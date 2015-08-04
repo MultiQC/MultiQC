@@ -36,7 +36,7 @@ def multiqc (title=None, template=config['template'], output_dir=os.path.join(os
 
     # Copy the template directory to the output directory
     shutil.copytree(template_dir, output_dir)
-    
+
     # Load the copied template
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(output_dir))
@@ -51,6 +51,9 @@ def multiqc (title=None, template=config['template'], output_dir=os.path.join(os
             print(report, file=f)
     except IOError as e:
         raise IOError ("Error printing report to '{}' - {}".format(output_path, IOError(e)))
+
+    # Create a zip file of the report directory
+    shutil.make_archive('multiqc_report', 'zip', output_dir)
 
 
 
