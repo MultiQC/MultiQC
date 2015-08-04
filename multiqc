@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+
+""" MultiQC: A modular tool to aggregate results from bioinformatics analyses across many samples into a single report
+"""
+
+from __future__ import print_function
+
+import argparse
+import jinja2
+import json
+import os
+import yaml
+
+# Constants
+VERSION = '0.1'
+MULTIQC_DIR = os.path.dirname(os.path.realpath(__file__))
+
+# Load and parse configuration file if we find it
+try:
+    yaml_config = os.path.join(MULTIQC_DIR, 'multiqc_config.yaml')
+    with open(yaml_config) as f:
+        config = yaml.load(f)
+except IOError:
+    config = {
+        'template': 'default.html'
+    }
+
+# Main function to execute MultiQC
+def multiqc (title=None, template=config['template'], output_path=os.path.join(os.getcwd(), 'multiqc_report.html'), modules=()):
+
+    # Load the template
+    try:
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.join(MULTIQC_DIR, 'templates')))
+        j_template = env.get_template(template)
+    except:
+        raise IOError ("Error - could not load template '{}'".format(template_path))
+
+    # Use jinja2 to render the template
+    report = j_template.render(title=title)
+
+    # Write the report to disk
+    try:
+        with open(output_path, 'w') as f:
+            print(report, file=f)
+    except IOError as e:
+        raise IOError ("Error printing report to '{}' - {}".format(output_path, IOError(e)))
+
+
+
+
+
+# This script is being run from the command line
+if __name__ == "__main__":
+
+    # Overwrite any of the config options specified on the command line
+    parser = argparse.ArgumentParser("Run MultiQC")
+    parser.add_argument("-i", "--title", dest="title", default=None,
+        help="Report title")
+    parser.add_argument("-t", "--template", dest="template", default=config['template'],
+        help="Report template to use")
+    parser.add_argument("-o", "--output", dest="output", default=os.path.join(os.getcwd(), 'multiqc_report.html'),
+        help="Output directory. Default: workind directory when script is executed.")
+    parser.add_argument('-m', '--module', dest="modules", default=None, action="append", nargs="*",
+        help="Use only these modules")
+    parser.add_argument("-v", "--version", dest="print_version", action='store_true',
+        help="Print the version of the program and exit")
+    kwargs = vars(parser.parse_args())
+
+    if kwargs['print_version']:
+        os.exit("MultiQC version {}".format(VERSION))
+
+    multiqc(title=kwargs['title'], template=kwargs['template'], output_path=kwargs['output'], modules=kwargs['modules'])
