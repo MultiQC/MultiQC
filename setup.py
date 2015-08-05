@@ -18,6 +18,5 @@ setup(
     scripts=['scripts/multiqc'],
     install_requires=[
         'jinja2'
-    ],
-    dependency_links=dependency_links
+    ]
 )

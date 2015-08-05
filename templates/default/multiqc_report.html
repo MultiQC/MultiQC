@@ -21,6 +21,12 @@
 
   <p>I guess I kind of need to think about what elements every report needs to have.</p>
 
+  {% for m in modules %}
+    <h1>Module: {{ m.name }}</h1>
+  {% endfor %}
+
+  <p>Report generated: {{ creation_date }}</p>
+
 </div>
 
 
