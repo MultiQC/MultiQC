@@ -59,10 +59,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         parsed_stats = self.fastqc_basic_stats(fastqc_raw_data)
         parsed_stats = collections.OrderedDict(sorted(parsed_stats.items()))
         stats_table_headers = {
-            'percent_duplicates': '%&nbsp;Sequence Duplication',
-            'sequence_length': 'Sequence Length (bp)',
-            'percent_gc': '%&nbsp;GC',
-            'total_sequences_m': 'Total Sequences (millions)'
+            'percent_duplicates': '<span data-toggle="tooltip" title="% Duplicate Reads">%&nbsp; Dups</span>',
+            'sequence_length': '<span data-toggle="tooltip" title="Sequence Length (bp)">Length</span>',
+            'percent_gc': '<span data-toggle="tooltip" title="Average % GC Content">%&nbsp;GC</span>',
+            'total_sequences_m': '<span data-toggle="tooltip" title="Total Sequences (millions)">M Sequences</span>'
         }
         cell_classes = {
             'percent_duplicates': 'text-right',
@@ -89,7 +89,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
             dups = re.search("#Total Deduplicated Percentage\s+([\d\.]+)", data)
             if dups:
-                parsed_data[s]['percent_duplicates'] = "{0:.2f}%".format(float(dups.group(1)))
+                parsed_data[s]['percent_duplicates'] = "{0:.2f}%".format(100 - float(dups.group(1)))
 
             seqlen = re.search("Sequence length\s+(\d+)", data)
             if seqlen:
