@@ -19,10 +19,8 @@ VERSION = '0.1'
 MULTIQC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates'))
                 if os.path.isdir(os.path.join(MULTIQC_DIR, 'templates', d)) ]
-avail_modules = [ f[:-3] for f in os.listdir(os.path.join(MULTIQC_DIR, 'multiqc'))
-                if os.path.isfile(os.path.join(MULTIQC_DIR, 'multiqc', f))
-                and f.endswith('.py')
-                and f != '__init__.py' ]
+avail_modules = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'multiqc'))
+                if os.path.isdir(os.path.join(MULTIQC_DIR, 'multiqc', d)) ]
 
 # Load and parse configuration file if we find it
 try:
@@ -61,7 +59,7 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
     modules_output = list()
     for m in run_modules:
         mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
-        modules_output.append(mod.MultiqcModule(output_dir))
+        modules_output.append(mod.MultiqcModule(analysis_dir, output_dir))
 
 
     # Load the copied template

@@ -9,8 +9,11 @@
   <meta name="author" content="MultiQC">
   <title>{{ title + ': ' if title != None }}MultiQC Report</title>
 
-  <link href="template_assets/css/bootstrap.min.css" rel="stylesheet">
-  <link href="template_assets/css/default_multiqc.css" rel="stylesheet">
+  <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+  {%- for m in modules %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css %}
+  <link href="{{ css_href }}" rel="stylesheet">
+  {%- endfor %}{% endif %}{% endfor %}
+  <link href="assets/css/default_multiqc.css" rel="stylesheet">
 </head>
 <body>
 
@@ -22,15 +25,25 @@
   <p>I guess I kind of need to think about what elements every report needs to have.</p>
 
   {% for m in modules %}
-    <h1>Module: {{ m.name }}</h1>
+    <h2>{{ m.name }}</h2>
+    {% for s in m.sections %}
+      <h3>{{ s.name }}<h3>
+    {% endfor %}
   {% endfor %}
-
-  <p>Report generated: {{ creation_date }}</p>
 
 </div>
 
+<div class="footer">
+  <div class="container">
+    <p>Report generated: {{ creation_date }}</p>
+  </div>
+</div>
 
-<script src="template_assets/js/jquery-1.11.3.min.js"></script>
-<script src="template_assets/js/bootstrap.min.js"></script>
+
+<script src="assets/js/jquery-1.11.3.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+{%- for m in modules %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js %}
+<script src="{{ js_href }}"></script>
+{%- endfor %}{% endif %}{% endfor %}
 </body>
 </html>
