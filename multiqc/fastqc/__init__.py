@@ -59,14 +59,20 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         parsed_stats = self.fastqc_basic_stats(fastqc_raw_data)
         parsed_stats = collections.OrderedDict(sorted(parsed_stats.items()))
         stats_table_headers = {
-            'percent_duplicates': '% Sequence Duplication',
+            'percent_duplicates': '%&nbsp;Sequence Duplication',
             'sequence_length': 'Sequence Length (bp)',
-            'percent_gc': '% GC',
+            'percent_gc': '%&nbsp;GC',
             'total_sequences_m': 'Total Sequences (millions)'
+        }
+        cell_classes = {
+            'percent_duplicates': 'text-right',
+            'sequence_length': 'text-right',
+            'percent_gc': 'text-right',
+            'total_sequences_m': 'text-right'
         }
         self.sections.append({
             'name': 'Basic Stats',
-            'content': self.dict_to_table(parsed_stats, colheaders=stats_table_headers, sort_rows=True)
+            'content': self.dict_to_table(parsed_stats, colheaders=stats_table_headers, tclasses='table table-bordered', cclasses=cell_classes)
         })
 
 

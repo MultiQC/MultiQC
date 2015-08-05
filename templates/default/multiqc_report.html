@@ -20,9 +20,7 @@
 <div class="container">
 
   <h1>MultiQC Report{{ ': ' + title if title != None }}</h1>
-  <p class="lead">This is the default template for MultiQC reports.</p>
-
-  <p>I guess I kind of need to think about what elements every report needs to have.</p>
+  <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
 
   {% for m in modules %}
     <h2>{{ m.name }}</h2>
@@ -36,7 +34,9 @@
 
 <div class="footer">
   <div class="container">
-    <p>Report generated: {{ creation_date }}</p>
+    <p><strong><a href="https://github.com/ewels/MultiQC" target="_blank">MultiQC</a></strong> -
+      Written by <a href="http://phil.ewels.co.uk" target="_blank">Phil Ewels</a>, available on <a href="https://github.com/ewels/MultiQC" target="_blank">GitHub</a>.
+      Report generated: {{ creation_date }}</p>
   </div>
 </div>
 
