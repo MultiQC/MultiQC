@@ -27,7 +27,8 @@
   {% for m in modules %}
     <h2>{{ m.name }}</h2>
     {% for s in m.sections %}
-      <h3>{{ s.name }}<h3>
+      {{ '<h3>' + s['name'] + '</h3>' if s['name'] }}
+      {{ s['content'] if s['content'] }}
     {% endfor %}
   {% endfor %}
 
