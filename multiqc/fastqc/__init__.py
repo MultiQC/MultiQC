@@ -205,7 +205,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_quality_overlay", \
                     fastqc_overlay_hist_data, "Mean Quality Scores", "Phred Score", "Position (bp)", \
-                    undefined, 0); \
+                    undefined, 0, undefined, undefined, "Base {{point.x}}"); \
             }}); \
         </script>'.format(json.dumps(data));
 
@@ -252,7 +252,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_gc_overlay", \
                     fastqc_overlay_gc_data, "Per Sequence GC Content", "Count", "%GC", \
-                    undefined, 0, 100, 0); \
+                    undefined, 0, 100, 0, "{{point.x}}% GC"); \
             }}); \
         </script>'.format(json.dumps(data));
 
@@ -305,7 +305,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_adapter_overlay", \
                     fastqc_adapter_data, "Adapter Content", "% of Sequences", "Position", \
-                    100, 0); \
+                    100, 0, undefined, undefined, "Base {{point.x}}"); \
             }}); \
         </script>'.format(json.dumps(data));
 

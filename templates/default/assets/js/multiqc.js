@@ -71,7 +71,8 @@ $(function () {
 ////////////////////////////////////////////////
 
 // Basic Line Graph
-function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin){
+function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin, tt_label){
+  if(tt_label === undefined){ tt_label = '{point.x}'; }
   $(div).highcharts({
     chart: {
       type: 'line',
@@ -117,7 +118,7 @@ function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin
 			enabled: false
 		},
     tooltip: {
-      headerFormat: '<b>{point.x}</b><table>',
+      headerFormat: '<b>'+tt_label+'</b><table>',
 			pointFormat: '<tr><td><span style="color:{series.color};">{series.name}:</span></td><td>{point.y:.2f}</td></tr>',
 			footerFormat: '</table>',
 			useHTML: true
