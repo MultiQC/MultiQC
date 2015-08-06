@@ -101,7 +101,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if dups:
                 parsed_data[s]['percent_duplicates'] = "{0:.2f}%".format(100 - float(dups.group(1)))
 
-            seqlen = re.search("Sequence length\s+(\d+)", data)
+            seqlen = re.search("Sequence length\s+([\d-]+)", data)
             if seqlen:
                 parsed_data[s]['sequence_length'] = seqlen.group(1)
 
@@ -112,6 +112,31 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             numseq = re.search("Total Sequences\s+(\d+)", data)
             if numseq:
                 parsed_data[s]['total_sequences_m'] = "{0:.1f}".format(float(numseq.group(1))/1000000)
+
+            # Work out the average sequence length as the range is a bit useless
+            if '-' in parsed_data[s]['sequence_length']:
+                in_module = False
+                total_count = 0
+                total_bp = 0
+                for l in data.splitlines():
+                    if l[:30] == ">>Sequence Length Distribution":
+                        in_module = True
+                    elif l == ">>END_MODULE":
+                        in_module = False
+                    elif in_module is True:
+                        len_matches = re.search("([\d-]+)\s+([\d\.E]+)", l)
+                        try:
+                            avg_len = len_matches.group(1)
+                            if '-' in avg_len:
+                                maxlen = int(avg_len.split("-",1)[1])
+                                minlen = int(avg_len.split("-",1)[0])
+                                avg_len = ((maxlen - minlen)/2) + minlen
+                            total_bp += float(len_matches.group(2)) * avg_len
+                            total_count += float(len_matches.group(2))
+                        except AttributeError:
+                            pass
+                if total_count > 0:
+                    parsed_data[s]['sequence_length'] = '{:.0f}'.format(total_bp / total_count)
 
         return parsed_data
 
@@ -124,7 +149,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         stats_table_headers = {
             'percent_duplicates': '<span data-toggle="tooltip" title="% Duplicate Reads">%&nbsp; Dups</span>',
-            'sequence_length': '<span data-toggle="tooltip" title="Sequence Length (bp)">Length</span>',
+            'sequence_length': '<span data-toggle="tooltip" title="Average Sequence Length (bp)">Length</span>',
             'percent_gc': '<span data-toggle="tooltip" title="Average % GC Content">%&nbsp;GC</span>',
             'total_sequences_m': '<span data-toggle="tooltip" title="Total Sequences (millions)">M Seqs</span>'
         }
