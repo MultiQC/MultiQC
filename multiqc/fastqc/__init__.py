@@ -67,8 +67,22 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Section 2 - Quality Histograms
         histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
         self.sections.append({
-            'name': 'Quality Histograms',
+            'name': 'Sequence Quality Histograms',
             'content': self.fastqc_quality_overlay_plot(histogram_data)
+        })
+
+        # Section 3 - GC Content
+        gc_data = self.fastqc_gc_content(fastqc_raw_data)
+        self.sections.append({
+            'name': 'Per Sequence GC Content',
+            'content': self.fastqc_gc_overlay_plot(gc_data)
+        })
+
+        # Section 4 - Adapter Content
+        adapter_data = self.fastqc_adapter_content(fastqc_raw_data)
+        self.sections.append({
+            'name': 'Adapter Content',
+            'content': self.fastqc_adapter_overlay_plot(adapter_data)
         })
 
 
@@ -159,7 +173,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
-                    quals = re.search("([\d-]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)", l)
+                    quals = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
                     try:
                         parsed_data[s]['base'].append(quals.group(1))
                         parsed_data[s]['mean'].append(float(quals.group(2)))
@@ -185,17 +199,113 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'data': pairs
             })
 
-        html = '<div id="fastqc_overlay_hist" style="height:500px;"></div> \
+        html = '<div id="fastqc_quality_overlay" style="height:500px;"></div> \
         <script type="text/javascript"> \
             fastqc_overlay_hist_data = {};\
             $(function () {{ \
-                plot_xy_line_graph("#fastqc_overlay_hist", \
-                    fastqc_overlay_hist_data, \
-                    "Mean Quality Scores", \
-                    "Phred Score", \
-                    "Position (bp)", \
-                    undefined, 0 \
-                ); \
+                plot_xy_line_graph("#fastqc_quality_overlay", \
+                    fastqc_overlay_hist_data, "Mean Quality Scores", "Phred Score", "Position (bp)", \
+                    undefined, 0); \
+            }}); \
+        </script>'.format(json.dumps(data));
+
+        return html
+
+
+    def fastqc_gc_content(self, fastqc_raw_data):
+        """ Parse the 'Per sequence GC content' data from fastqc_data.txt
+        Returns a 2D dict, sample names as first keys, then a dict of with keys
+        containing percentage and values containing counts """
+
+        parsed_data = {}
+        for s, data in fastqc_raw_data.iteritems():
+            parsed_data[s] = {}
+            in_module = False
+            for l in data.splitlines():
+                if l[:25] == ">>Per sequence GC content":
+                    in_module = True
+                elif l == ">>END_MODULE":
+                    in_module = False
+                elif in_module is True:
+                    gc_matches = re.search("([\d]+)\s+([\d\.E]+)", l)
+                    try:
+                        parsed_data[s][int(gc_matches.group(1))] = float(gc_matches.group(2))
+                    except AttributeError:
+                        pass
+
+        return parsed_data
+
+    def fastqc_gc_overlay_plot (self, parsed_data):
+        data = list()
+        for s in sorted(parsed_data):
+            pairs = list()
+            for k, p in iter(sorted(parsed_data[s].iteritems())):
+                pairs.append([int(k), p])
+            data.append({
+                'name': s,
+                'data': pairs
+            })
+
+        html = '<div id="fastqc_gc_overlay" style="height:500px;"></div> \
+        <script type="text/javascript"> \
+            fastqc_overlay_gc_data = {};\
+            $(function () {{ \
+                plot_xy_line_graph("#fastqc_gc_overlay", \
+                    fastqc_overlay_gc_data, "Per Sequence GC Content", "Count", "%GC", \
+                    undefined, 0, 100, 0); \
+            }}); \
+        </script>'.format(json.dumps(data));
+
+        return html
+
+
+    def fastqc_adapter_content(self, fastqc_raw_data):
+        """ Parse the 'Adapter Content' data from fastqc_data.txt
+        Returns a 2D dict, sample names as first keys, then a dict of with keys
+        containing adapter type and values containing counts """
+
+        parsed_data = {}
+        for s, data in fastqc_raw_data.iteritems():
+            parsed_data[s] = dict()
+            in_module = False
+            adapter_types = []
+            for l in data.splitlines():
+                if l[:17] == ">>Adapter Content":
+                    in_module = True
+                elif l == ">>END_MODULE":
+                    in_module = False
+                elif in_module is True:
+                    if l[:1] == '#':
+                        adapter_types = l[1:].split("\t")[1:]
+                        for a in adapter_types:
+                            parsed_data[s][a] = dict()
+                    else:
+                        cols = l.split("\t")
+                        pos = int(cols[0].split('-', 1)[0])
+                        for idx, val in enumerate(cols[1:]):
+                            parsed_data[s][adapter_types[idx]][pos] = float(val)
+        return parsed_data
+
+    def fastqc_adapter_overlay_plot (self, parsed_data):
+
+        data = list()
+        for s in sorted(parsed_data):
+            for a, d in parsed_data[s].iteritems():
+                pairs = list()
+                for base, count in iter(sorted(d.iteritems())):
+                    pairs.append([base, count])
+                data.append({
+                    'name': '{} - {}'.format(s, a),
+                    'data': pairs
+                })
+
+        html = '<div id="fastqc_adapter_overlay" style="height:500px;"></div> \
+        <script type="text/javascript"> \
+            fastqc_adapter_data = {};\
+            $(function () {{ \
+                plot_xy_line_graph("#fastqc_adapter_overlay", \
+                    fastqc_adapter_data, "Adapter Content", "% of Sequences", "Position", \
+                    100, 0); \
             }}); \
         </script>'.format(json.dumps(data));
 

@@ -117,11 +117,10 @@ function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin
 			enabled: false
 		},
     tooltip: {
-      headerFormat: '<b>Base {point.x}</b><table>',
+      headerFormat: '<b>{point.x}</b><table>',
 			pointFormat: '<tr><td><span style="color:{series.color};">{series.name}:</span></td><td>{point.y:.2f}</td></tr>',
 			footerFormat: '</table>',
-			useHTML: true,
-      delay: 400
+			useHTML: true
     },
     series: data
   });
