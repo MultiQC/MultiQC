@@ -116,8 +116,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         }
         header_attrs = {
             'percent_duplicates': 'class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"',
-            'sequence_length': 'class="chroma-col" data-chroma-scale="RdYlGn"',
-            'percent_gc': 'class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="60" data-chroma-min="30"',
+            'sequence_length': 'class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"',
+            'percent_gc': 'class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="100" data-chroma-min="0"',
             'total_sequences_m': 'class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"'
         }
         cell_attrs = {
@@ -175,23 +175,21 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def fastqc_quality_overlay_plot (self, parsed_data):
 
-        categories = None
         data = list()
         for s in sorted(parsed_data):
-            if categories is None:
-                categories = parsed_data[s]['base']
+            pairs = list()
+            for k, p in enumerate(parsed_data[s]['base']):
+                pairs.append([int(p.split('-', 1)[0]), parsed_data[s]['mean'][k]])
             data.append({
                 'name': s,
-                'data': parsed_data[s]['mean']
+                'data': pairs
             })
 
         html = '<div id="fastqc_overlay_hist" style="height:500px;"></div> \
         <script type="text/javascript"> \
-            fastqc_overlay_hist_cats = {};\
             fastqc_overlay_hist_data = {};\
             $(function () {{ \
-                plot_line_graph("#fastqc_overlay_hist", \
-                    fastqc_overlay_hist_cats, \
+                plot_xy_line_graph("#fastqc_overlay_hist", \
                     fastqc_overlay_hist_data, \
                     "Mean Quality Scores", \
                     "Phred Score", \
@@ -199,7 +197,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     undefined, 0 \
                 ); \
             }}); \
-        </script>'.format(json.dumps(categories), json.dumps(data));
+        </script>'.format(json.dumps(data));
 
         return html
 

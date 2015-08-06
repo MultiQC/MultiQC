@@ -54,8 +54,8 @@ $(function () {
           var col = scale(parseFloat($(this).text())).css();
           $(this).css('background-color', col);
           // Change the colour of the text if we can get a better contrast ratio
-          if(chroma.contrast('#FFFFFF', col) > chroma.contrast($(this).css('color'), col)){
-            $(this).css('color', '#FFFFFF').css('font-weight', '200');
+          if(chroma.contrast('#EEEEEE', col) > chroma.contrast($(this).css('color'), col)){
+            $(this).css('color', '#EEEEEE').css('font-weight', '200');
           }
         });
       }
@@ -71,8 +71,12 @@ $(function () {
 ////////////////////////////////////////////////
 
 // Basic Line Graph
-function plot_line_graph(div, cats, data, title, ylab, xlab, ymax, ymin, xmax, xmin){
+function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin){
   $(div).highcharts({
+    chart: {
+      type: 'line',
+      zoomType: 'x'
+    },
     title: {
       text: title,
       x: -20 //center
@@ -82,8 +86,7 @@ function plot_line_graph(div, cats, data, title, ylab, xlab, ymax, ymin, xmax, x
         text: xlab
       },
       max: xmax,
-      min: xmin,
-      categories: cats
+      min: xmin
     },
     yAxis: {
       title: {
@@ -114,11 +117,11 @@ function plot_line_graph(div, cats, data, title, ylab, xlab, ymax, ymin, xmax, x
 			enabled: false
 		},
     tooltip: {
-			shared: true,
       headerFormat: '<b>Base {point.x}</b><table>',
 			pointFormat: '<tr><td><span style="color:{series.color};">{series.name}:</span></td><td>{point.y:.2f}</td></tr>',
 			footerFormat: '</table>',
-			useHTML: true
+			useHTML: true,
+      delay: 400
     },
     series: data
   });
