@@ -14,6 +14,15 @@
   <link href="{{ css_href }}" rel="stylesheet">
   {%- endfor %}{% endif %}{% endfor %}
   <link href="assets/css/default_multiqc.css" rel="stylesheet">
+
+  <script src="assets/js/jquery-1.11.3.min.js"></script>
+  <script src="assets/js/bootstrap.min.js"></script>
+  <script src="assets/js/highcharts.js"></script>
+  <script src="assets/js/chroma.min.js"></script>
+  <script src="assets/js/multiqc.js"></script>
+  {%- for m in modules %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js %}
+  <script src="{{ js_href }}"></script>
+  {%- endfor %}{% endif %}{% endfor %}
 </head>
 <body>
 
@@ -40,12 +49,5 @@
   </div>
 </div>
 
-
-<script src="assets/js/jquery-1.11.3.min.js"></script>
-<script src="assets/js/bootstrap.min.js"></script>
-<script src="assets/js/multiqc.js"></script>
-{%- for m in modules %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js %}
-<script src="{{ js_href }}"></script>
-{%- endfor %}{% endif %}{% endfor %}
 </body>
 </html>

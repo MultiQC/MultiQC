@@ -4,6 +4,7 @@
 """
 
 import collections
+import json
 import logging
 import os
 import re
@@ -53,26 +54,21 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         logging.info("Found {} FastQC reports".format(len(fastqc_raw_data)))
 
-        self.sections = ['fubar!']
+        self.sections = list()
 
         # Section 1 - Basic Stats
         parsed_stats = self.fastqc_basic_stats(fastqc_raw_data)
-        parsed_stats = collections.OrderedDict(sorted(parsed_stats.items()))
-        stats_table_headers = {
-            'percent_duplicates': '<span data-toggle="tooltip" title="% Duplicate Reads">%&nbsp; Dups</span>',
-            'sequence_length': '<span data-toggle="tooltip" title="Sequence Length (bp)">Length</span>',
-            'percent_gc': '<span data-toggle="tooltip" title="Average % GC Content">%&nbsp;GC</span>',
-            'total_sequences_m': '<span data-toggle="tooltip" title="Total Sequences (millions)">M Sequences</span>'
-        }
-        cell_classes = {
-            'percent_duplicates': 'text-right',
-            'sequence_length': 'text-right',
-            'percent_gc': 'text-right',
-            'total_sequences_m': 'text-right'
-        }
+        stats_table = self.fastqc_stats_table(parsed_stats)
         self.sections.append({
             'name': 'Basic Stats',
-            'content': self.dict_to_table(parsed_stats, colheaders=stats_table_headers, tclasses='table table-bordered', cclasses=cell_classes)
+            'content': stats_table
+        })
+
+        # Section 2 - Quality Histograms
+        histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
+        self.sections.append({
+            'name': 'Quality Histograms',
+            'content': self.fastqc_quality_overlay_plot(histogram_data)
         })
 
 
@@ -80,7 +76,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.init_modfiles()
 
     def fastqc_basic_stats(self, fastqc_raw_data):
-        """ Parse the contents of multiple fastqc_raw_data.txt files.
+        """ Parse fastqc_data.txt for basic stats.
         Returns a 2D dict with basic stats, sample names as first keys,
         then statistic type as second key. """
         parsed_data = {}
@@ -104,6 +100,108 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 parsed_data[s]['total_sequences_m'] = "{0:.1f}".format(float(numseq.group(1))/1000000)
 
         return parsed_data
+
+    def fastqc_stats_table(self, parsed_stats):
+        """ Take the parsed stats from the FastQC report and turn it into a
+        nice attractive HTML table. """
+
+        # Order the table by the sample names
+        parsed_stats = collections.OrderedDict(sorted(parsed_stats.items()))
+
+        stats_table_headers = {
+            'percent_duplicates': '<span data-toggle="tooltip" title="% Duplicate Reads">%&nbsp; Dups</span>',
+            'sequence_length': '<span data-toggle="tooltip" title="Sequence Length (bp)">Length</span>',
+            'percent_gc': '<span data-toggle="tooltip" title="Average % GC Content">%&nbsp;GC</span>',
+            'total_sequences_m': '<span data-toggle="tooltip" title="Total Sequences (millions)">M Seqs</span>'
+        }
+        header_attrs = {
+            'percent_duplicates': 'class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"',
+            'sequence_length': 'class="chroma-col" data-chroma-scale="RdYlGn"',
+            'percent_gc': 'class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="60" data-chroma-min="30"',
+            'total_sequences_m': 'class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"'
+        }
+        cell_attrs = {
+            'percent_duplicates': 'class="text-right"',
+            'sequence_length': 'class="text-right"',
+            'percent_gc': 'class="text-right"',
+            'total_sequences_m': 'class="text-right"'
+        }
+
+        # Use the base class dict_to_table to make a HTML table
+        parsed_stats = self.dict_to_table(parsed_stats,
+            colheaders=stats_table_headers,
+            table_attrs='class="table table-hover table-bordered table-responsive table-condensed table-nostretch"',
+            header_attrs=header_attrs,
+            cell_attrs=cell_attrs)
+
+        return parsed_stats
+
+    def fastqc_seq_quality(self, fastqc_raw_data):
+        """ Parse the 'Per base sequence quality' data from fastqc_data.txt
+        Returns a 2D dict, sample names as first keys, then a dict of lists
+        containing base, mean, median, lower_quart, upper_quart, 10_percentile
+        and 90_percentile. """
+
+        parsed_data = {}
+        for s, data in fastqc_raw_data.iteritems():
+            parsed_data[s] = {}
+            parsed_data[s]['base'] = list()
+            parsed_data[s]['mean'] = list()
+            parsed_data[s]['median'] = list()
+            parsed_data[s]['lower_quart'] = list()
+            parsed_data[s]['upper_quart'] = list()
+            parsed_data[s]['10_percentile'] = list()
+            parsed_data[s]['90_percentile'] = list()
+            in_module = False
+            for l in data.splitlines():
+                if l[:27] == ">>Per base sequence quality":
+                    in_module = True
+                elif l == ">>END_MODULE":
+                    in_module = False
+                elif in_module is True:
+                    quals = re.search("([\d-]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)\s+([\d'.]+)", l)
+                    try:
+                        parsed_data[s]['base'].append(quals.group(1))
+                        parsed_data[s]['mean'].append(float(quals.group(2)))
+                        parsed_data[s]['median'].append(float(quals.group(3)))
+                        parsed_data[s]['lower_quart'].append(float(quals.group(4)))
+                        parsed_data[s]['upper_quart'].append(float(quals.group(5)))
+                        parsed_data[s]['10_percentile'].append(float(quals.group(6)))
+                        parsed_data[s]['90_percentile'].append(float(quals.group(7)))
+                    except AttributeError:
+                        pass
+
+        return parsed_data
+
+    def fastqc_quality_overlay_plot (self, parsed_data):
+
+        categories = None
+        data = list()
+        for s in sorted(parsed_data):
+            if categories is None:
+                categories = parsed_data[s]['base']
+            data.append({
+                'name': s,
+                'data': parsed_data[s]['mean']
+            })
+
+        html = '<div id="fastqc_overlay_hist" style="height:500px;"></div> \
+        <script type="text/javascript"> \
+            fastqc_overlay_hist_cats = {};\
+            fastqc_overlay_hist_data = {};\
+            $(function () {{ \
+                plot_line_graph("#fastqc_overlay_hist", \
+                    fastqc_overlay_hist_cats, \
+                    fastqc_overlay_hist_data, \
+                    "Mean Quality Scores", \
+                    "Phred Score", \
+                    "Position (bp)", \
+                    undefined, 0 \
+                ); \
+            }}); \
+        </script>'.format(json.dumps(categories), json.dumps(data));
+
+        return html
 
 
     def init_modfiles(self):

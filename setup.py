@@ -17,6 +17,7 @@ setup(
     zip_safe=False,
     scripts=['scripts/multiqc'],
     install_requires=[
-        'jinja2'
+        'jinja2',
+        'json'
     ]
 )

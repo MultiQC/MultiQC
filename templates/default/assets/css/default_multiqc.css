@@ -1,5 +1,16 @@
 /* CSS Styles for Default MultiQC Report Template */
 
+/* General Styles */
+
+.table-nostretch {
+    width: auto;
+}
+.table tr td {
+    font-size:0.9em;
+}
+
+/* Page Template */
+
 .footer {
     background-color: #ededed;
     border-top: 1px solid #ccc;
