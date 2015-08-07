@@ -24,6 +24,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.name = "FastQC"
         self.analysis_dir = analysis_dir
         self.output_dir = output_dir
+        self.data_dir = os.path.join(output_dir, 'report_data')
 
         # Find and load any FastQC reports
         fastqc_raw_data = {}
@@ -71,14 +72,21 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'content': self.fastqc_quality_overlay_plot(histogram_data)
         })
 
-        # Section 3 - GC Content
+        # Section 3 - Per-base sequence content
+        seq_content = self.fastqc_seq_content(fastqc_raw_data)
+        self.sections.append({
+            'name': 'Per Base Sequence Content',
+            'content': self.fastqc_seq_heatmap(seq_content)
+        })
+
+        # Section 4 - GC Content
         gc_data = self.fastqc_gc_content(fastqc_raw_data)
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'content': self.fastqc_gc_overlay_plot(gc_data)
         })
 
-        # Section 4 - Adapter Content
+        # Section 5 - Adapter Content
         adapter_data = self.fastqc_adapter_content(fastqc_raw_data)
         self.sections.append({
             'name': 'Adapter Content',
@@ -233,6 +241,113 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     undefined, 0, undefined, undefined, "Base {{point.x}}"); \
             }}); \
         </script>'.format(json.dumps(data));
+
+        return html
+
+
+    def fastqc_seq_content(self, fastqc_raw_data):
+        """ Parse the 'Per base sequence content' data from fastqc_data.txt
+        Returns a 3D dict, sample names as first keys, second key the base
+        position and third key with the base ([ACTG]). Values contain percentages """
+
+        parsed_data = {}
+        for s, data in fastqc_raw_data.iteritems():
+            parsed_data[s] = {}
+            in_module = False
+            for l in data.splitlines():
+                if l[:27] == ">>Per base sequence content":
+                    in_module = True
+                elif l == ">>END_MODULE":
+                    in_module = False
+                elif in_module is True:
+                    seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
+                    try:
+                        bp = int(seq_matches.group(1).split('-', 1)[0])
+                        parsed_data[s][bp] = {}
+                        parsed_data[s][bp]['base'] = seq_matches.group(1)
+                        parsed_data[s][bp]['G'] = float(seq_matches.group(2))
+                        parsed_data[s][bp]['A'] = float(seq_matches.group(3))
+                        parsed_data[s][bp]['T'] = float(seq_matches.group(4))
+                        parsed_data[s][bp]['C'] = float(seq_matches.group(5))
+                    except AttributeError:
+                        if l[:1] != '#':
+                            raise
+
+        return parsed_data
+
+    def fastqc_seq_heatmap (self, parsed_data):
+
+        # Order the table by the sample names
+        parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
+
+        html = '<canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
+        <p><small class="text-muted">Fuzzy after resizing the window? Hit your browser\'s refresh button..</small></p>\n\
+        <script type="text/javascript"> \n\
+            fastqc_seq_content_data = {};\n\
+            $(function () {{ \n\
+                var num_samples = Object.keys(fastqc_seq_content_data).length; \n\
+                var num_data = undefined; \n\
+                var ypos = 0; \n\
+                var xpos_start = 0; \n\
+                var labels_width = 0; \n\
+                var max_bp = 0; \n\
+                // Convert the CSS percentage size into pixels \n\
+                var c_width = $("#fastqc_seq_heatmap").width(); \n\
+                var c_height = $("#fastqc_seq_heatmap").height(); \n\
+                console.log(c_height); \n\
+                if( c_height / num_samples > 14){{ \n\
+                    c_height = num_samples * 14; \n\
+                }} \n\
+                $("#fastqc_seq_heatmap").prop("width", c_width); \n\
+                $("#fastqc_seq_heatmap").prop("height", c_height); \n\
+                var s_height = c_height / num_samples; \n\
+                var canvas = document.getElementById("fastqc_seq_heatmap"); \n\
+                if (canvas.getContext) {{ \n\
+                    var ctx = canvas.getContext("2d"); \n\
+                    ctx.font = (parseInt(s_height)-2)+"px Arial"; \n\
+                    // First, do labels and get max base pairs \n\
+                    $.each(fastqc_seq_content_data, function(name, s){{ \n\
+                        var txt_w = ctx.measureText(name).width; \n\
+                        if(txt_w > labels_width) {{ \n\
+                            labels_width = txt_w; \n\
+                        }} \n\
+                        ctx.fillText(name, 0, ypos+parseInt(s_height)-2); \n\
+                        ypos += s_height; \n\
+                        $.each(s, function(bp, v){{ \n\
+                            bp = parseInt(bp); \n\
+                            if(bp > max_bp){{ \n\
+                                max_bp = bp; \n\
+                            }} \n\
+                        }}); \n\
+                    }}); \n\
+                    labels_width += 5; \n\
+                    ypos = 0; \n\
+                    xpos_start = labels_width; \n\
+                    c_width -= labels_width; \n\
+                    $.each(fastqc_seq_content_data, function(name, s){{ \n\
+                        if (num_data == undefined){{ \n\
+                            var s_width = c_width / Object.keys(s).length; \n\
+                        }} \n\
+                        var xpos = xpos_start; \n\
+                        var last_bp = 0; \n\
+                        $.each(s, function(bp, v){{ \n\
+                            bp = parseInt(bp); \n\
+                            var this_width = (bp - last_bp) * (c_width / max_bp); \n\
+                            last_bp = bp; \n\
+                            var c = v["G"] / 100; \n\
+                            var m = v["A"] / 100; \n\
+                            var y = v["T"] / 100; \n\
+                            var k = v["C"] / 100; \n\
+                            ctx.fillStyle = chroma.cmyk(c,m,y,k).css(); \n\
+                            ctx.fillRect (xpos, ypos, this_width, s_height); \n\
+                            //console.log("bp:"+bp+" c_width: "+c_width+" xpos: "+xpos+" ypos: "+ypos+" this_width: "+this_width+" s_height: "+s_height); \n\
+                            xpos += this_width; \n\
+                        }}); \n\
+                        ypos += s_height; \n\
+                    }}); \n\
+                }} \n\
+            }}); \n\
+        </script>'.format(json.dumps(parsed_data))
 
         return html
 

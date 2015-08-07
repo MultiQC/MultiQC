@@ -55,6 +55,9 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
     logging.info("Saving to {}".format(output_dir))
     shutil.copytree(template_dir, output_dir)
 
+    # Make the report data directory
+    os.mkdir(os.path.join(output_dir, 'report_data'))
+
     # Run the modules!
     modules_output = list()
     for m in run_modules:

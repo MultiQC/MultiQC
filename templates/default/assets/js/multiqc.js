@@ -126,3 +126,7 @@ function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin
     series: data
   });
 }
+
+
+
+// Heat Map
