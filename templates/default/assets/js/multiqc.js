@@ -74,6 +74,7 @@ $(function () {
 function plot_xy_line_graph(div, data, config){
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
   if(config['use_legend'] === undefined){ config['use_legend'] = true; }
+  if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   $(div).highcharts({
     chart: {
       type: 'line',
@@ -108,9 +109,7 @@ function plot_xy_line_graph(div, data, config){
         cursor: 'pointer',
         point: {
           events: {
-            click: function () {
-              alert(this.series.name);
-            }
+            click: config['click_func']
           }
         }
       }

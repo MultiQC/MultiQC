@@ -99,4 +99,10 @@ function fastqc_seq_content_heatmap(data) {
       $('#fastqc_seq_heatmap_key').slideDown();
       $('#fastqc_seq_heatmap_click_instr').text('Click to show original FastQC sequence composition plot.');
     });
+
+    $('#fastqc_qual_original').click(function(){
+      $('#fastqc_quality_overlay').slideDown();
+      $(this).slideUp();
+      $('#fastqc_quals_click_instr').text('Click to show original FastQC sequence quality plot.');
+    });
 }

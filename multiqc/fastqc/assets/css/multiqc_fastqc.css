@@ -49,6 +49,6 @@
   background: linear-gradient(to right, black, white);
 }
 
-#fastqc_seq_heatmap, #fastqc_seq_original {
+#fastqc_seq_heatmap, .original-plot {
   cursor: pointer;
 }

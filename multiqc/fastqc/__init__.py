@@ -252,7 +252,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'data': pairs
             })
 
-        html = '<div id="fastqc_quality_overlay" style="height:500px;"></div> \
+        html = '<p>Sample Name: <code id="fastqc_qual_orig_sname">-</code></p> \n\
+        <p class="text-muted" id="fastqc_quals_click_instr">Click to show original FastQC sequence quality plot.</p>\n\
+        <div id="fastqc_qual_original" style="display:none;" class="original-plot"></div>\n\
+        <div id="fastqc_quality_overlay" style="height:500px;"></div> \
         <script type="text/javascript"> \
             fastqc_overlay_hist_data = {};\
             var quals_pconfig = {{ \n\
@@ -262,7 +265,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "ymin": 0,\n\
                 "tt_label": "Base {{point.x}}",\n\
                 "use_legend": false,\n\
-            }}; \n\
+                "click_func": function () {{ \n\
+                    var img = \'<img style="max-width:800px; width:100%;" src="report_data/fastqc/\'+this.series.name+\'_per_base_quality.png">\'; \n\
+                    $("#fastqc_qual_original").html(img).delay(100).slideDown(); \n\
+                    $("#fastqc_quality_overlay").delay(100).slideUp(); \n\
+                    $("#fastqc_qual_orig_sname").text(this.series.name); \n\
+                    $("#fastqc_quals_click_instr").text("Click to show plot of all sample means."); \n\
+                }}, }}; \n\
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_quality_overlay", fastqc_overlay_hist_data, quals_pconfig); \
             }}); \
@@ -307,7 +316,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
 
         html = '<p>Sample Name: <code id="fastqc_seq_heatmap_sname">-</code></p> \n\
-        <div id="fastqc_seq_original" style="display:none;"></div>\n\
+        <div id="fastqc_seq_original" style="display:none;" class="original-plot"></div>\n\
         <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
         <ul id="fastqc_seq_heatmap_key">\n\
             <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
