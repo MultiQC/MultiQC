@@ -11,6 +11,56 @@
 
 /* Page Template */
 
+.mainpage {
+    padding: 20px;
+}
+#page_title {
+    margin-top: 0;
+}
+
+ /* Modified from http://www.bootply.com/idWWJSmrKD */
+@media (min-width: 768px) {
+    .mainpage {
+        margin-left: 300px;
+    }
+
+    .navbar-collapse {
+        height: auto;
+        border-top: 0;
+        box-shadow: none;
+        max-height: none;
+        padding-left:0;
+        padding-right:0;
+    }
+    .navbar-collapse.collapse {
+        display: block !important;
+        width: auto !important;
+        padding-bottom: 0;
+        overflow: visible !important;
+    }
+    .navbar-collapse.in {
+        overflow-x: visible;
+    }
+
+    .navbar {
+    	max-width:300px;
+    	margin-right: 0;
+    	margin-left: 0;
+        float: left;
+    }
+    .navbar-nav, .navbar-nav > li, .navbar-left, .navbar-right, .navbar-header {
+        float:none !important;
+    }
+    .navbar-right .dropdown-menu {
+        left:0;right:auto;
+    }
+    .navbar-collapse .navbar-nav.navbar-right:last-child {
+        margin-right: 0;
+    }
+}
+
+
+
 .footer {
     background-color: #ededed;
     border-top: 1px solid #ccc;

@@ -26,15 +26,51 @@
 </head>
 <body>
 
-<div class="container-fluid">
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="#">MultiQC</a>
+  </div>
 
-  <h1>MultiQC Report{{ ': ' + title if title != None }}</h1>
+  <!-- Collect the nav links, forms, and other content for toggling -->
+  <div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav">
+      {% for m in modules %}
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ m.name }} <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+        {% for s in m.sections %}
+          <li><a href="#{{ s['name']|lower|replace(' ','-') }}">{{ s['name'] }}</a></li>
+        {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+    <!-- <form class="navbar-form" role="search">
+      <div class="form-group">
+        <input type="text" class="form-control" placeholder="Search">
+      </div>
+      <button type="submit" class="btn btn-default">Submit</button>
+    </form> -->
+  </div><!-- /.navbar-collapse -->
+</nav>
+
+<div class="mainpage">
+
+  <h1 id="page_title">MultiQC{{ ': '+title if title != None }}</h1>
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
+  <p>Report generated: {{ creation_date }}.</p>
 
   {% for m in modules %}
     <h2>{{ m.name }}</h2>
     {% for s in m.sections %}
-      {{ '<h3>' + s['name'] + '</h3>' if s['name'] }}
+      <h3 id="{{ s['name']|lower|replace(' ','-') }}">{{ s['name'] }}</h3>
       {{ s['content'] if s['content'] }}
     {% endfor %}
   {% endfor %}
