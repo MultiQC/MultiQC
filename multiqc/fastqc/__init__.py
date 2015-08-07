@@ -24,10 +24,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.name = "FastQC"
         self.analysis_dir = analysis_dir
         self.output_dir = output_dir
-        self.data_dir = os.path.join(output_dir, 'report_data')
+        self.data_dir = os.path.join(output_dir, 'report_data', 'fastqc')
+        os.mkdir(self.data_dir)
 
         # Find and load any FastQC reports
         fastqc_raw_data = {}
+        plot_fns = [
+            'per_base_quality.png',
+            'per_base_sequence_content.png',
+            'per_sequence_gc_content.png',
+            'adapter_content.png'
+        ]
         for root, dirnames, filenames in os.walk(analysis_dir):
             # Extracted FastQC directory
             if root[-7:] == '_fastqc' and 'fastqc_data.txt' in filenames:
@@ -36,6 +43,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 d_path = os.path.join(root, 'fastqc_data.txt')
                 with open (d_path, "r") as f:
                     fastqc_raw_data[s_name] = f.read()
+                # Copy across the raw images
+                for p in plot_fns:
+                    try:
+                        shutil.copyfile(os.path.join(root, 'Images', p), os.path.join(self.data_dir, "{}_{}".format(s_name, p)))
+                    except:
+                        raise
 
             # Zipped FastQC report
             for f in filenames:
