@@ -129,4 +129,17 @@ function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin
 
 
 
-// Heat Map
+//////////////////
+// Generic helper functions
+// http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
+function findPos(obj) {
+  var curleft = 0, curtop = 0;
+  if (obj.offsetParent) {
+    do {
+      curleft += obj.offsetLeft;
+      curtop += obj.offsetTop;
+    } while (obj = obj.offsetParent);
+    return { x: curleft, y: curtop };
+  }
+  return undefined;
+}

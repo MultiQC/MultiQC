@@ -281,7 +281,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
 
         html = '<canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
-        <p><small class="text-muted">Fuzzy after resizing the window? Hit your browser\'s refresh button..</small></p>\n\
+        <ul id="fastqc_seq_heatmap_key">\n\
+            <li>%G: <span id="fastqc_seq_heatmap_key_g">?</span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%A: <span id="fastqc_seq_heatmap_key_a">?</span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%T: <span id="fastqc_seq_heatmap_key_t">?</span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%C: <span id="fastqc_seq_heatmap_key_c">?</span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
+        </ul>\n\
+        <p id="fastqc_seq_heatmap_footer"><small class="text-muted">Fuzzy after resizing the window? Hit your browser\'s refresh button..</small></p>\n\
         <script type="text/javascript"> \n\
             fastqc_seq_content_data = {};\n\
             $(function () {{ \n\
@@ -294,7 +300,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 // Convert the CSS percentage size into pixels \n\
                 var c_width = $("#fastqc_seq_heatmap").width(); \n\
                 var c_height = $("#fastqc_seq_heatmap").height(); \n\
-                console.log(c_height); \n\
                 if( c_height / num_samples > 14){{ \n\
                     c_height = num_samples * 14; \n\
                 }} \n\
@@ -334,18 +339,38 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             bp = parseInt(bp); \n\
                             var this_width = (bp - last_bp) * (c_width / max_bp); \n\
                             last_bp = bp; \n\
-                            var c = v["G"] / 100; \n\
-                            var m = v["A"] / 100; \n\
-                            var y = v["T"] / 100; \n\
-                            var k = v["C"] / 100; \n\
-                            ctx.fillStyle = chroma.cmyk(c,m,y,k).css(); \n\
+                            var r = (v["G"] / 100)*255; \n\
+                            var g = (v["A"] / 100)*255; \n\
+                            var b = (v["T"] / 100)*255; \n\
+                            ctx.fillStyle = chroma(r,g,b).css(); \n\
                             ctx.fillRect (xpos, ypos, this_width, s_height); \n\
-                            //console.log("bp:"+bp+" c_width: "+c_width+" xpos: "+xpos+" ypos: "+ypos+" this_width: "+this_width+" s_height: "+s_height); \n\
                             xpos += this_width; \n\
                         }}); \n\
                         ypos += s_height; \n\
                     }}); \n\
                 }} \n\
+                \n\
+                // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover \n\
+                $("#fastqc_seq_heatmap").mousemove(function(e) {{ \n\
+                    var pos = findPos(this); \n\
+                    var x = e.pageX - pos.x; \n\
+                    var y = e.pageY - pos.y; \n\
+                    var coord = "x=" + x + ", y=" + y; \n\
+                    var c = this.getContext("2d"); \n\
+                    var p = c.getImageData(x, y, 1, 1).data;  \n\
+                    var seq_g = Math.round((p[0]/255)*100); \n\
+                    var seq_a = Math.round((p[1]/255)*100); \n\
+                    var seq_t = Math.round((p[2]/255)*100); \n\
+                    var seq_c = 100 - (seq_g + seq_a + seq_t); \n\
+                    $("#fastqc_seq_heatmap_key_g").text(seq_g+"%"); \n\
+                    $("#fastqc_seq_heatmap_key_a").text(seq_a+"%"); \n\
+                    $("#fastqc_seq_heatmap_key_t").text(seq_t+"%"); \n\
+                    $("#fastqc_seq_heatmap_key_c").text(seq_c+"%"); \n\
+                    $("#fastqc_seq_heatmap_key_colourbar_g span").css("margin-left", seq_g); \n\
+                    $("#fastqc_seq_heatmap_key_colourbar_a span").css("margin-left", seq_a); \n\
+                    $("#fastqc_seq_heatmap_key_colourbar_t span").css("margin-left", seq_t); \n\
+                    $("#fastqc_seq_heatmap_key_colourbar_c span").css("margin-left", seq_c); \n\
+                }}); \n\
             }}); \n\
         </script>'.format(json.dumps(parsed_data))
 
