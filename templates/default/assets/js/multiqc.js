@@ -71,30 +71,31 @@ $(function () {
 ////////////////////////////////////////////////
 
 // Basic Line Graph
-function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin, tt_label){
-  if(tt_label === undefined){ tt_label = '{point.x}'; }
+function plot_xy_line_graph(div, data, config){
+  if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
+  if(config['use_legend'] === undefined){ config['use_legend'] = true; }
   $(div).highcharts({
     chart: {
       type: 'line',
       zoomType: 'x'
     },
     title: {
-      text: title,
+      text: config['title'],
       x: -20 //center
     },
     xAxis: {
       title: {
-        text: xlab
+        text: config['xlab']
       },
-      max: xmax,
-      min: xmin
+      max: config['xmax'],
+      min: config['xmin']
     },
     yAxis: {
       title: {
-        text: ylab
+        text: config['ylab']
       },
-      max: ymax,
-      min: ymin,
+      max: config['ymax'],
+      min: config['ymin'],
       plotLines: [{
         value: 0,
         width: 1,
@@ -103,12 +104,19 @@ function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin
     },
     plotOptions: {
       series: {
-        marker: {
-          enabled: false
+        marker: { enabled: false },
+        cursor: 'pointer',
+        point: {
+          events: {
+            click: function () {
+              alert(this.series.name);
+            }
+          }
         }
       }
     },
     legend: {
+      enabled: config['use_legend'],
       layout: 'vertical',
       align: 'right',
       verticalAlign: 'middle',
@@ -118,7 +126,7 @@ function plot_xy_line_graph(div, data, title, ylab, xlab, ymax, ymin, xmax, xmin
 			enabled: false
 		},
     tooltip: {
-      headerFormat: '<b>'+tt_label+'</b><table>',
+      headerFormat: '<b>'+config['tt_label']+'</b><table>',
 			pointFormat: '<tr><td><span style="color:{series.color};">{series.name}:</span></td><td>{point.y:.2f}</td></tr>',
 			footerFormat: '</table>',
 			useHTML: true

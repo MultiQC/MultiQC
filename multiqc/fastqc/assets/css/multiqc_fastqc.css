@@ -48,3 +48,7 @@
   background: -moz-linear-gradient(right, black, white);
   background: linear-gradient(to right, black, white);
 }
+
+#fastqc_seq_heatmap, #fastqc_seq_original {
+  cursor: pointer;
+}

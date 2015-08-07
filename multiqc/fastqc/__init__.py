@@ -48,7 +48,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     try:
                         shutil.copyfile(os.path.join(root, 'Images', p), os.path.join(self.data_dir, "{}_{}".format(s_name, p)))
                     except:
-                        raise
+                        pass
 
             # Zipped FastQC report
             for f in filenames:
@@ -61,6 +61,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             fastqc_raw_data[s_name] = f.read()
                     except KeyError:
                         pass # Can't find fastqc_raw_data.txt in the zip file
+                    else:
+                        # Copy across the raw images
+                        for p in plot_fns:
+                            with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
+                                img = f.read()
+                            with open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "w") as f:
+                                f.write(img)
 
         if len(fastqc_raw_data) == 0:
             logging.debug("Could not find any FastQC reports in {}".format(analysis_dir))
@@ -248,10 +255,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         html = '<div id="fastqc_quality_overlay" style="height:500px;"></div> \
         <script type="text/javascript"> \
             fastqc_overlay_hist_data = {};\
+            var quals_pconfig = {{ \n\
+                "title": "Mean Quality Scores",\n\
+                "ylab": "Phred Score",\n\
+                "xlab": "Position (bp)",\n\
+                "ymin": 0,\n\
+                "tt_label": "Base {{point.x}}",\n\
+                "use_legend": false,\n\
+            }}; \n\
             $(function () {{ \
-                plot_xy_line_graph("#fastqc_quality_overlay", \
-                    fastqc_overlay_hist_data, "Mean Quality Scores", "Phred Score", "Position (bp)", \
-                    undefined, 0, undefined, undefined, "Base {{point.x}}"); \
+                plot_xy_line_graph("#fastqc_quality_overlay", fastqc_overlay_hist_data, quals_pconfig); \
             }}); \
         </script>'.format(json.dumps(data));
 
@@ -293,14 +306,19 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Order the table by the sample names
         parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
 
-        html = '<canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
+        html = '<p>Sample Name: <code id="fastqc_seq_heatmap_sname">-</code></p> \n\
+        <div id="fastqc_seq_original" style="display:none;"></div>\n\
+        <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
         <ul id="fastqc_seq_heatmap_key">\n\
-            <li>%G: <span id="fastqc_seq_heatmap_key_g">?</span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%A: <span id="fastqc_seq_heatmap_key_a">?</span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%T: <span id="fastqc_seq_heatmap_key_t">?</span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%C: <span id="fastqc_seq_heatmap_key_c">?</span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
+            <li>%G: <span id="fastqc_seq_heatmap_key_g"></span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%A: <span id="fastqc_seq_heatmap_key_a"></span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%T: <span id="fastqc_seq_heatmap_key_t"></span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%C: <span id="fastqc_seq_heatmap_key_c"></span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li><small class="text-muted">Values are approximate</small></li>\n\
         </ul>\n\
-        <p id="fastqc_seq_heatmap_footer"><small class="text-muted">Fuzzy after resizing the window? Hit your browser\'s refresh button..</small></p>\n\
+        <p class="text-muted" id="fastqc_seq_heatmap_click_instr">Click to show original FastQC sequence composition plot.</p>\n\
+        <div class="clearfix"></div> \n\
         <script type="text/javascript"> \n\
             fastqc_seq_content_data = {};\n\
             $(function () {{ \n\
@@ -347,11 +365,19 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         html = '<div id="fastqc_gc_overlay" style="height:500px;"></div> \
         <script type="text/javascript"> \
-            fastqc_overlay_gc_data = {};\
+            var fastqc_overlay_gc_data = {};\
+            var gc_pconfig = {{ \n\
+                "title": "Per Sequence GC Content",\n\
+                "ylab": "Count",\n\
+                "xlab": "%GC",\n\
+                "ymin": 0,\n\
+                "xmax": 100,\n\
+                "xmin": 0,\n\
+                "tt_label": "{{point.x}}% GC",\n\
+                "use_legend": false,\n\
+            }}; \n\
             $(function () {{ \
-                plot_xy_line_graph("#fastqc_gc_overlay", \
-                    fastqc_overlay_gc_data, "Per Sequence GC Content", "Count", "%GC", \
-                    undefined, 0, 100, 0, "{{point.x}}% GC"); \
+                plot_xy_line_graph("#fastqc_gc_overlay", fastqc_overlay_gc_data, gc_pconfig); \
             }}); \
         </script>'.format(json.dumps(data));
 
@@ -401,10 +427,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         html = '<div id="fastqc_adapter_overlay" style="height:500px;"></div> \
         <script type="text/javascript"> \
             fastqc_adapter_data = {};\
+            var adapter_pconfig = {{ \n\
+                "title": "Adapter Content",\n\
+                "ylab": "% of Sequences",\n\
+                "xlab": "Position",\n\
+                "ymax": 100,\n\
+                "ymin": 0,\n\
+                "tt_label": "Base {{point.x}}",\n\
+                "use_legend": false,\n\
+            }}; \n\
             $(function () {{ \
-                plot_xy_line_graph("#fastqc_adapter_overlay", \
-                    fastqc_adapter_data, "Adapter Content", "% of Sequences", "Position", \
-                    100, 0, undefined, undefined, "Base {{point.x}}"); \
+                plot_xy_line_graph("#fastqc_adapter_overlay", fastqc_adapter_data, adapter_pconfig); \
             }}); \
         </script>'.format(json.dumps(data));
 
