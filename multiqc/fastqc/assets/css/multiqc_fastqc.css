@@ -24,7 +24,7 @@
   background-color: black;
 }
 
-#fastqc_seq_heatmap_key_colourbar_g {
+#fastqc_seq_heatmap_key_colourbar_t {
   background: -webkit-linear-gradient(left, black, red);
   background: -o-linear-gradient(right, black, red);
   background: -moz-linear-gradient(right, black, red);
@@ -36,13 +36,13 @@
   background: -moz-linear-gradient(right, black, green);
   background: linear-gradient(to right, black, green);
 }
-#fastqc_seq_heatmap_key_colourbar_t {
+#fastqc_seq_heatmap_key_colourbar_c {
   background: -webkit-linear-gradient(left, black, blue);
   background: -o-linear-gradient(right, black, blue);
   background: -moz-linear-gradient(right, black, blue);
   background: linear-gradient(to right, black, blue);
 }
-#fastqc_seq_heatmap_key_colourbar_c {
+#fastqc_seq_heatmap_key_colourbar_g {
   background: -webkit-linear-gradient(left, black, white);
   background: -o-linear-gradient(right, black, white);
   background: -moz-linear-gradient(right, black, white);

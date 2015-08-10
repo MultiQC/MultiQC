@@ -92,18 +92,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'content': self.fastqc_quality_overlay_plot(histogram_data)
         })
 
-        # Section 3 - Per-base sequence content
-        seq_content = self.fastqc_seq_content(fastqc_raw_data)
-        self.sections.append({
-            'name': 'Per Base Sequence Content',
-            'content': self.fastqc_seq_heatmap(seq_content)
-        })
-
-        # Section 4 - GC Content
+        # Section 3 - GC Content
         gc_data = self.fastqc_gc_content(fastqc_raw_data)
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'content': self.fastqc_gc_overlay_plot(gc_data)
+        })
+
+        # Section 4 - Per-base sequence content
+        seq_content = self.fastqc_seq_content(fastqc_raw_data)
+        self.sections.append({
+            'name': 'Per Base Sequence Content',
+            'content': self.fastqc_seq_heatmap(seq_content)
         })
 
         # Section 5 - Adapter Content
@@ -276,82 +276,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "use_legend": false,\n\
                 "click_func": function () {{ \n\
                     fastqc_chg_original (this.series.name, fastqc_overlay_hist_data_names, \'_per_base_quality.png\', \'#fastqc_qual_original\', \'#fastqc_quals_click_instr\'); \n\
-                    $("#fastqc_qual_original").slideDown(); \n\
-                    $("#fastqc_quality_overlay").slideUp(); \n\
+                    $("#fastqc_qual_original").delay(100).slideDown(); \n\
+                    $("#fastqc_quality_overlay").delay(100).slideUp(); \n\
                 }} \n\
             }}; \n\
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_quality_overlay", fastqc_overlay_hist_data, quals_pconfig); \
             }}); \
         </script>'.format(json.dumps(data), json.dumps(names));
-
-        return html
-
-
-    def fastqc_seq_content(self, fastqc_raw_data):
-        """ Parse the 'Per base sequence content' data from fastqc_data.txt
-        Returns a 3D dict, sample names as first keys, second key the base
-        position and third key with the base ([ACTG]). Values contain percentages """
-
-        parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
-            parsed_data[s] = {}
-            in_module = False
-            for l in data.splitlines():
-                if l[:27] == ">>Per base sequence content":
-                    in_module = True
-                elif l == ">>END_MODULE":
-                    in_module = False
-                elif in_module is True:
-                    seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
-                    try:
-                        bp = int(seq_matches.group(1).split('-', 1)[0])
-                        parsed_data[s][bp] = {}
-                        parsed_data[s][bp]['base'] = seq_matches.group(1)
-                        parsed_data[s][bp]['G'] = float(seq_matches.group(2))
-                        parsed_data[s][bp]['A'] = float(seq_matches.group(3))
-                        parsed_data[s][bp]['T'] = float(seq_matches.group(4))
-                        parsed_data[s][bp]['C'] = float(seq_matches.group(5))
-                    except AttributeError:
-                        if l[:1] != '#':
-                            raise
-
-        return parsed_data
-
-    def fastqc_seq_heatmap (self, parsed_data):
-
-        # Order the table by the sample names
-        parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
-
-        # Get the sample names
-        names = parsed_data.keys()
-
-        html = '<p>Sample Name: <code id="fastqc_seq_heatmap_sname">-</code></p> \n\
-        <p class="text-muted" id="fastqc_seq_heatmap_click_instr">Click to show original FastQC sequence composition plot.</p>\n\
-        <div id="fastqc_seq_original" style="display:none;"> \n\
-            <div class="btn-group btn-group-sm" id="fastqc_seq_orig_nextprev"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default prev_btn">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default nxt_btn">Next &raquo;</a> \n\
-            </div>\n\
-            <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png"></p> \n\
-        </div>\n\
-        <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
-        <ul id="fastqc_seq_heatmap_key">\n\
-            <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
-            <li>%G: <span id="fastqc_seq_heatmap_key_g"></span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%A: <span id="fastqc_seq_heatmap_key_a"></span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%T: <span id="fastqc_seq_heatmap_key_t"></span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%C: <span id="fastqc_seq_heatmap_key_c"></span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li><small class="text-muted">Values are approximate</small></li>\n\
-        </ul>\n\
-        <div class="clearfix"></div> \n\
-        <script type="text/javascript"> \n\
-            fastqc_seq_content_data = {};\n\
-            fastqc_seq_content_names = {};\n\
-            $(function () {{ \n\
-                fastqc_seq_content_heatmap(fastqc_seq_content_data); \n\
-            }}); \n\
-        </script>'.format(json.dumps(parsed_data), json.dumps(names))
 
         return html
 
@@ -407,6 +339,75 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 plot_xy_line_graph("#fastqc_gc_overlay", fastqc_overlay_gc_data, gc_pconfig); \
             }}); \
         </script>'.format(json.dumps(data));
+
+        return html
+
+
+
+    def fastqc_seq_content(self, fastqc_raw_data):
+        """ Parse the 'Per base sequence content' data from fastqc_data.txt
+        Returns a 3D dict, sample names as first keys, second key the base
+        position and third key with the base ([ACTG]). Values contain percentages """
+
+        parsed_data = {}
+        for s, data in fastqc_raw_data.iteritems():
+            parsed_data[s] = {}
+            in_module = False
+            for l in data.splitlines():
+                if l[:27] == ">>Per base sequence content":
+                    in_module = True
+                elif l == ">>END_MODULE":
+                    in_module = False
+                elif in_module is True:
+                    seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
+                    try:
+                        bp = int(seq_matches.group(1).split('-', 1)[0])
+                        parsed_data[s][bp] = {}
+                        parsed_data[s][bp]['base'] = seq_matches.group(1)
+                        parsed_data[s][bp]['G'] = float(seq_matches.group(2))
+                        parsed_data[s][bp]['A'] = float(seq_matches.group(3))
+                        parsed_data[s][bp]['T'] = float(seq_matches.group(4))
+                        parsed_data[s][bp]['C'] = float(seq_matches.group(5))
+                    except AttributeError:
+                        if l[:1] != '#':
+                            raise
+
+        return parsed_data
+
+    def fastqc_seq_heatmap (self, parsed_data):
+
+        # Order the table by the sample names
+        parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
+
+        # Get the sample names
+        names = parsed_data.keys()
+
+        html = '<p>Sample Name: <code id="fastqc_seq_heatmap_sname">-</code></p> \n\
+        <p class="text-muted" id="fastqc_seq_heatmap_click_instr">Click to show original FastQC sequence composition plot.</p>\n\
+        <div id="fastqc_seq_original" style="display:none;"> \n\
+            <div class="btn-group btn-group-sm" id="fastqc_seq_orig_nextprev"> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default prev_btn">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default nxt_btn">Next &raquo;</a> \n\
+            </div>\n\
+            <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png"></p> \n\
+        </div>\n\
+        <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
+        <ul id="fastqc_seq_heatmap_key">\n\
+            <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
+            <li>%T: <span id="fastqc_seq_heatmap_key_t"></span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%C: <span id="fastqc_seq_heatmap_key_c"></span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%A: <span id="fastqc_seq_heatmap_key_a"></span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li>%G: <span id="fastqc_seq_heatmap_key_g"></span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
+            <li><small class="text-muted">Values are approximate</small></li>\n\
+        </ul>\n\
+        <div class="clearfix"></div> \n\
+        <script type="text/javascript"> \n\
+            fastqc_seq_content_data = {};\n\
+            fastqc_seq_content_names = {};\n\
+            $(function () {{ \n\
+                fastqc_seq_content_heatmap(fastqc_seq_content_data); \n\
+            }}); \n\
+        </script>'.format(json.dumps(parsed_data), json.dumps(names))
 
         return html
 
