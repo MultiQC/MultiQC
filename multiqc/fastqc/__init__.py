@@ -243,6 +243,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def fastqc_quality_overlay_plot (self, parsed_data):
 
         data = list()
+        names = list()
         for s in sorted(parsed_data):
             pairs = list()
             for k, p in enumerate(parsed_data[s]['base']):
@@ -251,31 +252,38 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'name': s,
                 'data': pairs
             })
+            names.append(s);
 
-        html = '<p>Sample Name: <code id="fastqc_qual_orig_sname">-</code></p> \n\
-        <p class="text-muted" id="fastqc_quals_click_instr">Click to show original FastQC sequence quality plot.</p>\n\
-        <div id="fastqc_qual_original" style="display:none;" class="original-plot"></div>\n\
+        html = '<p class="text-muted" id="fastqc_quals_click_instr">Click to show original FastQC sequence quality plot.</p>\n\
+        <div id="fastqc_qual_original" style="display:none;"> \n\
+            <p>Sample Name: <code>'+names[0]+'</code></p> \n\
+            <div class="btn-group btn-group-sm" id="fastqc_qual_orig_nextprev"> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default prev_btn">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default nxt_btn">Next &raquo;</a> \n\
+            </div>\n\
+            <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png"></p> \n\
+        </div>\n\
         <div id="fastqc_quality_overlay" style="height:500px;"></div> \
         <script type="text/javascript"> \
             fastqc_overlay_hist_data = {};\
+            fastqc_overlay_hist_data_names = {};\
             var quals_pconfig = {{ \n\
                 "title": "Mean Quality Scores",\n\
                 "ylab": "Phred Score",\n\
                 "xlab": "Position (bp)",\n\
                 "ymin": 0,\n\
-                "tt_label": "Base {{point.x}}",\n\
+                "tt_label": "</b>Click to show original plot.<br><b>Base {{point.x}}",\n\
                 "use_legend": false,\n\
                 "click_func": function () {{ \n\
-                    var img = \'<img style="max-width:800px; width:100%;" src="report_data/fastqc/\'+this.series.name+\'_per_base_quality.png">\'; \n\
-                    $("#fastqc_qual_original").html(img).delay(100).slideDown(); \n\
-                    $("#fastqc_quality_overlay").delay(100).slideUp(); \n\
-                    $("#fastqc_qual_orig_sname").text(this.series.name); \n\
-                    $("#fastqc_quals_click_instr").text("Click to show plot of all sample means."); \n\
-                }}, }}; \n\
+                    fastqc_chg_original (this.series.name, fastqc_overlay_hist_data_names, \'_per_base_quality.png\', \'#fastqc_qual_original\', \'#fastqc_quals_click_instr\'); \n\
+                    $("#fastqc_qual_original").slideDown(); \n\
+                    $("#fastqc_quality_overlay").slideUp(); \n\
+                }} \n\
+            }}; \n\
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_quality_overlay", fastqc_overlay_hist_data, quals_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data));
+        </script>'.format(json.dumps(data), json.dumps(names));
 
         return html
 
@@ -315,8 +323,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Order the table by the sample names
         parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
 
+        # Get the sample names
+        names = parsed_data.keys()
+
         html = '<p>Sample Name: <code id="fastqc_seq_heatmap_sname">-</code></p> \n\
-        <div id="fastqc_seq_original" style="display:none;" class="original-plot"></div>\n\
+        <p class="text-muted" id="fastqc_seq_heatmap_click_instr">Click to show original FastQC sequence composition plot.</p>\n\
+        <div id="fastqc_seq_original" style="display:none;"> \n\
+            <div class="btn-group btn-group-sm" id="fastqc_seq_orig_nextprev"> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default prev_btn">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default nxt_btn">Next &raquo;</a> \n\
+            </div>\n\
+            <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png"></p> \n\
+        </div>\n\
         <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
         <ul id="fastqc_seq_heatmap_key">\n\
             <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
@@ -326,14 +344,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             <li>%C: <span id="fastqc_seq_heatmap_key_c"></span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
             <li><small class="text-muted">Values are approximate</small></li>\n\
         </ul>\n\
-        <p class="text-muted" id="fastqc_seq_heatmap_click_instr">Click to show original FastQC sequence composition plot.</p>\n\
         <div class="clearfix"></div> \n\
         <script type="text/javascript"> \n\
             fastqc_seq_content_data = {};\n\
+            fastqc_seq_content_names = {};\n\
             $(function () {{ \n\
                 fastqc_seq_content_heatmap(fastqc_seq_content_data); \n\
             }}); \n\
-        </script>'.format(json.dumps(parsed_data))
+        </script>'.format(json.dumps(parsed_data), json.dumps(names))
 
         return html
 

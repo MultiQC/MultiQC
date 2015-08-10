@@ -55,6 +55,7 @@ function fastqc_seq_content_heatmap(data) {
         ctx.stroke();
     }
 
+    // Show the sequence base percentages on heatmap rollover
     // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
     $("#fastqc_seq_heatmap").mousemove(function(e) {
         var pos = findPos(this);
@@ -84,25 +85,57 @@ function fastqc_seq_content_heatmap(data) {
         $("#fastqc_seq_heatmap_key_colourbar_t span").css("margin-left", seq_t);
         $("#fastqc_seq_heatmap_key_colourbar_c span").css("margin-left", seq_c);
     });
+}
 
-    // Show the original plots
-    $("#fastqc_seq_heatmap").click(function(){
-      var img = '<img style="max-width:800px; width:100%;" src="report_data/fastqc/'+$('#fastqc_seq_heatmap_sname').text()+'_per_base_sequence_content.png">';
-      $("#fastqc_seq_original").html(img).delay(100).slideDown();
-      $(this).delay(100).slideUp();
-      $('#fastqc_seq_heatmap_key').slideUp();
-      $('#fastqc_seq_heatmap_click_instr').text('Click to show the MultiQC sequence composition heatmap.');
-    });
-    $("#fastqc_seq_original").click(function(){
-      $("#fastqc_seq_heatmap").slideDown();
-      $(this).slideUp();
-      $('#fastqc_seq_heatmap_key').slideDown();
-      $('#fastqc_seq_heatmap_click_instr').text('Click to show original FastQC sequence composition plot.');
-    });
+// Set up listeners etc on page load
+$(function () {
 
-    $('#fastqc_qual_original').click(function(){
-      $('#fastqc_quality_overlay').slideDown();
-      $(this).slideUp();
-      $('#fastqc_quals_click_instr').text('Click to show original FastQC sequence quality plot.');
-    });
+  // Show the original plots
+  $("#fastqc_seq_heatmap").click(function(){
+    var name = $('#fastqc_seq_heatmap_sname').text();
+    fastqc_chg_original (name, fastqc_overlay_hist_data_names, '_per_base_sequence_content.png', '#fastqc_seq_original', '#fastqc_seq_heatmap_click_instr');
+    $("#fastqc_seq_original").slideDown();
+    $(this).slideUp();
+    $('#fastqc_seq_heatmap_key').slideUp();
+  });
+  $("#fastqc_seq_original .original-plot").click(function(){
+    $("#fastqc_seq_heatmap").slideDown();
+    $('#fastqc_seq_original').slideUp();
+    $('#fastqc_seq_heatmap_key').slideDown();
+    $('#fastqc_seq_heatmap_click_instr').text('Click to show original FastQC sequence composition plot.');
+  });
+  $('#fastqc_seq_orig_nextprev a').click(function(e){
+    e.preventDefault();
+    var name = $(this).attr('href').substr(1);
+    fastqc_chg_original (name, fastqc_overlay_hist_data_names, '_per_base_sequence_content.png', '#fastqc_seq_original', '#fastqc_seq_heatmap_click_instr', '#fastqc_seq_heatmap_sname');
+  });
+
+  $('#fastqc_qual_original img.original-plot').click(function(){
+    $('#fastqc_quality_overlay').slideDown();
+    $('#fastqc_qual_original').slideUp();
+    $('#fastqc_quals_click_instr').text('Click to show original FastQC sequence quality plot.');
+  });
+
+  $('#fastqc_qual_orig_nextprev a').click(function(e){
+    e.preventDefault();
+    var name = $(this).attr('href').substr(1);
+    fastqc_chg_original (name, fastqc_overlay_hist_data_names, '_per_base_quality.png', '#fastqc_qual_original', '#fastqc_quals_click_instr');
+  });
+
+});
+
+// Click event for sequence quality plot
+function fastqc_chg_original (name, names, suffix, target, instr_target, name_target) {
+    if (name_target == undefined){ name_target = target+" code"; }
+    $(target+" img").attr('src', 'report_data/fastqc/'+name+suffix);
+    $(name_target).text(name);
+    var i = fastqc_overlay_hist_data_names.indexOf(name);
+    var l = fastqc_overlay_hist_data_names.length;
+    var n_i = i+1 < l ? i+1 : 0;
+    var p_i = i-1 >= 0 ? i-1 : l - 1;
+    var n = fastqc_overlay_hist_data_names[n_i];
+    var p = fastqc_overlay_hist_data_names[p_i];
+    $(target+" .prev_btn").attr('href', '#'+p);
+    $(target+" .nxt_btn").attr('href', '#'+n);
+    $(instr_target).text("Click plot to return to overview plot.");
 }

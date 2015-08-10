@@ -52,3 +52,7 @@
 #fastqc_seq_heatmap, .original-plot {
   cursor: pointer;
 }
+.original-plot {
+  max-width:800px;
+  width:100%;
+}
