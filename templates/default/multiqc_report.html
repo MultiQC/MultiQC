@@ -56,7 +56,9 @@
     {% for s in m.sections %}
       <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
       {{ s['content'] if s['content'] }}
+      {{ '<hr>' if not loop.last }}
     {% endfor %}
+    {{ '<hr>' if not loop.last }}
   {% endfor %}
 
 </div>

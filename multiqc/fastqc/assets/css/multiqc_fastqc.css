@@ -7,6 +7,12 @@
   text-transform: capitalize;
 }
 
+.fastqc_passfail_progress {
+  width: 100px;
+  display: inline-block;
+  margin: 0 0 -2px 20px;
+}
+
 #fastqc_seq_heatmap_key {
   display:inline-block;
   width: 250px;

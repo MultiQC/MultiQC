@@ -106,10 +106,14 @@ $(function () {
 
   // Add the pass / warning / fails counts to the headings
   $.each(fastqc_passfails, function(k, v){
-      $('#'+k).append('&nbsp;<span class="label label-success" title="FastQC: '+v['pass']+' samples passed" data-toggle="tooltip">'+v['pass']+'</span>');
-      $('#'+k).append('&nbsp;<span class="label label-warning" title="FastQC: '+v['warn']+' samples with warnings" data-toggle="tooltip">'+v['warn']+'</span>');
-      $('#'+k).append('&nbsp;<span class="label label-danger" title="FastQC: '+v['fail']+' samples failed" data-toggle="tooltip">'+v['fail']+'</span>');
-      $('#'+k).tooltip({selector: '[data-toggle="tooltip"]' });
+    var total = v['pass'] + v['warn'] + v['fail'];
+    var p_bar = '<div class="progress fastqc_passfail_progress"> \
+      <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed" data-toggle="tooltip">'+v['pass']+'</div> \
+      <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings" data-toggle="tooltip">'+v['warn']+'</div> \
+      <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed" data-toggle="tooltip">'+v['fail']+'</div> \
+    </div>';
+    $('#'+k).append(p_bar);
+    $('#'+k).tooltip({selector: '[data-toggle="tooltip"]' });
   });
 
   // Show the overlay plots again (clicking the original)
