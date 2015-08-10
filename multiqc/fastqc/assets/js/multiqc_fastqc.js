@@ -65,6 +65,12 @@ function fastqc_seq_content_heatmap(data) {
         var idx = Math.floor(y/s_height);
         var s_name = labels[idx];
         $('#fastqc_seq_original .s_name').text(s_name);
+        var s_status = fastqc_s_statuses["fastqc_seq_original"][s_name];
+        $("#fastqc_seq_original .s_status").text(s_status);
+        console.log(s_status);
+        if(s_status == 'pass'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-success'); }
+        if(s_status == 'warn'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-warning'); }
+        if(s_status == 'fail'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-danger'); }
         // Get position from x pos
         var this_bp = Math.floor((x/c_width)*max_bp);
         $('#fastqc_seq_heatmap_key_pos').text(this_bp+' bp');
@@ -119,8 +125,13 @@ $(function () {
 function fastqc_chg_original (name, target) {
     var suffix = $(target+" img.original-plot").data('fnsuffix');
     var names = fastqc_s_names[target.substr(1)];
+    var statuses = fastqc_s_statuses[target.substr(1)]
     $(target+" img.original-plot").attr('src', 'report_data/fastqc/'+name+suffix);
     $(target+" .s_name").text(name);
+    $(target+" .s_status").text(statuses[name]);
+    if(statuses[name] == 'pass'){ $(target+" .s_status").removeClass().addClass('s_status label label-success'); }
+    if(statuses[name] == 'warn'){ $(target+" .s_status").removeClass().addClass('s_status label label-warning'); }
+    if(statuses[name] == 'fail'){ $(target+" .s_status").removeClass().addClass('s_status label label-danger'); }
     var i = names.indexOf(name);
     var l = names.length;
     var n_i = i+1 < l ? i+1 : 0;

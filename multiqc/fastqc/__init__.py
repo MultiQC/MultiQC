@@ -77,45 +77,84 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         self.sections = list()
 
+        # Get the section pass and fails
+        passfails = self.fastqc_get_passfails(fastqc_raw_data)
+
         # Section 1 - Basic Stats
         parsed_stats = self.fastqc_basic_stats(fastqc_raw_data)
         stats_table = self.fastqc_stats_table(parsed_stats)
         self.sections.append({
             'name': 'Basic Stats',
+            'anchor': 'basic-stats',
             'content': stats_table
         })
 
         # Section 2 - Quality Histograms
         histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
         self.sections.append({
-            'name': 'Sequence Quality Histograms',
+            'name': 'Sequence Quality Histograms {}'.format(passfails['seq_qual']['html']),
+            'anchor': 'sequence-quality',
             'content': self.fastqc_quality_overlay_plot(histogram_data)
         })
 
         # Section 3 - GC Content
         gc_data = self.fastqc_gc_content(fastqc_raw_data)
         self.sections.append({
-            'name': 'Per Sequence GC Content',
+            'name': 'Per Sequence GC Content {}'.format(passfails['gc_content']['html']),
+            'anchor': 'gc-content',
             'content': self.fastqc_gc_overlay_plot(gc_data)
         })
 
         # Section 4 - Per-base sequence content
         seq_content = self.fastqc_seq_content(fastqc_raw_data)
         self.sections.append({
-            'name': 'Per Base Sequence Content',
+            'name': 'Per Base Sequence Content {}'.format(passfails['seq_content']['html']),
+            'anchor': 'sequence-content',
             'content': self.fastqc_seq_heatmap(seq_content)
         })
 
         # Section 5 - Adapter Content
         adapter_data = self.fastqc_adapter_content(fastqc_raw_data)
         self.sections.append({
-            'name': 'Adapter Content',
+            'name': 'Adapter Content {}'.format(passfails['adapter_content']['html']),
+            'anchor': 'adapter-content',
             'content': self.fastqc_adapter_overlay_plot(adapter_data)
         })
 
 
         # Copy across the required module files (CSS / Javascript etc)
         self.init_modfiles()
+
+
+    def fastqc_get_passfails(self, fastqc_raw_data):
+        """ Go through the headings for each report and count how many
+        of each module were passes, fails and warnings. Returns a 2D dict,
+        first key is section name, second keys are passes / fails / warnings
+        and html (html uses bootstrap labels) """
+
+        parsed_data = {
+            'seq_qual': {'pattern': '>>Per base sequence quality\s+(pass|warn|fail)'},
+            'seq_content': {'pattern': '>>Per base sequence content\s+(pass|warn|fail)'},
+            'gc_content': {'pattern': '>>Per sequence GC content\s+(pass|warn|fail)'},
+            'adapter_content': {'pattern': '>>Adapter Content\s+(pass|warn|fail)'},
+        }
+        counts = {'pass': 0, 'warn': 0, 'fail': 0, 'html': ''}
+        for p in parsed_data.keys():
+            parsed_data[p].update(counts)
+
+        for s, data in fastqc_raw_data.iteritems():
+            for p in parsed_data.keys():
+                match = re.search(parsed_data[p]['pattern'], data)
+                if match:
+                    parsed_data[p][match.group(1)] += 1
+
+        for p in parsed_data.keys():
+            parsed_data[p]['html'] += '<span class="label label-success" title="FastQC: {0} samples passed" data-toggle="tooltip">{0}</span> '.format(parsed_data[p]['pass'])
+            parsed_data[p]['html'] += '<span class="label label-warning" title="FastQC: {0} samples with warnings" data-toggle="tooltip">{0}</span> '.format(parsed_data[p]['warn'])
+            parsed_data[p]['html'] += '<span class="label label-danger" title="FastQC: {0} samples failed" data-toggle="tooltip">{0}</span> '.format(parsed_data[p]['fail'])
+
+        return parsed_data
+
 
     def fastqc_basic_stats(self, fastqc_raw_data):
         """ Parse fastqc_data.txt for basic stats.
@@ -212,6 +251,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         parsed_data = {}
         for s, data in fastqc_raw_data.iteritems():
             parsed_data[s] = {}
+            parsed_data[s]['status'] = ''
             parsed_data[s]['base'] = list()
             parsed_data[s]['mean'] = list()
             parsed_data[s]['median'] = list()
@@ -223,6 +263,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for l in data.splitlines():
                 if l[:27] == ">>Per base sequence quality":
                     in_module = True
+                    parsed_data[s]['status'] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
@@ -244,10 +285,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         data = list()
         names = list()
+        statuses = dict()
         for s in sorted(parsed_data):
             pairs = list()
             for k, p in enumerate(parsed_data[s]['base']):
                 pairs.append([int(p.split('-', 1)[0]), parsed_data[s]['mean'][k]])
+                statuses[s] = parsed_data[s]['status']
             data.append({
                 'name': s,
                 'data': pairs
@@ -257,7 +300,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         html = '<div id="fastqc_qual_original" class="fastqc_orig"> \n\
             <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
             <div class="showhide_orig" style="display:none;"> \n\
-                <p>Sample Name: <code class="s_name">'+names[0]+'</code></p> \n\
+                <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">status</span></h4> \n\
                 <div class="btn-group btn-group-sm"> \n\
                     <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_qual_original">&laquo; Previous</a> \n\
                     <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_qual_original">Next &raquo;</a> \n\
@@ -270,6 +313,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             fastqc_overlay_hist_data = {};\n\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
             fastqc_s_names["fastqc_qual_original"] = {};\
+            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+            fastqc_s_statuses["fastqc_qual_original"] = {};\
             var quals_pconfig = {{ \n\
                 "title": "Mean Quality Scores",\n\
                 "ylab": "Phred Score",\n\
@@ -286,7 +331,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_quality_overlay", fastqc_overlay_hist_data, quals_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data), json.dumps(names));
+        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses));
 
         return html
 
@@ -298,17 +343,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         parsed_data = {}
         for s, data in fastqc_raw_data.iteritems():
-            parsed_data[s] = {}
+            parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             for l in data.splitlines():
                 if l[:25] == ">>Per sequence GC content":
                     in_module = True
+                    parsed_data[s]['status'] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
                     gc_matches = re.search("([\d]+)\s+([\d\.E]+)", l)
                     try:
-                        parsed_data[s][int(gc_matches.group(1))] = float(gc_matches.group(2))
+                        parsed_data[s]['vals'][int(gc_matches.group(1))] = float(gc_matches.group(2))
                     except AttributeError:
                         pass
 
@@ -317,9 +363,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def fastqc_gc_overlay_plot (self, parsed_data):
         data = list()
         names = list()
+        statuses = dict()
         for s in sorted(parsed_data):
             pairs = list()
-            for k, p in iter(sorted(parsed_data[s].iteritems())):
+            statuses[s] = parsed_data[s]['status']
+            for k, p in iter(sorted(parsed_data[s]['vals'].iteritems())):
                 pairs.append([int(k), p])
             data.append({
                 'name': s,
@@ -330,7 +378,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         html = '<div id="fastqc_gc_original" class="fastqc_orig"> \n\
             <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
             <div class="showhide_orig" style="display:none;"> \n\
-                <p>Sample Name: <code class="s_name">'+names[0]+'</code></p> \n\
+                <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">status</span></h4> \n\
                 <div class="btn-group btn-group-sm"> \n\
                     <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_gc_original">&laquo; Previous</a> \n\
                     <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_gc_original">Next &raquo;</a> \n\
@@ -343,6 +391,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             var fastqc_overlay_gc_data = {};\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
             fastqc_s_names["fastqc_gc_original"] = {};\
+            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+            fastqc_s_statuses["fastqc_gc_original"] = {};\
             var gc_pconfig = {{ \n\
                 "title": "Per Sequence GC Content",\n\
                 "ylab": "Count",\n\
@@ -361,7 +411,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_gc_overlay", fastqc_overlay_gc_data, gc_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data), json.dumps(names));
+        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses));
 
         return html
 
@@ -374,23 +424,24 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         parsed_data = {}
         for s, data in fastqc_raw_data.iteritems():
-            parsed_data[s] = {}
+            parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             for l in data.splitlines():
                 if l[:27] == ">>Per base sequence content":
                     in_module = True
+                    parsed_data[s]['status'] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
                     seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
                     try:
                         bp = int(seq_matches.group(1).split('-', 1)[0])
-                        parsed_data[s][bp] = {}
-                        parsed_data[s][bp]['base'] = seq_matches.group(1)
-                        parsed_data[s][bp]['G'] = float(seq_matches.group(2))
-                        parsed_data[s][bp]['A'] = float(seq_matches.group(3))
-                        parsed_data[s][bp]['T'] = float(seq_matches.group(4))
-                        parsed_data[s][bp]['C'] = float(seq_matches.group(5))
+                        parsed_data[s]['vals'][bp] = {}
+                        parsed_data[s]['vals'][bp]['base'] = seq_matches.group(1)
+                        parsed_data[s]['vals'][bp]['G'] = float(seq_matches.group(2))
+                        parsed_data[s]['vals'][bp]['A'] = float(seq_matches.group(3))
+                        parsed_data[s]['vals'][bp]['T'] = float(seq_matches.group(4))
+                        parsed_data[s]['vals'][bp]['C'] = float(seq_matches.group(5))
                     except AttributeError:
                         if l[:1] != '#':
                             raise
@@ -399,15 +450,21 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def fastqc_seq_heatmap (self, parsed_data):
 
-        # Order the table by the sample names
-        parsed_data = collections.OrderedDict(sorted(parsed_data.items()))
+        # Get theh sample statuses
+        data = dict()
+        names = list()
+        statuses = dict()
+        for s in sorted(parsed_data):
+            names.append(s)
+            statuses[s] = parsed_data[s]['status']
+            data[s] = parsed_data[s]['vals']
 
-        # Get the sample names
-        names = parsed_data.keys()
+        # Order the table by the sample names
+        data = collections.OrderedDict(sorted(data.items()))
 
         html = '<div id="fastqc_seq_original" class="fastqc_orig"> \n\
             <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-            <p>Sample Name: <code class="s_name">-</code></p> \n\
+            <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 <div class="btn-group btn-group-sm"> \n\
                     <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_seq_original">&laquo; Previous</a> \n\
@@ -432,10 +489,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             fastqc_seq_content_data = {};\n\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
             fastqc_s_names["fastqc_seq_original"] = {};\n\
+            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+            fastqc_s_statuses["fastqc_seq_original"] = {};\
             $(function () {{ \n\
                 fastqc_seq_content_heatmap(fastqc_seq_content_data); \n\
             }}); \n\
-        </script>'.format(json.dumps(parsed_data), json.dumps(names))
+        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses))
 
         return html
 
@@ -447,32 +506,35 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         parsed_data = {}
         for s, data in fastqc_raw_data.iteritems():
-            parsed_data[s] = dict()
+            parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             adapter_types = []
             for l in data.splitlines():
                 if l[:17] == ">>Adapter Content":
                     in_module = True
+                    parsed_data[s]['status'] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
                     if l[:1] == '#':
                         adapter_types = l[1:].split("\t")[1:]
                         for a in adapter_types:
-                            parsed_data[s][a] = dict()
+                            parsed_data[s]['vals'][a] = dict()
                     else:
                         cols = l.split("\t")
                         pos = int(cols[0].split('-', 1)[0])
                         for idx, val in enumerate(cols[1:]):
-                            parsed_data[s][adapter_types[idx]][pos] = float(val)
+                            parsed_data[s]['vals'][adapter_types[idx]][pos] = float(val)
         return parsed_data
 
     def fastqc_adapter_overlay_plot (self, parsed_data):
 
         data = list()
         names = list()
+        statuses = dict()
         for s in sorted(parsed_data):
-            for a, d in parsed_data[s].iteritems():
+            statuses[s] = parsed_data[s]['status']
+            for a, d in parsed_data[s]['vals'].iteritems():
                 pairs = list()
                 for base, count in iter(sorted(d.iteritems())):
                     pairs.append([base, count])
@@ -485,7 +547,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         html = '<div id="fastqc_adapter_original" class="fastqc_orig"> \n\
             <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
             <div class="showhide_orig" style="display:none;"> \n\
-                <p>Sample Name: <code class="s_name">'+names[0]+'</code></p> \n\
+                <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">status</span></h4> \n\
                 <div class="btn-group btn-group-sm"> \n\
                     <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter_original">&laquo; Previous</a> \n\
                     <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter_original">Next &raquo;</a> \n\
@@ -498,6 +560,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             fastqc_adapter_data = {};\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
             fastqc_s_names["fastqc_adapter_original"] = {};\n\
+            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+            fastqc_s_statuses["fastqc_adapter_original"] = {};\
             var adapter_pconfig = {{ \n\
                 "title": "Adapter Content",\n\
                 "ylab": "% of Sequences",\n\
@@ -516,7 +580,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_adapter_overlay", fastqc_adapter_data, adapter_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data), json.dumps(names));
+        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses));
 
         return html
 

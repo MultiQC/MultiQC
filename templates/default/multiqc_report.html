@@ -46,7 +46,7 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ m.name }} <b class="caret"></b></a>
         <ul class="dropdown-menu">
         {% for s in m.sections %}
-          <li><a href="#{{ s['name']|lower|replace(' ','-') }}">{{ s['name'] }}</a></li>
+          <li><a href="#{{ s['anchor'] }}">{{ s['name'] }}</a></li>
         {% endfor %}
         </ul>
       </li>
@@ -71,7 +71,7 @@
   {% for m in modules %}
     <h2>{{ m.name }}</h2>
     {% for s in m.sections %}
-      <h3 id="{{ s['name']|lower|replace(' ','-') }}">{{ s['name'] }}</h3>
+      <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
       {{ s['content'] if s['content'] }}
     {% endfor %}
   {% endfor %}

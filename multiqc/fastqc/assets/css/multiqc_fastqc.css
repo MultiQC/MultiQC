@@ -1,5 +1,12 @@
 /* CSS for the FastQC MultiQC Module */
 
+.showhide_orig h4 {
+  margin-top: 0;
+}
+.s_status {
+  text-transform: capitalize;
+}
+
 #fastqc_seq_heatmap_key {
   display:inline-block;
   width: 250px;
