@@ -92,11 +92,11 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
 if __name__ == "__main__":
 
     # Overwrite any of the config options specified on the command line
-    parser = argparse.ArgumentParser("multiqc", description="MultiQC is a tool to create an aggreate report summarising \
-        the reslts of bioinformatics analyses across numerous samples. To run, supply with a directory to scan for \
+    parser = argparse.ArgumentParser("multiqc", description="MultiQC is a tool to create an aggregate report summarising \
+        the results of bioinformatics analyses across numerous samples. To run, supply with a directory to scan for \
         analysis results. To run here, use 'multiqc .'")
     parser.add_argument('analysis_dir', metavar='<analysis directory>',
-        help="Directory with analysis results to parse. Use '.' for current working direcory.")
+        help="Directory with analysis results to parse. Use '.' for current working directory.")
     parser.add_argument('-i', "--title", dest="title", default=None,
         help="Report title")
     parser.add_argument('-t', "--template", dest="template", default=config['template'], choices=avail_templates, metavar='TEMPLATE',
