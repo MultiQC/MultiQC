@@ -22,6 +22,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Static variables
         self.name = "FastQC"
+        self.anchor = "fastqc"
+        self.intro = '<p><a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">FastQC</a> \
+            is a quality control tool for high throughput sequence data, written by Simon Andrews at the Babraham Institute in Cambridge.</p>'
         self.analysis_dir = analysis_dir
         self.output_dir = output_dir
         self.data_dir = os.path.join(output_dir, 'report_data', 'fastqc')
@@ -79,6 +82,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Get the section pass and fails
         passfails = self.fastqc_get_passfails(fastqc_raw_data)
+        self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(passfails))
 
         # Section 1 - Basic Stats
         parsed_stats = self.fastqc_basic_stats(fastqc_raw_data)
@@ -92,7 +96,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Section 2 - Quality Histograms
         histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
         self.sections.append({
-            'name': 'Sequence Quality Histograms {}'.format(passfails['seq_qual']['html']),
+            'name': 'Sequence Quality Histograms',
             'anchor': 'sequence-quality',
             'content': self.fastqc_quality_overlay_plot(histogram_data)
         })
@@ -100,7 +104,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Section 3 - GC Content
         gc_data = self.fastqc_gc_content(fastqc_raw_data)
         self.sections.append({
-            'name': 'Per Sequence GC Content {}'.format(passfails['gc_content']['html']),
+            'name': 'Per Sequence GC Content',
             'anchor': 'gc-content',
             'content': self.fastqc_gc_overlay_plot(gc_data)
         })
@@ -108,7 +112,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Section 4 - Per-base sequence content
         seq_content = self.fastqc_seq_content(fastqc_raw_data)
         self.sections.append({
-            'name': 'Per Base Sequence Content {}'.format(passfails['seq_content']['html']),
+            'name': 'Per Base Sequence Content',
             'anchor': 'sequence-content',
             'content': self.fastqc_seq_heatmap(seq_content)
         })
@@ -116,7 +120,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Section 5 - Adapter Content
         adapter_data = self.fastqc_adapter_content(fastqc_raw_data)
         self.sections.append({
-            'name': 'Adapter Content {}'.format(passfails['adapter_content']['html']),
+            'name': 'Adapter Content',
             'anchor': 'adapter-content',
             'content': self.fastqc_adapter_overlay_plot(adapter_data)
         })
@@ -133,12 +137,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         and html (html uses bootstrap labels) """
 
         parsed_data = {
-            'seq_qual': {'pattern': '>>Per base sequence quality\s+(pass|warn|fail)'},
-            'seq_content': {'pattern': '>>Per base sequence content\s+(pass|warn|fail)'},
-            'gc_content': {'pattern': '>>Per sequence GC content\s+(pass|warn|fail)'},
-            'adapter_content': {'pattern': '>>Adapter Content\s+(pass|warn|fail)'},
+            'sequence-quality': {'pattern': '>>Per base sequence quality\s+(pass|warn|fail)'},
+            'sequence-content': {'pattern': '>>Per base sequence content\s+(pass|warn|fail)'},
+            'gc-content': {'pattern': '>>Per sequence GC content\s+(pass|warn|fail)'},
+            'adapter-content': {'pattern': '>>Adapter Content\s+(pass|warn|fail)'},
         }
-        counts = {'pass': 0, 'warn': 0, 'fail': 0, 'html': ''}
+        counts = {'pass': 0, 'warn': 0, 'fail': 0}
         for p in parsed_data.keys():
             parsed_data[p].update(counts)
 
@@ -147,11 +151,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 match = re.search(parsed_data[p]['pattern'], data)
                 if match:
                     parsed_data[p][match.group(1)] += 1
-
-        for p in parsed_data.keys():
-            parsed_data[p]['html'] += '<span class="label label-success" title="FastQC: {0} samples passed" data-toggle="tooltip">{0}</span> '.format(parsed_data[p]['pass'])
-            parsed_data[p]['html'] += '<span class="label label-warning" title="FastQC: {0} samples with warnings" data-toggle="tooltip">{0}</span> '.format(parsed_data[p]['warn'])
-            parsed_data[p]['html'] += '<span class="label label-danger" title="FastQC: {0} samples failed" data-toggle="tooltip">{0}</span> '.format(parsed_data[p]['fail'])
 
         return parsed_data
 

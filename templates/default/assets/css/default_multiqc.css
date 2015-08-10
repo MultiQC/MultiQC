@@ -7,60 +7,75 @@
 .table tr td {
     font-size:0.9em;
 }
+code {
+    background-color: #f3f3f3;
+    color: #666;
+}
 
 /* Page Template */
-
+@media only screen and (min-width: 900px){
+    .mainpage { margin-left: 270px; }
+    .footer { margin-left: 250px; }
+    .side-nav {
+        position: fixed;
+        width: 250px;
+        overflow: auto;
+    }
+}
 .mainpage {
     padding: 20px;
 }
+.side-nav {
+    height: 100%;
+    background-color: #ededed;
+    border-right: 1px solid #ccc;
+}
+.side-nav h1 {
+    font-size: 18px;
+    text-align: center;
+    margin:0;
+    padding: 20px 0;
+}
+.side-nav h1 img {
+    height: 26px;
+}
+.side-nav p {
+    font-size: 0.8em;
+    color: #999;
+    padding: 10px;
+}
+.side-nav ul {
+    margin:0;
+    padding:0;
+    list-style-type: none;
+}
+.side-nav > ul {
+    border-bottom: 1px solid #ccc;
+}
+.side-nav a {
+    display: inline-block;
+    width: 100%;
+    text-decoration: none;
+}
+.side-nav a:hover, .side-nav a:active, .side-nav a:focus {
+    background-color: #dedede;
+}
+.side-nav > ul > li > a{
+    padding: 10px;
+    border-top: 1px solid #ccc;
+}
+.side-nav > ul > li > ul > li > a {
+    padding: 5px 10px 5px 15px;
+    border-top: 1px solid #dedede;
+    font-size: 0.9em;
+}
+
 #page_title {
-    margin-top: 0;
+    margin: 0 0 20px;
 }
 #page_title img {
     width: 260px;
 }
-
- /* Modified from http://www.bootply.com/idWWJSmrKD */
-@media (min-width: 768px) {
-    .mainpage {
-        margin-left: 300px;
-    }
-
-    .navbar-collapse {
-        height: auto;
-        border-top: 0;
-        box-shadow: none;
-        max-height: none;
-        padding-left:0;
-        padding-right:0;
-    }
-    .navbar-collapse.collapse {
-        display: block !important;
-        width: auto !important;
-        padding-bottom: 0;
-        overflow: visible !important;
-    }
-    .navbar-collapse.in {
-        overflow-x: visible;
-    }
-
-    .navbar {
-    	max-width:300px;
-    	margin-right: 0;
-    	margin-left: 0;
-        float: left;
-    }
-    .navbar-nav, .navbar-nav > li, .navbar-left, .navbar-right, .navbar-header {
-        float:none !important;
-    }
-    .navbar-right .dropdown-menu {
-        left:0;right:auto;
-    }
-    .navbar-collapse .navbar-nav.navbar-right:last-child {
-        margin-right: 0;
-    }
-}
-
 
 
 .footer {
@@ -77,4 +92,14 @@
 .footer a {
     color: #999;
     text-decoration: underline;
+}
+
+/* Stop the headings from "head-butting" the top of the browser
+https://css-tricks.com/hash-tag-links-padding/ */
+h1:before, h2:before, h3:before, h4:before {
+  display: block;
+  content: " ";
+  margin-top: -20px;
+  height: 20px;
+  visibility: hidden;
 }

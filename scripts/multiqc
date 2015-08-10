@@ -73,7 +73,8 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
         raise IOError ("Error - could not load template '{}'".format(template_fn))
 
     # Use jinja2 to render the template and overwrite
-    report = j_template.render(title=title, modules=modules_output, creation_date=datetime.now().strftime("%Y-%m-%d %H:%m"))
+    creation_date = datetime.now().strftime("%Y-%m-%d %H:%m")
+    report = j_template.render(title=title, modules=modules_output, creation_date=creation_date, working_dir=os.getcwd())
     try:
         with open(template_fn, 'w') as f:
             print(report, file=f)

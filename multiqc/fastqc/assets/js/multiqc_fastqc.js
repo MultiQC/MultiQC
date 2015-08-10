@@ -104,6 +104,13 @@ function fastqc_seq_content_heatmap(data) {
 // Set up listeners etc on page load
 $(function () {
 
+  // Add the pass / warning / fails counts to the headings
+  $.each(fastqc_passfails, function(k, v){
+      $('#'+k).append(' <span class="label label-success" title="FastQC: '+v['pass']+' samples passed" data-toggle="tooltip">'+v['pass']+'</span>');
+      $('#'+k).append(' <span class="label label-warning" title="FastQC: '+v['warn']+' samples with warnings" data-toggle="tooltip">'+v['warn']+'</span>');
+      $('#'+k).append(' <span class="label label-danger" title="FastQC: '+v['fail']+' samples failed" data-toggle="tooltip">'+v['fail']+'</span>');
+  });
+
   // Show the overlay plots again (clicking the original)
   $('.original-plot').click(function(){
     $(this).closest('.fastqc_orig').next('.fastqc-overlay-plot').slideDown();
