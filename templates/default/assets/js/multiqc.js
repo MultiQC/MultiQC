@@ -126,7 +126,7 @@ function plot_xy_line_graph(div, data, config){
 		},
     tooltip: {
       headerFormat: '',
-			pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br><b>'+config['tt_label']+':</b> {point.y:.2f}',
+			pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br>'+config['tt_label']+': {point.y:.2f}',
 			useHTML: true
     },
     series: data

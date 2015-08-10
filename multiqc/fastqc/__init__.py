@@ -275,7 +275,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "ylab": "Phred Score",\n\
                 "xlab": "Position (bp)",\n\
                 "ymin": 0,\n\
-                "tt_label": "</b>Click to show original plot.<br><b>Base {{point.x}}",\n\
+                "tt_label": "Click to show original plot.<br><b>Base {{point.x}}</b>",\n\
                 "use_legend": false,\n\
                 "click_func": function () {{ \n\
                     fastqc_chg_original (this.series.name, \'#fastqc_qual_original\'); \n\
@@ -316,6 +316,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def fastqc_gc_overlay_plot (self, parsed_data):
         data = list()
+        names = list()
         for s in sorted(parsed_data):
             pairs = list()
             for k, p in iter(sorted(parsed_data[s].iteritems())):
@@ -324,10 +325,24 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'name': s,
                 'data': pairs
             })
+            names.append(s)
 
-        html = '<div id="fastqc_gc_overlay" style="height:500px;"></div> \
+        html = '<div id="fastqc_gc_original" class="fastqc_orig"> \n\
+            <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
+            <div class="showhide_orig" style="display:none;"> \n\
+                <p>Sample Name: <code class="s_name">'+names[0]+'</code></p> \n\
+                <div class="btn-group btn-group-sm"> \n\
+                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_gc_original">&laquo; Previous</a> \n\
+                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_gc_original">Next &raquo;</a> \n\
+                </div>\n\
+                <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"></p> \n\
+            </div>\n\
+        </div>\n\
+        <div id="fastqc_gc_overlay" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \
             var fastqc_overlay_gc_data = {};\
+            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
+            fastqc_s_names["fastqc_gc_original"] = {};\
             var gc_pconfig = {{ \n\
                 "title": "Per Sequence GC Content",\n\
                 "ylab": "Count",\n\
@@ -335,13 +350,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "ymin": 0,\n\
                 "xmax": 100,\n\
                 "xmin": 0,\n\
-                "tt_label": "{{point.x}}% GC",\n\
+                "tt_label": "Click to show original plot.<br><b>{{point.x}}% GC</b>",\n\
                 "use_legend": false,\n\
+                "click_func": function () {{ \n\
+                    fastqc_chg_original (this.series.name, \'#fastqc_gc_original\'); \n\
+                    $("#fastqc_gc_original .showhide_orig").delay(100).slideDown(); \n\
+                    $("#fastqc_gc_overlay").delay(100).slideUp(); \n\
+                }} \n\
             }}; \n\
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_gc_overlay", fastqc_overlay_gc_data, gc_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data));
+        </script>'.format(json.dumps(data), json.dumps(names));
 
         return html
 
@@ -450,6 +470,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def fastqc_adapter_overlay_plot (self, parsed_data):
 
         data = list()
+        names = list()
         for s in sorted(parsed_data):
             for a, d in parsed_data[s].iteritems():
                 pairs = list()
@@ -459,23 +480,43 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     'name': '{} - {}'.format(s, a),
                     'data': pairs
                 })
+            names.append(s)
 
-        html = '<div id="fastqc_adapter_overlay" style="height:500px;"></div> \
+        html = '<div id="fastqc_adapter_original" class="fastqc_orig"> \n\
+            <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
+            <div class="showhide_orig" style="display:none;"> \n\
+                <p>Sample Name: <code class="s_name">'+names[0]+'</code></p> \n\
+                <div class="btn-group btn-group-sm"> \n\
+                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter_original">&laquo; Previous</a> \n\
+                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter_original">Next &raquo;</a> \n\
+                </div>\n\
+                <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_adapter_content.png" data-fnsuffix="_adapter_content.png"></p> \n\
+            </div>\n\
+        </div>\n\
+        <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot" style="height:500px;"></div>\n\
         <script type="text/javascript"> \
             fastqc_adapter_data = {};\
+            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
+            fastqc_s_names["fastqc_adapter_original"] = {};\n\
             var adapter_pconfig = {{ \n\
                 "title": "Adapter Content",\n\
                 "ylab": "% of Sequences",\n\
                 "xlab": "Position",\n\
                 "ymax": 100,\n\
                 "ymin": 0,\n\
-                "tt_label": "Base {{point.x}}",\n\
+                "tt_label": "Click to show original plot.<br><b>Base {{point.x}}</b>",\n\
                 "use_legend": false,\n\
+                "click_func": function () {{ \n\
+                    var snames = this.series.name.split(" - ");\n\
+                    fastqc_chg_original (snames[0], \'#fastqc_adapter_original\'); \n\
+                    $("#fastqc_adapter_original .showhide_orig").delay(100).slideDown(); \n\
+                    $("#fastqc_adapter_overlay").delay(100).slideUp(); \n\
+                }} \n\
             }}; \n\
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_adapter_overlay", fastqc_adapter_data, adapter_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data));
+        </script>'.format(json.dumps(data), json.dumps(names));
 
         return html
 
