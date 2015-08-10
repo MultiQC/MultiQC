@@ -64,7 +64,7 @@ function fastqc_seq_content_heatmap(data) {
         // Get label from y position
         var idx = Math.floor(y/s_height);
         var s_name = labels[idx];
-        $('#fastqc_seq_heatmap_sname').text(s_name);
+        $('#fastqc_seq_original .s_name').text(s_name);
         // Get position from x pos
         var this_bp = Math.floor((x/c_width)*max_bp);
         $('#fastqc_seq_heatmap_key_pos').text(this_bp+' bp');
@@ -74,69 +74,60 @@ function fastqc_seq_content_heatmap(data) {
         var seq_t = (p[0]/255)*100;
         var seq_a = (p[1]/255)*100;
         var seq_c = (p[2]/255)*100;
-        var seq_g = 100 - (seq_g + seq_a + seq_t);
+        var seq_g = 100 - (seq_t + seq_a + seq_c);
         if (seq_g < 0){ seq_g = 0; }
-        $("#fastqc_seq_heatmap_key_g").text(seq_g.toFixed(0)+"%");
-        $("#fastqc_seq_heatmap_key_a").text(seq_a.toFixed(0)+"%");
         $("#fastqc_seq_heatmap_key_t").text(seq_t.toFixed(0)+"%");
         $("#fastqc_seq_heatmap_key_c").text(seq_c.toFixed(0)+"%");
-        $("#fastqc_seq_heatmap_key_colourbar_g span").css("margin-left", seq_g);
-        $("#fastqc_seq_heatmap_key_colourbar_a span").css("margin-left", seq_a);
+        $("#fastqc_seq_heatmap_key_a").text(seq_a.toFixed(0)+"%");
+        $("#fastqc_seq_heatmap_key_g").text(seq_g.toFixed(0)+"%");
         $("#fastqc_seq_heatmap_key_colourbar_t span").css("margin-left", seq_t);
         $("#fastqc_seq_heatmap_key_colourbar_c span").css("margin-left", seq_c);
+        $("#fastqc_seq_heatmap_key_colourbar_a span").css("margin-left", seq_a);
+        $("#fastqc_seq_heatmap_key_colourbar_g span").css("margin-left", seq_g);
+    });
+
+    // Show the original plot on click (Sequence Content)
+    $("#fastqc_seq_heatmap").click(function(){
+      var name = $('#fastqc_seq_original .s_name').text();
+      fastqc_chg_original (name, '#fastqc_seq_original');
+      $("#fastqc_seq_original .showhide_orig").delay(100).slideDown();
+      $("#fastqc_seq_heatmap_div").delay(100).slideUp();
     });
 }
 
 // Set up listeners etc on page load
 $(function () {
 
-  // Show the original plots - Sequence Quality
-  $('#fastqc_qual_original img.original-plot').click(function(){
-    $('#fastqc_quality_overlay').slideDown();
-    $('#fastqc_qual_original').slideUp();
-    $('#fastqc_quals_click_instr').text('Click to show original FastQC sequence quality plot.');
+  // Show the overlay plots again (clicking the original)
+  $('.original-plot').click(function(){
+    $(this).closest('.fastqc_orig').next('.fastqc-overlay-plot').slideDown();
+    $(this).closest('.showhide_orig').slideUp();
+    $(this).closest('.fastqc_orig').find('.instr').text('Click to show original FastQC plot.');
   });
 
-  $('#fastqc_qual_orig_nextprev a').click(function(e){
+  // prev / next buttons for original images
+  $('.fastqc_prev_btn, .fastqc_nxt_btn').click(function(e){
     e.preventDefault();
     var name = $(this).attr('href').substr(1);
-    fastqc_chg_original (name, fastqc_overlay_hist_data_names, '_per_base_quality.png', '#fastqc_qual_original', '#fastqc_quals_click_instr');
-  });
-
-  // Show the original plots - Sequence Content
-  $("#fastqc_seq_heatmap").click(function(){
-    var name = $('#fastqc_seq_heatmap_sname').text();
-    fastqc_chg_original (name, fastqc_overlay_hist_data_names, '_per_base_sequence_content.png', '#fastqc_seq_original', '#fastqc_seq_heatmap_click_instr');
-    $("#fastqc_seq_original").delay(100).slideDown();
-    $(this).delay(100).slideUp();
-    $('#fastqc_seq_heatmap_key').slideUp();
-  });
-  $("#fastqc_seq_original .original-plot").click(function(){
-    $("#fastqc_seq_heatmap").slideDown();
-    $('#fastqc_seq_original').slideUp();
-    $('#fastqc_seq_heatmap_key').slideDown();
-    $('#fastqc_seq_heatmap_click_instr').text('Click to show original FastQC sequence composition plot.');
-  });
-  $('#fastqc_seq_orig_nextprev a').click(function(e){
-    e.preventDefault();
-    var name = $(this).attr('href').substr(1);
-    fastqc_chg_original (name, fastqc_overlay_hist_data_names, '_per_base_sequence_content.png', '#fastqc_seq_original', '#fastqc_seq_heatmap_click_instr', '#fastqc_seq_heatmap_sname');
+    var target = $(this).data('target');
+    fastqc_chg_original (name, target);
   });
 
 });
 
-// Click event for sequence quality plot
-function fastqc_chg_original (name, names, suffix, target, instr_target, name_target) {
-    if (name_target == undefined){ name_target = target+" code"; }
-    $(target+" img").attr('src', 'report_data/fastqc/'+name+suffix);
-    $(name_target).text(name);
-    var i = fastqc_overlay_hist_data_names.indexOf(name);
-    var l = fastqc_overlay_hist_data_names.length;
+// Update a FastQC original plot
+function fastqc_chg_original (name, target) {
+    var suffix = $(target+" img.original-plot").data('fnsuffix');
+    var names = fastqc_s_names[target.substr(1)];
+    $(target+" img.original-plot").attr('src', 'report_data/fastqc/'+name+suffix);
+    $(target+" .s_name").text(name);
+    var i = names.indexOf(name);
+    var l = names.length;
     var n_i = i+1 < l ? i+1 : 0;
     var p_i = i-1 >= 0 ? i-1 : l - 1;
-    var n = fastqc_overlay_hist_data_names[n_i];
-    var p = fastqc_overlay_hist_data_names[p_i];
-    $(target+" .prev_btn").attr('href', '#'+p);
-    $(target+" .nxt_btn").attr('href', '#'+n);
-    $(instr_target).text("Click plot to return to overview plot.");
+    var n = names[n_i];
+    var p = names[p_i];
+    $(target+" .fastqc_prev_btn").attr('href', '#'+p);
+    $(target+" .fastqc_nxt_btn").attr('href', '#'+n);
+    $(target+" .instr").text("Click plot to return to overview plot.");
 }

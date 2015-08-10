@@ -254,19 +254,22 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             })
             names.append(s);
 
-        html = '<p class="text-muted" id="fastqc_quals_click_instr">Click to show original FastQC sequence quality plot.</p>\n\
-        <div id="fastqc_qual_original" style="display:none;"> \n\
-            <p>Sample Name: <code>'+names[0]+'</code></p> \n\
-            <div class="btn-group btn-group-sm" id="fastqc_qual_orig_nextprev"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default prev_btn">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default nxt_btn">Next &raquo;</a> \n\
+        html = '<div id="fastqc_qual_original" class="fastqc_orig"> \n\
+            <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
+            <div class="showhide_orig" style="display:none;"> \n\
+                <p>Sample Name: <code class="s_name">'+names[0]+'</code></p> \n\
+                <div class="btn-group btn-group-sm"> \n\
+                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_qual_original">&laquo; Previous</a> \n\
+                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_qual_original">Next &raquo;</a> \n\
+                </div>\n\
+                <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png" data-fnsuffix="_per_base_quality.png"></p> \n\
             </div>\n\
-            <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png"></p> \n\
         </div>\n\
-        <div id="fastqc_quality_overlay" style="height:500px;"></div> \
-        <script type="text/javascript"> \
-            fastqc_overlay_hist_data = {};\
-            fastqc_overlay_hist_data_names = {};\
+        <div id="fastqc_quality_overlay" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <script type="text/javascript"> \n\
+            fastqc_overlay_hist_data = {};\n\
+            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
+            fastqc_s_names["fastqc_qual_original"] = {};\
             var quals_pconfig = {{ \n\
                 "title": "Mean Quality Scores",\n\
                 "ylab": "Phred Score",\n\
@@ -275,8 +278,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "tt_label": "</b>Click to show original plot.<br><b>Base {{point.x}}",\n\
                 "use_legend": false,\n\
                 "click_func": function () {{ \n\
-                    fastqc_chg_original (this.series.name, fastqc_overlay_hist_data_names, \'_per_base_quality.png\', \'#fastqc_qual_original\', \'#fastqc_quals_click_instr\'); \n\
-                    $("#fastqc_qual_original").delay(100).slideDown(); \n\
+                    fastqc_chg_original (this.series.name, \'#fastqc_qual_original\'); \n\
+                    $("#fastqc_qual_original .showhide_orig").delay(100).slideDown(); \n\
                     $("#fastqc_quality_overlay").delay(100).slideUp(); \n\
                 }} \n\
             }}; \n\
@@ -382,28 +385,33 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Get the sample names
         names = parsed_data.keys()
 
-        html = '<p>Sample Name: <code id="fastqc_seq_heatmap_sname">-</code></p> \n\
-        <p class="text-muted" id="fastqc_seq_heatmap_click_instr">Click to show original FastQC sequence composition plot.</p>\n\
-        <div id="fastqc_seq_original" style="display:none;"> \n\
-            <div class="btn-group btn-group-sm" id="fastqc_seq_orig_nextprev"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default prev_btn">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default nxt_btn">Next &raquo;</a> \n\
+        html = '<div id="fastqc_seq_original" class="fastqc_orig"> \n\
+            <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
+            <p>Sample Name: <code class="s_name">-</code></p> \n\
+            <div class="showhide_orig" style="display:none;"> \n\
+                <div class="btn-group btn-group-sm"> \n\
+                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_seq_original">&laquo; Previous</a> \n\
+                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_seq_original">Next &raquo;</a> \n\
+                </div>\n\
+                <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> \n\
             </div>\n\
-            <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png"></p> \n\
         </div>\n\
-        <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
-        <ul id="fastqc_seq_heatmap_key">\n\
-            <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
-            <li>%T: <span id="fastqc_seq_heatmap_key_t"></span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%C: <span id="fastqc_seq_heatmap_key_c"></span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%A: <span id="fastqc_seq_heatmap_key_a"></span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li>%G: <span id="fastqc_seq_heatmap_key_g"></span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
-            <li><small class="text-muted">Values are approximate</small></li>\n\
-        </ul>\n\
+        <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
+            <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
+            <ul id="fastqc_seq_heatmap_key">\n\
+                <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
+                <li>%T: <span id="fastqc_seq_heatmap_key_t"></span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
+                <li>%C: <span id="fastqc_seq_heatmap_key_c"></span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
+                <li>%A: <span id="fastqc_seq_heatmap_key_a"></span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
+                <li>%G: <span id="fastqc_seq_heatmap_key_g"></span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
+                <li><small class="text-muted">Values are approximate</small></li>\n\
+            </ul>\n\
+        </div> \n\
         <div class="clearfix"></div> \n\
         <script type="text/javascript"> \n\
             fastqc_seq_content_data = {};\n\
-            fastqc_seq_content_names = {};\n\
+            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
+            fastqc_s_names["fastqc_seq_original"] = {};\n\
             $(function () {{ \n\
                 fastqc_seq_content_heatmap(fastqc_seq_content_data); \n\
             }}); \n\
