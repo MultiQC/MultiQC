@@ -35,7 +35,7 @@
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <a class="navbar-brand" href="#">MultiQC</a>
+    <a class="navbar-brand" href="#"><img src="assets/img/MultiQC_logo.png" title="MultiQC" style="height: 26px;"></a>
   </div>
 
   <!-- Collect the nav links, forms, and other content for toggling -->
@@ -63,7 +63,8 @@
 
 <div class="mainpage">
 
-  <h1 id="page_title">MultiQC{{ ': '+title if title != None }}</h1>
+  <h1 id="page_title"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></h1>
+  {{ '<h2>'+title+'</h2>' if title != None }}
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
   <p>Report generated: {{ creation_date }}.</p>
 
@@ -84,6 +85,8 @@
       <strong><a href="https://github.com/ewels/MultiQC" target="_blank">MultiQC</a></strong> -
       Written by <a href="http://phil.ewels.co.uk" target="_blank">Phil Ewels</a>, available on <a href="https://github.com/ewels/MultiQC" target="_blank">GitHub</a>.
       Report generated: {{ creation_date }}.</p>
+    <p>This report makes use of <a href="http://www.highcharts.com/" target="_blank">HighCharts</a>, <a href="https://jquery.com/" target="_blank">jQuery</a>,
+       <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> and <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a></p>
   </div>
 </div>
 

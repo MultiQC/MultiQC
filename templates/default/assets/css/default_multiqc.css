@@ -1,7 +1,6 @@
 /* CSS Styles for Default MultiQC Report Template */
 
 /* General Styles */
-
 .table-nostretch {
     width: auto;
 }
@@ -16,6 +15,9 @@
 }
 #page_title {
     margin-top: 0;
+}
+#page_title img {
+    width: 260px;
 }
 
  /* Modified from http://www.bootply.com/idWWJSmrKD */
