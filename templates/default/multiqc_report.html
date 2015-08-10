@@ -47,7 +47,7 @@
   <h1 id="page_title"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></h1>
   {{ '<h2>'+title+'</h2>' if title != None }}
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
-  <p>Report generated at {{ creation_date }} in <code>{{ working_dir if working_dir }}</code></p>
+  <p>Report generated on {{ creation_date }} in <code>{{ working_dir if working_dir }}</code></p>
 
 
   {% for m in modules %}
