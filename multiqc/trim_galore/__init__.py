@@ -106,10 +106,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             report['general_stats']['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
 
     def trimgalore_length_trimmed(self, tgalore_raw_data):
-        """ Parse the 'Per base sequence quality' data from fastqc_data.txt
-        Returns a 2D dict, sample names as first keys, then a dict of lists
-        containing base, mean, median, lower_quart, upper_quart, 10_percentile
-        and 90_percentile. """
+        """ Parse the counts of adapter lengths that have been trimmed """
 
         parsed_data = {}
         for s, data in tgalore_raw_data.iteritems():
