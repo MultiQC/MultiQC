@@ -15,7 +15,7 @@ import multiqc
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, analysis_dir, output_dir):
+    def __init__(self, report):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -25,10 +25,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.anchor = "fastqc"
         self.intro = '<p><a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">FastQC</a> \
             is a quality control tool for high throughput sequence data, written by Simon Andrews at the Babraham Institute in Cambridge.</p>'
-        self.analysis_dir = analysis_dir
-        self.output_dir = output_dir
-        self.data_dir = os.path.join(output_dir, 'report_data', 'fastqc')
-        os.mkdir(self.data_dir)
+        self.analysis_dir = report['analysis_dir']
+        self.output_dir = report['output_dir']
+        self.data_dir = os.path.join(self.output_dir, 'report_data', 'fastqc')
 
         # Find and load any FastQC reports
         fastqc_raw_data = {}
@@ -38,7 +37,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'per_sequence_gc_content.png',
             'adapter_content.png'
         ]
-        for root, dirnames, filenames in os.walk(analysis_dir):
+        for root, dirnames, filenames in os.walk(self.analysis_dir):
             # Extracted FastQC directory
             if root[-7:] == '_fastqc' and 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)
@@ -47,11 +46,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 with open (d_path, "r") as f:
                     fastqc_raw_data[s_name] = f.read()
                 # Copy across the raw images
+                if not os.path.exists(self.data_dir):
+                    os.makedirs(self.data_dir)
                 for p in plot_fns:
-                    try:
-                        shutil.copyfile(os.path.join(root, 'Images', p), os.path.join(self.data_dir, "{}_{}".format(s_name, p)))
-                    except:
-                        pass
+                    shutil.copyfile(os.path.join(root, 'Images', p), os.path.join(self.data_dir, "{}_{}".format(s_name, p)))
 
             # Zipped FastQC report
             for f in filenames:
@@ -66,6 +64,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         pass # Can't find fastqc_raw_data.txt in the zip file
                     else:
                         # Copy across the raw images
+                        if not os.path.exists(self.data_dir):
+                            os.makedirs(self.data_dir)
                         for p in plot_fns:
                             with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
                                 img = f.read()
@@ -76,6 +76,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             logging.debug("Could not find any FastQC reports in {}".format(analysis_dir))
             return
 
+
         logging.info("Found {} FastQC reports".format(len(fastqc_raw_data)))
 
         self.sections = list()
@@ -84,16 +85,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         passfails = self.fastqc_get_passfails(fastqc_raw_data)
         self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(passfails))
 
-        # Section 1 - Basic Stats
+        # Basic Stats Table
+        # Report table is immutable, so just updating it works
         parsed_stats = self.fastqc_basic_stats(fastqc_raw_data)
-        stats_table = self.fastqc_stats_table(parsed_stats)
-        self.sections.append({
-            'name': 'Basic Stats',
-            'anchor': 'basic-stats',
-            'content': stats_table
-        })
+        self.fastqc_stats_table(parsed_stats, report)
 
-        # Section 2 - Quality Histograms
+        # Section 1 - Quality Histograms
         histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
         self.sections.append({
             'name': 'Sequence Quality Histograms',
@@ -101,7 +98,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'content': self.fastqc_quality_overlay_plot(histogram_data)
         })
 
-        # Section 3 - GC Content
+        # Section 2 - GC Content
         gc_data = self.fastqc_gc_content(fastqc_raw_data)
         self.sections.append({
             'name': 'Per Sequence GC Content',
@@ -109,7 +106,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'content': self.fastqc_gc_overlay_plot(gc_data)
         })
 
-        # Section 4 - Per-base sequence content
+        # Section 3 - Per-base sequence content
         seq_content = self.fastqc_seq_content(fastqc_raw_data)
         self.sections.append({
             'name': 'Per Base Sequence Content',
@@ -117,7 +114,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'content': self.fastqc_seq_heatmap(seq_content)
         })
 
-        # Section 5 - Adapter Content
+        # Section 4 - Adapter Content
         adapter_data = self.fastqc_adapter_content(fastqc_raw_data)
         self.sections.append({
             'name': 'Adapter Content',
@@ -165,7 +162,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
             dups = re.search("#Total Deduplicated Percentage\s+([\d\.]+)", data)
             if dups:
-                parsed_data[s]['percent_duplicates'] = "{0:.2f}%".format(100 - float(dups.group(1)))
+                parsed_data[s]['percent_duplicates'] = "{0:.1f}%".format(100 - float(dups.group(1)))
 
             seqlen = re.search("Sequence length\s+([\d-]+)", data)
             if seqlen:
@@ -206,40 +203,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         return parsed_data
 
-    def fastqc_stats_table(self, parsed_stats):
-        """ Take the parsed stats from the FastQC report and turn it into a
-        nice attractive HTML table. """
+    def fastqc_stats_table(self, parsed_stats, report):
+        """ Take the parsed stats from the FastQC report and add them to the
+        basic stats table at the top of the report """
 
-        # Order the table by the sample names
-        parsed_stats = collections.OrderedDict(sorted(parsed_stats.items()))
+        report['basic_stats']['headers']['total_sequences_m'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Total Sequences (millions)">M Seqs</span></th>'
+        report['basic_stats']['headers']['sequence_length'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average Sequence Length (bp)">Length</span></th>'
+        report['basic_stats']['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average % GC Content">%&nbsp;GC</span></th>'
+        report['basic_stats']['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: % Duplicate Reads">%&nbsp;Dups</span></th>'
 
-        stats_table_headers = {
-            'percent_duplicates': '<span data-toggle="tooltip" title="% Duplicate Reads">%&nbsp; Dups</span>',
-            'sequence_length': '<span data-toggle="tooltip" title="Average Sequence Length (bp)">Length</span>',
-            'percent_gc': '<span data-toggle="tooltip" title="Average % GC Content">%&nbsp;GC</span>',
-            'total_sequences_m': '<span data-toggle="tooltip" title="Total Sequences (millions)">M Seqs</span>'
-        }
-        header_attrs = {
-            'percent_duplicates': 'class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"',
-            'sequence_length': 'class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"',
-            'percent_gc': 'class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="100" data-chroma-min="0"',
-            'total_sequences_m': 'class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"'
-        }
-        cell_attrs = {
-            'percent_duplicates': 'class="text-right"',
-            'sequence_length': 'class="text-right"',
-            'percent_gc': 'class="text-right"',
-            'total_sequences_m': 'class="text-right"'
-        }
-
-        # Use the base class dict_to_table to make a HTML table
-        parsed_stats = self.dict_to_table(parsed_stats,
-            colheaders=stats_table_headers,
-            table_attrs='class="table table-hover table-bordered table-responsive table-condensed table-nostretch"',
-            header_attrs=header_attrs,
-            cell_attrs=cell_attrs)
-
-        return parsed_stats
+        for samp, vals in parsed_stats.iteritems():
+            for k, v in vals.iteritems():
+                report['basic_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
 
     def fastqc_seq_quality(self, fastqc_raw_data):
         """ Parse the 'Per base sequence quality' data from fastqc_data.txt

@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import argparse
+import collections
 import jinja2
 import json
 import logging
@@ -58,12 +59,24 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
     # Make the report data directory
     os.mkdir(os.path.join(output_dir, 'report_data'))
 
+    # Create a dict with common fields
+    report = {
+        'title': title,
+        'creation_date': datetime.now().strftime("%Y-%m-%d, %H:%m"),
+        'working_dir': os.getcwd(),
+        'analysis_dir': analysis_dir,
+        'output_dir': output_dir,
+        'basic_stats': {
+            'headers': collections.OrderedDict(),
+            'rows': collections.defaultdict(lambda:dict())
+        }
+    }
+
     # Run the modules!
     modules_output = list()
     for m in run_modules:
         mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
-        modules_output.append(mod.MultiqcModule(analysis_dir, output_dir))
-
+        modules_output.append(mod.MultiqcModule(report))
 
     # Load the copied template
     try:
@@ -73,8 +86,7 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
         raise IOError ("Error - could not load template '{}'".format(template_fn))
 
     # Use jinja2 to render the template and overwrite
-    creation_date = datetime.now().strftime("%Y-%m-%d, %H:%m")
-    report = j_template.render(title=title, modules=modules_output, creation_date=creation_date, working_dir=os.getcwd())
+    report = j_template.render(report=report, modules=modules_output)
     try:
         with open(template_fn, 'w') as f:
             print(report, file=f)
@@ -103,7 +115,7 @@ if __name__ == "__main__":
         help="Report template to use. Choose from: {}".format(', '.join(avail_templates)))
     parser.add_argument("-o", "--output_dir", dest="output_dir", default=os.path.join(os.getcwd(), config['output_dir']),
         help="Output directory. Default: {}".format(config['output_dir']))
-    parser.add_argument('-m', "--module", dest="run_modules", default=avail_modules, action="append", nargs="*", choices=avail_modules, metavar='MODULE',
+    parser.add_argument('-m', "--module", dest="run_modules", default=avail_modules, nargs="*", choices=avail_modules, metavar='MODULE',
         help="Use only these modules. Choose from: {}".format(', '.join(avail_modules)))
     parser.add_argument("-f", "--force", dest="force_overwrite", action='store_true',
         help="Overwrite any existing reports")
