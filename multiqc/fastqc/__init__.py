@@ -87,7 +87,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-        parsed_stats = self.fastqc_basic_stats(fastqc_raw_data)
+        parsed_stats = self.fastqc_general_stats(fastqc_raw_data)
         self.fastqc_stats_table(parsed_stats, report)
 
         # Section 1 - Quality Histograms
@@ -152,7 +152,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         return parsed_data
 
 
-    def fastqc_basic_stats(self, fastqc_raw_data):
+    def fastqc_general_stats(self, fastqc_raw_data):
         """ Parse fastqc_data.txt for basic stats.
         Returns a 2D dict with basic stats, sample names as first keys,
         then statistic type as second key. """
@@ -207,14 +207,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Take the parsed stats from the FastQC report and add them to the
         basic stats table at the top of the report """
 
-        report['basic_stats']['headers']['total_sequences_m'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Total Sequences (millions)">M Seqs</span></th>'
-        report['basic_stats']['headers']['sequence_length'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average Sequence Length (bp)">Length</span></th>'
-        report['basic_stats']['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average % GC Content">%&nbsp;GC</span></th>'
-        report['basic_stats']['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: % Duplicate Reads">%&nbsp;Dups</span></th>'
+        report['general_stats']['headers']['total_sequences_m'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Total Sequences (millions)">M Seqs</span></th>'
+        report['general_stats']['headers']['sequence_length'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average Sequence Length (bp)">Length</span></th>'
+        report['general_stats']['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average % GC Content">%&nbsp;GC</span></th>'
+        report['general_stats']['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: % Duplicate Reads">%&nbsp;Dups</span></th>'
 
         for samp, vals in parsed_stats.iteritems():
             for k, v in vals.iteritems():
-                report['basic_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
+                report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
 
     def fastqc_seq_quality(self, fastqc_raw_data):
         """ Parse the 'Per base sequence quality' data from fastqc_data.txt

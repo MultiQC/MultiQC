@@ -53,8 +53,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-        parsed_stats = self.tgalore_basic_stats(tgalore_raw_data)
-        self.tgalore_basic_stats_table(parsed_stats, report)
+        parsed_stats = self.tgalore_general_stats(tgalore_raw_data)
+        self.tgalore_general_stats_table(parsed_stats, report)
 
         # Section 1 - Trimming Length Profiles
         length_trimmed = self.trimgalore_length_trimmed(tgalore_raw_data)
@@ -65,7 +65,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         })
 
 
-    def tgalore_basic_stats(self, tgalore_raw_data):
+    def tgalore_general_stats(self, tgalore_raw_data):
         """ Parse the single-digit stats for each sample from the Trim Galore!
         report. """
         parsed_stats = {}
@@ -97,13 +97,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         return parsed_stats
 
-    def tgalore_basic_stats_table(self, parsed_stats, report):
+    def tgalore_general_stats_table(self, parsed_stats, report):
         """ Take the parsed stats from the Trim Galore! report and add it to the
         basic stats table at the top of the report """
 
-        report['basic_stats']['headers']['bp_trimmed'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="% Total Base Pairs trimmed by Trim Galore!">Trimmed</span></th>'
+        report['general_stats']['headers']['bp_trimmed'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="% Total Base Pairs trimmed by Trim Galore!">Trimmed</span></th>'
         for samp, vals in parsed_stats.iteritems():
-            report['basic_stats']['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
+            report['general_stats']['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
 
     def trimgalore_length_trimmed(self, tgalore_raw_data):
         """ Parse the 'Per base sequence quality' data from fastqc_data.txt

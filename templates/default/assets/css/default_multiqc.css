@@ -34,6 +34,8 @@ code {
     font-size: 18px;
     text-align: center;
     margin:0;
+}
+.side-nav h1 a {
     padding: 20px 0;
 }
 .side-nav h1 img {
@@ -68,6 +70,7 @@ code {
     padding: 5px 10px 5px 15px;
     border-top: 1px solid #dedede;
     font-size: 0.9em;
+    color: #788fa4;
 }
 
 #page_title {

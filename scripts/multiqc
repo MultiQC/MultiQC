@@ -66,7 +66,7 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
         'working_dir': os.getcwd(),
         'analysis_dir': analysis_dir,
         'output_dir': output_dir,
-        'basic_stats': {
+        'general_stats': {
             'headers': collections.OrderedDict(),
             'rows': collections.defaultdict(lambda:dict())
         }

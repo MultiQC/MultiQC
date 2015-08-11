@@ -29,8 +29,8 @@
 <div class="side-nav">
   <h1><a href="#"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
   <ul>
-    {% if report['basic_stats']['headers']|length > 0 %}
-    <li><a href="#basic_stats">Basic Stats</a></li>
+    {% if report['general_stats']['headers']|length > 0 %}
+    <li><a href="#general_stats">General Stats</a></li>
     {% endif -%}
     {% for m in modules %}
     <li>
@@ -52,22 +52,22 @@
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
   <p>Report generated on {{ report['creation_date'] }} in <code>{{ report['working_dir'] }}</code></p>
 
-  {% if report['basic_stats']['headers']|length > 0 %}
-  <h2 id="basic_stats">Basic Statistics</h2>
+  {% if report['general_stats']['headers']|length > 0 %}
+  <h2 id="general_stats">General Statistics</h2>
   <table class="table table-hover table-bordered table-responsive table-condensed table-nostretch">
     <thead>
       <tr>
         <th></th>
-        {% for k, h in report['basic_stats']['headers'].iteritems() %}
+        {% for k, h in report['general_stats']['headers'].iteritems() %}
           {{ h }}
         {% endfor -%}
       </tr>
     </thead>
     <tbody>
-      {% for sn, r in report['basic_stats']['rows']|dictsort %}
+      {% for sn, r in report['general_stats']['rows']|dictsort %}
       <tr>
         <th>{{ sn }}</th>
-        {% for k, h in report['basic_stats']['headers'].iteritems() %}
+        {% for k, h in report['general_stats']['headers'].iteritems() %}
           {{ r[k] if r[k] else '<td></td>' }}
         {% endfor -%}
       </tr>
