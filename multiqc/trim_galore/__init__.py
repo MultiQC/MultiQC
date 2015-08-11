@@ -44,8 +44,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         tgalore_raw_data[s_name] = f.read()
 
         if len(tgalore_raw_data) == 0:
-            logging.debug("Could not find any Trim Galore! reports in {}".format(analysis_dir))
-            return
+            logging.debug("Could not find any Trim Galore! reports in {}".format(self.analysis_dir))
+            raise UserWarning
 
         logging.info("Found {} Trim Galore! reports".format(len(tgalore_raw_data)))
 

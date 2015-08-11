@@ -75,8 +75,11 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
     # Run the modules!
     modules_output = list()
     for m in run_modules:
-        mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
-        modules_output.append(mod.MultiqcModule(report))
+        try:
+            mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
+            modules_output.append(mod.MultiqcModule(report))
+        except UserWarning:
+            pass # No samples found
 
     # Load the copied template
     try:

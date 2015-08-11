@@ -73,8 +73,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 f.write(img)
 
         if len(fastqc_raw_data) == 0:
-            logging.debug("Could not find any FastQC reports in {}".format(analysis_dir))
-            return
+            logging.debug("Could not find any FastQC reports in {}".format(self.analysis_dir))
+            raise UserWarning
 
 
         logging.info("Found {} FastQC reports".format(len(fastqc_raw_data)))
