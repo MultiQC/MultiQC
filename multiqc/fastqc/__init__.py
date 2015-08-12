@@ -49,14 +49,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                 if fn_search:
                     s_name = fn_search.group(1)
-                if s_name[-7:] == '_fastqc':
-                    s_name = s_name[:-7]
-                if s_name[-3:] == '.gz':
-                    s_name = s_name[:-3]
-                if s_name[-3:] == '.fq':
-                    s_name = s_name[:-3]
-                if s_name[-6:] == '.fastq':
-                    s_name = s_name[:-6]
+                s_name = s_name.split("_fastqc",1)[0]
+                s_name = s_name.split(".gz",1)[0]
+                s_name = s_name.split(".fastq",1)[0]
+                s_name = s_name.split(".fq",1)[0]
 
                 fastqc_raw_data[s_name] = r_data
 

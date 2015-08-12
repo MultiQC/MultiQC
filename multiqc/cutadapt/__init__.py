@@ -44,7 +44,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = s_name.split(".gz",1)[0]
                             s_name = s_name.split(".fastq",1)[0]
                             s_name = s_name.split(".fq",1)[0]
-                            s_name = s_name.split(".gz",1)[0]
+
                             cutadapt_raw_data[s_name] = f.read()
 
         if len(cutadapt_raw_data) == 0:
