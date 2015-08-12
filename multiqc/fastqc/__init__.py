@@ -41,7 +41,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             # Extracted FastQC directory
             if 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)
-                s_name = s_name[:-7]
+                if s_name[-7:] == '_fastqc':
+                    s_name = s_name[:-7]
                 d_path = os.path.join(root, 'fastqc_data.txt')
                 with open (d_path, "r") as f:
                     fastqc_raw_data[s_name] = f.read()
@@ -61,7 +62,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
                             fastqc_raw_data[s_name] = f.read()
                     except KeyError:
-                        pass # Can't find fastqc_raw_data.txt in the zip file
+                        logging.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
                     else:
                         # Copy across the raw images
                         if not os.path.exists(self.data_dir):
