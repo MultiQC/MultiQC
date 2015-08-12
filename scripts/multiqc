@@ -81,6 +81,12 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
         except UserWarning:
             pass # No samples found
 
+    # Did we find anything?
+    if len(modules_output) == 0:
+        logging.error("Error - did not find any analysis results. Cleaning up..")
+        shutil.rmtree(output_dir)
+        return
+
     # Load the copied template
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(output_dir))
