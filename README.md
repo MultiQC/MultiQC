@@ -1,9 +1,18 @@
 # MultiQC
-Modular tool to aggregate results from bioinformatics analyses across many samples into a single report.
+MultiQC is a tool to aggregate bioinformatics results across many samples into
+a single report.
+
+It is written in Python and contains modules for a number of common tools.
+Currently, these include [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/),
+[FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
+and [Trim Galore!](http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/)
+(more to come soon - please suggest any ideas as a new
+[issue](https://github.com/ewels/MultiQC/issues)).
 
 ## Installation
 
-Either [download](https://github.com/ewels/MultiQC/archive/master.zip) or clone this repository to your computer:
+Either [download](https://github.com/ewels/MultiQC/archive/master.zip) or clone
+this repository to your computer:
 ```
 git clone https://github.com/ewels/MultiQC.git
 ```
@@ -18,7 +27,6 @@ Add the following line to your `~/.bashrc` or `~/.bash_profile` so that you can 
 ```
 export PATH="/path/to/MultiQC/scripts:$PATH"
 ```
-_(change `/path/to/MultiQC/` to your installation directory)_
 
 ## Usage
 
@@ -26,8 +34,11 @@ In the terminal, go to your analysis directory and run `multiqc .` - that's it!
 ```
 cd my_analysis
 multiqc .
-open multiqc_report/multiqc_report.html
 ```
+
+A reports is generated in `multiqc_report/multiqc_report.html` by default
+(use the `-o` flag to change this). A zip file of the report is also created
+to facilitate easy transfer / sharing.
 
 For more detailed instructions, run `multiqc -h`:
 

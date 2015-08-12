@@ -126,6 +126,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     title: {{ text: "FastQ Screen Results" }}, \n\
                     xAxis: {{ categories: fq_screen_categories }}, \n\
                     yAxis: {{ \n\
+                        max: 100, \n\
                         min: 0, \n\
                         title: {{ text: "Percentage Aligned" }} \n\
                     }}, \n\
