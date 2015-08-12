@@ -76,8 +76,10 @@ optional arguments:
 ## Contributions & Support
 Contributions and suggestions for new features are welcome, as are bug reports!
 Please create a new [issue](https://github.com/ewels/MultiQC/issues) for any
-of these. Pull requests with new code are always gladly received, see
-[CONTRIBUTING.md](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
+of these.
+
+Pull requests with new code are always gladly received, see the
+[contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
 for details.
 
 If in doubt, feel free to get in touch with the author:

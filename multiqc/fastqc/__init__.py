@@ -191,9 +191,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         try:
                             avg_len = len_matches.group(1)
                             if '-' in avg_len:
-                                maxlen = int(avg_len.split("-",1)[1])
-                                minlen = int(avg_len.split("-",1)[0])
+                                maxlen = float(avg_len.split("-",1)[1])
+                                minlen = float(avg_len.split("-",1)[0])
                                 avg_len = ((maxlen - minlen)/2) + minlen
+                            avg_len = int(avg_len)
                             total_bp += float(len_matches.group(2)) * avg_len
                             total_count += float(len_matches.group(2))
                         except AttributeError:

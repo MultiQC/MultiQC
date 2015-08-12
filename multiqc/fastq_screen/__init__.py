@@ -140,7 +140,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     plotOptions: {{ \n\
                         column: {{ \n\
                             pointPadding: 0, \n\
-                            groupPadding: 0, \n\
+                            groupPadding: 0.02, \n\
                             stacking: "normal" }} \n\
                     }}, \n\
                     series: fq_screen_data \n\
