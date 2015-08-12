@@ -39,7 +39,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         ]
         for root, dirnames, filenames in os.walk(self.analysis_dir):
             # Extracted FastQC directory
-            if root[-7:] == '_fastqc' and 'fastqc_data.txt' in filenames:
+            if 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)
                 s_name = s_name[:-7]
                 d_path = os.path.join(root, 'fastqc_data.txt')

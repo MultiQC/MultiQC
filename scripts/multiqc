@@ -52,7 +52,9 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
             if os.path.exists("{}.zip".format(output_dir)):
                 os.remove("{}.zip".format(output_dir))
         else:
-            raise OSError("Output directory {} already exists. Exiting. Use -f or --force to overwrite existing reports".format(output_dir))
+            logging.error("Error - Output directory {} already exists. Use -f or --force to overwrite existing reports".format(output_dir))
+            return
+            
     logging.info("Saving to {}".format(output_dir))
     shutil.copytree(template_dir, output_dir)
 
