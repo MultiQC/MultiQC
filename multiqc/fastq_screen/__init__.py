@@ -2,7 +2,7 @@
 
 """ MultiQC module to parse output from FastQ Screen """
 
-import collections
+from collections import OrderedDict
 import json
 import logging
 import os
@@ -53,7 +53,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = dict()
         for s, data in fq_screen_raw_data.iteritems():
-            parsed_data[s] = collections.OrderedDict()
+            parsed_data[s] = OrderedDict()
             for l in data.splitlines():
                 if l[:18] == "%Hit_no_libraries:":
                     org = 'No hits'
@@ -89,7 +89,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         categories = list()
         getCats = True
         data = list()
-        p_types = collections.OrderedDict()
+        p_types = OrderedDict()
         p_types['multiple_hits_multiple_libraries'] = {'col': '#7f0000', 'name': 'Multiple Hits, Multiple Libraries' }
         p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Libraries' }
         p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Library' }
@@ -133,7 +133,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         formatter: function () {{ \n\
                             return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" + \n\
                                 this.series.name + ": " + this.y + "%<br/>" + \n\
-                                "Total: " + this.point.stackTotal + "%"; \n\
+                                "Total Alignment: " + this.point.stackTotal + "%"; \n\
                         }}, \n\
                     }}, \n\
                     plotOptions: {{ \n\

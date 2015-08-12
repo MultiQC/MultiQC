@@ -3,7 +3,7 @@
 """ MultiQC module to parse output from FastQC
 """
 
-import collections
+from collections import OrderedDict
 import json
 import logging
 import os
@@ -434,7 +434,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             data[s] = parsed_data[s]['vals']
 
         # Order the table by the sample names
-        data = collections.OrderedDict(sorted(data.items()))
+        data = OrderedDict(sorted(data.items()))
 
         html = '<div id="fastqc_seq_original" class="fastqc_orig"> \n\
             <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
