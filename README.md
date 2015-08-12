@@ -5,7 +5,7 @@ a single report.
 It is written in Python and contains modules for a number of common tools.
 Currently, these include [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/),
 [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
-and [Trim Galore!](http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/)
+and [Cutadapt](https://code.google.com/p/cutadapt/)
 (more to come soon - please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues)).
 
@@ -21,11 +21,6 @@ Install the MultiQC python package:
 ```
 cd MultiQC
 python setup.py develop
-```
-
-Add the following line to your `~/.bashrc` or `~/.bash_profile` so that you can run MultiQC anywhere:
-```
-export PATH="/path/to/MultiQC/scripts:$PATH"
 ```
 
 ## Usage
@@ -64,8 +59,8 @@ optional arguments:
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         Output directory. Default: multiqc_report
   -m [MODULE [MODULE ...]], --module [MODULE [MODULE ...]]
-                        Use only these modules. Choose from: fastq_screen,
-                        fastqc, trim_galore
+                        Use only these modules. Choose from: cutadapt,
+                        fastq_screen, fastqc
   -f, --force           Overwrite any existing reports
   -l LEVEL, --logging LEVEL
                         Level of logging to be printed to the console. Choose

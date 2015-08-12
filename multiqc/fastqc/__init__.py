@@ -41,11 +41,25 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             # Extracted FastQC directory
             if 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)
-                if s_name[-7:] == '_fastqc':
-                    s_name = s_name[:-7]
                 d_path = os.path.join(root, 'fastqc_data.txt')
                 with open (d_path, "r") as f:
-                    fastqc_raw_data[s_name] = f.read()
+                    r_data = f.read()
+
+                # Get the sample name from inside the file if possible
+                fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
+                if fn_search:
+                    s_name = fn_search.group(1)
+                if s_name[-7:] == '_fastqc':
+                    s_name = s_name[:-7]
+                if s_name[-3:] == '.gz':
+                    s_name = s_name[:-3]
+                if s_name[-3:] == '.fq':
+                    s_name = s_name[:-3]
+                if s_name[-6:] == '.fastq':
+                    s_name = s_name[:-6]
+
+                fastqc_raw_data[s_name] = r_data
+
                 # Copy across the raw images
                 if not os.path.exists(self.data_dir):
                     os.makedirs(self.data_dir)
@@ -60,7 +74,23 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     fqc_zip = zipfile.ZipFile(os.path.join(root, f))
                     try:
                         with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
-                            fastqc_raw_data[s_name] = f.read()
+                            r_data = f.read()
+
+                        # Get the sample name from inside the file if possible
+                        fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
+                        if fn_search:
+                            s_name = fn_search.group(1)
+                        if s_name[-7:] == '_fastqc':
+                            s_name = s_name[:-7]
+                        if s_name[-3:] == '.gz':
+                            s_name = s_name[:-3]
+                        if s_name[-3:] == '.fq':
+                            s_name = s_name[:-3]
+                        if s_name[-6:] == '.fastq':
+                            s_name = s_name[:-6]
+
+                        fastqc_raw_data[s_name] = r_data
+
                     except KeyError:
                         logging.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
                     else:
