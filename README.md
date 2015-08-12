@@ -36,14 +36,13 @@ cd my_analysis
 multiqc .
 ```
 
-A reports is generated in `multiqc_report/multiqc_report.html` by default
-(use the `-o` flag to change this). A zip file of the report is also created
-to facilitate easy transfer / sharing.
+The report is created in `multiqc_report/multiqc_report.html` by default.
+A zip file of the report is also generated to facilitate easy transfer and sharing.
 
 For more detailed instructions, run `multiqc -h`:
 
 ```
-multiqc -h
+$ multiqc -h
 usage: multiqc [-h] [-i TITLE] [-t TEMPLATE] [-o OUTPUT_DIR]
                [-m [MODULE [MODULE ...]]] [-f] [-l LEVEL] [-v]
                <analysis directory>
@@ -65,10 +64,21 @@ optional arguments:
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         Output directory. Default: multiqc_report
   -m [MODULE [MODULE ...]], --module [MODULE [MODULE ...]]
-                        Use only these modules. Choose from: fastqc
+                        Use only these modules. Choose from: fastq_screen,
+                        fastqc, trim_galore
   -f, --force           Overwrite any existing reports
   -l LEVEL, --logging LEVEL
                         Level of logging to be printed to the console. Choose
-                        from 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+                        from 'debug', 'info', 'warning', 'error', 'critical'
   -v, --version         Print the version of the program and exit
 ```
+
+## Contributions & Support
+Contributions and suggestions for new features are welcome, as are bug reports!
+Please create a new [issue](https://github.com/ewels/MultiQC/issues) for any
+of these. Pull requests with new code are always gladly received, see
+[CONTRIBUTING.md](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
+for details.
+
+If in doubt, feel free to get in touch with the author:
+[@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
