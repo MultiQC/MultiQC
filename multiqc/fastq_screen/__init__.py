@@ -2,6 +2,7 @@
 
 """ MultiQC module to parse output from FastQ Screen """
 
+import collections
 import json
 import logging
 import os
@@ -41,35 +42,27 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         logging.info("Found {} FastQ Screen reports".format(len(fq_screen_raw_data)))
 
-        f = os.path.join('assets', 'js', 'multiqc_fastq_screen.js')
-        d = os.path.join(self.output_dir, os.path.dirname(f))
-        if not os.path.exists(d):
-            os.makedirs(d)
-        if not os.path.exists(os.path.join(self.output_dir, f)):
-            shutil.copy(os.path.join(os.path.dirname(__file__), f), os.path.join(self.output_dir, f))
-        self.js = [ f ]
-
         self.sections = list()
 
         # Section 1 - Alignment Profiles
         fq_screen_data = self.parse_fqscreen(fq_screen_raw_data)
         self.intro += self.fqscreen_plot(fq_screen_data)
-        # self.sections.append({
-        #     'name': 'FastQ Screen Profiles',
-        #     'anchor': 'fq_screen-profiles',
-        #     'content': self.fqscreen_plot(fq_screen_data)
-        # })
 
 
     def parse_fqscreen(self, fq_screen_raw_data):
         """ Parse the FastQ Screen output into a 3D dict """
-        parsed_data = {}
+        parsed_data = dict()
         for s, data in fq_screen_raw_data.iteritems():
-            parsed_data[s] = {}
+            parsed_data[s] = collections.OrderedDict()
             for l in data.splitlines():
                 if l[:18] == "%Hit_no_libraries:":
-                    parsed_data[s]['No hits'] = {'percentages':{}}
-                    parsed_data[s]['No hits']['percentages']['one_hit_one_library'] = float(l[19:])
+                    org = 'No hits'
+                    parsed_data[s][org] = {'percentages':{}}
+                    parsed_data[s][org]['percentages']['one_hit_one_library'] = float(l[19:])
+                    parsed_data[s][org]['percentages']['unmapped'] = 0
+                    parsed_data[s][org]['percentages']['multiple_hits_one_library'] = 0
+                    parsed_data[s][org]['percentages']['one_hit_multiple_libraries'] = 0
+                    parsed_data[s][org]['percentages']['multiple_hits_multiple_libraries'] = 0
                 else:
                     fqs = re.search(r"^(\w+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
                     if fqs:
@@ -86,10 +79,72 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s][org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
                         parsed_data[s][org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
                         parsed_data[s][org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
+            if len(parsed_data[s]) == 0:
+                logging.warning("Could not parse FastQ Screen report {}".format(s))
+                parsed_data.pop(s, None)
+
         return parsed_data
 
     def fqscreen_plot (self, parsed_data):
+        categories = list()
+        getCats = True
+        data = list()
+        p_types = collections.OrderedDict()
+        p_types['multiple_hits_multiple_libraries'] = {'col': '#7f0000', 'name': 'Multiple Hits, Multiple Libraries' }
+        p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Libraries' }
+        p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Library' }
+        p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Library' }
+        for k, t in p_types.iteritems():
+            first = True
+            for s in sorted(parsed_data):
+                thisdata = list()
+                if len(categories) > 0:
+                    getCats = False
+                for org in parsed_data[s]:
+                    thisdata.append(parsed_data[s][org]['percentages'][k])
+                    if getCats:
+                        categories.append(org)
+                td = {
+                    'name': t['name'],
+                    'stack': s,
+                    'data': thisdata,
+                    'color': t['col']
+                }
+                if first:
+                    first = False
+                else:
+                    td['linkedTo'] = ':previous'
+                data.append(td)
 
-        html = '<div id="fq_screen_plot" style="height:500px;"></div>'
+        html = '<div id="fq_screen_plot" style="height:500px;"></div> \n\
+        <script type="text/javascript"> \n\
+            fq_screen_data = {};\n\
+            fq_screen_categories = {};\n\
+            $(function () {{ \n\
+                $("#fq_screen_plot").highcharts({{ \n\
+                    chart: {{ type: "column" }}, \n\
+                    title: {{ text: "FastQ Screen Results" }}, \n\
+                    xAxis: {{ categories: fq_screen_categories }}, \n\
+                    yAxis: {{ \n\
+                        min: 0, \n\
+                        title: {{ text: "Percentage Aligned" }} \n\
+                    }}, \n\
+                    tooltip: {{ \n\
+                        formatter: function () {{ \n\
+                            return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" + \n\
+                                this.series.name + ": " + this.y + "%<br/>" + \n\
+                                "Total: " + this.point.stackTotal + "%"; \n\
+                        }}, \n\
+                    }}, \n\
+                    plotOptions: {{ \n\
+                        column: {{ \n\
+                            pointPadding: 0, \n\
+                            groupPadding: 0, \n\
+                            stacking: "normal" }} \n\
+                    }}, \n\
+                    series: fq_screen_data \n\
+                }}); \n\
+            }}); \n\
+        </script>'.format(json.dumps(data), json.dumps(categories))
 
         return html
