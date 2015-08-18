@@ -77,9 +77,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Parse the raw reports
         self.parse_bismark_reports()
 
+        # Basic Stats Table
+        # Report table is immutable, so just updating it works
+        self.bismark_stats_table(report)
+
         self.sections = list()
 
     def parse_bismark_reports (self):
+        """ Search the three types of Bismark report files for
+        numbers needed later in the module. """
+
         regexes = {
             'alignment': {
                 'total_reads': r"^Sequence(?:s| pairs) analysed in total:\s+(\d+)$",
@@ -89,7 +96,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             },
             'dedup': {
                 'aligned_reads': r"^Total number of alignments analysed in .+:\s+(\d+)$",
-                'dup_reads': r"^Total number duplicated alignments removed:\s+(\d+)$"
+                'dup_reads': r"^Total number duplicated alignments removed:\s+(\d+)",
+                'dup_reads_percent': r"^Total number duplicated alignments removed:\s+\d+\s+\(([\d\.]+)%\)",
+                'dedup_reads': r"^Total count of deduplicated leftover sequences:\s+(\d+)",
+                'dedup_reads_percent': r"^Total count of deduplicated leftover sequences:\s+\d+\s+\(([\d\.]+)% of total\)"
             },
             'methextract': {
                 'total_c': r"^Total number of C's analysed:\s+(\d+)$",
@@ -106,8 +116,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 for k, r in regexes[report_type].iteritems():
                     r_search = re.search(r, data[report_type], re.MULTILINE)
                     if r_search:
-                        self.bismark_raw_data[sn][k] = r_search.group(1)
-            try:
-                self.bismark_raw_data[sn]['unique_reads'] = self.bismark_raw_data[sn]['aligned_reads'] - self.bismark_raw_data[sn]['dup_reads']
-            except KeyError:
-                pass
+                        self.bismark_raw_data[sn][k] = float(r_search.group(1))
+
+    def bismark_stats_table(self, report):
+        """ Take the parsed stats from the Bismark reports and add them to the
+        basic stats table at the top of the report """
+
+        report['general_stats']['headers']['bismark_dedup_reads'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M Unique</span></th>'
+        report['general_stats']['headers']['bismark_dedup_reads_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">% Dups</span></th>'
+        report['general_stats']['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M Aligned</span></th>'
+
+        for sn, data in self.bismark_raw_data.iteritems():
+            report['general_stats']['rows'][sn]['bismark_dedup_reads'] = '<td class="text-right">{:.1f}</td>'.format(data['dedup_reads']/1000000)
+            report['general_stats']['rows'][sn]['bismark_dedup_reads_percent'] = '<td class="text-right">{}%</td>'.format(data['dup_reads_percent'])
+            report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
