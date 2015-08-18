@@ -55,9 +55,17 @@ $(function () {
 
         // Get the max and min values if not set with data attributes
         var maxval = $(this).data('chroma-max');
-        if(maxval === undefined){ maxval = Math.max.apply(Math, data); }
         var minval = $(this).data('chroma-min');
-        if(minval === undefined){ minval = Math.min.apply(Math, data); }
+        if(maxval === undefined || minval === undefined){
+          $.each(data, function(k, v){
+            if(v > maxval || maxval == undefined){ maxval = v; }
+            if(v < minval || minval == undefined){ minval = v; }
+          });
+        }
+        if(isNaN(minval) || isNaN(maxval)){
+          console.log('Could not calculate max or min value for '+$(this).text()+': ['+[minval, maxval]+']')
+          return true; // Skip to next loop
+        }
 
         // Go through table cells again, adding colour
         var i = 0;
