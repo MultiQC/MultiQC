@@ -55,7 +55,12 @@
 
   {% if report['general_stats']['headers']|length > 0 %}
   <h2 id="general_stats">General Statistics</h2>
-  <p><a href="#" id="genstat_table_showhide_dups" style="display:none;" data-ishidden="true">Click here to show suspected duplicate samples.</a></p>
+  <p id="general_stats_hide_buttons">Hide table rows:
+    <button class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_trimmed">Trimmed Samples</button>
+    <button class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_read1">Read 1</button>
+    <button class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_read2">Read 2</button>
+    <input id="genstat_table_showhide_custom" placeholder="Custom Pattern" class="form-control input-sm" style="width: 150px; display:inline;">
+  </p>
   <table id="general_stats_table" class="table table-hover table-bordered table-responsive table-condensed table-nostretch">
     <thead>
       <tr>

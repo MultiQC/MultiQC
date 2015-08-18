@@ -13,18 +13,35 @@ $(function () {
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
 
-  // Hide suspected duplicates in general stats table
-  hide_general_stats_duplicates();
-
-  $('#genstat_table_showhide_dups').click(function(e){
-    e.preventDefault();
-    if($(this).attr('data-ishidden') === 'true'){
-      $('.genstats-duplicate').show();
-      $(this).text('Click here to hide suspected duplicate samples.').attr('data-ishidden', 'false');
-    } else {
-      $('.genstats-duplicate').hide();
-      $(this).text('Click here to show suspected duplicate samples.').attr('data-ishidden', 'true');
+  // Show / Hide suspected duplicates in general stats table
+  var hidecounts = [];
+  var hidecounts_t = 0;
+  $("#general_stats_table tbody tr").each(function(){
+    var sn = $(this).find('th').text();
+    if(sn.indexOf('_val_1') > -1 || sn.indexOf('_val_2') > -1){
+      $(this).addClass('sample_trimmed');
+      hidecounts['sample_trimmed'] += 1; hidecounts_t += 1;
     }
+    if(sn.match(/_1$/) || sn.match(/_R1$/i)){
+      $(this).addClass('sample_read1');
+      hidecounts['sample_read1'] += 1; hidecounts_t += 1;
+    }
+    if(sn.match(/_2$/) || sn.match(/_R2$/i)){
+      $(this).addClass('sample_read2');
+      hidecounts['sample_read2'] += 1; hidecounts_t += 1;
+    }
+  });
+  if(hidecounts['sample_trimmed'] == 0){ $('.genstat_table_showhide[data-target="sample_trimmed"]').hide(); }
+  if(hidecounts['sample_read1'] == 0){ $('.genstat_table_showhide[data-target="sample_read1"]').hide(); }
+  if(hidecounts['sample_read2'] == 0){ $('.genstat_table_showhide[data-target="sample_read2"]').hide(); }
+  if(hidecounts_t == 0){ $('#general_stats_hide_buttons').hide(); }
+  $('.genstat_table_showhide').click(function(e){
+    e.preventDefault();
+    $(this).toggleClass('active');
+    showhide_general_stats_rows();
+  });
+  $('#genstat_table_showhide_custom').keyup(function(){
+    showhide_general_stats_rows();
   });
 
 
@@ -156,27 +173,30 @@ function plot_xy_line_graph(div, data, config){
   });
 }
 
-// Hide suspected duplicates in general stats table
-function hide_general_stats_duplicates(){
-  var gen_stats_snames = [];
-  var hidden_rows = 0;
-  $("#general_stats_table tbody tr").each(function(){
-    var sn = $(this).find('th').text();
-    var matched = 0;
-    $.each(gen_stats_snames, function(k, v){
-      if(sn.indexOf(v) > -1){
-        matched += 1;
-      }
-    });
-    if(matched > 0){
-      $(this).addClass('genstats-duplicate').hide();
-      hidden_rows += 1;
-    } else {
-      gen_stats_snames.push(sn)
+// Show / Hide rows in general stats table
+function showhide_general_stats_rows(){
+  var showhideclasses = [];
+  var hideclasses = [];
+  $('.genstat_table_showhide').each(function(){
+    showhideclasses.push($(this).data('target'));
+    if($(this).hasClass('active')){
+      hideclasses.push($(this).data('target'));
     }
   });
-  if(hidden_rows > 0){
-    $('#genstat_table_showhide_dups').text('Click here to show suspected duplicate samples.').show();
+  $.each(showhideclasses, function(k, v){
+    $('.'+v).show();
+  });
+  $.each(hideclasses, function(k, v){
+    $('.'+v).hide();
+  });
+  var custom_text = $('#genstat_table_showhide_custom').val().trim();
+  if(custom_text.length > 0){
+    $('#general_stats_table tbody tr').each(function(){
+      var sn = $(this).find('th').text();
+      if(sn.indexOf(custom_text) > -1){
+        $(this).hide();
+      }
+    });
   }
 }
 
