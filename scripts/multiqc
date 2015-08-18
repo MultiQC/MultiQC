@@ -12,7 +12,7 @@ import json
 import logging
 import os
 import shutil
-import sys
+import traceback
 import yaml
 from datetime import datetime
 
@@ -84,7 +84,7 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
         except UserWarning:
             pass # No samples found
         except:
-            logging.error("Error - module {} raised an exception: {}".format(m, sys.exc_info()))
+            logging.error("Error - module {} raised an exception: {}".format(m, traceback.format_exc()))
 
     # Did we find anything?
     if len(modules_output) == 0:
