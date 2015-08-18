@@ -48,7 +48,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 # Get the sample name from inside the file if possible
                 fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                 if fn_search:
-                    s_name = fn_search.group(1)
+                    s_name = fn_search.group(1).strip()
                 s_name = s_name.split("_fastqc",1)[0]
                 s_name = s_name.split(".gz",1)[0]
                 s_name = s_name.split(".fastq",1)[0]
@@ -60,7 +60,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if not os.path.exists(self.data_dir):
                     os.makedirs(self.data_dir)
                 for p in plot_fns:
-                    shutil.copyfile(os.path.join(root, 'Images', p), os.path.join(self.data_dir, "{}_{}".format(s_name, p)))
+                    try:
+                        shutil.copyfile(os.path.join(root, 'Images', p), os.path.join(self.data_dir, "{}_{}".format(s_name, p)))
+                    except IOError:
+                        pass
 
             # Zipped FastQC report
             for f in filenames:
@@ -75,7 +78,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         # Get the sample name from inside the file if possible
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                         if fn_search:
-                            s_name = fn_search.group(1)
+                            s_name = fn_search.group(1).strip()
                         if s_name[-7:] == '_fastqc':
                             s_name = s_name[:-7]
                         if s_name[-3:] == '.gz':
@@ -94,10 +97,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         if not os.path.exists(self.data_dir):
                             os.makedirs(self.data_dir)
                         for p in plot_fns:
-                            with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
-                                img = f.read()
-                            with open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "w") as f:
-                                f.write(img)
+                            try:
+                                with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
+                                    img = f.read()
+                                with open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "w") as f:
+                                    f.write(img)
+                            except KeyError:
+                                pass
 
         if len(fastqc_raw_data) == 0:
             logging.debug("Could not find any FastQC reports in {}".format(self.analysis_dir))
@@ -119,35 +125,39 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Section 1 - Quality Histograms
         histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
-        self.sections.append({
-            'name': 'Sequence Quality Histograms',
-            'anchor': 'sequence-quality',
-            'content': self.fastqc_quality_overlay_plot(histogram_data)
-        })
+        if len(histogram_data) > 0:
+            self.sections.append({
+                'name': 'Sequence Quality Histograms',
+                'anchor': 'sequence-quality',
+                'content': self.fastqc_quality_overlay_plot(histogram_data)
+            })
 
         # Section 2 - GC Content
         gc_data = self.fastqc_gc_content(fastqc_raw_data)
-        self.sections.append({
-            'name': 'Per Sequence GC Content',
-            'anchor': 'gc-content',
-            'content': self.fastqc_gc_overlay_plot(gc_data)
-        })
+        if len(gc_data) > 0:
+            self.sections.append({
+                'name': 'Per Sequence GC Content',
+                'anchor': 'gc-content',
+                'content': self.fastqc_gc_overlay_plot(gc_data)
+            })
 
         # Section 3 - Per-base sequence content
         seq_content = self.fastqc_seq_content(fastqc_raw_data)
-        self.sections.append({
-            'name': 'Per Base Sequence Content',
-            'anchor': 'sequence-content',
-            'content': self.fastqc_seq_heatmap(seq_content)
-        })
+        if len(seq_content) > 0:
+            self.sections.append({
+                'name': 'Per Base Sequence Content',
+                'anchor': 'sequence-content',
+                'content': self.fastqc_seq_heatmap(seq_content)
+            })
 
         # Section 4 - Adapter Content
         adapter_data = self.fastqc_adapter_content(fastqc_raw_data)
-        self.sections.append({
-            'name': 'Adapter Content',
-            'anchor': 'adapter-content',
-            'content': self.fastqc_adapter_overlay_plot(adapter_data)
-        })
+        if len(adapter_data) > 0:
+            self.sections.append({
+                'name': 'Adapter Content',
+                'anchor': 'adapter-content',
+                'content': self.fastqc_adapter_overlay_plot(adapter_data)
+            })
 
 
         # Copy across the required module files (CSS / Javascript etc)
@@ -240,9 +250,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         report['general_stats']['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average % GC Content">%&nbsp;GC</span></th>'
         report['general_stats']['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: % Duplicate Reads">%&nbsp;Dups</span></th>'
 
+        rowcounts = { 'total_sequences_m' : 0, 'sequence_length' : 0,
+            'percent_gc' : 0, 'percent_duplicates' : 0 }
+
         for samp, vals in parsed_stats.iteritems():
             for k, v in vals.iteritems():
                 report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
+                rowcounts[k] += 1
+
+        # Remove header if we don't have any filled cells for it (eg. % dups in older FastQC reports)
+        for k in rowcounts.keys():
+            if rowcounts[k] == 0:
+                report['general_stats']['headers'].pop(k, None)
 
     def fastqc_seq_quality(self, fastqc_raw_data):
         """ Parse the 'Per base sequence quality' data from fastqc_data.txt
@@ -280,6 +299,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s]['90_percentile'].append(float(quals.group(7)))
                     except AttributeError:
                         pass
+            if len(parsed_data[s]['mean']) == 0:
+                parsed_data.pop(s, None)
 
         return parsed_data
 
@@ -359,6 +380,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s]['vals'][int(gc_matches.group(1))] = float(gc_matches.group(2))
                     except AttributeError:
                         pass
+            if len(parsed_data[s]['vals']) == 0:
+                parsed_data.pop(s, None)
 
         return parsed_data
 
@@ -447,6 +470,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     except AttributeError:
                         if l[:1] != '#':
                             raise
+            if len(parsed_data[s]['vals']) == 0:
+                parsed_data.pop(s, None)
 
         return parsed_data
 
@@ -527,6 +552,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         pos = int(cols[0].split('-', 1)[0])
                         for idx, val in enumerate(cols[1:]):
                             parsed_data[s]['vals'][adapter_types[idx]][pos] = float(val)
+            if len(parsed_data[s]['vals']) == 0:
+                parsed_data.pop(s, None)
         return parsed_data
 
     def fastqc_adapter_overlay_plot (self, parsed_data):
