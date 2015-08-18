@@ -13,6 +13,21 @@ $(function () {
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
 
+  // Hide suspected duplicates in general stats table
+  hide_general_stats_duplicates();
+
+  $('#genstat_table_showhide_dups').click(function(e){
+    e.preventDefault();
+    if($(this).attr('data-ishidden') === 'true'){
+      $('.genstats-duplicate').show();
+      $(this).text('Click here to hide suspected duplicate samples.').attr('data-ishidden', 'false');
+    } else {
+      $('.genstats-duplicate').hide();
+      $(this).text('Click here to show suspected duplicate samples.').attr('data-ishidden', 'true');
+    }
+  });
+
+
   // Colour code table cells using chroma.js
   $('table').each(function(){
     var table = $(this);
@@ -131,6 +146,30 @@ function plot_xy_line_graph(div, data, config){
     },
     series: data
   });
+}
+
+// Hide suspected duplicates in general stats table
+function hide_general_stats_duplicates(){
+  var gen_stats_snames = [];
+  var hidden_rows = 0;
+  $("#general_stats_table tbody tr").each(function(){
+    var sn = $(this).find('th').text();
+    var matched = 0;
+    $.each(gen_stats_snames, function(k, v){
+      if(sn.indexOf(v) > -1){
+        matched += 1;
+      }
+    });
+    if(matched > 0){
+      $(this).addClass('genstats-duplicate').hide();
+      hidden_rows += 1;
+    } else {
+      gen_stats_snames.push(sn)
+    }
+  });
+  if(hidden_rows > 0){
+    $('#genstat_table_showhide_dups').text('Click here to show suspected duplicate samples.').show();
+  }
 }
 
 

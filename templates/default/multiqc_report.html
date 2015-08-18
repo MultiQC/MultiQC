@@ -55,7 +55,8 @@
 
   {% if report['general_stats']['headers']|length > 0 %}
   <h2 id="general_stats">General Statistics</h2>
-  <table class="table table-hover table-bordered table-responsive table-condensed table-nostretch">
+  <p><a href="#" id="genstat_table_showhide_dups" style="display:none;" data-ishidden="true">Click here to show suspected duplicate samples.</a></p>
+  <table id="general_stats_table" class="table table-hover table-bordered table-responsive table-condensed table-nostretch">
     <thead>
       <tr>
         <th></th>
