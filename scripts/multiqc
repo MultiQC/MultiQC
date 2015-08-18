@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 import yaml
 from datetime import datetime
 
@@ -54,7 +55,7 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
         else:
             logging.error("Error - Output directory {} already exists. Use -f or --force to overwrite existing reports".format(output_dir))
             return
-            
+
     logging.info("Saving to {}".format(output_dir))
     shutil.copytree(template_dir, output_dir)
 
@@ -82,6 +83,8 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
             modules_output.append(mod.MultiqcModule(report))
         except UserWarning:
             pass # No samples found
+        except:
+            logging.error("Error - module {} raised an exception: {}".format(m, sys.exc_info()))
 
     # Did we find anything?
     if len(modules_output) == 0:

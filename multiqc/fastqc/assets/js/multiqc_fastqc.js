@@ -120,7 +120,7 @@ $(function () {
   $('.original-plot').click(function(){
     $(this).closest('.fastqc_orig').next('.fastqc-overlay-plot').slideDown();
     $(this).closest('.showhide_orig').slideUp();
-    $(this).closest('.fastqc_orig').find('.instr').text('Click to show original FastQC plot.');
+    $(this).closest('.fastqc_orig').find('.instr').text('Click to show original FastQC plot.').fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
   });
 
   // prev / next buttons for original images
@@ -152,5 +152,5 @@ function fastqc_chg_original (name, target) {
     var p = names[p_i];
     $(target+" .fastqc_prev_btn").attr('href', '#'+p);
     $(target+" .fastqc_nxt_btn").attr('href', '#'+n);
-    $(target+" .instr").text("Click plot to return to overview plot.");
+    $(target+" .instr").text("Click plot to return to overview plot.").fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 }

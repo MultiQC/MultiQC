@@ -125,7 +125,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s][a_len] = {}
                         parsed_data[s][a_len]['count'] = int(r_seqs.group(2))
                         parsed_data[s][a_len]['expect'] = float(r_seqs.group(3))
-                        parsed_data[s][a_len]['obs_exp'] = int(r_seqs.group(2)) / float(r_seqs.group(3))
+                        if float(r_seqs.group(3)) > 0:
+                            parsed_data[s][a_len]['obs_exp'] = float(r_seqs.group(2)) / float(r_seqs.group(3))
+                        else:
+                            parsed_data[s][a_len]['obs_exp'] = float(r_seqs.group(2)) # Cheating, I know. Infinity is difficult to plot.
                     else:
                         break
         return parsed_data
