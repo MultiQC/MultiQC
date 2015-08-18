@@ -67,7 +67,6 @@ function fastqc_seq_content_heatmap(data) {
         $('#fastqc_seq_original .s_name').text(s_name);
         var s_status = fastqc_s_statuses["fastqc_seq_original"][s_name];
         $("#fastqc_seq_original .s_status").text(s_status);
-        console.log(s_status);
         if(s_status == 'pass'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-success'); }
         if(s_status == 'warn'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-warning'); }
         if(s_status == 'fail'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-danger'); }

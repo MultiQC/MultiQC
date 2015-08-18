@@ -135,35 +135,67 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def cutadapt_length_trimmed_plot (self, parsed_data):
 
-        data = list()
+        counts = list()
+        obsexp = list()
         for s in sorted(parsed_data):
-            pairs = list()
+            counts_pairs = list()
+            obsexp_pairs = list()
             for l, p in iter(sorted(parsed_data[s].iteritems())):
-                pairs.append([l, parsed_data[s][l]['obs_exp']])
-            data.append({
+                counts_pairs.append([l, parsed_data[s][l]['count']])
+                obsexp_pairs.append([l, parsed_data[s][l]['obs_exp']])
+            counts.append({
                 'name': s,
-                'data': pairs
+                'data': counts_pairs
+            })
+            obsexp.append({
+                'name': s,
+                'data': obsexp_pairs
             })
 
         html = '<p>This plot shows the number of reads with certain lengths of adapter trimmed. \n\
-        These counts are divided by the number expected due to sequencing errors. A defined peak \n\
+        Obs/Exp shows the raw counts divided by the number expected due to sequencing errors. A defined peak \n\
         may be related to adapter length. See the \n\
         <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
         for more information on how these numbers are generated.</p> \n\
-        <div id="cutadapt_length_trimmed" style="height:500px;"></div> \n\
+        <div class="btn-group">\n\
+            <button id="cutadapt_obsexp_button" class="btn btn-primary active">Obs/Exp</button>\n\
+            <button id="cutadapt_counts_button" class="btn btn-default">Counts</button>\n\
+        </div> \n\
+        <div id="cutadapt_length_obs_exp" style="height:500px;"></div> \n\
+        <div id="cutadapt_length_counts" style="height:500px; display:none;"></div> \n\
         <script type="text/javascript"> \n\
-            cutadapt_length_trimmed_data = {};\n\
-            var cutadapt_l_pconfig = {{ \n\
+            cutadapt_length_counts = {};\n\
+            cutadapt_length_obsexp = {};\n\
+            var cutadapt_l_c_pconfig = {{ \n\
                 "title": "Lengths Trimmed",\n\
-                "ylab": "Obs / Expected",\n\
+                "ylab": "Count",\n\
                 "xlab": "Length Trimmed (bp)",\n\
                 "ymin": 0,\n\
-                "tt_label": "<b>{{point.x}}bp trimmed</b>",\n\
+                "tt_label": "<b>{{point.x}} bp trimmed</b>",\n\
                 "use_legend": false,\n\
             }}; \n\
+            var cutadapt_l_oe_pconfig = cutadapt_l_c_pconfig; \n\
+            cutadapt_l_oe_pconfig["ylab"] = "Obs / Expected"; \n\
+            var counts_plotted = false; \n\
             $(function () {{ \
-                plot_xy_line_graph("#cutadapt_length_trimmed", cutadapt_length_trimmed_data, cutadapt_l_pconfig); \
+                plot_xy_line_graph("#cutadapt_length_obs_exp", cutadapt_length_obsexp, cutadapt_l_oe_pconfig); \n\
+                $("#cutadapt_counts_button").click(function(){{ \n\
+                    $("#cutadapt_length_counts").show(); \n\
+                    $("#cutadapt_length_obs_exp").hide(); \n\
+                    if(!counts_plotted){{ \n\
+                        plot_xy_line_graph("#cutadapt_length_counts", cutadapt_length_counts, cutadapt_l_c_pconfig); \n\
+                        counts_plotted = true; \n\
+                    }} \n\
+                    $("#cutadapt_counts_button").removeClass("btn-default").addClass("btn-primary active"); \n\
+                    $("#cutadapt_obsexp_button").addClass("btn-default").removeClass("btn-primary active"); \n\
+                }}) \n\
+                $("#cutadapt_obsexp_button").click(function(){{ \n\
+                    $("#cutadapt_length_obs_exp").show(); \n\
+                    $("#cutadapt_length_counts").hide(); \n\
+                    $("#cutadapt_obsexp_button").removeClass("btn-default").addClass("btn-primary active"); \n\
+                    $("#cutadapt_counts_button").addClass("btn-default").removeClass("btn-primary active"); \n\
+                }}) \n\
             }}); \
-        </script>'.format(json.dumps(data));
+        </script>'.format(json.dumps(counts), json.dumps(obsexp));
 
         return html

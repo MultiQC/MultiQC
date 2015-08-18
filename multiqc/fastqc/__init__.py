@@ -537,17 +537,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for s in sorted(parsed_data):
             statuses[s] = parsed_data[s]['status']
             for a, d in parsed_data[s]['vals'].iteritems():
-                pairs = list()
-                for base, count in iter(sorted(d.iteritems())):
-                    pairs.append([base, count])
-                data.append({
-                    'name': '{} - {}'.format(s, a),
-                    'data': pairs
-                })
+                if max(d.values()) >= 1:
+                    pairs = list()
+                    for base, count in iter(sorted(d.iteritems())):
+                        pairs.append([base, count])
+                    data.append({
+                        'name': '{} - {}'.format(s, a),
+                        'data': pairs
+                    })
             names.append(s)
 
         html = '<div id="fastqc_adapter_original" class="fastqc_orig"> \n\
-            <p class="text-muted instr">Click to show original FastQC plot.</p>\n\
+            <p class="text-muted">Samples with no adapter contamination are hidden. <span class="instr">Click to show original FastQC plot.</span></p>\n\
             <div class="showhide_orig" style="display:none;"> \n\
                 <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">status</span></h4> \n\
                 <div class="btn-group btn-group-sm"> \n\
