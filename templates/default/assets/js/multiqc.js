@@ -198,6 +198,7 @@ function plot_xy_line_graph(div, data, config){
 // Stacked Bar Graph
 function plot_stacked_bar_graph(div, cats, data, config){
   if (config['colors'] === undefined){ config['colors'] = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']  }
+  if (config['use_legend'] === undefined){ config['use_legend'] = true; }
   highcharts_plot_options[div] = {
     colors: config['colors'],
     chart: {
@@ -222,7 +223,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
     },
     plotOptions: {
       series: {
-        stacking: 'normal',
+        stacking: config['stacking'],
         groupPadding: 0.02
       }
     },
@@ -230,6 +231,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
       enabled: false
     },
     legend: {
+      enabled: config['use_legend'],
       reversed: true
     },
     tooltip: {

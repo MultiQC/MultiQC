@@ -91,6 +91,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'content': self.bismark_alignment_chart()
         })
 
+        # Section 2 - Methylation percentages
+        self.parse_methylation_chart_data()
+        self.sections.append({
+            'name': 'Cytosine Methylation',
+            'anchor': 'bismark-methylation',
+            'content': self.bismark_methlyation_chart()
+        })
+
     def parse_bismark_reports (self):
         """ Search the three types of Bismark report files for
         numbers needed later in the module. """
@@ -235,9 +243,58 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "title": "Bismark Alignment Scores",\n\
                 "ylab": "# Reads",\n\
                 "ymin": 0,\n\
-                "use_legend": false,\n\
+                "stacking": "normal" \n\
             }}; \n\
             $(function () {{ \
                 plot_stacked_bar_graph("#bismark_alignment_plot", bismark_alignment_cats, bismark_alignment_data, bismark_alignment_pconfig); \
             }}); \
         </script>'.format(json.dumps(self.bismark_sn_categories), json.dumps(self.bismark_aln_plot_series));
+
+
+    def parse_methylation_chart_data (self):
+        """ Make a data structure suitable for HighCharts for the methylation plot """
+        self.bismark_meth_helptext = "Numbers taken from methylation extraction report."
+        self.bismark_meth_snames = list()
+        series = OrderedDict()
+        series['Unmethylated CpG'] = list()
+        series['Methylated CpG'] = list()
+        for sn in sorted(self.bismark_raw_data.keys()):
+            self.bismark_meth_snames.append(sn)
+            try:
+                series['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['me_unmeth_cpg']))
+                series['Methylated CpG'].append(int(self.bismark_raw_data[sn]['me_meth_cpg']))
+            except KeyError:
+                series['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['aln_unmeth_cpg']))
+                series['Methylated CpG'].append(int(self.bismark_raw_data[sn]['aln_meth_cpg']))
+                self.bismark_meth_helptext = "Numbers taken from Bismark alignment report"
+
+        self.bismark_meth_plot_series = list()
+        for cat in series:
+            self.bismark_meth_plot_series.append({
+                'name': cat,
+                'data': series[cat]
+            })
+
+    def bismark_methlyation_chart (self):
+        """ Make the HighCharts HTML to plot the methylation calls """
+
+        return '<p class="text-muted">{}<p> \n\
+        <div class="btn-group switch_group"> \n\
+			<button class="btn btn-default btn-sm" data-action="set_numbers" data-target="#bismark_methylation_plot">Number of Calls</button> \n\
+			<button class="btn btn-default btn-sm active" data-action="set_percent" data-target="#bismark_methylation_plot">Percentages</button> \n\
+		</div> \n\
+        <div id="bismark_methylation_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <script type="text/javascript"> \n\
+            bismark_methylation_cats = {};\n\
+            bismark_methylation_data = {};\n\
+            var bismark_methylation_pconfig = {{ \n\
+                "colors": ["#0d233a", "#2f7ed8", "#8bbc21", "#1aadce", "#910000", "#492970"], \n\
+                "title": "Cytosine CpG Methylation",\n\
+                "ylab": "% Calls",\n\
+                "ymin": 0,\n\
+                "stacking": "percent" \n\
+            }}; \n\
+            $(function () {{ \
+                plot_stacked_bar_graph("#bismark_methylation_plot", bismark_methylation_cats, bismark_methylation_data, bismark_methylation_pconfig); \
+            }}); \
+        </script>'.format(self.bismark_meth_helptext, json.dumps(self.bismark_meth_snames), json.dumps(self.bismark_meth_plot_series));
