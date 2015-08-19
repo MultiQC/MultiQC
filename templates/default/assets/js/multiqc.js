@@ -13,6 +13,23 @@ $(function () {
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
 
+  // Switch a HighCharts plot between values and percentages
+  $('.switch_group button').click(function(e){
+    e.preventDefault();
+    $(this).siblings('button.active').removeClass('active');
+    $(this).addClass('active');
+    var target = $(this).data('target');
+    var action = $(this).data('action');
+    var plot_options = highcharts_plot_options[target];
+    if(action == 'set_percent' || action == 'set_numbers'){
+      var sym = (action == 'set_percent') ? '%' : '#';
+      var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
+      plot_options.yAxis.title.text = sym+plot_options.yAxis.title.text.substr(1)
+      plot_options.plotOptions.series.stacking = stack_type;
+      $(target).highcharts(plot_options);
+    }
+  });
+
   // Show / Hide suspected duplicates in general stats table
   var hidecounts = [];
   var hidecounts_t = 0;
@@ -110,6 +127,11 @@ $(function () {
 // HighCharts Plotting Functions
 ////////////////////////////////////////////////
 
+// We store the config options for every graph in an array.
+// This way, we can go back and change them via button clicks
+// eg. Changing an axis from values to percentages
+highcharts_plot_options = [];
+
 // Basic Line Graph
 function plot_xy_line_graph(div, data, config){
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
@@ -176,7 +198,7 @@ function plot_xy_line_graph(div, data, config){
 // Stacked Bar Graph
 function plot_stacked_bar_graph(div, cats, data, config){
   if (config['colors'] === undefined){ config['colors'] = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']  }
-  $(div).highcharts({
+  highcharts_plot_options[div] = {
     colors: config['colors'],
     chart: {
       type: 'bar',
@@ -228,7 +250,8 @@ function plot_stacked_bar_graph(div, cats, data, config){
       useHTML: true
     },
     series: data
-  });
+  }
+  $(div).highcharts(highcharts_plot_options[div]);
 }
 
 

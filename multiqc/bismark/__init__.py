@@ -222,7 +222,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def bismark_alignment_chart (self):
         """ Make the HighCharts HTML to plot the alignment rates """
 
-        return '<div id="bismark_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        return '<div class="btn-group switch_group"> \n\
+			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bismark_alignment_plot">Number of Reads</button> \n\
+			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bismark_alignment_plot">Percentages</button> \n\
+		</div> \n\
+        <div id="bismark_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
             bismark_alignment_cats = {};\n\
             bismark_alignment_data = {};\n\
