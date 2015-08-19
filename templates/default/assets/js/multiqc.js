@@ -13,7 +13,7 @@ $(function () {
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
 
-  // Switch a HighCharts plot between values and percentages
+  // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
     e.preventDefault();
     $(this).siblings('button.active').removeClass('active');
@@ -21,11 +21,22 @@ $(function () {
     var target = $(this).data('target');
     var action = $(this).data('action');
     var plot_options = highcharts_plot_options[target];
+    // Switch between values and percentages
     if(action == 'set_percent' || action == 'set_numbers'){
       var sym = (action == 'set_percent') ? '%' : '#';
       var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
       plot_options.yAxis.title.text = sym+plot_options.yAxis.title.text.substr(1)
       plot_options.plotOptions.series.stacking = stack_type;
+      $(target).highcharts(plot_options);
+    }
+    // Switch data source
+    if(action == 'set_data'){
+      var ds = $(this).data('newdata');
+      plot_options.series = window[ds];
+      var colslice = $(this).data('colslice');
+      if(!isNaN(parseFloat(colslice)) && isFinite(colslice)){
+        plot_options.colors = highcharts_plot_colors[target].slice(colslice);
+      }
       $(target).highcharts(plot_options);
     }
   });
@@ -131,6 +142,7 @@ $(function () {
 // This way, we can go back and change them via button clicks
 // eg. Changing an axis from values to percentages
 highcharts_plot_options = [];
+highcharts_plot_colors = [];
 
 // Basic Line Graph
 function plot_xy_line_graph(div, data, config){
@@ -198,6 +210,7 @@ function plot_xy_line_graph(div, data, config){
 // Stacked Bar Graph
 function plot_stacked_bar_graph(div, cats, data, config){
   if (config['colors'] === undefined){ config['colors'] = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']  }
+  highcharts_plot_colors[div] = config['colors'];
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
   highcharts_plot_options[div] = {
     colors: config['colors'],

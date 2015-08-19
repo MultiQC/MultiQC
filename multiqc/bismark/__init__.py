@@ -112,10 +112,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'discarded_reads': r"^Sequence(?:s| pairs) which were discarded because genomic sequence could not be extracted:\s+(\d+)$",
                 'aln_total_c': r"^Total number of C's analysed:\s+(\d+)$",
                 'aln_meth_cpg': r"^Total methylated C's in CpG context:\s+(\d+)",
-                'aln_meth_cph': r"^Total methylated C's in CHG context:\s+(\d+)",
+                'aln_meth_chg': r"^Total methylated C's in CHG context:\s+(\d+)",
                 'aln_meth_chh': r"^Total methylated C's in CHH context:\s+(\d+)",
                 'aln_unmeth_cpg': r"^Total unmethylated C's in CpG context:\s+(\d+)",
-                'aln_unmeth_cph': r"^Total unmethylated C's in CHG context:\s+(\d+)",
+                'aln_unmeth_chg': r"^Total unmethylated C's in CHG context:\s+(\d+)",
                 'aln_unmeth_chh': r"^Total unmethylated C's in CHH context:\s+(\d+)",
                 'aln_percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
                 'aln_percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
@@ -134,10 +134,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 # These calls are typically done after deduplication
                 'me_total_c': r"^Total number of C's analysed:\s+(\d+)$",
                 'me_meth_cpg': r"^Total methylated C's in CpG context:\s+(\d+)",
-                'me_meth_cph': r"^Total methylated C's in CHG context:\s+(\d+)",
+                'me_meth_chg': r"^Total methylated C's in CHG context:\s+(\d+)",
                 'me_meth_chh': r"^Total methylated C's in CHH context:\s+(\d+)",
                 'me_unmeth_cpg': r"^Total C to T conversions in CpG context:\s+(\d+)",
-                'me_unmeth_cph': r"^Total C to T conversions in CHG context:\s+(\d+)",
+                'me_unmeth_chg': r"^Total C to T conversions in CHG context:\s+(\d+)",
                 'me_unmeth_chh': r"^Total C to T conversions in CHH context:\s+(\d+)",
                 'me_percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
                 'me_percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
@@ -255,24 +255,46 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Make a data structure suitable for HighCharts for the methylation plot """
         self.bismark_meth_helptext = "Numbers taken from methylation extraction report."
         self.bismark_meth_snames = list()
-        series = OrderedDict()
-        series['Unmethylated CpG'] = list()
-        series['Methylated CpG'] = list()
+        series = {
+            'cpg': OrderedDict([('Unmethylated CpG', list()), ('Methylated CpG', list())]),
+            'chg': OrderedDict([('Unmethylated CHG', list()), ('Methylated CHG', list())]),
+            'chh': OrderedDict([('Unmethylated CHH', list()), ('Methylated CHH', list())]),
+        }
         for sn in sorted(self.bismark_raw_data.keys()):
             self.bismark_meth_snames.append(sn)
             try:
-                series['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['me_unmeth_cpg']))
-                series['Methylated CpG'].append(int(self.bismark_raw_data[sn]['me_meth_cpg']))
+                series['cpg']['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['me_unmeth_cpg']))
+                series['cpg']['Methylated CpG'].append(int(self.bismark_raw_data[sn]['me_meth_cpg']))
+                series['chg']['Unmethylated CHG'].append(int(self.bismark_raw_data[sn]['me_unmeth_chg']))
+                series['chg']['Methylated CHG'].append(int(self.bismark_raw_data[sn]['me_meth_chg']))
+                series['chh']['Unmethylated CHH'].append(int(self.bismark_raw_data[sn]['me_unmeth_chh']))
+                series['chh']['Methylated CHH'].append(int(self.bismark_raw_data[sn]['me_meth_chh']))
             except KeyError:
-                series['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['aln_unmeth_cpg']))
-                series['Methylated CpG'].append(int(self.bismark_raw_data[sn]['aln_meth_cpg']))
+                series['cpg']['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['aln_unmeth_cpg']))
+                series['cpg']['Methylated CpG'].append(int(self.bismark_raw_data[sn]['aln_meth_cpg']))
+                series['chg']['Unmethylated CHG'].append(int(self.bismark_raw_data[sn]['aln_unmeth_chg']))
+                series['chg']['Methylated CHG'].append(int(self.bismark_raw_data[sn]['aln_meth_chg']))
+                series['chh']['Unmethylated CHH'].append(int(self.bismark_raw_data[sn]['aln_unmeth_chh']))
+                series['chh']['Methylated CHH'].append(int(self.bismark_raw_data[sn]['aln_meth_chh']))
                 self.bismark_meth_helptext = "Numbers taken from Bismark alignment report"
 
-        self.bismark_meth_plot_series = list()
-        for cat in series:
-            self.bismark_meth_plot_series.append({
+        self.bismark_meth_cpg_series = list()
+        self.bismark_meth_chg_series = list()
+        self.bismark_meth_chh_series = list()
+        for cat in series['cpg']:
+            self.bismark_meth_cpg_series.append({
                 'name': cat,
-                'data': series[cat]
+                'data': series['cpg'][cat]
+            })
+        for cat in series['chg']:
+            self.bismark_meth_chg_series.append({
+                'name': cat,
+                'data': series['chg'][cat]
+            })
+        for cat in series['chh']:
+            self.bismark_meth_chh_series.append({
+                'name': cat,
+                'data': series['chh'][cat]
             })
 
     def bismark_methlyation_chart (self):
@@ -282,19 +304,26 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         <div class="btn-group switch_group"> \n\
 			<button class="btn btn-default btn-sm" data-action="set_numbers" data-target="#bismark_methylation_plot">Number of Calls</button> \n\
 			<button class="btn btn-default btn-sm active" data-action="set_percent" data-target="#bismark_methylation_plot">Percentages</button> \n\
+		</div> &nbsp; &nbsp; \n\
+        <div class="btn-group switch_group"> \n\
+			<button class="btn btn-default btn-sm active" data-action="set_data" data-newdata="bismark_methylation_cpg_data" data-colslice="0" data-target="#bismark_methylation_plot">CpG</button> \n\
+			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chg_data" data-colslice="2" data-target="#bismark_methylation_plot">CHG</button> \n\
+			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chh_data" data-colslice="4" data-target="#bismark_methylation_plot">CHH</button> \n\
 		</div> \n\
         <div id="bismark_methylation_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
             bismark_methylation_cats = {};\n\
-            bismark_methylation_data = {};\n\
+            bismark_methylation_cpg_data = {};\n\
+            bismark_methylation_chg_data = {};\n\
+            bismark_methylation_chh_data = {};\n\
             var bismark_methylation_pconfig = {{ \n\
                 "colors": ["#0d233a", "#2f7ed8", "#8bbc21", "#1aadce", "#910000", "#492970"], \n\
-                "title": "Cytosine CpG Methylation",\n\
+                "title": "Cytosine Methylation",\n\
                 "ylab": "% Calls",\n\
                 "ymin": 0,\n\
                 "stacking": "percent" \n\
             }}; \n\
             $(function () {{ \
-                plot_stacked_bar_graph("#bismark_methylation_plot", bismark_methylation_cats, bismark_methylation_data, bismark_methylation_pconfig); \
+                plot_stacked_bar_graph("#bismark_methylation_plot", bismark_methylation_cats, bismark_methylation_cpg_data, bismark_methylation_pconfig); \
             }}); \
-        </script>'.format(self.bismark_meth_helptext, json.dumps(self.bismark_meth_snames), json.dumps(self.bismark_meth_plot_series));
+        </script>'.format(self.bismark_meth_helptext, json.dumps(self.bismark_meth_snames), json.dumps(self.bismark_meth_cpg_series), json.dumps(self.bismark_meth_chg_series), json.dumps(self.bismark_meth_chh_series));
