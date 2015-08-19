@@ -19,6 +19,7 @@ code {
     .side-nav {
         position: fixed;
         width: 250px;
+        border-right: 1px solid #ccc;
         overflow: auto;
     }
 }
@@ -28,7 +29,6 @@ code {
 .side-nav {
     height: 100%;
     background-color: #ededed;
-    border-right: 1px solid #ccc;
 }
 .side-nav h1 {
     font-size: 18px;

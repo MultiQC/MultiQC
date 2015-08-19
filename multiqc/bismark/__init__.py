@@ -2,7 +2,7 @@
 
 """ MultiQC module to parse output from Bismark """
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import json
 import logging
 import mmap
@@ -83,6 +83,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         self.sections = list()
 
+        # Section 1 - Column chart of alignment stats
+        self.parse_alignment_chart_data()
+        self.sections.append({
+            'name': 'Alignment Rates',
+            'anchor': 'bismark-alignment',
+            'content': self.bismark_alignment_chart()
+        })
+
     def parse_bismark_reports (self):
         """ Search the three types of Bismark report files for
         numbers needed later in the module. """
@@ -90,11 +98,24 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         regexes = {
             'alignment': {
                 'total_reads': r"^Sequence(?:s| pairs) analysed in total:\s+(\d+)$",
+                'aligned_reads': r"^Number of(?: paired-end) alignments with a unique best hit:\s+(\d+)$",
                 'no_alignments': r"^Sequence(?:s| pairs) with no alignments under any condition:\s+(\d+)$",
                 'ambig_reads': r"^Sequence(?:s| pairs) did not map uniquely:\s+(\d+)$",
-                'discarded_reads': r"^Sequence(?:s| pairs) which were discarded because genomic sequence could not be extracted:\s+(\d+)$"
+                'discarded_reads': r"^Sequence(?:s| pairs) which were discarded because genomic sequence could not be extracted:\s+(\d+)$",
+                'aln_total_c': r"^Total number of C's analysed:\s+(\d+)$",
+                'aln_meth_cpg': r"^Total methylated C's in CpG context:\s+(\d+)",
+                'aln_meth_cph': r"^Total methylated C's in CHG context:\s+(\d+)",
+                'aln_meth_chh': r"^Total methylated C's in CHH context:\s+(\d+)",
+                'aln_unmeth_cpg': r"^Total unmethylated C's in CpG context:\s+(\d+)",
+                'aln_unmeth_cph': r"^Total unmethylated C's in CHG context:\s+(\d+)",
+                'aln_unmeth_chh': r"^Total unmethylated C's in CHH context:\s+(\d+)",
+                'aln_percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
+                'aln_percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
+                'aln_percent_chh_meth': r"^C methylated in CHH context:\s+([\d\.]+)%"
             },
             'dedup': {
+                # 'aligned_reads' overwrites previous, but I trust this more
+                # Leave the number from the alignment report in case deduplication is not run
                 'aligned_reads': r"^Total number of alignments analysed in .+:\s+(\d+)$",
                 'dup_reads': r"^Total number duplicated alignments removed:\s+(\d+)",
                 'dup_reads_percent': r"^Total number duplicated alignments removed:\s+\d+\s+\(([\d\.]+)%\)",
@@ -102,31 +123,117 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'dedup_reads_percent': r"^Total count of deduplicated leftover sequences:\s+\d+\s+\(([\d\.]+)% of total\)"
             },
             'methextract': {
-                'total_c': r"^Total number of C's analysed:\s+(\d+)$",
-                'meth_cpg': r"^Total methylated C's in CpG context:\s+(\d+)",
-                'meth_cph': r"^Total methylated C's in CHG context:\s+(\d+)",
-                'meth_chh': r"^Total methylated C's in CHH context:\s+(\d+)",
-                'unmeth_cpg': r"^Total C to T conversions in CpG context:\s+(\d+)",
-                'unmeth_cph': r"^Total C to T conversions in CHG context:\s+(\d+)",
-                'unmeth_chh': r"^Total C to T conversions in CHH context:\s+(\d+)"
+                # These calls are typically done after deduplication
+                'me_total_c': r"^Total number of C's analysed:\s+(\d+)$",
+                'me_meth_cpg': r"^Total methylated C's in CpG context:\s+(\d+)",
+                'me_meth_cph': r"^Total methylated C's in CHG context:\s+(\d+)",
+                'me_meth_chh': r"^Total methylated C's in CHH context:\s+(\d+)",
+                'me_unmeth_cpg': r"^Total C to T conversions in CpG context:\s+(\d+)",
+                'me_unmeth_cph': r"^Total C to T conversions in CHG context:\s+(\d+)",
+                'me_unmeth_chh': r"^Total C to T conversions in CHH context:\s+(\d+)",
+                'me_percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
+                'me_percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
+                'me_percent_chh_meth': r"^C methylated in CHH context:\s+([\d\.]+)%"
             }
         }
         for sn, data in self.bismark_raw_data.iteritems():
             for report_type in regexes.keys():
                 for k, r in regexes[report_type].iteritems():
-                    r_search = re.search(r, data[report_type], re.MULTILINE)
-                    if r_search:
-                        self.bismark_raw_data[sn][k] = float(r_search.group(1))
+                    try:
+                        r_search = re.search(r, data[report_type], re.MULTILINE)
+                        if r_search:
+                            self.bismark_raw_data[sn][k] = float(r_search.group(1))
+                    except KeyError:
+                        pass # Missing report type
 
     def bismark_stats_table(self, report):
         """ Take the parsed stats from the Bismark reports and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['bismark_dedup_reads'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M Unique</span></th>'
-        report['general_stats']['headers']['bismark_dedup_reads_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">% Dups</span></th>'
-        report['general_stats']['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M Aligned</span></th>'
+        # Use several try blocks in case one of the report types is missing
+        # If exception is triggered, header rows won't be added
+        try:
+            for sn, data in self.bismark_raw_data.iteritems():
+                report['general_stats']['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['me_percent_cpg_meth'])
+                report['general_stats']['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['me_total_c']/1000000)
+            report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (meth&nbsp;extraction)">%&nbsp;Meth</span></th>'
+            report['general_stats']['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (meth&nbsp;extraction)">M&nbsp;C\'s</span></th>'
+        except KeyError:
+            # Use numbers from alignment instead
+            try:
+                for sn, data in self.bismark_raw_data.iteritems():
+                    report['general_stats']['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['aln_percent_cpg_meth'])
+                    report['general_stats']['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['aln_total_c']/1000000)
+                report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">%&nbsp;Meth</span></th>'
+                report['general_stats']['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (alignment)">M&nbsp;C\'s</span></th>'
+            except KeyError:
+                pass
 
-        for sn, data in self.bismark_raw_data.iteritems():
-            report['general_stats']['rows'][sn]['bismark_dedup_reads'] = '<td class="text-right">{:.1f}</td>'.format(data['dedup_reads']/1000000)
-            report['general_stats']['rows'][sn]['bismark_dedup_reads_percent'] = '<td class="text-right">{}%</td>'.format(data['dup_reads_percent'])
-            report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
+        try:
+            for sn, data in self.bismark_raw_data.iteritems():
+                report['general_stats']['rows'][sn]['bismark_dedup_reads_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['dup_reads_percent'])
+                report['general_stats']['rows'][sn]['bismark_dedup_reads'] = '<td class="text-right">{:.1f}</td>'.format(data['dedup_reads']/1000000)
+                report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
+            report['general_stats']['headers']['bismark_dedup_reads_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">%&nbsp;Dups</span></th>'
+            report['general_stats']['headers']['bismark_dedup_reads'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M&nbsp;Unique</span></th>'
+        except KeyError:
+            pass
+
+        try:
+            for sn, data in self.bismark_raw_data.iteritems():
+                report['general_stats']['rows'][sn]['bismark_percent_aligned'] = '<td class="text-right">{:.1f}%</td>'.format((data['aligned_reads']/data['total_reads'])*100)
+                report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
+            report['general_stats']['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">%&nbsp;Aligned</span></th>'
+            report['general_stats']['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M&nbsp;Aligned</span></th>'
+        except KeyError:
+            pass
+
+
+    def parse_alignment_chart_data (self):
+        """ Make a data structure suitable for HighCharts for the alignment plot """
+        self.bismark_sn_categories = list()
+        series = OrderedDict()
+        series['No Genomic Sequence'] = list()
+        series['Did Not Align'] = list()
+        series['Aligned Ambiguously'] = list()
+        series['Aligned Uniquely'] = list()
+        series['Duplicated Unique Alignments'] = list()
+        series['Deduplicated Unique Alignments'] = list()
+        for sn in sorted(self.bismark_raw_data.keys()):
+            self.bismark_sn_categories.append(sn)
+            series['No Genomic Sequence'].append(int(self.bismark_raw_data[sn].get('discarded_reads', 0)))
+            series['Did Not Align'].append(int(self.bismark_raw_data[sn].get('no_alignments', 0)))
+            series['Aligned Ambiguously'].append(int(self.bismark_raw_data[sn].get('ambig_reads', 0)))
+            try:
+                series['Duplicated Unique Alignments'].append(int(self.bismark_raw_data[sn]['dup_reads']))
+                series['Deduplicated Unique Alignments'].append(int(self.bismark_raw_data[sn]['dedup_reads']))
+                series['Aligned Uniquely'].append(0)
+            except KeyError:
+                series['Aligned Uniquely'].append(int(self.bismark_raw_data[sn].get('aligned_reads', 0)))
+
+        self.bismark_aln_plot_series = list()
+        for cat in series:
+            if(len(series[cat]) > 0 and max(series[cat]) > 0):
+                self.bismark_aln_plot_series.append({
+                    'name': cat,
+                    'data': series[cat]
+                })
+
+    def bismark_alignment_chart (self):
+        """ Make the HighCharts HTML to plot the alignment rates """
+
+        return '<div id="bismark_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <script type="text/javascript"> \n\
+            bismark_alignment_cats = {};\n\
+            bismark_alignment_data = {};\n\
+            var bismark_alignment_pconfig = {{ \n\
+                "colors": ["#f28f43", "#0d233a", "#492970", "#2f7ed8", "#8bbc21"], \n\
+                "title": "Bismark Alignment Scores",\n\
+                "ylab": "# Reads",\n\
+                "ymin": 0,\n\
+                "use_legend": false,\n\
+            }}; \n\
+            $(function () {{ \
+                plot_stacked_bar_graph("#bismark_alignment_plot", bismark_alignment_cats, bismark_alignment_data, bismark_alignment_pconfig); \
+            }}); \
+        </script>'.format(json.dumps(self.bismark_sn_categories), json.dumps(self.bismark_aln_plot_series));

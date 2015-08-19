@@ -173,6 +173,87 @@ function plot_xy_line_graph(div, data, config){
   });
 }
 
+// Stacked Bar Graph
+function plot_stacked_bar_graph(div, cats, data, config){
+  if (config['colors'] === undefined){ config['colors'] = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']  }
+  $(div).highcharts({
+    colors: config['colors'],
+    chart: {
+      type: 'bar',
+    },
+    title: {
+      text: config['title'],
+    },
+    xAxis: {
+      categories: cats,
+      min: 0,
+      title: {
+        text: config['xlab']
+      }
+    },
+    yAxis: {
+      title: {
+        text: config['ylab']
+      },
+      max: config['ymax'],
+      min: config['ymin'],
+    },
+    plotOptions: {
+      series: {
+        stacking: 'normal',
+        groupPadding: 0.02
+      }
+    },
+    credits: {
+      enabled: false
+    },
+    legend: {
+      reversed: true
+    },
+    tooltip: {
+      headerFormat: '',
+      pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br>'+config['tt_label']+': {point.y:.2f}',
+      useHTML: true
+    },
+    tooltip: {
+      formatter: function () {
+        var s = '<table><tr><th colspan="3" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
+        $.each(this.points.reverse(), function () {
+          s += '<tr><td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px;">' + this.series.name + ':</td><td style="text-align:right;">' + numberWithCommas(this.y) + ' reads</td><td style="text-align:right;">(' + this.percentage.toFixed(1) + '%)</td></tr>';
+        });
+        s += '</table>';
+        return s;
+      },
+      shared: true,
+      useHTML: true
+    },
+    series: data
+  });
+}
+
+
+
+//////////////////
+// Generic helper functions
+
+// From http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
+function findPos(obj) {
+  var curleft = 0, curtop = 0;
+  if (obj.offsetParent) {
+    do {
+      curleft += obj.offsetLeft;
+      curtop += obj.offsetTop;
+    } while (obj = obj.offsetParent);
+    return { x: curleft, y: curtop };
+  }
+  return undefined;
+}
+
 // Show / Hide rows in general stats table
 function showhide_general_stats_rows(){
   var showhideclasses = [];
@@ -198,21 +279,4 @@ function showhide_general_stats_rows(){
       }
     });
   }
-}
-
-
-
-//////////////////
-// Generic helper functions
-// http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
-function findPos(obj) {
-  var curleft = 0, curtop = 0;
-  if (obj.offsetParent) {
-    do {
-      curleft += obj.offsetLeft;
-      curtop += obj.offsetTop;
-    } while (obj = obj.offsetParent);
-    return { x: curleft, y: curtop };
-  }
-  return undefined;
 }

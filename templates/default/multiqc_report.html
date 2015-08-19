@@ -37,9 +37,9 @@
     <li>
       <a href="#{{ m.anchor }}">{{ m.name }}</a>
       <ul>
-      {% for s in m.sections %}
+      {% for s in m.sections -%}
         <li><a href="#{{ s['anchor'] }}">{{ s['name']|striptags }}</a></li>
-      {% endfor %}
+      {%- endfor %}
       </ul>
     </li>
     {% endfor %}
@@ -61,26 +61,28 @@
     <button class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_read2">Read 2</button>
     <input id="genstat_table_showhide_custom" placeholder="Custom Pattern" class="form-control input-sm" style="width: 150px; display:inline;">
   </p>
-  <table id="general_stats_table" class="table table-hover table-bordered table-responsive table-condensed table-nostretch">
-    <thead>
-      <tr>
-        <th></th>
-        {% for k, h in report['general_stats']['headers'].iteritems() %}
-          {{ h }}
-        {% endfor -%}
-      </tr>
-    </thead>
-    <tbody>
-      {% for sn, r in report['general_stats']['rows']|dictsort %}
-      <tr>
-        <th>{{ sn }}</th>
-        {% for k, h in report['general_stats']['headers'].iteritems() %}
-          {{ r[k] if r[k] else '<td></td>' }}
-        {% endfor -%}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
+      <thead>
+        <tr>
+          <th></th>
+          {%- for k, h in report['general_stats']['headers'].iteritems() %}
+            {{ h }}
+          {%- endfor -%}
+        </tr>
+      </thead>
+      <tbody>
+        {% for sn, r in report['general_stats']['rows']|dictsort %}
+        <tr>
+          <th>{{ sn }}</th>
+          {%- for k, h in report['general_stats']['headers'].iteritems() %}
+            {{ r[k] if r[k] else '<td></td>' }}
+          {%- endfor -%}
+        </tr>
+        {%- endfor %}
+      </tbody>
+    </table>
+  </div>
   {% endif %}
 
   {% for m in modules %}

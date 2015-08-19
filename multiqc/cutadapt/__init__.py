@@ -60,14 +60,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         parsed_stats = self.cutadapt_general_stats(cutadapt_raw_data)
         self.cutadapt_general_stats_table(parsed_stats, report)
 
-        # Section 1 - Trimming Length Profiles
+        # Trimming Length Profiles
+        # Only one section, so add to the intro
         length_trimmed = self.cutadapt_length_trimmed(cutadapt_raw_data)
-        self.sections.append({
-            'name': 'Trimming Length Profiles',
-            'anchor': 'cutadapt-lengths',
-            'content': self.cutadapt_length_trimmed_plot(length_trimmed)
-        })
-
+        self.intro += self.cutadapt_length_trimmed_plot(length_trimmed)
+        
 
     def cutadapt_general_stats(self, cutadapt_raw_data):
         """ Parse the single-digit stats for each sample from the Cutadapt report. """
