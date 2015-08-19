@@ -64,7 +64,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Only one section, so add to the intro
         length_trimmed = self.cutadapt_length_trimmed(cutadapt_raw_data)
         self.intro += self.cutadapt_length_trimmed_plot(length_trimmed)
-        
+
 
     def cutadapt_general_stats(self, cutadapt_raw_data):
         """ Parse the single-digit stats for each sample from the Cutadapt report. """
@@ -154,44 +154,24 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         may be related to adapter length. See the \n\
         <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
         for more information on how these numbers are generated.</p> \n\
-        <div class="btn-group">\n\
-            <button id="cutadapt_obsexp_button" class="btn btn-primary active">Obs/Exp</button>\n\
-            <button id="cutadapt_counts_button" class="btn btn-default">Counts</button>\n\
-        </div> \n\
-        <div id="cutadapt_length_obs_exp" style="height:500px;"></div> \n\
-        <div id="cutadapt_length_counts" style="height:500px; display:none;"></div> \n\
+        <div class="btn-group switch_group"> \n\
+			<button class="btn btn-default btn-sm active" data-action="set_data" data-ylab="Obs / Expected" data-newdata="cutadapt_length_obsexp" data-target="#cutadapt_length_plot">Obs/Exp</button> \n\
+			<button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Count" data-newdata="cutadapt_length_counts" data-target="#cutadapt_length_plot">Counts</button> \n\
+		</div> \n\
+        <div id="cutadapt_length_plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
             cutadapt_length_counts = {};\n\
             cutadapt_length_obsexp = {};\n\
-            var cutadapt_l_c_pconfig = {{ \n\
+            var cutadapt_length_pconfig = {{ \n\
                 "title": "Lengths Trimmed",\n\
-                "ylab": "Count",\n\
+                "ylab": "Obs / Expected",\n\
                 "xlab": "Length Trimmed (bp)",\n\
                 "ymin": 0,\n\
                 "tt_label": "<b>{{point.x}} bp trimmed</b>",\n\
                 "use_legend": false,\n\
             }}; \n\
-            var cutadapt_l_oe_pconfig = cutadapt_l_c_pconfig; \n\
-            cutadapt_l_oe_pconfig["ylab"] = "Obs / Expected"; \n\
-            var counts_plotted = false; \n\
             $(function () {{ \
-                plot_xy_line_graph("#cutadapt_length_obs_exp", cutadapt_length_obsexp, cutadapt_l_oe_pconfig); \n\
-                $("#cutadapt_counts_button").click(function(){{ \n\
-                    $("#cutadapt_length_counts").show(); \n\
-                    $("#cutadapt_length_obs_exp").hide(); \n\
-                    if(!counts_plotted){{ \n\
-                        plot_xy_line_graph("#cutadapt_length_counts", cutadapt_length_counts, cutadapt_l_c_pconfig); \n\
-                        counts_plotted = true; \n\
-                    }} \n\
-                    $("#cutadapt_counts_button").removeClass("btn-default").addClass("btn-primary active"); \n\
-                    $("#cutadapt_obsexp_button").addClass("btn-default").removeClass("btn-primary active"); \n\
-                }}) \n\
-                $("#cutadapt_obsexp_button").click(function(){{ \n\
-                    $("#cutadapt_length_obs_exp").show(); \n\
-                    $("#cutadapt_length_counts").hide(); \n\
-                    $("#cutadapt_obsexp_button").removeClass("btn-default").addClass("btn-primary active"); \n\
-                    $("#cutadapt_counts_button").addClass("btn-default").removeClass("btn-primary active"); \n\
-                }}) \n\
+                plot_xy_line_graph("#cutadapt_length_plot", cutadapt_length_obsexp, cutadapt_length_pconfig); \n\
             }}); \
         </script>'.format(json.dumps(counts), json.dumps(obsexp));
 

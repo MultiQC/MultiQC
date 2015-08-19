@@ -33,6 +33,10 @@ $(function () {
     if(action == 'set_data'){
       var ds = $(this).data('newdata');
       plot_options.series = window[ds];
+      var ylab = $(this).data('ylab');
+      if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
+      var xlab = $(this).data('xlab');
+      if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
       var colslice = $(this).data('colslice');
       if(!isNaN(parseFloat(colslice)) && isFinite(colslice)){
         plot_options.colors = highcharts_plot_colors[target].slice(colslice);
@@ -138,9 +142,10 @@ $(function () {
 // HighCharts Plotting Functions
 ////////////////////////////////////////////////
 
-// We store the config options for every graph in an array.
+// We store the config options for every graph in an arrays.
 // This way, we can go back and change them via button clicks
 // eg. Changing an axis from values to percentages
+highcharts_plots = [];
 highcharts_plot_options = [];
 highcharts_plot_colors = [];
 
@@ -149,14 +154,14 @@ function plot_xy_line_graph(div, data, config){
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
   if(config['use_legend'] === undefined){ config['use_legend'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
-  $(div).highcharts({
+  highcharts_plot_options[div] = {
     chart: {
       type: 'line',
       zoomType: 'x'
     },
     title: {
       text: config['title'],
-      x: -20 //center
+      x: 30 // fudge to center over plot area rather than whole plot
     },
     xAxis: {
       title: {
@@ -204,7 +209,8 @@ function plot_xy_line_graph(div, data, config){
 			useHTML: true
     },
     series: data
-  });
+  }
+  highcharts_plots[div] = $(div).highcharts(highcharts_plot_options[div]);
 }
 
 // Stacked Bar Graph
@@ -266,7 +272,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
     },
     series: data
   }
-  $(div).highcharts(highcharts_plot_options[div]);
+  highcharts_plots[div] = $(div).highcharts(highcharts_plot_options[div]);
 }
 
 
