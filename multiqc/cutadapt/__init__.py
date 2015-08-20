@@ -31,21 +31,24 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for root, dirnames, filenames in os.walk(self.analysis_dir):
             for fn in filenames:
                 if fn.endswith('.txt') and os.path.getsize(os.path.join(root,fn)) < 50000:
-                    with open (os.path.join(root,fn), "r") as f:
-                        s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                        if s.find('This is cutadapt') != -1:
-                            fn_search = re.search(r"^Input filename:\s+(.+)$", s, re.MULTILINE)
-                            if fn_search:
-                                s_name = fn_search.group(1)
-                            else:
-                                s_name = fn
-                            s_name = s_name.split(".txt",1)[0]
-                            s_name = s_name.split("_trimming_report",1)[0]
-                            s_name = s_name.split(".gz",1)[0]
-                            s_name = s_name.split(".fastq",1)[0]
-                            s_name = s_name.split(".fq",1)[0]
+                    try:
+                        with open (os.path.join(root,fn), "r") as f:
+                            s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+                            if s.find('This is cutadapt') != -1:
+                                fn_search = re.search(r"^Input filename:\s+(.+)$", s, re.MULTILINE)
+                                if fn_search:
+                                    s_name = fn_search.group(1)
+                                else:
+                                    s_name = fn
+                                s_name = s_name.split(".txt",1)[0]
+                                s_name = s_name.split("_trimming_report",1)[0]
+                                s_name = s_name.split(".gz",1)[0]
+                                s_name = s_name.split(".fastq",1)[0]
+                                s_name = s_name.split(".fq",1)[0]
 
-                            cutadapt_raw_data[s_name] = f.read()
+                                cutadapt_raw_data[s_name] = f.read()
+                    except ValueError:
+                        logging.warn("Couldn't read file when looking for cutadapt output: {}".format(fn))
 
         if len(cutadapt_raw_data) == 0:
             logging.debug("Could not find any Cutadapt reports in {}".format(self.analysis_dir))
