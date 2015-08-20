@@ -21,8 +21,21 @@ VERSION = '0.1'
 MULTIQC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates'))
                 if os.path.isdir(os.path.join(MULTIQC_DIR, 'templates', d)) ]
-avail_modules = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'multiqc'))
+
+# This overcomplicated code finds modules from their presence in the multiqc
+# directory and also tries to specify their order. It copes with missing
+# modules and unexpected modules. There's probably a much more elegant way
+# to do this.
+mod_folders = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'multiqc'))
                 if os.path.isdir(os.path.join(MULTIQC_DIR, 'multiqc', d)) ]
+module_order = ['bismark', 'cutadapt', 'fastq_screen', 'fastqc']
+avail_modules = list()
+for m in module_order:
+    if m in mod_folders:
+        avail_modules.append(m)
+for m in mod_folders:
+    if m not in module_order:
+        avail_modules.append(m)
 
 # Load and parse configuration file if we find it
 try:
