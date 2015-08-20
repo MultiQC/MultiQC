@@ -46,27 +46,28 @@ $(function () {
   });
 
   // Show / Hide suspected duplicates in general stats table
-  var hidecounts = [];
-  var hidecounts_t = 0;
+  var hc = [];
+  hc['sample_trimmed'] = hc['sample_read1'] = hc['sample_read2'] = 0;
+  var rc = 0;
   $("#general_stats_table tbody tr").each(function(){
     var sn = $(this).find('th').text();
-    if(sn.indexOf('_val_1') > -1 || sn.indexOf('_val_2') > -1){
+    rc += 1;
+    if(sn.match(/_val_[12]$/) || sn.match(/_trimmed$/)){
       $(this).addClass('sample_trimmed');
-      hidecounts['sample_trimmed'] += 1; hidecounts_t += 1;
+      hc['sample_trimmed'] += 1;
     }
     if(sn.match(/_1$/) || sn.match(/_R1$/i)){
       $(this).addClass('sample_read1');
-      hidecounts['sample_read1'] += 1; hidecounts_t += 1;
+      hc['sample_read1'] += 1;
     }
     if(sn.match(/_2$/) || sn.match(/_R2$/i)){
       $(this).addClass('sample_read2');
-      hidecounts['sample_read2'] += 1; hidecounts_t += 1;
+      hc['sample_read2'] += 1;
     }
   });
-  if(hidecounts['sample_trimmed'] == 0){ $('.genstat_table_showhide[data-target="sample_trimmed"]').hide(); }
-  if(hidecounts['sample_read1'] == 0){ $('.genstat_table_showhide[data-target="sample_read1"]').hide(); }
-  if(hidecounts['sample_read2'] == 0){ $('.genstat_table_showhide[data-target="sample_read2"]').hide(); }
-  if(hidecounts_t == 0){ $('#general_stats_hide_buttons').hide(); }
+  if(hc['sample_trimmed'] > 0 && hc['sample_trimmed'] != rc){ $('.genstat_table_showhide[data-target="sample_trimmed"]').show(); }
+  if(hc['sample_read1'] > 0 && hc['sample_read1'] != rc){ $('.genstat_table_showhide[data-target="sample_read1"]').show(); }
+  if(hc['sample_read2'] > 0 && hc['sample_read2'] != rc){ $('.genstat_table_showhide[data-target="sample_read2"]').show(); }
   $('.genstat_table_showhide').click(function(e){
     e.preventDefault();
     $(this).toggleClass('active');
@@ -107,8 +108,11 @@ $(function () {
         var minval = $(this).data('chroma-min');
         if(maxval === undefined || minval === undefined){
           $.each(data, function(k, v){
-            if(v > maxval || maxval == undefined){ maxval = v; }
-            if(v < minval || minval == undefined){ minval = v; }
+            v = parseFloat(v);
+            if(!isNaN(v)){
+              if(v > maxval || maxval == undefined){ maxval = v; }
+              if(v < minval || minval == undefined){ minval = v; }
+            }
           });
         }
         if(isNaN(minval) || isNaN(maxval)){
