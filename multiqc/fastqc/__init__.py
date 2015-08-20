@@ -574,7 +574,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     })
             names.append(s)
 
-        if len(names) == 0:
+        if len(data) == 0:
             return '<p>No adapter contamination found in any samples.</p>'
 
         html = '<div id="fastqc_adapter_original" class="fastqc_orig"> \n\
