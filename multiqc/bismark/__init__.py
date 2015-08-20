@@ -99,6 +99,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'content': self.bismark_methlyation_chart()
         })
 
+        # Section 3 - Strand Alignments
+        self.parse_strand_chart_data()
+        self.sections.append({
+            'name': 'Strand Alignment',
+            'anchor': 'bismark-strands',
+            'content': self.bismark_strand_chart()
+        })
+
     def parse_bismark_reports (self):
         """ Search the three types of Bismark report files for
         numbers needed later in the module. """
@@ -119,7 +127,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'aln_unmeth_chh': r"^Total unmethylated C's in CHH context:\s+(\d+)",
                 'aln_percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
                 'aln_percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
-                'aln_percent_chh_meth': r"^C methylated in CHH context:\s+([\d\.]+)%"
+                'aln_percent_chh_meth': r"^C methylated in CHH context:\s+([\d\.]+)%",
+                'aln_strand_ot': r"^CT\/GA\/CT:\s+(\d+)\s+\(\(converted\) top strand\)$",
+                'aln_strand_ctot': r"^GA\/CT\/CT:\s+(\d+)\s+\(complementary to \(converted\) top strand\)$",
+                'aln_strand_ctob': r"^GA\/CT\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)$",
+                'aln_strand_ob': r"^CT\/GA\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)$",
+                'aln_strand_directional': r"^(Option '--directional' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\))$"
             },
             'dedup': {
                 # 'aligned_reads' overwrites previous, but I trust this more
@@ -150,7 +163,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     try:
                         r_search = re.search(r, data[report_type], re.MULTILINE)
                         if r_search:
-                            self.bismark_raw_data[sn][k] = float(r_search.group(1))
+                            try:
+                                self.bismark_raw_data[sn][k] = float(r_search.group(1))
+                            except ValueError:
+                                self.bismark_raw_data[sn][k] = r_search.group(1) # NaN
                     except KeyError:
                         pass # Missing report type
 
@@ -327,3 +343,68 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 plot_stacked_bar_graph("#bismark_methylation_plot", bismark_methylation_cats, bismark_methylation_cpg_data, bismark_methylation_pconfig); \
             }}); \
         </script>'.format(self.bismark_meth_helptext, json.dumps(self.bismark_meth_snames), json.dumps(self.bismark_meth_cpg_series), json.dumps(self.bismark_meth_chg_series), json.dumps(self.bismark_meth_chh_series));
+
+
+    def parse_strand_chart_data (self):
+        """ Make a data structure suitable for HighCharts for the strand alignment plot """
+        self.bismark_strand_samples = list()
+        self.bismark_directional_mode = 0
+        series = OrderedDict()
+        series['OB'] = list()
+        series['CTOB'] = list()
+        series['CTOT'] = list()
+        series['OT'] = list()
+        for sn in sorted(self.bismark_raw_data.keys()):
+            self.bismark_strand_samples.append(sn)
+            series['OB'].append(int(self.bismark_raw_data[sn].get('aln_strand_ob', 0)))
+            series['CTOB'].append(int(self.bismark_raw_data[sn].get('aln_strand_ctob', 0)))
+            series['CTOT'].append(int(self.bismark_raw_data[sn].get('aln_strand_ctot', 0)))
+            series['OT'].append(int(self.bismark_raw_data[sn].get('aln_strand_ot', 0)))
+            if 'aln_strand_directional' in self.bismark_raw_data[sn]:
+                self.bismark_directional_mode += 1
+
+        if self.bismark_directional_mode == len(self.bismark_strand_samples):
+            series.pop('CTOB', None)
+            series.pop('CTOT', None)
+
+        self.bismark_strand_plot_series = list()
+        for cat in series:
+            self.bismark_strand_plot_series.append({
+                'name': cat,
+                'data': series[cat]
+            })
+
+    def bismark_strand_chart (self):
+        """ Make the HighCharts HTML to plot the strand alignment rates """
+        if self.bismark_directional_mode == len(self.bismark_strand_samples):
+            d_mode = '<p>All samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.</p>'
+        elif self.bismark_directional_mode == 0:
+            d_mode = ''
+        else:
+            d_mode = '<p>{} samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.</p>'.format(self.bismark_directional_mode)
+
+        return '{} <div class="btn-group switch_group"> \n\
+			<button class="btn btn-default btn-sm" data-action="set_numbers" data-target="#bismark_strand_alignment_plot">Number of Reads</button> \n\
+			<button class="btn btn-default btn-sm active" data-action="set_percent" data-target="#bismark_strand_alignment_plot">Percentages</button> \n\
+		</div> \n\
+        <div id="bismark_strand_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div>\n\
+        <div class="row"><div class="col-sm-6"><ul class="list-unstyled">\n\
+            <li><strong>OT</strong>: Original top strand</li>\n\
+            <li><strong>OB</strong>: Original bottom strand</li>\n\
+        </ul></div><div class="col-sm-6"><ul class="list-unstyled">\n\
+            <li><strong>CTOT</strong>: Complementary to original top strand</li>\n\
+            <li><strong>CTOB</strong>: Complementary to original bottom strand</li>\n\
+        </ul></div></div>\n\
+        <script type="text/javascript"> \n\
+            bismark_strand_cats = {};\n\
+            bismark_strand_data = {};\n\
+            var bismark_strand_pconfig = {{ \n\
+                "title": "Alignment to Individual Bisulfite Strands",\n\
+                "ylab": "% Reads",\n\
+                "ymin": 0,\n\
+                "stacking": "percent" \n\
+            }}; \n\
+            $(function () {{ \
+                plot_stacked_bar_graph("#bismark_strand_alignment_plot", bismark_strand_cats, bismark_strand_data, bismark_strand_pconfig); \
+            }}); \
+        </script>'.format(d_mode, json.dumps(self.bismark_strand_samples), json.dumps(self.bismark_strand_plot_series));
