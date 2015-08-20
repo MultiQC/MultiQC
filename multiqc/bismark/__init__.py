@@ -106,7 +106,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         regexes = {
             'alignment': {
                 'total_reads': r"^Sequence(?:s| pairs) analysed in total:\s+(\d+)$",
-                'aligned_reads': r"^Number of(?: paired-end) alignments with a unique best hit(?: from the different alignments)?:\s+(\d+)$",
+                'aligned_reads': r"^Number of(?: paired-end)? alignments with a unique best hit(?: from the different alignments)?:\s+(\d+)$",
                 'no_alignments': r"^Sequence(?:s| pairs) with no alignments under any condition:\s+(\d+)$",
                 'ambig_reads': r"^Sequence(?:s| pairs) did not map uniquely:\s+(\d+)$",
                 'discarded_reads': r"^Sequence(?:s| pairs) which were discarded because genomic sequence could not be extracted:\s+(\d+)$",
