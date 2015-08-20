@@ -110,6 +110,8 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
     # Create a zip file of the report directory
     shutil.make_archive(output_dir, 'zip', output_dir)
 
+    logging.info("MultiQC complete")
+
 
 
 

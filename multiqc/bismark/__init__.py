@@ -42,7 +42,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = s_name.split("_val_1",1)[0]
                             self.bismark_raw_data[s_name]['alignment'] = r_data
                         else:
-                            logging.warn("Found bismark alignment report, but couldn't recognise contents: {}".format(fn))
+                            logging.warn("Didn't recognise bismark alignment report contents: {}".format(fn))
 
                 if fn.endswith('.deduplication_report.txt'):
                     with open (os.path.join(root,fn), "r") as f:
@@ -56,7 +56,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = s_name.split("_val_1",1)[0]
                             self.bismark_raw_data[s_name]['dedup'] = r_data
                         else:
-                            logging.warn("Found bismark deduplication report, but couldn't recognise contents: {}".format(fn))
+                            logging.warn("Didn't recognise bismark deduplication report contents: {}".format(fn))
 
                 if fn.endswith('_splitting_report.txt'):
                     with open (os.path.join(root,fn), "r") as f:
