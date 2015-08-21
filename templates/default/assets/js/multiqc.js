@@ -1,9 +1,9 @@
 /* Javascript for MultiQC Default Template */
 
-var brewer_scales = ['￼YlOrRd', 'YlOrBr', 'YlGnBu', 'YlGn', 'Reds', 'RdPu',
+var brewer_scales = ['YlOrRd', 'YlOrBr', 'YlGnBu', 'YlGn', 'Reds', 'RdPu',
   'Purples', 'PuRd', 'PuBuGn', 'PuBu', 'OrRd', 'Oranges', 'Greys', 'Greens',
-  'GnBu', 'BuPu', 'BuGn', 'Blues', '￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼Set3', 'Set2', 'Set1', '￼￼￼Pastel2', 'Pastel1',
-  'Paired', 'Dark2', 'Accent', '￼￼￼￼￼￼￼￼￼￼￼￼￼￼￼Spectral', 'RdYlGn', 'RdYlBu', 'RdGy', 'RdBu',
+  'GnBu', 'BuPu', 'BuGn', 'Blues', 'Set3', 'Set2', 'Set1', 'Pastel2', 'Pastel1',
+  'Paired', 'Dark2', 'Accent', 'Spectral', 'RdYlGn', 'RdYlBu', 'RdGy', 'RdBu',
   'PuOr', 'PRGn', 'PiYG', 'BrBG'];
 
 // Execute when page load has finished
@@ -147,13 +147,14 @@ $(function () {
 // eg. Changing an axis from values to percentages
 highcharts_plots = [];
 highcharts_plot_options = [];
-highcharts_plot_colors = [];
 
 // Basic Line Graph
 function plot_xy_line_graph(div, data, config){
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
   if(config['use_legend'] === undefined){ config['use_legend'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
+  if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
+  if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   highcharts_plot_options[div] = {
     chart: {
       type: 'line',
@@ -168,7 +169,8 @@ function plot_xy_line_graph(div, data, config){
         text: config['xlab']
       },
       max: config['xmax'],
-      min: config['xmin']
+      min: config['xmin'],
+      allowDecimals: config['xDecimals'],
     },
     yAxis: {
       title: {
@@ -176,6 +178,7 @@ function plot_xy_line_graph(div, data, config){
       },
       max: config['ymax'],
       min: config['ymin'],
+      allowDecimals: config['yDecimals'],
       plotLines: [{
         value: 0,
         width: 1,
@@ -215,11 +218,9 @@ function plot_xy_line_graph(div, data, config){
 
 // Stacked Bar Graph
 function plot_stacked_bar_graph(div, cats, data, config){
-  if (config['colors'] === undefined){ config['colors'] = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']  }
-  highcharts_plot_colors[div] = config['colors'];
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
+  if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   highcharts_plot_options[div] = {
-    colors: config['colors'],
     chart: {
       type: 'bar',
     },
@@ -239,6 +240,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
       },
       max: config['ymax'],
       min: config['ymin'],
+      allowDecimals: config['yDecimals']
     },
     plotOptions: {
       series: {

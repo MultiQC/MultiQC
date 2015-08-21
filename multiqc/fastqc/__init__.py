@@ -343,6 +343,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "ylab": "Phred Score",\n\
                 "xlab": "Position (bp)",\n\
                 "ymin": 0,\n\
+                "xDecimals": false,\n\
                 "tt_label": "Click to show original plot.<br><b>Base {{point.x}}</b>",\n\
                 "use_legend": false,\n\
                 "click_func": function () {{ \n\
@@ -425,6 +426,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "ymin": 0,\n\
                 "xmax": 100,\n\
                 "xmin": 0,\n\
+                "yDecimals": false,\n\
                 "tt_label": "Click to show original plot.<br><b>{{point.x}}% GC</b>",\n\
                 "use_legend": false,\n\
                 "click_func": function () {{ \n\
@@ -599,6 +601,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "title": "Adapter Content",\n\
                 "ylab": "% of Sequences",\n\
                 "xlab": "Position",\n\
+                "xDecimals": false,\n\
                 "ymax": 100,\n\
                 "ymin": 0,\n\
                 "tt_label": "Click to show original plot.<br><b>Base {{point.x}}</b>",\n\
