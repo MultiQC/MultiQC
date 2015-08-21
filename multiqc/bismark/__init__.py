@@ -128,10 +128,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'aln_percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
                 'aln_percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
                 'aln_percent_chh_meth': r"^C methylated in CHH context:\s+([\d\.]+)%",
-                'aln_strand_ot': r"^CT\/GA\/CT:\s+(\d+)\s+\(\(converted\) top strand\)$",
-                'aln_strand_ctot': r"^GA\/CT\/CT:\s+(\d+)\s+\(complementary to \(converted\) top strand\)$",
-                'aln_strand_ctob': r"^GA\/CT\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)$",
-                'aln_strand_ob': r"^CT\/GA\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)$",
+                'aln_strand_ot': r"^CT(?:\/GA)?\/CT:\s+(\d+)\s+\(\(converted\) top strand\)$",
+                'aln_strand_ctot': r"^GA(?:\/CT)?\/CT:\s+(\d+)\s+\(complementary to \(converted\) top strand\)$",
+                'aln_strand_ctob': r"^GA(?:\/CT)?\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)$",
+                'aln_strand_ob': r"^CT(?:\/GA)?\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)$",
                 'aln_strand_directional': r"^(Option '--directional' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\))$"
             },
             'dedup': {
@@ -223,6 +223,15 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         series['Aligned Uniquely'] = list()
         series['Duplicated Unique Alignments'] = list()
         series['Deduplicated Unique Alignments'] = list()
+        colours = {
+            'No Genomic Sequence': '#f28f43',
+            'Did Not Align': '#0d233a',
+            'Aligned Ambiguously': '#492970',
+            'Aligned Uniquely': '#2f7ed8',
+            'Duplicated Unique Alignments': '#2f7ed8',
+            'Deduplicated Unique Alignments': '#8bbc21',
+        }
+        optional_cats = ['Aligned Uniquely', 'Duplicated Unique Alignments', 'Deduplicated Unique Alignments']
         for sn in sorted(self.bismark_raw_data.keys()):
             self.bismark_sn_categories.append(sn)
             series['No Genomic Sequence'].append(int(self.bismark_raw_data[sn].get('discarded_reads', 0)))
@@ -237,9 +246,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         self.bismark_aln_plot_series = list()
         for cat in series:
-            if(len(series[cat]) > 0 and max(series[cat]) > 0):
+            if cat not in optional_cats or (len(series[cat]) > 0 and max(series[cat]) > 0):
                 self.bismark_aln_plot_series.append({
                     'name': cat,
+                    'color': colours[cat],
                     'data': series[cat]
                 })
 
@@ -255,7 +265,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             bismark_alignment_cats = {};\n\
             bismark_alignment_data = {};\n\
             var bismark_alignment_pconfig = {{ \n\
-                "colors": ["#f28f43", "#0d233a", "#492970", "#2f7ed8", "#8bbc21"], \n\
                 "title": "Bismark Alignment Scores",\n\
                 "ylab": "# Reads",\n\
                 "ymin": 0,\n\
@@ -275,6 +284,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'cpg': OrderedDict([('Unmethylated CpG', list()), ('Methylated CpG', list())]),
             'chg': OrderedDict([('Unmethylated CHG', list()), ('Methylated CHG', list())]),
             'chh': OrderedDict([('Unmethylated CHH', list()), ('Methylated CHH', list())]),
+        }
+        colours = {
+            'cpg': {'Unmethylated CpG': '#2f7ed8', 'Methylated CpG': '#0d233a'},
+            'chg': {'Unmethylated CHG': '#8bbc21', 'Methylated CHG': '#1aadce'},
+            'chh': {'Unmethylated CHH': '#910000', 'Methylated CHH': '#492970'}
         }
         for sn in sorted(self.bismark_raw_data.keys()):
             self.bismark_meth_snames.append(sn)
@@ -300,16 +314,19 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for cat in series['cpg']:
             self.bismark_meth_cpg_series.append({
                 'name': cat,
+                'color': colours['cpg'][cat],
                 'data': series['cpg'][cat]
             })
         for cat in series['chg']:
             self.bismark_meth_chg_series.append({
                 'name': cat,
+                'color': colours['chg'][cat],
                 'data': series['chg'][cat]
             })
         for cat in series['chh']:
             self.bismark_meth_chh_series.append({
                 'name': cat,
+                'color': colours['chh'][cat],
                 'data': series['chh'][cat]
             })
 
@@ -322,9 +339,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_percent" data-target="#bismark_methylation_plot">Percentages</button> \n\
 		</div> &nbsp; &nbsp; \n\
         <div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_data" data-newdata="bismark_methylation_cpg_data" data-colslice="0" data-target="#bismark_methylation_plot">CpG</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chg_data" data-colslice="2" data-target="#bismark_methylation_plot">CHG</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chh_data" data-colslice="4" data-target="#bismark_methylation_plot">CHH</button> \n\
+			<button class="btn btn-default btn-sm active" data-action="set_data" data-newdata="bismark_methylation_cpg_data" data-target="#bismark_methylation_plot">CpG</button> \n\
+			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chg_data" data-target="#bismark_methylation_plot">CHG</button> \n\
+			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chh_data" data-target="#bismark_methylation_plot">CHH</button> \n\
 		</div> \n\
         <div id="bismark_methylation_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
@@ -333,7 +350,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             bismark_methylation_chg_data = {};\n\
             bismark_methylation_chh_data = {};\n\
             var bismark_methylation_pconfig = {{ \n\
-                "colors": ["#0d233a", "#2f7ed8", "#8bbc21", "#1aadce", "#910000", "#492970"], \n\
                 "title": "Cytosine Methylation",\n\
                 "ylab": "% Calls",\n\
                 "ymin": 0,\n\

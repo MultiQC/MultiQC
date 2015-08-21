@@ -37,10 +37,6 @@ $(function () {
       if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
       var xlab = $(this).data('xlab');
       if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
-      var colslice = $(this).data('colslice');
-      if(!isNaN(parseFloat(colslice)) && isFinite(colslice)){
-        plot_options.colors = highcharts_plot_colors[target].slice(colslice);
-      }
       $(target).highcharts(plot_options);
     }
   });
