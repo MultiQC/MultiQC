@@ -2,6 +2,7 @@
 
 """ MultiQC module to parse output from Bismark """
 
+from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import json
 import logging
@@ -75,7 +76,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         logging.info("Found {} Bismark reports".format(len(self.bismark_raw_data)))
 
         # Parse the raw reports
+        self.bismark_data = defaultdict(lambda:dict())
         self.parse_bismark_reports()
+
+        # Write parsed report data to a file
+        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_bismark_data.txt'), "w") as f:
+            print( self.dict_to_csv( self.bismark_data ), file=f)
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
@@ -132,7 +138,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'aln_strand_ctot': r"^GA(?:\/CT)?\/CT:\s+(\d+)\s+\(complementary to \(converted\) top strand\)$",
                 'aln_strand_ctob': r"^GA(?:\/CT)?\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)$",
                 'aln_strand_ob': r"^CT(?:\/GA)?\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)$",
-                'aln_strand_directional': r"^(Option '--directional' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\))$"
+                'aln_strand_directional': r"^Option '--(directional)' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\)$"
             },
             'dedup': {
                 # 'aligned_reads' overwrites previous, but I trust this more
@@ -164,9 +170,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         r_search = re.search(r, data[report_type], re.MULTILINE)
                         if r_search:
                             try:
-                                self.bismark_raw_data[sn][k] = float(r_search.group(1))
+                                self.bismark_data[sn][k] = float(r_search.group(1))
                             except ValueError:
-                                self.bismark_raw_data[sn][k] = r_search.group(1) # NaN
+                                self.bismark_data[sn][k] = r_search.group(1) # NaN
                     except KeyError:
                         pass # Missing report type
 
@@ -177,7 +183,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Use several try blocks in case one of the report types is missing
         # If exception is triggered, header rows won't be added
         try:
-            for sn, data in self.bismark_raw_data.iteritems():
+            for sn, data in self.bismark_data.iteritems():
                 report['general_stats']['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['me_percent_cpg_meth'])
                 report['general_stats']['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['me_total_c']/1000000)
             report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (meth&nbsp;extraction)">%&nbsp;Meth</span></th>'
@@ -185,7 +191,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         except KeyError:
             # Use numbers from alignment instead
             try:
-                for sn, data in self.bismark_raw_data.iteritems():
+                for sn, data in self.bismark_data.iteritems():
                     report['general_stats']['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['aln_percent_cpg_meth'])
                     report['general_stats']['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['aln_total_c']/1000000)
                 report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">%&nbsp;Meth</span></th>'
@@ -194,7 +200,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 pass
 
         try:
-            for sn, data in self.bismark_raw_data.iteritems():
+            for sn, data in self.bismark_data.iteritems():
                 report['general_stats']['rows'][sn]['bismark_dedup_reads_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['dup_reads_percent'])
                 report['general_stats']['rows'][sn]['bismark_dedup_reads'] = '<td class="text-right">{:.1f}</td>'.format(data['dedup_reads']/1000000)
                 report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
@@ -204,7 +210,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             pass
 
         try:
-            for sn, data in self.bismark_raw_data.iteritems():
+            for sn, data in self.bismark_data.iteritems():
                 report['general_stats']['rows'][sn]['bismark_percent_aligned'] = '<td class="text-right">{:.1f}%</td>'.format((data['aligned_reads']/data['total_reads'])*100)
                 report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
             report['general_stats']['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">%&nbsp;Aligned</span></th>'
@@ -232,17 +238,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'Deduplicated Unique Alignments': '#8bbc21',
         }
         optional_cats = ['Aligned Uniquely', 'Duplicated Unique Alignments', 'Deduplicated Unique Alignments']
-        for sn in sorted(self.bismark_raw_data.keys()):
+        for sn in sorted(self.bismark_data.keys()):
             self.bismark_sn_categories.append(sn)
-            series['No Genomic Sequence'].append(int(self.bismark_raw_data[sn].get('discarded_reads', 0)))
-            series['Did Not Align'].append(int(self.bismark_raw_data[sn].get('no_alignments', 0)))
-            series['Aligned Ambiguously'].append(int(self.bismark_raw_data[sn].get('ambig_reads', 0)))
+            series['No Genomic Sequence'].append(int(self.bismark_data[sn].get('discarded_reads', 0)))
+            series['Did Not Align'].append(int(self.bismark_data[sn].get('no_alignments', 0)))
+            series['Aligned Ambiguously'].append(int(self.bismark_data[sn].get('ambig_reads', 0)))
             try:
-                series['Duplicated Unique Alignments'].append(int(self.bismark_raw_data[sn]['dup_reads']))
-                series['Deduplicated Unique Alignments'].append(int(self.bismark_raw_data[sn]['dedup_reads']))
+                series['Duplicated Unique Alignments'].append(int(self.bismark_data[sn]['dup_reads']))
+                series['Deduplicated Unique Alignments'].append(int(self.bismark_data[sn]['dedup_reads']))
                 series['Aligned Uniquely'].append(0)
             except KeyError:
-                series['Aligned Uniquely'].append(int(self.bismark_raw_data[sn].get('aligned_reads', 0)))
+                series['Aligned Uniquely'].append(int(self.bismark_data[sn].get('aligned_reads', 0)))
 
         self.bismark_aln_plot_series = list()
         for cat in series:
@@ -290,22 +296,22 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'chg': {'Unmethylated CHG': '#8bbc21', 'Methylated CHG': '#1aadce'},
             'chh': {'Unmethylated CHH': '#910000', 'Methylated CHH': '#492970'}
         }
-        for sn in sorted(self.bismark_raw_data.keys()):
+        for sn in sorted(self.bismark_data.keys()):
             self.bismark_meth_snames.append(sn)
             try:
-                series['cpg']['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['me_unmeth_cpg']))
-                series['cpg']['Methylated CpG'].append(int(self.bismark_raw_data[sn]['me_meth_cpg']))
-                series['chg']['Unmethylated CHG'].append(int(self.bismark_raw_data[sn]['me_unmeth_chg']))
-                series['chg']['Methylated CHG'].append(int(self.bismark_raw_data[sn]['me_meth_chg']))
-                series['chh']['Unmethylated CHH'].append(int(self.bismark_raw_data[sn]['me_unmeth_chh']))
-                series['chh']['Methylated CHH'].append(int(self.bismark_raw_data[sn]['me_meth_chh']))
+                series['cpg']['Unmethylated CpG'].append(int(self.bismark_data[sn]['me_unmeth_cpg']))
+                series['cpg']['Methylated CpG'].append(int(self.bismark_data[sn]['me_meth_cpg']))
+                series['chg']['Unmethylated CHG'].append(int(self.bismark_data[sn]['me_unmeth_chg']))
+                series['chg']['Methylated CHG'].append(int(self.bismark_data[sn]['me_meth_chg']))
+                series['chh']['Unmethylated CHH'].append(int(self.bismark_data[sn]['me_unmeth_chh']))
+                series['chh']['Methylated CHH'].append(int(self.bismark_data[sn]['me_meth_chh']))
             except KeyError:
-                series['cpg']['Unmethylated CpG'].append(int(self.bismark_raw_data[sn]['aln_unmeth_cpg']))
-                series['cpg']['Methylated CpG'].append(int(self.bismark_raw_data[sn]['aln_meth_cpg']))
-                series['chg']['Unmethylated CHG'].append(int(self.bismark_raw_data[sn]['aln_unmeth_chg']))
-                series['chg']['Methylated CHG'].append(int(self.bismark_raw_data[sn]['aln_meth_chg']))
-                series['chh']['Unmethylated CHH'].append(int(self.bismark_raw_data[sn]['aln_unmeth_chh']))
-                series['chh']['Methylated CHH'].append(int(self.bismark_raw_data[sn]['aln_meth_chh']))
+                series['cpg']['Unmethylated CpG'].append(int(self.bismark_data[sn]['aln_unmeth_cpg']))
+                series['cpg']['Methylated CpG'].append(int(self.bismark_data[sn]['aln_meth_cpg']))
+                series['chg']['Unmethylated CHG'].append(int(self.bismark_data[sn]['aln_unmeth_chg']))
+                series['chg']['Methylated CHG'].append(int(self.bismark_data[sn]['aln_meth_chg']))
+                series['chh']['Unmethylated CHH'].append(int(self.bismark_data[sn]['aln_unmeth_chh']))
+                series['chh']['Methylated CHH'].append(int(self.bismark_data[sn]['aln_meth_chh']))
                 self.bismark_meth_helptext = "Numbers taken from Bismark alignment report"
 
         self.bismark_meth_cpg_series = list()
@@ -370,13 +376,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         series['CTOB'] = list()
         series['CTOT'] = list()
         series['OT'] = list()
-        for sn in sorted(self.bismark_raw_data.keys()):
+        for sn in sorted(self.bismark_data.keys()):
             self.bismark_strand_samples.append(sn)
-            series['OB'].append(int(self.bismark_raw_data[sn].get('aln_strand_ob', 0)))
-            series['CTOB'].append(int(self.bismark_raw_data[sn].get('aln_strand_ctob', 0)))
-            series['CTOT'].append(int(self.bismark_raw_data[sn].get('aln_strand_ctot', 0)))
-            series['OT'].append(int(self.bismark_raw_data[sn].get('aln_strand_ot', 0)))
-            if 'aln_strand_directional' in self.bismark_raw_data[sn]:
+            series['OB'].append(int(self.bismark_data[sn].get('aln_strand_ob', 0)))
+            series['CTOB'].append(int(self.bismark_data[sn].get('aln_strand_ctob', 0)))
+            series['CTOT'].append(int(self.bismark_data[sn].get('aln_strand_ctot', 0)))
+            series['OT'].append(int(self.bismark_data[sn].get('aln_strand_ot', 0)))
+            if 'aln_strand_directional' in self.bismark_data[sn]:
                 self.bismark_directional_mode += 1
 
         if self.bismark_directional_mode == len(self.bismark_strand_samples):

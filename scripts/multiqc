@@ -11,6 +11,7 @@ import jinja2
 import json
 import logging
 import os
+import re
 import shutil
 import traceback
 import yaml
@@ -100,6 +101,16 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
         logging.error("Error - did not find any analysis results. Cleaning up..")
         shutil.rmtree(output_dir)
         return
+
+    # Print the general stats table to a file
+    with open (os.path.join(output_dir, 'report_data', 'multiqc_general_stats.txt'), "w") as f:
+        hrow = '\t'.join([''] + report['general_stats']['headers'].keys() )
+        l = [hrow]
+        for sn, r in iter(sorted(report['general_stats']['rows'].iteritems())):
+            thesefields = [sn] + [ str(r.get(k, '')) for k in report['general_stats']['headers'] ]
+            thesefields = [ re.sub('<[^<]+?>', '', field) for field in thesefields ]
+            l.append( '\t'.join( thesefields ) )
+        print( '\n'.join(l), file=f)
 
     # Load the copied template
     try:
