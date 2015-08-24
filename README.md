@@ -3,10 +3,16 @@ MultiQC is a tool to aggregate bioinformatics results across many samples into
 a single report.
 
 It is written in Python and contains modules for a number of common tools.
-Currently, these include [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/),
-[FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
-and [Cutadapt](https://code.google.com/p/cutadapt/)
-(more to come soon - please suggest any ideas as a new
+Currently, these include:
+* [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+* [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
+* [Cutadapt](https://code.google.com/p/cutadapt/)
+* [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
+* [STAR](https://github.com/alexdobin/STAR)
+* [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
+* [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
+
+More to come soon - please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues)).
 
 ## Installation
@@ -59,8 +65,8 @@ optional arguments:
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         Output directory. Default: multiqc_report
   -m [MODULE [MODULE ...]], --module [MODULE [MODULE ...]]
-                        Use only these modules. Choose from: cutadapt,
-                        fastq_screen, fastqc
+                        Use only these modules. Choose from: featureCounts,
+                        bismark, star, cutadapt, fastq_screen, fastqc, picard
   -f, --force           Overwrite any existing reports
   -l LEVEL, --logging LEVEL
                         Level of logging to be printed to the console. Choose
@@ -71,7 +77,7 @@ optional arguments:
 ## Contributions & Support
 Contributions and suggestions for new features are welcome, as are bug reports!
 Please create a new [issue](https://github.com/ewels/MultiQC/issues) for any
-of these.
+of these, including example reports where possible.
 
 Pull requests with new code are always gladly received, see the
 [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)

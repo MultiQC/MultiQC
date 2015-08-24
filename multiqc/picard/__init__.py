@@ -80,11 +80,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Take the parsed stats from the Picard report and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard: % Duplication">%&nbsp;Dups</span></th>'
-        # report['general_stats']['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Picard: Uniquely mapped reads (millions)">M&nbsp;Mapped</span></th>'
+        report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">%&nbsp;Dups</span></th>'
         for sn, data in self.picard_data.iteritems():
             report['general_stats']['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
-            # report['general_stats']['rows'][sn]['uniquely_mapped'] = '<td class="text-right">{:.1f}</td>'.format(data['uniquely_mapped']/1000000)
 
     def mark_duplicates_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
@@ -119,7 +117,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     'data': thisdata
                 })
 
-        return '<div class="btn-group switch_group"> \n\
+        return '<p class="text-muted">An attempt at summing the numbers from the picard metrics file. Take with a pinch of salt for now.</p>\n\
+        <div class="btn-group switch_group"> \n\
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#picard_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#picard_alignment_plot">Percentages</button> \n\
 		</div> \n\
