@@ -37,7 +37,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
                             self.parse_cutadapt_logs(s)
                     except ValueError:
-                        logging.warn("Couldn't read file when looking for cutadapt output: {}".format(fn))
+                        logging.debug("Couldn't read file when looking for cutadapt output: {}".format(fn))
 
         if len(self.cutadapt_data) == 0:
             logging.debug("Could not find any Cutadapt reports in {}".format(self.analysis_dir))

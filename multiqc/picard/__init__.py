@@ -50,7 +50,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                     except ValueError:
                                         self.picard_data[s_name][k] = vals[i]
                     except ValueError:
-                        logging.warn("Couldn't read file when looking for Picard output: {}".format(fn))
+                        logging.debug("Couldn't read file when looking for Picard output: {}".format(fn))
 
         if len(self.picard_data) == 0:
             logging.debug("Could not find any Picard reports in {}".format(self.analysis_dir))
