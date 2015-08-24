@@ -40,6 +40,9 @@ multiqc .
 The report is created in `multiqc_report/multiqc_report.html` by default.
 A zip file of the report is also generated to facilitate easy transfer and sharing.
 
+Tab-delimited data files are also created in `multiqc_report/report_data/`,
+containing extra information. These can be easily inspected using Excel.
+
 For more detailed instructions, run `multiqc -h`:
 
 ```
