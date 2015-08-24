@@ -244,7 +244,8 @@ function plot_stacked_bar_graph(div, cats, data, config){
       },
       max: config['ymax'],
       min: config['ymin'],
-      allowDecimals: config['yDecimals']
+      allowDecimals: config['yDecimals'],
+      reversedStacks: false
     },
     plotOptions: {
       series: {
@@ -256,8 +257,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
       enabled: false
     },
     legend: {
-      enabled: config['use_legend'],
-      reversed: true
+      enabled: config['use_legend']
     },
     tooltip: {
       headerFormat: '',

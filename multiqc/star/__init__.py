@@ -122,12 +122,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         cats = sorted(self.star_data.keys())
         data = list()
         keys = OrderedDict()
-        keys['unmapped_other'] =      'Unmapped: other'
-        keys['unmapped_tooshort'] =   'Unmapped: too short'
-        keys['unmapped_mismatches'] = 'Unmapped: too many mismatchess'
-        keys['multimapped_toomany'] = 'Mapped to too many loci'
-        keys['multimapped'] =         'Mapped to multiple loci'
         keys['uniquely_mapped'] =     'Uniquely mapped'
+        keys['multimapped'] =         'Mapped to multiple loci'
+        keys['multimapped_toomany'] = 'Mapped to too many loci'
+        keys['unmapped_mismatches'] = 'Unmapped: too many mismatchess'
+        keys['unmapped_tooshort'] =   'Unmapped: too short'
+        keys['unmapped_other'] =      'Unmapped: other'
+
         colours = {
             'unmapped_other':      '#7f0000',
             'unmapped_tooshort':   '#b1084c',
@@ -152,7 +153,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#star_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#star_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="star_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <div id="star_alignment_plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
             star_alignment_cats = {};\n\
             star_alignment_data = {};\n\

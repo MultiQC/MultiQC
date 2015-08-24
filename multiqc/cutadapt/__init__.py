@@ -31,7 +31,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.cutadapt_data = dict()
         for root, dirnames, filenames in os.walk(self.analysis_dir):
             for fn in filenames:
-                if fn.endswith('.txt') and os.path.getsize(os.path.join(root,fn)) < 50000:
+                if os.path.getsize(os.path.join(root,fn)) < 10000:
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)

@@ -223,12 +223,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Make a data structure suitable for HighCharts for the alignment plot """
         self.bismark_sn_categories = list()
         series = OrderedDict()
-        series['No Genomic Sequence'] = list()
-        series['Did Not Align'] = list()
-        series['Aligned Ambiguously'] = list()
-        series['Aligned Uniquely'] = list()
-        series['Duplicated Unique Alignments'] = list()
         series['Deduplicated Unique Alignments'] = list()
+        series['Duplicated Unique Alignments'] = list()
+        series['Aligned Uniquely'] = list()
+        series['Aligned Ambiguously'] = list()
+        series['Did Not Align'] = list()
+        series['No Genomic Sequence'] = list()
         colours = {
             'No Genomic Sequence': '#f28f43',
             'Did Not Align': '#0d233a',
@@ -266,7 +266,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bismark_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bismark_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="bismark_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <div id="bismark_alignment_plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
             bismark_alignment_cats = {};\n\
             bismark_alignment_data = {};\n\
@@ -287,31 +287,31 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.bismark_meth_helptext = "Numbers taken from methylation extraction report."
         self.bismark_meth_snames = list()
         series = {
-            'cpg': OrderedDict([('Unmethylated CpG', list()), ('Methylated CpG', list())]),
-            'chg': OrderedDict([('Unmethylated CHG', list()), ('Methylated CHG', list())]),
-            'chh': OrderedDict([('Unmethylated CHH', list()), ('Methylated CHH', list())]),
+            'cpg': OrderedDict([('Methylated CpG', list()), ('Unmethylated CpG', list())]),
+            'chg': OrderedDict([('Methylated CHG', list()), ('Unmethylated CHG', list())]),
+            'chh': OrderedDict([('Methylated CHH', list()), ('Unmethylated CHH', list())]),
         }
         colours = {
-            'cpg': {'Unmethylated CpG': '#2f7ed8', 'Methylated CpG': '#0d233a'},
-            'chg': {'Unmethylated CHG': '#8bbc21', 'Methylated CHG': '#1aadce'},
-            'chh': {'Unmethylated CHH': '#910000', 'Methylated CHH': '#492970'}
+            'cpg': {'Methylated CpG': '#0d233a', 'Unmethylated CpG': '#2f7ed8'},
+            'chg': {'Methylated CHG': '#1aadce', 'Unmethylated CHG': '#8bbc21'},
+            'chh': {'Methylated CHH': '#492970', 'Unmethylated CHH': '#910000'}
         }
         for sn in sorted(self.bismark_data.keys()):
             self.bismark_meth_snames.append(sn)
             try:
-                series['cpg']['Unmethylated CpG'].append(int(self.bismark_data[sn]['me_unmeth_cpg']))
                 series['cpg']['Methylated CpG'].append(int(self.bismark_data[sn]['me_meth_cpg']))
-                series['chg']['Unmethylated CHG'].append(int(self.bismark_data[sn]['me_unmeth_chg']))
+                series['cpg']['Unmethylated CpG'].append(int(self.bismark_data[sn]['me_unmeth_cpg']))
                 series['chg']['Methylated CHG'].append(int(self.bismark_data[sn]['me_meth_chg']))
-                series['chh']['Unmethylated CHH'].append(int(self.bismark_data[sn]['me_unmeth_chh']))
+                series['chg']['Unmethylated CHG'].append(int(self.bismark_data[sn]['me_unmeth_chg']))
                 series['chh']['Methylated CHH'].append(int(self.bismark_data[sn]['me_meth_chh']))
+                series['chh']['Unmethylated CHH'].append(int(self.bismark_data[sn]['me_unmeth_chh']))
             except KeyError:
-                series['cpg']['Unmethylated CpG'].append(int(self.bismark_data[sn]['aln_unmeth_cpg']))
                 series['cpg']['Methylated CpG'].append(int(self.bismark_data[sn]['aln_meth_cpg']))
-                series['chg']['Unmethylated CHG'].append(int(self.bismark_data[sn]['aln_unmeth_chg']))
+                series['cpg']['Unmethylated CpG'].append(int(self.bismark_data[sn]['aln_unmeth_cpg']))
                 series['chg']['Methylated CHG'].append(int(self.bismark_data[sn]['aln_meth_chg']))
-                series['chh']['Unmethylated CHH'].append(int(self.bismark_data[sn]['aln_unmeth_chh']))
+                series['chg']['Unmethylated CHG'].append(int(self.bismark_data[sn]['aln_unmeth_chg']))
                 series['chh']['Methylated CHH'].append(int(self.bismark_data[sn]['aln_meth_chh']))
+                series['chh']['Unmethylated CHH'].append(int(self.bismark_data[sn]['aln_unmeth_chh']))
                 self.bismark_meth_helptext = "Numbers taken from Bismark alignment report"
 
         self.bismark_meth_cpg_series = list()
@@ -349,7 +349,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chg_data" data-target="#bismark_methylation_plot">CHG</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chh_data" data-target="#bismark_methylation_plot">CHH</button> \n\
 		</div> \n\
-        <div id="bismark_methylation_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <div id="bismark_methylation_plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
             bismark_methylation_cats = {};\n\
             bismark_methylation_cpg_data = {};\n\
@@ -409,7 +409,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm" data-action="set_numbers" data-target="#bismark_strand_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm active" data-action="set_percent" data-target="#bismark_strand_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="bismark_strand_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div>\n\
+        <div id="bismark_strand_alignment_plot" style="height:500px;"></div>\n\
         <div class="row"><div class="col-sm-6"><ul class="list-unstyled">\n\
             <li><strong>OT</strong>: Original top strand</li>\n\
             <li><strong>OB</strong>: Original bottom strand</li>\n\

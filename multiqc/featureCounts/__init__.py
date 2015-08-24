@@ -115,7 +115,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         'Unassigned_Unmapped', 'Unassigned_MappingQuality', 'Unassigned_FragementLength', 'Unassigned_Chimera',
         'Unassigned_Secondary', 'Unassigned_Nonjunction', 'Unassigned_Duplicate']
 
-        for k in reversed(keys):
+        for k in keys:
             thisdata = list()
             name = k.replace('_', ' ')
             for sn in cats:
@@ -130,7 +130,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#featurecounts_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#featurecounts_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="featurecounts_alignment_plot" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <div id="featurecounts_alignment_plot" style="height:500px;"></div> \n\
         <script type="text/javascript"> \n\
             featurecounts_alignment_cats = {};\n\
             featurecounts_alignment_data = {};\n\
