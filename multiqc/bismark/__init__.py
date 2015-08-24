@@ -80,7 +80,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.parse_bismark_reports()
 
         # Write parsed report data to a file
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_bismark_data.txt'), "w") as f:
+        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_bismark.txt'), "w") as f:
             print( self.dict_to_csv( self.bismark_data ), file=f)
 
         # Basic Stats Table

@@ -47,7 +47,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Write parsed report data to a file
         # Only the summary stats - skip the length data (t_lengths)
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_cutadapt_data.txt'), "w") as f:
+        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w") as f:
             print( self.dict_to_csv( { k: { j: x for j, x in v.iteritems() if j != 't_lengths'} for k, v in self.cutadapt_data.iteritems() } ), file=f)
 
         self.sections = list()

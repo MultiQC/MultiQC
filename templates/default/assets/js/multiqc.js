@@ -43,7 +43,7 @@ $(function () {
 
   // Show / Hide suspected duplicates in general stats table
   var hc = [];
-  hc['sample_trimmed'] = hc['sample_read1'] = hc['sample_read2'] = 0;
+  hc['sample_trimmed'] = hc['sample_untrimmed'] = hc['sample_read1'] = hc['sample_read2'] = 0;
   var rc = 0;
   $("#general_stats_table tbody tr").each(function(){
     var sn = $(this).find('th').text();
@@ -51,6 +51,9 @@ $(function () {
     if(sn.match(/_val_[12]$/) || sn.match(/_trimmed$/)){
       $(this).addClass('sample_trimmed');
       hc['sample_trimmed'] += 1;
+    } else {
+      $(this).addClass('sample_untrimmed');
+      hc['sample_untrimmed'] += 1;
     }
     if(sn.match(/_1$/) || sn.match(/_R1$/i)){
       $(this).addClass('sample_read1');
@@ -62,6 +65,7 @@ $(function () {
     }
   });
   if(hc['sample_trimmed'] > 0 && hc['sample_trimmed'] != rc){ $('.genstat_table_showhide[data-target="sample_trimmed"]').show(); }
+  if(hc['sample_untrimmed'] > 0 && hc['sample_untrimmed'] != rc){ $('.genstat_table_showhide[data-target="sample_untrimmed"]').show(); }
   if(hc['sample_read1'] > 0 && hc['sample_read1'] != rc){ $('.genstat_table_showhide[data-target="sample_read1"]').show(); }
   if(hc['sample_read2'] > 0 && hc['sample_read2'] != rc){ $('.genstat_table_showhide[data-target="sample_read2"]').show(); }
   $('.genstat_table_showhide').click(function(e){
