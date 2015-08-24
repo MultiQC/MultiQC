@@ -3,10 +3,9 @@
 """ MultiQC module to parse output from featureCounts """
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import json
 import logging
-import mmap
 import os
 import re
 

@@ -25,7 +25,7 @@ avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates')
 
 # Order tha modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
-module_order = ['featureCounts', 'bismark', 'star', 'cutadapt', 'fastq_screen', 'fastqc']
+module_order = ['featureCounts', 'picard', 'bismark', 'star', 'cutadapt', 'fastq_screen', 'fastqc']
 
 # Find directories in multiqc and order them if possible. Tolerant of people
 # not adding their modules to the above list :)
