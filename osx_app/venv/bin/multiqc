@@ -1,6 +1,0 @@
-#!/Users/philewels/Work/MultiQC/osx_app/venv/bin/python
-# EASY-INSTALL-DEV-SCRIPT: 'ngi-reports==0.1','multiqc'
-__requires__ = 'ngi-reports==0.1'
-__import__('pkg_resources').require('ngi-reports==0.1')
-__file__ = '/Users/philewels/Work/MultiQC/scripts/multiqc'
-exec(compile(open(__file__).read(), __file__, 'exec'))

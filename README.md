@@ -1,4 +1,4 @@
-# <img src="osx_app/MultiQC_logo.png" width="300" title="MultiQC">
+# <img src="templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">
 
 **MultiQC is a tool to aggregate bioinformatics results across many samples into
 a single report.**
@@ -20,8 +20,8 @@ More to come soon. Please suggest any ideas as a new
 
 ## Graphical Usage
 
-MultiQC comes with a graphical app for OS X. To use, download
-[MultiQC.app.zip](https://github.com/ewels/MultiQC/raw/master/osx_app/MultiQC.app.zip)
+MultiQC comes with a graphical app for OS X. To use, download `MultiQC.app.zip`
+from the [releases page](https://github.com/ewels/MultiQC/releases)
 and unzip the archive. Double click MultiQC.app to launch, then
 drag your analysis directory onto the window.
 
