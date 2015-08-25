@@ -1,37 +1,53 @@
-# MultiQC
-MultiQC is a tool to aggregate bioinformatics results across many samples into
-a single report.
+# <img src="osx_app/MultiQC_logo.png" width="300" title="MultiQC">
+
+**MultiQC is a tool to aggregate bioinformatics results across many samples into
+a single report.**
 
 It is written in Python and contains modules for a number of common tools.
 Currently, these include:
+
 * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
 * [Cutadapt](https://code.google.com/p/cutadapt/)
 * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
 * [STAR](https://github.com/alexdobin/STAR)
+* [Bowtie](http://bowtie-bio.sourceforge.net)
 * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
 * [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
 
-More to come soon - please suggest any ideas as a new
-[issue](https://github.com/ewels/MultiQC/issues)).
+More to come soon. Please suggest any ideas as a new
+[issue](https://github.com/ewels/MultiQC/issues).
 
-## Installation
+## Graphical Usage
 
-Either [download](https://github.com/ewels/MultiQC/archive/master.zip) or clone
+MultiQC comes with a graphical app for OS X. To use, download
+[MultiQC.app.zip](https://github.com/ewels/MultiQC/raw/master/osx_app/MultiQC.app.zip)
+and unzip the archive. Double click MultiQC.app to launch, then
+drag your analysis directory onto the window.
+
+The app can be run from anywhere, though we recommend copying to your
+Applications directory.
+
+A similar graphical utility for Windows is planned for a future release.
+
+## Command Line Usage
+
+To install, either [download](https://github.com/ewels/MultiQC/archive/master.zip) or clone
 this repository to your computer:
+
 ```
 git clone https://github.com/ewels/MultiQC.git
 ```
 
 Install the MultiQC python package:
+
 ```
 cd MultiQC
 python setup.py develop
 ```
 
-## Usage
-
 In the terminal, go to your analysis directory and run `multiqc .` - that's it!
+
 ```
 cd my_analysis
 multiqc .
@@ -78,6 +94,7 @@ optional arguments:
 ```
 
 ## Contributions & Support
+
 Contributions and suggestions for new features are welcome, as are bug reports!
 Please create a new [issue](https://github.com/ewels/MultiQC/issues) for any
 of these, including example reports where possible.
