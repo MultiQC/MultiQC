@@ -20,14 +20,13 @@ from datetime import datetime
 
 # Constants
 VERSION = '0.1'
-MULTIQC_DIR = os.path.realpath(os.path.dirname(os.path.realpath(__file__)))
+MULTIQC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 # Are we running as an OSX App?
-if any("MultiQC.app" in s for s in sys.argv):
+if os.environ.get('MULTQC_IS_APP') is not None:
     OSX_APP = True
     logging.basicConfig(stream=sys.stdout, format='<li>%(message)s</li>', level=20)
     with open(os.path.join(MULTIQC_DIR, 'multiqc_app_header.html'), 'r') as f: print(f.read())
 else:
-    MULTIQC_DIR = os.path.join(MULTIQC_DIR, '..')
     OSX_APP = False
 avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates'))
                 if os.path.isdir(os.path.join(MULTIQC_DIR, 'templates', d)) ]
