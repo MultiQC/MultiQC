@@ -18,6 +18,7 @@ setup(
     scripts=['scripts/multiqc'],
     install_requires=[
         'jinja2',
-        'simplejson'
+        'simplejson',
+        'pyyaml'
     ]
 )
