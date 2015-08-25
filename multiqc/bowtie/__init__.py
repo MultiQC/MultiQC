@@ -34,7 +34,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                            self.bowtie_data[fn] = self.parse_bowtie_logs(s)
+                            parsed_data = self.parse_bowtie_logs(s)
+                            if parsed_data is not None:
+                                self.bowtie_data[fn] = parsed_data
                     except ValueError:
                         logging.debug("Couldn't read file when looking for bowtie output: {}".format(fn))
 
