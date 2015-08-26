@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 version = '0.1'
 
 setup(
-    name='ngi_reports',
+    name='multiqc',
     version=version,
     description="Create aggregate analyses reports for many samples",
     long_description='A modular tool to aggregate results from bioinformatics analyses across many samples into a single report',

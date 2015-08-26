@@ -19,7 +19,7 @@ import yaml
 from datetime import datetime
 
 # Constants
-VERSION = '0.1'
+VERSION = '0.1 devel'
 MULTIQC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 # Are we running as an OSX App?
 if os.environ.get('MULTQC_IS_APP') is not None:
@@ -171,7 +171,7 @@ if __name__ == "__main__":
         help="Print the version of the program and exit")
 
     if sys.argv[-1] == '-f' and OSX_APP:
-        print('</ul><p>Please drag your analysis directory here.</p></body></html>')
+        print('</ul><p>Please drag your analysis directory here.</p><small>MultiQC version {}</small></body></html>'.format(VERSION))
         sys.exit(1)
     else:
         kwargs = vars(parser.parse_args())
