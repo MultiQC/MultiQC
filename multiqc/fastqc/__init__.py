@@ -37,7 +37,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'per_sequence_gc_content.png',
             'adapter_content.png'
         ]
-        for root, dirnames, filenames in os.walk(self.analysis_dir):
+        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             # Extracted FastQC directory
             if 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)

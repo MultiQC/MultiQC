@@ -29,7 +29,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any featureCounts reports
         self.featurecounts_data = defaultdict(lambda:dict())
-        for root, dirnames, filenames in os.walk(self.analysis_dir):
+        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith('_counts.txt.summary'):
                     with open (os.path.join(root,fn), "r") as f:

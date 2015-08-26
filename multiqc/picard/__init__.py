@@ -28,7 +28,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any Picard reports
         self.picard_data = defaultdict(lambda: dict())
-        for root, dirnames, filenames in os.walk(self.analysis_dir):
+        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if os.path.getsize(os.path.join(root,fn)) < 10000:
                     try:

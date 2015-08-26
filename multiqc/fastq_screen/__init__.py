@@ -29,7 +29,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any FastQ Screen reports
         fq_screen_raw_data = {}
-        for root, dirnames, filenames in os.walk(self.analysis_dir):
+        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith("_screen.txt"):
                     s_name = fn[:-11]
