@@ -169,8 +169,8 @@ if __name__ == "__main__":
         help="Level of logging to be printed to the console. Choose from 'debug', 'info', 'warning', 'error', 'critical'")
     parser.add_argument("-v", "--version", dest="print_version", action='store_true',
         help="Print the version of the program and exit")
-
-    if sys.argv[-1] == '-f' and OSX_APP:
+    
+    if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and OSX_APP:
         print('</ul><p>Please drag your analysis directory here.</p><small>MultiQC version {}</small></body></html>'.format(VERSION))
         sys.exit(1)
     else:
