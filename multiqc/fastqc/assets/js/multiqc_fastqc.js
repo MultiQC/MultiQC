@@ -6,6 +6,8 @@ function fastqc_seq_content_heatmap(data) {
     var ypos = 0;
     var max_bp = 0;
     var s_height = 15;
+    if (num_samples > 20){ s_height = 10; }
+    if (num_samples > 40){ s_height = 7; }
     var labels = [];
     // Convert the CSS percentage size into pixels
     var c_width = $("#fastqc_seq_heatmap").width();
