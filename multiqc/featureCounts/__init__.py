@@ -129,7 +129,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#featurecounts_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#featurecounts_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="featurecounts_alignment_plot" style="height:500px;"></div> \n\
+        <div id="featurecounts_alignment_plot" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
             featurecounts_alignment_cats = {};\n\
             featurecounts_alignment_data = {};\n\

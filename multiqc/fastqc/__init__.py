@@ -331,7 +331,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png" data-fnsuffix="_per_base_quality.png"></p> \n\
             </div>\n\
         </div>\n\
-        <div id="fastqc_quality_overlay" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <div id="fastqc_quality_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
         <script type="text/javascript"> \n\
             fastqc_overlay_hist_data = {};\n\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
@@ -412,7 +412,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"></p> \n\
             </div>\n\
         </div>\n\
-        <div id="fastqc_gc_overlay" class="fastqc-overlay-plot" style="height:500px;"></div> \n\
+        <div id="fastqc_gc_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
         <script type="text/javascript"> \
             var fastqc_overlay_gc_data = {};\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
@@ -590,7 +590,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_adapter_content.png" data-fnsuffix="_adapter_content.png"></p> \n\
             </div>\n\
         </div>\n\
-        <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot" style="height:500px;"></div>\n\
+        <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot hc-plot"></div>\n\
         <script type="text/javascript"> \
             fastqc_adapter_data = {};\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\

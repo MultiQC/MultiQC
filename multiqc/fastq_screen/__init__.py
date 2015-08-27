@@ -116,7 +116,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     td['linkedTo'] = ':previous'
                 data.append(td)
 
-        html = '<div id="fq_screen_plot" style="height:500px;"></div> \n\
+        html = '<div id="fq_screen_plot" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
             fq_screen_data = {};\n\
             fq_screen_categories = {};\n\

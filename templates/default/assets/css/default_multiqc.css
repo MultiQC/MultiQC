@@ -12,6 +12,33 @@ code {
     color: #666;
 }
 
+.hc-plot {
+    height: 500px;
+    width: 100%;
+}
+.hc-plot-wrapper{
+    width: 100%;
+    height: 500px;
+    position: relative;
+    border: 1px solid #ededed;
+    margin-top: 15px;
+}
+.hc-plot-handle {
+    position: absolute;
+    bottom:0;
+    width: 100%;
+    height: 10px;
+    background-color: #dedede;
+    cursor:ns-resize;
+}
+.hc-plot-handle span {
+    display:block;
+    height: 2px;
+    width: 40px;
+    margin: 2px auto;
+    background-color: #aaa;
+}
+
 /* Page Template */
 @media only screen and (min-width: 900px){
     .mainpage { margin-left: 270px; }

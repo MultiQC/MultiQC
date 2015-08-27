@@ -77,6 +77,24 @@ $(function () {
     showhide_general_stats_rows();
   });
 
+  // Make HighCharts divs height-draggable
+  // http://jsfiddle.net/Lkwb86c8/
+  $('.hc-plot').wrap('<div class="hc-plot-wrapper"></div>');
+  $('.hc-plot').after('<div class="hc-plot-handle"><span></span><span></span></div>');
+  $('.hc-plot').css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
+  $('.hc-plot-handle').on('mousedown', function(e){
+    var wrapper = $(this).parent();
+    var startHeight = wrapper.height();
+    var pY = e.pageY;
+    $(document).on('mouseup', function(e){
+      $(document).off('mouseup').off('mousemove');
+    });
+    $(document).on('mousemove', function(me){
+      var my = (me.pageY - pY);
+      wrapper.css('height', startHeight + my);
+      $(window).resize();
+    });        
+  });
 
   // Colour code table cells using chroma.js
   $('table').each(function(){

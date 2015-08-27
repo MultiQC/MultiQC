@@ -161,7 +161,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_data" data-ylab="Obs / Expected" data-newdata="cutadapt_length_obsexp" data-target="#cutadapt_length_plot">Obs/Exp</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Count" data-newdata="cutadapt_length_counts" data-target="#cutadapt_length_plot">Counts</button> \n\
 		</div> \n\
-        <div id="cutadapt_length_plot" style="height:500px;"></div> \n\
+        <div id="cutadapt_length_plot" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
             cutadapt_length_counts = {};\n\
             cutadapt_length_obsexp = {};\n\

@@ -153,7 +153,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#star_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#star_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="star_alignment_plot" style="height:500px;"></div> \n\
+        <div id="star_alignment_plot" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
             star_alignment_cats = {};\n\
             star_alignment_data = {};\n\

@@ -265,7 +265,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bismark_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bismark_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="bismark_alignment_plot" style="height:500px;"></div> \n\
+        <div id="bismark_alignment_plot" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
             bismark_alignment_cats = {};\n\
             bismark_alignment_data = {};\n\
@@ -348,7 +348,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chg_data" data-target="#bismark_methylation_plot">CHG</button> \n\
 			<button class="btn btn-default btn-sm" data-action="set_data" data-newdata="bismark_methylation_chh_data" data-target="#bismark_methylation_plot">CHH</button> \n\
 		</div> \n\
-        <div id="bismark_methylation_plot" style="height:500px;"></div> \n\
+        <div id="bismark_methylation_plot" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
             bismark_methylation_cats = {};\n\
             bismark_methylation_cpg_data = {};\n\
@@ -408,7 +408,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 			<button class="btn btn-default btn-sm" data-action="set_numbers" data-target="#bismark_strand_alignment_plot">Number of Reads</button> \n\
 			<button class="btn btn-default btn-sm active" data-action="set_percent" data-target="#bismark_strand_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="bismark_strand_alignment_plot" style="height:500px;"></div>\n\
+        <div id="bismark_strand_alignment_plot" class="hc-plot"></div>\n\
         <div class="row"><div class="col-sm-6"><ul class="list-unstyled">\n\
             <li><strong>OT</strong>: Original top strand</li>\n\
             <li><strong>OB</strong>: Original bottom strand</li>\n\

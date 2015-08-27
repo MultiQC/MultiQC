@@ -120,7 +120,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 		# 	<button class="btn btn-default btn-sm active" data-action="set_data" data-ylab="Obs / Expected" data-newdata="bowtie_length_obsexp" data-target="#bowtie_length_plot">Obs/Exp</button> \n\
 		# 	<button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Count" data-newdata="bowtie_length_counts" data-target="#bowtie_length_plot">Counts</button> \n\
 		# </div> \n\
-        # <div id="bowtie_length_plot" style="height:500px;"></div> \n\
+        # <div id="bowtie_length_plot" class="hc-plot"></div> \n\
         # <script type="text/javascript"> \n\
         #     bowtie_length_counts = {};\n\
         #     bowtie_length_obsexp = {};\n\
