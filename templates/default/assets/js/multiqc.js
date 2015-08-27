@@ -80,7 +80,7 @@ $(function () {
   // Make HighCharts divs height-draggable
   // http://jsfiddle.net/Lkwb86c8/
   $('.hc-plot').wrap('<div class="hc-plot-wrapper"></div>');
-  $('.hc-plot').after('<div class="hc-plot-handle"><span></span><span></span></div>');
+  $('.hc-plot').after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
   $('.hc-plot').css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
   $('.hc-plot-handle').on('mousedown', function(e){
     var wrapper = $(this).parent();
@@ -93,7 +93,7 @@ $(function () {
       var my = (me.pageY - pY);
       wrapper.css('height', startHeight + my);
       $(document).resize();
-    });        
+    });
   });
 
   // Colour code table cells using chroma.js
@@ -155,7 +155,7 @@ $(function () {
       }
     });
   });
-  
+
   // Update colours of matching samples
   var hc_colours = chroma.brewer.Set1;
   var hc_colours_idx = 0;
@@ -433,7 +433,7 @@ function apply_hc_highlights(){
     }
   });
   $('#general_stats_table tbody th').css('color', '#333');
-  
+
   // Loop through each filter
   $('#hc_col_filters li .f_text').each(function(){
     var f_text = $(this).text();
