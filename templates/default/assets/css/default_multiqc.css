@@ -12,40 +12,6 @@ code {
     color: #666;
 }
 
-.hc-plot {
-    height: 500px;
-    width: 100%;
-}
-.hc-plot-wrapper{
-    width: 100%;
-    height: 500px;
-    position: relative;
-    border: 1px solid #ededed;
-    margin-top: 15px;
-}
-.hc-plot-handle {
-    position: absolute;
-    bottom:0;
-    width: 100%;
-    height: 10px;
-    background-color: #dedede;
-    cursor:ns-resize;
-    padding: 2px 0;
-}
-.hc-plot-handle span {
-    display:block;
-    height: 2px;
-    width: 40px;
-    margin: 1px auto;
-    background-color: #aaa;
-}
-.hc-plot-handle:hover {
-    background-color: #cdcdcd;
-}
-.hc-plot-handle:hover span {
-    background-color: #999;
-}
-
 /* Page Template */
 @media only screen and (min-width: 900px){
     .mainpage { margin-left: 270px; }
@@ -55,6 +21,7 @@ code {
         width: 250px;
         border-right: 1px solid #ccc;
         overflow: auto;
+        padding-bottom: 30px;
     }
 }
 .mainpage {
@@ -80,12 +47,12 @@ code {
     color: #999;
     padding: 10px;
 }
-.side-nav ul {
+.side-nav ul.mqc-nav, .side-nav ul.mqc-nav ul {
     margin:0;
     padding:0;
     list-style-type: none;
 }
-.side-nav > ul {
+.side-nav ul.mqc-nav {
     border-bottom: 1px solid #ccc;
 }
 .side-nav a {
@@ -96,11 +63,11 @@ code {
 .side-nav a:hover, .side-nav a:active, .side-nav a:focus {
     background-color: #dedede;
 }
-.side-nav > ul > li > a{
+.side-nav ul.mqc-nav > li > a{
     padding: 10px;
     border-top: 1px solid #ccc;
 }
-.side-nav > ul > li > ul > li > a {
+.side-nav ul.mqc-nav > li > ul > li > a {
     padding: 5px 10px 5px 15px;
     border-top: 1px solid #dedede;
     font-size: 0.9em;
@@ -139,4 +106,77 @@ h1:before, h2:before, h3:before, h4:before {
   margin-top: -20px;
   height: 20px;
   visibility: hidden;
+}
+
+/* Fancy sample highlighting in the side nav */
+input.form-control[type=color]{
+    padding: 0 2px;
+    width: 30px;
+}
+
+#hc_col_filters {
+    margin: 10px 0;
+    padding: 0;
+    list-style-type:none;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+#hc_col_filters li {
+    padding: 5px 10px;
+}
+#hc_col_filters li .close {
+    margin-top: -3px;
+}
+#hc_col_filters li:hover {
+    background-color: #dedede;
+}
+.hc_cols {
+    padding:10px;
+}
+.hc_cols small {
+    color: #999;
+    font-style:italic;
+}
+@media only screen and (max-width: 900px){
+    .hc_cols .form-control {
+        display: inline-block;
+    }
+    #hc_colour_filter { width: auto; }
+    #hc_colour_filter_color { padding: 5px 2px; }
+}
+
+
+/* Draggable height bar for HighCharts Plots */
+.hc-plot {
+    height: 500px;
+    width: 100%;
+}
+.hc-plot-wrapper{
+    width: 100%;
+    height: 500px;
+    position: relative;
+    border: 1px solid #ededed;
+    margin-top: 15px;
+}
+.hc-plot-handle {
+    position: absolute;
+    bottom:0;
+    width: 100%;
+    height: 10px;
+    background-color: #dedede;
+    cursor:ns-resize;
+    padding: 2px 0;
+}
+.hc-plot-handle span {
+    display:block;
+    height: 2px;
+    width: 40px;
+    margin: 1px auto;
+    background-color: #aaa;
+}
+.hc-plot-handle:hover {
+    background-color: #cdcdcd;
+}
+.hc-plot-handle:hover span {
+    background-color: #999;
 }

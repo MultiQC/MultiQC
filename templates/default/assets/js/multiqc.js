@@ -155,6 +155,35 @@ $(function () {
       }
     });
   });
+  
+  // Update colours of matching samples
+  var hc_colours = chroma.brewer.Set1;
+  var hc_colours_idx = 0;
+  $('#hc_color_form').submit(function(e){
+    e.preventDefault();
+    var f_text = $('#hc_colour_filter').val().trim();
+    var f_col = $('#hc_colour_filter_color').val().trim();
+    var error = false;
+    if(f_text.length == 0){ f_text = '[ all ]'; }
+    $('#hc_col_filters li .f_text').each(function(){
+      if($(this).text() == f_text){
+        alert('Error - highlight text "'+f_text+'" already exists');
+        error = true;
+      }
+    });
+    if(!error){
+      $('#hc_col_filters').append('<li style="color:'+f_col+';"><span class="f_text">'+f_text+'</span><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      apply_hc_highlights();
+      $('#hc_colour_filter').val('');
+      hc_colours_idx += 1;
+      if(hc_colours_idx >= hc_colours.length){ hc_colours_idx = 0; }
+      $('#hc_colour_filter_color').val(hc_colours[hc_colours_idx]);
+    }
+  });
+  $('#hc_col_filters').on('click', 'li', function(){
+    $(this).remove();
+    apply_hc_highlights();
+  });
 
 
 })
@@ -179,6 +208,7 @@ function plot_xy_line_graph(div, data, config){
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   highcharts_plot_options[div] = {
     chart: {
+      renderTo: div.replace('#',''),
       type: 'line',
       zoomType: 'x'
     },
@@ -226,7 +256,9 @@ function plot_xy_line_graph(div, data, config){
       borderWidth: 0
     },
     credits: {
-			enabled: false
+			enabled: true,
+      text: 'Created with MultiQC',
+      href: 'https://github.com/ewels/MultiQC'
 		},
     tooltip: {
       headerFormat: '',
@@ -235,7 +267,7 @@ function plot_xy_line_graph(div, data, config){
     },
     series: data
   }
-  highcharts_plots[div] = $(div).highcharts(highcharts_plot_options[div]);
+  highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
 }
 
 // Stacked Bar Graph
@@ -244,6 +276,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   highcharts_plot_options[div] = {
     chart: {
+      renderTo: div.replace('#',''),
       type: 'bar',
     },
     title: {
@@ -272,8 +305,10 @@ function plot_stacked_bar_graph(div, cats, data, config){
       }
     },
     credits: {
-      enabled: false
-    },
+			enabled: true,
+      text: 'Created with MultiQC',
+      href: 'https://github.com/ewels/MultiQC'
+		},
     legend: {
       enabled: config['use_legend']
     },
@@ -296,7 +331,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
     },
     series: data
   }
-  highcharts_plots[div] = $(div).highcharts(highcharts_plot_options[div]);
+  highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
 }
 
 
@@ -373,4 +408,54 @@ function highlight_fade_text(obj){
       'transition'       : 'background-color 0.5s, color 0.5s'
     });
   }, 500);
+}
+
+// Apply the Highlight highlights to highcharts plots
+function apply_hc_highlights(){
+  // First - reset colours on all plots
+  $.each(Object.keys(highcharts_plots), function(i, id){
+    var p = highcharts_plots[id];
+    if(p.options.chart.type == 'line'){
+      $.each(p.series, function(j, s){
+        var col = highcharts_plot_options[id]['series'][j]['color'];
+        if (col != undefined){
+          s.color = col;
+          s.graph.attr({ stroke: col });
+          $.each(s.data, function(i, point) { point.pointAttr.hover.fill = col; });
+        }
+      });
+    } else if(p.options.chart.type == 'bar'){
+      $(id+' .highcharts-axis-labels text').css('fill', '#606060');
+    }
+  });
+  $('#general_stats_table tbody th').css('color', '#333');
+  
+  // Loop through each filter
+  $('#hc_col_filters li .f_text').each(function(){
+    var f_text = $(this).text();
+    var f_col = $(this).css('color');
+    if(f_text == '[ all ]'){ f_text = ''; }
+    // Loop through each plot
+    $.each(Object.keys(highcharts_plots), function(i, id){
+      var p = highcharts_plots[id];
+      if(p.options.chart.type == 'line'){
+        $.each(p.series, function(j, s){
+          if(highcharts_plot_options[id]['series'][j]['color'] === undefined){
+            highcharts_plot_options[id]['series'][j]['color'] = s.color;
+          }
+          if(s.name.indexOf(f_text) > -1){
+            s.color = f_col;
+            s.graph.attr({ stroke: f_col });
+            $.each(s.data, function(i, point) { point.pointAttr.hover.fill = f_col; });
+          }
+        });
+      } else if(p.options.chart.type == 'bar'){
+        $(id+' .highcharts-axis-labels text:contains('+f_text+')').css('fill', f_col);
+      }
+    });
+    $('#general_stats_table tbody th:contains('+f_text+')').css('color', f_col);
+  });
+  $.each(Object.keys(highcharts_plots), function(i, id){
+    highcharts_plots[id].redraw();
+  });
 }
