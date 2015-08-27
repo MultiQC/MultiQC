@@ -246,7 +246,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         report['general_stats']['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: %&nbsp;Duplicate Reads">%&nbsp;Dups</span></th>'
-        report['general_stats']['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average %&nbsp;GC Content">%&nbsp;GC</span></th>'
+        report['general_stats']['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="FastQC: Average %&nbsp;GC Content">%&nbsp;GC</span></th>'
         report['general_stats']['headers']['sequence_length'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average Sequence Length (bp)">Length</span></th>'
         report['general_stats']['headers']['total_sequences_m'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Total Sequences (millions)">M&nbsp;Seqs</span></th>'
 

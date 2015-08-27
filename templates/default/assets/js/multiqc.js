@@ -184,6 +184,10 @@ $(function () {
     $(this).remove();
     apply_hc_highlights();
   });
+  // Use jQuery UI to make the filters sortable
+  $("#hc_col_filters").sortable();
+  $("#hc_col_filters").disableSelection();
+  $("#hc_col_filters").on("sortstop", function(event, ui){ apply_hc_highlights(); });
 
 
 })
