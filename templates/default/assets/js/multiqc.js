@@ -87,12 +87,12 @@ $(function () {
     var startHeight = wrapper.height();
     var pY = e.pageY;
     $(document).on('mouseup', function(e){
-      $(document).off('mouseup').off('mousemove');
+      $(document).off('mousemove');
     });
     $(document).on('mousemove', function(me){
       var my = (me.pageY - pY);
       wrapper.css('height', startHeight + my);
-      $(window).resize();
+      $(document).resize();
     });        
   });
 

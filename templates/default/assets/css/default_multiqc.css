@@ -30,13 +30,20 @@ code {
     height: 10px;
     background-color: #dedede;
     cursor:ns-resize;
+    padding: 2px 0;
 }
 .hc-plot-handle span {
     display:block;
     height: 2px;
     width: 40px;
-    margin: 2px auto;
+    margin: 1px auto;
     background-color: #aaa;
+}
+.hc-plot-handle:hover {
+    background-color: #cdcdcd;
+}
+.hc-plot-handle:hover span {
+    background-color: #999;
 }
 
 /* Page Template */
