@@ -61,7 +61,7 @@ the text to the right:
 <td class="text-right">96.7%</td>
 ```
 
-# Javascript Helper Functions
+## Javascript Helper Functions
 The javascript bundled in the default MultiQC template has a number of
 helper functions to make your life easier.
 
@@ -115,8 +115,8 @@ config = {
 ### Example Bar Plot HTML
 ```html
 <div id="my_awesome_bar_plot" class="hc-plot"></div>
-<script type="text/javascript"> \n\
-    my_sample_names = ['sample 1', 'sample 2']
+<script type="text/javascript">
+    my_sample_names = ['Sample 1', 'Sample 2']
     my_sample_data = [{"data": [4, 7], "name": "Passed Test"}, {"data": [2, 3], "name": "Failed Test"}]
     var my_config = {
         "title": "My Awesome Plot",
@@ -145,6 +145,35 @@ config = {
 }
 ```
 
+### Switching Between Counts and Percentages
+If you're using the plotting functions above, it's easy to add a button which
+switches between percentages and counts. Just add the following HTML above
+your plot:
+```html
+<div class="btn-group switch_group">
+    <button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#my_plot">Counts</button>
+    <button class="btn btn-default btn-sm" data-action="set_percent" data-target="#my_plot">Percentages</button>
+</div>
+```
+_NB:_ Currently, this only works with stacked bar plots, not x-y line graphs.
+
+
+
+### Switching Plot Datasets
+Much like the counts / percentages buttons above, you can add a button which
+switches the data displayed in a single plot. Make sure that both datasets
+are stored in named javascript variables, then add the following markup:
+```html
+<div class="btn-group switch_group">
+    <button class="btn btn-default btn-sm active" data-action="set_data" data-ylab="First Data" data-newdata="data_var_1" data-target="#my_plot">Data 1</button>
+    <button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Second Data" data-newdata="data_var_2" data-target="#my_plot">Data 2</button>
+</div> 
+```
+Note the CSS class `active` which specifies which button is 'pressed' on page load.
+`data-ylab` and `data-xlab` can be used to specify the new axes labels.
+`data-newdata` should be the name of the javascript object with the new data
+to be plotted and `data-target` should be the CSS selector of the plot to change.
+
 ### Custom Event Triggers
 Some of the events that take place in the general javascript javascript
 code trigger jQuery events which you can hook into from within your
@@ -157,7 +186,7 @@ $(document).on('mqc_highlights:reset', function(){
     // sample name highlights. This could include a highlight
     // being removed, so should be used to reset plots
 });
-$(document).on('mqc_highlights:apply', function(f_text, f_col){
+$(document).on('mqc_highlights:apply', function(e, f_text, f_col){
     // This trigger is called once for each highlight string
     // when something changes. Two variables are given - the
     // search string (f_text) and the colour (f_col)
@@ -170,4 +199,32 @@ $('#YOUR_PLOT_ID').on('mqc_plotresize', function(){
 ```
 
 
+## Python Helper Functions
+When defining your new Python module, you should inherit the base module
+class as follows:
+
+```python
+class MultiqcModule(multiqc.BaseMultiqcModule):
+    def __init__(self, report):
+        # Initialise the parent object
+        super(MultiqcModule, self).__init__()
+```
+
+Doing so gives you access to common Python functions. These are currently
+few in number (just one) but may be extended in the near future.
+
+### dict_to_csv (data, delim="\t")
+This function takes a 2D dictionary and returns a string suitable for
+writing to a .csv file. First key should be sample name (row header),
+second key should be field (column header).
+
+The function takes a dictionary as input, plus an optional 'delim'
+field to specify column delimiter (default: tab).
+
+You can see an example of this function in the featureCounts module:
+```python
+# Write parsed report data to a file
+with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w") as f:
+    print( self.dict_to_csv( self.featurecounts_data ), file=f)
+```
 
