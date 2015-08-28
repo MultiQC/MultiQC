@@ -66,12 +66,12 @@ function fastqc_seq_content_heatmap(data) {
         // Get label from y position
         var idx = Math.floor(y/s_height);
         var s_name = labels[idx];
-        $('#fastqc_seq_original .s_name').text(s_name);
-        var s_status = fastqc_s_statuses["fastqc_seq_original"][s_name];
-        $("#fastqc_seq_original .s_status").text(s_status);
-        if(s_status == 'pass'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-success'); }
-        if(s_status == 'warn'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-warning'); }
-        if(s_status == 'fail'){ $("#fastqc_seq_original .s_status").removeClass().addClass('s_status label label-danger'); }
+        $('#fastqc_seq .s_name').text(s_name);
+        var s_status = fastqc_s_statuses["fastqc_seq"][s_name];
+        $("#fastqc_seq .s_status").text(s_status);
+        if(s_status == 'pass'){ $("#fastqc_seq .s_status").removeClass().addClass('s_status label label-success'); }
+        if(s_status == 'warn'){ $("#fastqc_seq .s_status").removeClass().addClass('s_status label label-warning'); }
+        if(s_status == 'fail'){ $("#fastqc_seq .s_status").removeClass().addClass('s_status label label-danger'); }
         // Get position from x pos
         var this_bp = Math.floor((x/c_width)*max_bp);
         $('#fastqc_seq_heatmap_key_pos').text(this_bp+' bp');
@@ -95,9 +95,9 @@ function fastqc_seq_content_heatmap(data) {
 
     // Show the original plot on click (Sequence Content)
     $("#fastqc_seq_heatmap").click(function(){
-      var name = $('#fastqc_seq_original .s_name').text();
-      fastqc_chg_original (name, '#fastqc_seq_original');
-      $("#fastqc_seq_original .showhide_orig").delay(100).slideDown();
+      var name = $('#fastqc_seq .s_name').text();
+      fastqc_chg_original (name, '#fastqc_seq');
+      $("#fastqc_seq .showhide_orig").delay(100).slideDown();
       $("#fastqc_seq_heatmap_div").delay(100).slideUp();
     });
 }
@@ -119,10 +119,10 @@ $(function () {
 
   // Show the overlay plots again (clicking the original)
   $('.original-plot').click(function(){
-    $(this).closest('.fastqc_orig').next('.fastqc-overlay-plot').slideDown();
+    $(this).closest('.showhide_orig').next('.fastqc-overlay-plot').slideDown();
     $(this).closest('.showhide_orig').slideUp();
-    $(this).closest('.fastqc_orig').find('.instr').text('Click to show original FastQC plot.');
-    highlight_fade_text($(this).closest('.fastqc_orig').find('.instr'));
+    $(this).closest('.mqc-section').find('.instr').text('Click to show original FastQC plot.');
+    highlight_fade_text($(this).closest('.mqc-section').find('.instr'));
   });
 
   // prev / next buttons for original images
@@ -154,8 +154,8 @@ function fastqc_chg_original (name, target) {
     var p = names[p_i];
     $(target+" .fastqc_prev_btn").attr('href', '#'+p);
     $(target+" .fastqc_nxt_btn").attr('href', '#'+n);
-    if($(target+" .instr").text() != "Click plot to return to overview plot."){
-        $(target+" .instr").text("Click plot to return to overview plot.");
-        highlight_fade_text($(target+" .instr"));
+    if($(target).closest('.mqc-section').find('.instr').text() != "Click plot to return to overview plot."){
+        $(target).closest('.mqc-section').find('.instr').text("Click plot to return to overview plot.");
+        highlight_fade_text($(target).closest('.mqc-section').find('.instr'));
     }
 }

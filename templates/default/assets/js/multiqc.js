@@ -79,8 +79,14 @@ $(function () {
 
   // Make HighCharts divs height-draggable
   // http://jsfiddle.net/Lkwb86c8/
-  $('.hc-plot').wrap('<div class="hc-plot-wrapper"></div>');
-  $('.hc-plot').after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
+  $('.hc-plot').each(function(){
+    if(!$(this).parent().hasClass('hc-plot-wrapper')){
+      $(this).wrap('<div class="hc-plot-wrapper"></div>');
+    }
+    if(!$(this).siblings().hasClass('hc-plot-handle')){
+      $(this).after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
+    }
+  });
   $('.hc-plot').css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
   $('.hc-plot-handle').on('mousedown', function(e){
     var wrapper = $(this).parent();
