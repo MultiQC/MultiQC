@@ -1,4 +1,5 @@
 # <img src="templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">
+[![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
 
 **MultiQC is a tool to aggregate bioinformatics results across many samples into
 a single report.**
