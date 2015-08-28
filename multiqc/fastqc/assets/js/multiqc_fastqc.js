@@ -1,17 +1,25 @@
 // Javascript for the FastQC MultiQC Mod
 
+///////////////
 // Per Base Sequence Content
-function fastqc_seq_content_heatmap(data) {
-    var num_samples = Object.keys(data).length;
-    var ypos = 0;
-    var max_bp = 0;
-    var s_height = 15;
-    if (num_samples > 20){ s_height = 10; }
-    if (num_samples > 40){ s_height = 7; }
-    var labels = [];
+///////////////
+
+// Global vars
+s_height = 10;
+num_samples = 0;
+labels = [];
+c_width = 0;
+c_height = 0;
+ypos = 0;
+max_bp = 0;
+// Function to plot heatmap
+function fastqc_seq_content_heatmap() {
+    num_samples = Object.keys(fastqc_seq_content_data).length;
     // Convert the CSS percentage size into pixels
-    var c_width = $("#fastqc_seq_heatmap").width();
-    var c_height = num_samples * (s_height);
+    c_width = $("#fastqc_seq_heatmap").parent().width();
+    c_height = $("#fastqc_seq_heatmap").parent().height();
+    s_height = c_height / num_samples;
+    // Resize the canvas properties
     $("#fastqc_seq_heatmap").prop("width", c_width);
     $("#fastqc_seq_heatmap").prop("height", c_height+1);
     var canvas = document.getElementById("fastqc_seq_heatmap");
@@ -19,16 +27,19 @@ function fastqc_seq_content_heatmap(data) {
         var ctx = canvas.getContext("2d");
         ctx.strokeStyle = "#666666";
         // First, do labels and get max base pairs
-        $.each(data, function(name, s){
-            labels.push(name);
-            $.each(s, function(bp, v){
-                bp = parseInt(bp);
-                if(bp > max_bp){
-                    max_bp = bp;
-                }
+        if(max_bp == 0){
+            $.each(fastqc_seq_content_data, function(name, s){
+                labels.push(name);
+                $.each(s, function(bp, v){
+                    bp = parseInt(bp);
+                    if(bp > max_bp){
+                        max_bp = bp;
+                    }
+                });
             });
-        });
-        $.each(data, function(name, s){
+        }
+        ypos = 0;
+        $.each(fastqc_seq_content_data, function(name, s){
             var xpos = 0;
             var last_bp = 0;
             $.each(s, function(bp, v){
@@ -55,8 +66,73 @@ function fastqc_seq_content_heatmap(data) {
         ctx.moveTo(0, ypos);
         ctx.lineTo(c_width, ypos);
         ctx.stroke();
+        
+        // Custom highlights
+        $('#hc_col_filters li .f_text').each(function(){
+            var f_text = $(this).text();
+            var f_col = $(this).css('color');
+            if(f_text == '[ all ]'){ return true; } // no initial colour, so highlighting all makes no sense
+            $.each(labels, function(idx, label){
+                if(label.indexOf(f_text) > -1){
+                    var c_width = $("#fastqc_seq_heatmap").width();
+                    var ypos = s_height * idx;
+                    var canvas = document.getElementById("fastqc_seq_heatmap");
+                    var ctx = canvas.getContext("2d");
+                    var thisy = ypos + 2;
+                    // Adjust height and position if we're next to another square of the same colour
+                    // this avoids having a double thickness line
+                    if(labels[idx-1] && labels[idx-1].indexOf(f_text) > -1){ thisy = ypos; }
+                    ctx.beginPath();
+                    ctx.lineWidth="2";
+                    ctx.strokeStyle = f_col;
+                    ctx.rect(1, thisy, c_width-2, s_height-2);
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            });
+        });
     }
+}
 
+// Set up listeners etc on page load
+$(function () {
+
+    // Add the pass / warning / fails counts to the headings
+    $.each(fastqc_passfails, function(k, v){
+        var total = v['pass'] + v['warn'] + v['fail'];
+        var p_bar = '<div class="progress fastqc_passfail_progress"> \
+            <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed" data-toggle="tooltip">'+v['pass']+'</div> \
+            <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings" data-toggle="tooltip">'+v['warn']+'</div> \
+            <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed" data-toggle="tooltip">'+v['fail']+'</div> \
+        </div>';
+        $('#'+k).append(p_bar);
+        $('#'+k).tooltip({selector: '[data-toggle="tooltip"]' });
+    });
+
+    // Show the overlay plots again (clicking the original)
+    $('.original-plot').click(function(){
+        $(this).closest('.showhide_orig').next('.fastqc-overlay-plot').slideDown();
+        $(this).closest('.showhide_orig').slideUp();
+        $(this).closest('.mqc-section').find('.instr').text('Click to show original FastQC plot.');
+        highlight_fade_text($(this).closest('.mqc-section').find('.instr'));
+        // Replot heatmap
+        if ($(this).parents('#fastqc_seq').length) {
+            fastqc_seq_content_heatmap();
+        }
+    });
+
+    // prev / next buttons for original images
+    $('.fastqc_prev_btn, .fastqc_nxt_btn').click(function(e){
+        e.preventDefault();
+        var name = $(this).attr('href').substr(1);
+        var target = $(this).data('target');
+        fastqc_chg_original (name, target);
+    });
+    
+    /////////
+    /// SEQ CONTENT HEATMAP LISTENERS
+    /////////
+    
     // Show the sequence base percentages on heatmap rollover
     // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
     $("#fastqc_seq_heatmap").mousemove(function(e) {
@@ -95,43 +171,26 @@ function fastqc_seq_content_heatmap(data) {
 
     // Show the original plot on click (Sequence Content)
     $("#fastqc_seq_heatmap").click(function(){
-      var name = $('#fastqc_seq .s_name').text();
-      fastqc_chg_original (name, '#fastqc_seq');
-      $("#fastqc_seq .showhide_orig").delay(100).slideDown();
-      $("#fastqc_seq_heatmap_div").delay(100).slideUp();
+        var name = $('#fastqc_seq .s_name').text();
+        fastqc_chg_original (name, '#fastqc_seq');
+        $("#fastqc_seq .showhide_orig").delay(100).slideDown();
+        $("#fastqc_seq_heatmap_div").delay(100).slideUp();
     });
-}
-
-// Set up listeners etc on page load
-$(function () {
-
-  // Add the pass / warning / fails counts to the headings
-  $.each(fastqc_passfails, function(k, v){
-    var total = v['pass'] + v['warn'] + v['fail'];
-    var p_bar = '<div class="progress fastqc_passfail_progress"> \
-      <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed" data-toggle="tooltip">'+v['pass']+'</div> \
-      <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings" data-toggle="tooltip">'+v['warn']+'</div> \
-      <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed" data-toggle="tooltip">'+v['fail']+'</div> \
-    </div>';
-    $('#'+k).append(p_bar);
-    $('#'+k).tooltip({selector: '[data-toggle="tooltip"]' });
-  });
-
-  // Show the overlay plots again (clicking the original)
-  $('.original-plot').click(function(){
-    $(this).closest('.showhide_orig').next('.fastqc-overlay-plot').slideDown();
-    $(this).closest('.showhide_orig').slideUp();
-    $(this).closest('.mqc-section').find('.instr').text('Click to show original FastQC plot.');
-    highlight_fade_text($(this).closest('.mqc-section').find('.instr'));
-  });
-
-  // prev / next buttons for original images
-  $('.fastqc_prev_btn, .fastqc_nxt_btn').click(function(e){
-    e.preventDefault();
-    var name = $(this).attr('href').substr(1);
-    var target = $(this).data('target');
-    fastqc_chg_original (name, target);
-  });
+    
+      
+    // Highlight the custom heatmap
+    $(document).on('mqc_highlights:reset', function(){
+        fastqc_seq_content_heatmap();
+    });
+    
+    // Seq content heatmap drag handle resized
+    $('#fastqc_seq_plot').on('mqc_plotresize', function(){
+        fastqc_seq_content_heatmap();
+    });
+    // Seq content - window resized
+    $(window).resize(function() {
+        fastqc_seq_content_heatmap();
+    });
 
 });
 

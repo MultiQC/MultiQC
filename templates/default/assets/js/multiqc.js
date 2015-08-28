@@ -90,15 +90,18 @@ $(function () {
   $('.hc-plot').css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
   $('.hc-plot-handle').on('mousedown', function(e){
     var wrapper = $(this).parent();
+    var handle = $(this);
     var startHeight = wrapper.height();
     var pY = e.pageY;
     $(document).on('mouseup', function(e){
       $(document).off('mousemove');
+      $(document).resize(); // send resize trigger for replotting
+      // Fire off a custom jQuery event for other javascript chunks to tie into
+      // Bind to the plot div, which should have a custom ID
+      $(wrapper.parent().find('.hc-plot')).trigger('mqc_plotresize');
     });
     $(document).on('mousemove', function(me){
-      var my = (me.pageY - pY);
-      wrapper.css('height', startHeight + my);
-      $(document).resize();
+      wrapper.css('height', startHeight + (me.pageY - pY));
     });
   });
 
@@ -422,6 +425,7 @@ function highlight_fade_text(obj){
 
 // Apply the Highlight highlights to highcharts plots
 function apply_hc_highlights(){
+  
   // First - reset colours on all plots
   $.each(Object.keys(highcharts_plots), function(i, id){
     var p = highcharts_plots[id];
@@ -439,6 +443,7 @@ function apply_hc_highlights(){
     }
   });
   $('#general_stats_table tbody th').css('color', '#333');
+  $(document).trigger('mqc_highlights:reset');
 
   // Loop through each filter
   $('#hc_col_filters li .f_text').each(function(){
@@ -448,6 +453,8 @@ function apply_hc_highlights(){
     // Loop through each plot
     $.each(Object.keys(highcharts_plots), function(i, id){
       var p = highcharts_plots[id];
+      
+      // Colour the lines in line charts
       if(p.options.chart.type == 'line'){
         $.each(p.series, function(j, s){
           if(highcharts_plot_options[id]['series'][j]['color'] === undefined){
@@ -459,12 +466,23 @@ function apply_hc_highlights(){
             $.each(s.data, function(i, point) { point.pointAttr.hover.fill = f_col; });
           }
         });
-      } else if(p.options.chart.type == 'bar'){
+      }
+      
+      // Colour the text labels on bar charts
+      else if(p.options.chart.type == 'bar'){
         $(id+' .highcharts-axis-labels text:contains('+f_text+')').css('fill', f_col);
       }
     });
+    
+    // Colour the heading text on the general stats table
     $('#general_stats_table tbody th:contains('+f_text+')').css('color', f_col);
+    
+    // Fire off a custom jQuery event for other javascript chunks to tie into
+    $(document).trigger('mqc_highlights:apply', [f_text, f_col]);
+    
   });
+  
+  // Redraw all plots so that the updates are visible
   $.each(Object.keys(highcharts_plots), function(i, id){
     highcharts_plots[id].redraw();
   });

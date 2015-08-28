@@ -502,7 +502,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> \n\
             </div>\n\
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
-                <canvas id="fastqc_seq_heatmap" height="300px" width="800px" style="width:100%;"></canvas> \n\
+                <div id="fastqc_seq_plot" class="hc-plot"> \n\
+                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
+                </div> \n\
                 <ul id="fastqc_seq_heatmap_key">\n\
                     <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
                     <li>%T: <span id="fastqc_seq_heatmap_key_t"></span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
@@ -521,7 +523,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
             fastqc_s_statuses["fastqc_seq"] = {};\
             $(function () {{ \n\
-                fastqc_seq_content_heatmap(fastqc_seq_content_data); \n\
+                fastqc_seq_content_heatmap(); \n\
             }}); \n\
         </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses))
 
