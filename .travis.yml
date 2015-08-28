@@ -2,7 +2,6 @@ language: python
 python:
   - "2.7"
 # command to install dependencies
-# install: "pip install -r requirements.txt"
-install: python setup.py -q develop
+install: python setup.py -q install
 # command to run tests
 script: multiqc -f -o tests/multiqc_report tests/data

@@ -1,0 +1,92 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: SRR1067514_1.fastq.gz
+Trimming mode: single-end
+Trim Galore version: 0.4.0
+Cutadapt version: 1.8
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'CTGTCTCTTATA' (Nextera Transposase sequence; auto-detected)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length before a sequence gets removed: 20 bp
+Running FastQC on the data once trimming has completed
+Running FastQC with the following extra arguments: -q
+Output file will be GZIP compressed
+
+
+This is cutadapt 1.8 with Python 2.7.6
+Command line parameters: -f fastq -e 0.1 -q 20 -O 1 -a CTGTCTCTTATA SRR1067514_1.fastq.gz
+Trimming 1 adapter(s) with at most 10.0% errors in single-end mode ...
+Finished in 618.34 s (18 us/read; 3.30 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:              33,979,765
+Reads with adapters:                10,999,557 (32.4%)
+Reads written (passing filters):    33,979,765 (100.0%)
+
+Total basepairs processed: 1,223,271,540 bp
+Quality-trimmed:              22,364,778 bp (1.8%)
+Total written (filtered):  1,184,928,113 bp (96.9%)
+
+=== Adapter 1 ===
+
+Sequence: CTGTCTCTTATA; Type: regular 3'; Length: 12; Trimmed: 10999557 times.
+
+No. of allowed errors:
+0-9 bp: 0; 10-12 bp: 1
+
+Bases preceding removed adapters:
+  A: 22.3%
+  C: 27.9%
+  G: 21.7%
+  T: 28.1%
+  none/other: 0.1%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	7594926	8494941.2	0	7594926
+2	2380883	2123735.3	0	2380883
+3	771670	530933.8	0	771670
+4	169007	132733.5	0	169007
+5	41226	33183.4	0	41226
+6	18721	8295.8	0	18721
+7	6899	2074.0	0	6899
+8	3117	518.5	0	3117
+9	2213	129.6	0	463 1750
+10	2343	32.4	1	61 2282
+11	891	8.1	1	18 873
+12	350	2.0	1	2 348
+13	267	2.0	1	2 265
+14	269	2.0	1	5 264
+15	334	2.0	1	8 326
+16	331	2.0	1	3 328
+17	265	2.0	1	1 264
+18	300	2.0	1	3 297
+19	325	2.0	1	6 319
+20	275	2.0	1	4 271
+21	292	2.0	1	5 287
+22	310	2.0	1	7 303
+23	281	2.0	1	4 277
+24	282	2.0	1	5 277
+25	310	2.0	1	7 303
+26	284	2.0	1	4 280
+27	319	2.0	1	1 318
+28	289	2.0	1	3 286
+29	332	2.0	1	0 332
+30	288	2.0	1	4 284
+31	281	2.0	1	3 278
+32	229	2.0	1	2 227
+33	297	2.0	1	2 295
+34	249	2.0	1	0 249
+35	305	2.0	1	19 286
+36	597	2.0	1	272 325
+
+
+RUN STATISTICS FOR INPUT FILE: SRR1067514_1.fastq.gz
+=============================================
+33979765 sequences processed in total
+Sequences removed because they became shorter than the length cutoff of 20 bp:	373919 (1.1%)
+
