@@ -5,4 +5,4 @@ python:
 # install: "pip install -r requirements.txt"
 install: python setup.py -q develop
 # command to run tests
-script: multiqc
+script: multiqc -f -o tests/multiqc_report tests/data

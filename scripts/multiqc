@@ -67,11 +67,14 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
 
     # Copy the template directory to the output directory
     if os.path.exists(output_dir):
-        if force_overwrite:
+        if force_overwrite and os.path.basename(output_dir) == 'multiqc_report':
             logging.warning("Deleting {} because -f was specified.".format(output_dir))
             shutil.rmtree(output_dir)
             if os.path.exists("{}.zip".format(output_dir)):
                 os.remove("{}.zip".format(output_dir))
+        elif force_overwrite:
+            logging.critical("Error - Force overwrite was specified but output directory was not called multiqc_report. Halting execution to avoid accidentally overwriting data.")
+            sys.exit(1)
         else:
             logging.error("Error - Output directory {} already exists. Use -f or --force to overwrite existing reports".format(output_dir))
             return
@@ -169,10 +172,10 @@ if __name__ == "__main__":
         help="Level of logging to be printed to the console. Choose from 'debug', 'info', 'warning', 'error', 'critical'")
     parser.add_argument("-v", "--version", dest="print_version", action='store_true',
         help="Print the version of the program and exit")
-    
+
     if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and OSX_APP:
         print('</ul><p>Please drag your analysis directory here.</p><small>MultiQC version {}</small></body></html>'.format(VERSION))
-        sys.exit(1)
+        sys.exit(0)
     else:
         kwargs = vars(parser.parse_args())
 
