@@ -1,6 +1,9 @@
 from setuptools import setup, find_packages
+import os
 
 version = '0.1'
+
+template_files = [os.path.join(dp, f) for dp, dn, filenames in os.walk('templates') for f in filenames]
 
 setup(
     name = 'multiqc',
@@ -13,8 +16,8 @@ setup(
     url = 'https://github.com/ewels/MultiQC',
     license = 'MIT',
     packages = find_packages(exclude=['ez_setup', 'examples', 'tests']),
-    package_data = {'': ['*.*']},
-    include_package_data = True,
+    # data_files = template_files,
+    included_files="git",
     zip_safe = False,
     scripts = ['scripts/multiqc'],
     install_requires = [
