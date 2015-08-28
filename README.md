@@ -1,8 +1,9 @@
-# <img src="templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">
-[![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
+# [<img src="templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">](https://github.com/ewels/MultiQC)
 
 **MultiQC is a tool to aggregate bioinformatics results across many samples into
 a single report.**
+
+[![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
 
 It is written in Python and contains modules for a number of common tools.
 Currently, these include:
