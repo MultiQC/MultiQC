@@ -20,6 +20,12 @@ module, which is fairly simple. For more advanced examples see `fastq_screen`
 (with a custom plotting function) or if you're feeling really brave, 
 `fastqc` (lots of custom CSS and JS).
 
+Note - you can add other required files to your module directory. Note that
+any subdirectories will need to contain an empty `__init__.py` file to be
+copied when the package is installed. Your module will also need to copy
+required files to the report at run time. See the `init_modfiles()` function
+in the FastQC module for an example of this.
+
 ## General Statistics Table
 The general statistics table at the top of every MultiQC report is a special
 case section, designed to bring together numbers for samples from across

@@ -11,6 +11,8 @@ eggs/
 *.egg-info/
 .installed.cfg
 *.egg
+build/
+dist/
 
 # OS generated files
 .DS_Store
