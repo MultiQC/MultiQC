@@ -45,7 +45,7 @@ Install the MultiQC python package:
 
 ```
 cd MultiQC
-python setup.py install
+python setup.py develop
 ```
 
 In the terminal, go to your analysis directory and run `multiqc .` - that's it!
