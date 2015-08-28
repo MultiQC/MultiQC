@@ -3,6 +3,6 @@ python:
   - "2.7"
 # command to install dependencies
 # install: "pip install -r requirements.txt"
-install: python setup.py -q install
+install: python setup.py -q develop
 # command to run tests
 script: multiqc
