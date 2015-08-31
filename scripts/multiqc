@@ -23,7 +23,7 @@ from datetime import datetime
 import multiqc
 
 # Constants
-VERSION = '0.1 devel'
+VERSION = '0.1.dev'
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
 # Are we running as an OSX App?
