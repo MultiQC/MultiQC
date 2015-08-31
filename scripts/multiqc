@@ -7,10 +7,12 @@ from __future__ import print_function
 
 import argparse
 import collections
+import inspect
 import jinja2
 import json
 import logging
 import os
+import pkgutil
 import re
 import shutil
 import sys
@@ -18,9 +20,11 @@ import traceback
 import yaml
 from datetime import datetime
 
+import multiqc
+
 # Constants
 VERSION = '0.1 devel'
-MULTIQC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 # Are we running as an OSX App?
 if os.environ.get('MULTQC_IS_APP') is not None:
     OSX_APP = True
@@ -28,19 +32,20 @@ if os.environ.get('MULTQC_IS_APP') is not None:
     with open(os.path.join(MULTIQC_DIR, 'multiqc_app_header.html'), 'r') as f: print(f.read())
 else:
     OSX_APP = False
-avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates'))
-                if os.path.isdir(os.path.join(MULTIQC_DIR, 'templates', d)) ]
 
 # Order tha modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
 module_order = ['featureCounts', 'picard', 'bismark', 'star', 'bowtie', 'cutadapt', 'fastq_screen', 'fastqc']
 
-# Find directories in multiqc and order them if possible. Tolerant of people
+# Find submodules in multiqc and order them if possible. Tolerant of people
 # not adding their modules to the above list :)
-mod_folders = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'multiqc'))
-                if os.path.isdir(os.path.join(MULTIQC_DIR, 'multiqc', d)) ]
-avail_modules = [ m for m in module_order if m in mod_folders ]
-avail_modules.extend([ m for m in mod_folders if m not in module_order ])
+multiqc_submods = [name for _, name, _ in pkgutil.iter_modules([MULTIQC_DIR])]
+avail_modules = [ m for m in module_order if m in multiqc_submods ]
+avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
+
+# Available templates, in case extras have been added
+avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates'))
+                if os.path.isdir(os.path.join(MULTIQC_DIR, 'templates', d)) ]
 
 # Load and parse configuration file if we find it
 try:
