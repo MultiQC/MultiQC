@@ -25,6 +25,7 @@ import multiqc
 # Constants
 VERSION = '0.1 devel'
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
+
 # Are we running as an OSX App?
 if os.environ.get('MULTQC_IS_APP') is not None:
     OSX_APP = True
