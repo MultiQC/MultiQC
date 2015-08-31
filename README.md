@@ -34,26 +34,20 @@ A similar graphical utility for Windows is planned for a future release.
 
 ## Command Line Usage
 
-To install, either [download](https://github.com/ewels/MultiQC/archive/master.zip) or clone
-this repository to your computer:
+You can install MultiQC using `pip` as follows: _(submission to PyPi soon!)_
 
 ```
-git clone https://github.com/ewels/MultiQC.git
+pip install git+https://github.com/ewels/MultiQC.git
 ```
 
-Install the MultiQC python package:
+Then it's just a case of going to your analysis directory and running the script:
 
 ```
-cd MultiQC
-python setup.py install
-```
-
-In the terminal, go to your analysis directory and run `multiqc .` - that's it!
-
-```
-cd my_analysis
 multiqc .
 ```
+
+That's it! MultiQC will scan the specified directory (`.` is the current dir)
+and produce a report detailing whatever it finds.
 
 The report is created in `multiqc_report/multiqc_report.html` by default.
 A zip file of the report is also generated to facilitate easy transfer and sharing.
