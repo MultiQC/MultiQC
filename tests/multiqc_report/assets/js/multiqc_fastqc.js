@@ -68,12 +68,16 @@ function fastqc_seq_content_heatmap() {
         ctx.stroke();
         
         // Custom highlights
-        $('#hc_col_filters li .f_text').each(function(){
-            var f_text = $(this).text();
+        var regex_mode = true;
+        if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode off'){
+          regex_mode = false;
+        }
+        $('#mqc_col_filters li .f_text').each(function(){
+            var f_text = $(this).val();
             var f_col = $(this).css('color');
             if(f_text == '[ all ]'){ return true; } // no initial colour, so highlighting all makes no sense
             $.each(labels, function(idx, label){
-                if(label.indexOf(f_text) > -1){
+                if((regex_mode && label.match(f_text)) || (!regex_mode && label.indexOf(f_text) > -1)){
                     var c_width = $("#fastqc_seq_heatmap").width();
                     var ypos = s_height * idx;
                     var canvas = document.getElementById("fastqc_seq_heatmap");
@@ -179,7 +183,7 @@ $(function () {
     
       
     // Highlight the custom heatmap
-    $(document).on('mqc_highlights:reset', function(){
+    $(document).on('mqc_highlights', function(){
         fastqc_seq_content_heatmap();
     });
     

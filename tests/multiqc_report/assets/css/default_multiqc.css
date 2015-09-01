@@ -114,35 +114,66 @@ input.form-control[type=color]{
     width: 30px;
 }
 
-#hc_col_filters {
+.hc_handle {
+    display: inline-block;
+    padding: 9px 4px;
+    height: 28px;
+    cursor: pointer;
+}
+.hc_handle span {
+    display: inline-block;
+    height: 100%;
+    width: 1px;
+    margin: 0 1px;
+    background-color: #999;
+}
+.f_text {
+    border: 0;
+    padding: 5px 0 5px 10px;
+    margin: 0;
+    background-color: transparent;
+    outline: none;
+    width: -moz-calc(100% - 55px);
+    width: -webkit-calc(100% - 55px);
+    width: calc(100% - 55px);
+}
+.mqc_filters button {
+    padding: 7px 10px 0;
+}
+
+.mqc_filters {
     margin: 10px 0;
     padding: 0;
     list-style-type:none;
     font-size: 0.9em;
-    cursor: pointer;
 }
-#hc_col_filters li {
-    padding: 5px 10px;
+.mqc_filters li {
+    padding: 0;
+    clear:both;
 }
-#hc_col_filters li .close {
+.mqc_filters li .close {
     margin-top: -3px;
 }
-#hc_col_filters li:hover {
+.mqc_filters li:hover {
     background-color: #dedede;
 }
-.hc_cols {
+.mqc_regex_mode {
+    cursor:pointer;
+}
+
+.mqc_filter_section {
     padding:10px;
 }
-.hc_cols small {
+.mqc_filter_section small {
     color: #999;
     font-style:italic;
 }
 @media only screen and (max-width: 900px){
-    .hc_cols .form-control {
+    .mqc_filter_section .form-control {
         display: inline-block;
     }
-    #hc_colour_filter { width: auto; }
-    #hc_colour_filter_color { padding: 5px 2px; }
+    .mqc_filter_section input[type="text"] { width: auto; }
+    .mqc_filter_section input[type="color"] { padding: 5px 2px; }
 }
 
 

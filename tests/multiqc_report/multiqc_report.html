@@ -59,15 +59,24 @@
     </li>
     
   </ul>
-  <div class="hc_cols">
+  <div id="mqc_cols" class="mqc_filter_section">
     <h5>Highlight samples:</h5>
-    <form class="form-inline" id="hc_color_form">
-      <input id="hc_colour_filter" placeholder="Custom Pattern" class="form-control input-sm">
-      <input id="hc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
-      <button type="submit" id="hc_colour_filter_update" class="btn btn-default btn-sm">+</button>
+    <form class="form-inline" id="mqc_color_form">
+      <input id="mqc_colour_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
+      <input id="mqc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
+      <button type="submit" id="mqc_colour_filter_update" class="btn btn-default btn-sm">+</button>
     </form>
-    <ul id="hc_col_filters"></ul>
-    <small>Click to remove. Drag to set order.</small>
+    <ul id="mqc_col_filters" class="mqc_filters"></ul>
+    <small class="mqc_regex_mode">Regex mode <strong>off</strong></small>
+  </div>
+  <div id="mqc_hidesamples" class="mqc_filter_section">
+    <h5>Hide samples:</h5>
+    <form class="form-inline" id="mqc_hidesamples_form">
+      <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
+      <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
+    </form>
+    <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
+    <small class="mqc_regex_mode">Regex mode <strong>off</strong></small>
   </div>
 </div>
 
@@ -76,18 +85,11 @@
   <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
   
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
-  <p>Report generated on 2015-08-28, 16:08 based on data in <code>/Users/philewels/Work/MultiQC/tests/data</code></p>
+  <p>Report generated on 2015-09-01, 17:09 based on data in <code>/Users/philewels/Work/MultiQC/tests/data</code></p>
   <p>Report location: <code>/Users/philewels/Work/MultiQC/tests/multiqc_report/multiqc_report.html</code></p>
 
   
   <h2 id="general_stats">General Statistics</h2>
-  <p id="general_stats_hide_buttons">Hide table rows:
-    <button style="display:none;" class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_trimmed">Trimmed</button>
-    <button style="display:none;" class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_untrimmed">Untrimmed</button>
-    <button style="display:none;" class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_read1">Read 1</button>
-    <button style="display:none;" class="genstat_table_showhide btn btn-sm btn-default" data-target="sample_read2">Read 2</button>
-    <input id="genstat_table_showhide_custom" placeholder="Custom Pattern" class="form-control input-sm" style="width: 150px; display:inline;">
-  </p>
   <div class="table-responsive">
     <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
       <thead>
