@@ -34,10 +34,11 @@ A similar graphical utility for Windows is planned for a future release.
 
 ## Command Line Usage
 
-You can install MultiQC using `pip` as follows: _(submission to PyPi soon!)_
+You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/0.1)
+using `pip` as follows:
 
 ```
-pip install git+https://github.com/ewels/MultiQC.git
+pip install multiqc
 ```
 
 Then it's just a case of going to your analysis directory and running the script:
