@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.1.dev0'
+version = '0.1'
 
 setup(
     name = 'multiqc',
@@ -11,6 +11,7 @@ setup(
     long_description = 'A modular tool to aggregate results from bioinformatics analyses across many samples into a single report',
     keywords = 'bioinformatics',
     url = 'https://github.com/ewels/MultiQC',
+    download_url = 'https://github.com/ewels/MultiQC/releases',
     license = 'MIT',
     packages = find_packages(),
     include_package_data = True,
@@ -20,5 +21,21 @@ setup(
         'jinja2',
         'simplejson',
         'pyyaml'
-    ]
+    ],
+    classifiers = [
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Environment :: Web Environment',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Programming Language :: Python',
+        'Programming Language :: JavaScript',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Visualization',
+    ],
 )
