@@ -23,14 +23,14 @@ from datetime import datetime
 import multiqc
 
 # Constants
-VERSION = '0.1.dev'
+VERSION = '0.1.dev0'
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
 # Are we running as an OSX App?
 if os.environ.get('MULTQC_IS_APP') is not None:
     OSX_APP = True
     logging.basicConfig(stream=sys.stdout, format='<li>%(message)s</li>', level=20)
-    with open(os.path.join(MULTIQC_DIR, 'multiqc_app_header.html'), 'r') as f: print(f.read())
+    with open(os.path.join(os.getcwd(), 'multiqc_app_header.html'), 'r') as f: print(f.read())
 else:
     OSX_APP = False
 
