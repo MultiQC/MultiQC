@@ -69,3 +69,12 @@ for details. These notes include extensive help with how to use the built in cod
 
 If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
+
+## Version History
+
+#### [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
+* The first public release of MultiQC, after a month of development. Basic
+structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark, 
+STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching
+stability, though still under fairly heavy development.
+
