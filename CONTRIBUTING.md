@@ -187,15 +187,19 @@ module's code. This allows you to take advantage of events generated
 by the global theme whilst keeping your code modular.
 
 ```javascript
-$(document).on('mqc_highlights:reset', function(){
-    // This trigger is called when something changes with the
-    // sample name highlights. This could include a highlight
-    // being removed, so should be used to reset plots
+$(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
+    // This trigger is called when the highlight strings are
+    // updated. Three variables are given - an array of search
+    // strings (f_texts), an array of colours with corresponding
+    // indexes (f_cols) and a boolean var saying whether the
+    // search should be treated as a string or a regex (regex_mode)
 });
-$(document).on('mqc_highlights:apply', function(e, f_text, f_col){
-    // This trigger is called once for each highlight string
-    // when something changes. Two variables are given - the
-    // search string (f_text) and the colour (f_col)
+
+$(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
+    // This trigger is called when the Hide Samples filters change.
+    // Two variables are given - an array of search strings
+    // (f_texts) and a boolean saying whether the search should
+    // be treated as a string or a regex (regex_mode)
 });
 
 $('#YOUR_PLOT_ID').on('mqc_plotresize', function(){
