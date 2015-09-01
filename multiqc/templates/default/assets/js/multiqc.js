@@ -175,13 +175,13 @@ $(function () {
     var error = false;
     if(f_text.length == 0){ f_text = '[ all ]'; }
     $('#hc_col_filters li .f_text').each(function(){
-      if($(this).text() == f_text){
+      if($(this).val() == f_text){
         alert('Error - highlight text "'+f_text+'" already exists');
         error = true;
       }
     });
     if(!error){
-      $('#hc_col_filters').append('<li style="color:'+f_col+';"><span class="f_text">'+f_text+'</span><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      $('#hc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(hc_colours_idx+100)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
       apply_hc_highlights();
       $('#hc_colour_filter').val('');
       hc_colours_idx += 1;
@@ -189,13 +189,23 @@ $(function () {
       $('#hc_colour_filter_color').val(hc_colours[hc_colours_idx]);
     }
   });
-  $('#hc_col_filters').on('click', 'li', function(){
-    $(this).remove();
+  // Actions when filters are clicked and changed
+  $('#hc_col_filters').on('blur', 'li input', function(){
+    if($(this).val().length == 0){ $(this).val('[ all ]'); }
+    apply_hc_highlights();
+  });
+  $('#hc_col_filters').on('keyup', 'li input', function(e){
+    if(e.keyCode == 13) { // Pressed enter
+      $(this).blur();
+      $(this).parent().next('li').find('input').focus().select();
+    }
+  });
+  $('#hc_col_filters').on('click', 'li button', function(){
+    $(this).parent().remove();
     apply_hc_highlights();
   });
   // Use jQuery UI to make the filters sortable
   $("#hc_col_filters").sortable();
-  $("#hc_col_filters").disableSelection();
   $("#hc_col_filters").on("sortstop", function(event, ui){ apply_hc_highlights(); });
 
 
@@ -447,7 +457,7 @@ function apply_hc_highlights(){
 
   // Loop through each filter
   $('#hc_col_filters li .f_text').each(function(){
-    var f_text = $(this).text();
+    var f_text = $(this).val();
     var f_col = $(this).css('color');
     if(f_text == '[ all ]'){ f_text = ''; }
     // Loop through each plot

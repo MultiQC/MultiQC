@@ -114,15 +114,42 @@ input.form-control[type=color]{
     width: 30px;
 }
 
+.hc_handle {
+    display: inline-block;
+    padding: 9px 4px;
+    height: 28px;
+    cursor: pointer;
+}
+.hc_handle span {
+    display: inline-block;
+    height: 100%;
+    width: 1px;
+    margin: 0 1px;
+    background-color: #999;
+}
+.f_text {
+    border: 0;
+    padding: 5px 0 5px 10px;
+    margin: 0;
+    background-color: transparent;
+    outline: none;
+    width: -moz-calc(100% - 55px);
+    width: -webkit-calc(100% - 55px);
+    width: calc(100% - 55px);
+}
+#hc_col_filters button {
+    padding: 7px 10px 0;
+}
+
 #hc_col_filters {
     margin: 10px 0;
     padding: 0;
     list-style-type:none;
     font-size: 0.9em;
-    cursor: pointer;
 }
 #hc_col_filters li {
-    padding: 5px 10px;
+    padding: 0;
+    clear:both;
 }
 #hc_col_filters li .close {
     margin-top: -3px;
