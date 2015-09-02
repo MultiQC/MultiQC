@@ -21,7 +21,7 @@ class BaseMultiqcModule(object):
         l = list()
         for sn in d:
             if h is None:
-                h = d[sn].keys()
+                h = list(d[sn].keys())
                 l.append(delim.join([''] + h))
             thesefields = [sn] + [ str(d[sn].get(k, '')) for k in h ]
             l.append( delim.join( thesefields ) )

@@ -84,7 +84,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         }
         parsed_data = {}
         total_count = 0
-        for k, r in regexes.iteritems():
+        for k, r in regexes.items():
             r_search = re.search(r, raw_data, re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
@@ -100,7 +100,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         report['general_stats']['headers']['featureCounts_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: % Assigned reads">%&nbsp;Assigned</span></th>'
         report['general_stats']['headers']['featureCounts'] = '<th class="chroma-col" data-chroma-scale="PuBu" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: Assigned reads (millions)">M&nbsp;Assigned</span></th>'
-        for sn, data in self.featurecounts_data.iteritems():
+        for sn, data in self.featurecounts_data.items():
             report['general_stats']['rows'][sn]['featureCounts_percent'] = '<td class="text-right">{:.1f}%</td>'.format((data['Assigned']/data['Total'])*100)
             report['general_stats']['rows'][sn]['featureCounts'] = '<td class="text-right">{:.1f}</td>'.format(data['Assigned']/1000000)
 

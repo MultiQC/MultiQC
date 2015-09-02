@@ -87,7 +87,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'unmapped_other_percent':       r"% of reads unmapped: other \|\s+([\d\.]+)",
         }
         parsed_data = {}
-        for k, r in regexes.iteritems():
+        for k, r in regexes.items():
             r_search = re.search(r, raw_data, re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
@@ -112,7 +112,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         report['general_stats']['headers']['uniquely_mapped_percent'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">%&nbsp;Mapped</span></th>'
         report['general_stats']['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M&nbsp;Mapped</span></th>'
-        for sn, data in self.star_data.iteritems():
+        for sn, data in self.star_data.items():
             report['general_stats']['rows'][sn]['uniquely_mapped_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['uniquely_mapped_percent'])
             report['general_stats']['rows'][sn]['uniquely_mapped'] = '<td class="text-right">{:.1f}</td>'.format(data['uniquely_mapped']/1000000)
 
@@ -138,7 +138,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'uniquely_mapped':     '#437bb1',
         }
 
-        for k, name in keys.iteritems():
+        for k, name in keys.items():
             thisdata = list()
             for sn in cats:
                 thisdata.append(self.star_data[sn][k])

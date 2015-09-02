@@ -123,9 +123,9 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
 
     # Print the general stats table to a file
     with open (os.path.join(output_dir, 'report_data', 'multiqc_general_stats.txt'), "w") as f:
-        hrow = '\t'.join([''] + report['general_stats']['headers'].keys() )
+        hrow = '\t'.join([''] + list(report['general_stats']['headers'].keys()) )
         l = [hrow]
-        for sn, r in iter(sorted(report['general_stats']['rows'].iteritems())):
+        for sn, r in iter(sorted(report['general_stats']['rows'].items())):
             thesefields = [sn] + [ str(r.get(k, '')) for k in report['general_stats']['headers'] ]
             thesefields = [ re.sub('<[^<]+?>', '', field) for field in thesefields ]
             l.append( '\t'.join( thesefields ) )

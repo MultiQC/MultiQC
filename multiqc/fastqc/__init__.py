@@ -73,7 +73,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     fqc_zip = zipfile.ZipFile(os.path.join(root, f))
                     try:
                         with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
-                            r_data = f.read()
+                            r_data = f.read().decode()
 
                         # Get the sample name from inside the file if possible
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
@@ -100,7 +100,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             try:
                                 with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
                                     img = f.read()
-                                with open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "w") as f:
+                                with open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), 'wb') as f:
                                     f.write(img)
                             except KeyError:
                                 pass
@@ -180,7 +180,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for p in parsed_data.keys():
             parsed_data[p].update(counts)
 
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             for p in parsed_data.keys():
                 match = re.search(parsed_data[p]['pattern'], data)
                 if match:
@@ -194,7 +194,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         Returns a 2D dict with basic stats, sample names as first keys,
         then statistic type as second key. """
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {}
 
             dups = re.search("#Total Deduplicated Percentage\s+([\d\.]+)", data)
@@ -253,8 +253,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         rowcounts = { 'total_sequences_m' : 0, 'sequence_length' : 0,
             'percent_gc' : 0, 'percent_duplicates' : 0 }
 
-        for samp, vals in parsed_stats.iteritems():
-            for k, v in vals.iteritems():
+        for samp, vals in parsed_stats.items():
+            for k, v in vals.items():
                 report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
                 rowcounts[k] += 1
 
@@ -270,7 +270,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         and 90_percentile. """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {}
             parsed_data[s]['status'] = ''
             parsed_data[s]['base'] = list()
@@ -369,7 +369,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         containing percentage and values containing counts """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             for l in data.splitlines():
@@ -396,7 +396,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for s in sorted(parsed_data):
             pairs = list()
             statuses[s] = parsed_data[s]['status']
-            for k, p in iter(sorted(parsed_data[s]['vals'].iteritems())):
+            for k, p in iter(sorted(parsed_data[s]['vals'].items())):
                 pairs.append([int(k), p])
             data.append({
                 'name': s,
@@ -457,7 +457,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         position and third key with the base ([ACTG]). Values contain percentages """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             for l in data.splitlines():
@@ -547,7 +547,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         containing adapter type and values containing counts """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             adapter_types = []
@@ -578,10 +578,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         statuses = dict()
         for s in sorted(parsed_data):
             statuses[s] = parsed_data[s]['status']
-            for a, d in parsed_data[s]['vals'].iteritems():
+            for a, d in parsed_data[s]['vals'].items():
                 if max(d.values()) >= 1:
                     pairs = list()
-                    for base, count in iter(sorted(d.iteritems())):
+                    for base, count in iter(sorted(d.items())):
                         pairs.append([base, count])
                     data.append({
                         'name': '{} - {}'.format(s, a),

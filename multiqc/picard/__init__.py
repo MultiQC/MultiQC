@@ -34,7 +34,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                            i = s.find('## METRICS CLASS	picard.sam.DuplicationMetrics')
+                            i = s.find(b'## METRICS CLASS	picard.sam.DuplicationMetrics')
                             if i > -1:
                                 s_name = fn
                                 s_name = s_name.split(".metrics",1)[0]
@@ -80,7 +80,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">%&nbsp;Dups</span></th>'
-        for sn, data in self.picard_data.iteritems():
+        for sn, data in self.picard_data.items():
             report['general_stats']['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
 
     def mark_duplicates_plot (self):

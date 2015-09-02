@@ -49,7 +49,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Write parsed report data to a file
         # Only the summary stats - skip the length data (t_lengths)
         with open (os.path.join(self.output_dir, 'report_data', 'multiqc_bowtie.txt'), "w") as f:
-            print( self.dict_to_csv( { k: { j: x for j, x in v.iteritems() if j != 't_lengths'} for k, v in self.bowtie_data.iteritems() } ), file=f)
+            print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.bowtie_data.items() } ), file=f)
 
         self.sections = list()
 
@@ -63,7 +63,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
 
     def parse_bowtie_logs(self, s):
-        i = s.find('# reads processed:', 0)
+        i = s.find(b'# reads processed:', 0)
         parsed_data = {}
         if i >= 0:
             regexes = {
@@ -76,7 +76,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'mulimapped_percentage': r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)"
             }
 
-            for k, r in regexes.iteritems():
+            for k, r in regexes.items():
                 match = re.search(r, l)
                 if match:
                     parsed_data[k] = int(match.group(1).replace(',', ''))
@@ -89,7 +89,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         report['general_stats']['headers']['bowtie_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bowtie: % reads with at least one reported alignment">%&nbsp;Aligned</span></th>'
-        for samp, vals in self.bowtie_data.iteritems():
+        for samp, vals in self.bowtie_data.items():
             report['general_stats']['rows'][samp]['bowtie_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['reads_aligned_percentage'])
 
     def bowtie_alignment_plot (self):
@@ -99,7 +99,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # for s in sorted(self.bowtie_data):
         #     counts_pairs = list()
         #     obsexp_pairs = list()
-        #     for l, p in iter(sorted(self.bowtie_data[s]['t_lengths'].iteritems())):
+        #     for l, p in iter(sorted(self.bowtie_data[s]['t_lengths'].items())):
         #         counts_pairs.append([l, p['count']])
         #         obsexp_pairs.append([l, p['obs_exp']])
         #     counts.append({

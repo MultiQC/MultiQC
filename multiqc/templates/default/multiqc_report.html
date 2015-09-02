@@ -81,7 +81,7 @@
       <thead>
         <tr>
           <th></th>
-          {%- for k, h in report['general_stats']['headers'].iteritems() %}
+          {%- for k, h in report['general_stats']['headers'].items() %}
             {{ h }}
           {%- endfor -%}
         </tr>
@@ -90,7 +90,7 @@
         {% for sn, r in report['general_stats']['rows']|dictsort %}
         <tr>
           <th>{{ sn }}</th>
-          {%- for k, h in report['general_stats']['headers'].iteritems() %}
+          {%- for k, h in report['general_stats']['headers'].items() %}
             {{ r[k] if r[k] else '<td></td>' }}
           {%- endfor -%}
         </tr>

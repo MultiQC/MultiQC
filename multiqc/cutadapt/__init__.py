@@ -48,7 +48,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Write parsed report data to a file
         # Only the summary stats - skip the length data (t_lengths)
         with open (os.path.join(self.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w") as f:
-            print( self.dict_to_csv( { k: { j: x for j, x in v.iteritems() if j != 't_lengths'} for k, v in self.cutadapt_data.iteritems() } ), file=f)
+            print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.cutadapt_data.items() } ), file=f)
 
         self.sections = list()
 
@@ -62,16 +62,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
 
     def parse_cutadapt_logs(self, s):
-        i = s.find('Input filename', 0)
+        i = s.find(b'Input filename', 0)
         while i >= 0:
             s.seek(i)
 
-            fn_search = re.search(r"^Input filename:\s+(.+)$", s.readline())
+            fn_search = re.search(br"^Input filename:\s+(.+)$", s.readline())
             while fn_search is None:
                 l = s.readline()
                 if not l: return # end of file
-                fn_search = re.search(r"^Input filename:\s+(.+)$", l)
-            s_name = fn_search.group(1)
+                fn_search = re.search(br"^Input filename:\s+(.+)$", l)
+            s_name = fn_search.group(1).decode()
             s_name = s_name.split(".txt",1)[0]
             s_name = s_name.split("_trimming_report",1)[0]
             s_name = s_name.split(".gz",1)[0]
@@ -89,14 +89,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
             l = s.readline()
             while l:
-                for k, r in regexes.iteritems():
-                    match = re.search(r, l)
+                for k, r in regexes.items():
+                    match = re.search(r.encode('utf-8'), l)
                     if match:
-                        self.cutadapt_data[s_name][k] = int(match.group(1).replace(',', ''))
+                        self.cutadapt_data[s_name][k] = int(match.group(1).decode().replace(',', ''))
 
-                if l.find('length') > -1 and l.find('max.err') > -1:
+                if l.find(b'length') > -1 and l.find(b'max.err') > -1:
                     l = s.readline()
-                    r_seqs = re.search(r"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
+                    r_seqs = re.search(br"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
                     self.cutadapt_data[s_name]['t_lengths'] = {}
                     while r_seqs:
                         a_len = int(r_seqs.group(1))
@@ -111,10 +111,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             self.cutadapt_data[s_name]['t_lengths'][a_len]['obs_exp'] = float(r_seqs.group(2))
 
                         l = s.readline() # Push on to next line for regex
-                        r_seqs = re.search(r"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
+                        r_seqs = re.search(br"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
 
                 if len(self.cutadapt_data[s_name]) == len(regexes) + 1: break # Found everything we need
-                if l.find('Input filename') > -1: break # Didn't find everything, but come across another sample
+                if l.find(b'Input filename') > -1: break # Didn't find everything, but come across another sample
 
                 l = s.readline() # Next line for while loop
 
@@ -122,7 +122,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 self.cutadapt_data[s_name]['percent_trimmed'] = (float(self.cutadapt_data[s_name]['bp_processed'] - self.cutadapt_data[s_name]['bp_written']) / self.cutadapt_data[s_name]['bp_processed']) * 100
 
             # Look for the next cutadapt output in this file
-            i = s.find('This is cutadapt', i + 1)
+            i = s.find(b'This is cutadapt', i + 1)
 
 
     def cutadapt_general_stats_table(self, report):
@@ -130,7 +130,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         report['general_stats']['headers']['bp_trimmed'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="% Total Base Pairs trimmed by Cutadapt">Trimmed</span></th>'
-        for samp, vals in self.cutadapt_data.iteritems():
+        for samp, vals in self.cutadapt_data.items():
             report['general_stats']['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
 
     def cutadapt_length_trimmed_plot (self):
@@ -140,7 +140,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for s in sorted(self.cutadapt_data):
             counts_pairs = list()
             obsexp_pairs = list()
-            for l, p in iter(sorted(self.cutadapt_data[s]['t_lengths'].iteritems())):
+            for l, p in iter(sorted(self.cutadapt_data[s]['t_lengths'].items())):
                 counts_pairs.append([l, p['count']])
                 obsexp_pairs.append([l, p['obs_exp']])
             counts.append({

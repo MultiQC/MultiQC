@@ -52,7 +52,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def parse_fqscreen(self, fq_screen_raw_data):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = dict()
-        for s, data in fq_screen_raw_data.iteritems():
+        for s, data in fq_screen_raw_data.items():
             parsed_data[s] = OrderedDict()
             for l in data.splitlines():
                 if l[:18] == "%Hit_no_libraries:":
@@ -94,7 +94,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Libraries' }
         p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Library' }
         p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Library' }
-        for k, t in p_types.iteritems():
+        for k, t in p_types.items():
             first = True
             for s in sorted(parsed_data):
                 thisdata = list()
