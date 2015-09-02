@@ -143,11 +143,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             groupPadding: 0.02, \n\
                             stacking: "normal" }} \n\
                     }}, \n\
-                    credits: {{ \n\
-                        enabled: true, \n\
-                        text: "Created with MultiQC", \n\
-                        href: "https://github.com/ewels/MultiQC" \n\
-            		}}, \n\
                     series: fq_screen_data \n\
                 }}); \n\
             }}); \n\

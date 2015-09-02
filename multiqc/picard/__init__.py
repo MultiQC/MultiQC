@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import defaultdict
+import io
 import json
 import logging
 import mmap
@@ -32,9 +33,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for fn in filenames:
                 if os.path.getsize(os.path.join(root,fn)) < 10000:
                     try:
-                        with open (os.path.join(root,fn), "r") as f:
-                            s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                            i = s.find(b'## METRICS CLASS	picard.sam.DuplicationMetrics')
+                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                            s = f.read()
+                            i = s.find('## METRICS CLASS	picard.sam.DuplicationMetrics')
                             if i > -1:
                                 s_name = fn
                                 s_name = s_name.split(".metrics",1)[0]
@@ -58,7 +59,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         logging.info("Found {} Picard reports".format(len(self.picard_data)))
 
         # Write parsed report data to a file
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_picard.txt'), "w") as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_picard.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.picard_data ), file=f)
 
         self.sections = list()

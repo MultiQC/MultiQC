@@ -4,6 +4,7 @@
 """
 
 from collections import OrderedDict
+import io
 import json
 import logging
 import os
@@ -42,7 +43,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)
                 d_path = os.path.join(root, 'fastqc_data.txt')
-                with open (d_path, "r") as f:
+                with io.open (d_path, "r", encoding='utf-8') as f:
                     r_data = f.read()
 
                 # Get the sample name from inside the file if possible
@@ -73,7 +74,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     fqc_zip = zipfile.ZipFile(os.path.join(root, f))
                     try:
                         with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
-                            r_data = f.read().decode()
+                            r_data = f.read().decode('utf8')
 
                         # Get the sample name from inside the file if possible
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
@@ -100,7 +101,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             try:
                                 with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
                                     img = f.read()
-                                with open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), 'wb') as f:
+                                with io.open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "wb") as f:
                                     f.write(img)
                             except KeyError:
                                 pass

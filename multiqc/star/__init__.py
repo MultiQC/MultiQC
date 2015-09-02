@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import io
 import json
 import logging
 import mmap
@@ -32,7 +33,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith('Log.final.out'):
-                    with open (os.path.join(root,fn), "r") as f:
+                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         parsed_data = self.parse_star_report(f.read())
                         if parsed_data is not None:
                             self.star_data[fn[:-13]] = parsed_data
@@ -44,7 +45,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         logging.info("Found {} STAR reports".format(len(self.star_data)))
 
         # Write parsed report data to a file
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_star.txt'), "w") as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_star.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.star_data ), file=f)
 
         self.sections = list()

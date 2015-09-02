@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from Cutadapt """
 
 from __future__ import print_function
+import io
 import json
 import logging
 import mmap
@@ -47,7 +48,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Write parsed report data to a file
         # Only the summary stats - skip the length data (t_lengths)
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w") as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.cutadapt_data.items() } ), file=f)
 
         self.sections = list()

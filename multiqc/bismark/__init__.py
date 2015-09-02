@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import io
 import json
 import logging
 import os
@@ -31,7 +32,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith('_PE_report.txt') or fn.endswith('_SE_report.txt'):
-                    with open (os.path.join(root,fn), "r") as f:
+                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         r_data = f.read()
                         fn_search = re.search("Bismark report for: (\S+)", r_data)
                         if fn_search:
@@ -45,7 +46,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             logging.warn("Didn't recognise bismark alignment report contents: {}".format(fn))
 
                 if fn.endswith('.deduplication_report.txt'):
-                    with open (os.path.join(root,fn), "r") as f:
+                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         r_data = f.read()
                         fn_search = re.search("Total number of alignments analysed in (\S+)", r_data)
                         if fn_search:
@@ -59,7 +60,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             logging.warn("Didn't recognise bismark deduplication report contents: {}".format(fn))
 
                 if fn.endswith('_splitting_report.txt'):
-                    with open (os.path.join(root,fn), "r") as f:
+                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         r_data = f.read()
                         s_name = r_data.splitlines()[0]
                         s_name = s_name.split(".gz",1)[0]
@@ -79,7 +80,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.parse_bismark_reports()
 
         # Write parsed report data to a file
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_bismark.txt'), "w") as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_bismark.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.bismark_data ), file=f)
 
         # Basic Stats Table

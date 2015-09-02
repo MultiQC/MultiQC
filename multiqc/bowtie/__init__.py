@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from Bowtie """
 
 from __future__ import print_function
+import io
 import json
 import logging
 import mmap
@@ -32,8 +33,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for fn in filenames:
                 if os.path.getsize(os.path.join(root,fn)) < 10000:
                     try:
-                        with open (os.path.join(root,fn), "r") as f:
-                            s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                            s = f.read()
                             parsed_data = self.parse_bowtie_logs(s)
                             if parsed_data is not None:
                                 self.bowtie_data[fn] = parsed_data
@@ -63,7 +64,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
 
     def parse_bowtie_logs(self, s):
-        i = s.find(b'# reads processed:', 0)
+        i = s.find('# reads processed:', 0)
         parsed_data = {}
         if i >= 0:
             regexes = {
