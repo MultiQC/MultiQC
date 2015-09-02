@@ -319,25 +319,28 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'data': pairs
             })
             names.append(s);
-
+        
+        next_prev_buttons = ''
+        if len(names) > 1:
+            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_quals">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_quals">Next &raquo;</a> \n\
+            </div></div>'
+        
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_quals" class="hc-plot-wrapper"> \n\
             <div class="showhide_orig" style="display:none;"> \n\
-                <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">status</span></h4> \n\
-                <div class="clearfix"><div class="btn-group btn-group-sm"> \n\
-                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_quals">&laquo; Previous</a> \n\
-                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_quals">Next &raquo;</a> \n\
-                </div></div>\n\
-                <img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_quality.png" data-fnsuffix="_per_base_quality.png"> \n\
+                <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
+                {b} <img class="original-plot" src="report_data/fastqc/{fn}_per_base_quality.png" data-fnsuffix="_per_base_quality.png"> \n\
             </div>\n\
             <div id="fastqc_quality_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
         </div> \n\
         <script type="text/javascript"> \n\
-            fastqc_overlay_hist_data = {};\n\
+            fastqc_overlay_hist_data = {d};\n\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_quals"] = {};\
+            fastqc_s_names["fastqc_quals"] = {n};\
             if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_quals"] = {};\
+            fastqc_s_statuses["fastqc_quals"] = {s};\
             var quals_pconfig = {{ \n\
                 "title": "Mean Quality Scores",\n\
                 "ylab": "Phred Score",\n\
@@ -355,7 +358,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_quality_overlay", fastqc_overlay_hist_data, quals_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses));
+        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses));
 
         return html
 
@@ -400,25 +403,29 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'data': pairs
             })
             names.append(s)
-
+        
+        if len(names) > 1:
+            next_prev_buttons = '<div class="btn-group btn-group-sm"> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_gc">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_gc">Next &raquo;</a> \n\
+            </div>'
+        else: next_prev_buttons = ''
+        
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_gc" class="hc-plot-wrapper"> \n\
             <div class="showhide_orig" style="display:none;"> \n\
-                <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">status</span></h4> \n\
-                <div class="btn-group btn-group-sm"> \n\
-                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_gc">&laquo; Previous</a> \n\
-                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_gc">Next &raquo;</a> \n\
-                </div>\n\
-                <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"></p> \n\
+                <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
+                {b}\n\
+                <p><img class="original-plot" src="report_data/fastqc/{fn}_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"></p> \n\
             </div>\n\
             <div id="fastqc_gc_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
         </div>\n\
         <script type="text/javascript"> \
-            var fastqc_overlay_gc_data = {};\
+            var fastqc_overlay_gc_data = {d};\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_gc"] = {};\
+            fastqc_s_names["fastqc_gc"] = {n};\
             if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_gc"] = {};\
+            fastqc_s_statuses["fastqc_gc"] = {s};\
             var gc_pconfig = {{ \n\
                 "title": "Per Sequence GC Content",\n\
                 "ylab": "Count",\n\
@@ -438,7 +445,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_gc_overlay", fastqc_overlay_gc_data, gc_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses));
+        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses));
 
         return html
 
@@ -490,16 +497,20 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Order the table by the sample names
         data = OrderedDict(sorted(data.items()))
+        
+        if len(names) > 1:
+            next_prev_buttons = '<div class="btn-group btn-group-sm"> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_seq">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_seq">Next &raquo;</a> \n\
+            </div>'
+        else: next_prev_buttons = ''
 
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_seq"> \n\
-            <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
+            <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
-                <div class="btn-group btn-group-sm"> \n\
-                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_seq">&laquo; Previous</a> \n\
-                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_seq">Next &raquo;</a> \n\
-                </div>\n\
-                <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> \n\
+                {b}\n\
+                <p><img class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> \n\
             </div>\n\
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
                 <div id="fastqc_seq_plot" class="hc-plot"> \n\
@@ -517,15 +528,15 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             <div class="clearfix"></div> \n\
         </div> \n\
         <script type="text/javascript"> \n\
-            fastqc_seq_content_data = {};\n\
+            fastqc_seq_content_data = {d};\n\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_seq"] = {};\n\
+            fastqc_s_names["fastqc_seq"] = {n};\n\
             if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_seq"] = {};\
+            fastqc_s_statuses["fastqc_seq"] = {s};\
             $(function () {{ \n\
                 fastqc_seq_content_heatmap(); \n\
             }}); \n\
-        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses))
+        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses))
 
         return html
 
@@ -580,25 +591,29 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         if len(data) == 0:
             return '<p>No adapter contamination found in any samples.</p>'
-
+        
+        if len(names) > 1:
+            next_prev_buttons = '<div class="btn-group btn-group-sm"> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter_original">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter_original">Next &raquo;</a> \n\
+            </div>'
+        else: next_prev_buttons = ''
+        
         html = '<div id="fastqc_adapter_original" class="fastqc_orig"> \n\
             <p class="text-muted">Samples with no adapter contamination are hidden. <span class="instr">Click to show original FastQC plot.</span></p>\n\
             <div class="showhide_orig" style="display:none;"> \n\
-                <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">status</span></h4> \n\
-                <div class="btn-group btn-group-sm"> \n\
-                    <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter_original">&laquo; Previous</a> \n\
-                    <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter_original">Next &raquo;</a> \n\
-                </div>\n\
-                <p><img class="original-plot" src="report_data/fastqc/'+names[0]+'_adapter_content.png" data-fnsuffix="_adapter_content.png"></p> \n\
+                <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
+                {b}\n\
+                <p><img class="original-plot" src="report_data/fastqc/{fn}_adapter_content.png" data-fnsuffix="_adapter_content.png"></p> \n\
             </div>\n\
         </div>\n\
         <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot hc-plot"></div>\n\
         <script type="text/javascript"> \
-            fastqc_adapter_data = {};\
+            fastqc_adapter_data = {d};\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_adapter_original"] = {};\n\
+            fastqc_s_names["fastqc_adapter_original"] = {n};\n\
             if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_adapter_original"] = {};\
+            fastqc_s_statuses["fastqc_adapter_original"] = {s};\
             var adapter_pconfig = {{ \n\
                 "title": "Adapter Content",\n\
                 "ylab": "% of Sequences",\n\
@@ -618,7 +633,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \
                 plot_xy_line_graph("#fastqc_adapter_overlay", fastqc_adapter_data, adapter_pconfig); \
             }}); \
-        </script>'.format(json.dumps(data), json.dumps(names), json.dumps(statuses));
+        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses));
 
         return html
 
