@@ -34,21 +34,19 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if os.path.getsize(os.path.join(root,fn)) < 10000:
                     try:
                         with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                            s = f.read()
-                            i = s.find('## METRICS CLASS	picard.sam.DuplicationMetrics')
-                            if i > -1:
-                                s_name = fn
-                                s_name = s_name.split(".metrics",1)[0]
-                                s.seek(i)
-                                s.readline()
-                                keys = s.readline().split()
-                                vals = s.readline().split()
-                                # TODO: Deal with multiple libraries? Proper regex?
-                                for i, k in enumerate(keys):
-                                    try:
-                                        self.picard_data[s_name][k] = float(vals[i])
-                                    except ValueError:
-                                        self.picard_data[s_name][k] = vals[i]
+                            s = f.readlines()
+                            for idx, l in enumerate(s):
+                                if l == '## METRICS CLASS	picard.sam.DuplicationMetrics':
+                                    s_name = fn
+                                    s_name = s_name.split(".metrics",1)[0]
+                                    keys = s[idx+1].split()
+                                    vals = s[idx+2].split()
+                                    for i, k in enumerate(keys):
+                                        try:
+                                            self.picard_data[s_name][k] = float(vals[i])
+                                        except ValueError:
+                                            self.picard_data[s_name][k] = vals[i]
+                                    break # TODO: Deal with multiple libraries? Proper regex?
                     except ValueError:
                         logging.debug("Couldn't read file when looking for Picard output: {}".format(fn))
 
