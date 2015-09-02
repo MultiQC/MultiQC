@@ -41,6 +41,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         s_name = s_name.split(".gz",1)[0]
                         s_name = s_name.split(".fastq",1)[0]
                         s_name = s_name.split(".fq",1)[0]
+                        if report['prepend_dirs']:
+                            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                         parsed_data = self.parse_featurecounts_report(f.read())
                         if parsed_data is not None:
                             self.featurecounts_data[s_name] = parsed_data

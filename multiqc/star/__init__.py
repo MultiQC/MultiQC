@@ -36,7 +36,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         parsed_data = self.parse_star_report(f.read())
                         if parsed_data is not None:
-                            self.star_data[fn[:-13]] = parsed_data
+                            s_name = fn[:-13]
+                            if report['prepend_dirs']:
+                                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
+                            self.star_data[s_name] = parsed_data
 
         if len(self.star_data) == 0:
             logging.debug("Could not find any STAR reports in {}".format(self.analysis_dir))

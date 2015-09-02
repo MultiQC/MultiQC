@@ -36,7 +36,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                            self.parse_cutadapt_logs(s)
+                            self.parse_cutadapt_logs(s, root, report)
                     except ValueError:
                         logging.debug("Couldn't read file when looking for cutadapt output: {}".format(fn))
 
@@ -62,7 +62,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.intro += self.cutadapt_length_trimmed_plot()
 
 
-    def parse_cutadapt_logs(self, s):
+    def parse_cutadapt_logs(self, s, root, report):
         i = s.find(b'Input filename', 0)
         while i >= 0:
             s.seek(i)
@@ -78,6 +78,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             s_name = s_name.split(".gz",1)[0]
             s_name = s_name.split(".fastq",1)[0]
             s_name = s_name.split(".fq",1)[0]
+            if report['prepend_dirs']:
+                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
 
             self.cutadapt_data[s_name] = dict()
             regexes = {

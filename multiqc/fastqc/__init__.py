@@ -55,6 +55,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 s_name = s_name.split(".gz",1)[0]
                 s_name = s_name.split(".fastq",1)[0]
                 s_name = s_name.split(".fq",1)[0]
+                
+                if report['prepend_dirs']:
+                    s_name = "{} | {}".format(os.path.dirname(root).replace(os.sep, ' | '), s_name).lstrip('. | ')
 
                 fastqc_raw_data[s_name] = r_data
 
@@ -89,6 +92,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = s_name[:-3]
                         if s_name[-6:] == '.fastq':
                             s_name = s_name[:-6]
+                        
+                        if report['prepend_dirs']:
+                            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
 
                         fastqc_raw_data[s_name] = r_data
 
@@ -474,6 +480,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
+                    l.replace('NaN','0')
                     seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
                     try:
                         bp = int(seq_matches.group(1).split('-', 1)[0])
@@ -485,7 +492,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s]['vals'][bp]['C'] = float(seq_matches.group(5))
                     except AttributeError:
                         if l[:1] != '#':
-                            raise
+                            logging.debug("Couldn't parse a line from FastQC sequence content report {}: {}".format(s, l))
             if len(parsed_data[s]['vals']) == 0:
                 parsed_data.pop(s, None)
 
@@ -514,7 +521,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_seq"> \n\
-            <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
+            <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 {b}\n\
                 <p><img class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> \n\

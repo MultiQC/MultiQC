@@ -41,6 +41,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = s_name.split(".fastq",1)[0]
                             s_name = s_name.split(".fq",1)[0]
                             s_name = s_name.split("_val_1",1)[0]
+                            if report['prepend_dirs']:
+                                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                             self.bismark_raw_data[s_name]['alignment'] = r_data
                         else:
                             logging.warn("Didn't recognise bismark alignment report contents: {}".format(fn))
@@ -55,6 +57,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = s_name.split(".fastq",1)[0]
                             s_name = s_name.split(".fq",1)[0]
                             s_name = s_name.split("_val_1",1)[0]
+                            if report['prepend_dirs']:
+                                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                             self.bismark_raw_data[s_name]['dedup'] = r_data
                         else:
                             logging.warn("Didn't recognise bismark deduplication report contents: {}".format(fn))
@@ -67,6 +71,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         s_name = s_name.split(".fastq",1)[0]
                         s_name = s_name.split(".fq",1)[0]
                         s_name = s_name.split("_val_1",1)[0]
+                        if report['prepend_dirs']:
+                            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                         self.bismark_raw_data[s_name]['methextract'] = r_data
 
         if len(self.bismark_raw_data) == 0:

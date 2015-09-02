@@ -60,7 +60,7 @@ except IOError:
     }
 
 # Main function to execute MultiQC
-def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], output_dir=os.path.join(os.getcwd(), config['output_dir']), run_modules=avail_modules, force_overwrite=False):
+def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=config['template'], output_dir=os.path.join(os.getcwd(), config['output_dir']), run_modules=avail_modules, force_overwrite=False):
 
     # Set up helper vars
     template_dir = os.path.join(MULTIQC_DIR, 'templates', template.strip())
@@ -68,7 +68,7 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
     if OSX_APP: output_dir = os.path.join(analysis_dir, 'multiqc_report')
     template_fn = os.path.join(output_dir, 'multiqc_report.html')
 
-    analysis_dir = os.path.realpath(analysis_dir)
+    # analysis_dir = os.path.realpath(analysis_dir)
     logging.info("Scanning {}".format(analysis_dir))
 
     # Copy the template directory to the output directory
@@ -94,6 +94,7 @@ def multiqc (analysis_dir=os.getcwd(), title=None, template=config['template'], 
     # Create a dict with common fields
     report = {
         'title': title,
+        'prepend_dirs': prepend_dirs,
         'creation_date': datetime.now().strftime("%Y-%m-%d, %H:%m"),
         'working_dir': os.getcwd(),
         'analysis_dir': analysis_dir,
@@ -164,6 +165,8 @@ if __name__ == "__main__":
         analysis results. To run here, use 'multiqc .'")
     parser.add_argument('analysis_dir', metavar='<analysis directory>',
         help="Directory with analysis results to parse. Use '.' for current working directory.")
+    parser.add_argument('-d', "--dirs", dest="prepend_dirs", action='store_true',
+        help="Prepend directory to sample names")
     parser.add_argument('-i', "--title", dest="title", default=None,
         help="Report title")
     parser.add_argument('-t', "--template", dest="template", default=config['template'], choices=avail_templates, metavar='TEMPLATE',
