@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from FastQC
 """
 
+from __future__ import print_function
 from collections import OrderedDict
 import io
 import json
@@ -123,6 +124,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Report table is immutable, so just updating it works
         parsed_stats = self.fastqc_general_stats(fastqc_raw_data)
         self.fastqc_stats_table(parsed_stats, report)
+        
+        # Write the basic stats table data to a file
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_fastqc.txt'), "w", encoding='utf-8') as f:
+            print( self.dict_to_csv( parsed_stats ), file=f)
+
 
         # Section 1 - Quality Histograms
         histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
