@@ -96,6 +96,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         'title': title,
         'prepend_dirs': prepend_dirs,
         'creation_date': datetime.now().strftime("%Y-%m-%d, %H:%m"),
+        'version': VERSION,
         'working_dir': os.getcwd(),
         'analysis_dir': analysis_dir,
         'output_dir': output_dir,
