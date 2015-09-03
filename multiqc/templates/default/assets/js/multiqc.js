@@ -459,42 +459,46 @@ function apply_mqc_highlights(){
   
   // Loop through each plot
   $.each(Object.keys(highcharts_plots), function(i, id){
-    var p = highcharts_plots[id];
-    
-    // Colour the lines in line charts
-    if(p.options.chart.type == 'line'){
-      $.each(p.series, function(j, s){
-        if(highcharts_plot_options[id]['series'][j]['color'] === undefined){
-          highcharts_plot_options[id]['series'][j]['color'] = s.color;
-        }
-        var thiscol = highcharts_plot_options[id]['series'][j]['color'];
-        $.each(f_texts, function(idx, f_text){
-          if(f_text == '[ all ]'){ f_text = ''; }
-          if((regex_mode && s.name.match(f_text)) || (!regex_mode && s.name.indexOf(f_text) > -1)){
-            thiscol = f_cols[idx];
+    // Put in a try / catch so that one plot doesn't break all highlighting
+    try {
+      var p = highcharts_plots[id];
+      // Colour the lines in line charts
+      if(p.options.chart.type == 'line'){
+        $.each(p.series, function(j, s){
+          if(highcharts_plot_options[id]['series'][j]['color'] === undefined){
+            highcharts_plot_options[id]['series'][j]['color'] = s.color;
           }
+          var thiscol = highcharts_plot_options[id]['series'][j]['color'];
+          $.each(f_texts, function(idx, f_text){
+            if(f_text == '[ all ]'){ f_text = ''; }
+            if((regex_mode && s.name.match(f_text)) || (!regex_mode && s.name.indexOf(f_text) > -1)){
+              thiscol = f_cols[idx];
+            }
+          });
+          s.color = thiscol;
+          s.graph.attr({ stroke: thiscol });
+          $.each(s.data, function(i, point) { point.pointAttr.hover.fill = thiscol; });
         });
-        s.color = thiscol;
-        s.graph.attr({ stroke: thiscol });
-        $.each(s.data, function(i, point) { point.pointAttr.hover.fill = thiscol; });
-      });
-    }
-    
-    // Colour the text labels on bar charts
-    else if(p.options.chart.type == 'bar'){
-      $(id+' .highcharts-xaxis-labels text').each(function(i, val){
-        var labeltext = $(this).text();
-        var thiscol = '#606060';
-        $.each(f_texts, function(idx, f_text){
-          if(f_text == '[ all ]'){ f_text = ''; }
-          if((regex_mode && labeltext.match(f_text)) || (!regex_mode && labeltext.indexOf(f_text) > -1)){
-            thiscol = f_cols[idx];
-          }
+      }
+      
+      // Colour the text labels on bar charts
+      else if(p.options.chart.type == 'bar'){
+        $(id+' .highcharts-xaxis-labels text').each(function(i, val){
+          var labeltext = $(this).text();
+          var thiscol = '#606060';
+          $.each(f_texts, function(idx, f_text){
+            if(f_text == '[ all ]'){ f_text = ''; }
+            if((regex_mode && labeltext.match(f_text)) || (!regex_mode && labeltext.indexOf(f_text) > -1)){
+              thiscol = f_cols[idx];
+            }
+          });
+          $(this).css('fill', thiscol);
         });
-        $(this).css('fill', thiscol);
-      });
+      }
+      p.redraw();
+    } catch(err) {
+      console.log("Error highlighting highcharts plot "+id)
     }
-    p.redraw();
   });
   
   // Colour the heading text on the general stats table
@@ -532,6 +536,7 @@ function apply_mqc_hidesamples(){
   // Loop through each plot
   $('.hc-plot').each(function(){
     var plotid = $(this).attr('id');
+    // Put in a try / catch so that one plot doesn't break all hiding
     try {
       // Line plots
       if($(this).highcharts().options.chart.type == 'line'){
