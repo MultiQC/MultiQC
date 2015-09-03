@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import defaultdict
+import io
 import json
 import logging
 import mmap
@@ -30,24 +31,25 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.picard_data = defaultdict(lambda: dict())
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 10000:
+                if os.path.getsize(os.path.join(root,fn)) < 50000:
                     try:
-                        with open (os.path.join(root,fn), "r") as f:
-                            s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                            i = s.find('## METRICS CLASS	picard.sam.DuplicationMetrics')
-                            if i > -1:
-                                s_name = fn
-                                s_name = s_name.split(".metrics",1)[0]
-                                s.seek(i)
-                                s.readline()
-                                keys = s.readline().split()
-                                vals = s.readline().split()
-                                # TODO: Deal with multiple libraries? Proper regex?
-                                for i, k in enumerate(keys):
-                                    try:
-                                        self.picard_data[s_name][k] = float(vals[i])
-                                    except ValueError:
-                                        self.picard_data[s_name][k] = vals[i]
+                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                            s = f.readlines()
+                            for idx, l in enumerate(s):
+                                if l == '## METRICS CLASS	picard.sam.DuplicationMetrics':
+                                    s_name = fn
+                                    s_name = s_name.split(".metrics",1)[0]
+                                    s_name = self.clean_s_name(s_name)
+                                    if report['prepend_dirs']:
+                                        s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
+                                    keys = s[idx+1].split()
+                                    vals = s[idx+2].split()
+                                    for i, k in enumerate(keys):
+                                        try:
+                                            self.picard_data[s_name][k] = float(vals[i])
+                                        except ValueError:
+                                            self.picard_data[s_name][k] = vals[i]
+                                    break # TODO: Deal with multiple libraries? Proper regex?
                     except ValueError:
                         logging.debug("Couldn't read file when looking for Picard output: {}".format(fn))
 
@@ -58,7 +60,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         logging.info("Found {} Picard reports".format(len(self.picard_data)))
 
         # Write parsed report data to a file
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_picard.txt'), "w") as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_picard.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.picard_data ), file=f)
 
         self.sections = list()
@@ -80,7 +82,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">%&nbsp;Dups</span></th>'
-        for sn, data in self.picard_data.iteritems():
+        for sn, data in self.picard_data.items():
             report['general_stats']['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
 
     def mark_duplicates_plot (self):

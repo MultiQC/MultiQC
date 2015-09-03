@@ -1,14 +1,21 @@
 from setuptools import setup, find_packages
+import io
+import os
 
 version = '0.1.1dev'
+
+# Get the long description from the readme
+here = os.path.abspath(os.path.dirname(__file__))
+with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name = 'multiqc',
     version = version,
     author = 'Phil Ewels',
     author_email = 'phil.ewels@scilifelab.se',
-    description = "Create aggregate analyses reports for many samples",
-    long_description = 'A modular tool to aggregate results from bioinformatics analyses across many samples into a single report',
+    description = "Create aggregate bioinformatics analysis report across many samples",
+    long_description = long_description,
     keywords = 'bioinformatics',
     url = 'https://github.com/ewels/MultiQC',
     download_url = 'https://github.com/ewels/MultiQC/releases',

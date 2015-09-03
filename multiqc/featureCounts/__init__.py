@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import defaultdict
+import io
 import json
 import logging
 import os
@@ -32,14 +33,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith('_counts.txt.summary'):
-                    with open (os.path.join(root,fn), "r") as f:
+                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         s_name = fn[:-19]
-                        s_name = s_name.split(".bam",1)[0]
-                        s_name = s_name.split(".sam",1)[0]
+                        s_name = self.clean_s_name(s_name)
                         s_name = s_name.split("_star_aligned",1)[0]
-                        s_name = s_name.split(".gz",1)[0]
-                        s_name = s_name.split(".fastq",1)[0]
-                        s_name = s_name.split(".fq",1)[0]
+                        if report['prepend_dirs']:
+                            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                         parsed_data = self.parse_featurecounts_report(f.read())
                         if parsed_data is not None:
                             self.featurecounts_data[s_name] = parsed_data
@@ -51,7 +50,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         logging.info("Found {} featureCounts reports".format(len(self.featurecounts_data)))
 
         # Write parsed report data to a file
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w") as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.featurecounts_data ), file=f)
 
         self.sections = list()
@@ -84,7 +83,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         }
         parsed_data = {}
         total_count = 0
-        for k, r in regexes.iteritems():
+        for k, r in regexes.items():
             r_search = re.search(r, raw_data, re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
@@ -100,7 +99,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         report['general_stats']['headers']['featureCounts_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: % Assigned reads">%&nbsp;Assigned</span></th>'
         report['general_stats']['headers']['featureCounts'] = '<th class="chroma-col" data-chroma-scale="PuBu" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: Assigned reads (millions)">M&nbsp;Assigned</span></th>'
-        for sn, data in self.featurecounts_data.iteritems():
+        for sn, data in self.featurecounts_data.items():
             report['general_stats']['rows'][sn]['featureCounts_percent'] = '<td class="text-right">{:.1f}%</td>'.format((data['Assigned']/data['Total'])*100)
             report['general_stats']['rows'][sn]['featureCounts'] = '<td class="text-right">{:.1f}</td>'.format(data['Assigned']/1000000)
 

@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import io
 import json
 import logging
 import mmap
@@ -32,10 +33,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith('Log.final.out'):
-                    with open (os.path.join(root,fn), "r") as f:
+                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         parsed_data = self.parse_star_report(f.read())
                         if parsed_data is not None:
-                            self.star_data[fn[:-13]] = parsed_data
+                            s_name = fn[:-13]
+                            s_name = self.clean_s_name(s_name)
+                            if report['prepend_dirs']:
+                                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
+                            self.star_data[s_name] = parsed_data
 
         if len(self.star_data) == 0:
             logging.debug("Could not find any STAR reports in {}".format(self.analysis_dir))
@@ -44,7 +49,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         logging.info("Found {} STAR reports".format(len(self.star_data)))
 
         # Write parsed report data to a file
-        with open (os.path.join(self.output_dir, 'report_data', 'multiqc_star.txt'), "w") as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_star.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.star_data ), file=f)
 
         self.sections = list()
@@ -87,7 +92,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'unmapped_other_percent':       r"% of reads unmapped: other \|\s+([\d\.]+)",
         }
         parsed_data = {}
-        for k, r in regexes.iteritems():
+        for k, r in regexes.items():
             r_search = re.search(r, raw_data, re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
@@ -112,7 +117,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         report['general_stats']['headers']['uniquely_mapped_percent'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">%&nbsp;Mapped</span></th>'
         report['general_stats']['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M&nbsp;Mapped</span></th>'
-        for sn, data in self.star_data.iteritems():
+        for sn, data in self.star_data.items():
             report['general_stats']['rows'][sn]['uniquely_mapped_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['uniquely_mapped_percent'])
             report['general_stats']['rows'][sn]['uniquely_mapped'] = '<td class="text-right">{:.1f}</td>'.format(data['uniquely_mapped']/1000000)
 
@@ -138,7 +143,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'uniquely_mapped':     '#437bb1',
         }
 
-        for k, name in keys.iteritems():
+        for k, name in keys.items():
             thisdata = list()
             for sn in cats:
                 thisdata.append(self.star_data[sn][k])

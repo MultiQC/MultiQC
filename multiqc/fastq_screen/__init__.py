@@ -33,6 +33,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for fn in filenames:
                 if fn.endswith("_screen.txt"):
                     s_name = fn[:-11]
+                    if report['prepend_dirs']:
+                        s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                     with open (os.path.join(root,fn), "r") as f:
                         fq_screen_raw_data[s_name] = f.read()
 
@@ -52,7 +54,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def parse_fqscreen(self, fq_screen_raw_data):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = dict()
-        for s, data in fq_screen_raw_data.iteritems():
+        for s, data in fq_screen_raw_data.items():
             parsed_data[s] = OrderedDict()
             for l in data.splitlines():
                 if l[:18] == "%Hit_no_libraries:":
@@ -94,7 +96,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Libraries' }
         p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Library' }
         p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Library' }
-        for k, t in p_types.iteritems():
+        for k, t in p_types.items():
             first = True
             for s in sorted(parsed_data):
                 thisdata = list()
@@ -143,11 +145,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             groupPadding: 0.02, \n\
                             stacking: "normal" }} \n\
                     }}, \n\
-                    credits: {{ \n\
-                        enabled: true, \n\
-                        text: "Created with MultiQC", \n\
-                        href: "https://github.com/ewels/MultiQC" \n\
-            		}}, \n\
                     series: fq_screen_data \n\
                 }}); \n\
             }}); \n\

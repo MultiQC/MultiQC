@@ -72,6 +72,14 @@ If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ## Version History
+#### v0.1.1dev
+* Bowtie module now works
+* New command line parameter `-d` prefixes sample names with the directory that
+  they were found in. Allows duplicate filenames without being overwritten.
+* Now compatible with both Python 2 and Python 3
+* Software version number now printed on command line properly, and in reports.
+* Bugfix: FastQC doesn't break when only one report found
+* Bugfix: FastQC seq content heatmap highlighting
 
 #### [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
 * The first public release of MultiQC, after a month of development. Basic

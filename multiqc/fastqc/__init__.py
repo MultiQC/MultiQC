@@ -3,7 +3,9 @@
 """ MultiQC module to parse output from FastQC
 """
 
+from __future__ import print_function
 from collections import OrderedDict
+import io
 import json
 import logging
 import os
@@ -42,17 +44,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)
                 d_path = os.path.join(root, 'fastqc_data.txt')
-                with open (d_path, "r") as f:
+                with io.open (d_path, "r", encoding='utf-8') as f:
                     r_data = f.read()
 
                 # Get the sample name from inside the file if possible
                 fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                 if fn_search:
                     s_name = fn_search.group(1).strip()
+                s_name = self.clean_s_name(s_name)
                 s_name = s_name.split("_fastqc",1)[0]
-                s_name = s_name.split(".gz",1)[0]
-                s_name = s_name.split(".fastq",1)[0]
-                s_name = s_name.split(".fq",1)[0]
+                
+                if report['prepend_dirs']:
+                    s_name = "{} | {}".format(os.path.dirname(root).replace(os.sep, ' | '), s_name).lstrip('. | ')
 
                 fastqc_raw_data[s_name] = r_data
 
@@ -73,20 +76,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     fqc_zip = zipfile.ZipFile(os.path.join(root, f))
                     try:
                         with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
-                            r_data = f.read()
+                            r_data = f.read().decode('utf8')
 
                         # Get the sample name from inside the file if possible
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                         if fn_search:
                             s_name = fn_search.group(1).strip()
-                        if s_name[-7:] == '_fastqc':
-                            s_name = s_name[:-7]
-                        if s_name[-3:] == '.gz':
-                            s_name = s_name[:-3]
-                        if s_name[-3:] == '.fq':
-                            s_name = s_name[:-3]
-                        if s_name[-6:] == '.fastq':
-                            s_name = s_name[:-6]
+                        s_name = self.clean_s_name(s_name)
+                        s_name = s_name.split("_fastqc",1)[0]
+                        
+                        if report['prepend_dirs']:
+                            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
 
                         fastqc_raw_data[s_name] = r_data
 
@@ -100,7 +100,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             try:
                                 with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
                                     img = f.read()
-                                with open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "w") as f:
+                                with io.open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "wb") as f:
                                     f.write(img)
                             except KeyError:
                                 pass
@@ -122,6 +122,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Report table is immutable, so just updating it works
         parsed_stats = self.fastqc_general_stats(fastqc_raw_data)
         self.fastqc_stats_table(parsed_stats, report)
+        
+        # Write the basic stats table data to a file
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_fastqc.txt'), "w", encoding='utf-8') as f:
+            print( self.dict_to_csv( parsed_stats ), file=f)
+
 
         # Section 1 - Quality Histograms
         histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
@@ -180,7 +185,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for p in parsed_data.keys():
             parsed_data[p].update(counts)
 
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             for p in parsed_data.keys():
                 match = re.search(parsed_data[p]['pattern'], data)
                 if match:
@@ -194,7 +199,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         Returns a 2D dict with basic stats, sample names as first keys,
         then statistic type as second key. """
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {}
 
             dups = re.search("#Total Deduplicated Percentage\s+([\d\.]+)", data)
@@ -253,8 +258,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         rowcounts = { 'total_sequences_m' : 0, 'sequence_length' : 0,
             'percent_gc' : 0, 'percent_duplicates' : 0 }
 
-        for samp, vals in parsed_stats.iteritems():
-            for k, v in vals.iteritems():
+        for samp, vals in parsed_stats.items():
+            for k, v in vals.items():
                 report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
                 rowcounts[k] += 1
 
@@ -270,7 +275,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         and 90_percentile. """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {}
             parsed_data[s]['status'] = ''
             parsed_data[s]['base'] = list()
@@ -369,7 +374,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         containing percentage and values containing counts """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             for l in data.splitlines():
@@ -396,7 +401,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for s in sorted(parsed_data):
             pairs = list()
             statuses[s] = parsed_data[s]['status']
-            for k, p in iter(sorted(parsed_data[s]['vals'].iteritems())):
+            for k, p in iter(sorted(parsed_data[s]['vals'].items())):
                 pairs.append([int(k), p])
             data.append({
                 'name': s,
@@ -457,7 +462,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         position and third key with the base ([ACTG]). Values contain percentages """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             for l in data.splitlines():
@@ -467,6 +472,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
+                    l.replace('NaN','0')
                     seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
                     try:
                         bp = int(seq_matches.group(1).split('-', 1)[0])
@@ -478,7 +484,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s]['vals'][bp]['C'] = float(seq_matches.group(5))
                     except AttributeError:
                         if l[:1] != '#':
-                            raise
+                            logging.debug("Couldn't parse a line from FastQC sequence content report {}: {}".format(s, l))
             if len(parsed_data[s]['vals']) == 0:
                 parsed_data.pop(s, None)
 
@@ -507,7 +513,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_seq"> \n\
-            <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
+            <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 {b}\n\
                 <p><img class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> \n\
@@ -547,7 +553,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         containing adapter type and values containing counts """
 
         parsed_data = {}
-        for s, data in fastqc_raw_data.iteritems():
+        for s, data in fastqc_raw_data.items():
             parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             adapter_types = []
@@ -578,10 +584,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         statuses = dict()
         for s in sorted(parsed_data):
             statuses[s] = parsed_data[s]['status']
-            for a, d in parsed_data[s]['vals'].iteritems():
+            for a, d in parsed_data[s]['vals'].items():
                 if max(d.values()) >= 1:
                     pairs = list()
-                    for base, count in iter(sorted(d.iteritems())):
+                    for base, count in iter(sorted(d.items())):
                         pairs.append([base, count])
                     data.append({
                         'name': '{} - {}'.format(s, a),
