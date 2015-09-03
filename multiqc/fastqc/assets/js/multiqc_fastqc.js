@@ -45,17 +45,17 @@ function fastqc_seq_content_heatmap() {
         var ctx = canvas.getContext("2d");
         ctx.strokeStyle = "#666666";
         // First, do labels and get max base pairs
-        if(max_bp == 0){
-            $.each(fastqc_seq_content_data, function(name, s){
-                labels.push(name);
-                $.each(s, function(bp, v){
-                    bp = parseInt(bp);
-                    if(bp > max_bp){
-                        max_bp = bp;
-                    }
-                });
+        max_bp = 0;
+        $.each(sample_names, function(i, name){
+            var s = fastqc_seq_content_data[name];
+            labels.push(name);
+            $.each(s, function(bp, v){
+                bp = parseInt(bp);
+                if(bp > max_bp){
+                    max_bp = bp;
+                }
             });
-        }
+        });
         ypos = 0;
         $.each(sample_names, function(i, name){
             var s = fastqc_seq_content_data[name]
