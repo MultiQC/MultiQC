@@ -22,8 +22,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Static variables
         self.name = "Bowtie"
-        self.anchor = "bowtie"
-        self.intro = '<p><a href="http://bowtie-bio.sourceforge.net/" target="_blank">Bowtie</a> \
+        self.anchor = "bowtie1"
+        self.intro = '<p><a href="http://bowtie-bio.sourceforge.net/" target="_blank">Bowtie 1</a> \
             is an ultrafast, memory-efficient short read aligner.</p>'
         self.analysis_dir = report['analysis_dir']
         self.output_dir = report['output_dir']
@@ -41,16 +41,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 s_name = self.clean_s_name(fn)
                                 self.bowtie_data[s_name] = parsed_data
                     except ValueError:
-                        logging.debug("Couldn't read file when looking for bowtie output: {}".format(fn))
+                        logging.debug("Couldn't read file when looking for Bowtie 1 output: {}".format(fn))
 
         if len(self.bowtie_data) == 0:
-            logging.debug("Could not find any Bowtie reports in {}".format(self.analysis_dir))
+            logging.debug("Could not find any Bowtie 1 reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} Bowtie reports".format(len(self.bowtie_data)))
+        logging.info("Found {} Bowtie 1 reports".format(len(self.bowtie_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_bowtie.txt'), "w", encoding='utf-8') as f:
+        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_bowtie1.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.bowtie_data.items() } ), file=f)
 
         self.sections = list()
@@ -90,7 +90,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Take the parsed stats from the Bowtie report and add it to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['bowtie_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Bowtie: % reads with at least one reported alignment">%&nbsp;Aligned</span></th>'
+        report['general_stats']['headers']['bowtie_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Bowtie 1: % reads with at least one reported alignment">%&nbsp;Aligned</span></th>'
         for samp, vals in self.bowtie_data.items():
             report['general_stats']['rows'][samp]['bowtie_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['reads_aligned_percentage'])
 
@@ -122,20 +122,20 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 })
 
         return '<div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bowtie_alignment_plot">Number of Reads</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bowtie_alignment_plot">Percentages</button> \n\
+			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bowtie1_alignment_plot">Number of Reads</button> \n\
+			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bowtie1_alignment_plot">Percentages</button> \n\
 		</div> \n\
-        <div id="bowtie_alignment_plot" class="hc-plot"></div> \n\
+        <div id="bowtie1_alignment_plot" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
-            bowtie_alignment_cats = {};\n\
-            bowtie_alignment_data = {};\n\
-            var bowtie_alignment_pconfig = {{ \n\
-                "title": "Bowtie Alignment Scores",\n\
+            bowtie1_alignment_cats = {};\n\
+            bowtie1_alignment_data = {};\n\
+            var bowtie1_alignment_pconfig = {{ \n\
+                "title": "Bowtie 1 Alignment Scores",\n\
                 "ylab": "# Reads",\n\
                 "ymin": 0,\n\
                 "stacking": "normal" \n\
             }}; \n\
             $(function () {{ \
-                plot_stacked_bar_graph("#bowtie_alignment_plot", bowtie_alignment_cats, bowtie_alignment_data, bowtie_alignment_pconfig); \
+                plot_stacked_bar_graph("#bowtie1_alignment_plot", bowtie1_alignment_cats, bowtie1_alignment_data, bowtie1_alignment_pconfig); \
             }}); \
         </script>'.format(json.dumps(cats), json.dumps(data));

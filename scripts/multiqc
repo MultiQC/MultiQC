@@ -36,7 +36,7 @@ else:
 
 # Order tha modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
-module_order = ['featureCounts', 'picard', 'bismark', 'star', 'bowtie', 'cutadapt', 'fastq_screen', 'fastqc']
+module_order = ['featureCounts', 'picard', 'bismark', 'star', 'bowtie1', 'cutadapt', 'fastq_screen', 'fastqc']
 
 # Find submodules in multiqc and order them if possible. Tolerant of people
 # not adding their modules to the above list :)
