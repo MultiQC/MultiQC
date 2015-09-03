@@ -3,6 +3,14 @@
 """ MultiQC module to parse output from FastQC
 """
 
+######################################################
+#### LOOKING FOR AN EXAMPLE OF HOW MULTIQC WORKS? ####
+######################################################
+#### Stop! This module is huge and complicated.   ####
+#### Have a look at Bowtie or STAR for a simpler  ####
+#### example. CONTRIBUTING.md has documentation.  ####
+######################################################
+
 from __future__ import print_function
 from collections import OrderedDict
 import io
