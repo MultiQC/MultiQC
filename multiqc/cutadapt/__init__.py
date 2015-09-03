@@ -32,7 +32,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.cutadapt_data = dict()
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 10000:
+                if os.path.getsize(os.path.join(root,fn)) < 50000:
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
@@ -73,11 +73,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if not l: return # end of file
                 fn_search = re.search(br"^Input filename:\s+(.+)$", l)
             s_name = fn_search.group(1).decode()
+            s_name = self.clean_s_name(s_name)
             s_name = s_name.split(".txt",1)[0]
             s_name = s_name.split("_trimming_report",1)[0]
-            s_name = s_name.split(".gz",1)[0]
-            s_name = s_name.split(".fastq",1)[0]
-            s_name = s_name.split(".fq",1)[0]
             if report['prepend_dirs']:
                 s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
 

@@ -35,12 +35,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if fn.endswith('_counts.txt.summary'):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         s_name = fn[:-19]
-                        s_name = s_name.split(".bam",1)[0]
-                        s_name = s_name.split(".sam",1)[0]
+                        s_name = self.clean_s_name(s_name)
                         s_name = s_name.split("_star_aligned",1)[0]
-                        s_name = s_name.split(".gz",1)[0]
-                        s_name = s_name.split(".fastq",1)[0]
-                        s_name = s_name.split(".fq",1)[0]
                         if report['prepend_dirs']:
                             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                         parsed_data = self.parse_featurecounts_report(f.read())

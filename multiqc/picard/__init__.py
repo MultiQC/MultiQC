@@ -31,7 +31,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.picard_data = defaultdict(lambda: dict())
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 10000:
+                if os.path.getsize(os.path.join(root,fn)) < 50000:
                     try:
                         with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                             s = f.readlines()
@@ -39,6 +39,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 if l == '## METRICS CLASS	picard.sam.DuplicationMetrics':
                                     s_name = fn
                                     s_name = s_name.split(".metrics",1)[0]
+                                    s_name = self.clean_s_name(s_name)
                                     if report['prepend_dirs']:
                                         s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                                     keys = s[idx+1].split()

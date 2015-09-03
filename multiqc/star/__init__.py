@@ -37,6 +37,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data = self.parse_star_report(f.read())
                         if parsed_data is not None:
                             s_name = fn[:-13]
+                            s_name = self.clean_s_name(s_name)
                             if report['prepend_dirs']:
                                 s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
                             self.star_data[s_name] = parsed_data
