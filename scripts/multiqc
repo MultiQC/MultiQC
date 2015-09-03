@@ -36,7 +36,15 @@ else:
 
 # Order tha modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
-module_order = ['featureCounts', 'picard', 'bismark', 'star', 'bowtie1', 'cutadapt', 'fastq_screen', 'fastqc']
+module_order = [
+    # Post-alignment analysis results
+    'featureCounts', 'picard',
+    # Alignment tool stats
+    'bismark', 'star', 'bowtie1',
+    # Pre-alignment QC
+    'cutadapt', 'fastq_screen', 'fastqc'
+]
+
 
 # Find submodules in multiqc and order them if possible. Tolerant of people
 # not adding their modules to the above list :)
@@ -98,8 +106,8 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         'creation_date': datetime.now().strftime("%Y-%m-%d, %H:%m"),
         'version': VERSION,
         'working_dir': os.getcwd(),
-        'analysis_dir': analysis_dir,
-        'output_dir': output_dir,
+        'analysis_dir': os.path.realpath(analysis_dir),
+        'output_dir': os.path.realpath(output_dir),
         'general_stats': {
             'headers': collections.OrderedDict(),
             'rows': collections.defaultdict(lambda:dict())

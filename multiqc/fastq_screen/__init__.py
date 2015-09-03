@@ -2,9 +2,11 @@
 
 """ MultiQC module to parse output from FastQ Screen """
 
+from __future__ import print_function
 from collections import OrderedDict
 import json
 import logging
+import io
 import os
 import re
 import shutil
@@ -49,6 +51,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Section 1 - Alignment Profiles
         fq_screen_data = self.parse_fqscreen(fq_screen_raw_data)
         self.intro += self.fqscreen_plot(fq_screen_data)
+        
+        # TODO - Write parsed report data to a file
+        # with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_fastq_screen.txt'), "w", encoding='utf-8') as f:
+        #     print( self.dict_to_csv(fq_screen_data), file=f)
 
 
     def parse_fqscreen(self, fq_screen_raw_data):
