@@ -4,6 +4,8 @@
 
 import json
 import os
+import random
+import string
 
 class BaseMultiqcModule(object):
 
@@ -26,6 +28,33 @@ class BaseMultiqcModule(object):
         if prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
+    
+    def plot_xy_data(self, data, config={}):
+        """ Plot a line graph with X,Y data. Expects a 2D dict with 
+        first keys as sample names, then x: y data pairs.
+        See CONTRIBUTING.md for further instructions on use. """
+        
+        # Generate a random HTML id if not given
+        if config['id'] is None:
+            config['id'] = ''.join(random.sample(string.lowercase+string.digits, 10))
+        
+        # Generate the data dict structure expected by HighCharts series
+        plotdata = list()
+        for s in sorted(data):
+            pairs = list()
+            for k, p in iter(sorted(data[s].items())):
+                pairs.append([k, p])
+            plotdata.append({
+                'name': s,
+                'data': pairs
+            })
+        
+        # Build the HTML for the page
+        html = '<div id="{n}" class="hc-plot"></div> \n\
+        <script type="text/javascript"> \n\
+            $(function () {{ plot_xy_line_graph("#{n}", {d}, {c}); }}); \n\
+        </script>'.format(n=config['id'], d=json.dumps(data), c=json.dumps(config));
+        return html
     
     def dict_to_csv (self, d, delim="\t"):
         """ Takes a 2D dictionary and returns a string suitable for

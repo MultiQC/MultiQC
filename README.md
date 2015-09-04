@@ -75,9 +75,8 @@ If in doubt, feel free to get in touch with the author:
 
 ## Version History
 #### v0.1.1dev
+* New Tophat, Bowtie 2 and Qualimap modules
 * Bowtie module now works
-* New Bowtie 2 module
-* New Tophat module
 * New command line parameter `-d` prefixes sample names with the directory that
   they were found in. Allows duplicate filenames without being overwritten.
 * Now compatible with both Python 2 and Python 3

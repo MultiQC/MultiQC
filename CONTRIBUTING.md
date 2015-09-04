@@ -67,6 +67,73 @@ the text to the right:
 <td class="text-right">96.7%</td>
 ```
 
+## Python Helper Functions
+When defining your new Python module, you should inherit the base module
+class as follows:
+
+```python
+class MultiqcModule(multiqc.BaseMultiqcModule):
+    def __init__(self, report):
+        # Initialise the parent object
+        super(MultiqcModule, self).__init__()
+```
+
+Doing so gives you access to common Python functions. These are currently
+few in number (just one) but may be extended in the near future.
+
+### dict_to_csv (data, delim="\t")
+This function takes a 2D dictionary and returns a string suitable for
+writing to a .csv file. First key should be sample name (row header),
+second key should be field (column header).
+
+The function takes a dictionary as input, plus an optional 'delim'
+field to specify column delimiter (default: tab).
+
+You can see an example of this function in the featureCounts module:
+```python
+# Write parsed report data to a file
+with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w") as f:
+    print( self.dict_to_csv( self.featurecounts_data ), file=f)
+```
+
+### plot_xy_data(data, config)
+This function takes a dict of data and plots an XY line graph.
+It expects a dictionary in the following format:
+```python
+data = {
+    'sample 1': {
+        '<x val 1>': '<y val 1>',
+        '<x val 2>': '<y val 2>',
+        [ .. ]
+    },
+    'sample 2': {
+        '<x val 1>': '<y val 1>',
+        '<x val 2>': '<y val 2>',
+        [ .. ]
+    },
+    [ .. ]
+}
+```
+Additionally, a config dict can be supplied. The defaults are as follows
+_(most actually set by javascript function below)_:
+```python
+config = {
+    'id': '<random string>', # HTML ID used for plot
+    'title': None,           # Plot title
+    'xlab': None,            # X axis label
+    'ylab': None,            # Y axis label
+    'xmax': None,            # Max x limit
+    'xmin': None,            # Min x limit
+    'xDecimals': True,       # Set to false to only show integer labels
+    'ymax': None,            # Max y limit
+    'ymin': None,            # Min y limit
+    'yDecimals': True,       # Set to false to only show integer labels
+    'tt_label': '{point.x}', # Use to customise tooltip label, eg. '{point.x} base pairs'
+    'use_legend': True,      # Show / hide the legend
+    'click_func': None       # Javascript function to be called when a point is clicked
+}
+```
+
 ## Javascript Helper Functions
 The javascript bundled in the default MultiQC template has a number of
 helper functions to make your life easier.
@@ -208,32 +275,3 @@ $('#YOUR_PLOT_ID').on('mqc_plotresize', function(){
 });
 ```
 
-
-## Python Helper Functions
-When defining your new Python module, you should inherit the base module
-class as follows:
-
-```python
-class MultiqcModule(multiqc.BaseMultiqcModule):
-    def __init__(self, report):
-        # Initialise the parent object
-        super(MultiqcModule, self).__init__()
-```
-
-Doing so gives you access to common Python functions. These are currently
-few in number (just one) but may be extended in the near future.
-
-### dict_to_csv (data, delim="\t")
-This function takes a 2D dictionary and returns a string suitable for
-writing to a .csv file. First key should be sample name (row header),
-second key should be field (column header).
-
-The function takes a dictionary as input, plus an optional 'delim'
-field to specify column delimiter (default: tab).
-
-You can see an example of this function in the featureCounts module:
-```python
-# Write parsed report data to a file
-with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w") as f:
-    print( self.dict_to_csv( self.featurecounts_data ), file=f)
-```

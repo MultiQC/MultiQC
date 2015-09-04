@@ -234,7 +234,6 @@ highcharts_plot_options = [];
 // Basic Line Graph
 function plot_xy_line_graph(div, data, config){
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
-  if(config['use_legend'] === undefined){ config['use_legend'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
@@ -281,11 +280,7 @@ function plot_xy_line_graph(div, data, config){
       }
     },
     legend: {
-      enabled: config['use_legend'],
-      layout: 'vertical',
-      align: 'right',
-      verticalAlign: 'middle',
-      borderWidth: 0
+      enabled: false
     },
     credits: {
 			enabled: true,

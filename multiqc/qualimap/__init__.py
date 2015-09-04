@@ -57,7 +57,15 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             self.sections.append({
                 'name': 'Coverage Histogram',
                 'anchor': 'qualimap-coverage-histogram',
-                'content': self.qualimap_cov_his_plot(histogram_data)
+                'content': self.plot_xy_data(histogram_data, {
+                    'id': 'qualimap_cov_hist',
+                    'title': 'Coverage Histogram',
+                    'ylab': 'Genome Bin Counts',
+                    'xlab': 'Coverage (X)',
+                    'ymin': 0,
+                    'xmin': 0,
+                    'tt_label': '<b>{{point.x}}-X coverage </b>',
+                })
             })
 
 
@@ -84,31 +92,31 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         return parsed_data
 
 
-    def qualimap_cov_his_plot(self, parsed_data):
-        data = list()
-        for s in sorted(parsed_data):
-            pairs = list()
-            for k, p in iter(sorted(parsed_data[s].items())):
-                pairs.append([int(k), p])
-            data.append({
-                'name': s,
-                'data': pairs
-            })
-
-        html = '<div id="qualimap_cov_hist" class="hc-plot"></div> \n\
-                <script type="text/javascript"> \
-                    var qualimap-cov_pconfig = {{ \n\
-                        "title": "Coverage Histogram",\n\
-                        "ylab": "Genome Bin Counts",\n\
-                        "xlab": "Coverage (X)",\n\
-                        "ymin": 0,\n\
-                        "xmin": 0,\n\
-                        "tt_label": "<b>{{point.x}}-X coverage </b>",\n\
-                        "use_legend": false,\n\
-                    }}; \n\
-                    $(function () {{ \
-                        plot_xy_line_graph("#qualimap_cov_hist", {d}, qualimap-cov_pconfig); \
-                    }}); \
-                </script>'.format(d=json.dumps(data));
-
-        return html
+    # def qualimap_cov_his_plot(self, parsed_data):
+    #     data = list()
+    #     for s in sorted(parsed_data):
+    #         pairs = list()
+    #         for k, p in iter(sorted(parsed_data[s].items())):
+    #             pairs.append([int(k), p])
+    #         data.append({
+    #             'name': s,
+    #             'data': pairs
+    #         })
+    # 
+    #     html = '<div id="qualimap_cov_hist" class="hc-plot"></div> \n\
+    #             <script type="text/javascript"> \
+    #                 var qualimap-cov_pconfig = {{ \n\
+    #                     "title": "Coverage Histogram",\n\
+    #                     "ylab": "Genome Bin Counts",\n\
+    #                     "xlab": "Coverage (X)",\n\
+    #                     "ymin": 0,\n\
+    #                     "xmin": 0,\n\
+    #                     "tt_label": "<b>{{point.x}}-X coverage </b>",\n\
+    #                     "use_legend": false,\n\
+    #                 }}; \n\
+    #                 $(function () {{ \
+    #                     plot_xy_line_graph("#qualimap_cov_hist", {d}, qualimap-cov_pconfig); \
+    #                 }}); \
+    #             </script>'.format(d=json.dumps(data));
+    # 
+    #     return html
