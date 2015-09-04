@@ -32,7 +32,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.bowtie_data = dict()
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 50000:
+                if os.path.getsize(os.path.join(root,fn)) < 200000:
                     try:
                         with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                             s = f.read()
@@ -65,6 +65,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
 
     def parse_bowtie_logs(self, s):
+        # Check that this isn't actually Bismark using bowtie
+        if s.find('Using bowtie 1 for aligning with bismark.', 0) >= 0: return None
         i = s.find('# reads processed:', 0)
         parsed_data = {}
         if i >= 0:
@@ -113,7 +115,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for k, name in keys.items():
             thisdata = list()
             for sn in cats:
-                thisdata.append(self.bowtie_data[sn][k])
+                thisdata.append(self.bowtie_data[sn].get(k, 0))
             if max(thisdata) > 0:
                 data.append({
                     'name': name,

@@ -32,7 +32,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.bowtie2_data = dict()
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 50000:
+                if os.path.getsize(os.path.join(root,fn)) < 200000:
                     try:
                         with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                             s = f.read()
@@ -65,17 +65,19 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
 
     def parse_bowtie2_logs(self, s):
+        # Check that this isn't actually Bismark using bowtie
+        if s.find('Using bowtie 2 for aligning with bismark.', 0) >= 0: return None
         i = s.find('reads; of these:', 0)
         parsed_data = {}
         if i >= 0:
             regexes = {
                 'reads_processed': r"(\d+) reads; of these:",
-                'reads_aligned': r"(\d+) \([\d\.]+%\) aligned exactly 1 time",
-                'reads_aligned_percentage': r"\(([\d\.]+)%\) aligned exactly 1 time",
-                'not_aligned': r"(\d+) \([\d\.]+%\) aligned 0 times",
-                'not_aligned_percentage': r"\(([\d\.]+)%\) aligned 0 times",
-                'multimapped': r"(\d+) \([\d\.]+%\) aligned >1 times",
-                'multimapped_percentage': r"\(([\d\.]+)%\) aligned >1 times",
+                'reads_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?exactly 1 time",
+                'reads_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?exactly 1 time",
+                'not_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?0 times",
+                'not_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?0 times",
+                'multimapped': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?>1 times",
+                'multimapped_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?>1 times",
                 'overall_aligned_rate': r"([\d\.]+)% overall alignment rate",
             }
 
@@ -118,7 +120,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for k, name in keys.items():
             thisdata = list()
             for sn in cats:
-                thisdata.append(self.bowtie2_data[sn][k])
+                thisdata.append(self.bowtie2_data[sn].get(k, 0))
             if max(thisdata) > 0:
                 data.append({
                     'name': name,

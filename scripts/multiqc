@@ -38,9 +38,9 @@ else:
 # eg. FastQC is usually the first step, so should be last in this list.
 module_order = [
     # Post-alignment analysis results
-    'featureCounts', 'picard',
+    'qualimap', 'featureCounts', 'picard',
     # Alignment tool stats
-    'bismark', 'star', 'bowtie1',
+    'bismark', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
     'cutadapt', 'fastq_screen', 'fastqc'
 ]
@@ -50,6 +50,8 @@ module_order = [
 # not adding their modules to the above list :)
 multiqc_submods = [name for _, name, _ in pkgutil.iter_modules([MULTIQC_DIR])]
 avail_modules = [ m for m in module_order if m in multiqc_submods ]
+if len(multiqc_submods) > len(avail_modules):
+    logging.warn("Modules missing from order declaration: {}".format([ m for m in multiqc_submods if m not in module_order ]))
 avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
 
 # Available templates, in case extras have been added

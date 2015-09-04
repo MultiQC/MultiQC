@@ -31,17 +31,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.picard_data = defaultdict(lambda: dict())
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 50000:
+                if os.path.getsize(os.path.join(root,fn)) < 200000:
                     try:
                         with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                             s = f.readlines()
                             for idx, l in enumerate(s):
-                                if l == '## METRICS CLASS	picard.sam.DuplicationMetrics':
+                                if 'picard.sam.DuplicationMetrics' in l:
                                     s_name = fn
                                     s_name = s_name.split(".metrics",1)[0]
                                     s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
-                                    keys = s[idx+1].split()
-                                    vals = s[idx+2].split()
+                                    keys = s[idx+1].split("\t")
+                                    vals = s[idx+2].split("\t")
                                     for i, k in enumerate(keys):
                                         try:
                                             self.picard_data[s_name][k] = float(vals[i])
