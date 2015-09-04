@@ -1,0 +1,3 @@
+	multimapped_percentage	reads_processed	not_aligned_percentage	multimapped	reads_aligned_percentage	not_aligned	reads_aligned
+SRR1067503_1	27.34	30680980.0	14.61	8389278.0	58.05	4481177.0	17810525.0
+SRR1067500_1	14.34	38377305.0	6.74	5503256.0	78.92	2587129.0	30286920.0

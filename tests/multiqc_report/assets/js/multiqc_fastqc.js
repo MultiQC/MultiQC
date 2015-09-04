@@ -12,9 +12,27 @@ c_width = 0;
 c_height = 0;
 ypos = 0;
 max_bp = 0;
+highlight_regex_mode = false;
+highlight_f_texts = [];
+highlight_f_cols = [];
+hidesamples_regex_mode = false;
+hidesamples_f_texts = [];
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
-    num_samples = Object.keys(fastqc_seq_content_data).length;
+    
+    // Get sample names, skipping hidden samples
+    sample_names = [];
+    $.each(Object.keys(fastqc_seq_content_data), function(i, name){
+        var hide_sample = false;
+        $.each(hidesamples_f_texts, function(idx, f_text){
+            if((hidesamples_regex_mode && name.match(f_text))  || (!hidesamples_regex_mode && name.indexOf(f_text) > -1)){
+                hide_sample = true;
+            }
+        });
+        if(!hide_sample){ sample_names.push(name); }
+    });
+    num_samples = sample_names.length;
+    
     // Convert the CSS percentage size into pixels
     c_width = $("#fastqc_seq_heatmap").parent().width();
     c_height = $("#fastqc_seq_heatmap").parent().height();
@@ -27,19 +45,20 @@ function fastqc_seq_content_heatmap() {
         var ctx = canvas.getContext("2d");
         ctx.strokeStyle = "#666666";
         // First, do labels and get max base pairs
-        if(max_bp == 0){
-            $.each(fastqc_seq_content_data, function(name, s){
-                labels.push(name);
-                $.each(s, function(bp, v){
-                    bp = parseInt(bp);
-                    if(bp > max_bp){
-                        max_bp = bp;
-                    }
-                });
+        max_bp = 0;
+        $.each(sample_names, function(i, name){
+            var s = fastqc_seq_content_data[name];
+            labels.push(name);
+            $.each(s, function(bp, v){
+                bp = parseInt(bp);
+                if(bp > max_bp){
+                    max_bp = bp;
+                }
             });
-        }
+        });
         ypos = 0;
-        $.each(fastqc_seq_content_data, function(name, s){
+        $.each(sample_names, function(i, name){
+            var s = fastqc_seq_content_data[name]
             var xpos = 0;
             var last_bp = 0;
             $.each(s, function(bp, v){
@@ -67,17 +86,12 @@ function fastqc_seq_content_heatmap() {
         ctx.lineTo(c_width, ypos);
         ctx.stroke();
         
-        // Custom highlights
-        var regex_mode = true;
-        if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode off'){
-          regex_mode = false;
-        }
-        $('#mqc_col_filters li .f_text').each(function(){
-            var f_text = $(this).val();
-            var f_col = $(this).css('color');
+        // Draw custom highlights
+        $.each(highlight_f_texts, function(idx, f_text){
+            var f_col = highlight_f_cols[idx];
             if(f_text == '[ all ]'){ return true; } // no initial colour, so highlighting all makes no sense
             $.each(labels, function(idx, label){
-                if((regex_mode && label.match(f_text)) || (!regex_mode && label.indexOf(f_text) > -1)){
+                if((highlight_regex_mode && label.match(f_text)) || (!highlight_regex_mode && label.indexOf(f_text) > -1)){
                     var c_width = $("#fastqc_seq_heatmap").width();
                     var ypos = s_height * idx;
                     var canvas = document.getElementById("fastqc_seq_heatmap");
@@ -183,7 +197,17 @@ $(function () {
     
       
     // Highlight the custom heatmap
-    $(document).on('mqc_highlights', function(){
+    $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
+        highlight_regex_mode = regex_mode;
+        highlight_f_texts = f_texts;
+        highlight_f_cols = f_cols;
+        fastqc_seq_content_heatmap();
+    });
+    
+    // Hide samples the custom heatmap
+    $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
+        hidesamples_regex_mode = regex_mode;
+        hidesamples_f_texts = f_texts;
         fastqc_seq_content_heatmap();
     });
     
