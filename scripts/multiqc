@@ -118,6 +118,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
 
     # Run the modules!
     modules_output = list()
+    sys_exit = 0
     for m in run_modules:
         try:
             mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
@@ -125,6 +126,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         except UserWarning:
             pass # No samples found
         except:
+            # Flag the error, but carry on
             logging.error("###### ERROR ##################### \n" \
                         "Oops! One of the MultiQC modules broke... \n" \
                         "Please copy the following traceback and report \n" \
@@ -133,6 +135,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
                         "############################################### \n" \
                         "Module {} raised an exception: {}".format(m, traceback.format_exc()) + \
                         "###############################################")
+            sys_exit = 1
 
     # Did we find anything?
     if len(modules_output) == 0:
@@ -171,7 +174,9 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
 
     logging.info("MultiQC complete")
     if OSX_APP: print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
-
+    
+    # Exit with an error code if a module broke
+    sys.exit(sys_exit)
 
 
 

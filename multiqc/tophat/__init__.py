@@ -13,6 +13,8 @@ import re
 
 import multiqc
 
+def sakfdjbdas
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -23,8 +25,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Static variables
         self.name = "Tophat"
         self.anchor = "tophat"
-        self.intro = '<p><a href="http://tophat-bio.sourceforge.net/" target="_blank">Tophat</a> \
-            is an ultrafast, memory-efficient short read aligner.</p>'
+        self.intro = '<p><a href="https://ccb.jhu.edu/software/tophat/" target="_blank">Tophat</a> \
+            is a fast splice junction mapper for RNA-Seq reads. It aligns RNA-Seq reads to mammalian-sized genomes.</p>'
         self.analysis_dir = report['analysis_dir']
         self.output_dir = report['output_dir']
 

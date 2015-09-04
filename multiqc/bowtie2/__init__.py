@@ -23,8 +23,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Static variables
         self.name = "Bowtie 2"
         self.anchor = "bowtie2"
-        self.intro = '<p><a href="http://bowtie-bio.sourceforge.net/" target="_blank">Bowtie 2</a> \
-            is an ultrafast, memory-efficient short read aligner.</p>'
+        self.intro = '<p><a href="http://bowtie-bio.sourceforge.net/bowtie2/" target="_blank">Bowtie 2</a> \
+            is ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.</p>'
         self.analysis_dir = report['analysis_dir']
         self.output_dir = report['output_dir']
 

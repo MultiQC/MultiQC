@@ -13,7 +13,9 @@ Currently, these include:
 * [Cutadapt](https://code.google.com/p/cutadapt/)
 * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
 * [STAR](https://github.com/alexdobin/STAR)
+* [Tophat](https://ccb.jhu.edu/software/tophat/)
 * [Bowtie](http://bowtie-bio.sourceforge.net)
+* [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
 * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
 * [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
 
@@ -74,12 +76,15 @@ If in doubt, feel free to get in touch with the author:
 ## Version History
 #### v0.1.1dev
 * Bowtie module now works
+* New Bowtie 2 module
+* New Tophat module
 * New command line parameter `-d` prefixes sample names with the directory that
   they were found in. Allows duplicate filenames without being overwritten.
 * Now compatible with both Python 2 and Python 3
 * Software version number now printed on command line properly, and in reports.
 * Bugfix: FastQC doesn't break when only one report found
 * Bugfix: FastQC seq content heatmap highlighting
+* Many, many small bugfixes
 
 #### [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
 * The first public release of MultiQC, after a month of development. Basic
