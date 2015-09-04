@@ -59,13 +59,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                 if fn_search:
                     s_name = fn_search.group(1).strip()
-                s_name = s_name.split(".gz",1)[0]
-                s_name = s_name.split(".fastq",1)[0]
-                s_name = s_name.split(".fq",1)[0]
-                s_name = s_name.split("_fastqc",1)[0]
-                
-                if report['prepend_dirs']:
-                    s_name = "{} | {}".format(os.path.dirname(root).replace(os.sep, ' | '), s_name).lstrip('. | ')
+                s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'], trimmed=False)
 
                 fastqc_raw_data[s_name] = r_data
 

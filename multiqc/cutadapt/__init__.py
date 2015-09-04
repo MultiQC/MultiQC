@@ -73,11 +73,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if not l: return # end of file
                 fn_search = re.search(br"^Input filename:\s+(.+)$", l)
             s_name = fn_search.group(1).decode()
-            s_name = self.clean_s_name(s_name)
             s_name = s_name.split(".txt",1)[0]
             s_name = s_name.split("_trimming_report",1)[0]
-            if report['prepend_dirs']:
-                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
+            s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
 
             self.cutadapt_data[s_name] = dict()
             regexes = {

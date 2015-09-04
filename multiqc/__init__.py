@@ -3,25 +3,29 @@
 """ MultiQC modules base class, contains helper functions """
 
 import json
+import os
 
 class BaseMultiqcModule(object):
 
     def __init__(self):
         pass
 
-    def clean_s_name(self, s_name):
+    def clean_s_name(self, s_name, prepend_dirs=False, trimmed=True):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary. """
         # Split then take first section to remove everything after these matches
         s_name = s_name.split(".gz",1)[0]
         s_name = s_name.split(".fastq",1)[0]
         s_name = s_name.split(".fq",1)[0]
-        s_name = s_name.split("_val_1",1)[0]
-        s_name = s_name.split("_val_2",1)[0]
         s_name = s_name.split(".bam",1)[0]
         s_name = s_name.split(".sam",1)[0]
+        if trimmed:
+            s_name = s_name.split("_val_1",1)[0]
+            s_name = s_name.split("_val_2",1)[0]
+            s_name = s_name.split("_trimmed",1)[0]
+        if prepend_dirs:
+            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
-    
     
     def dict_to_csv (self, d, delim="\t"):
         """ Takes a 2D dictionary and returns a string suitable for

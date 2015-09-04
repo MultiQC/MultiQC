@@ -37,9 +37,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search("Bismark report for: (\S+)", r_data)
                         if fn_search:
                             s_name = os.path.basename(fn_search.group(1))
-                            s_name = self.clean_s_name(s_name)
-                            if report['prepend_dirs']:
-                                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
+                            s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
                             self.bismark_raw_data[s_name]['alignment'] = r_data
                         else:
                             logging.warn("Didn't recognise bismark alignment report contents: {}".format(fn))
@@ -50,9 +48,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search("Total number of alignments analysed in (\S+)", r_data)
                         if fn_search:
                             s_name = os.path.basename(fn_search.group(1))
-                            s_name = self.clean_s_name(s_name)
-                            if report['prepend_dirs']:
-                                s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
+                            s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
                             self.bismark_raw_data[s_name]['dedup'] = r_data
                         else:
                             logging.warn("Didn't recognise bismark deduplication report contents: {}".format(fn))
@@ -61,9 +57,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         r_data = f.read()
                         s_name = os.path.basename(r_data.splitlines()[0])
-                        s_name = self.clean_s_name(s_name)
-                        if report['prepend_dirs']:
-                            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
+                        s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
                         self.bismark_raw_data[s_name]['methextract'] = r_data
 
         if len(self.bismark_raw_data) == 0:
