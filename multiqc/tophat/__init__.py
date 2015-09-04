@@ -13,8 +13,6 @@ import re
 
 import multiqc
 
-def sakfdjbdas
-
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
