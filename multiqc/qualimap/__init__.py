@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from QualiMap """
 
 from __future__ import print_function
+import io
 import json
 import logging
 import os
@@ -20,9 +21,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.name = "QualiMap"
         self.anchor = "qualimap"
         self.intro = '<p><a href="http://qualimap.bioinfo.cipf.es/" target="_blank">QualiMap</a> \
-             is a platform-independent application written in Java and R that provides both \
-             a Graphical User Inteface (GUI) and a command-line interface to facilitate \
-             the quality control of alignment sequencing data and its derivatives like feature counts.</p>'
+             is a platform-independent application to facilitate the quality control of alignment \
+             sequencing data and its derivatives like feature counts.</p>'
         self.analysis_dir = report['analysis_dir']
         self.output_dir = report['output_dir']
 
@@ -30,7 +30,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         qualimap_raw_data = {}
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             if 'genome_results.txt' in filenames and 'raw_data_qualimapReport' in dirnames:
-                with open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
+                with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
                     for l in gr:
                         if 'bam file' in l:
                             s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]))
@@ -57,7 +57,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         if len(histogram_data) > 0:
             self.sections.append({
                 'name': 'Coverage Histogram',
-                'anchor': 'coverage-histogram',
+                'anchor': 'qualimap-coverage-histogram',
                 'content': self.qualimap_cov_his_plot(histogram_data)
             })
 
@@ -69,7 +69,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if cov_report:
                 counts={}
                 try:
-                    with open(cov_report, 'r') as fh:
+                    with io.open(cov_report, 'r') as fh:
                         next(fh) # skip the header
                         for line in fh:
                             (coverage, count) = line.split(None, 1)
@@ -98,7 +98,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         html = '<div id="qualimap_cov_hist" class="hc-plot"></div> \n\
                 <script type="text/javascript"> \
-                    var cov_pconfig = {{ \n\
+                    var qualimap-cov_pconfig = {{ \n\
                         "title": "Coverage Histogram",\n\
                         "ylab": "Genome Bin Counts",\n\
                         "xlab": "Coverage (X)",\n\
@@ -108,7 +108,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         "use_legend": false,\n\
                     }}; \n\
                     $(function () {{ \
-                        plot_xy_line_graph("#qualimap_cov_hist", {d}, cov_pconfig); \
+                        plot_xy_line_graph("#qualimap_cov_hist", {d}, qualimap-cov_pconfig); \
                     }}); \
                 </script>'.format(d=json.dumps(data));
 
