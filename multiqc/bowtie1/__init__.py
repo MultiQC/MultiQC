@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from Bowtie """
+""" MultiQC module to parse output from Bowtie 1 """
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -38,7 +38,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s = f.read()
                             parsed_data = self.parse_bowtie_logs(s)
                             if parsed_data is not None:
-                                s_name = self.clean_s_name(fn, prepend_dirs=report['prepend_dirs'])
+                                s_name = self.clean_s_name(fn, root, prepend_dirs=report['prepend_dirs'])
                                 self.bowtie_data[s_name] = parsed_data
                     except ValueError:
                         logging.debug("Couldn't read file when looking for Bowtie 1 output: {}".format(fn))

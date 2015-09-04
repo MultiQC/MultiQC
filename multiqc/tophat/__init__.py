@@ -85,13 +85,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             r_search = re.search(r, raw_data, re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
+        if len(parsed_data) == 0: return None
         parsed_data['concordant_aligned_percent'] = parsed_data.get('concordant_aligned_percent', 0)
         parsed_data['aligned_total'] = parsed_data.get('aligned_total', 0)
         parsed_data['aligned_multimap'] = parsed_data.get('aligned_multimap', 0)
         parsed_data['aligned_discordant'] = parsed_data.get('aligned_discordant', 0)
         parsed_data['unaligned_total'] = parsed_data['total_reads'] - parsed_data['aligned_total']
         parsed_data['aligned_not_multimapped_discordant'] = parsed_data['aligned_total'] - parsed_data['aligned_multimap'] - parsed_data['aligned_discordant']
-        if len(parsed_data) == 0: return None
         return parsed_data
 
 
