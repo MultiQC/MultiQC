@@ -17,7 +17,7 @@ module.
 
 For a starting place, I recommend that you have a look at the `star`
 module, which is fairly simple. For more advanced examples see `fastq_screen`
-(with a custom plotting function) or if you're feeling really brave, 
+(with a custom plotting function) or if you're feeling really brave,
 `fastqc` (lots of custom CSS and JS).
 
 Note - you can add other required files to your module directory. Note that
@@ -77,7 +77,7 @@ create plots which can be resized / have highlighted sample names and so on:
 ### Example Line Graph
 ```html
 <div id="my_awesome_line_graph" class="hc-plot"></div>
-<script type="text/javascript"> 
+<script type="text/javascript">
     my_data = [
         {
             name: 'Sample 1',
@@ -128,7 +128,7 @@ config = {
         "title": "My Awesome Plot",
         "ylab": "# Observations",
         "ymin": 0,
-        "stacking": "normal" 
+        "stacking": "normal"
     };
     $(function () {
         plot_stacked_bar_graph("#my_awesome_bar_plot", my_sample_names, my_sample_data, my_config);
@@ -173,7 +173,7 @@ are stored in named javascript variables, then add the following markup:
 <div class="btn-group switch_group">
     <button class="btn btn-default btn-sm active" data-action="set_data" data-ylab="First Data" data-newdata="data_var_1" data-target="#my_plot">Data 1</button>
     <button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Second Data" data-newdata="data_var_2" data-target="#my_plot">Data 2</button>
-</div> 
+</div>
 ```
 Note the CSS class `active` which specifies which button is 'pressed' on page load.
 `data-ylab` and `data-xlab` can be used to specify the new axes labels.
@@ -181,7 +181,7 @@ Note the CSS class `active` which specifies which button is 'pressed' on page lo
 to be plotted and `data-target` should be the CSS selector of the plot to change.
 
 ### Custom Event Triggers
-Some of the events that take place in the general javascript javascript
+Some of the events that take place in the general javascript
 code trigger jQuery events which you can hook into from within your
 module's code. This allows you to take advantage of events generated
 by the global theme whilst keeping your code modular.
@@ -237,4 +237,3 @@ You can see an example of this function in the featureCounts module:
 with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w") as f:
     print( self.dict_to_csv( self.featurecounts_data ), file=f)
 ```
-
