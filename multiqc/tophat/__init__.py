@@ -38,7 +38,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     else:
                         s_name = fn[:-17]
                     s_name = s_name.split("_tophat",1)[0]
-                    s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
+                    s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                     
                     try:
                         with open (os.path.join(root,fn), "r") as f:
@@ -53,8 +53,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             raise UserWarning
 
         logging.info("Found {} Tophat reports".format(len(self.tophat_data)))
-        
-        print(json.dumps(self.tophat_data, indent=4))
 
         # Write parsed report data to a file
         with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_tophat.txt'), "w", encoding='utf-8') as f:

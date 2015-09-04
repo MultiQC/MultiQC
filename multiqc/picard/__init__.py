@@ -39,7 +39,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 if l == '## METRICS CLASS	picard.sam.DuplicationMetrics':
                                     s_name = fn
                                     s_name = s_name.split(".metrics",1)[0]
-                                    s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
+                                    s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                                     keys = s[idx+1].split()
                                     vals = s[idx+2].split()
                                     for i, k in enumerate(keys):

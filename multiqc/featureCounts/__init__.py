@@ -36,7 +36,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         s_name = fn[:-19]
                         s_name = s_name.split("_star_aligned",1)[0]
-                        s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
+                        s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                         parsed_data = self.parse_featurecounts_report(f.read())
                         if parsed_data is not None:
                             self.featurecounts_data[s_name] = parsed_data

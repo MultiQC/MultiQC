@@ -106,7 +106,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         'creation_date': datetime.now().strftime("%Y-%m-%d, %H:%m"),
         'version': VERSION,
         'working_dir': os.getcwd(),
-        'analysis_dir': os.path.realpath(analysis_dir),
+        'analysis_dir': analysis_dir,
         'output_dir': os.path.realpath(output_dir),
         'general_stats': {
             'headers': collections.OrderedDict(),
@@ -149,6 +149,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         raise IOError ("Error - could not load template '{}'".format(template_fn))
 
     # Use jinja2 to render the template and overwrite
+    report['analysis_dir'] = os.path.realpath(report['analysis_dir'])
     report = j_template.render(report=report, modules=modules_output)
     try:
         with open(template_fn, 'w') as f:

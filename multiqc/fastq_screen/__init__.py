@@ -35,7 +35,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for fn in filenames:
                 if fn.endswith("_screen.txt"):
                     s_name = fn[:-11]
-                    s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
+                    s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             fq_screen_raw_data[s_name] = f.read()

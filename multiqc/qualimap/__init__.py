@@ -35,7 +35,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         if 'bam file' in l:
                             s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]))
 
-                s_name = self.clean_s_name(s_name, prepend_dirs=report['prepend_dirs'])
+                s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
 
                 qualimap_raw_data[s_name] = {}
                 qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, 'raw_data_qualimapReport', r) \
