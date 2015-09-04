@@ -36,7 +36,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         r_data = f.read()
                         fn_search = re.search("Bismark report for: (\S+)", r_data)
                         if fn_search:
-                            s_name = fn_search.group(1)
+                            s_name = os.path.basename(fn_search.group(1))
                             s_name = self.clean_s_name(s_name)
                             if report['prepend_dirs']:
                                 s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
@@ -49,7 +49,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         r_data = f.read()
                         fn_search = re.search("Total number of alignments analysed in (\S+)", r_data)
                         if fn_search:
-                            s_name = fn_search.group(1)
+                            s_name = os.path.basename(fn_search.group(1))
                             s_name = self.clean_s_name(s_name)
                             if report['prepend_dirs']:
                                 s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
@@ -60,7 +60,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if fn.endswith('_splitting_report.txt'):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         r_data = f.read()
-                        s_name = r_data.splitlines()[0]
+                        s_name = os.path.basename(r_data.splitlines()[0])
                         s_name = self.clean_s_name(s_name)
                         if report['prepend_dirs']:
                             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
