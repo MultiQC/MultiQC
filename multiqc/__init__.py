@@ -42,4 +42,4 @@ class BaseMultiqcModule(object):
                 l.append(delim.join([''] + h))
             thesefields = [sn] + [ str(d[sn].get(k, '')) for k in h ]
             l.append( delim.join( thesefields ) )
-        return unicode('\n'.join(l))
+        return str('\n'.join(l), 'utf-8'))
