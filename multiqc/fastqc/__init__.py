@@ -343,7 +343,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         <div id="fastqc_quals" class="hc-plot-wrapper"> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
-                {b} <img class="original-plot" src="report_data/fastqc/{fn}_per_base_quality.png" data-fnsuffix="_per_base_quality.png"> \n\
+                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_base_quality.png" data-fnsuffix="_per_base_quality.png"> \n\
             </div>\n\
             <div id="fastqc_quality_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
         </div> \n\
@@ -417,18 +417,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             names.append(s)
         
         if len(names) > 1:
-            next_prev_buttons = '<div class="btn-group btn-group-sm"> \n\
+            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
                 <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_gc">&laquo; Previous</a> \n\
                 <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_gc">Next &raquo;</a> \n\
-            </div>'
+            </div></div>'
         else: next_prev_buttons = ''
         
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_gc" class="hc-plot-wrapper"> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
-                {b}\n\
-                <p><img class="original-plot" src="report_data/fastqc/{fn}_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"></p> \n\
+                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"> \n\
             </div>\n\
             <div id="fastqc_gc_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
         </div>\n\
@@ -512,18 +511,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         data = OrderedDict(sorted(data.items()))
         
         if len(names) > 1:
-            next_prev_buttons = '<div class="btn-group btn-group-sm"> \n\
+            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
                 <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_seq">&laquo; Previous</a> \n\
                 <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_seq">Next &raquo;</a> \n\
-            </div>'
+            </div></div>'
         else: next_prev_buttons = ''
 
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_seq"> \n\
             <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
-                {b}\n\
-                <p><img class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> \n\
+                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"> \n\
             </div>\n\
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
                 <div id="fastqc_seq_plot" class="hc-plot"> \n\
@@ -606,18 +604,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             return '<p>No adapter contamination found in any samples.</p>'
         
         if len(names) > 1:
-            next_prev_buttons = '<div class="btn-group btn-group-sm"> \n\
+            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
                 <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter">&laquo; Previous</a> \n\
                 <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter">Next &raquo;</a> \n\
-            </div>'
+            </div></div>'
         else: next_prev_buttons = ''
         
         html = '<p class="text-muted">Samples with no adapter contamination are hidden. <span class="instr">Click to show original FastQC plot.</span></p>\n\
         <div id="fastqc_adapter" class="hc-plot-wrapper"> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
-                {b}\n\
-                <p><img class="original-plot" src="report_data/fastqc/{fn}_adapter_content.png" data-fnsuffix="_adapter_content.png"></p> \n\
+                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_adapter_content.png" data-fnsuffix="_adapter_content.png"> \n\
             </div>\n\
             <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot hc-plot"></div>\n\
         </div>\n\
