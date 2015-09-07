@@ -18,13 +18,13 @@ h1 img {
    animation-iteration-count: infinite;
 }
 .mainpage h1 {
-   background: url('../img/test/new2.gif') center right no-repeat;
+   background: url('../img/new2.gif') center right no-repeat;
    display: block;
    width: 300px;
    padding-right: 30px;
 }
 hr {
-   background: url('../img/test/mchammer.gif') center center;
+   background: url('../img/mchammer.gif') center center;
    height: 80px;
 }
 .side-nav, .footer {
@@ -33,10 +33,14 @@ hr {
 .side-nav .mqc-nav li a:hover {
    background-color: yellow;
 }
+.side-nav .mqc-nav li:nth-child(2) {
+   background: url('../img/new.gif') left center no-repeat;
+   padding-left: 20px;
+}
 .footer .container-fluid {
-   background: url('../img/test/drudgesiren.gif') left center no-repeat;
-   padding-left: 120px;
-   height: 80px;
+   background: url('../img/emailme.gif') left center no-repeat;
+   padding-left: 60px;
+   height: 40px;
 }
 .footer .container-fluid p:last-child:after {
    content: '.     This theme was lovingly built with Geo for Bootstrap.';
@@ -57,6 +61,11 @@ h2 {
    background: #000 url('../img/flames.gif') top left;
    margin: 30px 0;
    padding: 10px 20px;
+}
+h3 {
+   background: url('../img/hot.gif') center left no-repeat;
+   margin: 30px 0;
+   padding: 10px 60px;
 }
 @keyframes marquee {
     0%   { text-indent: 50.5em }
