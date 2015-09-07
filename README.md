@@ -43,13 +43,19 @@ using `pip` as follows:
 pip install multiqc
 ```
 
+If you would like the development version instead, the command is:
+
+```
+pip install git+https://github.com/ewels/MultiQC.git
+```
+
 Then it's just a case of going to your analysis directory and running the script:
 
 ```
 multiqc .
 ```
 
-That's it! MultiQC will scan the specified directory (`.` is the current dir)
+That's it! MultiQC will scan the specified directory ('.' is the current dir)
 and produce a report detailing whatever it finds.
 
 The report is created in `multiqc_report/multiqc_report.html` by default.
