@@ -202,10 +202,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         try:
             for sn, data in self.bismark_data.items():
-                report['general_stats']['rows'][sn]['bismark_percent_aligned'] = '<td class="text-right">{:.1f}%</td>'.format((data['aligned_reads']/data['total_reads'])*100)
                 report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
-            report['general_stats']['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">%&nbsp;Aligned</span></th>'
+                report['general_stats']['rows'][sn]['bismark_percent_aligned'] = '<td class="text-right">{:.1f}%</td>'.format((data['aligned_reads']/data['total_reads'])*100)
             report['general_stats']['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M&nbsp;Aligned</span></th>'
+            report['general_stats']['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">%&nbsp;Aligned</span></th>'
         except KeyError:
             pass
 

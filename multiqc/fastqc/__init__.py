@@ -607,26 +607,26 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         
         if len(names) > 1:
             next_prev_buttons = '<div class="btn-group btn-group-sm"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter_original">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter_original">Next &raquo;</a> \n\
+                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter">&laquo; Previous</a> \n\
+                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter">Next &raquo;</a> \n\
             </div>'
         else: next_prev_buttons = ''
         
-        html = '<div id="fastqc_adapter_original" class="fastqc_orig"> \n\
-            <p class="text-muted">Samples with no adapter contamination are hidden. <span class="instr">Click to show original FastQC plot.</span></p>\n\
+        html = '<p class="text-muted">Samples with no adapter contamination are hidden. <span class="instr">Click to show original FastQC plot.</span></p>\n\
+        <div id="fastqc_adapter" class="hc-plot-wrapper"> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
                 {b}\n\
                 <p><img class="original-plot" src="report_data/fastqc/{fn}_adapter_content.png" data-fnsuffix="_adapter_content.png"></p> \n\
             </div>\n\
+            <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot hc-plot"></div>\n\
         </div>\n\
-        <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot hc-plot"></div>\n\
         <script type="text/javascript"> \
             fastqc_adapter_data = {d};\
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_adapter_original"] = {n};\n\
+            fastqc_s_names["fastqc_adapter"] = {n};\n\
             if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_adapter_original"] = {s};\
+            fastqc_s_statuses["fastqc_adapter"] = {s};\
             var adapter_pconfig = {{ \n\
                 "title": "Adapter Content",\n\
                 "ylab": "% of Sequences",\n\
@@ -638,8 +638,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 "use_legend": false,\n\
                 "click_func": function () {{ \n\
                     var snames = this.series.name.split(" - ");\n\
-                    fastqc_chg_original (snames[0], \'#fastqc_adapter_original\'); \n\
-                    $("#fastqc_adapter_original .showhide_orig").delay(100).slideDown(); \n\
+                    fastqc_chg_original (snames[0], \'#fastqc_adapter\'); \n\
+                    $("#fastqc_adapter .showhide_orig").delay(100).slideDown(); \n\
                     $("#fastqc_adapter_overlay").delay(100).slideUp(); \n\
                 }} \n\
             }}; \n\
