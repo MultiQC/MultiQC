@@ -117,7 +117,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         colours = {
             'aligned_not_multimapped_discordant':  '#8bbc21',
             'aligned_multimap':    '#2f7ed8',
-            'aligned_discordant':  '#0d233a',
+            'aligned_discordant':  '#a81a00',
             'unaligned_total':     '#0d233a',
         }
 

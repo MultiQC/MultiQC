@@ -186,6 +186,18 @@ input.form-control[type=color]{
     .mqc_filter_section input[type="color"] { padding: 5px 2px; }
 }
 
+/* General stats table */
+#general_stats_table th.sorthandle {
+    border-right: none;
+}
+#general_stats_table tbody th.sorthandle {
+    cursor: pointer;
+    color: #ccc;
+}
+#general_stats_table th.rowheader {
+    border-left: none;
+}
+
 
 /* Draggable height bar for HighCharts Plots */
 .hc-plot {

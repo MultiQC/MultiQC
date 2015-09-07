@@ -85,7 +85,8 @@
     <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
       <thead>
         <tr>
-          <th></th>
+          <th class="sorthandle"></th>
+          <th class="rowheader"></th>
           {%- for k, h in report['general_stats']['headers'].items() %}
             {{ h }}
           {%- endfor -%}
@@ -94,7 +95,8 @@
       <tbody>
         {% for sn, r in report['general_stats']['rows']|dictsort %}
         <tr>
-          <th>{{ sn }}</th>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">{{ sn }}</th>
           {%- for k, h in report['general_stats']['headers'].items() %}
             {{ r[k] if r[k] else '<td></td>' }}
           {%- endfor -%}

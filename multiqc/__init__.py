@@ -21,6 +21,7 @@ class BaseMultiqcModule(object):
         s_name = s_name.split(".fq",1)[0]
         s_name = s_name.split(".bam",1)[0]
         s_name = s_name.split(".sam",1)[0]
+        s_name = s_name.split("_tophat",1)[0]
         if trimmed:
             s_name = s_name.split("_val_1",1)[0]
             s_name = s_name.split("_val_2",1)[0]

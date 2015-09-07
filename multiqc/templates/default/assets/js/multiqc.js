@@ -68,11 +68,15 @@ $(function () {
       wrapper.css('height', startHeight + (me.pageY - pY));
     });
   });
-
+  
+  // Make rows in general stats table sortable
+  $('#general_stats_table tbody').sortable({ handle: '.sorthandle' });
+  
   // Colour code table cells using chroma.js
   $('table').each(function(){
     var table = $(this);
-    table.find('thead th').each(function(index){
+    table.find('thead th').each(function(idx){
+      var index = idx - 1;
       if($(this).hasClass('chroma-col')){
 
         // Get the colour scheme if set
