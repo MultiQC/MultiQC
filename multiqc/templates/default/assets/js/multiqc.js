@@ -245,7 +245,8 @@ function plot_xy_line_graph(div, data, config){
     chart: {
       renderTo: div.replace('#',''),
       type: 'line',
-      zoomType: 'x'
+      zoomType: 'x',
+      backgroundColor: null,
     },
     title: {
       text: config['title'],
@@ -309,6 +310,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
     chart: {
       renderTo: div.replace('#',''),
       type: 'bar',
+      backgroundColor: null,
     },
     title: {
       text: config['title'],

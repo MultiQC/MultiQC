@@ -132,7 +132,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             fq_screen_categories = {};\n\
             $(function () {{ \n\
                 $("#fq_screen_plot").highcharts({{ \n\
-                    chart: {{ type: "column" }}, \n\
+                    chart: {{ type: "column", backgroundColor: null }}, \n\
                     title: {{ text: "FastQ Screen Results" }}, \n\
                     xAxis: {{ categories: fq_screen_categories }}, \n\
                     yAxis: {{ \n\
