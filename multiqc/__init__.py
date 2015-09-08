@@ -93,7 +93,7 @@ class BaseMultiqcModule(object):
             cats = newcats
         
         # Parse the data into a HighCharts friendly format
-        hc_samples = data.keys()
+        hc_samples = list(data.keys())
         hc_data = list()
         for c in cats.keys():
             thisdata = list()
