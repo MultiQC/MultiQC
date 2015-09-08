@@ -236,7 +236,7 @@ An example of the markup expected, with the function being called:
 ```
 
 
-### plot_xy_line_graph (target, names, data, config)
+### plot_stacked_bar_graph (target, names, data, config)
 
 Plots a bar graph with multiple series containing multiple categories.
 
