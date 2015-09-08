@@ -81,7 +81,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 Doing so gives you access to common Python functions. These are currently
 few in number (just one) but may be extended in the near future.
 
-### dict_to_csv (data, delim="\t")
+### self.dict_to_csv (data, delim="\t")
 This function takes a 2D dictionary and returns a string suitable for
 writing to a .csv file. First key should be sample name (row header),
 second key should be field (column header).
@@ -96,7 +96,7 @@ with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.t
     print( self.dict_to_csv( self.featurecounts_data ), file=f)
 ```
 
-### plot_xy_data(data, config)
+### self.plot_xy_data (data, config)
 This function takes a dict of data and plots an XY line graph.
 It expects a dictionary in the following format:
 ```python
@@ -113,6 +113,7 @@ data = {
     },
     [ .. ]
 }
+html += self.plot_xy_data(data)
 ```
 Additionally, a config dict can be supplied. The defaults are as follows:
 ```python
@@ -123,7 +124,7 @@ config = {
 This dictionary can also have any of the javascript config options.
 See the [#example-line-graph](Example Line Graph) below for those.
 
-### plot_bargraph (data, cats, config)
+### self.plot_bargraph (data, cats, config)
 Takes a dict of data and plots a bar graph. The expected data structure
 is as follows:
 ```python
@@ -140,6 +141,7 @@ data = {
     },
     [ .. ]
 }
+html += self.plot_bargraph(data)
 ```
 Cats is an optional extra which allows you to specify how the different
 categories are displayed. If not specified, the categories are determined
@@ -182,10 +184,32 @@ See the [#example-bar-plot-html](Example Bar Plot HTML) below for those.
 The javascript bundled in the default MultiQC template has a number of
 helper functions to make your life easier.
 
-The following minimal examples make use of these helper functions to
-create plots which can be resized / have highlighted sample names and so on:
+Note that the above Python functions make use of these, so
+you typically won't need to call these directly.
 
-### Example Line Graph
+### plot_xy_line_graph (target, data, config)
+
+Plots a line graph with multiple series of (x,y) data pairs.
+
+Available config options with default vars:
+```javascript
+config = {
+    title: undefined,           // Plot title
+    xlab: undefined,            // X axis label
+    ylab: undefined,            // Y axis label
+    xmax: undefined,            // Max x limit
+    xmin: undefined,            // Min x limit
+    xDecimals: true,            // Set to false to only show integer labels
+    ymax: undefined,            // Max y limit
+    ymin: undefined,            // Min y limit
+    yDecimals: true,            // Set to false to only show integer labels
+    tt_label: '{point.x}',      // Use to customise tooltip label, eg. '{point.x} base pairs'
+    click_func: function(){},   // Javascript function to be called when a point is clicked
+    cursor: undefined           // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
+}
+```
+
+An example of the markup expected, with the function being called:
 ```html
 <div id="my_awesome_line_graph" class="hc-plot"></div>
 <script type="text/javascript">
@@ -210,42 +234,10 @@ create plots which can be resized / have highlighted sample names and so on:
 </script>
 ```
 
-All available config options with default vars:
-```javascript
-config = {
-    title: undefined,           // Plot title
-    xlab: undefined,            // X axis label
-    ylab: undefined,            // Y axis label
-    xmax: undefined,            // Max x limit
-    xmin: undefined,            // Min x limit
-    xDecimals: true,            // Set to false to only show integer labels
-    ymax: undefined,            // Max y limit
-    ymin: undefined,            // Min y limit
-    yDecimals: true,            // Set to false to only show integer labels
-    tt_label: '{point.x}',      // Use to customise tooltip label, eg. '{point.x} base pairs'
-    click_func: function(){},   // Javascript function to be called when a point is clicked
-    cursor: undefined           // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
-}
-```
-
 
 ### Example Bar Plot HTML
-```html
-<div id="my_awesome_bar_plot" class="hc-plot"></div>
-<script type="text/javascript">
-    my_sample_names = ['Sample 1', 'Sample 2']
-    my_sample_data = [{"data": [4, 7], "name": "Passed Test"}, {"data": [2, 3], "name": "Failed Test"}]
-    var my_config = {
-        "title": "My Awesome Plot",
-        "ylab": "# Observations",
-        "ymin": 0,
-        "stacking": "normal"
-    };
-    $(function () {
-        plot_stacked_bar_graph("#my_awesome_bar_plot", my_sample_names, my_sample_data, my_config);
-    });
-</script>
-```
+
+Plots a bar graph with multiple series containing multiple categories.
 
 All available config options with default vars:
 ```javascript
@@ -263,6 +255,24 @@ config = {
 }
 ```
 
+An example of the markup expected, with the function being called:
+```html
+<div id="my_awesome_bar_plot" class="hc-plot"></div>
+<script type="text/javascript">
+    my_sample_names = ['Sample 1', 'Sample 2']
+    my_sample_data = [{"data": [4, 7], "name": "Passed Test"}, {"data": [2, 3], "name": "Failed Test"}]
+    var my_config = {
+        "title": "My Awesome Plot",
+        "ylab": "# Observations",
+        "ymin": 0,
+        "stacking": "normal"
+    };
+    $(function () {
+        plot_stacked_bar_graph("#my_awesome_bar_plot", my_sample_names, my_sample_data, my_config);
+    });
+</script>
+```
+
 ### Switching Between Counts and Percentages
 If you're using the plotting functions above, it's easy to add a button which
 switches between percentages and counts. Just add the following HTML above
@@ -273,7 +283,7 @@ your plot:
     <button class="btn btn-default btn-sm" data-action="set_percent" data-target="#my_plot">Percentages</button>
 </div>
 ```
-_NB:_ Currently, this only works with stacked bar plots, not x-y line graphs.
+_NB:_ This markup is generated automatically with the Python `self.plot_bargraph()` function.
 
 
 
