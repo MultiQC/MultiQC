@@ -6,7 +6,8 @@ from collections import OrderedDict
 import json
 import os
 import random
-import string
+
+letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
 
@@ -38,7 +39,7 @@ class BaseMultiqcModule(object):
         
         # Generate a random HTML id if not given
         if config.get('id') is None:
-            config['id'] = 'mqc_hcplot_'+''.join(random.sample(string.lowercase, 10))
+            config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
         
         # Generate the data dict structure expected by HighCharts series
         plotdata = list()
@@ -90,7 +91,7 @@ class BaseMultiqcModule(object):
         
         # Build the HTML
         if config.get('id') is None:
-            config['id'] = 'mqc_hcplot_'+''.join(random.sample(string.lowercase, 10))
+            config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
         html = ''
         
         # Counts / Percentages Switch
