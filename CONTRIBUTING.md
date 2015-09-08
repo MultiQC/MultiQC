@@ -190,7 +190,9 @@ you typically won't need to call these directly.
 
 ### plot_xy_line_graph (target, data, config)
 
-Plots a line graph with multiple series of (x,y) data pairs.
+Plots a line graph with multiple series of (x,y) data pairs. Used by
+the [self.plot_xy_data()](CONTRIBUTING.md#selfplot_xy_data-data-config)
+python function.
 
 Available config options with default vars:
 ```javascript
@@ -239,6 +241,8 @@ An example of the markup expected, with the function being called:
 ### plot_stacked_bar_graph (target, names, data, config)
 
 Plots a bar graph with multiple series containing multiple categories.
+Used by the [self.plot_bargraph()](CONTRIBUTING.md#selfplot_bargraph-data-cats-config)
+python function.
 
 All available config options with default vars:
 ```javascript
