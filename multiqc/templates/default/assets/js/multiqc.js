@@ -25,7 +25,9 @@ $(function () {
     if(action == 'set_percent' || action == 'set_numbers'){
       var sym = (action == 'set_percent') ? '%' : '#';
       var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
-      plot_options.yAxis.title.text = sym+plot_options.yAxis.title.text.substr(1)
+      if(plot_options.yAxis.title.text !== undefined){
+        plot_options.yAxis.title.text = sym+plot_options.yAxis.title.text.substr(1);
+      }
       plot_options.plotOptions.series.stacking = stack_type;
       $(target).highcharts(plot_options);
     }
@@ -304,6 +306,7 @@ function plot_xy_line_graph(div, data, config){
 
 // Stacked Bar Graph
 function plot_stacked_bar_graph(div, cats, data, config){
+  if (config['stacking'] === undefined){ config['stacking'] = true; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   highcharts_plot_options[div] = {

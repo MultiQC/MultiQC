@@ -108,40 +108,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
 
     def featureCounts_chart (self):
-        """ Make the HighCharts HTML to plot the assignment rates """
-
-        cats = sorted(self.featurecounts_data.keys())
-        data = list()
+        """ Make the featureCounts assignment rates plot """
+        
+        # Specify the order of the different possible categories
         keys = ['Assigned', 'Unassigned_Ambiguity', 'Unassigned_MultiMapping', 'Unassigned_NoFeatures',
         'Unassigned_Unmapped', 'Unassigned_MappingQuality', 'Unassigned_FragementLength', 'Unassigned_Chimera',
         'Unassigned_Secondary', 'Unassigned_Nonjunction', 'Unassigned_Duplicate']
-
-        for k in keys:
-            thisdata = list()
-            name = k.replace('_', ' ')
-            for sn in cats:
-                thisdata.append(self.featurecounts_data[sn][k])
-            if max(thisdata) > 0:
-                data.append({
-                    'name': name,
-                    'data': thisdata
-                })
-
-        return '<div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#featurecounts_alignment_plot">Number of Reads</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#featurecounts_alignment_plot">Percentages</button> \n\
-		</div> \n\
-        <div id="featurecounts_alignment_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            featurecounts_alignment_cats = {};\n\
-            featurecounts_alignment_data = {};\n\
-            var featurecounts_alignment_pconfig = {{ \n\
-                "title": "featurecounts Alignment Scores",\n\
-                "ylab": "# Reads",\n\
-                "ymin": 0,\n\
-                "stacking": "normal" \n\
-            }}; \n\
-            $(function () {{ \
-                plot_stacked_bar_graph("#featurecounts_alignment_plot", featurecounts_alignment_cats, featurecounts_alignment_data, featurecounts_alignment_pconfig); \
-            }}); \
-        </script>'.format(json.dumps(cats), json.dumps(data));
+        
+        # Config for the plot
+        config = {
+            'title': 'featureCounts Assignments',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+        
+        return self.plot_bargraph(self.featurecounts_data, keys, config)

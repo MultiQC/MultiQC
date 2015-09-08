@@ -2,6 +2,7 @@
 
 """ MultiQC modules base class, contains helper functions """
 
+from collections import OrderedDict
 import json
 import os
 import random
@@ -36,8 +37,8 @@ class BaseMultiqcModule(object):
         See CONTRIBUTING.md for further instructions on use. """
         
         # Generate a random HTML id if not given
-        if config['id'] is None:
-            config['id'] = ''.join(random.sample(string.lowercase+string.digits, 10))
+        if config.get('id') is None:
+            config['id'] = 'mqc_hcplot_'+''.join(random.sample(string.lowercase, 10))
         
         # Generate the data dict structure expected by HighCharts series
         plotdata = list()
@@ -56,6 +57,61 @@ class BaseMultiqcModule(object):
             $(function () {{ plot_xy_line_graph("#{n}", {d}, {c}); }}); \n\
         </script>'.format(n=config['id'], d=json.dumps(data), c=json.dumps(config));
         return html
+    
+    def plot_bargraph (self, data, cats=None, config={}):
+        """ Plot a horizontal bar graph. Expects a 2D dict of sample
+        data. Also can take info about categories. There are quite a
+        few variants of how to use this function, see CONTRIBUTING.md
+        for documentation and examples. """
+        
+        # Not given any cats - find them from the data
+        if cats is None:
+            cats = list(set(k for s in data.keys() for k in data[s].keys() ))
+        
+        # Given a list of cats - turn it into a dict
+        if type(cats) is list:
+            newcats = OrderedDict()
+            for c in cats:
+                newcats[c] = {'name': c}
+            cats = newcats
+        
+        # Parse the data into a HighCharts friendly format
+        hc_samples = data.keys()
+        hc_data = list()
+        for c in cats.keys():
+            thisdata = list()
+            for s in data.keys():
+                thisdata.append(data[s][c])
+            if max(thisdata) > 0:
+                thisdict = { 'name': cats[c]['name'], 'data': thisdata }
+                if 'color' in cats[c]:
+                    thisdict['color'] = cats[c]['color']
+                hc_data.append(thisdict)
+        
+        # Build the HTML
+        if config.get('id') is None:
+            config['id'] = 'mqc_hcplot_'+''.join(random.sample(string.lowercase, 10))
+        html = ''
+        
+        # Counts / Percentages Switch
+        if config.get('cpswitch') is not False:
+            c_active = 'active' if config.get('cpswitch_c_active', True) is True else ''
+            p_active = 'active' if c_active is not 'active' else ''
+            c_label = config.get('cpswitch_counts_label', 'Counts')
+            p_label = config.get('cpswitch_percent_label', 'Percentages')
+            html += '<div class="btn-group switch_group"> \n\
+    			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="#{id}">{c_l}</button> \n\
+    			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="#{id}">{p_l}</button> \n\
+    		</div>'.format(id=config['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
+        
+        # Plot and javascript function
+        html += '<div id="{id}" class="hc-plot"></div> \n\
+        <script type="text/javascript"> \n\
+            $(function () {{ plot_stacked_bar_graph("#{id}", {s}, {d}, {c}); }}); \
+        </script>'.format(id=config['id'], s=json.dumps(hc_samples), d=json.dumps(hc_data), c=json.dumps(config));
+        
+        return html
+        
     
     def dict_to_csv (self, d, delim="\t"):
         """ Takes a 2D dictionary and returns a string suitable for
