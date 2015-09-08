@@ -28,7 +28,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.output_dir = report['output_dir']
 
         # Find and load any Picard reports
-        self.picard_data = defaultdict(lambda: dict())
+        self.picard_dupMetrics_data = defaultdict(lambda: dict())
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
                 if os.path.getsize(os.path.join(root,fn)) < 200000:
@@ -40,26 +40,28 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                     s_name = fn
                                     s_name = s_name.split(".metrics",1)[0]
                                     s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
+                                    if s_name in self.picard_dupMetrics_data:
+                                        logging.warn("Picard: Duplicate DuplicationMetrics sample name found! Overwriting: {}".format(s_name))
                                     keys = s[idx+1].split("\t")
                                     vals = s[idx+2].split("\t")
                                     for i, k in enumerate(keys):
                                         try:
-                                            self.picard_data[s_name][k] = float(vals[i])
+                                            self.picard_dupMetrics_data[s_name][k] = float(vals[i])
                                         except ValueError:
-                                            self.picard_data[s_name][k] = vals[i]
+                                            self.picard_dupMetrics_data[s_name][k] = vals[i]
                                     break # TODO: Deal with multiple libraries? Proper regex?
                     except ValueError:
                         logging.debug("Couldn't read file when looking for Picard output: {}".format(fn))
 
-        if len(self.picard_data) == 0:
+        if len(self.picard_dupMetrics_data) == 0:
             logging.debug("Could not find any Picard reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} Picard reports".format(len(self.picard_data)))
+        logging.info("Found {} Picard reports".format(len(self.picard_dupMetrics_data)))
 
         # Write parsed report data to a file
         with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_picard.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( self.picard_data ), file=f)
+            print( self.dict_to_csv( self.picard_dupMetrics_data ), file=f)
 
         self.sections = list()
 
@@ -80,7 +82,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">%&nbsp;Dups</span></th>'
-        for sn, data in self.picard_data.items():
+        for sn, data in self.picard_dupMetrics_data.items():
             report['general_stats']['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
 
     def mark_duplicates_plot (self):
@@ -88,7 +90,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # NOTE: I had a hard time getting these numbers to add up as expected.
         # If you think I've done something wrong, let me know! Please add an
         # issue here: https://github.com/ewels/MultiQC/issues
-        cats = sorted(self.picard_data.keys())
+        cats = sorted(self.picard_dupMetrics_data.keys())
         data = list()
         keys = ['READ_PAIR_UNIQUE',
                 'UNPAIRED_READ_UNIQUE',
@@ -100,16 +102,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             thisdata = list()
             if k == 'UNPAIRED_READ_UNIQUE':
                 for sn in cats:
-                    thisdata.append(self.picard_data[sn]['UNPAIRED_READS_EXAMINED'] - self.picard_data[sn]['UNPAIRED_READ_DUPLICATES'])
+                    thisdata.append(self.picard_dupMetrics_data[sn]['UNPAIRED_READS_EXAMINED'] - self.picard_dupMetrics_data[sn]['UNPAIRED_READ_DUPLICATES'])
             elif k == 'READ_PAIR_NOT_OPTICAL_DUPLICATES':
                 for sn in cats:
-                    thisdata.append(self.picard_data[sn]['READ_PAIR_DUPLICATES'] - self.picard_data[sn]['READ_PAIR_OPTICAL_DUPLICATES'])
+                    thisdata.append(self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES'] - self.picard_dupMetrics_data[sn]['READ_PAIR_OPTICAL_DUPLICATES'])
             elif k == 'READ_PAIR_UNIQUE':
                 for sn in cats:
-                    thisdata.append(self.picard_data[sn]['READ_PAIRS_EXAMINED'] - self.picard_data[sn]['READ_PAIR_DUPLICATES'])
+                    thisdata.append(self.picard_dupMetrics_data[sn]['READ_PAIRS_EXAMINED'] - self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES'])
             else:
                 for sn in cats:
-                    thisdata.append(self.picard_data[sn][k])
+                    thisdata.append(self.picard_dupMetrics_data[sn][k])
             if max(thisdata) > 0:
                 data.append({
                     'name': k.replace('_',' ').title(),

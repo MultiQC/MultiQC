@@ -38,6 +38,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                     try:
                         with open (os.path.join(root,fn), "r") as f:
+                            if s_name in fq_screen_raw_data:
+                                logging.warn("FastQ Screen: Duplicate sample name found! Overwriting: {}".format(s_name))
                             fq_screen_raw_data[s_name] = f.read()
                     except ValueError:
                         logging.debug("Couldn't read file when looking for FastQ Screen output: {}".format(fn))

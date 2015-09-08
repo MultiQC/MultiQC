@@ -76,7 +76,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             s_name = s_name.split(".txt",1)[0]
             s_name = s_name.split("_trimming_report",1)[0]
             s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
-
+            
+            if s_name in self.cutadapt_data:
+                logging.warn("Cutadapt: Duplicate sample name found! Overwriting: {}".format(s_name))
             self.cutadapt_data[s_name] = dict()
             regexes = {
                 'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",

@@ -39,6 +39,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                         parsed_data = self.parse_featurecounts_report(f.read())
                         if parsed_data is not None:
+                            if s_name in self.featurecounts_data:
+                                logging.warn("featureCounts: Duplicate sample name found! Overwriting: {}".format(s_name))
                             self.featurecounts_data[s_name] = parsed_data
 
         if len(self.featurecounts_data) == 0:

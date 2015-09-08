@@ -60,7 +60,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if fn_search:
                     s_name = fn_search.group(1).strip()
                 s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
-
+                if s_name in fastqc_raw_data:
+                    logging.warn("FastQC: Duplicate sample name found! Overwriting: {}".format(s_name))
                 fastqc_raw_data[s_name] = r_data
 
                 # Copy across the raw images
@@ -86,15 +87,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                         if fn_search:
                             s_name = fn_search.group(1).strip()
-                        s_name = s_name.split(".gz",1)[0]
-                        s_name = s_name.split(".fastq",1)[0]
-                        s_name = s_name.split(".fq",1)[0]
-                        s_name = s_name.split("_fastqc",1)[0]
-                        s_name = s_name.split("_fastqc",1)[0]
-                        
-                        if report['prepend_dirs']:
-                            s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
-
+                        s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
+                        if s_name in fastqc_raw_data:
+                            logging.warn("FastQC: Duplicate sample name found! Overwriting: {}".format(s_name))
                         fastqc_raw_data[s_name] = r_data
 
                     except KeyError:

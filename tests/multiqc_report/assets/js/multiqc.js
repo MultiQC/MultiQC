@@ -68,11 +68,15 @@ $(function () {
       wrapper.css('height', startHeight + (me.pageY - pY));
     });
   });
-
+  
+  // Make rows in general stats table sortable
+  $('#general_stats_table tbody').sortable({ handle: '.sorthandle' });
+  
   // Colour code table cells using chroma.js
   $('table').each(function(){
     var table = $(this);
-    table.find('thead th').each(function(index){
+    table.find('thead th').each(function(idx){
+      var index = idx - 1;
       if($(this).hasClass('chroma-col')){
 
         // Get the colour scheme if set
@@ -234,7 +238,6 @@ highcharts_plot_options = [];
 // Basic Line Graph
 function plot_xy_line_graph(div, data, config){
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
-  if(config['use_legend'] === undefined){ config['use_legend'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
@@ -242,7 +245,8 @@ function plot_xy_line_graph(div, data, config){
     chart: {
       renderTo: div.replace('#',''),
       type: 'line',
-      zoomType: 'x'
+      zoomType: 'x',
+      backgroundColor: null,
     },
     title: {
       text: config['title'],
@@ -281,11 +285,7 @@ function plot_xy_line_graph(div, data, config){
       }
     },
     legend: {
-      enabled: config['use_legend'],
-      layout: 'vertical',
-      align: 'right',
-      verticalAlign: 'middle',
-      borderWidth: 0
+      enabled: false
     },
     credits: {
 			enabled: true,
@@ -310,6 +310,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
     chart: {
       renderTo: div.replace('#',''),
       type: 'bar',
+      backgroundColor: null,
     },
     title: {
       text: config['title'],

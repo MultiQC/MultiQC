@@ -64,6 +64,13 @@
     </li>
     
     <li>
+      <a href="#tophat">Tophat</a>
+      <ul>
+      
+      </ul>
+    </li>
+    
+    <li>
       <a href="#bowtie2">Bowtie 2</a>
       <ul>
       
@@ -125,7 +132,7 @@
   <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
   
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
-  <p>Report generated on 2015-09-04, 16:09 based on data in <code>/Users/philewels/Work/MultiQC/tests/data</code></p>
+  <p>Report generated on 2015-09-08, 09:09 based on data in <code>/Users/philewels/Work/MultiQC/tests/data</code></p>
   <p>Report location: <code>/Users/philewels/Work/MultiQC/tests/multiqc_report/multiqc_report.html</code></p>
 
   
@@ -134,7 +141,8 @@
     <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
       <thead>
         <tr>
-          <th></th>
+          <th class="sorthandle"></th>
+          <th class="rowheader"></th>
             <th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: % Assigned reads">%&nbsp;Assigned</span></th>
             <th class="chroma-col" data-chroma-scale="PuBu" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: Assigned reads (millions)">M&nbsp;Assigned</span></th>
             <th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">%&nbsp;Dups</span></th>
@@ -142,10 +150,11 @@
             <th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C's analysed, in millions (meth&nbsp;extraction)">M&nbsp;C's</span></th>
             <th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">%&nbsp;Dups</span></th>
             <th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M&nbsp;Unique</span></th>
-            <th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">%&nbsp;Aligned</span></th>
             <th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M&nbsp;Aligned</span></th>
+            <th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">%&nbsp;Aligned</span></th>
             <th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">%&nbsp;Mapped</span></th>
             <th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M&nbsp;Mapped</span></th>
+            <th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Tophat: overall read mapping rate">%&nbsp;Aligned</span></th>
             <th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Bowtie 2: overall alignment rate">%&nbsp;Aligned</span></th>
             <th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Bowtie 1: % reads with at least one reported alignment">%&nbsp;Aligned</span></th>
             <th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="% Total Base Pairs trimmed by Cutadapt">Trimmed</span></th>
@@ -157,7 +166,30 @@
       <tbody>
         
         <tr>
-          <th>P1775_101</th>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">ERR458837_1_val</th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-right">90.0%</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td></tr>
+        <tr>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">P1775_101</th>
             <td></td>
             <td></td>
             <td class="text-right">3.7%</td>
@@ -175,9 +207,11 @@
             <td></td>
             <td></td>
             <td></td>
+            <td></td>
             <td></td></tr>
         <tr>
-          <th>P1775_102</th>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">P1775_102</th>
             <td></td>
             <td></td>
             <td class="text-right">7.6%</td>
@@ -195,12 +229,37 @@
             <td></td>
             <td></td>
             <td></td>
+            <td></td>
             <td></td></tr>
         <tr>
-          <th>SRR1067500_1</th>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">SRR1026912_blood_RNA-Seq_1_val</th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-right">83.6%</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td></tr>
+        <tr>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">SRR1067500_1</th>
             <td></td>
             <td></td>
             <td class="text-right">16.0%</td>
+            <td></td>
             <td></td>
             <td></td>
             <td></td>
@@ -217,7 +276,8 @@
             <td></td>
             <td></td></tr>
         <tr>
-          <th>SRR1067503_1</th>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">SRR1067503_1</th>
             <td class="text-right">2.4%</td>
             <td class="text-right">0.9</td>
             <td class="text-right">9.0%</td>
@@ -229,6 +289,7 @@
             <td></td>
             <td class="text-right">63.2%</td>
             <td class="text-right">19.3</td>
+            <td></td>
             <td class="text-right">86.1%</td>
             <td class="text-right">58.0%</td>
             <td class="text-right">2.1%</td>
@@ -237,7 +298,8 @@
             <td class="text-right">36</td>
             <td class="text-right">30.7</td></tr>
         <tr>
-          <th>SRR1067505_1</th>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">SRR1067505_1</th>
             <td class="text-right">7.4%</td>
             <td class="text-right">1.5</td>
             <td></td>
@@ -251,13 +313,15 @@
             <td class="text-right">14.2</td>
             <td></td>
             <td></td>
+            <td></td>
             <td class="text-right">3.5%</td>
             <td class="text-right">8.2%</td>
             <td class="text-right">47%</td>
             <td class="text-right">36</td>
             <td class="text-right">18.4</td></tr>
         <tr>
-          <th>test_data</th>
+          <th class="sorthandle">||</th>
+          <th class="rowheader">test_data</th>
             <td></td>
             <td></td>
             <td></td>
@@ -265,8 +329,9 @@
             <td class="text-right">0.0</td>
             <td class="text-right">0.2%</td>
             <td class="text-right">0.0</td>
-            <td class="text-right">65.6%</td>
             <td class="text-right">0.0</td>
+            <td class="text-right">65.6%</td>
+            <td></td>
             <td></td>
             <td></td>
             <td></td>
@@ -426,8 +491,27 @@
     
     <hr>
   
+    <h2 id="tophat">Tophat</h2>
+    <p><a href="https://ccb.jhu.edu/software/tophat/" target="_blank">Tophat</a>             is a fast splice junction mapper for RNA-Seq reads. It aligns RNA-Seq reads to mammalian-sized genomes.</p><div class="btn-group switch_group"> 
+			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#tophat_alignment_plot">Number of Reads</button> 
+			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#tophat_alignment_plot">Percentages</button> 
+		</div> 
+        <div id="tophat_alignment_plot" class="hc-plot"></div> 
+        <script type="text/javascript"> 
+            tophat_alignment_cats = ["ERR458837_1_val", "SRR1026912_blood_RNA-Seq_1_val"];
+            tophat_alignment_data = [{"color": "#8bbc21", "data": [25853104.0, 33468617.0], "name": "Aligned"}, {"color": "#2f7ed8", "data": [1430484.0, 914557.0], "name": "Multimapped"}, {"color": "#a81a00", "data": [443165.0, 835099.0], "name": "Discordant mappings"}, {"color": "#0d233a", "data": [4470538.0, 11018312.0], "name": "Not aligned"}];
+            var tophat_alignment_pconfig = { 
+                "title": "Tophat Alignment Scores",
+                "ylab": "# Reads",
+                "ymin": 0,
+                "stacking": "normal" 
+            }; 
+            $(function () {                 plot_stacked_bar_graph("#tophat_alignment_plot", tophat_alignment_cats, tophat_alignment_data, tophat_alignment_pconfig);             });         </script>
+    
+    <hr>
+  
     <h2 id="bowtie2">Bowtie 2</h2>
-    <p><a href="http://bowtie-bio.sourceforge.net/" target="_blank">Bowtie 2</a>             is an ultrafast, memory-efficient short read aligner.</p><div class="btn-group switch_group"> 
+    <p><a href="http://bowtie-bio.sourceforge.net/bowtie2/" target="_blank">Bowtie 2</a>             is ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.</p><div class="btn-group switch_group"> 
 			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bowtie2_alignment_plot">Number of Reads</button> 
 			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bowtie2_alignment_plot">Percentages</button> 
 		</div> 
@@ -498,7 +582,7 @@
             fq_screen_categories = ["Human", "Mouse", "Ecoli", "PhiX", "No hits"];
             $(function () { 
                 $("#fq_screen_plot").highcharts({ 
-                    chart: { type: "column" }, 
+                    chart: { type: "column", backgroundColor: null }, 
                     title: { text: "FastQ Screen Results" }, 
                     xAxis: { categories: fq_screen_categories }, 
                     yAxis: { 
@@ -538,7 +622,7 @@
                 <div class="clearfix"><div class="btn-group btn-group-sm"> 
                 <a href="#SRR1067505_1" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_quals">&laquo; Previous</a> 
                 <a href="#SRR1067505_1" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_quals">Next &raquo;</a> 
-            </div></div> <img class="original-plot" src="report_data/fastqc/SRR1067503_1_per_base_quality.png" data-fnsuffix="_per_base_quality.png"> 
+            </div></div> <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/SRR1067503_1_per_base_quality.png" data-fnsuffix="_per_base_quality.png"> 
             </div>
             <div id="fastqc_quality_overlay" class="fastqc-overlay-plot hc-plot"></div> 
         </div> 
@@ -570,11 +654,10 @@
         <div id="fastqc_gc" class="hc-plot-wrapper"> 
             <div class="showhide_orig" style="display:none;"> 
                 <h4><span class="s_name">SRR1067503_1</span> <span class="label label-default s_status">status</span></h4> 
-                <div class="btn-group btn-group-sm"> 
+                <div class="clearfix"><div class="btn-group btn-group-sm"> 
                 <a href="#SRR1067505_1" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_gc">&laquo; Previous</a> 
                 <a href="#SRR1067505_1" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_gc">Next &raquo;</a> 
-            </div>
-                <p><img class="original-plot" src="report_data/fastqc/SRR1067503_1_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"></p> 
+            </div></div> <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/SRR1067503_1_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"> 
             </div>
             <div id="fastqc_gc_overlay" class="fastqc-overlay-plot hc-plot"></div> 
         </div>
@@ -606,11 +689,10 @@
         <div id="fastqc_seq"> 
             <h4><span class="s_name">SRR1067503_1</span> <span class="label label-default s_status">warn</span></h4> 
             <div class="showhide_orig" style="display:none;"> 
-                <div class="btn-group btn-group-sm"> 
+                <div class="clearfix"><div class="btn-group btn-group-sm"> 
                 <a href="#SRR1067505_1" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_seq">&laquo; Previous</a> 
                 <a href="#SRR1067505_1" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_seq">Next &raquo;</a> 
-            </div>
-                <p><img class="original-plot" src="report_data/fastqc/SRR1067503_1_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"></p> 
+            </div></div> <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/SRR1067503_1_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"> 
             </div>
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
                 <div id="fastqc_seq_plot" class="hc-plot"> 

@@ -12,8 +12,8 @@
   text-transform: capitalize;
 }
 .original-plot {
-  max-width:800px;
-  width:100%;
+  max-width:100%;
+  max-height: calc(100% - 60px);
   cursor: pointer;
 }
 
