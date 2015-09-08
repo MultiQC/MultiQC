@@ -103,46 +103,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def bowtie_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-
-        cats = sorted(self.bowtie_data.keys())
-        data = list()
+        
+        # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['reads_aligned'] = 'Aligned'
-        keys['multimapped'] =    'Multimapped'
-        keys['not_aligned'] =   'Not aligned'
-
-        colours = {
-            'reads_aligned':  '#8bbc21',
-            'multimapped':    '#2f7ed8',
-            'not_aligned':    '#0d233a',
+        keys['reads_aligned'] = { 'color': '#8bbc21', 'name': 'Aligned' }
+        keys['multimapped'] =   { 'color': '#2f7ed8', 'name': 'Multimapped' }
+        keys['not_aligned'] =   { 'color': '#0d233a', 'name': 'Not aligned' }
+        
+        # Config for the plot
+        config = {
+            'title': 'Bowtie 1 Alignment Scores',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
         }
-
-        for k, name in keys.items():
-            thisdata = list()
-            for sn in cats:
-                thisdata.append(self.bowtie_data[sn].get(k, 0))
-            if max(thisdata) > 0:
-                data.append({
-                    'name': name,
-                    'color': colours[k],
-                    'data': thisdata
-                })
-
-        return '<div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bowtie1_alignment_plot">Number of Reads</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bowtie1_alignment_plot">Percentages</button> \n\
-		</div> \n\
-        <div id="bowtie1_alignment_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            bowtie1_alignment_cats = {};\n\
-            bowtie1_alignment_data = {};\n\
-            var bowtie1_alignment_pconfig = {{ \n\
-                "title": "Bowtie 1 Alignment Scores",\n\
-                "ylab": "# Reads",\n\
-                "ymin": 0,\n\
-                "stacking": "normal" \n\
-            }}; \n\
-            $(function () {{ \
-                plot_stacked_bar_graph("#bowtie1_alignment_plot", bowtie1_alignment_cats, bowtie1_alignment_data, bowtie1_alignment_pconfig); \
-            }}); \
-        </script>'.format(json.dumps(cats), json.dumps(data));
+        
+        return self.plot_bargraph(self.bowtie_data, keys, config)

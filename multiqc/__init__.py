@@ -93,11 +93,11 @@ class BaseMultiqcModule(object):
             cats = newcats
         
         # Parse the data into a HighCharts friendly format
-        hc_samples = list(data.keys())
+        hc_samples = sorted(list(data.keys()))
         hc_data = list()
         for c in cats.keys():
             thisdata = list()
-            for s in data.keys():
+            for s in hc_samples:
                 thisdata.append(data[s][c])
             if max(thisdata) > 0:
                 thisdict = { 'name': cats[c]['name'], 'data': thisdata }

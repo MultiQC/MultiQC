@@ -132,7 +132,7 @@
   <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
   
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
-  <p>Report generated on 2015-09-08, 09:09 based on data in <code>/Users/philewels/Work/MultiQC/tests/data</code></p>
+  <p>Report generated on 2015-09-08, 17:09 based on data in <code>/Users/philewels/Work/MultiQC/tests/data</code></p>
   <p>Report location: <code>/Users/philewels/Work/MultiQC/tests/multiqc_report/multiqc_report.html</code></p>
 
   
@@ -349,20 +349,11 @@
   
     <h2 id="featurecounts">featureCounts</h2>
     <p><a href="http://bioinf.wehi.edu.au/featureCounts/" target="_blank">Subread featureCounts</a>              is a highly efficient general-purpose read summarization program that counts mapped reads for genomic              features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations.</p><div class="btn-group switch_group"> 
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#featurecounts_alignment_plot">Number of Reads</button> 
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#featurecounts_alignment_plot">Percentages</button> 
-		</div> 
-        <div id="featurecounts_alignment_plot" class="hc-plot"></div> 
+    			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#mqc_hcplot_rgbyokwvea">Number of Reads</button> 
+    			<button class="btn btn-default btn-sm " data-action="set_percent" data-target="#mqc_hcplot_rgbyokwvea">Percentages</button> 
+    		</div><div id="mqc_hcplot_rgbyokwvea" class="hc-plot"></div> 
         <script type="text/javascript"> 
-            featurecounts_alignment_cats = ["SRR1067503_1", "SRR1067505_1"];
-            featurecounts_alignment_data = [{"data": [937197.0, 1463323.0], "name": "Assigned"}, {"data": [33475.0, 71509.0], "name": "Unassigned Ambiguity"}, {"data": [19788199.0, 5480600.0], "name": "Unassigned MultiMapping"}, {"data": [18334149.0, 12710744.0], "name": "Unassigned NoFeatures"}];
-            var featurecounts_alignment_pconfig = { 
-                "title": "featurecounts Alignment Scores",
-                "ylab": "# Reads",
-                "ymin": 0,
-                "stacking": "normal" 
-            }; 
-            $(function () {                 plot_stacked_bar_graph("#featurecounts_alignment_plot", featurecounts_alignment_cats, featurecounts_alignment_data, featurecounts_alignment_pconfig);             });         </script>
+            $(function () { plot_stacked_bar_graph("#mqc_hcplot_rgbyokwvea", ["SRR1067503_1", "SRR1067505_1"], [{"data": [937197.0, 1463323.0], "name": "Assigned"}, {"data": [33475.0, 71509.0], "name": "Unassigned_Ambiguity"}, {"data": [19788199.0, 5480600.0], "name": "Unassigned_MultiMapping"}, {"data": [18334149.0, 12710744.0], "name": "Unassigned_NoFeatures"}], {"id": "mqc_hcplot_rgbyokwvea", "ylab": "# Reads", "cpswitch_counts_label": "Number of Reads", "title": "featureCounts Assignments"}); });         </script>
     
     <hr>
   
@@ -371,22 +362,12 @@
     
       <div class="mqc-section">
         <h3 id="picard-markduplicates">Mark Duplicates</h3>
-        <p class="text-muted">An attempt at summing the numbers from the picard metrics file. Take with a pinch of salt for now.</p>
         <div class="btn-group switch_group"> 
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#picard_alignment_plot">Number of Reads</button> 
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#picard_alignment_plot">Percentages</button> 
-		</div> 
-        <div id="picard_alignment_plot" class="hc-plot"></div> 
+    			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#mqc_hcplot_rmlzjbyoen">Number of Reads</button> 
+    			<button class="btn btn-default btn-sm " data-action="set_percent" data-target="#mqc_hcplot_rmlzjbyoen">Percentages</button> 
+    		</div><div id="mqc_hcplot_rmlzjbyoen" class="hc-plot"></div> 
         <script type="text/javascript"> 
-            picard_alignment_cats = ["P1775_101", "P1775_102", "SRR1067500_1", "SRR1067503_1"];
-            picard_alignment_data = [{"data": [422600029.0, 311875806.0, 0.0, 0.0], "name": "Read Pair Unique"}, {"data": [1034216.0, 5427324.0, 25431710.0, 16201191.0], "name": "Unpaired Read Unique"}, {"data": [13258971.0, 17217982.0, 0.0, 0.0], "name": "Read Pair Not Optical Duplicates"}, {"data": [2791952.0, 7953795.0, 0.0, 0.0], "name": "Read Pair Optical Duplicates"}, {"data": [456659.0, 1519164.0, 4855210.0, 1609334.0], "name": "Unpaired Read Duplicates"}, {"data": [7107521.0, 17290046.0, 8090385.0, 12870455.0], "name": "Unmapped Reads"}];
-            var picard_alignment_pconfig = { 
-                "title": "Picard Alignment Scores",
-                "ylab": "# Reads",
-                "ymin": 0,
-                "stacking": "normal" 
-            }; 
-            $(function () {                 plot_stacked_bar_graph("#picard_alignment_plot", picard_alignment_cats, picard_alignment_data, picard_alignment_pconfig);             });         </script>
+            $(function () { plot_stacked_bar_graph("#mqc_hcplot_rmlzjbyoen", ["P1775_101", "P1775_102", "SRR1067500_1", "SRR1067503_1"], [{"data": [422600029.0, 311875806.0, 0.0, 0.0], "name": "Read Pair Unique"}, {"data": [1034216.0, 5427324.0, 25431710.0, 16201191.0], "name": "Unpaired Read Unique"}, {"data": [13258971.0, 17217982.0, 0.0, 0.0], "name": "Read Pair Not Optical Duplicates"}, {"data": [2791952.0, 7953795.0, 0.0, 0.0], "name": "Read Pair Optical Duplicates"}, {"data": [456659.0, 1519164.0, 4855210.0, 1609334.0], "name": "Unpaired Read Duplicates"}, {"data": [7107521.0, 17290046.0, 8090385.0, 12870455.0], "name": "Unmapped Reads"}], {"id": "mqc_hcplot_rmlzjbyoen", "ylab": "# Reads", "cpswitch_counts_label": "Number of Reads", "title": "Picard Deduplication Stats"}); });         </script>
         
       </div>
     
@@ -474,77 +455,41 @@
   
     <h2 id="star">STAR</h2>
     <p><a href="https://github.com/alexdobin/STAR" target="_blank">STAR</a>             is an ultrafast universal RNA-seq aligner.</p><div class="btn-group switch_group"> 
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#star_alignment_plot">Number of Reads</button> 
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#star_alignment_plot">Percentages</button> 
-		</div> 
-        <div id="star_alignment_plot" class="hc-plot"></div> 
+    			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#mqc_hcplot_goprutjwmz">Number of Reads</button> 
+    			<button class="btn btn-default btn-sm " data-action="set_percent" data-target="#mqc_hcplot_goprutjwmz">Percentages</button> 
+    		</div><div id="mqc_hcplot_goprutjwmz" class="hc-plot"></div> 
         <script type="text/javascript"> 
-            star_alignment_cats = ["SRR1067503_1", "SRR1067505_1"];
-            star_alignment_data = [{"color": "#437bb1", "data": [19304821.0, 14245576.0], "name": "Uniquely mapped"}, {"color": "#7cb5ec", "data": [4858768.0, 1424932.0], "name": "Mapped to multiple loci"}, {"color": "#f7a35c", "data": [1457031.0, 337226.0], "name": "Mapped to too many loci"}, {"color": "#b1084c", "data": [3154220, 1497656], "name": "Unmapped: too short"}, {"color": "#7f0000", "data": [1758791, 495019], "name": "Unmapped: other"}];
-            var star_alignment_pconfig = { 
-                "title": "STAR Alignment Scores",
-                "ylab": "# Reads",
-                "ymin": 0,
-                "stacking": "normal" 
-            }; 
-            $(function () {                 plot_stacked_bar_graph("#star_alignment_plot", star_alignment_cats, star_alignment_data, star_alignment_pconfig);             });         </script>
+            $(function () { plot_stacked_bar_graph("#mqc_hcplot_goprutjwmz", ["SRR1067503_1", "SRR1067505_1"], [{"color": "#437bb1", "data": [19304821.0, 14245576.0], "name": "Uniquely mapped"}, {"color": "#7cb5ec", "data": [4858768.0, 1424932.0], "name": "Mapped to multiple loci"}, {"color": "#f7a35c", "data": [1457031.0, 337226.0], "name": "Mapped to too many loci"}, {"color": "#b1084c", "data": [3154220, 1497656], "name": "Unmapped: too short"}, {"color": "#7f0000", "data": [1758791, 495019], "name": "Unmapped: other"}], {"id": "mqc_hcplot_goprutjwmz", "ylab": "# Reads", "cpswitch_counts_label": "Number of Reads", "title": "STAR Alignment Scores"}); });         </script>
     
     <hr>
   
     <h2 id="tophat">Tophat</h2>
     <p><a href="https://ccb.jhu.edu/software/tophat/" target="_blank">Tophat</a>             is a fast splice junction mapper for RNA-Seq reads. It aligns RNA-Seq reads to mammalian-sized genomes.</p><div class="btn-group switch_group"> 
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#tophat_alignment_plot">Number of Reads</button> 
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#tophat_alignment_plot">Percentages</button> 
-		</div> 
-        <div id="tophat_alignment_plot" class="hc-plot"></div> 
+    			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#mqc_hcplot_ukspeqwjxy">Number of Reads</button> 
+    			<button class="btn btn-default btn-sm " data-action="set_percent" data-target="#mqc_hcplot_ukspeqwjxy">Percentages</button> 
+    		</div><div id="mqc_hcplot_ukspeqwjxy" class="hc-plot"></div> 
         <script type="text/javascript"> 
-            tophat_alignment_cats = ["ERR458837_1_val", "SRR1026912_blood_RNA-Seq_1_val"];
-            tophat_alignment_data = [{"color": "#8bbc21", "data": [25853104.0, 33468617.0], "name": "Aligned"}, {"color": "#2f7ed8", "data": [1430484.0, 914557.0], "name": "Multimapped"}, {"color": "#a81a00", "data": [443165.0, 835099.0], "name": "Discordant mappings"}, {"color": "#0d233a", "data": [4470538.0, 11018312.0], "name": "Not aligned"}];
-            var tophat_alignment_pconfig = { 
-                "title": "Tophat Alignment Scores",
-                "ylab": "# Reads",
-                "ymin": 0,
-                "stacking": "normal" 
-            }; 
-            $(function () {                 plot_stacked_bar_graph("#tophat_alignment_plot", tophat_alignment_cats, tophat_alignment_data, tophat_alignment_pconfig);             });         </script>
+            $(function () { plot_stacked_bar_graph("#mqc_hcplot_ukspeqwjxy", ["ERR458837_1_val", "SRR1026912_blood_RNA-Seq_1_val"], [{"color": "#437bb1", "data": [25853104.0, 33468617.0], "name": "Aligned"}, {"color": "#f7a35c", "data": [1430484.0, 914557.0], "name": "Multimapped"}, {"color": "#e63491", "data": [443165.0, 835099.0], "name": "Discordant mappings"}, {"color": "#7f0000", "data": [4470538.0, 11018312.0], "name": "Not aligned"}], {"id": "mqc_hcplot_ukspeqwjxy", "ylab": "# Reads", "cpswitch_counts_label": "Number of Reads", "title": "Tophat Alignment Scores"}); });         </script>
     
     <hr>
   
     <h2 id="bowtie2">Bowtie 2</h2>
     <p><a href="http://bowtie-bio.sourceforge.net/bowtie2/" target="_blank">Bowtie 2</a>             is ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.</p><div class="btn-group switch_group"> 
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bowtie2_alignment_plot">Number of Reads</button> 
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bowtie2_alignment_plot">Percentages</button> 
-		</div> 
-        <div id="bowtie2_alignment_plot" class="hc-plot"></div> 
+    			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#mqc_hcplot_oebumwgatx">Number of Reads</button> 
+    			<button class="btn btn-default btn-sm " data-action="set_percent" data-target="#mqc_hcplot_oebumwgatx">Percentages</button> 
+    		</div><div id="mqc_hcplot_oebumwgatx" class="hc-plot"></div> 
         <script type="text/javascript"> 
-            bowtie2_alignment_cats = ["SRR1067500_1", "SRR1067503_1"];
-            bowtie2_alignment_data = [{"color": "#8bbc21", "data": [27593593.0, 14739644.0], "name": "1 Alignment"}, {"color": "#2f7ed8", "data": [8258135.0, 11688364.0], "name": ">1 Alignments"}, {"color": "#0d233a", "data": [2525577.0, 4252972.0], "name": "Not aligned"}];
-            var bowtie2_alignment_pconfig = { 
-                "title": "Bowtie 2 Alignment Scores",
-                "ylab": "# Reads",
-                "ymin": 0,
-                "stacking": "normal" 
-            }; 
-            $(function () {                 plot_stacked_bar_graph("#bowtie2_alignment_plot", bowtie2_alignment_cats, bowtie2_alignment_data, bowtie2_alignment_pconfig);             });         </script>
+            $(function () { plot_stacked_bar_graph("#mqc_hcplot_oebumwgatx", ["SRR1067500_1", "SRR1067503_1"], [{"color": "#8bbc21", "data": [27593593.0, 14739644.0], "name": "1 Alignment"}, {"color": "#2f7ed8", "data": [8258135.0, 11688364.0], "name": ">1 Alignments"}, {"color": "#0d233a", "data": [2525577.0, 4252972.0], "name": "Not aligned"}], {"id": "mqc_hcplot_oebumwgatx", "ylab": "# Reads", "cpswitch_counts_label": "Number of Reads", "title": "Bowtie 2 Alignment Scores"}); });         </script>
     
     <hr>
   
     <h2 id="bowtie1">Bowtie</h2>
     <p><a href="http://bowtie-bio.sourceforge.net/" target="_blank">Bowtie 1</a>             is an ultrafast, memory-efficient short read aligner.</p><div class="btn-group switch_group"> 
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#bowtie1_alignment_plot">Number of Reads</button> 
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#bowtie1_alignment_plot">Percentages</button> 
-		</div> 
-        <div id="bowtie1_alignment_plot" class="hc-plot"></div> 
+    			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#mqc_hcplot_udjgeihapk">Number of Reads</button> 
+    			<button class="btn btn-default btn-sm " data-action="set_percent" data-target="#mqc_hcplot_udjgeihapk">Percentages</button> 
+    		</div><div id="mqc_hcplot_udjgeihapk" class="hc-plot"></div> 
         <script type="text/javascript"> 
-            bowtie1_alignment_cats = ["SRR1067500_1", "SRR1067503_1"];
-            bowtie1_alignment_data = [{"color": "#8bbc21", "data": [30286920.0, 17810525.0], "name": "Aligned"}, {"color": "#2f7ed8", "data": [5503256.0, 8389278.0], "name": "Multimapped"}, {"color": "#0d233a", "data": [2587129.0, 4481177.0], "name": "Not aligned"}];
-            var bowtie1_alignment_pconfig = { 
-                "title": "Bowtie 1 Alignment Scores",
-                "ylab": "# Reads",
-                "ymin": 0,
-                "stacking": "normal" 
-            }; 
-            $(function () {                 plot_stacked_bar_graph("#bowtie1_alignment_plot", bowtie1_alignment_cats, bowtie1_alignment_data, bowtie1_alignment_pconfig);             });         </script>
+            $(function () { plot_stacked_bar_graph("#mqc_hcplot_udjgeihapk", ["SRR1067500_1", "SRR1067503_1"], [{"color": "#8bbc21", "data": [30286920.0, 17810525.0], "name": "Aligned"}, {"color": "#2f7ed8", "data": [5503256.0, 8389278.0], "name": "Multimapped"}, {"color": "#0d233a", "data": [2587129.0, 4481177.0], "name": "Not aligned"}], {"id": "mqc_hcplot_udjgeihapk", "ylab": "# Reads", "cpswitch_counts_label": "Number of Reads", "title": "Bowtie 1 Alignment Scores"}); });         </script>
     
     <hr>
   

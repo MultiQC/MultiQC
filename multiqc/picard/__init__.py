@@ -3,7 +3,7 @@
 """ MultiQC module to parse output from Picard """
 
 from __future__ import print_function
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import io
 import json
 import logging
@@ -93,50 +93,23 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # NOTE: I had a hard time getting these numbers to add up as expected.
         # If you think I've done something wrong, let me know! Please add an
         # issue here: https://github.com/ewels/MultiQC/issues
-        cats = sorted(self.picard_dupMetrics_data.keys())
-        data = list()
-        keys = ['READ_PAIR_UNIQUE',
-                'UNPAIRED_READ_UNIQUE',
-                'READ_PAIR_NOT_OPTICAL_DUPLICATES',
-                'READ_PAIR_OPTICAL_DUPLICATES',
-                'UNPAIRED_READ_DUPLICATES',
-                'UNMAPPED_READS']
-        for k in keys:
-            thisdata = list()
-            if k == 'UNPAIRED_READ_UNIQUE':
-                for sn in cats:
-                    thisdata.append(self.picard_dupMetrics_data[sn]['UNPAIRED_READS_EXAMINED'] - self.picard_dupMetrics_data[sn]['UNPAIRED_READ_DUPLICATES'])
-            elif k == 'READ_PAIR_NOT_OPTICAL_DUPLICATES':
-                for sn in cats:
-                    thisdata.append(self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES'] - self.picard_dupMetrics_data[sn]['READ_PAIR_OPTICAL_DUPLICATES'])
-            elif k == 'READ_PAIR_UNIQUE':
-                for sn in cats:
-                    thisdata.append(self.picard_dupMetrics_data[sn]['READ_PAIRS_EXAMINED'] - self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES'])
-            else:
-                for sn in cats:
-                    thisdata.append(self.picard_dupMetrics_data[sn][k])
-            if max(thisdata) > 0:
-                data.append({
-                    'name': k.replace('_',' ').title(),
-                    'data': thisdata
-                })
-
-        return '<p class="text-muted">An attempt at summing the numbers from the picard metrics file. Take with a pinch of salt for now.</p>\n\
-        <div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#picard_alignment_plot">Number of Reads</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#picard_alignment_plot">Percentages</button> \n\
-		</div> \n\
-        <div id="picard_alignment_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            picard_alignment_cats = {};\n\
-            picard_alignment_data = {};\n\
-            var picard_alignment_pconfig = {{ \n\
-                "title": "Picard Alignment Scores",\n\
-                "ylab": "# Reads",\n\
-                "ymin": 0,\n\
-                "stacking": "normal" \n\
-            }}; \n\
-            $(function () {{ \
-                plot_stacked_bar_graph("#picard_alignment_plot", picard_alignment_cats, picard_alignment_data, picard_alignment_pconfig); \
-            }}); \
-        </script>'.format(json.dumps(cats), json.dumps(data));
+        
+        for sn in self.picard_dupMetrics_data.keys():
+            self.picard_dupMetrics_data[sn]['UNPAIRED_READ_UNIQUE'] = self.picard_dupMetrics_data[sn]['UNPAIRED_READS_EXAMINED'] - self.picard_dupMetrics_data[sn]['UNPAIRED_READ_DUPLICATES']
+            self.picard_dupMetrics_data[sn]['READ_PAIR_NOT_OPTICAL_DUPLICATES'] = self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES'] - self.picard_dupMetrics_data[sn]['READ_PAIR_OPTICAL_DUPLICATES']
+            self.picard_dupMetrics_data[sn]['READ_PAIR_UNIQUE'] = self.picard_dupMetrics_data[sn]['READ_PAIRS_EXAMINED'] - self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES']
+        
+        keys = OrderedDict()
+        keys_r = ['READ_PAIR_UNIQUE', 'UNPAIRED_READ_UNIQUE', 'READ_PAIR_NOT_OPTICAL_DUPLICATES',
+                'READ_PAIR_OPTICAL_DUPLICATES', 'UNPAIRED_READ_DUPLICATES', 'UNMAPPED_READS']
+        for k in keys_r:
+            keys[k] = {'name': k.replace('_',' ').title()}
+        
+        # Config for the plot
+        config = {
+            'title': 'Picard Deduplication Stats',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+        
+        return self.plot_bargraph(self.picard_dupMetrics_data, keys, config)
