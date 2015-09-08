@@ -33,6 +33,10 @@ if os.environ.get('MULTQC_IS_APP') is not None:
     with open(os.path.join(os.getcwd(), 'multiqc_app_header.html'), 'r') as f: print(f.read())
 else:
     OSX_APP = False
+    # logging config at bottom of script, for command line level flag
+
+# Initialise the logger
+log = logging.getLogger('MultiQC')
 
 # Order tha modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
@@ -51,7 +55,7 @@ module_order = [
 multiqc_submods = [name for _, name, _ in pkgutil.iter_modules([MULTIQC_DIR])]
 avail_modules = [ m for m in module_order if m in multiqc_submods ]
 if len(multiqc_submods) > len(avail_modules):
-    logging.warn("Modules missing from order declaration: {}".format([ m for m in multiqc_submods if m not in module_order ]))
+    log.warn("Modules missing from order declaration: {}".format([ m for m in multiqc_submods if m not in module_order ]))
 avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
 
 # Available templates, in case extras have been added
@@ -79,23 +83,23 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
     template_fn = os.path.join(output_dir, 'multiqc_report.html')
 
     # analysis_dir = os.path.realpath(analysis_dir)
-    logging.info("Scanning {}".format(analysis_dir))
+    log.info("Scanning {}".format(analysis_dir))
 
     # Copy the template directory to the output directory
     if os.path.exists(output_dir):
         if force_overwrite and os.path.basename(output_dir) == 'multiqc_report':
-            logging.warning("Deleting {} because -f was specified.".format(output_dir))
+            log.warning("Deleting {} because -f was specified.".format(output_dir))
             shutil.rmtree(output_dir)
             if os.path.exists("{}.zip".format(output_dir)):
                 os.remove("{}.zip".format(output_dir))
         elif force_overwrite:
-            logging.critical("Error - Force overwrite was specified but output directory was not called multiqc_report. Halting execution to avoid accidentally overwriting data.")
+            log.critical("Error - Force overwrite was specified but output directory was not called multiqc_report. Halting execution to avoid accidentally overwriting data.")
             sys.exit(1)
         else:
-            logging.error("Error - Output directory {} already exists. Use -f or --force to overwrite existing reports".format(output_dir))
+            log.error("Error - Output directory {} already exists. Use -f or --force to overwrite existing reports".format(output_dir))
             return
 
-    logging.info("Saving to {}".format(output_dir))
+    log.info("Saving to {}".format(output_dir))
     shutil.copytree(template_dir, output_dir)
 
     # Make the report data directory
@@ -127,7 +131,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
             pass # No samples found
         except:
             # Flag the error, but carry on
-            logging.error("###### ERROR ##################### \n" \
+            log.error("###### ERROR ##################### \n" \
                         "Oops! One of the MultiQC modules broke... \n" \
                         "Please copy the following traceback and report \n" \
                         "the bug at https://github.com/ewels/MultiQC/issues \n" \
@@ -139,7 +143,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
 
     # Did we find anything?
     if len(modules_output) == 0:
-        logging.error("Error - did not find any analysis results. Cleaning up..")
+        log.error("Error - did not find any analysis results. Cleaning up..")
         shutil.rmtree(output_dir)
         return
 
@@ -172,7 +176,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
     # Create a zip file of the report directory
     shutil.make_archive(output_dir, 'zip', output_dir)
 
-    logging.info("MultiQC complete")
+    log.info("MultiQC complete")
     if OSX_APP: print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
     
     # Exit with an error code if a module broke
@@ -217,7 +221,7 @@ if __name__ == "__main__":
         numeric_level = getattr(logging, kwargs['loglevel'].upper(), None)
         if not isinstance(numeric_level, int):
             raise ValueError('Invalid log level: %s' % kwargs['loglevel'])
-        logging.basicConfig(level=numeric_level)
+        logging.basicConfig(level=numeric_level, format='%(name)s : %(levelname)-8s: %(message)s')
     kwargs.pop('loglevel', None)
 
     multiqc(**kwargs)

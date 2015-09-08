@@ -12,6 +12,9 @@ import re
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('featureCounts'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -40,14 +43,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data = self.parse_featurecounts_report(f.read())
                         if parsed_data is not None:
                             if s_name in self.featurecounts_data:
-                                logging.warn("featureCounts: Duplicate sample name found! Overwriting: {}".format(s_name))
+                                log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
                             self.featurecounts_data[s_name] = parsed_data
 
         if len(self.featurecounts_data) == 0:
-            logging.debug("Could not find any featureCounts reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} featureCounts reports".format(len(self.featurecounts_data)))
+        log.info("Found {} reports".format(len(self.featurecounts_data)))
 
         # Write parsed report data to a file
         with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w", encoding='utf-8') as f:

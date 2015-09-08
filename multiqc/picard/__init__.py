@@ -12,6 +12,9 @@ import os
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('Picard'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -41,7 +44,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                     s_name = s_name.split(".metrics",1)[0]
                                     s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                                     if s_name in self.picard_dupMetrics_data:
-                                        logging.warn("Picard: Duplicate DuplicationMetrics sample name found! Overwriting: {}".format(s_name))
+                                        log.warn("Duplicate DuplicationMetrics sample name found! Overwriting: {}".format(s_name))
                                     keys = s[idx+1].split("\t")
                                     vals = s[idx+2].split("\t")
                                     for i, k in enumerate(keys):
@@ -51,13 +54,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                             self.picard_dupMetrics_data[s_name][k] = vals[i]
                                     break # TODO: Deal with multiple libraries? Proper regex?
                     except ValueError:
-                        logging.debug("Couldn't read file when looking for Picard output: {}".format(fn))
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.picard_dupMetrics_data) == 0:
-            logging.debug("Could not find any Picard reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} Picard reports".format(len(self.picard_dupMetrics_data)))
+        log.info("Found {} reports".format(len(self.picard_dupMetrics_data)))
 
         # Write parsed report data to a file
         with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_picard.txt'), "w", encoding='utf-8') as f:

@@ -12,6 +12,9 @@ import re
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('Bismark'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -39,10 +42,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = os.path.basename(fn_search.group(1))
                             s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                             if s_name in self.bismark_raw_data and 'alignment' in self.bismark_raw_data[s_name]:
-                                logging.warn("Bismark: Duplicate alignment report sample name found! Overwriting: {}".format(s_name))
+                                log.warn("Duplicate alignment report sample name found! Overwriting: {}".format(s_name))
                             self.bismark_raw_data[s_name]['alignment'] = r_data
                         else:
-                            logging.warn("Didn't recognise bismark alignment report contents: {}".format(fn))
+                            log.warn("Didn't recognise alignment report contents: {}".format(fn))
 
                 if fn.endswith('.deduplication_report.txt'):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
@@ -52,10 +55,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = os.path.basename(fn_search.group(1))
                             s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                             if s_name in self.bismark_raw_data and 'dedup' in self.bismark_raw_data[s_name]:
-                                logging.warn("Bismark: Duplicate deduplication report sample name found! Overwriting: {}".format(s_name))
+                                log.warn("Duplicate deduplication report sample name found! Overwriting: {}".format(s_name))
                             self.bismark_raw_data[s_name]['dedup'] = r_data
                         else:
-                            logging.warn("Didn't recognise bismark deduplication report contents: {}".format(fn))
+                            log.warn("Didn't recognise deduplication report contents: {}".format(fn))
 
                 if fn.endswith('_splitting_report.txt'):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
@@ -63,14 +66,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         s_name = os.path.basename(r_data.splitlines()[0])
                         s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                         if s_name in self.bismark_raw_data and 'methextract' in self.bismark_raw_data[s_name]:
-                            logging.warn("Bismark: Duplicate methextract report sample name found! Overwriting: {}".format(s_name))
+                            log.warn("Duplicate methextract report sample name found! Overwriting: {}".format(s_name))
                         self.bismark_raw_data[s_name]['methextract'] = r_data
 
         if len(self.bismark_raw_data) == 0:
-            logging.debug("Could not find any Bismark reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} Bismark reports".format(len(self.bismark_raw_data)))
+        log.info("Found {} reports".format(len(self.bismark_raw_data)))
 
         # Parse the raw reports
         self.bismark_data = defaultdict(lambda:dict())

@@ -13,6 +13,9 @@ import re
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('Bowtie 2'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -40,16 +43,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             if parsed_data is not None:
                                 s_name = self.clean_s_name(fn, root, prepend_dirs=report['prepend_dirs'])
                                 if s_name in self.bowtie2_data:
-                                    logging.warn("Bowtie 2: Duplicate sample name found! Overwriting: {}".format(s_name))
+                                    log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
                                 self.bowtie2_data[s_name] = parsed_data
                     except ValueError:
-                        logging.debug("Couldn't read file when looking for Bowtie 2 output: {}".format(fn))
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.bowtie2_data) == 0:
-            logging.debug("Could not find any Bowtie 2 reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} Bowtie 2 reports".format(len(self.bowtie2_data)))
+        log.info("Found {} reports".format(len(self.bowtie2_data)))
 
         # Write parsed report data to a file
         with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_bowtie2.txt'), "w", encoding='utf-8') as f:

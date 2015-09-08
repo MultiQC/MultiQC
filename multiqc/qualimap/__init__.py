@@ -10,6 +10,9 @@ import os
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('Qualimap'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -37,7 +40,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
                 s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                 if s_name in qualimap_raw_data:
-                    logging.warn("Qualimap: Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
                 
                 qualimap_raw_data[s_name] = {}
                 qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, 'raw_data_qualimapReport', r) \
@@ -46,10 +49,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     for r in os.listdir(os.path.join(root, 'images_qualimapReport'))}
 
         if len(qualimap_raw_data) == 0:
-            logging.debug("Could not find any QualiMap reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} QualiMap reports".format(len(qualimap_raw_data)))
+        log.info("Found {} reports".format(len(qualimap_raw_data)))
 
         self.sections = list()
 
@@ -87,7 +90,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             counts[coverage] = count
 
                 except IOError as e:
-                    logging.error("Could not load input file: {}".format(cov_report))
+                    log.error("Could not load input file: {}".format(cov_report))
                     raise
                 parsed_data[sn] = counts
 

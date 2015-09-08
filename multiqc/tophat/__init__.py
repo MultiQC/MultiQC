@@ -13,6 +13,9 @@ import re
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('Tophat'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -45,16 +48,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             parsed_data = self.parse_tophat_log(f.read())
                             if parsed_data is not None:
                                 if s_name in self.tophat_data:
-                                    logging.warn("Tophat: Duplicate sample name found! Overwriting: {}".format(s_name))
+                                    log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
                                 self.tophat_data[s_name] = parsed_data
                     except ValueError:
-                        logging.debug("Couldn't read file when looking for Tophat output: {}".format(fn))
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.tophat_data) == 0:
-            logging.debug("Could not find any Tophat reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} Tophat reports".format(len(self.tophat_data)))
+        log.info("Found {} reports".format(len(self.tophat_data)))
 
         # Write parsed report data to a file
         with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_tophat.txt'), "w", encoding='utf-8') as f:

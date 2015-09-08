@@ -23,6 +23,9 @@ import zipfile
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('FastQC'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -61,7 +64,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     s_name = fn_search.group(1).strip()
                 s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
                 if s_name in fastqc_raw_data:
-                    logging.warn("FastQC: Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
                 fastqc_raw_data[s_name] = r_data
 
                 # Copy across the raw images
@@ -89,11 +92,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = fn_search.group(1).strip()
                         s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
                         if s_name in fastqc_raw_data:
-                            logging.warn("FastQC: Duplicate sample name found! Overwriting: {}".format(s_name))
+                            log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
                         fastqc_raw_data[s_name] = r_data
 
                     except KeyError:
-                        logging.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
+                        log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
                     else:
                         # Copy across the raw images
                         if not os.path.exists(self.data_dir):
@@ -108,11 +111,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 pass
 
         if len(fastqc_raw_data) == 0:
-            logging.debug("Could not find any FastQC reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
 
-        logging.info("Found {} FastQC reports".format(len(fastqc_raw_data)))
+        log.info("Found {} reports".format(len(fastqc_raw_data)))
 
         self.sections = list()
 
@@ -485,7 +488,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s]['vals'][bp]['C'] = float(seq_matches.group(5))
                     except AttributeError:
                         if l[:1] != '#':
-                            logging.debug("Couldn't parse a line from FastQC sequence content report {}: {}".format(s, l))
+                            log.debug("Couldn't parse a line from sequence content report {}: {}".format(s, l))
             if len(parsed_data[s]['vals']) == 0:
                 parsed_data.pop(s, None)
 

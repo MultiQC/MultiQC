@@ -12,6 +12,9 @@ import re
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('Cutadapt'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -38,13 +41,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
                             self.parse_cutadapt_logs(s, root, report)
                     except ValueError:
-                        logging.debug("Couldn't read file when looking for cutadapt output: {}".format(fn))
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.cutadapt_data) == 0:
-            logging.debug("Could not find any Cutadapt reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} Cutadapt reports".format(len(self.cutadapt_data)))
+        log.info("Found {} reports".format(len(self.cutadapt_data)))
 
         # Write parsed report data to a file
         # Only the summary stats - skip the length data (t_lengths)
@@ -78,7 +81,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
             
             if s_name in self.cutadapt_data:
-                logging.warn("Cutadapt: Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.cutadapt_data[s_name] = dict()
             regexes = {
                 'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",

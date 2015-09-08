@@ -13,6 +13,9 @@ import shutil
 
 import multiqc
 
+# Initialise the logger
+log = logging.getLogger('MultiQC : {0:<14}'.format('FastQ Screen'))
+
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self, report):
@@ -39,16 +42,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             if s_name in fq_screen_raw_data:
-                                logging.warn("FastQ Screen: Duplicate sample name found! Overwriting: {}".format(s_name))
+                                log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
                             fq_screen_raw_data[s_name] = f.read()
                     except ValueError:
-                        logging.debug("Couldn't read file when looking for FastQ Screen output: {}".format(fn))
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(fq_screen_raw_data) == 0:
-            logging.debug("Could not find any FastQ Screen reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(self.analysis_dir))
             raise UserWarning
 
-        logging.info("Found {} FastQ Screen reports".format(len(fq_screen_raw_data)))
+        log.info("Found {} reports".format(len(fq_screen_raw_data)))
 
         self.sections = list()
 
@@ -92,7 +95,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data[s][org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
                         parsed_data[s][org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
             if len(parsed_data[s]) == 0:
-                logging.warning("Could not parse FastQ Screen report {}".format(s))
+                log.warning("Could not parse report {}".format(s))
                 parsed_data.pop(s, None)
 
         return parsed_data
