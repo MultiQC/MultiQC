@@ -110,48 +110,19 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def tophat_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-
-        cats = sorted(self.tophat_data.keys())
-        data = list()
+        
+        # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['aligned_not_multimapped_discordant'] = 'Aligned'
-        keys['aligned_multimap'] =    'Multimapped'
-        keys['aligned_discordant'] =  'Discordant mappings'
-        keys['unaligned_total'] =     'Not aligned'
-
-        colours = {
-            'aligned_not_multimapped_discordant':  '#8bbc21',
-            'aligned_multimap':    '#2f7ed8',
-            'aligned_discordant':  '#a81a00',
-            'unaligned_total':     '#0d233a',
+        keys['aligned_not_multimapped_discordant'] = { 'color': '#437bb1', 'name': 'Aligned' }
+        keys['aligned_multimap'] =   { 'color': '#f7a35c', 'name': 'Multimapped' }
+        keys['aligned_discordant'] = { 'color': '#e63491', 'name': 'Discordant mappings' }
+        keys['unaligned_total'] =    { 'color': '#7f0000', 'name': 'Not aligned' }
+        
+        # Config for the plot
+        config = {
+            'title': 'Tophat Alignment Scores',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
         }
-
-        for k, name in keys.items():
-            thisdata = list()
-            for sn in cats:
-                thisdata.append(self.tophat_data[sn][k])
-            if max(thisdata) > 0:
-                data.append({
-                    'name': name,
-                    'color': colours[k],
-                    'data': thisdata
-                })
-
-        return '<div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#tophat_alignment_plot">Number of Reads</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#tophat_alignment_plot">Percentages</button> \n\
-		</div> \n\
-        <div id="tophat_alignment_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            tophat_alignment_cats = {};\n\
-            tophat_alignment_data = {};\n\
-            var tophat_alignment_pconfig = {{ \n\
-                "title": "Tophat Alignment Scores",\n\
-                "ylab": "# Reads",\n\
-                "ymin": 0,\n\
-                "stacking": "normal" \n\
-            }}; \n\
-            $(function () {{ \
-                plot_stacked_bar_graph("#tophat_alignment_plot", tophat_alignment_cats, tophat_alignment_data, tophat_alignment_pconfig); \
-            }}); \
-        </script>'.format(json.dumps(cats), json.dumps(data));
+        
+        return self.plot_bargraph(self.tophat_data, keys, config)

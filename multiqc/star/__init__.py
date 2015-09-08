@@ -132,7 +132,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         keys['uniquely_mapped'] =      { 'color': '#437bb1', 'name': 'Uniquely mapped' }
         keys['multimapped'] =          { 'color': '#7cb5ec', 'name': 'Mapped to multiple loci' }
         keys['multimapped_toomany'] =  { 'color': '#f7a35c', 'name': 'Mapped to too many loci' }
-        keys['unmapped_mismatches'] =  { 'color': '#e63491', 'name': 'Unmapped: too many mismatchess' }
+        keys['unmapped_mismatches'] =  { 'color': '#e63491', 'name': 'Unmapped: too many mismatches' }
         keys['unmapped_tooshort'] =    { 'color': '#b1084c', 'name': 'Unmapped: too short' }
         keys['unmapped_other'] =       { 'color': '#7f0000', 'name': 'Unmapped: other' }
         
