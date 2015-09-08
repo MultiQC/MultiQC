@@ -43,7 +43,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         parsed_data = self.parse_featurecounts_report(f.read())
                         if parsed_data is not None:
                             if s_name in self.featurecounts_data:
-                                log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+                                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                             self.featurecounts_data[s_name] = parsed_data
 
         if len(self.featurecounts_data) == 0:

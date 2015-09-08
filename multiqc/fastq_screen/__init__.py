@@ -42,7 +42,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             if s_name in fq_screen_raw_data:
-                                log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+                                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                             fq_screen_raw_data[s_name] = f.read()
                     except ValueError:
                         log.debug("Couldn't read file when looking for output: {}".format(fn))

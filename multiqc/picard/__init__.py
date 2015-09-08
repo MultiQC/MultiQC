@@ -44,7 +44,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                     s_name = s_name.split(".metrics",1)[0]
                                     s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                                     if s_name in self.picard_dupMetrics_data:
-                                        log.warn("Duplicate DuplicationMetrics sample name found! Overwriting: {}".format(s_name))
+                                        log.debug("Duplicate DuplicationMetrics sample name found! Overwriting: {}".format(s_name))
                                     keys = s[idx+1].split("\t")
                                     vals = s[idx+2].split("\t")
                                     for i, k in enumerate(keys):

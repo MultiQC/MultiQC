@@ -42,7 +42,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = os.path.basename(fn_search.group(1))
                             s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                             if s_name in self.bismark_raw_data and 'alignment' in self.bismark_raw_data[s_name]:
-                                log.warn("Duplicate alignment report sample name found! Overwriting: {}".format(s_name))
+                                log.debug("Duplicate alignment report sample name found! Overwriting: {}".format(s_name))
                             self.bismark_raw_data[s_name]['alignment'] = r_data
                         else:
                             log.warn("Didn't recognise alignment report contents: {}".format(fn))
@@ -55,7 +55,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = os.path.basename(fn_search.group(1))
                             s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                             if s_name in self.bismark_raw_data and 'dedup' in self.bismark_raw_data[s_name]:
-                                log.warn("Duplicate deduplication report sample name found! Overwriting: {}".format(s_name))
+                                log.debug("Duplicate deduplication report sample name found! Overwriting: {}".format(s_name))
                             self.bismark_raw_data[s_name]['dedup'] = r_data
                         else:
                             log.warn("Didn't recognise deduplication report contents: {}".format(fn))
@@ -66,7 +66,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         s_name = os.path.basename(r_data.splitlines()[0])
                         s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                         if s_name in self.bismark_raw_data and 'methextract' in self.bismark_raw_data[s_name]:
-                            log.warn("Duplicate methextract report sample name found! Overwriting: {}".format(s_name))
+                            log.debug("Duplicate methextract report sample name found! Overwriting: {}".format(s_name))
                         self.bismark_raw_data[s_name]['methextract'] = r_data
 
         if len(self.bismark_raw_data) == 0:

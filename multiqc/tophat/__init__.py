@@ -48,7 +48,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             parsed_data = self.parse_tophat_log(f.read())
                             if parsed_data is not None:
                                 if s_name in self.tophat_data:
-                                    log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+                                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                                 self.tophat_data[s_name] = parsed_data
                     except ValueError:
                         log.debug("Couldn't read file when looking for output: {}".format(fn))

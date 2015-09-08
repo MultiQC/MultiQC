@@ -64,7 +64,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     s_name = fn_search.group(1).strip()
                 s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
                 if s_name in fastqc_raw_data:
-                    log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 fastqc_raw_data[s_name] = r_data
 
                 # Copy across the raw images
@@ -92,7 +92,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s_name = fn_search.group(1).strip()
                         s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
                         if s_name in fastqc_raw_data:
-                            log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+                            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                         fastqc_raw_data[s_name] = r_data
 
                     except KeyError:

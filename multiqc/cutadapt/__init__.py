@@ -81,7 +81,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
             
             if s_name in self.cutadapt_data:
-                log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.cutadapt_data[s_name] = dict()
             regexes = {
                 'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",

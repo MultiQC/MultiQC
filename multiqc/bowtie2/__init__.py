@@ -43,7 +43,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             if parsed_data is not None:
                                 s_name = self.clean_s_name(fn, root, prepend_dirs=report['prepend_dirs'])
                                 if s_name in self.bowtie2_data:
-                                    log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+                                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                                 self.bowtie2_data[s_name] = parsed_data
                     except ValueError:
                         log.debug("Couldn't read file when looking for output: {}".format(fn))
