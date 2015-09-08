@@ -126,52 +126,21 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def star_alignment_chart (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-
-        cats = sorted(self.star_data.keys())
-        data = list()
+        
+        # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['uniquely_mapped'] =     'Uniquely mapped'
-        keys['multimapped'] =         'Mapped to multiple loci'
-        keys['multimapped_toomany'] = 'Mapped to too many loci'
-        keys['unmapped_mismatches'] = 'Unmapped: too many mismatchess'
-        keys['unmapped_tooshort'] =   'Unmapped: too short'
-        keys['unmapped_other'] =      'Unmapped: other'
-
-        colours = {
-            'unmapped_other':      '#7f0000',
-            'unmapped_tooshort':   '#b1084c',
-            'unmapped_mismatches': '#e63491',
-            'multimapped_toomany': '#f7a35c',
-            'multimapped':         '#7cb5ec',
-            'uniquely_mapped':     '#437bb1',
+        keys['uniquely_mapped'] =      { 'color': '#437bb1', 'name': 'Uniquely mapped' }
+        keys['multimapped'] =          { 'color': '#7cb5ec', 'name': 'Mapped to multiple loci' }
+        keys['multimapped_toomany'] =  { 'color': '#f7a35c', 'name': 'Mapped to too many loci' }
+        keys['unmapped_mismatches'] =  { 'color': '#e63491', 'name': 'Unmapped: too many mismatchess' }
+        keys['unmapped_tooshort'] =    { 'color': '#b1084c', 'name': 'Unmapped: too short' }
+        keys['unmapped_other'] =       { 'color': '#7f0000', 'name': 'Unmapped: other' }
+        
+        # Config for the plot
+        config = {
+            'title': 'STAR Alignment Scores',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
         }
-
-        for k, name in keys.items():
-            thisdata = list()
-            for sn in cats:
-                thisdata.append(self.star_data[sn][k])
-            if max(thisdata) > 0:
-                data.append({
-                    'name': name,
-                    'color': colours[k],
-                    'data': thisdata
-                })
-
-        return '<div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_numbers" data-target="#star_alignment_plot">Number of Reads</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_percent" data-target="#star_alignment_plot">Percentages</button> \n\
-		</div> \n\
-        <div id="star_alignment_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            star_alignment_cats = {};\n\
-            star_alignment_data = {};\n\
-            var star_alignment_pconfig = {{ \n\
-                "title": "STAR Alignment Scores",\n\
-                "ylab": "# Reads",\n\
-                "ymin": 0,\n\
-                "stacking": "normal" \n\
-            }}; \n\
-            $(function () {{ \
-                plot_stacked_bar_graph("#star_alignment_plot", star_alignment_cats, star_alignment_data, star_alignment_pconfig); \
-            }}); \
-        </script>'.format(json.dumps(cats), json.dumps(data));
+        
+        return self.plot_bargraph(self.star_data, keys, config)
