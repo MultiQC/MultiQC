@@ -241,6 +241,7 @@ highcharts_plot_options = [];
 function plot_xy_line_graph(div, data, config){
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
+  else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   highcharts_plot_options[div] = {
@@ -278,7 +279,7 @@ function plot_xy_line_graph(div, data, config){
     plotOptions: {
       series: {
         marker: { enabled: false },
-        cursor: 'pointer',
+        cursor: config['cursor'],
         point: {
           events: {
             click: config['click_func']
@@ -306,9 +307,11 @@ function plot_xy_line_graph(div, data, config){
 
 // Stacked Bar Graph
 function plot_stacked_bar_graph(div, cats, data, config){
-  if (config['stacking'] === undefined){ config['stacking'] = true; }
+  if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
+  if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
+  else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   highcharts_plot_options[div] = {
     chart: {
       renderTo: div.replace('#',''),
@@ -338,6 +341,12 @@ function plot_stacked_bar_graph(div, cats, data, config){
       series: {
         stacking: config['stacking'],
         groupPadding: 0.02
+      },
+      cursor: config['cursor'],
+      point: {
+        events: {
+          click: config['click_func']
+        }
       }
     },
     credits: {
@@ -349,15 +358,10 @@ function plot_stacked_bar_graph(div, cats, data, config){
       enabled: config['use_legend']
     },
     tooltip: {
-      headerFormat: '',
-      pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br>'+config['tt_label']+': {point.y:.2f}',
-      useHTML: true
-    },
-    tooltip: {
       formatter: function () {
         var s = '<table><tr><th colspan="3" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
         $.each(this.points.reverse(), function () {
-          s += '<tr><td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px;">' + this.series.name + ':</td><td style="text-align:right;">' + numberWithCommas(this.y) + ' reads</td><td style="text-align:right;">(' + this.percentage.toFixed(1) + '%)</td></tr>';
+          s += '<tr><td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px;">' + this.series.name + ':</td><td style="text-align:right;">' + numberWithCommas(this.y) + '</td><td style="text-align:right;"> (' + this.percentage.toFixed(1) + '%)</td></tr>';
         });
         s += '</table>';
         return s;

@@ -114,25 +114,69 @@ data = {
     [ .. ]
 }
 ```
-Additionally, a config dict can be supplied. The defaults are as follows
-_(most actually set by javascript function below)_:
+Additionally, a config dict can be supplied. The defaults are as follows:
 ```python
 config = {
-    'id': '<random string>', # HTML ID used for plot
-    'title': None,           # Plot title
-    'xlab': None,            # X axis label
-    'ylab': None,            # Y axis label
-    'xmax': None,            # Max x limit
-    'xmin': None,            # Min x limit
-    'xDecimals': True,       # Set to false to only show integer labels
-    'ymax': None,            # Max y limit
-    'ymin': None,            # Min y limit
-    'yDecimals': True,       # Set to false to only show integer labels
-    'tt_label': '{point.x}', # Use to customise tooltip label, eg. '{point.x} base pairs'
-    'use_legend': True,      # Show / hide the legend
-    'click_func': None       # Javascript function to be called when a point is clicked
+    'id': '<random string>', # HTML ID used for plot    
 }
 ```
+This dictionary can also have any of the javascript config options.
+See the [#example-line-graph](Example Line Graph) below for those.
+
+### plot_bargraph (data, cats, config)
+Takes a dict of data and plots a bar graph. The expected data structure
+is as follows:
+```python
+data = {
+    'sample 1': {
+        'category 1': '<val>',
+        'category 2': '<val>',
+        [ .. ]
+    },
+    'sample 2': {
+        'category 1': '<val>',
+        'category 2': '<val>',
+        [ .. ]
+    },
+    [ .. ]
+}
+```
+Cats is an optional extra which allows you to specify how the different
+categories are displayed. If not specified, the categories are determined
+from the sample keys, but their order is random.
+
+If given as a list you can dictates the order, and ignore certain keys:
+```python
+cats = ['first_category', 'second_category', 'fourth_category']
+```
+
+If given as a dict, you can specify a nice name and a colour (optional).
+Make it an OrderedDict to specify the order as well:
+```python
+from collections import OrderedDict
+cats = OrderedDict()
+cats['first_category'] = {
+    'name': 'The First Category',
+    'color': '#8bbc21'
+}
+cats['second_category'] = {
+    'name': 'The Second Category',
+    'color': '#f7a35c'
+}
+```
+
+Finally, a config dict can be supplied. The defaults are as follows:
+```python
+config = {
+    'id': '<random string>',                # HTML ID used for plot
+    'cpswitch': True,                       # Show the 'Counts / Percentages' switch?
+    'cpswitch_c_active': True,              # Initial display with 'Counts' specified?
+    'cpswitch_counts_label': 'Counts',      # Label for 'Counts' button
+    'cpswitch_percent_label': 'Percentages' # Label for 'Percentages' button
+}
+```
+This dictionary can also have any of the javascript config options.
+See the [#example-bar-plot-html](Example Bar Plot HTML) below for those.
 
 ## Javascript Helper Functions
 The javascript bundled in the default MultiQC template has a number of
@@ -179,8 +223,8 @@ config = {
     ymin: undefined,            // Min y limit
     yDecimals: true,            // Set to false to only show integer labels
     tt_label: '{point.x}',      // Use to customise tooltip label, eg. '{point.x} base pairs'
-    use_legend: true,           // Show / hide the legend
-    click_func: function(){}    // Javascript function to be called when a point is clicked
+    click_func: function(){},   // Javascript function to be called when a point is clicked
+    cursor: undefined           // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
 }
 ```
 
@@ -212,9 +256,10 @@ config = {
     ymax: undefined,            // Max y limit
     ymin: undefined,            // Min y limit
     yDecimals: true,            // Set to false to only show integer labels
-    stacking: undefined,        // Set to 'normal' or 'percent' to stack http://api.highcharts.com/highcharts#series<bar>.stacking
+    stacking: 'normal',         // Set to null to have category bars side by side (None in python)
     use_legend: true,           // Show / hide the legend
-    tt_label: undefined         // Use to customise tooltip label, eg. '{point.x} base pairs'
+    click_func: undefined,      // Javascript function to be called when a point is clicked
+    cursor: undefined,          // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
 }
 ```
 
