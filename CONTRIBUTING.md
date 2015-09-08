@@ -122,7 +122,7 @@ config = {
 }
 ```
 This dictionary can also have any of the javascript config options.
-See the [#example-line-graph](Example Line Graph) below for those.
+See the [plot_xy_line_graph()](CONTRIBUTING.md#plot_xy_line_graph-target-data-config) below for those.
 
 ### self.plot_bargraph (data, cats, config)
 Takes a dict of data and plots a bar graph. The expected data structure
@@ -178,7 +178,8 @@ config = {
 }
 ```
 This dictionary can also have any of the javascript config options.
-See the [#example-bar-plot-html](Example Bar Plot HTML) below for those.
+See the [plot_stacked_bar_graph()](CONTRIBUTING.md#plot_stacked_bar_graph-target-names-data-config)
+docs below for those.
 
 ## Javascript Helper Functions
 The javascript bundled in the default MultiQC template has a number of
@@ -235,7 +236,7 @@ An example of the markup expected, with the function being called:
 ```
 
 
-### Example Bar Plot HTML
+### plot_xy_line_graph (target, names, data, config)
 
 Plots a bar graph with multiple series containing multiple categories.
 
