@@ -71,13 +71,15 @@ class BaseMultiqcModule(object):
         html = ''
         
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">'
-            for k, p in plotdata.items():
+            html += '<div class="btn-group switch_group">\n'
+            for k, p in enumerate(plotdata):
                 active = 'active' if k == 0 else ''
-                name = p.get('name', k+1)
-                ylab = p.get('ylab', name)
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" data-ylab="{y}" data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
-            html += '</div>'
+                try: name = config['data_labels'][k]['name']
+                except: name = k+1
+                try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
+                except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+            html += '</div>\n\n'
         
         html += '<div id="{id}" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\

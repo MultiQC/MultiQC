@@ -124,6 +124,20 @@ config = {
 This dictionary can also have any of the javascript config options.
 See the [plot_xy_line_graph()](CONTRIBUTING.md#plot_xy_line_graph-target-data-config) below for those.
 
+You can also have a single plot with buttons to switch between different
+datasets. To do this, just supply a list of data dicts instead (same
+formats as described above). Also add the following config options to
+supply names to the buttons and graph labels:
+```python
+config = {
+    'data_labels': [{'name': 'DS 1', 'ylab': 'Dataset 1'},
+                    {'name': 'DS 2', 'ylab': 'Dataset 2'}] 
+}
+```
+All of these config values are optional, the function will default
+to sensible values if things are missing. See the cutadapt module
+plots for an example of this in action.
+
 ### self.plot_bargraph (data, cats, config)
 Takes a dict of data and plots a bar graph. The expected data structure
 is as follows:

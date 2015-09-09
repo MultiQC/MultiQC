@@ -26,6 +26,7 @@ h1 img {
 hr {
    background: url('../img/mchammer.gif') center center;
    height: 80px;
+   border: none;
 }
 .side-nav, .footer {
     background: #000 url('../img/stars.gif') 

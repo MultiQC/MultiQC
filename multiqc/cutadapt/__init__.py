@@ -33,15 +33,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any Cutadapt reports
         self.cutadapt_data = dict()
+        self.cutadapt_length_counts = dict()
+        self.cutadapt_length_exp = dict()
+        self.cutadapt_length_obsexp = dict()
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 200000:
-                    try:
+                try:
+                    if os.path.getsize(os.path.join(root,fn)) < 200000:
                         with open (os.path.join(root,fn), "r") as f:
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
                             self.parse_cutadapt_logs(s, root, report)
-                    except ValueError:
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+                except (OSError, ValueError, UnicodeDecodeError):
+                    log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.cutadapt_data) == 0:
             log.debug("Could not find any reports in {}".format(self.analysis_dir))
@@ -52,7 +55,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Write parsed report data to a file
         # Only the summary stats - skip the length data (t_lengths)
         with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.cutadapt_data.items() } ), file=f)
+            print( self.dict_to_csv( self.cutadapt_data ), file=f)
 
         self.sections = list()
 
@@ -101,18 +104,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if l.find(b'length') > -1 and l.find(b'max.err') > -1:
                     l = s.readline()
                     r_seqs = re.search(br"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
-                    self.cutadapt_data[s_name]['t_lengths'] = {}
+                    self.cutadapt_length_counts[s_name] = {}
+                    self.cutadapt_length_exp[s_name] = {}
+                    self.cutadapt_length_obsexp[s_name] = {}
                     while r_seqs:
                         a_len = int(r_seqs.group(1))
-                        self.cutadapt_data[s_name]['t_lengths'][a_len] = {
-                            'count': int(r_seqs.group(2)),
-                            'expect': float(r_seqs.group(3))
-                        }
+                        self.cutadapt_length_counts[s_name][a_len] = int(r_seqs.group(2))
+                        self.cutadapt_length_exp[s_name][a_len] = float(r_seqs.group(3))
                         if float(r_seqs.group(3)) > 0:
-                            self.cutadapt_data[s_name]['t_lengths'][a_len]['obs_exp'] = float(r_seqs.group(2)) / float(r_seqs.group(3))
+                            self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2)) / float(r_seqs.group(3))
                         else:
                             # Cheating, I know. Infinity is difficult to plot.
-                            self.cutadapt_data[s_name]['t_lengths'][a_len]['obs_exp'] = float(r_seqs.group(2))
+                            self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2))
 
                         l = s.readline() # Push on to next line for regex
                         r_seqs = re.search(br"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
@@ -138,48 +141,24 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             report['general_stats']['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
 
     def cutadapt_length_trimmed_plot (self):
-
-        counts = list()
-        obsexp = list()
-        for s in sorted(self.cutadapt_data):
-            counts_pairs = list()
-            obsexp_pairs = list()
-            for l, p in iter(sorted(self.cutadapt_data[s]['t_lengths'].items())):
-                counts_pairs.append([l, p['count']])
-                obsexp_pairs.append([l, p['obs_exp']])
-            counts.append({
-                'name': s,
-                'data': counts_pairs
-            })
-            obsexp.append({
-                'name': s,
-                'data': obsexp_pairs
-            })
-
+        """ Generate the trimming length plot """
         html = '<p>This plot shows the number of reads with certain lengths of adapter trimmed. \n\
         Obs/Exp shows the raw counts divided by the number expected due to sequencing errors. A defined peak \n\
         may be related to adapter length. See the \n\
         <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
-        for more information on how these numbers are generated.</p> \n\
-        <div class="btn-group switch_group"> \n\
-			<button class="btn btn-default btn-sm active" data-action="set_data" data-ylab="Obs / Expected" data-newdata="cutadapt_length_obsexp" data-target="#cutadapt_length_plot">Obs/Exp</button> \n\
-			<button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Count" data-newdata="cutadapt_length_counts" data-target="#cutadapt_length_plot">Counts</button> \n\
-		</div> \n\
-        <div id="cutadapt_length_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            cutadapt_length_counts = {};\n\
-            cutadapt_length_obsexp = {};\n\
-            var cutadapt_length_pconfig = {{ \n\
-                "title": "Lengths Trimmed",\n\
-                "ylab": "Obs / Expected",\n\
-                "xlab": "Length Trimmed (bp)",\n\
-                "ymin": 0,\n\
-                "tt_label": "<b>{{point.x}} bp trimmed</b>",\n\
-                "use_legend": false,\n\
-            }}; \n\
-            $(function () {{ \
-                plot_xy_line_graph("#cutadapt_length_plot", cutadapt_length_obsexp, cutadapt_length_pconfig); \n\
-            }}); \
-        </script>'.format(json.dumps(counts), json.dumps(obsexp));
-
+        for more information on how these numbers are generated.</p>'
+        
+        pconfig = {
+            'title': 'Lengths Trimmed',
+            'ylab': 'Observed / Expected',
+            'xlab': 'Length Trimmed (bp)',
+            'xDecimals': False,
+            'ymin': 0,
+            'tt_label': '<b>{point.x} bp trimmed</b>',
+            'data_labels': [{'name': 'Obs/Exp', 'ylab': 'Observed / Expected'},
+                            {'name': 'Counts', 'ylab': 'Count'}]
+        }
+        
+        html += self.plot_xy_data([self.cutadapt_length_obsexp, self.cutadapt_length_counts], pconfig)
+        
         return html

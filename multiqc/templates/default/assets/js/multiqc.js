@@ -34,12 +34,17 @@ $(function () {
     // Switch data source
     if(action == 'set_data'){
       var ds = $(this).data('newdata');
-      plot_options.series = window[ds];
-      var ylab = $(this).data('ylab');
-      if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
-      var xlab = $(this).data('xlab');
-      if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
-      $(target).highcharts(plot_options);
+      var data = eval(ds);
+      if(data === undefined){
+        console.log('Error switching plot dataset - '+ds+' not found..');
+      } else {
+        plot_options.series = data;
+        var ylab = $(this).data('ylab');
+        if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
+        var xlab = $(this).data('xlab');
+        if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
+        $(target).highcharts(plot_options);
+      }
     }
   });
 
