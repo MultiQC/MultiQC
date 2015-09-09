@@ -137,14 +137,11 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
             pass # No samples found
         except:
             # Flag the error, but carry on
-            log.error("###### ERROR ##################### \n" \
-                        "Oops! One of the MultiQC modules broke... \n" \
-                        "Please copy the following traceback and report \n" \
-                        "the bug at https://github.com/ewels/MultiQC/issues \n" \
-                        "(if possible, include a log file that triggers the error) \n" \
-                        "############################################### \n" \
-                        "Module {} raised an exception: {}".format(m, traceback.format_exc()) + \
-                        "###############################################")
+            log.error("Oops! The {} MultiQC module broke... \n".format(m) + \
+                      (' '*20)+"Please copy the following traceback and report it at " + \
+                      "https://github.com/ewels/MultiQC/issues \n" + \
+                      (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
+                      ('='*60)+"\nModule {} raised an exception: {}".format(m, traceback.format_exc()) + ('='*60))
             sys_exit = 1
 
     # Did we find anything?
