@@ -34,8 +34,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.picard_dupMetrics_data = defaultdict(lambda: dict())
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 200000:
-                    try:
+                try:
+                    if os.path.getsize(os.path.join(root,fn)) < 200000:
                         with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                             s = f.readlines()
                             for idx, l in enumerate(s):
@@ -53,8 +53,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                         except ValueError:
                                             self.picard_dupMetrics_data[s_name][k] = vals[i]
                                     break # TODO: Deal with multiple libraries? Proper regex?
-                    except ValueError:
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+                except OSError, ValueError:
+                    log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.picard_dupMetrics_data) == 0:
             log.debug("Could not find any reports in {}".format(self.analysis_dir))
