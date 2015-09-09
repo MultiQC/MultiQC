@@ -53,7 +53,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                         except ValueError:
                                             self.picard_dupMetrics_data[s_name][k] = vals[i]
                                     break # TODO: Deal with multiple libraries? Proper regex?
-                except OSError, ValueError:
+                except (OSError, ValueError, UnicodeDecodeError):
                     log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.picard_dupMetrics_data) == 0:

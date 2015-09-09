@@ -35,8 +35,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.bowtie_data = dict()
         for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
             for fn in filenames:
-                if os.path.getsize(os.path.join(root,fn)) < 200000:
-                    try:
+                try:
+                    if os.path.getsize(os.path.join(root,fn)) < 200000:
                         with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                             s = f.read()
                             parsed_data = self.parse_bowtie_logs(s)
@@ -45,8 +45,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 if s_name in self.bowtie_data:
                                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                                 self.bowtie_data[s_name] = parsed_data
-                    except ValueError:
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+                except (OSError, ValueError, UnicodeDecodeError):
+                    log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.bowtie_data) == 0:
             log.debug("Could not find any reports in {}".format(self.analysis_dir))
