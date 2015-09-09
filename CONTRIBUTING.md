@@ -96,7 +96,7 @@ with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.t
     print( self.dict_to_csv( self.featurecounts_data ), file=f)
 ```
 
-### self.plot_xy_data (data, config)
+### self.plot_xy_data (data, config, original_plots)
 This function takes a dict of data and plots an XY line graph.
 It expects a dictionary in the following format:
 ```python
@@ -137,6 +137,25 @@ config = {
 All of these config values are optional, the function will default
 to sensible values if things are missing. See the cutadapt module
 plots for an example of this in action.
+
+Finally, it's possible to get the plots to show original data sources
+when clicked (for an example, see the FastQC plots). To achieve this
+magic, make sure that the images are copied to the report and pass
+the `original_plots` variable to the function. It should look like this:
+```python
+original_plots = [
+    {
+        's_name': "My First Sample",
+        'img_path': 'report_data/my_module/first_sample_original_image.png'
+    },
+    {
+        's_name': "My Second Sample",
+        'img_path': 'report_data/my_module/second_sample_original_image.png'
+    },
+]
+```
+Note that the _Prev_ / _Next_ buttons will cycle through these images in the
+order supplied, so it makes sense to sort by sample name alphabetically.
 
 ### self.plot_bargraph (data, cats, config)
 Takes a dict of data and plots a bar graph. The expected data structure
@@ -346,6 +365,16 @@ $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
 $('#YOUR_PLOT_ID').on('mqc_plotresize', function(){
     // This trigger is called when a plot handle is pulled,
     // resizing the height
+});
+
+$('#YOUR_PLOT_ID').on('mqc_original_series_click', function(e, name){
+    // A plot able to show original images has had a point clicked.
+    // 'name' contains the name of the series that was clicked
+});
+
+$('#YOUR_PLOT_ID').on('mqc_original_chg_source', function(e, name){
+    // A plot with original images has had a request to change the
+    // original image source (eg. pressing Prev / Next)
 });
 ```
 
