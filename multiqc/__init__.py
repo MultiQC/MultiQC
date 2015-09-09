@@ -39,10 +39,11 @@ class BaseMultiqcModule(object):
         return s_name
     
     
-    def plot_xy_data(self, data, config={}):
+    def plot_xy_data(self, data, config={}, original_plots=[]):
         """ Plot a line graph with X,Y data. See CONTRIBUTING.md for
         further instructions on use.
         :param data: 2D dict, first keys as sample names, then x:y data pairs
+        :param original_plots: optional list of dicts with keys 's_name' and 'img_path'
         :param config: optional dict with config key:value pairs. See CONTRIBUTING.md
         :return: HTML and JS, ready to be inserted into the page
         """
@@ -70,6 +71,7 @@ class BaseMultiqcModule(object):
             config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
         html = ''
         
+        # Buttons to cycle through different datasets
         if len(plotdata) > 1:
             html += '<div class="btn-group switch_group">\n'
             for k, p in enumerate(plotdata):
@@ -81,11 +83,38 @@ class BaseMultiqcModule(object):
                 html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         
-        html += '<div id="{id}" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
+        # Markup needed if we have the option of clicking through to original plot images
+        if len(original_plots) > 0:
+            config['tt_label'] = 'Click to show original plot.<br>{}'.format(config.get('tt_label', '{point.x}'))
+            if len(original_plots) > 1:
+                next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
+                    <a href="#{prev}" class="btn btn-default original_plot_prev_btn" data-target="#{id}">&laquo; Previous</a> \n\
+                    <a href="#{next}" class="btn btn-default original_plot_nxt_btn" data-target="#{id}">Next &raquo;</a> \n\
+                </div></div>'.format(id=config['id'], prev=original_plots[-1]['s_name'], next=original_plots[1]['s_name'])
+            else:
+                next_prev_buttons = ''
+            html += '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
+                    <div id="fastqc_quals" class="hc-plot-wrapper"> \n\
+                        <div class="showhide_orig" style="display:none;"> \n\
+                            <h4><span class="s_name">{n}</span></h4> \n\
+                            {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="{f}"> \n\
+                        </div>\n\
+                        <div id="{id}" class="hc-plot"></div> \n\
+                    </div>'.format(id=config['id'], b=next_prev_buttons, n=original_plots[0]['s_name'], f=original_plots[0]['img_path'])
+            orig_plots = 'var {id}_orig_plots = {d}; \n'.format(id=config['id'], d=json.dumps(original_plots))
+            config['orig_click_func'] = True # Javascript prints the click function
+        
+        # Regular plots (no original images)
+        else:
+            html += '<div id="{id}" class="hc-plot"></div> \n'.format(id=config['id'])
+            orig_plots = ''
+        
+        # Javascript with data dump
+        html += '<script type="text/javascript"> \n\
             var {id}_datasets = {d}; \n\
+            {o} \
             $(function () {{ plot_xy_line_graph("#{id}", {id}_datasets[0], {c}); }}); \n\
-        </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config));
+        </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config), o=orig_plots);
         return html
     
     

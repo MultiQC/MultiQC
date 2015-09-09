@@ -118,6 +118,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         log.info("Found {} reports".format(len(fastqc_raw_data)))
 
         self.sections = list()
+        
+        self.statuses = {
+            'fastqc_quals' : {},
+            'fastqc_gc' : {},
+            'fastqc_seq' : {},
+            'fastqc_adapter' : {},
+        }
 
         # Get the section pass and fails
         passfails = self.fastqc_get_passfails(fastqc_raw_data)
@@ -134,39 +141,39 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
 
         # Section 1 - Quality Histograms
-        histogram_data = self.fastqc_seq_quality(fastqc_raw_data)
-        if len(histogram_data) > 0:
+        self.parse_fastqc_seq_quality(fastqc_raw_data)
+        if len(self.sequence_quality) > 0:
             self.sections.append({
                 'name': 'Sequence Quality Histograms',
                 'anchor': 'sequence-quality',
-                'content': self.fastqc_quality_overlay_plot(histogram_data)
+                'content': self.fastqc_quality_overlay_plot()
             })
 
         # Section 2 - GC Content
-        gc_data = self.fastqc_gc_content(fastqc_raw_data)
-        if len(gc_data) > 0:
+        self.parse_fastqc_gc_content(fastqc_raw_data)
+        if len(self.gc_content) > 0:
             self.sections.append({
                 'name': 'Per Sequence GC Content',
                 'anchor': 'gc-content',
-                'content': self.fastqc_gc_overlay_plot(gc_data)
+                'content': self.fastqc_gc_overlay_plot()
             })
 
         # Section 3 - Per-base sequence content
-        seq_content = self.fastqc_seq_content(fastqc_raw_data)
-        if len(seq_content) > 0:
+        self.parse_fastqc_seq_content(fastqc_raw_data)
+        if len(self.seq_content) > 0:
             self.sections.append({
                 'name': 'Per Base Sequence Content',
                 'anchor': 'sequence-content',
-                'content': self.fastqc_seq_heatmap(seq_content)
+                'content': self.fastqc_seq_heatmap()
             })
 
         # Section 4 - Adapter Content
-        adapter_data = self.fastqc_adapter_content(fastqc_raw_data)
-        if len(adapter_data) > 0:
+        self.fastqc_adapter_content(fastqc_raw_data)
+        if len(self.adapter_content) > 0:
             self.sections.append({
                 'name': 'Adapter Content',
                 'anchor': 'adapter-content',
-                'content': self.fastqc_adapter_overlay_plot(adapter_data)
+                'content': self.fastqc_adapter_overlay_plot()
             })
 
 
@@ -273,206 +280,129 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if rowcounts[k] == 0:
                 report['general_stats']['headers'].pop(k, None)
 
-    def fastqc_seq_quality(self, fastqc_raw_data):
+    def parse_fastqc_seq_quality(self, fastqc_raw_data):
         """ Parse the 'Per base sequence quality' data from fastqc_data.txt
-        Returns a 2D dict, sample names as first keys, then a dict of lists
-        containing base, mean, median, lower_quart, upper_quart, 10_percentile
-        and 90_percentile. """
+        Creates self.sequence_quality with a dict - keys positions and values
+        mean phred score. Scope for several other values here. """
 
-        parsed_data = {}
+        self.sequence_quality = {}
         for s, data in fastqc_raw_data.items():
-            parsed_data[s] = {}
-            parsed_data[s]['status'] = ''
-            parsed_data[s]['base'] = list()
-            parsed_data[s]['mean'] = list()
-            parsed_data[s]['median'] = list()
-            parsed_data[s]['lower_quart'] = list()
-            parsed_data[s]['upper_quart'] = list()
-            parsed_data[s]['10_percentile'] = list()
-            parsed_data[s]['90_percentile'] = list()
+            self.sequence_quality[s] = {}
             in_module = False
             for l in data.splitlines():
                 if l[:27] == ">>Per base sequence quality":
                     in_module = True
-                    parsed_data[s]['status'] = l.split()[-1]
+                    self.statuses['fastqc_quals'][s] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
                     quals = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
                     try:
-                        parsed_data[s]['base'].append(quals.group(1))
-                        parsed_data[s]['mean'].append(float(quals.group(2)))
-                        parsed_data[s]['median'].append(float(quals.group(3)))
-                        parsed_data[s]['lower_quart'].append(float(quals.group(4)))
-                        parsed_data[s]['upper_quart'].append(float(quals.group(5)))
-                        parsed_data[s]['10_percentile'].append(float(quals.group(6)))
-                        parsed_data[s]['90_percentile'].append(float(quals.group(7)))
+                        bp = int(quals.group(1).split('-', 1)[0])
+                        self.sequence_quality[s][bp] = float(quals.group(2))                        
+                        # parsed_data[s]['base'].append(quals.group(1))
+                        # parsed_data[s]['mean'].append(float(quals.group(2)))
+                        # parsed_data[s]['median'].append(float(quals.group(3)))
+                        # parsed_data[s]['lower_quart'].append(float(quals.group(4)))
+                        # parsed_data[s]['upper_quart'].append(float(quals.group(5)))
+                        # parsed_data[s]['10_percentile'].append(float(quals.group(6)))
+                        # parsed_data[s]['90_percentile'].append(float(quals.group(7)))
                     except AttributeError:
                         pass
-            if len(parsed_data[s]['mean']) == 0:
-                parsed_data.pop(s, None)
+            if len(self.sequence_quality[s]) == 0:
+                self.sequence_quality.pop(s, None)
 
-        return parsed_data
-
-    def fastqc_quality_overlay_plot (self, parsed_data):
-
-        data = list()
-        names = list()
-        statuses = dict()
-        for s in sorted(parsed_data):
-            pairs = list()
-            for k, p in enumerate(parsed_data[s]['base']):
-                pairs.append([int(p.split('-', 1)[0]), parsed_data[s]['mean'][k]])
-                statuses[s] = parsed_data[s]['status']
-            data.append({
-                'name': s,
-                'data': pairs
-            })
-            names.append(s);
+    def fastqc_quality_overlay_plot (self):
+        """ Create the HTML for the phred quality score plot """
+        pconfig = {
+            'title': 'Mean Quality Scores',
+            'ylab': 'Phred Score',
+            'xlab': 'Position (bp)',
+            'ymin': 0,
+            'xDecimals': False,
+            'tt_label': '<b>Base {point.x}</b>',
+        }
+        images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_base_quality.png'.format(s)}
+                    for s in sorted(self.sequence_quality.keys())]
         
-        next_prev_buttons = ''
-        if len(names) > 1:
-            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_quals">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_quals">Next &raquo;</a> \n\
-            </div></div>'
+        html = self.plot_xy_data(self.sequence_quality, pconfig, images)
         
-        html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-        <div id="fastqc_quals" class="hc-plot-wrapper"> \n\
-            <div class="showhide_orig" style="display:none;"> \n\
-                <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
-                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_base_quality.png" data-fnsuffix="_per_base_quality.png"> \n\
-            </div>\n\
-            <div id="fastqc_quality_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
-        </div> \n\
-        <script type="text/javascript"> \n\
-            fastqc_overlay_hist_data = {d};\n\
-            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_quals"] = {n};\
-            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_quals"] = {s};\
-            var quals_pconfig = {{ \n\
-                "title": "Mean Quality Scores",\n\
-                "ylab": "Phred Score",\n\
-                "xlab": "Position (bp)",\n\
-                "ymin": 0,\n\
-                "xDecimals": false,\n\
-                "tt_label": "Click to show original plot.<br><b>Base {{point.x}}</b>",\n\
-                "use_legend": false,\n\
-                "click_func": function () {{ \n\
-                    fastqc_chg_original (this.series.name, \'#fastqc_quals\'); \n\
-                    $("#fastqc_quals .showhide_orig").delay(100).slideDown(); \n\
-                    $("#fastqc_quality_overlay").delay(100).slideUp(); \n\
-                }} \n\
-            }}; \n\
-            $(function () {{ \
-                plot_xy_line_graph("#fastqc_quality_overlay", fastqc_overlay_hist_data, quals_pconfig); \
-            }}); \
-        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses));
-
+        # Make a JS variable holding the FastQC status for each sample
+        statuses = {s: self.statuses['fastqc_quals'][s] for s in self.statuses['fastqc_quals'].keys()}
+        html += '<script type="text/javascript"> \n\
+                    if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+                    fastqc_s_statuses["fastqc_quals"] = {}; \n\
+                </script>'.format(json.dumps(statuses))
+        
         return html
 
 
-    def fastqc_gc_content(self, fastqc_raw_data):
+    def parse_fastqc_gc_content(self, fastqc_raw_data):
         """ Parse the 'Per sequence GC content' data from fastqc_data.txt
         Returns a 2D dict, sample names as first keys, then a dict of with keys
         containing percentage and values containing counts """
 
-        parsed_data = {}
+        self.gc_content = {}
         for s, data in fastqc_raw_data.items():
-            parsed_data[s] = {'status': '', 'vals': dict()}
+            self.gc_content[s] = {}
             in_module = False
             for l in data.splitlines():
                 if l[:25] == ">>Per sequence GC content":
                     in_module = True
-                    parsed_data[s]['status'] = l.split()[-1]
+                    self.statuses['fastqc_gc'][s] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
                     gc_matches = re.search("([\d]+)\s+([\d\.E]+)", l)
                     try:
-                        parsed_data[s]['vals'][int(gc_matches.group(1))] = float(gc_matches.group(2))
+                        self.gc_content[s][int(gc_matches.group(1))] = float(gc_matches.group(2))
                     except AttributeError:
                         pass
-            if len(parsed_data[s]['vals']) == 0:
-                parsed_data.pop(s, None)
+            if len(self.gc_content[s]) == 0:
+                self.gc_content.pop(s, None)
 
-        return parsed_data
 
-    def fastqc_gc_overlay_plot (self, parsed_data):
-        data = list()
-        names = list()
-        statuses = dict()
-        for s in sorted(parsed_data):
-            pairs = list()
-            statuses[s] = parsed_data[s]['status']
-            for k, p in iter(sorted(parsed_data[s]['vals'].items())):
-                pairs.append([int(k), p])
-            data.append({
-                'name': s,
-                'data': pairs
-            })
-            names.append(s)
+    def fastqc_gc_overlay_plot (self):
+        """ Create the HTML for the FastQC GC content plot """
+        pconfig = {
+            'title': 'Per Sequence GC Content',
+            'ylab': 'Count',
+            'xlab': '%GC',
+            'ymin': 0,
+            'xmax': 100,
+            'xmin': 0,
+            'yDecimals': False,
+            'tt_label': '<b>{point.x}% GC</b>',
+        }
+        images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_sequence_gc_content.png'.format(s)}
+                    for s in sorted(self.gc_content.keys())]
         
-        if len(names) > 1:
-            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_gc">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_gc">Next &raquo;</a> \n\
-            </div></div>'
-        else: next_prev_buttons = ''
+        html = self.plot_xy_data(self.gc_content, pconfig, images)
         
-        html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-        <div id="fastqc_gc" class="hc-plot-wrapper"> \n\
-            <div class="showhide_orig" style="display:none;"> \n\
-                <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
-                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_sequence_gc_content.png" data-fnsuffix="_per_sequence_gc_content.png"> \n\
-            </div>\n\
-            <div id="fastqc_gc_overlay" class="fastqc-overlay-plot hc-plot"></div> \n\
-        </div>\n\
-        <script type="text/javascript"> \
-            var fastqc_overlay_gc_data = {d};\
-            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_gc"] = {n};\
-            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_gc"] = {s};\
-            var gc_pconfig = {{ \n\
-                "title": "Per Sequence GC Content",\n\
-                "ylab": "Count",\n\
-                "xlab": "%GC",\n\
-                "ymin": 0,\n\
-                "xmax": 100,\n\
-                "xmin": 0,\n\
-                "yDecimals": false,\n\
-                "tt_label": "Click to show original plot.<br><b>{{point.x}}% GC</b>",\n\
-                "use_legend": false,\n\
-                "click_func": function () {{ \n\
-                    fastqc_chg_original (this.series.name, \'#fastqc_gc\'); \n\
-                    $("#fastqc_gc .showhide_orig").delay(100).slideDown(); \n\
-                    $("#fastqc_gc_overlay").delay(100).slideUp(); \n\
-                }} \n\
-            }}; \n\
-            $(function () {{ \
-                plot_xy_line_graph("#fastqc_gc_overlay", fastqc_overlay_gc_data, gc_pconfig); \
-            }}); \
-        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses));
-
+        # Make a JS variable holding the FastQC status for each sample
+        statuses = {s: self.statuses['fastqc_gc'][s] for s in self.statuses['fastqc_gc'].keys()}
+        html += '<script type="text/javascript"> \n\
+                    if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+                    fastqc_s_statuses["fastqc_gc"] = {}; \n\
+                </script>'.format(json.dumps(statuses))
+        
         return html
 
 
 
-    def fastqc_seq_content(self, fastqc_raw_data):
+    def parse_fastqc_seq_content(self, fastqc_raw_data):
         """ Parse the 'Per base sequence content' data from fastqc_data.txt
         Returns a 3D dict, sample names as first keys, second key the base
         position and third key with the base ([ACTG]). Values contain percentages """
 
-        parsed_data = {}
+        self.seq_content = {}
         for s, data in fastqc_raw_data.items():
-            parsed_data[s] = {'status': '', 'vals': dict()}
+            self.seq_content[s] = {}
             in_module = False
             for l in data.splitlines():
                 if l[:27] == ">>Per base sequence content":
                     in_module = True
-                    parsed_data[s]['status'] = l.split()[-1]
+                    self.statuses['fastqc_seq'][s] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
@@ -480,46 +410,50 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
                     try:
                         bp = int(seq_matches.group(1).split('-', 1)[0])
-                        parsed_data[s]['vals'][bp] = {}
-                        parsed_data[s]['vals'][bp]['base'] = seq_matches.group(1)
-                        parsed_data[s]['vals'][bp]['G'] = float(seq_matches.group(2))
-                        parsed_data[s]['vals'][bp]['A'] = float(seq_matches.group(3))
-                        parsed_data[s]['vals'][bp]['T'] = float(seq_matches.group(4))
-                        parsed_data[s]['vals'][bp]['C'] = float(seq_matches.group(5))
+                        self.seq_content[s][bp] = {}
+                        self.seq_content[s][bp]['base'] = seq_matches.group(1)
+                        self.seq_content[s][bp]['G'] = float(seq_matches.group(2))
+                        self.seq_content[s][bp]['A'] = float(seq_matches.group(3))
+                        self.seq_content[s][bp]['T'] = float(seq_matches.group(4))
+                        self.seq_content[s][bp]['C'] = float(seq_matches.group(5))
                     except AttributeError:
                         if l[:1] != '#':
                             log.debug("Couldn't parse a line from sequence content report {}: {}".format(s, l))
-            if len(parsed_data[s]['vals']) == 0:
-                parsed_data.pop(s, None)
+            if len(self.seq_content[s]) == 0:
+                self.seq_content.pop(s, None)
 
-        return parsed_data
-
-    def fastqc_seq_heatmap (self, parsed_data):
-
-        # Get theh sample statuses
+    def fastqc_seq_heatmap (self):
+        """ Create the epic HTML for the FastQC sequence content heatmap """
+        
+        # Get the sample statuses
         data = dict()
         names = list()
-        statuses = dict()
-        for s in sorted(parsed_data):
+        for s in sorted(self.seq_content):
             names.append(s)
-            statuses[s] = parsed_data[s]['status']
-            data[s] = parsed_data[s]['vals']
+            data[s] = self.seq_content[s]
 
+        # Order the table by the sample names
+        data = OrderedDict(sorted(data.items()))
+        
+        images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_base_sequence_content.png'.format(s)}
+                    for s in sorted(self.seq_content.keys())]
+        statuses = {s: self.statuses['fastqc_seq'][s] for s in self.statuses['fastqc_seq'].keys()}
+        
         # Order the table by the sample names
         data = OrderedDict(sorted(data.items()))
         
         if len(names) > 1:
             next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_seq">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_seq">Next &raquo;</a> \n\
-            </div></div>'
+                <a href="#{p_n}" class="btn btn-default original_plot_prev_btn" data-target="#fastqc_seq">&laquo; Previous</a> \n\
+                <a href="#{n_n}" class="btn btn-default original_plot_nxt_btn" data-target="#fastqc_seq">Next &raquo;</a> \n\
+            </div></div>'.format(p_n=names[-1], n_n=names[1])
         else: next_prev_buttons = ''
-
+        
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-        <div id="fastqc_seq"> \n\
-            <h4><span class="s_name">'+names[0]+'</span> <span class="label label-default s_status">'+statuses[names[0]]+'</span></h4> \n\
+        <div id="fastqc_seq" class="hc-plot-wrapper"> \n\
+            <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">{this_status}</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
-                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png" data-fnsuffix="_per_base_sequence_content.png"> \n\
+                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png"> \n\
             </div>\n\
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
                 <div id="fastqc_seq_plot" class="hc-plot"> \n\
@@ -541,12 +475,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
             fastqc_s_names["fastqc_seq"] = {n};\n\
             if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_seq"] = {s};\
+            fastqc_s_statuses["fastqc_seq"] = {s};\n\
+            var fastqc_seq_orig_plots = {oplots};\n\
             $(function () {{ \n\
                 fastqc_seq_content_heatmap(); \n\
             }}); \n\
-        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses))
-
+        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), this_status=statuses[names[0]], s=json.dumps(statuses), oplots=json.dumps(images))
+        
         return html
 
 
@@ -555,94 +490,65 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         Returns a 2D dict, sample names as first keys, then a dict of with keys
         containing adapter type and values containing counts """
 
-        parsed_data = {}
+        self.adapter_content = {}
         for s, data in fastqc_raw_data.items():
-            parsed_data[s] = {'status': '', 'vals': dict()}
             in_module = False
             adapter_types = []
             for l in data.splitlines():
                 if l[:17] == ">>Adapter Content":
                     in_module = True
-                    parsed_data[s]['status'] = l.split()[-1]
+                    self.statuses['fastqc_adapter'][s] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
                     if l[:1] == '#':
                         adapter_types = l[1:].split("\t")[1:]
                         for a in adapter_types:
-                            parsed_data[s]['vals'][a] = dict()
+                            name = '{} - {}'.format(s,a)
+                            self.adapter_content[name] = {}
                     else:
                         cols = l.split("\t")
                         pos = int(cols[0].split('-', 1)[0])
                         for idx, val in enumerate(cols[1:]):
-                            parsed_data[s]['vals'][adapter_types[idx]][pos] = float(val)
-            if len(parsed_data[s]['vals']) == 0:
-                parsed_data.pop(s, None)
-        return parsed_data
+                            name = '{} - {}'.format(s, adapter_types[idx])
+                            self.adapter_content[name][pos] = float(val)
+            for a in adapter_types:
+                name = '{} - {}'.format(s,a)
+                if len(self.adapter_content[name]) == 0:
+                    self.adapter_content.pop(name, None)
 
-    def fastqc_adapter_overlay_plot (self, parsed_data):
-
-        data = list()
-        names = list()
-        statuses = dict()
-        for s in sorted(parsed_data):
-            statuses[s] = parsed_data[s]['status']
-            for a, d in parsed_data[s]['vals'].items():
-                if max(d.values()) >= 1:
-                    pairs = list()
-                    for base, count in iter(sorted(d.items())):
-                        pairs.append([base, count])
-                    data.append({
-                        'name': '{} - {}'.format(s, a),
-                        'data': pairs
-                    })
-            names.append(s)
-
-        if len(data) == 0:
-            return '<p>No adapter contamination found in any samples.</p>'
+    def fastqc_adapter_overlay_plot (self):
+        """ Create the HTML for the FastQC adapter plot """
+        pconfig = {
+            'id': 'mqc_fastqc_adapter_plot',
+            'title': 'Adapter Content',
+            'ylab': '% of Sequences',
+            'xlab': 'Position',
+            'ymax': 100,
+            'ymin': 0,
+            'xDecimals': False,
+            'tt_label': '<b>Base {point.x}</b>',
+        }
+        images = []
+        samps = []
+        for s in sorted(self.adapter_content.keys()):
+            s_name = s.split(" - ")[0];
+            if s_name not in samps:
+                samps.append(s_name)
+                images.append({
+                    's_name': s_name,
+                    'img_path': 'report_data/fastqc/{}_adapter_content.png'.format(s_name)
+                })
         
-        if len(names) > 1:
-            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
-                <a href="#'+names[-1]+'" class="btn btn-default fastqc_prev_btn" data-target="#fastqc_adapter">&laquo; Previous</a> \n\
-                <a href="#'+names[1]+'" class="btn btn-default fastqc_nxt_btn" data-target="#fastqc_adapter">Next &raquo;</a> \n\
-            </div></div>'
-        else: next_prev_buttons = ''
+        html = self.plot_xy_data(self.adapter_content, pconfig, images)
         
-        html = '<p class="text-muted">Samples with no adapter contamination are hidden. <span class="instr">Click to show original FastQC plot.</span></p>\n\
-        <div id="fastqc_adapter" class="hc-plot-wrapper"> \n\
-            <div class="showhide_orig" style="display:none;"> \n\
-                <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">status</span></h4> \n\
-                {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_adapter_content.png" data-fnsuffix="_adapter_content.png"> \n\
-            </div>\n\
-            <div id="fastqc_adapter_overlay" class="fastqc-overlay-plot hc-plot"></div>\n\
-        </div>\n\
-        <script type="text/javascript"> \
-            fastqc_adapter_data = {d};\
-            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_adapter"] = {n};\n\
-            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_adapter"] = {s};\
-            var adapter_pconfig = {{ \n\
-                "title": "Adapter Content",\n\
-                "ylab": "% of Sequences",\n\
-                "xlab": "Position",\n\
-                "xDecimals": false,\n\
-                "ymax": 100,\n\
-                "ymin": 0,\n\
-                "tt_label": "Click to show original plot.<br><b>Base {{point.x}}</b>",\n\
-                "use_legend": false,\n\
-                "click_func": function () {{ \n\
-                    var snames = this.series.name.split(" - ");\n\
-                    fastqc_chg_original (snames[0], \'#fastqc_adapter\'); \n\
-                    $("#fastqc_adapter .showhide_orig").delay(100).slideDown(); \n\
-                    $("#fastqc_adapter_overlay").delay(100).slideUp(); \n\
-                }} \n\
-            }}; \n\
-            $(function () {{ \
-                plot_xy_line_graph("#fastqc_adapter_overlay", fastqc_adapter_data, adapter_pconfig); \
-            }}); \
-        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), s=json.dumps(statuses));
-
+        # Make a JS variable holding the FastQC status for each sample
+        statuses = {s: self.statuses['fastqc_adapter'][s] for s in self.statuses['fastqc_adapter'].keys()}
+        html += '<script type="text/javascript"> \n\
+                    if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+                    fastqc_s_statuses["fastqc_gc"] = {}; \n\
+                </script>'.format(json.dumps(statuses))
+        
         return html
 
 

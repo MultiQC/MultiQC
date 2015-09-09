@@ -111,7 +111,7 @@
     <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
     {{ m.intro if m.intro }}
     {% for s in m.sections %}
-      <div class="mqc-section">
+      <div class="mqc-section mqc-section-{{ m.anchor }}">
         <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
         {{ s['content'] if s['content'] }}
         {{ '<hr>' if not loop.last }}

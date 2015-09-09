@@ -126,25 +126,26 @@ $(function () {
         $('#'+k).append(p_bar);
         $('#'+k).tooltip({selector: '[data-toggle="tooltip"]' });
     });
-
-    // Show the overlay plots again (clicking the original)
-    $('.original-plot').click(function(){
-        $(this).closest('.showhide_orig').next('.fastqc-overlay-plot').slideDown();
-        $(this).closest('.showhide_orig').slideUp();
-        $(this).closest('.mqc-section').find('.instr').text('Click to show original FastQC plot.');
-        highlight_fade_text($(this).closest('.mqc-section').find('.instr'));
-        // Replot heatmap
-        if ($(this).parents('#fastqc_seq').length) {
-            fastqc_seq_content_heatmap();
+    
+    // Show the status next to the series name for original plots
+    $('.mqc-section-fastqc .hc-plot-wrapper').on('mqc_original_chg_source', function(e, name){
+        var pid = $(this).attr('id');
+        var status = fastqc_s_statuses[pid][name];
+        var label = $(this).find('.s_status');
+        if(label.length == 0){
+            $(this).find('h4').append(' <span class="label label-default s_status">status</span>');
+            label = $(this).find('.s_status');
         }
+        label.text(status);
+        if(status == 'pass'){ label.removeClass().addClass('s_status label label-success'); }
+        if(status == 'warn'){ label.removeClass().addClass('s_status label label-warning'); }
+        if(status == 'fail'){ label.removeClass().addClass('s_status label label-danger'); }
     });
-
-    // prev / next buttons for original images
-    $('.fastqc_prev_btn, .fastqc_nxt_btn').click(function(e){
-        e.preventDefault();
-        var name = $(this).attr('href').substr(1);
-        var target = $(this).data('target');
-        fastqc_chg_original (name, target);
+    
+    // Specific behaviour for adapter plot series click
+    $('#mqc_fastqc_adapter_plot').on('mqc_original_series_click', function(e, name){
+        var snames = name.split(" - ");
+        hc_original_chg_source (snames[0], $(this).attr('id'));
     });
     
     /////////
@@ -190,11 +191,15 @@ $(function () {
     // Show the original plot on click (Sequence Content)
     $("#fastqc_seq_heatmap").click(function(){
         var name = $('#fastqc_seq .s_name').text();
-        fastqc_chg_original (name, '#fastqc_seq');
+        hc_original_chg_source (name, 'fastqc_seq');
         $("#fastqc_seq .showhide_orig").delay(100).slideDown();
         $("#fastqc_seq_heatmap_div").delay(100).slideUp();
     });
-    
+    // Replot heatmap again (clicking the original)
+    $('#fastqc_seq img.original-plot').click(function(){
+        $("#fastqc_seq_heatmap_div").slideDown();
+        fastqc_seq_content_heatmap();
+    });
       
     // Highlight the custom heatmap
     $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
@@ -221,28 +226,3 @@ $(function () {
     });
 
 });
-
-// Update a FastQC original plot
-function fastqc_chg_original (name, target) {
-    var suffix = $(target+" img.original-plot").data('fnsuffix');
-    var names = fastqc_s_names[target.substr(1)];
-    var statuses = fastqc_s_statuses[target.substr(1)]
-    $(target+" img.original-plot").attr('src', 'report_data/fastqc/'+name+suffix);
-    $(target+" .s_name").text(name);
-    $(target+" .s_status").text(statuses[name]);
-    if(statuses[name] == 'pass'){ $(target+" .s_status").removeClass().addClass('s_status label label-success'); }
-    if(statuses[name] == 'warn'){ $(target+" .s_status").removeClass().addClass('s_status label label-warning'); }
-    if(statuses[name] == 'fail'){ $(target+" .s_status").removeClass().addClass('s_status label label-danger'); }
-    var i = names.indexOf(name);
-    var l = names.length;
-    var n_i = i+1 < l ? i+1 : 0;
-    var p_i = i-1 >= 0 ? i-1 : l - 1;
-    var n = names[n_i];
-    var p = names[p_i];
-    $(target+" .fastqc_prev_btn").attr('href', '#'+p);
-    $(target+" .fastqc_nxt_btn").attr('href', '#'+n);
-    if($(target).closest('.mqc-section').find('.instr').text() != "Click plot to return to overview plot."){
-        $(target).closest('.mqc-section').find('.instr').text("Click plot to return to overview plot.");
-        highlight_fade_text($(target).closest('.mqc-section').find('.instr'));
-    }
-}

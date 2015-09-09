@@ -24,7 +24,9 @@
 }
 
 
-
+#fastqc_seq {
+  border: 0;
+}
 #fastqc_seq_heatmap {
   cursor: pointer;
 }
