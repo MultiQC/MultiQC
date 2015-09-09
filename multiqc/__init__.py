@@ -77,8 +77,7 @@ class BaseMultiqcModule(object):
                 name = p.get('name', k+1)
                 ylab = p.get('ylab', name)
                 html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" data-ylab="{y}" data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
-    			# html += '<button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Count" data-newdata="cutadapt_length_counts" data-target="#cutadapt_length_plot">Counts</button> \n\'
-    		html += '</div>'
+            html += '</div>'
         
         html += '<div id="{id}" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
