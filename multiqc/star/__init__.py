@@ -118,8 +118,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['uniquely_mapped_percent'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">%&nbsp;Mapped</span></th>'
-        report['general_stats']['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M&nbsp;Mapped</span></th>'
+        report['general_stats']['headers']['uniquely_mapped_percent'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">% Mapped</span></th>'
+        report['general_stats']['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M Mapped</span></th>'
         for sn, data in self.star_data.items():
             report['general_stats']['rows'][sn]['uniquely_mapped_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['uniquely_mapped_percent'])
             report['general_stats']['rows'][sn]['uniquely_mapped'] = '<td class="text-right">{:.1f}</td>'.format(data['uniquely_mapped']/1000000)

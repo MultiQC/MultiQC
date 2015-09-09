@@ -186,16 +186,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for sn, data in self.bismark_data.items():
                 report['general_stats']['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['me_percent_cpg_meth'])
                 report['general_stats']['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['me_total_c']/1000000)
-            report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (meth&nbsp;extraction)">%&nbsp;Meth</span></th>'
-            report['general_stats']['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (meth&nbsp;extraction)">M&nbsp;C\'s</span></th>'
+            report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (meth&nbsp;extraction)">% Meth</span></th>'
+            report['general_stats']['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (meth&nbsp;extraction)">M C\'s</span></th>'
         except KeyError:
             # Use numbers from alignment instead
             try:
                 for sn, data in self.bismark_data.items():
                     report['general_stats']['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['aln_percent_cpg_meth'])
                     report['general_stats']['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['aln_total_c']/1000000)
-                report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">%&nbsp;Meth</span></th>'
-                report['general_stats']['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (alignment)">M&nbsp;C\'s</span></th>'
+                report['general_stats']['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">% Meth</span></th>'
+                report['general_stats']['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (alignment)">M C\'s</span></th>'
             except KeyError:
                 pass
 
@@ -204,8 +204,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 report['general_stats']['rows'][sn]['bismark_dedup_reads_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['dup_reads_percent'])
                 report['general_stats']['rows'][sn]['bismark_dedup_reads'] = '<td class="text-right">{:.1f}</td>'.format(data['dedup_reads']/1000000)
                 report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
-            report['general_stats']['headers']['bismark_dedup_reads_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">%&nbsp;Dups</span></th>'
-            report['general_stats']['headers']['bismark_dedup_reads'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M&nbsp;Unique</span></th>'
+            report['general_stats']['headers']['bismark_dedup_reads_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">% Dups</span></th>'
+            report['general_stats']['headers']['bismark_dedup_reads'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M Unique</span></th>'
         except KeyError:
             pass
 
@@ -213,8 +213,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for sn, data in self.bismark_data.items():
                 report['general_stats']['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
                 report['general_stats']['rows'][sn]['bismark_percent_aligned'] = '<td class="text-right">{:.1f}%</td>'.format((data['aligned_reads']/data['total_reads'])*100)
-            report['general_stats']['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M&nbsp;Aligned</span></th>'
-            report['general_stats']['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">%&nbsp;Aligned</span></th>'
+            report['general_stats']['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M Aligned</span></th>'
+            report['general_stats']['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">% Aligned</span></th>'
         except KeyError:
             pass
 

@@ -100,8 +100,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Take the parsed stats from the featureCounts report and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['featureCounts_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: % Assigned reads">%&nbsp;Assigned</span></th>'
-        report['general_stats']['headers']['featureCounts'] = '<th class="chroma-col" data-chroma-scale="PuBu" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: Assigned reads (millions)">M&nbsp;Assigned</span></th>'
+        report['general_stats']['headers']['featureCounts_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: % Assigned reads">% Assigned</span></th>'
+        report['general_stats']['headers']['featureCounts'] = '<th class="chroma-col" data-chroma-scale="PuBu" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: Assigned reads (millions)">M Assigned</span></th>'
         for sn, data in self.featurecounts_data.items():
             report['general_stats']['rows'][sn]['featureCounts_percent'] = '<td class="text-right">{:.1f}%</td>'.format((data['Assigned']/data['Total'])*100)
             report['general_stats']['rows'][sn]['featureCounts'] = '<td class="text-right">{:.1f}</td>'.format(data['Assigned']/1000000)

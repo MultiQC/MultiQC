@@ -84,7 +84,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Take the parsed stats from the Picard report and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">%&nbsp;Dups</span></th>'
+        report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">% Dups</span></th>'
         for sn, data in self.picard_dupMetrics_data.items():
             report['general_stats']['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
 

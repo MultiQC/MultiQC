@@ -104,7 +104,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         """ Take the parsed stats from the Tophat report and add it to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['tophat_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Tophat: overall read mapping rate">%&nbsp;Aligned</span></th>'
+        report['general_stats']['headers']['tophat_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Tophat: overall read mapping rate">% Aligned</span></th>'
         for samp, vals in self.tophat_data.items():
             report['general_stats']['rows'][samp]['tophat_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['overall_aligned_percent'])
 
