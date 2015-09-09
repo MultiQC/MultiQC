@@ -90,10 +90,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def mark_duplicates_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
+        
         # NOTE: I had a hard time getting these numbers to add up as expected.
         # If you think I've done something wrong, let me know! Please add an
         # issue here: https://github.com/ewels/MultiQC/issues
-        
         for sn in self.picard_dupMetrics_data.keys():
             self.picard_dupMetrics_data[sn]['UNPAIRED_READ_UNIQUE'] = self.picard_dupMetrics_data[sn]['UNPAIRED_READS_EXAMINED'] - self.picard_dupMetrics_data[sn]['UNPAIRED_READ_DUPLICATES']
             self.picard_dupMetrics_data[sn]['READ_PAIR_NOT_OPTICAL_DUPLICATES'] = self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES'] - self.picard_dupMetrics_data[sn]['READ_PAIR_OPTICAL_DUPLICATES']

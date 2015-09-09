@@ -36,7 +36,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
                     for l in gr:
                         if 'bam file' in l:
-                            s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]))
+                            s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root, prepend_dirs=report['prepend_dirs'])
 
                 s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                 if s_name in qualimap_raw_data:
@@ -63,13 +63,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'name': 'Coverage Histogram',
                 'anchor': 'qualimap-coverage-histogram',
                 'content': self.plot_xy_data(histogram_data, {
-                    'id': 'qualimap_cov_hist',
                     'title': 'Coverage Histogram',
                     'ylab': 'Genome Bin Counts',
                     'xlab': 'Coverage (X)',
                     'ymin': 0,
                     'xmin': 0,
-                    'tt_label': '<b>{{point.x}}-X coverage </b>',
+                    'tt_label': '<b>{point.x}-X coverage </b>',
                 })
             })
 

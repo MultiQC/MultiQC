@@ -47,26 +47,44 @@ class BaseMultiqcModule(object):
         :return: HTML and JS, ready to be inserted into the page
         """
         
-        # Generate a random HTML id if not given
-        if config.get('id') is None:
-            config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        # Given one dataset - turn it into a list
+        if type(data) is not list:
+            data = [data]
         
         # Generate the data dict structure expected by HighCharts series
         plotdata = list()
-        for s in sorted(data):
-            pairs = list()
-            for k, p in iter(sorted(data[s].items())):
-                pairs.append([k, p])
-            plotdata.append({
-                'name': s,
-                'data': pairs
-            })
+        for d in data:
+            thisplotdata = list()
+            for s in sorted(d.keys()):
+                pairs = list()
+                for k, p in d[s].items():
+                    pairs.append([k, p])
+                thisplotdata.append({
+                    'name': s,
+                    'data': pairs
+                })
+            plotdata.append(thisplotdata)
         
         # Build the HTML for the page
-        html = '<div id="{n}" class="hc-plot"></div> \n\
+        if config.get('id') is None:
+            config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        html = ''
+        
+        if len(plotdata) > 1:
+            html += '<div class="btn-group switch_group">'
+            for k, p in plotdata.items():
+                active = 'active' if k == 0 else ''
+                name = p.get('name', k+1)
+                ylab = p.get('ylab', name)
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" data-ylab="{y}" data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+    			# html += '<button class="btn btn-default btn-sm" data-action="set_data" data-ylab="Count" data-newdata="cutadapt_length_counts" data-target="#cutadapt_length_plot">Counts</button> \n\'
+    		html += '</div>'
+        
+        html += '<div id="{id}" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
-            $(function () {{ plot_xy_line_graph("#{n}", {d}, {c}); }}); \n\
-        </script>'.format(n=config['id'], d=json.dumps(data), c=json.dumps(config));
+            var {id}_datasets = {d}; \n\
+            $(function () {{ plot_xy_line_graph("#{id}", {id}_datasets[0], {c}); }}); \n\
+        </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config));
         return html
     
     
