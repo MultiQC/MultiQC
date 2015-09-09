@@ -124,6 +124,7 @@ config = {
 This dictionary can also have any of the javascript config options.
 See the [plot_xy_line_graph()](CONTRIBUTING.md#plot_xy_line_graph-target-data-config) below for those.
 
+#### Switching datasets
 You can also have a single plot with buttons to switch between different
 datasets. To do this, just supply a list of data dicts instead (same
 formats as described above). Also add the following config options to
@@ -138,6 +139,7 @@ All of these config values are optional, the function will default
 to sensible values if things are missing. See the cutadapt module
 plots for an example of this in action.
 
+#### Showing original plots
 Finally, it's possible to get the plots to show original data sources
 when clicked (for an example, see the FastQC plots). To achieve this
 magic, make sure that the images are copied to the report and pass
