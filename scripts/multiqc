@@ -74,13 +74,19 @@ except IOError:
     }
 
 # Main function to execute MultiQC
-def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=config['template'], output_dir=os.path.join(os.getcwd(), config['output_dir']), run_modules=avail_modules, force_overwrite=False):
+def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=config['template'], output_dir=os.path.join(os.getcwd(), config['output_dir']), run_modules=avail_modules, exclude_modules=[], force_overwrite=False):
 
     # Set up helper vars
     template_dir = os.path.join(MULTIQC_DIR, 'templates', template.strip())
     output_dir = output_dir.strip()
     if OSX_APP: output_dir = os.path.join(analysis_dir, 'multiqc_report')
     template_fn = os.path.join(output_dir, 'multiqc_report.html')
+    
+    # exclude modules
+    if len(exclude_modules) > 0:
+        log.info('Excluding modules {}'.format(', '.join(exclude_modules)))
+        run_modules = [m for m in run_modules if m not in exclude_modules]
+        
 
     # analysis_dir = os.path.realpath(analysis_dir)
     log.info("Scanning {}".format(analysis_dir))
@@ -143,8 +149,9 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
 
     # Did we find anything?
     if len(modules_output) == 0:
-        log.error("Error - did not find any analysis results. Cleaning up..")
+        log.warn("No analysis results found. Cleaning up..")
         shutil.rmtree(output_dir)
+        log.info("MultiQC complete")
         return
 
     # Print the general stats table to a file
@@ -162,7 +169,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(output_dir))
         j_template = env.get_template('multiqc_report.html')
     except:
-        raise IOError ("Error - could not load template '{}'".format(template_fn))
+        raise IOError ("Could not load template '{}'".format(template_fn))
 
     # Use jinja2 to render the template and overwrite
     report['analysis_dir'] = os.path.realpath(report['analysis_dir'])
@@ -171,7 +178,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         with open(template_fn, 'w') as f:
             print(report, file=f)
     except IOError as e:
-        raise IOError ("Error printing report to '{}' - {}".format(output_path, IOError(e)))
+        raise IOError ("Could not print report to '{}' - {}".format(output_path, IOError(e)))
 
     # Create a zip file of the report directory
     shutil.make_archive(output_dir, 'zip', output_dir)
@@ -203,6 +210,8 @@ if __name__ == "__main__":
         help="Output directory. Default: {}".format(config['output_dir']))
     parser.add_argument('-m', "--module", dest="run_modules", default=avail_modules, nargs="*", choices=avail_modules, metavar='MODULE',
         help="Use only these modules. Choose from: {}".format(', '.join(avail_modules)))
+    parser.add_argument('-e', "--exclude", dest="exclude_modules", default=[], nargs="*", choices=avail_modules, metavar='MODULE',
+        help="Exclude these modules. Choose from: {}".format(', '.join(avail_modules)))
     parser.add_argument("-f", "--force", dest="force_overwrite", action='store_true',
         help="Overwrite any existing reports")
     parser.add_argument('-l', '--logging', dest="loglevel", default='INFO', type=str.lower, choices=['debug', 'info', 'warning', 'error', 'critical'], metavar='LEVEL',
