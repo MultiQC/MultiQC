@@ -4,11 +4,11 @@
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import io
 import json
 import logging
 import mmap
 import os
+import re
 
 import multiqc
 from multiqc import config
@@ -30,30 +30,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             is a set of Java command line tools for manipulating high-throughput sequencing data.</p>'
 
         # Find and load any Picard reports
-        self.picard_dupMetrics_data = defaultdict(lambda: dict())
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                try:
-                    if os.path.getsize(os.path.join(root,fn)) < 200000:
-                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                            s = f.readlines()
-                            for idx, l in enumerate(s):
-                                if 'picard.sam.DuplicationMetrics' in l:
-                                    s_name = fn
-                                    s_name = s_name.split(".metrics",1)[0]
-                                    s_name = self.clean_s_name(s_name, root)
-                                    if s_name in self.picard_dupMetrics_data:
-                                        log.debug("Duplicate DuplicationMetrics sample name found! Overwriting: {}".format(s_name))
-                                    keys = s[idx+1].split("\t")
-                                    vals = s[idx+2].split("\t")
-                                    for i, k in enumerate(keys):
-                                        try:
-                                            self.picard_dupMetrics_data[s_name][k] = float(vals[i])
-                                        except ValueError:
-                                            self.picard_dupMetrics_data[s_name][k] = vals[i]
-                                    break # TODO: Deal with multiple libraries? Proper regex?
-                except (OSError, ValueError, UnicodeDecodeError):
-                    log.debug("Couldn't read file when looking for output: {}".format(fn))
+        self.picard_dupMetrics_data = dict()
+        for f in self.find_log_files(contents_match='picard.sam.MarkDuplicates', filehandles=True):
+            self.parse_picard_dupMetrics(f)   
 
         if len(self.picard_dupMetrics_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -62,8 +41,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.picard_dupMetrics_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_picard.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( self.picard_dupMetrics_data ), file=f)
+        self.write_csv_file(self.picard_dupMetrics_data, 'multiqc_picard.txt')
 
         self.sections = list()
 
@@ -79,6 +57,35 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         })
 
 
+    def parse_picard_dupMetrics(self, f):
+        """ Go through log file looking for picard output """
+        s_name = None
+        for l in f['f']:
+            # New log starting
+            if 'picard.sam.MarkDuplicates' in l and 'INPUT' in l:
+                s_name = None
+                
+                # Pull sample name from input
+                fn_search = re.search("INPUT=\[([^\]]+)\]", l)
+                if fn_search:
+                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = self.clean_s_name(s_name, f['root'])
+                    if s_name in self.picard_dupMetrics_data:
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    self.picard_dupMetrics_data[s_name] = dict()
+            
+            if s_name is not None:
+                if 'picard.sam.DuplicationMetrics' in l and '## METRICS CLASS' in l:
+                    keys = f['f'].next().split("\t")
+                    vals = f['f'].next().split("\t")
+                    for i, k in enumerate(keys):
+                        try:
+                            self.picard_dupMetrics_data[s_name][k] = float(vals[i])
+                        except ValueError:
+                            self.picard_dupMetrics_data[s_name][k] = vals[i]
+                    s_name = None
+        
+    
     def picard_stats_table(self):
         """ Take the parsed stats from the Picard report and add them to the
         basic stats table at the top of the report """
