@@ -1,0 +1,50 @@
+div.summary{
+
+}
+
+table.summary{
+
+	border: 0px;
+  width: 100%;
+  vertical-align: top;
+
+}
+
+div.table-summary{
+	margin-left:auto; 
+  margin-right:auto; 
+	padding-bottom: 20px;
+}
+
+td.column1{
+	width: 60%;
+}
+
+table.hovertable {
+
+	font-size:14px;
+
+	border-width: 1px;
+	border-color: #999999;
+	border-collapse: collapse;
+}
+table.hovertable th {
+	background-color:#FFFFFF;
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #a9c6c9;
+}
+table.hovertable tr {
+	background-color:#FFFFFF;
+}
+table.hovertable td {
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #a9c6c9;
+}
+
+
+
+

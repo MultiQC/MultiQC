@@ -35,7 +35,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Find QualiMap reports
         qualimap_raw_data = {}
         for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            if 'genome_results.txt' in filenames and 'raw_data_qualimapReport' in dirnames:
+            raw_data_dir = 'raw_data'
+            for d in dirnames:
+                if raw_data_dir in d:
+                    raw_data_dir = d
+            if 'genome_results.txt' in filenames and raw_data_dir in dirnames:
                 with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
                     for l in gr:
                         if 'bam file' in l:
@@ -46,8 +50,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
 
                 qualimap_raw_data[s_name] = {}
-                qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, 'raw_data_qualimapReport', r) \
-                    for r in os.listdir(os.path.join(root, 'raw_data_qualimapReport'))}
+                qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, raw_data_dir, r) \
+                    for r in os.listdir(os.path.join(root, raw_data_dir))}
 
         if len(qualimap_raw_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -131,20 +135,20 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             gc_report = data['reports']['mapped_reads_gc-content_distribution']
             if gc_report:
                 counts={}
-                total_cont = 0
+                avg_gc = 0
                 with io.open(gc_report, 'r') as fh:
                     next(fh)
                     for l in fh:
-                        gc, cont = l.split(None, 1)
-                        gc = int(round(float(gc)))
-                        cont = float(cont)
-                        total_cont += gc
+                        sections = l.split(None, 2)
+                        gc = int(round(float(sections[0])))
+                        cont = float(sections[1])
+                        avg_gc += gc*cont
                         counts[gc] = cont
 
                 parsed_data[sn] = counts
 
                 #Add reads avg. GC to the general stats table
-                self.parsed_stats[sn]['avg_gc'] = total_cont/len(counts)
+                self.parsed_stats[sn]['avg_gc'] = avg_gc
 
         return parsed_data
 
@@ -249,9 +253,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         # General stats table headers
-        config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
-        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Med. Ins</span></th>'
-        config.general_stats['headers']['thirty_x_pc'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% cov</span></th>'
+        config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median coverage">Coverage</span></th>'
+        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Insert Size</span></th>'
+        config.general_stats['headers']['thirty_x_pc'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% G Covered</span></th>'
         config.general_stats['headers']['avg_gc'] = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="Qualimap: Average GC content">Avg. GC</span></th>'
 
         rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0,
