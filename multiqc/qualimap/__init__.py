@@ -121,6 +121,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         'xlab': 'GC content (%)',
                         'ymin': 0,
                         'xmin': 0,
+                        'xmax': 100,
                         'tt_label': '<b>GC-content (%) </b>',
                     })
                 })
