@@ -8,7 +8,7 @@ import json
 import logging
 import os
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import multiqc
 
@@ -47,8 +47,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 qualimap_raw_data[s_name] = {}
                 qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, 'raw_data_qualimapReport', r) \
                     for r in os.listdir(os.path.join(root, 'raw_data_qualimapReport'))}
-                qualimap_raw_data[s_name]['plots'] = {os.path.splitext(r)[0]: os.path.join(root, 'images_qualimapReport', r) \
-                    for r in os.listdir(os.path.join(root, 'images_qualimapReport'))}
 
         if len(qualimap_raw_data) == 0:
             log.debug("Could not find any reports in {}".format(self.analysis_dir))
@@ -78,6 +76,26 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for sn, vals in histogram_data.iteritems():
             self.parsed_stats[sn]['median_coverage'] = vals['median_coverage']
 
+        # Section 2 - Insert size histogram
+        histogram_data = self.qualimap_ins_size_his(qualimap_raw_data)
+        if len(histogram_data) > 0:
+            self.sections.append({
+                'name': 'Insert size Histogram',
+                'anchor': 'qualimap-insert-size-histogram',
+                'content': self.plot_xy_data(histogram_data, {
+                    'title': 'Insert Size Histogram',
+                    'ylab': 'Number of reads',
+                    'xlab': 'Insert Size (bp)',
+                    'ymin': 0,
+                    'xmin': 0,
+                    'tt_label': '<b>{point.x} insert size (bd)</b>',
+                })
+            })
+
+        # Add the median insert size to the general stats table
+        for sn, vals in histogram_data.iteritems():
+            self.parsed_stats[sn]['median_insert_size'] = vals['median_insert_size']
+
         # General stats table
         self.qualimap_stats_table(report)
 
@@ -87,7 +105,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for sn, data in qualimap_raw_data.iteritems():
             cov_report = data['reports'].get('coverage_histogram')
             if cov_report:
-                counts={}
+                counts=OrderedDict()
                 try:
                     with io.open(cov_report, 'r') as fh:
                         next(fh) # skip the header
@@ -114,6 +132,44 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
                 parsed_data[sn]['median_coverage'] = median_coverage
 
+        return parsed_data
+
+
+    def qualimap_ins_size_his(self, qualimap_raw_data):
+        parsed_data = {}
+        for sn, data in qualimap_raw_data.iteritems():
+            ins_size = data['reports'].get('insert_size_histogram')
+            if ins_size:
+                counts = OrderedDict()
+                zero_insertsize = 0
+                try:
+                    with open(ins_size, 'r') as fh:
+                        next(fh) # skip the header
+                        for line in fh:
+                            (insertsize, count) = line.split(None, 1)
+                            insertsize = int(round(float(insertsize)))
+                            count = float(count) / 1000000
+                            if(insertsize == 0):
+                                zero_insertsize = count
+                            else:
+                                counts[insertsize] = count
+                except IOError as e:
+                    logging.error("Could not load input file: {}".format(fn))
+                    raise
+
+                parsed_data[sn] = counts
+
+                # Find median
+                num_counts = sum(counts.values())
+                cum_counts = 0
+                median_insert_size = None
+                for thisins, thiscount in counts.iteritems():
+                    cum_counts += thiscount
+                    if cum_counts >= num_counts/2:
+                        median_insert_size = thisins
+                        break
+
+                parsed_data[sn]['median_insert_size'] = median_insert_size
 
         return parsed_data
 
@@ -124,15 +180,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # General stats table headers
         report['general_stats']['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
+        report['general_stats']['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Med. Ins</span></th>'
 
-        rowcounts = { 'median_coverage' : 0}
+        rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0}
 
         for samp, vals in self.parsed_stats.items():
             for k, v in vals.items():
                 report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
                 rowcounts[k] += 1
 
-        # Remove header if we don't have any filled cells for it (eg. % dups in older FastQC reports)
+        # Remove header if we don't have any filled cells for it
         for k in rowcounts.keys():
             if rowcounts[k] == 0:
                 report['general_stats']['headers'].pop(k, None)
