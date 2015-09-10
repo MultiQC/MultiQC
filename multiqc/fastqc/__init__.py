@@ -61,7 +61,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                 if fn_search:
                     s_name = fn_search.group(1).strip()
-                s_name = self.clean_s_name(s_name, root, trimmed=False)
+                s_name = self.clean_s_name(s_name, root)
                 if s_name in fastqc_raw_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 fastqc_raw_data[s_name] = r_data
@@ -89,7 +89,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                         if fn_search:
                             s_name = fn_search.group(1).strip()
-                        s_name = self.clean_s_name(s_name, root, trimmed=False)
+                        s_name = self.clean_s_name(s_name, root)
                         if s_name in fastqc_raw_data:
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                         fastqc_raw_data[s_name] = r_data
@@ -518,6 +518,15 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def fastqc_adapter_overlay_plot (self):
         """ Create the HTML for the FastQC adapter plot """
+        
+        # Check that there is some adapter contamination in some of the plots
+        max_val = 0
+        for s in self.adapter_content.keys():
+            for v in self.adapter_content[s].values():
+                max_val = max(max_val, v)
+        if max_val <= 0.1:
+            return '<p>No adapter contamination found in any samples.</p>'
+        
         pconfig = {
             'id': 'mqc_fastqc_adapter_plot',
             'title': 'Adapter Content',
@@ -527,6 +536,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>',
+            'hide_empty': True
         }
         images = []
         samps = []

@@ -16,7 +16,7 @@ class BaseMultiqcModule(object):
     def __init__(self):
         pass
 
-    def clean_s_name(self, s_name, root, trimmed=True):
+    def clean_s_name(self, s_name, root):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
@@ -32,10 +32,6 @@ class BaseMultiqcModule(object):
         s_name = s_name.split(".bam",1)[0]
         s_name = s_name.split(".sam",1)[0]
         s_name = s_name.split("_tophat",1)[0]
-        if trimmed:
-            s_name = s_name.split("_val_1",1)[0]
-            s_name = s_name.split("_val_2",1)[0]
-            s_name = s_name.split("_trimmed",1)[0]
         if config.prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
@@ -62,12 +58,15 @@ class BaseMultiqcModule(object):
             thisplotdata = list()
             for s in sorted(d.keys()):
                 pairs = list()
+                maxval = 0
                 for k, p in d[s].items():
                     pairs.append([k, p])
-                thisplotdata.append({
-                    'name': s,
-                    'data': pairs
-                })
+                    maxval = max(maxval, p)
+                if maxval > 0 or config['hide_empty'] is not True:
+                    thisplotdata.append({
+                        'name': s,
+                        'data': pairs
+                    })
             plotdata.append(thisplotdata)
         
         # Build the HTML for the page
