@@ -81,7 +81,12 @@ If in doubt, feel free to get in touch with the author:
 
 ## Version History
 #### v0.1.1dev
-* New Tophat, Bowtie 2 and Qualimap modules
+* Huge amount of code restructuring for nearly all modules. Common base module
+  functions now handle many more functions (plots, config, file import)
+  * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
+    for instructions on how to use these new helpers to make your own module
+* New Tophat, Bowtie 2 and QualiMap modules
+  * Thanks to @guillermo-carrasco for the QualiMap module
 * Bowtie module now works
 * New command line parameter `-d` prefixes sample names with the directory that
   they were found in. Allows duplicate filenames without being overwritten.

@@ -187,6 +187,9 @@ input.form-control[type=color]{
 }
 
 /* General stats table */
+#general_stats_table th {
+    white-space: nowrap;
+}
 #general_stats_table th.sorthandle {
     border-right: none;
 }

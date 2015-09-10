@@ -1,3 +1,3 @@
-	overall_aligned_rate	reads_processed	not_aligned_percentage	multimapped	reads_aligned_percentage	multimapped_percentage	not_aligned	reads_aligned	reads_other
-SRR1067503_1	86.14	30680980.0	13.86	11688364.0	48.04	38.1	4252972.0	14739644.0	0.0
-SRR1067500_1	93.42	38377305.0	6.58	8258135.0	71.9	21.52	2525577.0	27593593.0	0.0
+	multimapped_percentage	reads_processed	not_aligned_percentage	multimapped	reads_aligned_percentage	overall_aligned_rate	not_aligned	reads_aligned	reads_other
+SRR1067500_1	21.52	38377305.0	6.58	8258135.0	71.9	93.42	2525577.0	27593593.0	0.0
+SRR1067503_1	38.1	30680980.0	13.86	11688364.0	48.04	86.14	4252972.0	14739644.0	0.0
