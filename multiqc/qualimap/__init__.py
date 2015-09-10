@@ -8,6 +8,8 @@ import json
 import logging
 import os
 
+from collections import defaultdict
+
 import multiqc
 
 # Initialise the logger
@@ -27,7 +29,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
              is a platform-independent application to facilitate the quality control of alignment \
              sequencing data and its derivatives like feature counts.</p>'
         self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
+        self.parsed_stats = defaultdict(dict)
 
         # Find QualiMap reports
         qualimap_raw_data = {}
@@ -41,7 +43,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
                 if s_name in qualimap_raw_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                
+
                 qualimap_raw_data[s_name] = {}
                 qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, 'raw_data_qualimapReport', r) \
                     for r in os.listdir(os.path.join(root, 'raw_data_qualimapReport'))}
@@ -72,6 +74,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 })
             })
 
+        # Add the median coverage to the general stats table
+        for sn, vals in histogram_data.iteritems():
+            self.parsed_stats[sn]['median_coverage'] = vals['median_coverage']
+
+        # General stats table
+        self.qualimap_stats_table(report)
+
 
     def qualimap_cov_his(self, qualimap_raw_data):
         parsed_data = {}
@@ -87,40 +96,43 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             coverage = int(round(float(coverage)))
                             count = float(count)
                             counts[coverage] = count
-
                 except IOError as e:
                     log.error("Could not load input file: {}".format(cov_report))
                     raise
+
                 parsed_data[sn] = counts
+
+                # Find median
+                num_counts = sum(counts.values())
+                cum_counts = 0
+                median_coverage = None
+                for thiscov, thiscount in counts.iteritems():
+                    cum_counts += thiscount
+                    if cum_counts >= num_counts/2:
+                        median_coverage = thiscov
+                        break
+
+                parsed_data[sn]['median_coverage'] = median_coverage
+
 
         return parsed_data
 
 
-    # def qualimap_cov_his_plot(self, parsed_data):
-    #     data = list()
-    #     for s in sorted(parsed_data):
-    #         pairs = list()
-    #         for k, p in iter(sorted(parsed_data[s].items())):
-    #             pairs.append([int(k), p])
-    #         data.append({
-    #             'name': s,
-    #             'data': pairs
-    #         })
-    # 
-    #     html = '<div id="qualimap_cov_hist" class="hc-plot"></div> \n\
-    #             <script type="text/javascript"> \
-    #                 var qualimap-cov_pconfig = {{ \n\
-    #                     "title": "Coverage Histogram",\n\
-    #                     "ylab": "Genome Bin Counts",\n\
-    #                     "xlab": "Coverage (X)",\n\
-    #                     "ymin": 0,\n\
-    #                     "xmin": 0,\n\
-    #                     "tt_label": "<b>{{point.x}}-X coverage </b>",\n\
-    #                     "use_legend": false,\n\
-    #                 }}; \n\
-    #                 $(function () {{ \
-    #                     plot_xy_line_graph("#qualimap_cov_hist", {d}, qualimap-cov_pconfig); \
-    #                 }}); \
-    #             </script>'.format(d=json.dumps(data));
-    # 
-    #     return html
+    def qualimap_stats_table(self, report):
+        """ Take the parsed stats from the QualiMap report and add them to the
+        basic stats table at the top of the report """
+
+        # General stats table headers
+        report['general_stats']['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
+
+        rowcounts = { 'median_coverage' : 0}
+
+        for samp, vals in self.parsed_stats.items():
+            for k, v in vals.items():
+                report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
+                rowcounts[k] += 1
+
+        # Remove header if we don't have any filled cells for it (eg. % dups in older FastQC reports)
+        for k in rowcounts.keys():
+            if rowcounts[k] == 0:
+                report['general_stats']['headers'].pop(k, None)
