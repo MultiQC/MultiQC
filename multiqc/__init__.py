@@ -2,8 +2,11 @@
 
 """ MultiQC modules base class, contains helper functions """
 
+from __future__ import print_function
 from collections import OrderedDict
+import io
 import json
+import mimetypes
 import os
 import random
 
@@ -16,6 +19,87 @@ class BaseMultiqcModule(object):
     def __init__(self):
         pass
 
+    def find_log_files(self, fn_match=None, contents_match=None, filehandles=False):
+        """
+        Search the analysis directory for log files of interest. Can take either a filename
+        suffix or a search string to return only log files that contain relevant info.
+        :param fn_match: Optional string or list of strings. Filename suffixes to search for.
+        :param contents_match: Optional string or list of strings to look for in file.
+        NB: Both searches return file if *any* of the supplied strings are matched.
+        :param filehandles: Set to true to return a file handle instead of slurped file contents
+        :return: Yields a set with two items - a sample name generated from the filename
+                 and either the file contents or file handle for the current matched file.
+                 As yield is used, the function can be iterated over without 
+        """
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
+            for fn in filenames:
+                
+                # Make a sample name from the filename
+                s_name = self.clean_s_name(fn, root)
+                
+                # Make search strings into lists if a string is given
+                if type(fn_match) is str:
+                    fn_match = [fn_match]
+                if type(contents_match) is str:
+                    contents_match = [contents_match]
+                
+                # Search for file names ending in a certain string
+                readfile = False
+                if fn_match is not None:
+                    for m in fn_match:
+                        if m in fn:
+                            readfile = True
+                            break
+                else:
+                    readfile = True
+                    # Limit search to files under 1MB to avoid 30GB FastQ files etc.
+                    try:
+                        filesize = os.path.getsize(os.path.join(root,fn))
+                    except (IOError, OSError, ValueError, UnicodeDecodeError):
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+                        readfile = False
+                    else:
+                        if filesize > 1000000:
+                            readfile = False
+                    
+                    # Use mimetypes to exclude binary files where possible
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+                    if encoding is not None:
+                        readfile = False # eg. gzipped files
+                    if ftype is None or ftype.startswith('text') is False:
+                        readfile = False # eg. images - 'image/jpeg'
+                            
+                if readfile:
+                    try:
+                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                            # Search this file for our string of interest
+                            returnfile = False
+                            if contents_match is not None:
+                                for line in f:
+                                    for m in contents_match:
+                                        if m in line:
+                                            returnfile = True
+                                            break
+                                f.seek(0)
+                            else:
+                                returnfile = True
+                            
+                            # Give back what was asked for. Yield instead of return
+                            # so that this function can be used as an interator
+                            # without loading all files at once.
+                            if returnfile:
+                                if filehandles:
+                                    yield {'s_name': s_name, 'f': f, 'root': root}
+                                else:
+                                    yield {'s_name': s_name, 'f': f.read(), 'root': root}
+                    except (IOError, OSError, ValueError, UnicodeDecodeError):
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+    
+    def write_csv_file(self, data, fn):
+        with io.open (os.path.join(config.output_dir, 'report_data', fn), "w", encoding='utf-8') as f:
+            print( self.dict_to_csv( data ), file=f)
+    
+    
     def clean_s_name(self, s_name, root):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.

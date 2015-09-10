@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import io
 import json
 import logging
 import mmap
@@ -32,20 +31,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any Bowtie reports
         self.bowtie_data = dict()
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                try:
-                    if os.path.getsize(os.path.join(root,fn)) < 200000:
-                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                            s = f.read()
-                            parsed_data = self.parse_bowtie_logs(s)
-                            if parsed_data is not None:
-                                s_name = self.clean_s_name(fn, root)
-                                if s_name in self.bowtie_data:
-                                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                                self.bowtie_data[s_name] = parsed_data
-                except (OSError, ValueError, UnicodeDecodeError):
-                    log.debug("Couldn't read file when looking for output: {}".format(fn))
+        for f in self.find_log_files(contents_match='# reads processed:'):
+            parsed_data = self.parse_bowtie_logs(f['f'])
+            if parsed_data is not None:
+                if f['s_name'] in self.bowtie_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.bowtie_data[f['s_name']] = parsed_data
 
         if len(self.bowtie_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -54,8 +45,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.bowtie_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_bowtie1.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.bowtie_data.items() } ), file=f)
+        self.write_csv_file(self.bowtie_data, 'multiqc_bowtie1.txt')
 
         self.sections = list()
 
@@ -71,24 +61,22 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def parse_bowtie_logs(self, s):
         # Check that this isn't actually Bismark using bowtie
         if s.find('Using bowtie 1 for aligning with bismark.', 0) >= 0: return None
-        i = s.find('# reads processed:', 0)
         parsed_data = {}
-        if i >= 0:
-            regexes = {
-                'reads_processed': r"# reads processed:\s+(\d+)",
-                'reads_aligned': r"# reads with at least one reported alignment:\s+(\d+)",
-                'reads_aligned_percentage': r"# reads with at least one reported alignment:\s+\d+\s+\(([\d\.]+)%\)",
-                'not_aligned': r"# reads that failed to align:\s+(\d+)",
-                'not_aligned_percentage': r"# reads that failed to align:\s+\d+\s+\(([\d\.]+)%\)",
-                'multimapped': r"# reads with alignments suppressed due to -m:\s+(\d+)",
-                'multimapped_percentage': r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)"
-            }
-
-            for k, r in regexes.items():
-                match = re.search(r, s)
-                if match:
-                    parsed_data[k] = float(match.group(1).replace(',', ''))
-        if len(parsed_data) == 0: return None
+        regexes = {
+            'reads_processed': r"# reads processed:\s+(\d+)",
+            'reads_aligned': r"# reads with at least one reported alignment:\s+(\d+)",
+            'reads_aligned_percentage': r"# reads with at least one reported alignment:\s+\d+\s+\(([\d\.]+)%\)",
+            'not_aligned': r"# reads that failed to align:\s+(\d+)",
+            'not_aligned_percentage': r"# reads that failed to align:\s+\d+\s+\(([\d\.]+)%\)",
+            'multimapped': r"# reads with alignments suppressed due to -m:\s+(\d+)",
+            'multimapped_percentage': r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)"
+        }
+        for k, r in regexes.items():
+            match = re.search(r, s)
+            if match:
+                parsed_data[k] = float(match.group(1).replace(',', ''))
+        if len(parsed_data) == 0:
+            return None
         return parsed_data
 
 

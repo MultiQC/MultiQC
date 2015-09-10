@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import io
 import json
 import logging
 import mmap
@@ -31,18 +30,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             is an ultrafast universal RNA-seq aligner.</p>'
 
         # Find and load any STAR reports
-        self.star_data = defaultdict(lambda:dict())
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                if fn.endswith('Log.final.out'):
-                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                        parsed_data = self.parse_star_report(f.read())
-                        if parsed_data is not None:
-                            s_name = fn[:-13]
-                            s_name = self.clean_s_name(s_name, root)
-                            if s_name in self.star_data:
-                                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                            self.star_data[s_name] = parsed_data
+        self.star_data = dict()
+        for f in self.find_log_files('Log.final.out'):
+            parsed_data = self.parse_star_report(f['f'])
+            if parsed_data is not None:
+                if f['s_name'] in self.star_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.star_data[f['s_name']] = parsed_data
 
         if len(self.star_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -51,8 +45,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.star_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_star.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( self.star_data ), file=f)
+        self.write_csv_file(self.star_data, 'multiqc_star.txt')
 
         self.sections = list()
 

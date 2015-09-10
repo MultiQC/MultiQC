@@ -32,74 +32,84 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             composition of the library matches with what you expect.</p>'
 
         # Find and load any FastQ Screen reports
-        fq_screen_raw_data = {}
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                if fn.endswith("_screen.txt"):
-                    s_name = fn[:-11]
-                    s_name = self.clean_s_name(s_name, root)
-                    try:
-                        with open (os.path.join(root,fn), "r") as f:
-                            if s_name in fq_screen_raw_data:
-                                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                            fq_screen_raw_data[s_name] = f.read()
-                    except ValueError:
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+        self.fq_screen_data = dict()
+        for f in self.find_log_files('_screen.txt', filehandles=True):
+            parsed_data = self.parse_fqscreen(f['f'])
+            if parsed_data is not None:
+                if f['s_name'] in self.fq_screen_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.fq_screen_data[f['s_name']] = parsed_data
 
-        if len(fq_screen_raw_data) == 0:
+        if len(self.fq_screen_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} reports".format(len(fq_screen_raw_data)))
+        log.info("Found {} reports".format(len(self.fq_screen_data)))
 
         self.sections = list()
 
         # Section 1 - Alignment Profiles
-        fq_screen_data = self.parse_fqscreen(fq_screen_raw_data)
-        self.intro += self.fqscreen_plot(fq_screen_data)
+        self.intro += self.fqscreen_plot()
         
-        # TODO - Write parsed report data to a file
-        # with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_fastq_screen.txt'), "w", encoding='utf-8') as f:
-        #     print( self.dict_to_csv(fq_screen_data), file=f)
+        # Write the total counts and percentages to files
+        (total_counts, total_percentages) = self.get_totals()
+        self.write_csv_file(total_counts, 'multiqc_fastq_screen_counts.txt')
+        self.write_csv_file(total_percentages, 'multiqc_fastq_screen_percentages.txt')
 
 
-    def parse_fqscreen(self, fq_screen_raw_data):
+    def parse_fqscreen(self, fh):
         """ Parse the FastQ Screen output into a 3D dict """
-        parsed_data = dict()
-        for s, data in fq_screen_raw_data.items():
-            parsed_data[s] = OrderedDict()
-            for l in data.splitlines():
-                if l[:18] == "%Hit_no_libraries:":
-                    org = 'No hits'
-                    parsed_data[s][org] = {'percentages':{}}
-                    parsed_data[s][org]['percentages']['one_hit_one_library'] = float(l[19:])
-                    parsed_data[s][org]['percentages']['unmapped'] = 0
-                    parsed_data[s][org]['percentages']['multiple_hits_one_library'] = 0
-                    parsed_data[s][org]['percentages']['one_hit_multiple_libraries'] = 0
-                    parsed_data[s][org]['percentages']['multiple_hits_multiple_libraries'] = 0
-                else:
-                    fqs = re.search(r"^(\w+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
-                    if fqs:
-                        org = fqs.group(1)
-                        parsed_data[s][org] = {'percentages':{}, 'counts':{}}
-                        parsed_data[s][org]['counts']['reads_processed'] = int(fqs.group(2))
-                        parsed_data[s][org]['counts']['unmapped'] = int(fqs.group(3))
-                        parsed_data[s][org]['percentages']['unmapped'] = float(fqs.group(4))
-                        parsed_data[s][org]['counts']['one_hit_one_library'] = int(fqs.group(5))
-                        parsed_data[s][org]['percentages']['one_hit_one_library'] = float(fqs.group(6))
-                        parsed_data[s][org]['counts']['multiple_hits_one_library'] = int(fqs.group(7))
-                        parsed_data[s][org]['percentages']['multiple_hits_one_library'] = float(fqs.group(8))
-                        parsed_data[s][org]['counts']['one_hit_multiple_libraries'] = int(fqs.group(9))
-                        parsed_data[s][org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
-                        parsed_data[s][org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
-                        parsed_data[s][org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
-            if len(parsed_data[s]) == 0:
-                log.warning("Could not parse report {}".format(s))
-                parsed_data.pop(s, None)
-
+        parsed_data = OrderedDict()
+        for l in fh:
+            if l.startswith('%Hit_no_libraries:'):
+                org = 'No hits'
+                parsed_data[org] = {'percentages':{}}
+                parsed_data[org]['percentages']['one_hit_one_library'] = float(l[19:])
+                parsed_data[org]['percentages']['unmapped'] = 0
+                parsed_data[org]['percentages']['multiple_hits_one_library'] = 0
+                parsed_data[org]['percentages']['one_hit_multiple_libraries'] = 0
+                parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = 0
+            else:
+                fqs = re.search(r"^(\w+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
+                if fqs:
+                    org = fqs.group(1)
+                    parsed_data[org] = {'percentages':{}, 'counts':{}}
+                    parsed_data[org]['counts']['reads_processed'] = int(fqs.group(2))
+                    parsed_data[org]['counts']['unmapped'] = int(fqs.group(3))
+                    parsed_data[org]['percentages']['unmapped'] = float(fqs.group(4))
+                    parsed_data[org]['counts']['one_hit_one_library'] = int(fqs.group(5))
+                    parsed_data[org]['percentages']['one_hit_one_library'] = float(fqs.group(6))
+                    parsed_data[org]['counts']['multiple_hits_one_library'] = int(fqs.group(7))
+                    parsed_data[org]['percentages']['multiple_hits_one_library'] = float(fqs.group(8))
+                    parsed_data[org]['counts']['one_hit_multiple_libraries'] = int(fqs.group(9))
+                    parsed_data[org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
+                    parsed_data[org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
+                    parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
+        if len(parsed_data) == 0: return None
         return parsed_data
+    
+    def get_totals(self):
+        total_counts = OrderedDict()
+        total_percentages = OrderedDict()
+        for s in sorted(self.fq_screen_data.keys()):
+            total_counts[s] = OrderedDict()
+            total_percentages[s] = OrderedDict()
+            for org in self.fq_screen_data[s]:
+                try:
+                    total_counts[s][org] = self.fq_screen_data[s][org]['counts']['one_hit_one_library']
+                    total_counts[s][org] += self.fq_screen_data[s][org]['counts']['multiple_hits_one_library']
+                    total_counts[s][org] += self.fq_screen_data[s][org]['counts']['one_hit_multiple_libraries']
+                    total_counts[s][org] += self.fq_screen_data[s][org]['counts']['multiple_hits_multiple_libraries']
+                except KeyError: pass
+                try:
+                    total_percentages[s][org] = self.fq_screen_data[s][org]['percentages']['one_hit_one_library']
+                    total_percentages[s][org] += self.fq_screen_data[s][org]['percentages']['multiple_hits_one_library']
+                    total_percentages[s][org] += self.fq_screen_data[s][org]['percentages']['one_hit_multiple_libraries']
+                    total_percentages[s][org] += self.fq_screen_data[s][org]['percentages']['multiple_hits_multiple_libraries']
+                except KeyError: pass
+        return (total_counts, total_percentages)
 
-    def fqscreen_plot (self, parsed_data):
+    def fqscreen_plot (self):
         categories = list()
         getCats = True
         data = list()
@@ -110,12 +120,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Library' }
         for k, t in p_types.items():
             first = True
-            for s in sorted(parsed_data):
+            for s in sorted(self.fq_screen_data.keys()):
                 thisdata = list()
                 if len(categories) > 0:
                     getCats = False
-                for org in parsed_data[s]:
-                    thisdata.append(parsed_data[s][org]['percentages'][k])
+                for org in self.fq_screen_data[s]:
+                    thisdata.append(self.fq_screen_data[s][org]['percentages'][k])
                     if getCats:
                         categories.append(org)
                 td = {
