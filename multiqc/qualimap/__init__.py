@@ -35,9 +35,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
                     for l in gr:
                         if 'bam file' in l:
-                            s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root, prepend_dirs=config.prepend_dirs)
+                            s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
 
-                s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
+                s_name = self.clean_s_name(s_name, root)
                 if s_name in qualimap_raw_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 

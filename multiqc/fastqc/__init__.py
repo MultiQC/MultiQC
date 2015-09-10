@@ -61,7 +61,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                 if fn_search:
                     s_name = fn_search.group(1).strip()
-                s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs, trimmed=False)
+                s_name = self.clean_s_name(s_name, root, trimmed=False)
                 if s_name in fastqc_raw_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 fastqc_raw_data[s_name] = r_data
@@ -89,7 +89,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                         if fn_search:
                             s_name = fn_search.group(1).strip()
-                        s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs, trimmed=False)
+                        s_name = self.clean_s_name(s_name, root, trimmed=False)
                         if s_name in fastqc_raw_data:
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                         fastqc_raw_data[s_name] = r_data

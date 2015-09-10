@@ -39,7 +39,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search("Bismark report for: (\S+)", r_data)
                         if fn_search:
                             s_name = os.path.basename(fn_search.group(1))
-                            s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
+                            s_name = self.clean_s_name(s_name, root)
                             if s_name in self.bismark_raw_data and 'alignment' in self.bismark_raw_data[s_name]:
                                 log.debug("Duplicate alignment report sample name found! Overwriting: {}".format(s_name))
                             self.bismark_raw_data[s_name]['alignment'] = r_data
@@ -52,7 +52,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search("Total number of alignments analysed in (\S+)", r_data)
                         if fn_search:
                             s_name = os.path.basename(fn_search.group(1))
-                            s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
+                            s_name = self.clean_s_name(s_name, root)
                             if s_name in self.bismark_raw_data and 'dedup' in self.bismark_raw_data[s_name]:
                                 log.debug("Duplicate deduplication report sample name found! Overwriting: {}".format(s_name))
                             self.bismark_raw_data[s_name]['dedup'] = r_data
@@ -63,7 +63,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         r_data = f.read()
                         s_name = os.path.basename(r_data.splitlines()[0])
-                        s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
+                        s_name = self.clean_s_name(s_name, root)
                         if s_name in self.bismark_raw_data and 'methextract' in self.bismark_raw_data[s_name]:
                             log.debug("Duplicate methextract report sample name found! Overwriting: {}".format(s_name))
                         self.bismark_raw_data[s_name]['methextract'] = r_data

@@ -40,7 +40,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     else:
                         s_name = fn[:-17]
                     s_name = s_name.split("_tophat",1)[0]
-                    s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
+                    s_name = self.clean_s_name(s_name, root)
                     
                     try:
                         with open (os.path.join(root,fn), "r") as f:

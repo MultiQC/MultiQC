@@ -7,6 +7,8 @@ import json
 import os
 import random
 
+from multiqc import config
+
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
@@ -14,7 +16,7 @@ class BaseMultiqcModule(object):
     def __init__(self):
         pass
 
-    def clean_s_name(self, s_name, root, prepend_dirs=False, trimmed=True):
+    def clean_s_name(self, s_name, root, trimmed=True):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
@@ -34,7 +36,7 @@ class BaseMultiqcModule(object):
             s_name = s_name.split("_val_1",1)[0]
             s_name = s_name.split("_val_2",1)[0]
             s_name = s_name.split("_trimmed",1)[0]
-        if prepend_dirs:
+        if config.prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
     

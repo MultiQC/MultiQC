@@ -80,7 +80,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             s_name = fn_search.group(1).decode()
             s_name = s_name.split(".txt",1)[0]
             s_name = s_name.split("_trimming_report",1)[0]
-            s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
+            s_name = self.clean_s_name(s_name, root)
             
             if s_name in self.cutadapt_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
