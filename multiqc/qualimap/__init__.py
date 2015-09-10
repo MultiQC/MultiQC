@@ -72,10 +72,6 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 })
             })
 
-        # Add the median coverage to the general stats table
-        for sn, vals in histogram_data.iteritems():
-            self.parsed_stats[sn]['median_coverage'] = vals['median_coverage']
-
         # Section 2 - Insert size histogram
         histogram_data = self.qualimap_ins_size_his(qualimap_raw_data)
         if len(histogram_data) > 0:
@@ -88,13 +84,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     'xlab': 'Insert Size (bp)',
                     'ymin': 0,
                     'xmin': 0,
-                    'tt_label': '<b>{point.x} insert size (bd)</b>',
+                    'tt_label': '<b>{point.x} insert size (bd) </b>',
                 })
             })
-
-        # Add the median insert size to the general stats table
-        for sn, vals in histogram_data.iteritems():
-            self.parsed_stats[sn]['median_insert_size'] = vals['median_insert_size']
 
         # General stats table
         self.qualimap_stats_table(report)
@@ -130,7 +122,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         median_coverage = thiscov
                         break
 
-                parsed_data[sn]['median_coverage'] = median_coverage
+                # Add median to the general stats table
+                self.parsed_stats[sn]['median_coverage'] = median_coverage
 
         return parsed_data
 
@@ -169,7 +162,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         median_insert_size = thisins
                         break
 
-                parsed_data[sn]['median_insert_size'] = median_insert_size
+                # Add the median insert size to the general stats table
+                self.parsed_stats[sn]['median_insert_size'] = median_insert_size
 
         return parsed_data
 
