@@ -90,9 +90,9 @@ class BaseMultiqcModule(object):
                             # without loading all files at once.
                             if returnfile:
                                 if filehandles:
-                                    yield {'s_name': s_name, 'f': f, 'root': root}
+                                    yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
                                 else:
-                                    yield {'s_name': s_name, 'f': f.read(), 'root': root}
+                                    yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
                     except (IOError, OSError, ValueError, UnicodeDecodeError):
                         self.log.debug("Couldn't read file when looking for output: {}".format(fn))
     

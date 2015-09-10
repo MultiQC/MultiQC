@@ -70,12 +70,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
-                    if s_name in self.picard_dupMetrics_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                    self.picard_dupMetrics_data[s_name] = dict()
             
             if s_name is not None:
                 if 'picard.sam.DuplicationMetrics' in l and '## METRICS CLASS' in l:
+                    if s_name in self.picard_dupMetrics_data:
+                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.picard_dupMetrics_data[s_name] = dict()
                     keys = f['f'].next().split("\t")
                     vals = f['f'].next().split("\t")
                     for i, k in enumerate(keys):
@@ -85,6 +85,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             self.picard_dupMetrics_data[s_name][k] = vals[i]
                     s_name = None
         
+        for s_name in self.picard_dupMetrics_data.keys():
+            if len(self.picard_dupMetrics_data[s_name]) == 0:
+                self.picard_dupMetrics_data.pop(s_name, None)
+                log.debug("Removing {} as no data parsed".format(s_name))
+        
     
     def picard_stats_table(self):
         """ Take the parsed stats from the Picard report and add them to the
@@ -92,7 +97,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         config.general_stats['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">% Dups</span></th>'
         for sn, data in self.picard_dupMetrics_data.items():
-            config.general_stats['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
+            try:
+                config.general_stats['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
+            except KeyError:
+                print(sn)
+                print(self.picard_dupMetrics_data)
 
     def mark_duplicates_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
