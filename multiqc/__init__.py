@@ -53,38 +53,47 @@ class BaseMultiqcModule(object):
                 else:
                     readfile = True
                     # Limit search to files under 1MB to avoid 30GB FastQ files etc.
-                    filesize = os.path.getsize(os.path.join(root,fn))
-                    if filesize > 1000000:
+                    try:
+                        filesize = os.path.getsize(os.path.join(root,fn))
+                    except (IOError, OSError, ValueError, UnicodeDecodeError):
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
                         readfile = False
+                    else:
+                        if filesize > 1000000:
+                            readfile = False
                     
                     # Use mimetypes to exclude binary files where possible
-                    (ftype, encoding) = mimetypes.guess_type(fn)
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
                     if encoding is not None:
                         readfile = False # eg. gzipped files
-                    if ftype.startswith('text') is False:
+                    if ftype is None or ftype.startswith('text') is False:
                         readfile = False # eg. images - 'image/jpeg'
                             
                 if readfile:
-                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                        # Search this file for our string of interest
-                        returnfile = False
-                        if contents_match is not None:
-                            for line in f:
-                                for m in contents_match:
-                                    if m in line:
-                                        returnfile = True
-                                        break
-                        else:
-                            returnfile = True
-                        
-                        # Give back what was asked for. Yield instead of return
-                        # so that this function can be used as an interator
-                        # without loading all files at once.
-                        if returnfile:
-                            if filehandles:
-                                yield (s_name, f)
+                    try:
+                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                            # Search this file for our string of interest
+                            returnfile = False
+                            if contents_match is not None:
+                                for line in f:
+                                    for m in contents_match:
+                                        if m in line:
+                                            returnfile = True
+                                            break
+                                f.seek(0)
                             else:
-                                yield (s_name, f.read() )
+                                returnfile = True
+                            
+                            # Give back what was asked for. Yield instead of return
+                            # so that this function can be used as an interator
+                            # without loading all files at once.
+                            if returnfile:
+                                if filehandles:
+                                    yield {'s_name': s_name, 'f': f, 'root': root}
+                                else:
+                                    yield {'s_name': s_name, 'f': f.read(), 'root': root}
+                    except (IOError, OSError, ValueError, UnicodeDecodeError):
+                        log.debug("Couldn't read file when looking for output: {}".format(fn))
     
     def write_csv_file(self, data, fn):
         with io.open (os.path.join(config.output_dir, 'report_data', fn), "w", encoding='utf-8') as f:

@@ -32,20 +32,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                try:
-                    if os.path.getsize(os.path.join(root,fn)) < 200000:
-                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                            s = f.read()
-                            parsed_data = self.parse_bowtie2_logs(s)
-                            if parsed_data is not None:
-                                s_name = self.clean_s_name(fn, root)
-                                if s_name in self.bowtie2_data:
-                                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                                self.bowtie2_data[s_name] = parsed_data
-                except (OSError, ValueError, UnicodeDecodeError):
-                    log.debug("Couldn't read file when looking for output: {}".format(fn))
+        for f in self.find_log_files(contents_match='reads; of these:'):
+            parsed_data = self.parse_bowtie2_logs(f['f'])
+            if parsed_data is not None:
+                if f['s_name'] in self.bowtie2_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.bowtie2_data[f['s_name']] = parsed_data
 
         if len(self.bowtie2_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -54,9 +46,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.bowtie2_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_bowtie2.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.bowtie2_data.items() } ), file=f)
-
+        self.write_csv_file(self.bowtie2_data, 'multiqc_bowtie2.txt')
+        
         self.sections = list()
 
         # Basic Stats Table
@@ -71,24 +62,22 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def parse_bowtie2_logs(self, s):
         # Check that this isn't actually Bismark using bowtie
         if s.find('Using bowtie 2 for aligning with bismark.', 0) >= 0: return None
-        i = s.find('reads; of these:', 0)
         parsed_data = {}
-        if i >= 0:
-            regexes = {
-                'reads_processed': r"(\d+) reads; of these:",
-                'reads_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?exactly 1 time",
-                'reads_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?exactly 1 time",
-                'not_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?0 times",
-                'not_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?0 times",
-                'multimapped': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?>1 times",
-                'multimapped_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?>1 times",
-                'overall_aligned_rate': r"([\d\.]+)% overall alignment rate",
-            }
+        regexes = {
+            'reads_processed': r"(\d+) reads; of these:",
+            'reads_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?exactly 1 time",
+            'reads_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?exactly 1 time",
+            'not_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?0 times",
+            'not_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?0 times",
+            'multimapped': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?>1 times",
+            'multimapped_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?>1 times",
+            'overall_aligned_rate': r"([\d\.]+)% overall alignment rate",
+        }
 
-            for k, r in regexes.items():
-                match = re.search(r, s)
-                if match:
-                    parsed_data[k] = float(match.group(1).replace(',', ''))
+        for k, r in regexes.items():
+            match = re.search(r, s)
+            if match:
+                parsed_data[k] = float(match.group(1).replace(',', ''))
             
         if len(parsed_data) == 0: return None
         parsed_data['reads_other'] = parsed_data['reads_processed'] - parsed_data.get('reads_aligned', 0) - parsed_data.get('not_aligned', 0) - parsed_data.get('multimapped', 0)

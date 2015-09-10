@@ -31,12 +31,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any STAR reports
         self.star_data = dict()
-        for (s_name, f) in self.find_log_files('Log.final.out'):
-            parsed_data = self.parse_star_report(f)
+        for f in self.find_log_files('Log.final.out'):
+            parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
-                if s_name in self.star_data:
+                if f['s_name'] in self.star_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.star_data[s_name] = parsed_data
+                self.star_data[f['s_name']] = parsed_data
 
         if len(self.star_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
