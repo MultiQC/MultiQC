@@ -21,7 +21,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__()
+        super(MultiqcModule, self).__init__(log)
 
         # Static variables
         self.name = "Cutadapt"
@@ -35,15 +35,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.cutadapt_length_counts = dict()
         self.cutadapt_length_exp = dict()
         self.cutadapt_length_obsexp = dict()
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                try:
-                    if os.path.getsize(os.path.join(root,fn)) < 200000:
-                        with open (os.path.join(root,fn), "r") as f:
-                            s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                            self.parse_cutadapt_logs(s, root)
-                except (OSError, ValueError, UnicodeDecodeError):
-                    log.debug("Couldn't read file when looking for output: {}".format(fn))
+        
+        for f in self.find_log_files(contents_match='This is cutadapt', filehandles=True):
+            self.parse_cutadapt_logs(f)        
 
         if len(self.cutadapt_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -67,68 +61,61 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.intro += self.cutadapt_length_trimmed_plot()
 
 
-    def parse_cutadapt_logs(self, s, root):
-        i = s.find(b'Input filename', 0)
-        while i >= 0:
-            s.seek(i)
-
-            fn_search = re.search(br"^Input filename:\s+(.+)$", s.readline())
-            while fn_search is None:
-                l = s.readline()
-                if not l: return # end of file
-                fn_search = re.search(br"^Input filename:\s+(.+)$", l)
-            s_name = fn_search.group(1).decode()
-            s_name = s_name.split(".txt",1)[0]
-            s_name = s_name.split("_trimming_report",1)[0]
-            s_name = self.clean_s_name(s_name, root)
+    def parse_cutadapt_logs(self, f):
+        """ Go through log file looking for cutadapt output """
+        fh = f['f']
+        regexes = {
+            'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",
+            'bp_written': "Total written \(filtered\):\s*([\d,]+) bp",
+            'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
+            'r_processed': "Total reads processed:\s*([\d,]+)",
+            'r_with_adapters': "Reads with adapters:\s*([\d,]+)"
+        }
+        s_name = None
+        for l in fh:
+            # New log starting
+            if l.startswith('This is cutadapt'):
+                s_name = None
             
-            if s_name in self.cutadapt_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            self.cutadapt_data[s_name] = dict()
-            regexes = {
-                'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",
-                'bp_written': "Total written \(filtered\):\s*([\d,]+) bp",
-                'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
-                'r_processed': "Total reads processed:\s*([\d,]+)",
-                'r_with_adapters': "Reads with adapters:\s*([\d,]+)"
-            }
-
-            l = s.readline()
-            while l:
+            # Get sample name from end of command line params
+            if l.startswith('Command line parameters'):
+                s_name = l.split()[-1]
+                s_name = self.clean_s_name(s_name, f['root'])
+                if s_name in self.cutadapt_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.cutadapt_data[s_name] = dict()
+                self.cutadapt_length_counts[s_name] = dict()
+                self.cutadapt_length_exp[s_name] = dict()
+                self.cutadapt_length_obsexp[s_name] = dict()
+            
+            if s_name is not None:
+                # Search regexes for overview stats
                 for k, r in regexes.items():
-                    match = re.search(r.encode('utf-8'), l)
+                    match = re.search(r, l)
                     if match:
-                        self.cutadapt_data[s_name][k] = int(match.group(1).decode().replace(',', ''))
+                        self.cutadapt_data[s_name][k] = int(match.group(1).replace(',', ''))
 
-                if l.find(b'length') > -1 and l.find(b'max.err') > -1:
-                    l = s.readline()
-                    r_seqs = re.search(br"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
-                    self.cutadapt_length_counts[s_name] = {}
-                    self.cutadapt_length_exp[s_name] = {}
-                    self.cutadapt_length_obsexp[s_name] = {}
-                    while r_seqs:
-                        a_len = int(r_seqs.group(1))
-                        self.cutadapt_length_counts[s_name][a_len] = int(r_seqs.group(2))
-                        self.cutadapt_length_exp[s_name][a_len] = float(r_seqs.group(3))
-                        if float(r_seqs.group(3)) > 0:
-                            self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2)) / float(r_seqs.group(3))
+                if 'length' in l and 'count' in l and 'expect' in l:
+                    # Nested loop to read this section while the regex matches
+                    for l in fh:
+                        r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", l)
+                        if r_seqs:
+                            a_len = int(r_seqs.group(1))
+                            self.cutadapt_length_counts[s_name][a_len] = int(r_seqs.group(2))
+                            self.cutadapt_length_exp[s_name][a_len] = float(r_seqs.group(3))
+                            if float(r_seqs.group(3)) > 0:
+                                self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2)) / float(r_seqs.group(3))
+                            else:
+                                # Cheating, I know. Infinity is difficult to plot.
+                                self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2))
                         else:
-                            # Cheating, I know. Infinity is difficult to plot.
-                            self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2))
-
-                        l = s.readline() # Push on to next line for regex
-                        r_seqs = re.search(br"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
-
-                if len(self.cutadapt_data[s_name]) == len(regexes) + 1: break # Found everything we need
-                if l.find(b'Input filename') > -1: break # Didn't find everything, but come across another sample
-
-                l = s.readline() # Next line for while loop
-
+                            break
+        
+        # Calculate a few extra numbers of our own
+        for s_name in self.cutadapt_data.keys():
             if 'bp_processed' in self.cutadapt_data[s_name] and 'bp_written' in self.cutadapt_data[s_name]:
                 self.cutadapt_data[s_name]['percent_trimmed'] = (float(self.cutadapt_data[s_name]['bp_processed'] - self.cutadapt_data[s_name]['bp_written']) / self.cutadapt_data[s_name]['bp_processed']) * 100
 
-            # Look for the next cutadapt output in this file
-            i = s.find(b'This is cutadapt', i + 1)
 
 
     def cutadapt_general_stats_table(self):
@@ -138,6 +125,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         config.general_stats['headers']['bp_trimmed'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="% Total Base Pairs trimmed by Cutadapt">Trimmed</span></th>'
         for samp, vals in self.cutadapt_data.items():
             config.general_stats['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
+    
 
     def cutadapt_length_trimmed_plot (self):
         """ Generate the trimming length plot """

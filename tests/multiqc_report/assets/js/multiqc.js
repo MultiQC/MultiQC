@@ -34,12 +34,17 @@ $(function () {
     // Switch data source
     if(action == 'set_data'){
       var ds = $(this).data('newdata');
-      plot_options.series = window[ds];
-      var ylab = $(this).data('ylab');
-      if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
-      var xlab = $(this).data('xlab');
-      if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
-      $(target).highcharts(plot_options);
+      var data = eval(ds);
+      if(data === undefined){
+        console.log('Error switching plot dataset - '+ds+' not found..');
+      } else {
+        plot_options.series = data;
+        var ylab = $(this).data('ylab');
+        if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
+        var xlab = $(this).data('xlab');
+        if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
+        $(target).highcharts(plot_options);
+      }
     }
   });
 
@@ -69,6 +74,22 @@ $(function () {
     $(document).on('mousemove', function(me){
       wrapper.css('height', startHeight + (me.pageY - pY));
     });
+  });
+  
+  // Show the overlay plots again (clicking the original)
+  $('.original-plot').click(function(){
+    $(this).closest('.showhide_orig').next('.hc-plot').slideDown();
+    $(this).closest('.showhide_orig').slideUp();
+    $(this).closest('.mqc-section').find('.instr').text('Click to show original FastQC plot.');
+    highlight_fade_text($(this).closest('.mqc-section').find('.instr'));
+  });
+
+  // prev / next buttons for original images
+  $('.original_plot_prev_btn, .original_plot_nxt_btn').click(function(e){
+    e.preventDefault();
+    var name = $(this).attr('href').substr(1);
+    var target = $(this).data('target').substr(1);
+    hc_original_chg_source (name, target);
   });
   
   // Make rows in general stats table sortable
@@ -244,6 +265,20 @@ function plot_xy_line_graph(div, data, config){
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
+  if (config['orig_click_func'] === true){
+    config['cursor'] = 'pointer';
+    config['click_func'] = function (e) {
+      var id = e.toElement.offsetParent.offsetParent.id;
+      var p = $('#'+id).parent();
+      if(id !== undefined){
+        hc_original_chg_source (this.series.name, id);
+        p.find('.showhide_orig').delay(100).slideDown();
+        p.find('.hc-plot').delay(100).slideUp();
+      }
+      // Fire off a custom jQuery event for other javascript chunks to tie into
+      $('#'+id).trigger('mqc_original_series_click', [this.series.name]);
+    }
+  }
   highcharts_plot_options[div] = {
     chart: {
       renderTo: div.replace('#',''),
@@ -598,5 +633,49 @@ function apply_mqc_hidesamples(){
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
+  
+}
+
+
+// Update an original plot source
+function hc_original_chg_source (name, id) {
+  
+  try {
+    var names = eval(id+'_orig_plots');
+  } catch(err) {
+    console.log("Couldn't find original plot names array for "+id+'_orig_plots - '+err);
+    return false;
+  }
+  
+  var target = $('#'+id).parent();
+  
+  // Find the image source
+  var src = undefined;
+  var i;
+  $.each(names, function(idx, n){
+    if(n['s_name'] == name){
+      src = n['img_path'];
+      i = idx;
+    }
+  });
+  if(src !== undefined){
+    target.find('img.original-plot').attr('src', src);
+    target.find('.s_name').text(name);
+
+    var l = names.length;
+    var n_i = i+1 < l ? i+1 : 0;
+    var p_i = i-1 >= 0 ? i-1 : l - 1;
+    var n = names[n_i]['s_name'];
+    var p = names[p_i]['s_name'];
+    target.find('.original_plot_prev_btn').attr('href', '#'+p);
+    target.find('.original_plot_nxt_btn').attr('href', '#'+n);
+    if(target.closest('.mqc-section').find('.instr').text() != "Click plot to return to overview plot."){
+      target.closest('.mqc-section').find('.instr').text("Click plot to return to overview plot.");
+      highlight_fade_text(target.closest('.mqc-section').find('.instr'));
+    }
+  }
+  
+  // Fire off a custom jQuery event for other javascript chunks to tie into
+  target.trigger('mqc_original_chg_source', [name]);
   
 }

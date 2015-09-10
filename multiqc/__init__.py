@@ -16,8 +16,8 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, log):
+        self.log = log
 
     def find_log_files(self, fn_match=None, contents_match=None, filehandles=False):
         """
@@ -32,6 +32,7 @@ class BaseMultiqcModule(object):
                  As yield is used, the function can be iterated over without 
         """
         for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
+            
             for fn in filenames:
                 
                 # Make a sample name from the filename
@@ -66,7 +67,7 @@ class BaseMultiqcModule(object):
                     (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
                     if encoding is not None:
                         readfile = False # eg. gzipped files
-                    if ftype is None or ftype.startswith('text') is False:
+                    if ftype is not None and ftype.startswith('text') is False:
                         readfile = False # eg. images - 'image/jpeg'
                             
                 if readfile:
@@ -89,15 +90,11 @@ class BaseMultiqcModule(object):
                             # without loading all files at once.
                             if returnfile:
                                 if filehandles:
-                                    yield {'s_name': s_name, 'f': f, 'root': root}
+                                    yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
                                 else:
-                                    yield {'s_name': s_name, 'f': f.read(), 'root': root}
+                                    yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
                     except (IOError, OSError, ValueError, UnicodeDecodeError):
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
-    
-    def write_csv_file(self, data, fn):
-        with io.open (os.path.join(config.output_dir, 'report_data', fn), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( data ), file=f)
+                        self.log.debug("Couldn't read file when looking for output: {}".format(fn))
     
     
     def clean_s_name(self, s_name, root):
@@ -116,6 +113,7 @@ class BaseMultiqcModule(object):
         s_name = s_name.split(".bam",1)[0]
         s_name = s_name.split(".sam",1)[0]
         s_name = s_name.split("_tophat",1)[0]
+        s_name = s_name.split("_star_aligned",1)[0]
         if config.prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
@@ -146,7 +144,7 @@ class BaseMultiqcModule(object):
                 for k, p in d[s].items():
                     pairs.append([k, p])
                     maxval = max(maxval, p)
-                if maxval > 0 or config['hide_empty'] is not True:
+                if maxval > 0 or config.get('hide_empty') is not True:
                     thisplotdata.append({
                         'name': s,
                         'data': pairs
@@ -270,6 +268,11 @@ class BaseMultiqcModule(object):
         return html
         
     
+    def write_csv_file(self, data, fn):
+        with io.open (os.path.join(config.output_dir, 'report_data', fn), "w", encoding='utf-8') as f:
+            print( self.dict_to_csv( data ), file=f)
+            
+            
     def dict_to_csv (self, d, delim="\t"):
         """ Converts a dict to a CSV string
         :param d: 2D dictionary, first keys sample names and second key
@@ -280,7 +283,7 @@ class BaseMultiqcModule(object):
 
         h = None # We make a list of keys to ensure consistent order
         l = list()
-        for sn in d:
+        for sn in sorted(d.keys()):
             if h is None:
                 h = list(d[sn].keys())
                 l.append(delim.join([''] + h))

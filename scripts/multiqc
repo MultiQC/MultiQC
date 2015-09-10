@@ -112,7 +112,7 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
             pass # No samples found
         except:
             # Flag the error, but carry on
-            log.error("Oops! The {} MultiQC module broke... \n".format(m) + \
+            log.error("Oops! The '{}' MultiQC module broke... \n".format(m) + \
                       (' '*20)+"Please copy the following traceback and report it at " + \
                       "https://github.com/ewels/MultiQC/issues \n" + \
                       (' '*20)+"(if possible, include a log file that triggers the error) \n" + \

@@ -1,3 +1,3 @@
 	Unassigned_Duplicate	Unassigned_MappingQuality	Unassigned_Nonjunction	Unassigned_FragementLength	Unassigned_Chimera	Unassigned_Ambiguity	Assigned	Unassigned_MultiMapping	Unassigned_Secondary	Unassigned_NoFeatures	Unassigned_Unmapped	Total
-SRR1067503_1	0.0	0.0	0.0	0.0	0.0	33475.0	937197.0	19788199.0	0.0	18334149.0	0.0	39093020.0
-SRR1067505_1	0.0	0.0	0.0	0.0	0.0	71509.0	1463323.0	5480600.0	0.0	12710744.0	0.0	19726176.0
+SRR1067503_1_trimmed	0.0	0.0	0.0	0.0	0.0	33475.0	937197.0	19788199.0	0.0	18334149.0	0.0	39093020.0
+SRR1067505_1_trimmed	0.0	0.0	0.0	0.0	0.0	71509.0	1463323.0	5480600.0	0.0	12710744.0	0.0	19726176.0

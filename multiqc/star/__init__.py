@@ -21,7 +21,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__()
+        super(MultiqcModule, self).__init__(log)
 
         # Static variables
         self.name = "STAR"
@@ -35,7 +35,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.star_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.star_data[f['s_name']] = parsed_data
 
         if len(self.star_data) == 0:

@@ -21,7 +21,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__()
+        super(MultiqcModule, self).__init__(log)
 
         # Static variables
         self.name = "featureCounts"
@@ -31,19 +31,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
              features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations.</p>'
 
         # Find and load any featureCounts reports
-        self.featurecounts_data = defaultdict(lambda:dict())
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                if fn.endswith('_counts.txt.summary'):
-                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                        s_name = fn[:-19]
-                        s_name = s_name.split("_star_aligned",1)[0]
-                        s_name = self.clean_s_name(s_name, root)
-                        parsed_data = self.parse_featurecounts_report(f.read())
-                        if parsed_data is not None:
-                            if s_name in self.featurecounts_data:
-                                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                            self.featurecounts_data[s_name] = parsed_data
+        self.featurecounts_data = dict()
+        for f in self.find_log_files('_counts.txt.summary'):
+            parsed_data = self.parse_featurecounts_report(f['f'])
+            if parsed_data is not None:
+                if f['s_name'] in self.featurecounts_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.featurecounts_data[f['s_name']] = parsed_data
 
         if len(self.featurecounts_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -52,8 +46,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.featurecounts_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( self.featurecounts_data ), file=f)
+        self.write_csv_file(self.featurecounts_data, 'multiqc_featureCounts.txt')
 
         self.sections = list()
 
