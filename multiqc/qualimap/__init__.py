@@ -105,9 +105,48 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 })
             })
 
+            # Section 4 - GC-content distribution
+            histogram_data = self.qualimap_gc_distribution(qualimap_raw_data)
+            if len(histogram_data) > 0:
+                self.sections.append({
+                    'name': 'GC-content distribution',
+                    'anchor': 'qualimap-gc-distribution',
+                    'content': self.plot_xy_data(histogram_data, {
+                        'title': 'GC-content distribution',
+                        'ylab': 'Fraction of reads',
+                        'xlab': 'GC content (%)',
+                        'ymin': 0,
+                        'xmin': 0,
+                        'tt_label': '<b>GC-content (%) </b>',
+                    })
+                })
+
         # General stats table
         self.qualimap_stats_table()
 
+
+    def qualimap_gc_distribution(self, qualimap_raw_data):
+        parsed_data = {}
+        for sn, data in qualimap_raw_data.iteritems():
+            gc_report = data['reports']['mapped_reads_gc-content_distribution']
+            if gc_report:
+                counts={}
+                total_cont = 0
+                with io.open(gc_report, 'r') as fh:
+                    next(fh)
+                    for l in fh:
+                        gc, cont = l.split(None, 1)
+                        gc = int(round(float(gc)))
+                        cont = float(cont)
+                        total_cont += gc
+                        counts[gc] = cont
+
+                parsed_data[sn] = counts
+
+                #Add reads avg. GC to the general stats table
+                self.parsed_stats[sn]['avg_gc'] = total_cont/len(counts)
+
+        return parsed_data
 
     def qualimap_cov_his(self, qualimap_raw_data):
         parsed_data = {}
@@ -210,12 +249,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         # General stats table headers
-        config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
-        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Med. Ins</span></th>'
-        config.general_stats['headers']['thirty_x_pc'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% cov</span></th>'
+        config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
+        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Med. Ins</span></th>'
+        config.general_stats['headers']['thirty_x_pc'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% cov</span></th>'
+        config.general_stats['headers']['avg_gc'] = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="Qualimap: Average GC content">Avg. GC</span></th>'
 
         rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0,
-                      'thirty_x_pc': 0}
+                      'thirty_x_pc': 0, 'avg_gc': 0}
 
         for samp, vals in self.parsed_stats.items():
             for k, v in vals.items():
