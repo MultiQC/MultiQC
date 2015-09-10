@@ -22,13 +22,14 @@ import shutil
 import zipfile
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('FastQC'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -38,9 +39,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.anchor = "fastqc"
         self.intro = '<p><a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">FastQC</a> \
             is a quality control tool for high throughput sequence data, written by Simon Andrews at the Babraham Institute in Cambridge.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
-        self.data_dir = os.path.join(self.output_dir, 'report_data', 'fastqc')
+        self.data_dir = os.path.join(config.output_dir, 'report_data', 'fastqc')
 
         # Find and load any FastQC reports
         fastqc_raw_data = {}
@@ -50,7 +49,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'per_sequence_gc_content.png',
             'adapter_content.png'
         ]
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             # Extracted FastQC directory
             if 'fastqc_data.txt' in filenames:
                 s_name = os.path.basename(root)
@@ -62,7 +61,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                 if fn_search:
                     s_name = fn_search.group(1).strip()
-                s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
+                s_name = self.clean_s_name(s_name, root)
                 if s_name in fastqc_raw_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 fastqc_raw_data[s_name] = r_data
@@ -90,7 +89,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
                         if fn_search:
                             s_name = fn_search.group(1).strip()
-                        s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'], trimmed=False)
+                        s_name = self.clean_s_name(s_name, root)
                         if s_name in fastqc_raw_data:
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                         fastqc_raw_data[s_name] = r_data
@@ -111,7 +110,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 pass
 
         if len(fastqc_raw_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
 
@@ -133,10 +132,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Basic Stats Table
         # Report table is immutable, so just updating it works
         parsed_stats = self.fastqc_general_stats(fastqc_raw_data)
-        self.fastqc_stats_table(parsed_stats, report)
+        self.fastqc_stats_table(parsed_stats)
         
         # Write the basic stats table data to a file
-        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_fastqc.txt'), "w", encoding='utf-8') as f:
+        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_fastqc.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( parsed_stats ), file=f)
 
 
@@ -258,27 +257,27 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         return parsed_data
 
-    def fastqc_stats_table(self, parsed_stats, report):
+    def fastqc_stats_table(self, parsed_stats):
         """ Take the parsed stats from the FastQC report and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: %&nbsp;Duplicate Reads">% Dups</span></th>'
-        report['general_stats']['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="FastQC: Average %&nbsp;GC Content">% GC</span></th>'
-        report['general_stats']['headers']['sequence_length'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average Sequence Length (bp)">Length</span></th>'
-        report['general_stats']['headers']['total_sequences_m'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Total Sequences (millions)">M Seqs</span></th>'
+        config.general_stats['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: %&nbsp;Duplicate Reads">% Dups</span></th>'
+        config.general_stats['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="FastQC: Average %&nbsp;GC Content">% GC</span></th>'
+        config.general_stats['headers']['sequence_length'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average Sequence Length (bp)">Length</span></th>'
+        config.general_stats['headers']['total_sequences_m'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Total Sequences (millions)">M Seqs</span></th>'
 
         rowcounts = { 'total_sequences_m' : 0, 'sequence_length' : 0,
             'percent_gc' : 0, 'percent_duplicates' : 0 }
 
         for samp, vals in parsed_stats.items():
             for k, v in vals.items():
-                report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
+                config.general_stats['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
                 rowcounts[k] += 1
 
         # Remove header if we don't have any filled cells for it (eg. % dups in older FastQC reports)
         for k in rowcounts.keys():
             if rowcounts[k] == 0:
-                report['general_stats']['headers'].pop(k, None)
+                config.general_stats['headers'].pop(k, None)
 
     def parse_fastqc_seq_quality(self, fastqc_raw_data):
         """ Parse the 'Per base sequence quality' data from fastqc_data.txt
@@ -519,6 +518,15 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def fastqc_adapter_overlay_plot (self):
         """ Create the HTML for the FastQC adapter plot """
+        
+        # Check that there is some adapter contamination in some of the plots
+        max_val = 0
+        for s in self.adapter_content.keys():
+            for v in self.adapter_content[s].values():
+                max_val = max(max_val, v)
+        if max_val <= 0.1:
+            return '<p>No adapter contamination found in any samples.</p>'
+        
         pconfig = {
             'id': 'mqc_fastqc_adapter_plot',
             'title': 'Adapter Content',
@@ -528,6 +536,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>',
+            'hide_empty': True
         }
         images = []
         samps = []
@@ -561,8 +570,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
 
         for f in self.css + self.js:
-            d = os.path.join(self.output_dir, os.path.dirname(f))
+            d = os.path.join(config.output_dir, os.path.dirname(f))
             if not os.path.exists(d):
                 os.makedirs(d)
-            if not os.path.exists(os.path.join(self.output_dir, f)):
-                shutil.copy(os.path.join(os.path.dirname(__file__), f), os.path.join(self.output_dir, f))
+            if not os.path.exists(os.path.join(config.output_dir, f)):
+                shutil.copy(os.path.join(os.path.dirname(__file__), f), os.path.join(config.output_dir, f))

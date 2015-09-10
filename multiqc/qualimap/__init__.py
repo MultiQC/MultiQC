@@ -11,13 +11,14 @@ import os
 from collections import defaultdict, OrderedDict
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('Qualimap'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -28,19 +29,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.intro = '<p><a href="http://qualimap.bioinfo.cipf.es/" target="_blank">QualiMap</a> \
              is a platform-independent application to facilitate the quality control of alignment \
              sequencing data and its derivatives like feature counts.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.parsed_stats = defaultdict(dict)
 
         # Find QualiMap reports
         qualimap_raw_data = {}
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             if 'genome_results.txt' in filenames and 'raw_data_qualimapReport' in dirnames:
                 with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
                     for l in gr:
                         if 'bam file' in l:
-                            s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root, prepend_dirs=report['prepend_dirs'])
+                            s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
 
-                s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
+                s_name = self.clean_s_name(s_name, root)
                 if s_name in qualimap_raw_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
 
@@ -49,7 +48,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     for r in os.listdir(os.path.join(root, 'raw_data_qualimapReport'))}
 
         if len(qualimap_raw_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(qualimap_raw_data)))

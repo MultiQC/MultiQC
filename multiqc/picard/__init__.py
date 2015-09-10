@@ -11,13 +11,14 @@ import mmap
 import os
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('Picard'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -27,12 +28,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.anchor = "picard"
         self.intro = '<p><a href="http://broadinstitute.github.io/picard/" target="_blank">Picard</a> \
             is a set of Java command line tools for manipulating high-throughput sequencing data.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
 
         # Find and load any Picard reports
         self.picard_dupMetrics_data = defaultdict(lambda: dict())
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             for fn in filenames:
                 try:
                     if os.path.getsize(os.path.join(root,fn)) < 200000:
@@ -42,7 +41,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                                 if 'picard.sam.DuplicationMetrics' in l:
                                     s_name = fn
                                     s_name = s_name.split(".metrics",1)[0]
-                                    s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
+                                    s_name = self.clean_s_name(s_name, root)
                                     if s_name in self.picard_dupMetrics_data:
                                         log.debug("Duplicate DuplicationMetrics sample name found! Overwriting: {}".format(s_name))
                                     keys = s[idx+1].split("\t")
@@ -57,20 +56,20 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.picard_dupMetrics_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.picard_dupMetrics_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_picard.txt'), "w", encoding='utf-8') as f:
+        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_picard.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.picard_dupMetrics_data ), file=f)
 
         self.sections = list()
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-        self.picard_stats_table(report)
+        self.picard_stats_table()
 
         # Section 1 - Column chart of alignment stats
         self.sections.append({
@@ -80,13 +79,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         })
 
 
-    def picard_stats_table(self, report):
+    def picard_stats_table(self):
         """ Take the parsed stats from the Picard report and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">% Dups</span></th>'
+        config.general_stats['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">% Dups</span></th>'
         for sn, data in self.picard_dupMetrics_data.items():
-            report['general_stats']['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
+            config.general_stats['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
 
     def mark_duplicates_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """

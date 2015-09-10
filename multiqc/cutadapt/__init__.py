@@ -11,13 +11,14 @@ import os
 import re
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('Cutadapt'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -28,47 +29,45 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.intro = '<p><a href="https://code.google.com/p/cutadapt/" target="_blank">Cutadapt</a> \
             is a tool to find and remove adapter sequences, primers, poly-A tails and other types \
             of unwanted sequence from your high-throughput sequencing reads.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
 
         # Find and load any Cutadapt reports
         self.cutadapt_data = dict()
         self.cutadapt_length_counts = dict()
         self.cutadapt_length_exp = dict()
         self.cutadapt_length_obsexp = dict()
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             for fn in filenames:
                 try:
                     if os.path.getsize(os.path.join(root,fn)) < 200000:
                         with open (os.path.join(root,fn), "r") as f:
                             s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-                            self.parse_cutadapt_logs(s, root, report)
+                            self.parse_cutadapt_logs(s, root)
                 except (OSError, ValueError, UnicodeDecodeError):
                     log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.cutadapt_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.cutadapt_data)))
 
         # Write parsed report data to a file
         # Only the summary stats - skip the length data (t_lengths)
-        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w", encoding='utf-8') as f:
+        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.cutadapt_data ), file=f)
 
         self.sections = list()
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-        self.cutadapt_general_stats_table(report)
+        self.cutadapt_general_stats_table()
 
         # Trimming Length Profiles
         # Only one section, so add to the intro
         self.intro += self.cutadapt_length_trimmed_plot()
 
 
-    def parse_cutadapt_logs(self, s, root, report):
+    def parse_cutadapt_logs(self, s, root):
         i = s.find(b'Input filename', 0)
         while i >= 0:
             s.seek(i)
@@ -81,7 +80,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             s_name = fn_search.group(1).decode()
             s_name = s_name.split(".txt",1)[0]
             s_name = s_name.split("_trimming_report",1)[0]
-            s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
+            s_name = self.clean_s_name(s_name, root)
             
             if s_name in self.cutadapt_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -132,13 +131,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             i = s.find(b'This is cutadapt', i + 1)
 
 
-    def cutadapt_general_stats_table(self, report):
+    def cutadapt_general_stats_table(self):
         """ Take the parsed stats from the Cutadapt report and add it to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['bp_trimmed'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="% Total Base Pairs trimmed by Cutadapt">Trimmed</span></th>'
+        config.general_stats['headers']['bp_trimmed'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="% Total Base Pairs trimmed by Cutadapt">Trimmed</span></th>'
         for samp, vals in self.cutadapt_data.items():
-            report['general_stats']['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
+            config.general_stats['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
 
     def cutadapt_length_trimmed_plot (self):
         """ Generate the trimming length plot """

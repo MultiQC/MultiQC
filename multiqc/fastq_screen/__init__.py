@@ -12,13 +12,14 @@ import re
 import shutil
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('FastQ Screen'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -29,16 +30,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.intro = '<p><a href="http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/" target="_blank">FastQ Screen</a> \
             allows you to screen a library of sequences in FastQ format against a set of sequence databases so you can see if the \
             composition of the library matches with what you expect.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
 
         # Find and load any FastQ Screen reports
         fq_screen_raw_data = {}
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith("_screen.txt"):
                     s_name = fn[:-11]
-                    s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
+                    s_name = self.clean_s_name(s_name, root)
                     try:
                         with open (os.path.join(root,fn), "r") as f:
                             if s_name in fq_screen_raw_data:
@@ -48,7 +47,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(fq_screen_raw_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(fq_screen_raw_data)))
@@ -60,7 +59,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.intro += self.fqscreen_plot(fq_screen_data)
         
         # TODO - Write parsed report data to a file
-        # with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_fastq_screen.txt'), "w", encoding='utf-8') as f:
+        # with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_fastq_screen.txt'), "w", encoding='utf-8') as f:
         #     print( self.dict_to_csv(fq_screen_data), file=f)
 
 

@@ -12,13 +12,14 @@ import os
 import re
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('Bowtie 1'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -28,12 +29,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.anchor = "bowtie1"
         self.intro = '<p><a href="http://bowtie-bio.sourceforge.net/" target="_blank">Bowtie 1</a> \
             is an ultrafast, memory-efficient short read aligner.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
 
         # Find and load any Bowtie reports
         self.bowtie_data = dict()
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             for fn in filenames:
                 try:
                     if os.path.getsize(os.path.join(root,fn)) < 200000:
@@ -41,7 +40,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                             s = f.read()
                             parsed_data = self.parse_bowtie_logs(s)
                             if parsed_data is not None:
-                                s_name = self.clean_s_name(fn, root, prepend_dirs=report['prepend_dirs'])
+                                s_name = self.clean_s_name(fn, root)
                                 if s_name in self.bowtie_data:
                                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                                 self.bowtie_data[s_name] = parsed_data
@@ -49,20 +48,20 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.bowtie_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.bowtie_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_bowtie1.txt'), "w", encoding='utf-8') as f:
+        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_bowtie1.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( { k: { j: x for j, x in v.items() if j != 't_lengths'} for k, v in self.bowtie_data.items() } ), file=f)
 
         self.sections = list()
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-        self.bowtie_general_stats_table(report)
+        self.bowtie_general_stats_table()
 
         # Alignment Rate Plot
         # Only one section, so add to the intro
@@ -93,13 +92,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         return parsed_data
 
 
-    def bowtie_general_stats_table(self, report):
+    def bowtie_general_stats_table(self):
         """ Take the parsed stats from the Bowtie report and add it to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['bowtie_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Bowtie 1: % reads with at least one reported alignment">% Aligned</span></th>'
+        config.general_stats['headers']['bowtie_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Bowtie 1: % reads with at least one reported alignment">% Aligned</span></th>'
         for samp, vals in self.bowtie_data.items():
-            report['general_stats']['rows'][samp]['bowtie_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['reads_aligned_percentage'])
+            config.general_stats['rows'][samp]['bowtie_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['reads_aligned_percentage'])
 
     def bowtie_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
