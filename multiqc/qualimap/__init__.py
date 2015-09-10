@@ -8,7 +8,7 @@ import json
 import logging
 import os
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 import multiqc
 from multiqc import config
@@ -29,6 +29,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.intro = '<p><a href="http://qualimap.bioinfo.cipf.es/" target="_blank">QualiMap</a> \
              is a platform-independent application to facilitate the quality control of alignment \
              sequencing data and its derivatives like feature counts.</p>'
+
+        self.parsed_stats = defaultdict(dict)
 
         # Find QualiMap reports
         qualimap_raw_data = {}
@@ -88,7 +90,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             })
 
         # General stats table
-        self.qualimap_stats_table(report)
+        self.qualimap_stats_table()
 
 
     def qualimap_cov_his(self, qualimap_raw_data):
@@ -96,7 +98,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for sn, data in qualimap_raw_data.iteritems():
             cov_report = data['reports'].get('coverage_histogram')
             if cov_report:
-                counts=OrderedDict()
+                counts={}
                 try:
                     with io.open(cov_report, 'r') as fh:
                         next(fh) # skip the header
@@ -132,7 +134,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for sn, data in qualimap_raw_data.iteritems():
             ins_size = data['reports'].get('insert_size_histogram')
             if ins_size:
-                counts = OrderedDict()
+                counts = {}
                 zero_insertsize = 0
                 try:
                     with open(ins_size, 'r') as fh:
@@ -167,22 +169,22 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         return parsed_data
 
 
-    def qualimap_stats_table(self, report):
+    def qualimap_stats_table(self):
         """ Take the parsed stats from the QualiMap report and add them to the
         basic stats table at the top of the report """
 
         # General stats table headers
-        report['general_stats']['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
-        report['general_stats']['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Med. Ins</span></th>'
+        config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
+        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Med. Ins</span></th>'
 
         rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0}
 
         for samp, vals in self.parsed_stats.items():
             for k, v in vals.items():
-                report['general_stats']['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
+                config.general_stats['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
                 rowcounts[k] += 1
 
         # Remove header if we don't have any filled cells for it
         for k in rowcounts.keys():
             if rowcounts[k] == 0:
-                report['general_stats']['headers'].pop(k, None)
+                config.general_stats['headers'].pop(k, None)
