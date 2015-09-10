@@ -108,6 +108,23 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # General stats table
         self.qualimap_stats_table()
 
+    def _load_xy_data_from_file(self, file_name, skip_header=True):
+        """Takes a file containing data for a 2D plot and returns the data (unformatted)
+
+        :param str: file_name: Path to the file containing the data
+        :param bool skip_header: If true, will skip first row
+        :returns list: List of tuples (x, y)
+        """
+        try:
+            with io.open(file_name, 'r') as fh:
+                if skip_header:
+                    next(fh)
+                for line in fh:
+                    yield line.split(None, 1)
+        except IOError as e:
+            log.error("Could not load input file: {}".format(file_name))
+            raise
+
 
     def qualimap_cov_his(self, qualimap_raw_data):
         parsed_data = {}
@@ -115,17 +132,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             cov_report = data['reports'].get('coverage_histogram')
             if cov_report:
                 counts={}
-                try:
-                    with io.open(cov_report, 'r') as fh:
-                        next(fh) # skip the header
-                        for line in fh:
-                            (coverage, count) = line.split(None, 1)
-                            coverage = int(round(float(coverage)))
-                            count = float(count)
-                            counts[coverage] = count
-                except IOError as e:
-                    log.error("Could not load input file: {}".format(cov_report))
-                    raise
+                for coverage, count in self._load_xy_data_from_file(cov_report):
+                    coverage = int(round(float(coverage)))
+                    count = float(count)
+                    counts[coverage] = count
 
                 parsed_data[sn] = counts
 
@@ -152,20 +162,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if ins_size:
                 counts = {}
                 zero_insertsize = 0
-                try:
-                    with open(ins_size, 'r') as fh:
-                        next(fh) # skip the header
-                        for line in fh:
-                            (insertsize, count) = line.split(None, 1)
+                for insertsize, count in self._load_xy_data_from_file(ins_size):
                             insertsize = int(round(float(insertsize)))
                             count = float(count) / 1000000
                             if(insertsize == 0):
                                 zero_insertsize = count
                             else:
                                 counts[insertsize] = count
-                except IOError as e:
-                    logging.error("Could not load input file: {}".format(fn))
-                    raise
 
                 parsed_data[sn] = counts
 
@@ -190,26 +193,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for sn, data in qualimap_raw_data.iteritems():
             frac_cov = data['reports'].get('genome_fraction_coverage')
             if frac_cov:
-                eighty_pc_coverage = 0
                 thirty_x_pc = 100
                 max_obs_x = 0
                 halfway_cov = None
                 counts={}
-                try:
-                    with open(frac_cov, 'r') as fh:
-                        next(fh) # skip the header
-                        for line in fh:
-                            (coverage, percentage) = line.split(None, 1)
-                            coverage = int(round(float(coverage)))
-                            percentage = float(percentage)
-                            counts[coverage] = percentage
+                for coverage, percentage in self._load_xy_data_from_file(frac_cov):
+                    coverage = int(round(float(coverage)))
+                    percentage = float(percentage)
+                    counts[coverage] = percentage
 
-                            if coverage <= 30 and thirty_x_pc > percentage:
-                                thirty_x_pc = percentage
-
-                except IOError as e:
-                    logging.error("Could not load input file: {}".format(fn))
-                    raise
+                    if coverage <= 30 and thirty_x_pc > percentage:
+                        thirty_x_pc = percentage
 
                 parsed_data[sn] = counts
 
