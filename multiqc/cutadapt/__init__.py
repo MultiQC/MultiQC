@@ -91,14 +91,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             if s_name is not None:
                 # Search regexes for overview stats
                 for k, r in regexes.items():
-                    match = re.search(r.encode('utf-8'), l)
+                    match = re.search(r, l)
                     if match:
-                        self.cutadapt_data[s_name][k] = int(match.group(1).decode().replace(',', ''))
+                        self.cutadapt_data[s_name][k] = int(match.group(1).replace(',', ''))
 
                 if 'length' in l and 'count' in l and 'expect' in l:
                     # Nested loop to read this section while the regex matches
                     for l in fh:
-                        r_seqs = re.search(br"^(\d+)\s+(\d+)\s+([\d\.]+)", l)
+                        r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", l)
                         if r_seqs:
                             a_len = int(r_seqs.group(1))
                             self.cutadapt_length_counts[s_name][a_len] = int(r_seqs.group(2))
