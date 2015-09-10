@@ -89,6 +89,22 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 })
             })
 
+        # Section 3 - Genome Fraction coverage
+        histogram_data = self.qualimap_gen_frac_his(qualimap_raw_data)
+        if len(histogram_data) > 0:
+            self.sections.append({
+                'name': 'Genome Fraction Coverage',
+                'anchor': 'qualimap-genome-fraction-coverage',
+                'content': self.plot_xy_data(histogram_data, {
+                    'title': 'Genome Fraction Coverage',
+                    'ylab': 'Fraction of reference (%)',
+                    'xlab': 'Coverage (X)',
+                    'ymin': 0,
+                    'xmin': 0,
+                    'tt_label': '<b>{point.x}-X coverage </b>',
+                })
+            })
+
         # General stats table
         self.qualimap_stats_table()
 
@@ -169,6 +185,40 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         return parsed_data
 
 
+    def qualimap_gen_frac_his(self, qualimap_raw_data):
+        parsed_data = {}
+        for sn, data in qualimap_raw_data.iteritems():
+            frac_cov = data['reports'].get('genome_fraction_coverage')
+            if frac_cov:
+                eighty_pc_coverage = 0
+                thirty_x_pc = 100
+                max_obs_x = 0
+                halfway_cov = None
+                counts={}
+                try:
+                    with open(frac_cov, 'r') as fh:
+                        next(fh) # skip the header
+                        for line in fh:
+                            (coverage, percentage) = line.split(None, 1)
+                            coverage = int(round(float(coverage)))
+                            percentage = float(percentage)
+                            counts[coverage] = percentage
+
+                            if coverage <= 30 and thirty_x_pc > percentage:
+                                thirty_x_pc = percentage
+
+                except IOError as e:
+                    logging.error("Could not load input file: {}".format(fn))
+                    raise
+
+                parsed_data[sn] = counts
+
+                # Add the median % genome >= 30X coverage to the general stats table
+                self.parsed_stats[sn]['thirty_x_pc'] = thirty_x_pc
+
+        return parsed_data
+
+
     def qualimap_stats_table(self):
         """ Take the parsed stats from the QualiMap report and add them to the
         basic stats table at the top of the report """
@@ -176,11 +226,14 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # General stats table headers
         config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median coverage">Med. Cov</span></th>'
         config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Med. Ins</span></th>'
+        config.general_stats['headers']['thirty_x_pc'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% cov</span></th>'
 
-        rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0}
+        rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0,
+                      'thirty_x_pc': 0}
 
         for samp, vals in self.parsed_stats.items():
             for k, v in vals.items():
+                v = round(v, 3) if type(v) == float else v
                 config.general_stats['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
                 rowcounts[k] += 1
 
