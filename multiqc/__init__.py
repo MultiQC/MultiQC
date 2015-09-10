@@ -45,6 +45,8 @@ class BaseMultiqcModule(object):
         :param data: 2D dict, first keys as sample names, then x:y data pairs
         :param original_plots: optional list of dicts with keys 's_name' and 'img_path'
         :param config: optional dict with config key:value pairs. See CONTRIBUTING.md
+        :param original_plots: optional list specifying original plot images. Each dict
+                               should have a key 's_name' and 'img_path'
         :return: HTML and JS, ready to be inserted into the page
         """
         

@@ -7,7 +7,7 @@
 
   <meta name="description" content="MultiQC: A modular tool to aggregate results from bioinformatics analyses across many samples into a single report">
   <meta name="author" content="MultiQC">
-  <title>{{ report['title'] + ': ' if report['title'] != None }}MultiQC Report</title>
+  <title>{{ config.title + ': ' if config.title != None }}MultiQC Report</title>
 
   <link href="assets/css/bootstrap.min.css" rel="stylesheet">
   {%- for m in modules %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css %}
@@ -32,11 +32,11 @@
   <h1>
     <a href="#">
       <img src="assets/img/MultiQC_logo.png" title="MultiQC"><br>
-      <small>v{{ report['version'] }}</small>
+      <small>v{{ config.version }}</small>
     </a>
   </h1>
   <ul class="mqc-nav">
-    {% if report['general_stats']['headers']|length > 0 %}
+    {% if config.general_stats['headers']|length > 0 %}
     <li><a href="#general_stats">General Stats</a></li>
     {% endif -%}
     {% for m in modules %}
@@ -74,12 +74,12 @@
 <div class="mainpage">
 
   <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
-  {{ '<h2>'+report['title']+'</h2>' if report['title'] != None }}
+  {{ '<h2>'+config.title+'</h2>' if config.title != None }}
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
-  <p>Report generated on {{ report['creation_date'] }} based on data in <code>{{ report['analysis_dir'] }}</code></p>
-  <p>Report location: <code>{{ report['output_dir'] }}/multiqc_report.html</code></p>
+  <p>Report generated on {{ config.creation_date }} based on data in <code>{{ config.analysis_dir }}</code></p>
+  <p>Report location: <code>{{ config.output_dir }}/multiqc_report.html</code></p>
 
-  {% if report['general_stats']['headers']|length > 0 %}
+  {% if config.general_stats['headers']|length > 0 %}
   <h2 id="general_stats">General Statistics</h2>
   <div class="table-responsive">
     <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
@@ -87,17 +87,17 @@
         <tr>
           <th class="sorthandle"></th>
           <th class="rowheader"></th>
-          {%- for k, h in report['general_stats']['headers'].items() %}
+          {%- for k, h in config.general_stats['headers'].items() %}
             {{ h }}
           {%- endfor -%}
         </tr>
       </thead>
       <tbody>
-        {% for sn, r in report['general_stats']['rows']|dictsort %}
+        {% for sn, r in config.general_stats['rows']|dictsort %}
         <tr>
           <th class="sorthandle">||</th>
           <th class="rowheader">{{ sn }}</th>
-          {%- for k, h in report['general_stats']['headers'].items() %}
+          {%- for k, h in config.general_stats['headers'].items() %}
             {{ r[k] if r[k] else '<td></td>' }}
           {%- endfor -%}
         </tr>
@@ -126,7 +126,7 @@
   <div class="container-fluid">
     <p>
       <a href="http://www.scilifelab.se/" target="_blank" class="pull-right"><img src="assets/img/SciLifeLab.png" style="height:41px;"></a>
-      <strong><a href="https://github.com/ewels/MultiQC" target="_blank">MultiQC v{{ report['version'] }}</a></strong> -
+      <strong><a href="https://github.com/ewels/MultiQC" target="_blank">MultiQC v{{ config.version }}</a></strong> -
       Written by <a href="http://phil.ewels.co.uk" target="_blank">Phil Ewels</a>, available on <a href="https://github.com/ewels/MultiQC" target="_blank">GitHub</a>.</p>
     <p>The report uses <a href="http://www.highcharts.com/" target="_blank">HighCharts</a>, <a href="https://jquery.com/" target="_blank">jQuery</a>,
        <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> and <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a></p>

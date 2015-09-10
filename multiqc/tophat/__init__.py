@@ -12,13 +12,14 @@ import os
 import re
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('Tophat'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -28,12 +29,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.anchor = "tophat"
         self.intro = '<p><a href="https://ccb.jhu.edu/software/tophat/" target="_blank">Tophat</a> \
             is a fast splice junction mapper for RNA-Seq reads. It aligns RNA-Seq reads to mammalian-sized genomes.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
 
         # Find and load any Tophat reports
         self.tophat_data = dict()
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith("align_summary.txt"):
                     if fn == "align_summary.txt":
@@ -41,7 +40,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     else:
                         s_name = fn[:-17]
                     s_name = s_name.split("_tophat",1)[0]
-                    s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
+                    s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
                     
                     try:
                         with open (os.path.join(root,fn), "r") as f:
@@ -54,20 +53,20 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         log.debug("Couldn't read file when looking for output: {}".format(fn))
 
         if len(self.tophat_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.tophat_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_tophat.txt'), "w", encoding='utf-8') as f:
+        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_tophat.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.tophat_data ), file=f)
 
         self.sections = list()
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-        self.tophat_general_stats_table(report)
+        self.tophat_general_stats_table()
 
         # Alignment Rate Plot
         # Only one section, so add to the intro
@@ -100,13 +99,13 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         return parsed_data
 
 
-    def tophat_general_stats_table(self, report):
+    def tophat_general_stats_table(self):
         """ Take the parsed stats from the Tophat report and add it to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['tophat_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Tophat: overall read mapping rate">% Aligned</span></th>'
+        config.general_stats['headers']['tophat_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Tophat: overall read mapping rate">% Aligned</span></th>'
         for samp, vals in self.tophat_data.items():
-            report['general_stats']['rows'][samp]['tophat_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['overall_aligned_percent'])
+            config.general_stats['rows'][samp]['tophat_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['overall_aligned_percent'])
 
     def tophat_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """

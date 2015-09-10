@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import argparse
 import collections
-import inspect
 import jinja2
 import json
 import logging
@@ -18,13 +17,8 @@ import shutil
 import sys
 import traceback
 import yaml
-from datetime import datetime
 
-import multiqc
-
-# Constants
-VERSION = '0.1.1dev'
-MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
+from multiqc import config
 
 # Are we running as an OSX App?
 if os.environ.get('MULTQC_IS_APP') is not None:
@@ -52,35 +46,31 @@ module_order = [
 
 # Find submodules in multiqc and order them if possible. Tolerant of people
 # not adding their modules to the above list :)
-multiqc_submods = [name for _, name, _ in pkgutil.iter_modules([MULTIQC_DIR])]
+multiqc_submods = [name for _, name, _ in pkgutil.iter_modules([config.MULTIQC_DIR]) if name != 'config']
 avail_modules = [ m for m in module_order if m in multiqc_submods ]
 if len(multiqc_submods) > len(avail_modules):
     log.warn("Modules missing from order declaration: {}".format([ m for m in multiqc_submods if m not in module_order ]))
 avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
 
 # Available templates, in case extras have been added
-avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates'))
-                if os.path.isdir(os.path.join(MULTIQC_DIR, 'templates', d)) ]
-
-# Load and parse configuration file if we find it
-try:
-    yaml_config = os.path.join(MULTIQC_DIR, 'multiqc_config.yaml')
-    with open(yaml_config) as f:
-        config = yaml.load(f)
-except IOError:
-    config = {
-        'template': 'default',
-        'output_dir': 'multiqc_report'
-    }
+avail_templates = [ d for d in os.listdir(os.path.join(config.MULTIQC_DIR, 'templates'))
+                if os.path.isdir(os.path.join(config.MULTIQC_DIR, 'templates', d)) ]
 
 # Main function to execute MultiQC
-def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=config['template'], output_dir=os.path.join(os.getcwd(), config['output_dir']), run_modules=avail_modules, exclude_modules=[], force_overwrite=False):
+def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=config.template, output_dir=os.path.join(os.getcwd(), config.output_dir), run_modules=avail_modules, exclude_modules=[], force_overwrite=False):
 
     # Set up helper vars
-    template_dir = os.path.join(MULTIQC_DIR, 'templates', template.strip())
+    template_dir = os.path.join(config.MULTIQC_DIR, 'templates', template.strip())
     output_dir = output_dir.strip()
-    if OSX_APP: output_dir = os.path.join(analysis_dir, 'multiqc_report')
-    template_fn = os.path.join(output_dir, 'multiqc_report.html')
+    if OSX_APP:
+        output_dir = os.path.join(analysis_dir, 'multiqc_report')
+    
+    # Update the config with the command line options
+    config.title = title
+    config.prepend_dirs = prepend_dirs
+    config.analysis_dir = analysis_dir
+    config.output_dir = os.path.realpath(output_dir)
+    config.template_fn = os.path.join(output_dir, 'multiqc_report.html')
     
     # exclude modules
     if len(exclude_modules) > 0:
@@ -111,28 +101,13 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
     # Make the report data directory
     os.mkdir(os.path.join(output_dir, 'report_data'))
 
-    # Create a dict with common fields
-    report = {
-        'title': title,
-        'prepend_dirs': prepend_dirs,
-        'creation_date': datetime.now().strftime("%Y-%m-%d, %H:%m"),
-        'version': VERSION,
-        'working_dir': os.getcwd(),
-        'analysis_dir': analysis_dir,
-        'output_dir': os.path.realpath(output_dir),
-        'general_stats': {
-            'headers': collections.OrderedDict(),
-            'rows': collections.defaultdict(lambda:dict())
-        }
-    }
-
     # Run the modules!
     modules_output = list()
     sys_exit = 0
     for m in run_modules:
         try:
             mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
-            modules_output.append(mod.MultiqcModule(report))
+            modules_output.append(mod.MultiqcModule())
         except UserWarning:
             pass # No samples found
         except:
@@ -153,10 +128,10 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
 
     # Print the general stats table to a file
     with open (os.path.join(output_dir, 'report_data', 'multiqc_general_stats.txt'), "w") as f:
-        hrow = '\t'.join([''] + list(report['general_stats']['headers'].keys()) )
+        hrow = '\t'.join([''] + list(config.general_stats['headers'].keys()) )
         l = [hrow]
-        for sn, r in iter(sorted(report['general_stats']['rows'].items())):
-            thesefields = [sn] + [ str(r.get(k, '')) for k in report['general_stats']['headers'] ]
+        for sn, r in iter(sorted(config.general_stats['rows'].items())):
+            thesefields = [sn] + [ str(r.get(k, '')) for k in config.general_stats['headers'] ]
             thesefields = [ re.sub('<[^<]+?>', '', field) for field in thesefields ]
             l.append( '\t'.join( thesefields ) )
         print( '\n'.join(l), file=f)
@@ -166,13 +141,13 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(output_dir))
         j_template = env.get_template('multiqc_report.html')
     except:
-        raise IOError ("Could not load template '{}'".format(template_fn))
+        raise IOError ("Could not load template '{}'".format(config.template_fn))
 
     # Use jinja2 to render the template and overwrite
-    report['analysis_dir'] = os.path.realpath(report['analysis_dir'])
-    report = j_template.render(report=report, modules=modules_output)
+    config.analysis_dir = os.path.realpath(config.analysis_dir)
+    report = j_template.render(config=config, modules=modules_output)
     try:
-        with open(template_fn, 'w') as f:
+        with open(config.template_fn, 'w') as f:
             print(report, file=f)
     except IOError as e:
         raise IOError ("Could not print report to '{}' - {}".format(output_path, IOError(e)))
@@ -201,10 +176,10 @@ if __name__ == "__main__":
         help="Prepend directory to sample names")
     parser.add_argument('-i', "--title", dest="title", default=None,
         help="Report title")
-    parser.add_argument('-t', "--template", dest="template", default=config['template'], choices=avail_templates, metavar='TEMPLATE',
+    parser.add_argument('-t', "--template", dest="template", default=config.template, choices=avail_templates, metavar='TEMPLATE',
         help="Report template to use. Choose from: {}".format(', '.join(avail_templates)))
-    parser.add_argument("-o", "--output_dir", dest="output_dir", default=os.path.join(os.getcwd(), config['output_dir']),
-        help="Output directory. Default: {}".format(config['output_dir']))
+    parser.add_argument("-o", "--output_dir", dest="output_dir", default=os.path.join(os.getcwd(), config.output_dir),
+        help="Output directory. Default: {}".format(config.output_dir))
     parser.add_argument('-m', "--module", dest="run_modules", default=avail_modules, nargs="*", choices=avail_modules, metavar='MODULE',
         help="Use only these modules. Choose from: {}".format(', '.join(avail_modules)))
     parser.add_argument('-e', "--exclude", dest="exclude_modules", default=[], nargs="*", choices=avail_modules, metavar='MODULE',
@@ -213,11 +188,11 @@ if __name__ == "__main__":
         help="Overwrite any existing reports")
     parser.add_argument('-l', '--logging', dest="loglevel", default='INFO', type=str.lower, choices=['debug', 'info', 'warning', 'error', 'critical'], metavar='LEVEL',
         help="Level of logging to be printed to the console. Choose from 'debug', 'info', 'warning', 'error', 'critical'")
-    parser.add_argument('-v', '--version', action='version', version="MultiQC v{}".format(VERSION),
+    parser.add_argument('-v', '--version', action='version', version="MultiQC v{}".format(config.VERSION),
         help="Print the version of the program and exit")
 
     if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and OSX_APP:
-        print('</ul><p>Please drag your analysis directory here.</p><small>MultiQC version {}</small></body></html>'.format(VERSION))
+        print('</ul><p>Please drag your analysis directory here.</p><small>MultiQC version {}</small></body></html>'.format(config.VERSION))
         sys.exit(0)
     else:
         kwargs = vars(parser.parse_args())

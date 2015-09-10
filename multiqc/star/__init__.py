@@ -12,13 +12,14 @@ import os
 import re
 
 import multiqc
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger('MultiQC : {0:<14}'.format('STAR'))
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
-    def __init__(self, report):
+    def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__()
@@ -28,38 +29,36 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.anchor = "star"
         self.intro = '<p><a href="https://github.com/alexdobin/STAR" target="_blank">STAR</a> \
             is an ultrafast universal RNA-seq aligner.</p>'
-        self.analysis_dir = report['analysis_dir']
-        self.output_dir = report['output_dir']
 
         # Find and load any STAR reports
         self.star_data = defaultdict(lambda:dict())
-        for root, dirnames, filenames in os.walk(self.analysis_dir, followlinks=True):
+        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
             for fn in filenames:
                 if fn.endswith('Log.final.out'):
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         parsed_data = self.parse_star_report(f.read())
                         if parsed_data is not None:
                             s_name = fn[:-13]
-                            s_name = self.clean_s_name(s_name, root, prepend_dirs=report['prepend_dirs'])
+                            s_name = self.clean_s_name(s_name, root, prepend_dirs=config.prepend_dirs)
                             if s_name in self.star_data:
                                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                             self.star_data[s_name] = parsed_data
 
         if len(self.star_data) == 0:
-            log.debug("Could not find any reports in {}".format(self.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.star_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(self.output_dir, 'report_data', 'multiqc_star.txt'), "w", encoding='utf-8') as f:
+        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_star.txt'), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( self.star_data ), file=f)
 
         self.sections = list()
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-        self.star_stats_table(report)
+        self.star_stats_table()
 
         # Alignment bar plot
         # Only one section, so add to the intro
@@ -114,15 +113,15 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         return parsed_data
 
 
-    def star_stats_table(self, report):
+    def star_stats_table(self):
         """ Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report """
 
-        report['general_stats']['headers']['uniquely_mapped_percent'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">% Mapped</span></th>'
-        report['general_stats']['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M Mapped</span></th>'
+        config.general_stats['headers']['uniquely_mapped_percent'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">% Mapped</span></th>'
+        config.general_stats['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M Mapped</span></th>'
         for sn, data in self.star_data.items():
-            report['general_stats']['rows'][sn]['uniquely_mapped_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['uniquely_mapped_percent'])
-            report['general_stats']['rows'][sn]['uniquely_mapped'] = '<td class="text-right">{:.1f}</td>'.format(data['uniquely_mapped']/1000000)
+            config.general_stats['rows'][sn]['uniquely_mapped_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['uniquely_mapped_percent'])
+            config.general_stats['rows'][sn]['uniquely_mapped'] = '<td class="text-right">{:.1f}</td>'.format(data['uniquely_mapped']/1000000)
 
     def star_alignment_chart (self):
         """ Make the HighCharts HTML to plot the alignment rates """
