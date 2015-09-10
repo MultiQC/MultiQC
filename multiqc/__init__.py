@@ -16,8 +16,8 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, log):
+        self.log = log
 
     def find_log_files(self, fn_match=None, contents_match=None, filehandles=False):
         """
@@ -94,7 +94,7 @@ class BaseMultiqcModule(object):
                                 else:
                                     yield {'s_name': s_name, 'f': f.read(), 'root': root}
                     except (IOError, OSError, ValueError, UnicodeDecodeError):
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+                        self.log.debug("Couldn't read file when looking for output: {}".format(fn))
     
     
     def clean_s_name(self, s_name, root):

@@ -22,7 +22,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__()
+        super(MultiqcModule, self).__init__(log)
 
         # Static variables
         self.name = "Tophat"
@@ -32,25 +32,17 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         # Find and load any Tophat reports
         self.tophat_data = dict()
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            for fn in filenames:
-                if fn.endswith("align_summary.txt"):
-                    if fn == "align_summary.txt":
-                        s_name = os.path.basename(root)
-                    else:
-                        s_name = fn[:-17]
-                    s_name = s_name.split("_tophat",1)[0]
-                    s_name = self.clean_s_name(s_name, root)
-                    
-                    try:
-                        with open (os.path.join(root,fn), "r") as f:
-                            parsed_data = self.parse_tophat_log(f.read())
-                            if parsed_data is not None:
-                                if s_name in self.tophat_data:
-                                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                                self.tophat_data[s_name] = parsed_data
-                    except ValueError:
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
+        for f in self.find_log_files('align_summary.txt'):
+            parsed_data = self.parse_tophat_log(f['f'])
+            if parsed_data is not None:
+                if f['s_name'] == "align_summary.txt":
+                    s_name = os.path.basename(f['root'])
+                else:
+                    s_name = f['s_name'].split("align_summary.txt",1)[0]
+                s_name = self.clean_s_name(s_name, f['root'])
+                if s_name in self.tophat_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.tophat_data[s_name] = parsed_data
 
         if len(self.tophat_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))

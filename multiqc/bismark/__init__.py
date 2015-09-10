@@ -21,7 +21,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__()
+        super(MultiqcModule, self).__init__(log)
 
         # Static variables
         self.name = "Bismark"
