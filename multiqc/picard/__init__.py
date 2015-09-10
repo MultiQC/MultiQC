@@ -76,8 +76,8 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     if s_name in self.picard_dupMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.picard_dupMetrics_data[s_name] = dict()
-                    keys = f['f'].next().split("\t")
-                    vals = f['f'].next().split("\t")
+                    keys = f['f'].readline().split("\t")
+                    vals = f['f'].readline().split("\t")
                     for i, k in enumerate(keys):
                         try:
                             self.picard_dupMetrics_data[s_name][k] = float(vals[i])
