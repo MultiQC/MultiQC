@@ -204,34 +204,50 @@ class BaseMultiqcModule(object):
         few variants of how to use this function, see CONTRIBUTING.md
         for documentation and examples.
         :param data: 2D dict, first keys as sample names, then x:y data pairs
-        :param cats: optnal list, dict or OrderedDict with plot categories
+                     Can supply a list of dicts and will have buttons to switch
+        :param cats: optional list, dict or OrderedDict with plot categories
         :param config: optional dict with config key:value pairs
         :return: HTML and JS, ready to be inserted into the page
         """
         
-        # Not given any cats - find them from the data
-        if cats is None:
-            cats = list(set(k for s in data.keys() for k in data[s].keys() ))
+        # Given one dataset - turn it into a list
+        if type(data) is not list:
+            data = [data]
+        
+        # Check we have a list of cats
+        if type(cats) is not list or type(cats[0]) is str:
+            cats = [cats]
+        
+        # Check that we have cats at all - find them from the data
+        for idx, cat in enumerate(cats):
+            if cats[idx] is None:
+                cats[idx] = list(set(k for s in data[idx].keys() for k in data[idx][s].keys() ))
         
         # Given a list of cats - turn it into a dict
-        if type(cats) is list:
-            newcats = OrderedDict()
-            for c in cats:
-                newcats[c] = {'name': c}
-            cats = newcats
+        for idx, cat in enumerate(cats):
+            if type(cat) is list:
+                newcats = OrderedDict()
+                for c in cat:
+                    newcats[c] = {'name': c}
+                cats[idx] = newcats
         
         # Parse the data into a HighCharts friendly format
-        hc_samples = sorted(list(data.keys()))
-        hc_data = list()
-        for c in cats.keys():
-            thisdata = list()
-            for s in hc_samples:
-                thisdata.append(data[s][c])
-            if max(thisdata) > 0:
-                thisdict = { 'name': cats[c]['name'], 'data': thisdata }
-                if 'color' in cats[c]:
-                    thisdict['color'] = cats[c]['color']
-                hc_data.append(thisdict)
+        plotsamples = list()
+        plotdata = list()
+        for idx, d in enumerate(data):
+            hc_samples = sorted(list(d.keys()))
+            hc_data = list()
+            for c in cats[idx].keys():
+                thisdata = list()
+                for s in hc_samples:
+                    thisdata.append(d[s][c])
+                if max(thisdata) > 0:
+                    thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
+                    if 'color' in cats[idx][c]:
+                        thisdict['color'] = cats[idx][c]['color']
+                    hc_data.append(thisdict)
+            plotsamples.append(hc_samples)
+            plotdata.append(hc_data)
         
         # Build the HTML
         if config.get('id') is None:
@@ -252,13 +268,29 @@ class BaseMultiqcModule(object):
             html += '<div class="btn-group switch_group"> \n\
     			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="#{id}">{c_l}</button> \n\
     			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="#{id}">{p_l}</button> \n\
-    		</div>'.format(id=config['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
+    		</div> '.format(id=config['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
+            if len(plotdata) > 1:
+                html += ' &nbsp; &nbsp; '
+        
+        # Buttons to cycle through different datasets
+        if len(plotdata) > 1:
+            html += '<div class="btn-group switch_group">\n'
+            for k, p in enumerate(plotdata):
+                active = 'active' if k == 0 else ''
+                try: name = config['data_labels'][k]
+                except: name = k+1
+                try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
+                except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+            html += '</div>\n\n'
         
         # Plot and javascript function
         html += '<div id="{id}" class="hc-plot"></div> \n\
         <script type="text/javascript"> \n\
-            $(function () {{ plot_stacked_bar_graph("#{id}", {s}, {d}, {c}); }}); \
-        </script>'.format(id=config['id'], s=json.dumps(hc_samples), d=json.dumps(hc_data), c=json.dumps(config));
+            var {id}_samples = {s}; \n\
+            var {id}_datasets = {d}; \n\
+            $(function () {{ plot_stacked_bar_graph("#{id}", {id}_samples[0], {id}_datasets[0], {c}); }}); \
+        </script>'.format(id=config['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(config));
         
         return html
         
