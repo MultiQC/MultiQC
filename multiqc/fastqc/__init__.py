@@ -79,8 +79,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for f in filenames:
                 if f[-11:] == '_fastqc.zip':
                     s_name = f[:-11]
-                    d_name = f[:-4]
                     fqc_zip = zipfile.ZipFile(os.path.join(root, f))
+                    # FastQC zip files should have one directory inside, containing report
+                    d_name = fqc_zip.namelist()[0]
                     try:
                         with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
                             r_data = f.read().decode('utf8')
