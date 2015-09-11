@@ -202,7 +202,7 @@ cats['second_category'] = {
 }
 ```
 
-Finally, a config dict can be supplied. The defaults are as follows:
+Like the X,Y plot, a config dict can be supplied. The defaults are as follows:
 ```python
 config = {
     'id': '<random string>',                # HTML ID used for plot
@@ -215,6 +215,23 @@ config = {
 This dictionary can also have any of the javascript config options.
 See the [plot_stacked_bar_graph()](CONTRIBUTING.md#plot_stacked_bar_graph-target-names-data-config)
 docs below for those.
+
+#### Switching datasets
+You can also have a single plot with buttons to switch between different
+datasets. To do this, give a list of data objects (same formats as described
+above). Also add the following config options to supply names to the buttons
+and graph labels:
+```python
+config = {
+    'data_labels': [{'name': 'DS 1', 'ylab': 'Dataset 1'},
+                    {'name': 'DS 2', 'ylab': 'Dataset 2'}] 
+}
+```
+If supplying multiple datasets, you can also supply multiple category
+objects. Make sure that they are in the same order as the data. If not
+supplied, these will be guessed from the data keys.
+
+See the bismark module plots for an example of this in action.
 
 ## Javascript Helper Functions
 The javascript bundled in the default MultiQC template has a number of
@@ -241,7 +258,7 @@ config = {
     ymax: undefined,            // Max y limit
     ymin: undefined,            // Min y limit
     yDecimals: true,            // Set to false to only show integer labels
-    tt_label: '{point.x}',      // Use to customise tooltip label, eg. '{point.x} base pairs'
+    tt_label: '{point.x}: {point.y:.2f}', // Use to customise tooltip label, eg. '{point.x} base pairs'
     click_func: function(){},   // Javascript function to be called when a point is clicked
     cursor: undefined           // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
 }
