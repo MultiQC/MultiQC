@@ -4,11 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import io
-import json
 import logging
-import mmap
-import os
 import re
 
 import multiqc

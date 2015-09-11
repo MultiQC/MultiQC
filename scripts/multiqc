@@ -6,9 +6,7 @@
 from __future__ import print_function
 
 import argparse
-import collections
 import jinja2
-import json
 import logging
 import os
 import pkgutil
@@ -16,7 +14,6 @@ import re
 import shutil
 import sys
 import traceback
-import yaml
 
 from multiqc import config
 

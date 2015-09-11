@@ -3,10 +3,8 @@
 """ MultiQC module to parse output from Picard """
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
-import json
+from collections import OrderedDict
 import logging
-import mmap
 import os
 import re
 

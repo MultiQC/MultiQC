@@ -6,10 +6,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import json
 import logging
-import io
-import os
 import re
-import shutil
 
 import multiqc
 from multiqc import config

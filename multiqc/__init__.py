@@ -107,13 +107,8 @@ class BaseMultiqcModule(object):
         :return: The cleaned sample name, ready to be used
         """
         # Split then take first section to remove everything after these matches
-        s_name = s_name.split(".gz",1)[0]
-        s_name = s_name.split(".fastq",1)[0]
-        s_name = s_name.split(".fq",1)[0]
-        s_name = s_name.split(".bam",1)[0]
-        s_name = s_name.split(".sam",1)[0]
-        s_name = s_name.split("_tophat",1)[0]
-        s_name = s_name.split("_star_aligned",1)[0]
+        for ext in config.fn_clean_exts:
+            s_name = s_name.split(ext ,1)[0]
         if config.prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name

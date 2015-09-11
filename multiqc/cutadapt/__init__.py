@@ -4,9 +4,7 @@
 
 from __future__ import print_function
 import io
-import json
 import logging
-import mmap
 import os
 import re
 

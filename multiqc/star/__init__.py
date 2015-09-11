@@ -3,11 +3,8 @@
 """ MultiQC module to parse output from STAR """
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
-import json
+from collections import OrderedDict
 import logging
-import mmap
-import os
 import re
 
 import multiqc
@@ -34,9 +31,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for f in self.find_log_files('Log.final.out'):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
-                if f['s_name'] in self.star_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                self.star_data[f['s_name']] = parsed_data
+                s_name = f['s_name'].split('Log.final.out', 1)[0]
+                if s_name in self.star_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.star_data[s_name] = parsed_data
 
         if len(self.star_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
