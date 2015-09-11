@@ -1,3 +1,0 @@
-	Human	Mouse	Ecoli	PhiX
-SRR1067503_1_screen.txt	82678	2734	207	0
-SRR1067505_1_screen.txt	88048	7090	7	0

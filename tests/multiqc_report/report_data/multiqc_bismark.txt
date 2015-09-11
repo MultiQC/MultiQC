@@ -1,2 +1,0 @@
-	meth_chg	dup_reads_percent	strand_ot	strand_ob	dup_reads	discarded_reads	dedup_reads	percent_chg_meth	meth_chh	percent_cpg_meth	total_c	meth_cpg	percent_chh_meth	strand_ctot	aligned_reads	unmeth_cpg	total_reads	strand_ctob	ambig_reads	no_alignments	strand_directional	unmeth_chh	dedup_reads_percent	unmeth_chg
-test_data_trimmed	26.0	0.18	3012.0	3013.0	11.0	0.0	6014.0	0.2	125.0	65.2	48653.0	1658.0	0.4	0.0	6025.0	885.0	9184.0	0.0	1268.0	1891.0	directional	33879.0	99.82	12080.0

@@ -1,7 +1,0 @@
-
-Total number of alignments analysed in test_data_trimmed.fq.gz_bismark.bam:	6025
-Total number duplicated alignments removed:	11 (0.18%)
-Duplicated alignments were found at:	11 different position(s)
-
-Total count of deduplicated leftover sequences: 6014 (99.82% of total)
-

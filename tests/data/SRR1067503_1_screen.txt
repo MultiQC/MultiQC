@@ -1,9 +1,0 @@
-#Fastq_screen version: 0.5.1	#Reads in subset: 100000
-Library	#Reads_processed	#Unmapped	%Unmapped	#One_hit_one_library	%One_hit_one_library	#Multiple_hits_one_library	%Multiple_hits_one_library	#One_hit_multiple_libraries	%One_hit_multiple_libraries	Multiple_hits_multiple_libraries	%Multiple_hits_multiple_libraries
-Human	99939	17261	17.26	51175	51.21	28922	28.94	267	0.27	2314	2.32
-Mouse	99939	97205	97.26	82	0.08	70	0.07	767	0.77	1815	1.82
-S.cerevisiae	99939	99837	99.91	4	0.00	1	0.00	3	0.00	94	0.09
-Ecoli	99939	99732	99.80	193	0.19	14	0.01	0	0.00	0	0.00
-PhiX	99939	99939	100.00	0	0.00	0	0.00	0	0.00	0	0.00
-
-%Hit_no_libraries: 16.91

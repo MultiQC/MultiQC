@@ -1,3 +1,0 @@
-	unaligned_total	aligned_total	aligned_not_multimapped_discordant	overall_aligned_percent	aligned_multimap	aligned_discordant	total_reads	concordant_aligned_percent
-ERR458837_1_val	4470538.0	27726753.0	25853104.0	90.0	1430484.0	443165.0	32197291.0	84.7
-SRR1026912_blood_RNA-Seq_1_val	11018312.0	35218273.0	33468617.0	83.6	914557.0	835099.0	46236585.0	74.4
