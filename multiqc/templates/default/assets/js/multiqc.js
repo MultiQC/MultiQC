@@ -12,6 +12,9 @@ $(function () {
   // Enable the bootstrap tooltip hovers
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
+  
+  // Enable tablesorter on the general statistics table
+  $("#general_stats_table").tablesorter(); 
 
   // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
