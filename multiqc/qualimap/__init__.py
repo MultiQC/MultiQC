@@ -132,7 +132,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def qualimap_gc_distribution(self, qualimap_raw_data):
         parsed_data = {}
-        for sn, data in qualimap_raw_data.iteritems():
+        for sn, data in qualimap_raw_data.items():
             gc_report = data['reports']['mapped_reads_gc-content_distribution']
             if gc_report:
                 counts={}
@@ -155,7 +155,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def qualimap_cov_his(self, qualimap_raw_data):
         parsed_data = {}
-        for sn, data in qualimap_raw_data.iteritems():
+        for sn, data in qualimap_raw_data.items():
             cov_report = data['reports'].get('coverage_histogram')
             if cov_report:
                 counts={}
@@ -173,7 +173,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 num_counts = sum(counts.values())
                 cum_counts = 0
                 median_coverage = None
-                for thiscov, thiscount in counts.iteritems():
+                for thiscov, thiscount in counts.items():
                     cum_counts += thiscount
                     if cum_counts >= num_counts/2:
                         median_coverage = thiscov
@@ -187,7 +187,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def qualimap_ins_size_his(self, qualimap_raw_data):
         parsed_data = {}
-        for sn, data in qualimap_raw_data.iteritems():
+        for sn, data in qualimap_raw_data.items():
             ins_size = data['reports'].get('insert_size_histogram')
             if ins_size:
                 counts = {}
@@ -209,7 +209,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 num_counts = sum(counts.values())
                 cum_counts = 0
                 median_insert_size = None
-                for thisins, thiscount in counts.iteritems():
+                for thisins, thiscount in counts.items():
                     cum_counts += thiscount
                     if cum_counts >= num_counts/2:
                         median_insert_size = thisins
@@ -223,7 +223,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def qualimap_gen_frac_his(self, qualimap_raw_data):
         parsed_data = {}
-        for sn, data in qualimap_raw_data.iteritems():
+        for sn, data in qualimap_raw_data.items():
             frac_cov = data['reports'].get('genome_fraction_coverage')
             if frac_cov:
                 thirty_x_pc = 100
