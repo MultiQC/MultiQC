@@ -260,7 +260,7 @@ highcharts_plot_options = [];
 
 // Basic Line Graph
 function plot_xy_line_graph(div, data, config){
-  if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}'; }
+  if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
@@ -332,7 +332,7 @@ function plot_xy_line_graph(div, data, config){
 		},
     tooltip: {
       headerFormat: '',
-			pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br>'+config['tt_label']+': {point.y:.2f}',
+			pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br>'+config['tt_label'],
 			useHTML: true
     },
     series: data

@@ -63,6 +63,19 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # Section 1 - Coverage Histogram
         histogram_data = self.qualimap_cov_his(qualimap_raw_data)
         if len(histogram_data) > 0:
+            
+            # Chew back on histogram to prevent long flat tail
+            # (find a sensible max x - lose 1% of longest tail)
+            max_x = 0
+            for d in histogram_data.values():
+                total = sum(d.values())
+                cumulative = 0
+                for count in sorted(d.keys(), reverse=True):
+                    cumulative += d[count]
+                    if cumulative / total > 0.01:
+                        max_x = max(max_x, count)
+                        break                    
+            
             self.sections.append({
                 'name': 'Coverage Histogram',
                 'anchor': 'qualimap-coverage-histogram',
@@ -72,7 +85,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     'xlab': 'Coverage (X)',
                     'ymin': 0,
                     'xmin': 0,
-                    'tt_label': '<b>{point.x}X</b>',
+                    'xmax': max_x,
+                    'xDecimals': False,
+                    'tt_label': '<b>{point.x}X</b>: {point.y}',
                 })
             })
 
@@ -84,11 +99,11 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                 'anchor': 'qualimap-insert-size-histogram',
                 'content': self.plot_xy_data(histogram_data, {
                     'title': 'Insert Size Histogram',
-                    'ylab': 'Number of reads',
+                    'ylab': 'Fraction of reads',
                     'xlab': 'Insert Size (bp)',
                     'ymin': 0,
                     'xmin': 0,
-                    'tt_label': '<b>{point.x} bp</b>',
+                    'tt_label': '<b>{point.x} bp</b>: {point.y}',
                 })
             })
 
@@ -102,9 +117,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                     'title': 'Genome Fraction Coverage',
                     'ylab': 'Fraction of reference (%)',
                     'xlab': 'Coverage (X)',
+                    'ymax': 100,
                     'ymin': 0,
                     'xmin': 0,
-                    'tt_label': '<b>{point.x}X</b>',
+                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
                 })
             })
 
@@ -121,7 +137,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
                         'ymin': 0,
                         'xmin': 0,
                         'xmax': 100,
-                        'tt_label': '<b>{point.x}%</b>',
+                        'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
                     })
                 })
 
@@ -255,7 +271,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         # General stats table headers
         config.general_stats['headers']['median_coverage']    = '<th class="chroma-col" data-chroma-scale="RdBu"><span data-toggle="tooltip" title="Qualimap: Median coverage">Coverage</span></th>'
         config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="PuOr"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Insert Size</span></th>'
-        config.general_stats['headers']['thirty_x_pc']        = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% Covered</span></th>'
+        config.general_stats['headers']['thirty_x_pc']        = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Fraction of genome with at least 30X coverage">&ge; 30X</span></th>'
         config.general_stats['headers']['avg_gc']             = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="Qualimap: Average GC content">Avg. GC</span></th>'
 
         rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0,

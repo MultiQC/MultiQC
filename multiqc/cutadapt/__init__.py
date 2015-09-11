@@ -139,7 +139,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'xlab': 'Length Trimmed (bp)',
             'xDecimals': False,
             'ymin': 0,
-            'tt_label': '<b>{point.x} bp trimmed</b>',
+            'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
             'data_labels': [{'name': 'Obs/Exp', 'ylab': 'Observed / Expected'},
                             {'name': 'Counts', 'ylab': 'Count'}]
         }

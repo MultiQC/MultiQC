@@ -320,7 +320,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'xlab': 'Position (bp)',
             'ymin': 0,
             'xDecimals': False,
-            'tt_label': '<b>Base {point.x}</b>',
+            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
         }
         images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_base_quality.png'.format(s)}
                     for s in sorted(self.sequence_quality.keys())]
@@ -372,7 +372,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'xmax': 100,
             'xmin': 0,
             'yDecimals': False,
-            'tt_label': '<b>{point.x}% GC</b>',
+            'tt_label': '<b>{point.x}% GC</b>: {point.y}',
         }
         images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_sequence_gc_content.png'.format(s)}
                     for s in sorted(self.gc_content.keys())]
@@ -536,7 +536,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'ymax': 100,
             'ymin': 0,
             'xDecimals': False,
-            'tt_label': '<b>Base {point.x}</b>',
+            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
             'hide_empty': True
         }
         images = []

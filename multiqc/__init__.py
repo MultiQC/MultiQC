@@ -165,7 +165,7 @@ class BaseMultiqcModule(object):
         
         # Markup needed if we have the option of clicking through to original plot images
         if len(original_plots) > 0:
-            config['tt_label'] = 'Click to show original plot.<br>{}'.format(config.get('tt_label', '{point.x}'))
+            config['tt_label'] = 'Click to show original plot.<br>{}'.format(config.get('tt_label', '{point.x}: {point.y:.2f}'))
             if len(original_plots) > 1:
                 next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
                     <a href="#{prev}" class="btn btn-default original_plot_prev_btn" data-target="#{id}">&laquo; Previous</a> \n\
