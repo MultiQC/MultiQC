@@ -136,9 +136,9 @@ class BaseMultiqcModule(object):
             for s in sorted(d.keys()):
                 pairs = list()
                 maxval = 0
-                for k, p in d[s].items():
-                    pairs.append([k, p])
-                    maxval = max(maxval, p)
+                for k in sorted(d[s].keys()):
+                    pairs.append([k, d[s][k]])
+                    maxval = max(maxval, d[s][k])
                 if maxval > 0 or config.get('hide_empty') is not True:
                     thisplotdata.append({
                         'name': s,

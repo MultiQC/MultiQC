@@ -450,7 +450,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         else: next_prev_buttons = ''
         
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-        <div id="fastqc_seq" class="hc-plot-wrapper"> \n\
+        <div id="fastqc_seq"> \n\
             <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">{this_status}</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png"> \n\
