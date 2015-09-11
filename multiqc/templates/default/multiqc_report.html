@@ -52,6 +52,7 @@
   </ul>
   <div id="mqc_cols" class="mqc_filter_section">
     <h5>Highlight samples:</h5>
+    <small>Leave blank to set all to one colour.</small>
     <form class="form-inline" id="mqc_color_form">
       <input id="mqc_colour_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
       <input id="mqc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
@@ -62,6 +63,7 @@
   </div>
   <div id="mqc_hidesamples" class="mqc_filter_section">
     <h5>Hide samples:</h5>
+    <small>Warning! This can take a few seconds.</small>
     <form class="form-inline" id="mqc_hidesamples_form">
       <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
       <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
@@ -106,6 +108,8 @@
     </table>
   </div>
   {% endif %}
+  
+  <div class="alert alert-info"><strong>Usage tip:</strong> Click and drag line plots to zoom in. Change plot heights with the grey bar.</div>
 
   {% for m in modules %}
     <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
