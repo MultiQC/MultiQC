@@ -254,9 +254,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         basic stats table at the top of the report """
 
         # General stats table headers
-        config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median coverage">Coverage</span></th>'
-        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Insert Size</span></th>'
-        config.general_stats['headers']['thirty_x_pc'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% G Covered</span></th>'
+        config.general_stats['headers']['median_coverage'] = '<th class="chroma-col" data-chroma-scale="RdBu"><span data-toggle="tooltip" title="Qualimap: Median coverage">Coverage</span></th>'
+        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="PuOr"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Insert Size</span></th>'
+        config.general_stats['headers']['thirty_x_pc'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Genome Fraction Coverage">% Covered</span></th>'
         config.general_stats['headers']['avg_gc'] = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="Qualimap: Average GC content">Avg. GC</span></th>'
 
         rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0,
@@ -264,7 +264,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
         for samp, vals in self.parsed_stats.items():
             for k, v in vals.items():
-                v = round(v, 3) if type(v) == float else v
+                v = '{0:.1f}'.format(v) if type(v) == float else v
+                if k in ['thirty_x_pc', 'avg_gc']:
+                    v += '%'
                 config.general_stats['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
                 rowcounts[k] += 1
 
