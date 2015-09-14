@@ -7,6 +7,7 @@
 // Global vars
 s_height = 10;
 num_samples = 0;
+sample_names = {};
 labels = [];
 c_width = 0;
 c_height = 0;
@@ -17,21 +18,36 @@ highlight_f_texts = [];
 highlight_f_cols = [];
 hidesamples_regex_mode = false;
 hidesamples_f_texts = [];
+rename_from_texts = [];
+rename_to_texts = [];
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
     
+    var renamed_sample_names = {};
+    sample_names = {};
+    
+    // // Rename samples
+    // $.each(Object.keys(fastqc_seq_content_data), function(i, orig_name){
+    //     renamed_sample_names[orig_name] = orig_name;
+    //     $.each(rename_from_texts, function(idx, f_text){
+    //         renamed_sample_names[orig_name] = renamed_sample_names[orig_name].replace(f_text, rename_to_texts[idx]);
+    //     });
+    // });
+    
     // Get sample names, skipping hidden samples
-    sample_names = [];
-    $.each(Object.keys(fastqc_seq_content_data), function(i, name){
+    num_samples = 0;
+    $.each(renamed_sample_names, function(s_name, name){
         var hide_sample = false;
         $.each(hidesamples_f_texts, function(idx, f_text){
             if((hidesamples_regex_mode && name.match(f_text))  || (!hidesamples_regex_mode && name.indexOf(f_text) > -1)){
                 hide_sample = true;
             }
         });
-        if(!hide_sample){ sample_names.push(name); }
+        if(!hide_sample){
+            sample_names[s_name] = name;
+            num_samples += 1;
+        }
     });
-    num_samples = sample_names.length;
     
     // Convert the CSS percentage size into pixels
     c_width = $("#fastqc_seq_heatmap").parent().width();
@@ -46,8 +62,9 @@ function fastqc_seq_content_heatmap() {
         ctx.strokeStyle = "#666666";
         // First, do labels and get max base pairs
         max_bp = 0;
-        $.each(sample_names, function(i, name){
-            var s = fastqc_seq_content_data[name];
+        labels = [];
+        $.each(sample_names, function(s_name, name){
+            var s = fastqc_seq_content_data[s_name];
             labels.push(name);
             $.each(s, function(bp, v){
                 bp = parseInt(bp);
@@ -57,8 +74,8 @@ function fastqc_seq_content_heatmap() {
             });
         });
         ypos = 0;
-        $.each(sample_names, function(i, name){
-            var s = fastqc_seq_content_data[name]
+        $.each(sample_names, function(s_name, name){
+            var s = fastqc_seq_content_data[s_name]
             var xpos = 0;
             var last_bp = 0;
             $.each(s, function(bp, v){
@@ -213,6 +230,13 @@ $(function () {
     $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
         hidesamples_regex_mode = regex_mode;
         hidesamples_f_texts = f_texts;
+        fastqc_seq_content_heatmap();
+    });
+    
+    // Rename samples on the custom heatmap
+    $(document).on('mqc_renamesamples', function(e, f_texts, t_texts){
+        rename_from_texts = f_texts;
+        rename_to_texts = t_texts;
         fastqc_seq_content_heatmap();
     });
     

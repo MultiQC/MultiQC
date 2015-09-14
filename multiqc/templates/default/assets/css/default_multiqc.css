@@ -147,6 +147,11 @@ input.form-control[type=color]{
     width: -webkit-calc(100% - 55px);
     width: calc(100% - 55px);
 }
+.from_text, .to_text {
+    width: -moz-calc(49% - 20px);
+    width: -webkit-calc(49% - 20px);
+    width: calc(49% - 20px);
+}
 .mqc_filters button {
     padding: 7px 10px 0;
 }
@@ -174,16 +179,34 @@ input.form-control[type=color]{
 .mqc_filter_section {
     padding:10px;
 }
-.mqc_filter_section small {
+.mqc_filter_section p {
+    font-size: 85%;
+    padding:0;
+    margin: 5px 0;
     color: #999;
     font-style:italic;
+}
+.mqc_filter_section p a {
+    color: #999;
+}
+.mqc_filter_section .form-inline .form-control {
+    vertical-align: middle;
 }
 @media only screen and (max-width: 900px){
     .mqc_filter_section .form-control {
         display: inline-block;
     }
     .mqc_filter_section input[type="text"] { width: auto; }
-    .mqc_filter_section input[type="color"] { padding: 5px 2px; }
+}
+#mqc_renamesamples input[type="text"] {
+    width: 80px;
+}
+
+#mqc_renamesamples_bulk_collapse {
+    border-top: 1px solid #CCC;
+}
+#mqc_renamesamples_bulk_update {
+    margin-top: 5px;
 }
 
 /* General stats table */
@@ -212,10 +235,11 @@ input.form-control[type=color]{
 #general_stats_table th {
     white-space: nowrap;
 }
-#general_stats_table th.sorthandle {
+#general_stats_table .sorthandle {
     border-right: none;
+    font-weight:bold;
 }
-#general_stats_table tbody th.sorthandle {
+#general_stats_table tbody .sorthandle {
     cursor: pointer;
     color: #ccc;
 }

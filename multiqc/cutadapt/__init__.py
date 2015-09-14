@@ -134,6 +134,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         for more information on how these numbers are generated.</p>'
         
         pconfig = {
+            'id': 'cutadapt_plot',
             'title': 'Lengths Trimmed',
             'ylab': 'Observed / Expected',
             'xlab': 'Length Trimmed (bp)',

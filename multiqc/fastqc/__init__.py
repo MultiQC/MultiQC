@@ -316,6 +316,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def fastqc_quality_overlay_plot (self):
         """ Create the HTML for the phred quality score plot """
         pconfig = {
+            'id': 'fastqc_quality_plot',
             'title': 'Mean Quality Scores',
             'ylab': 'Phred Score',
             'xlab': 'Position (bp)',
@@ -366,6 +367,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
     def fastqc_gc_overlay_plot (self):
         """ Create the HTML for the FastQC GC content plot """
         pconfig = {
+            'id': 'fastqc_gcontent_plot',
             'title': 'Per Sequence GC Content',
             'ylab': 'Count',
             'xlab': '%GC',

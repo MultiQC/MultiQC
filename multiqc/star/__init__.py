@@ -128,6 +128,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'star_alignment_plot',
             'title': 'STAR Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'

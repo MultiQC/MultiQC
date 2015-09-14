@@ -161,7 +161,7 @@ $(function () {
 
   // Highlight colour filters
   var mqc_colours = chroma.brewer.Set1;
-  var mqc_colours_idx = 0;
+  var mqc_colours_idx = 100;
   $('#mqc_color_form').submit(function(e){
     e.preventDefault();
     var f_text = $('#mqc_colour_filter').val().trim();
@@ -176,7 +176,7 @@ $(function () {
         return false;
       }
     });
-    $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx+100)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+    $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
     apply_mqc_highlights();
     $('#mqc_colour_filter').val('');
     mqc_colours_idx += 1;
@@ -185,7 +185,7 @@ $(function () {
   });
   
   // Hide sample filters
-  var mqc_hidesamples_idx = 0;
+  var mqc_hidesamples_idx = 200;
   $('#mqc_hidesamples_form').submit(function(e){
     e.preventDefault();
     var f_text = $('#mqc_hidesamples_filter').val().trim();
@@ -201,10 +201,31 @@ $(function () {
       }
     });
     if(error){ return false; }
-    $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_hidesamples_idx+100)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+    $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_hidesamples_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
     apply_mqc_hidesamples();
     $('#mqc_hidesamples_filter').val('');
     mqc_hidesamples_idx += 1;
+  });
+  
+  // Rename samples
+  var mqc_renamesamples_idx = 300;
+  $('#mqc_renamesamples_form').submit(function(e){
+    e.preventDefault();
+    var from_text = $('#mqc_renamesamples_from').val().trim();
+    var to_text = $('#mqc_renamesamples_to').val().trim();
+    if(from_text.length == 0){
+      alert('Error - "From" text must not be blank.');
+      return false;
+    }
+    var li = '<li><input class="f_text from_text" value="'+from_text+'" tabindex="'+(mqc_renamesamples_idx)+'" />'
+    li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" tabindex="'+(mqc_renamesamples_idx+1)+'" />'
+    li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+    $('#mqc_renamesamples_filters').append(li);
+      apply_mqc_renamesamples();
+    $('#mqc_renamesamples_from').val('');
+    $('#mqc_renamesamples_to').val('');
+    mqc_renamesamples_idx += 2;
+    $('#mqc_renamesamples_form input:first').focus();
   });
   
   // Filter text is changed
@@ -215,6 +236,9 @@ $(function () {
     }
     if(target == 'mqc_hidesamples_filters'){
       apply_mqc_hidesamples();
+    }
+    if(target == 'mqc_renamesamples_filters'){
+      apply_mqc_renamesamples();
     }
   });
   // Enter key pressed whilst editing a filter
@@ -230,6 +254,7 @@ $(function () {
     $(this).parent().remove();
     if(target == 'mqc_col_filters'){ apply_mqc_highlights(); }
     if(target == 'mqc_hidesamples_filters'){ apply_mqc_hidesamples(); }
+    if(target == 'mqc_renamesamples_filters'){ apply_mqc_renamesamples(); }
   });
   // Use jQuery UI to make the colour filters sortable
   $("#mqc_col_filters").sortable();
@@ -571,6 +596,7 @@ function apply_mqc_highlights(){
 
 // Apply the Highlight highlights to highcharts plots
 function apply_mqc_hidesamples(){
+  console.log('CALLED');
   
   // Collect the filters into an array
   var f_texts = [];
@@ -603,12 +629,14 @@ function apply_mqc_hidesamples(){
       // Bar charts
       else if($(this).highcharts().options.chart.type == 'bar'){
         var replot = $.extend(true, [], highcharts_plot_options['#'+plotid]); // make a copy, not reference
+        var matches = 0;
         // Remove the categories
         var idx = replot.xAxis.categories.length;
         while (idx--) {
           var val = replot.xAxis.categories[idx];
           $.each(f_texts, function(i, f_text){
             if((regex_mode && val.match(f_text)) || (!regex_mode && val.indexOf(f_text) > -1)){
+              matches += 1;
               replot.xAxis.categories.splice(idx, 1);
               $.each(replot.series, function(j, s){
                 replot.series[j].data.splice(idx, 1);
@@ -617,7 +645,7 @@ function apply_mqc_hidesamples(){
             }
           });
         };
-        highcharts_plots['#'+plotid] = new Highcharts.Chart(replot);
+        if(matches > 0){ highcharts_plots['#'+plotid] = new Highcharts.Chart(replot); }
       }
     } catch(err) {
       console.log('Error hiding samples in '+$(this).attr('id')+' - '+err.message);
@@ -642,6 +670,80 @@ function apply_mqc_hidesamples(){
   
 }
 
+function apply_mqc_renamesamples(){
+  // Loop through each plot
+  // $('.hc-plot').each(function(){
+  //   // Put in a try / catch so that one plot doesn't break all hiding
+  //   try {
+  //     // Line plots
+  //     if($(this).highcharts().options.chart.type == 'line'){
+  //       $.each($(this).highcharts().series, function(j, s){
+  //         s.name = get_new_name(s.name);
+  //       });
+  //     }
+  //     // Bar charts
+  //     else if($(this).highcharts().options.chart.type == 'bar'){
+  //       var plotid = $(this).attr('id');
+  //       var replot = $.extend(true, [], highcharts_plot_options['#'+plotid]); // make a copy, not reference
+  //       var matches = 0;
+  //       // Rename the categories
+  //       $.each(replot.xAxis.categories, function(idx, val){
+  //         s_name = replot.xAxis.categories[idx];
+  //         n_name = get_new_name(s_name);
+  //         if(n_name != s_name){
+  //           replot.xAxis.categories[idx] = n_name;
+  //           matches += 1;
+  //         }
+  //       });
+  //       if(matches > 0){ highcharts_plots['#'+plotid] = new Highcharts.Chart(replot); }
+  //     }
+  //   } catch(err) {
+  //     console.log('Error renaming samples in '+$(this).attr('id')+' - '+err.message);
+  //   }
+  // });
+  
+  // Rename samples in the general stats table
+  $("#general_stats_table tbody th").each(function(){
+    $(this).text(get_new_name($(this).text()));
+  });
+  
+  // Fire off a custom jQuery event for other javascript chunks to tie into
+  $(document).trigger('mqc_renamesamples');
+}
+// Try to keep track of what samples are called
+mqc_renamed_samples = {};
+function get_new_name(s_name){
+  // Collect the filters into an array
+  var f_texts = [];
+  var t_texts = [];
+  mqc_rename_filters = {};
+  $('#mqc_renamesamples_filters .from_text').each(function(){
+    f_texts.push($(this).val());
+  });
+  $('#mqc_renamesamples_filters .to_text').each(function(){
+    t_texts.push($(this).val());
+  });
+  // Find the original name, if it's changed
+  orig_name = get_orig_name(s_name);
+  s_name = orig_name;
+  // Now rename it
+  $.each(f_texts, function(idx, f_text){
+    s_name = s_name.replace(f_text, t_texts[idx]);
+  });
+  // Update list of names
+  mqc_renamed_samples[orig_name] = s_name;
+  return s_name;
+}
+function get_orig_name(s_name){
+  $.each(mqc_renamed_samples, function(s, r){
+    if(r == s_name){
+      s_name = s;
+      return false; // end loop
+    }
+  });
+  return s_name;
+}
+
 
 // Update an original plot source
 function hc_original_chg_source (name, id) {
@@ -650,10 +752,20 @@ function hc_original_chg_source (name, id) {
     var names = eval(id+'_orig_plots');
   } catch(err) {
     console.log("Couldn't find original plot names array for "+id+'_orig_plots - '+err);
-    return false;
   }
   
   var target = $('#'+id).parent();
+  
+  // Wipe the src in case it's not found later
+  target.find('img.original-plot').attr('src','assets/img/img_not_found.png');
+  
+  // Find the original name if it's been renamed
+  $.each(mqc_renamed_samples, function(orig, new_name){
+    if(new_name == name){
+      name = orig;
+      return false;
+    }
+  });
   
   // Find the image source
   var src = undefined;
