@@ -166,15 +166,16 @@ $(function () {
     e.preventDefault();
     var f_text = $('#mqc_colour_filter').val().trim();
     var f_col = $('#mqc_colour_filter_color').val().trim();
-    var error = false;
-    if(f_text.length == 0){ f_text = '[ all ]'; }
+    if(f_text.length == 0){
+      alert('Error - highlight text must not be blank.');
+      return false;
+    }
     $('#mqc_col_filters li .f_text').each(function(){
       if($(this).val() == f_text){
         alert('Error - highlight text "'+f_text+'" already exists');
-        error = true;
+        return false;
       }
     });
-    if(error){ return false; }
     $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx+100)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
     apply_mqc_highlights();
     $('#mqc_colour_filter').val('');
@@ -210,7 +211,6 @@ $(function () {
   $('.mqc_filters').on('blur', 'li input', function(){
     var target = $(this).parent().parent().attr('id');
     if(target == 'mqc_col_filters'){
-      if($(this).val().length == 0){ $(this).val('[ all ]'); }
       apply_mqc_highlights();
     }
     if(target == 'mqc_hidesamples_filters'){
@@ -501,7 +501,13 @@ function apply_mqc_highlights(){
   $('#mqc_col_filters li .f_text').each(function(){
     f_texts.push($(this).val());
     f_cols.push($(this).css('color'));
-  });  
+  });
+  
+  // Apply a 'background' highlight to remove default colouring first
+  if(f_texts.length > 0){
+    f_texts.unshift('');
+    f_cols.unshift('#cccccc');
+  }
   
   // Loop through each plot
   $.each(Object.keys(highcharts_plots), function(i, id){
@@ -516,7 +522,6 @@ function apply_mqc_highlights(){
           }
           var thiscol = highcharts_plot_options[id]['series'][j]['color'];
           $.each(f_texts, function(idx, f_text){
-            if(f_text == '[ all ]'){ f_text = ''; }
             if((regex_mode && s.name.match(f_text)) || (!regex_mode && s.name.indexOf(f_text) > -1)){
               thiscol = f_cols[idx];
             }
@@ -533,7 +538,6 @@ function apply_mqc_highlights(){
           var labeltext = $(this).text();
           var thiscol = '#606060';
           $.each(f_texts, function(idx, f_text){
-            if(f_text == '[ all ]'){ f_text = ''; }
             if((regex_mode && labeltext.match(f_text)) || (!regex_mode && labeltext.indexOf(f_text) > -1)){
               thiscol = f_cols[idx];
             }
@@ -552,7 +556,6 @@ function apply_mqc_highlights(){
     var thtext = $(this).text();
     var thiscol = '#333';
     $.each(f_texts, function(idx, f_text){
-      if(f_text == '[ all ]'){ f_text = ''; }
       if((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)){
         thiscol = f_cols[idx];
       }

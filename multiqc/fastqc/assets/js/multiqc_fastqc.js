@@ -89,7 +89,7 @@ function fastqc_seq_content_heatmap() {
         // Draw custom highlights
         $.each(highlight_f_texts, function(idx, f_text){
             var f_col = highlight_f_cols[idx];
-            if(f_text == '[ all ]'){ return true; } // no initial colour, so highlighting all makes no sense
+            if(f_text == ''){ return true; } // no initial colour, so highlighting all makes no sense
             $.each(labels, function(idx, label){
                 if((highlight_regex_mode && label.match(f_text)) || (!highlight_regex_mode && label.indexOf(f_text) > -1)){
                     var c_width = $("#fastqc_seq_heatmap").width();
