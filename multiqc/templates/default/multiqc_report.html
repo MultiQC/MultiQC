@@ -84,7 +84,7 @@
 
   {% if config.general_stats['headers']|length > 0 %}
   <h2 id="general_stats">General Statistics</h2>
-  <p class="text-muted"><strong>Usage tip:</strong> Click a header to sort by that column, shift-click to sort by multiple. Drag the handle on any row to re-arrange.</p>
+  <p class="text-muted hidden-print"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> <strong>Usage tip:</strong> Click a header to sort by that column, shift-click to sort by multiple. Drag the handle on any row to re-arrange.</p>
   <div class="table-responsive">
     <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
       <thead>
@@ -111,7 +111,7 @@
   </div>
   {% endif %}
   
-  <div class="alert alert-info"><strong>Usage tip:</strong> Click and drag line plots to zoom in. Change plot heights with the grey bar.</div>
+  <div class="alert alert-info hidden-print"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> <strong>Usage tip:</strong> Click and drag line plots to zoom in. Change plot heights with the grey bar.</div>
 
   {% for m in modules %}
     <h2 id="{{ m.anchor }}">{{ m.name }}</h2>

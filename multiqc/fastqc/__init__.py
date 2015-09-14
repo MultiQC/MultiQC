@@ -39,7 +39,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         self.anchor = "fastqc"
         self.intro = '<p><a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">FastQC</a> \
             is a quality control tool for high throughput sequence data, written by Simon Andrews at the Babraham Institute in Cambridge.</p> \
-            <div class="alert alert-info"><strong>Usage tip:</strong> Click a data point to view the original FastQC plot.</div>'
+            <div class="alert alert-info hidden-print"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> <strong>Usage tip:</strong> Click a data point to view the original FastQC plot.</div>'
         self.data_dir = os.path.join(config.output_dir, 'report_data', 'fastqc')
 
         # Find and load any FastQC reports

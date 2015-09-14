@@ -14,7 +14,7 @@ $(function () {
   $('[data-toggle="tooltip"]').tooltip();
   
   // Enable tablesorter on the general statistics table
-  $("#general_stats_table").tablesorter(); 
+  $("#general_stats_table").tablesorter({sortInitialOrder: 'desc'}); 
 
   // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
