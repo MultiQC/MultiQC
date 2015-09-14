@@ -527,6 +527,10 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for v in self.adapter_content[s].values():
                 max_val = max(max_val, v)
         if max_val <= 0.1:
+            # Delete original plots - can't see them withoit anything to click on anyway
+            adapter_plots = [ f for f in os.listdir(self.data_dir) if f.endswith("_adapter_content.png") ]
+            for f in adapter_plots:
+                os.remove(os.path.join(self.data_dir, f))
             return '<p>No adapter contamination found in any samples.</p>'
         
         pconfig = {
