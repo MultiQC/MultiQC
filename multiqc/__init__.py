@@ -140,10 +140,11 @@ class BaseMultiqcModule(object):
                     pairs.append([k, d[s][k]])
                     maxval = max(maxval, d[s][k])
                 if maxval > 0 or config.get('hide_empty') is not True:
-                    thisplotdata.append({
-                        'name': s,
-                        'data': pairs
-                    })
+                    this_series = { 'name': s, 'data': pairs }
+                    try:
+                        this_series['color'] = config['colors'][s]
+                    except: pass
+                    thisplotdata.append(this_series)
             plotdata.append(thisplotdata)
         
         # Build the HTML for the page
@@ -174,7 +175,7 @@ class BaseMultiqcModule(object):
             else:
                 next_prev_buttons = ''
             html += '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-                    <div id="fastqc_quals" class="hc-plot-wrapper"> \n\
+                    <div id="{id}_wrapper" class="hc-plot-wrapper"> \n\
                         <div class="showhide_orig" style="display:none;"> \n\
                             <h4><span class="s_name">{n}</span></h4> \n\
                             {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="{f}"> \n\

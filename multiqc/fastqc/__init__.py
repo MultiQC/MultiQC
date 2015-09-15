@@ -126,6 +126,18 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'fastqc_seq' : {},
             'fastqc_adapter' : {},
         }
+        self.status_colours = {
+            'pass': '#5cb85c',
+            'warn': '#f0ad4e',
+            'fail': '#d9534f',
+            'default': '#999'
+        }
+        self.status_classes = {
+            'pass': 'label-success',
+            'warn': 'label-warning',
+            'fail': 'label-danger',
+            'default': 'label-default'
+        }
 
         # Get the section pass and fails
         passfails = self.fastqc_get_passfails(fastqc_raw_data)
@@ -315,24 +327,39 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def fastqc_quality_overlay_plot (self):
         """ Create the HTML for the phred quality score plot """
+        
+        # Statuses
+        statuses = {}
+        s_colours = {}
+        for s_name, status in self.statuses['fastqc_quals'].items():
+            statuses[s_name] = status
+            s_colours[s_name] = self.status_colours.get(status, self.status_colours['default'])
+        
         pconfig = {
+            'id': 'fastqc_quality_plot',
             'title': 'Mean Quality Scores',
             'ylab': 'Phred Score',
             'xlab': 'Position (bp)',
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
+            'colors': s_colours,
+            'plotBands': [
+                {'from': 28, 'to': 100, 'color': '#c3e6c3'},
+                {'from': 20, 'to': 28, 'color': '#e6dcc3'},
+                {'from': 0, 'to': 20, 'color': '#e6c3c3'},
+            ]
         }
+        
+        # Original images
         images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_base_quality.png'.format(s)}
                     for s in sorted(self.sequence_quality.keys())]
         
         html = self.plot_xy_data(self.sequence_quality, pconfig, images)
         
-        # Make a JS variable holding the FastQC status for each sample
-        statuses = {s: self.statuses['fastqc_quals'][s] for s in self.statuses['fastqc_quals'].keys()}
         html += '<script type="text/javascript"> \n\
                     if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-                    fastqc_s_statuses["fastqc_quals"] = {}; \n\
+                    fastqc_s_statuses["fastqc_quality_plot"] = {}; \n\
                 </script>'.format(json.dumps(statuses))
         
         return html
@@ -365,7 +392,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def fastqc_gc_overlay_plot (self):
         """ Create the HTML for the FastQC GC content plot """
+        
+        # Statuses
+        statuses = {}
+        s_colours = {}
+        for s_name, status in self.statuses['fastqc_gc'].items():
+            statuses[s_name] = status
+            s_colours[s_name] = self.status_colours.get(status, self.status_colours['default'])
+        
         pconfig = {
+            'id': 'fastqc_gcontent_plot',
             'title': 'Per Sequence GC Content',
             'ylab': 'Count',
             'xlab': '%GC',
@@ -374,17 +410,16 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'xmin': 0,
             'yDecimals': False,
             'tt_label': '<b>{point.x}% GC</b>: {point.y}',
+            'colors': s_colours
         }
         images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_sequence_gc_content.png'.format(s)}
                     for s in sorted(self.gc_content.keys())]
         
         html = self.plot_xy_data(self.gc_content, pconfig, images)
         
-        # Make a JS variable holding the FastQC status for each sample
-        statuses = {s: self.statuses['fastqc_gc'][s] for s in self.statuses['fastqc_gc'].keys()}
         html += '<script type="text/javascript"> \n\
                     if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-                    fastqc_s_statuses["fastqc_gc"] = {}; \n\
+                    fastqc_s_statuses["fastqc_gcontent_plot"] = {}; \n\
                 </script>'.format(json.dumps(statuses))
         
         return html
@@ -452,12 +487,12 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         
         html = '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
         <div id="fastqc_seq"> \n\
-            <h4><span class="s_name">{fn}</span> <span class="label label-default s_status">{this_status}</span></h4> \n\
+            <h4><span class="s_name">{fn}</span> <span class="label {status_class} s_status">{this_status}</span></h4> \n\
             <div class="showhide_orig" style="display:none;"> \n\
                 {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="report_data/fastqc/{fn}_per_base_sequence_content.png"> \n\
             </div>\n\
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
-                <div id="fastqc_seq_plot" class="hc-plot"> \n\
+                <div id="fastqc_seq" class="hc-plot"> \n\
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
                 </div> \n\
                 <ul id="fastqc_seq_heatmap_key">\n\
@@ -481,7 +516,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             $(function () {{ \n\
                 fastqc_seq_content_heatmap(); \n\
             }}); \n\
-        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), this_status=statuses[names[0]], s=json.dumps(statuses), oplots=json.dumps(images))
+        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), this_status=statuses[names[0]], status_class=self.status_classes.get(statuses[names[0]], 'label-default'), s=json.dumps(statuses), oplots=json.dumps(images))
         
         return html
 
@@ -534,7 +569,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             return '<p>No adapter contamination found in any samples.</p>'
         
         pconfig = {
-            'id': 'mqc_fastqc_adapter_plot',
+            'id': 'fastqc_adapter_plot',
             'title': 'Adapter Content',
             'ylab': '% of Sequences',
             'xlab': 'Position',
@@ -544,6 +579,9 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
             'hide_empty': True
         }
+        # NB: No point in adding colour by status here. If there's anything to
+        # show, it's usually a fail. So everything is red. Boring.
+        
         images = []
         samps = []
         for s in sorted(self.adapter_content.keys()):
@@ -561,7 +599,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         statuses = {s: self.statuses['fastqc_adapter'][s] for s in self.statuses['fastqc_adapter'].keys()}
         html += '<script type="text/javascript"> \n\
                     if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-                    fastqc_s_statuses["fastqc_gc"] = {}; \n\
+                    fastqc_s_statuses["fastqc_adapter_plot"] = {}; \n\
                 </script>'.format(json.dumps(statuses))
         
         return html
