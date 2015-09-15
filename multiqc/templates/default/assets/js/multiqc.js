@@ -339,11 +339,7 @@ function plot_xy_line_graph(div, data, config){
       max: config['ymax'],
       min: config['ymin'],
       allowDecimals: config['yDecimals'],
-      plotLines: [{
-        value: 0,
-        width: 1,
-        color: '#808080'
-      }]
+      plotBands: config['plotBands']
     },
     plotOptions: {
       series: {

@@ -140,10 +140,11 @@ class BaseMultiqcModule(object):
                     pairs.append([k, d[s][k]])
                     maxval = max(maxval, d[s][k])
                 if maxval > 0 or config.get('hide_empty') is not True:
-                    thisplotdata.append({
-                        'name': s,
-                        'data': pairs
-                    })
+                    this_series = { 'name': s, 'data': pairs }
+                    try:
+                        this_series['color'] = config['colors'][s]
+                    except: pass
+                    thisplotdata.append(this_series)
             plotdata.append(thisplotdata)
         
         # Build the HTML for the page
