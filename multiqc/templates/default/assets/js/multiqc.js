@@ -790,7 +790,12 @@ function hc_original_chg_source (name, id) {
   try {
     var names = eval(id+'_orig_plots');
   } catch(err) {
+    console.log("Couldn't parse original plot paths array for "+id+'_orig_plots - '+err);
+    return false;
+  }
+  if(names.length == 0){
     console.log("Couldn't find original plot paths array for "+id+'_orig_plots - '+err);
+    return false;
   }
   
   var target = $('#'+id).parent();
@@ -827,6 +832,9 @@ function hc_original_chg_source (name, id) {
       target.closest('.mqc-section').find('.instr').text("Click plot to return to overview plot.");
       highlight_fade_text(target.closest('.mqc-section').find('.instr'));
     }
+  } else {
+    console.log("Couldn't find original image path for "+s_name+", id:"+id);
+    console.log(names);
   }
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
