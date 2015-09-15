@@ -672,39 +672,48 @@ function apply_mqc_hidesamples(){
 
 function apply_mqc_renamesamples(){
   // Loop through each plot
-  // $('.hc-plot').each(function(){
-  //   // Put in a try / catch so that one plot doesn't break all hiding
-  //   try {
-  //     // Line plots
-  //     if($(this).highcharts().options.chart.type == 'line'){
-  //       $.each($(this).highcharts().series, function(j, s){
-  //         s.name = get_new_name(s.name);
-  //       });
-  //     }
-  //     // Bar charts
-  //     else if($(this).highcharts().options.chart.type == 'bar'){
-  //       var plotid = $(this).attr('id');
-  //       var replot = $.extend(true, [], highcharts_plot_options['#'+plotid]); // make a copy, not reference
-  //       var matches = 0;
-  //       // Rename the categories
-  //       $.each(replot.xAxis.categories, function(idx, val){
-  //         s_name = replot.xAxis.categories[idx];
-  //         n_name = get_new_name(s_name);
-  //         if(n_name != s_name){
-  //           replot.xAxis.categories[idx] = n_name;
-  //           matches += 1;
-  //         }
-  //       });
-  //       if(matches > 0){ highcharts_plots['#'+plotid] = new Highcharts.Chart(replot); }
-  //     }
-  //   } catch(err) {
-  //     console.log('Error renaming samples in '+$(this).attr('id')+' - '+err.message);
-  //   }
-  // });
+  $('.hc-plot').each(function(){
+    // Skip non-standard plot types
+    if($(this).highcharts() === undefined){
+      return true;
+    }
+    // Put in a try / catch so that one plot doesn't break all hiding
+    try {
+      var pid = $(this).attr('id');
+      // Line plots
+      if($(this).highcharts().options.chart.type == 'line'){
+        $.each($(this).highcharts().series, function(j, s){
+          s.name = get_new_name(s.name, pid);
+        });
+      }
+      // Bar charts
+      else if($(this).highcharts().options.chart.type == 'bar'){
+        var replot = $.extend(true, [], highcharts_plot_options['#'+pid]); // make a copy, not reference
+        var matches = 0;
+        // Rename the categories
+        $.each(replot.xAxis.categories, function(idx, val){
+          s_name = replot.xAxis.categories[idx];
+          n_name = get_new_name(s_name, pid);
+          if(n_name != s_name){
+            replot.xAxis.categories[idx] = n_name;
+            matches += 1;
+          }
+        });
+        if(matches > 0){ highcharts_plots['#'+pid] = new Highcharts.Chart(replot); }
+      }
+    } catch(err) {
+      console.log('Error renaming samples in '+$(this).attr('id')+' - '+err.message);
+    }
+  });
   
   // Rename samples in the general stats table
   $("#general_stats_table tbody th").each(function(){
-    $(this).text(get_new_name($(this).text()));
+    var s_name = $(this).text();
+    var orig_name = $(this).data('original-sample-name');
+    if(orig_name === undefined){
+      $(this).data('original-sample-name', s_name);
+    }
+    $(this).text(get_new_name(s_name, '#general_stats_table', orig_name));
   });
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
@@ -712,7 +721,7 @@ function apply_mqc_renamesamples(){
 }
 // Try to keep track of what samples are called
 mqc_renamed_samples = {};
-function get_new_name(s_name){
+function get_new_name(s_name, obj_id, orig_name){
   // Collect the filters into an array
   var f_texts = [];
   var t_texts = [];
@@ -723,19 +732,29 @@ function get_new_name(s_name){
   $('#mqc_renamesamples_filters .to_text').each(function(){
     t_texts.push($(this).val());
   });
-  // Find the original name, if it's changed
-  orig_name = get_orig_name(s_name);
+  // Find the original name, if it's changed and if not supplied
+  if(orig_name === undefined){
+    orig_name = get_orig_name(s_name, obj_id);
+  }
   s_name = orig_name;
   // Now rename it
   $.each(f_texts, function(idx, f_text){
     s_name = s_name.replace(f_text, t_texts[idx]);
   });
   // Update list of names
-  mqc_renamed_samples[orig_name] = s_name;
+  // Needs to be one set of names per chart, else reverse
+  // lookup doesn't work for the next chart.
+  if(mqc_renamed_samples[obj_id] === undefined){
+    mqc_renamed_samples[obj_id] = {};
+  }
+  mqc_renamed_samples[obj_id][orig_name] = s_name;
   return s_name;
 }
-function get_orig_name(s_name){
-  $.each(mqc_renamed_samples, function(s, r){
+function get_orig_name(s_name, obj_id){
+  if(mqc_renamed_samples[obj_id] === undefined){
+    return s_name;
+  }
+  $.each(mqc_renamed_samples[obj_id], function(s, r){
     if(r == s_name){
       s_name = s;
       return false; // end loop
