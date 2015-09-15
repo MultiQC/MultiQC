@@ -333,7 +333,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         statuses = {s: self.statuses['fastqc_quals'][s] for s in self.statuses['fastqc_quals'].keys()}
         html += '<script type="text/javascript"> \n\
                     if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-                    fastqc_s_statuses["fastqc_quals"] = {}; \n\
+                    fastqc_s_statuses["fastqc_quality_plot"] = {}; \n\
                 </script>'.format(json.dumps(statuses))
         
         return html
@@ -386,7 +386,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         statuses = {s: self.statuses['fastqc_gc'][s] for s in self.statuses['fastqc_gc'].keys()}
         html += '<script type="text/javascript"> \n\
                     if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-                    fastqc_s_statuses["fastqc_gc"] = {}; \n\
+                    fastqc_s_statuses["fastqc_gcontent_plot"] = {}; \n\
                 </script>'.format(json.dumps(statuses))
         
         return html
@@ -536,7 +536,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             return '<p>No adapter contamination found in any samples.</p>'
         
         pconfig = {
-            'id': 'mqc_fastqc_adapter_plot',
+            'id': 'fastqc_adapter_plot',
             'title': 'Adapter Content',
             'ylab': '% of Sequences',
             'xlab': 'Position',
@@ -563,7 +563,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         statuses = {s: self.statuses['fastqc_adapter'][s] for s in self.statuses['fastqc_adapter'].keys()}
         html += '<script type="text/javascript"> \n\
                     if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-                    fastqc_s_statuses["fastqc_gc"] = {}; \n\
+                    fastqc_s_statuses["fastqc_adapter_plot"] = {}; \n\
                 </script>'.format(json.dumps(statuses))
         
         return html

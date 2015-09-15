@@ -174,7 +174,7 @@ class BaseMultiqcModule(object):
             else:
                 next_prev_buttons = ''
             html += '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-                    <div id="fastqc_quals" class="hc-plot-wrapper"> \n\
+                    <div id="{id}_wrapper" class="hc-plot-wrapper"> \n\
                         <div class="showhide_orig" style="display:none;"> \n\
                             <h4><span class="s_name">{n}</span></h4> \n\
                             {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="{f}"> \n\

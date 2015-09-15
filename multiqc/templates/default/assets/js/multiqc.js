@@ -307,6 +307,12 @@ function plot_xy_line_graph(div, data, config){
       $('#'+id).trigger('mqc_original_series_click', [this.series.name]);
     }
   }
+  // Collect the starting sample names to preserve after renaming
+  var s_names = [];
+  $.each(data, function(idx, d){
+    s_names.push(d['name']);
+  });
+  // Make the highcharts config object
   highcharts_plot_options[div] = {
     chart: {
       renderTo: div.replace('#',''),
@@ -363,7 +369,8 @@ function plot_xy_line_graph(div, data, config){
 			pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br>'+config['tt_label'],
 			useHTML: true
     },
-    series: data
+    series: data,
+    s_names: s_names // Not for highcharts - this is to remember original names for renaming
   }
   highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
 }
@@ -375,6 +382,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
+  // Make the highcharts config object
   highcharts_plot_options[div] = {
     chart: {
       renderTo: div.replace('#',''),
@@ -432,7 +440,8 @@ function plot_stacked_bar_graph(div, cats, data, config){
       shared: true,
       useHTML: true
     },
-    series: data
+    series: data,
+    s_names: cats // Not for highcharts - this is to remember original names for renaming
   }
   highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
 }
@@ -683,27 +692,40 @@ function apply_mqc_renamesamples(){
       // Line plots
       if($(this).highcharts().options.chart.type == 'line'){
         $.each($(this).highcharts().series, function(j, s){
-          s.name = get_new_name(s.name, pid);
+          var orig_name = undefined;
+          try {
+            orig_name = highcharts_plot_options['#'+pid]['s_names'][j];
+          } catch(err) {}
+          s.name = get_new_name(s.name, pid, orig_name);
         });
       }
       // Bar charts
       else if($(this).highcharts().options.chart.type == 'bar'){
         var replot = $.extend(true, [], highcharts_plot_options['#'+pid]); // make a copy, not reference
-        var matches = 0;
         // Rename the categories
         $.each(replot.xAxis.categories, function(idx, val){
-          s_name = replot.xAxis.categories[idx];
-          n_name = get_new_name(s_name, pid);
+          var s_name = replot.xAxis.categories[idx];
+          var orig_name = undefined;
+          try {
+            orig_name = replot['s_names'][idx];
+          } catch(err) {}
+          var n_name = get_new_name(s_name, pid, orig_name);
           if(n_name != s_name){
             replot.xAxis.categories[idx] = n_name;
-            matches += 1;
           }
         });
-        if(matches > 0){ highcharts_plots['#'+pid] = new Highcharts.Chart(replot); }
+        highcharts_plots['#'+pid] = new Highcharts.Chart(replot);
       }
     } catch(err) {
       console.log('Error renaming samples in '+$(this).attr('id')+' - '+err.message);
     }
+  });
+  
+  // Rename original plot titles
+  $('.hc-plot-wrapper').each(function(){
+    var id = $(this).attr('id');
+    var t = $(this).find('.s_name');
+    t.text(get_new_name(t.text(), id));
   });
   
   // Rename samples in the general stats table
@@ -720,6 +742,7 @@ function apply_mqc_renamesamples(){
   $(document).trigger('mqc_renamesamples');
 }
 // Try to keep track of what samples are called
+// This dict works as a backup for non-standard plots
 mqc_renamed_samples = {};
 function get_new_name(s_name, obj_id, orig_name){
   // Collect the filters into an array
@@ -732,7 +755,7 @@ function get_new_name(s_name, obj_id, orig_name){
   $('#mqc_renamesamples_filters .to_text').each(function(){
     t_texts.push($(this).val());
   });
-  // Find the original name, if it's changed and if not supplied
+  // Find the original name from what we currently have, if not supplied
   if(orig_name === undefined){
     orig_name = get_orig_name(s_name, obj_id);
   }
@@ -741,15 +764,15 @@ function get_new_name(s_name, obj_id, orig_name){
   $.each(f_texts, function(idx, f_text){
     s_name = s_name.replace(f_text, t_texts[idx]);
   });
-  // Update list of names
-  // Needs to be one set of names per chart, else reverse
-  // lookup doesn't work for the next chart.
+  // Update list of names for this plot
   if(mqc_renamed_samples[obj_id] === undefined){
     mqc_renamed_samples[obj_id] = {};
   }
   mqc_renamed_samples[obj_id][orig_name] = s_name;
   return s_name;
 }
+// Try to guess the original sample name, based on the contents
+// of mqc_renamed_samples
 function get_orig_name(s_name, obj_id){
   if(mqc_renamed_samples[obj_id] === undefined){
     return s_name;
@@ -767,10 +790,11 @@ function get_orig_name(s_name, obj_id){
 // Update an original plot source
 function hc_original_chg_source (name, id) {
   
+  // Get the plot image paths
   try {
     var names = eval(id+'_orig_plots');
   } catch(err) {
-    console.log("Couldn't find original plot names array for "+id+'_orig_plots - '+err);
+    console.log("Couldn't find original plot paths array for "+id+'_orig_plots - '+err);
   }
   
   var target = $('#'+id).parent();
@@ -778,30 +802,27 @@ function hc_original_chg_source (name, id) {
   // Wipe the src in case it's not found later
   target.find('img.original-plot').attr('src','assets/img/img_not_found.png');
   
-  // Find the original name if it's been renamed
-  $.each(mqc_renamed_samples, function(orig, new_name){
-    if(new_name == name){
-      name = orig;
-      return false;
-    }
-  });
+  // Find the original sample name if it's been renamed
+  s_name = get_orig_name(name, id);
   
   // Find the image source
   var src = undefined;
   var i;
   $.each(names, function(idx, n){
-    if(n['s_name'] == name){
+    if(n['s_name'] == s_name){
       src = n['img_path'];
       i = idx;
+      return false;
     }
   });
   if(src !== undefined){
     target.find('img.original-plot').attr('src', src);
-    target.find('.s_name').text(name);
+    target.find('.s_name').text(get_new_name(name, id, s_name));
 
     var l = names.length;
     var n_i = i+1 < l ? i+1 : 0;
     var p_i = i-1 >= 0 ? i-1 : l - 1;
+    // Sample names for next / prev links. Not renamed, but should be ok.
     var n = names[n_i]['s_name'];
     var p = names[p_i]['s_name'];
     target.find('.original_plot_prev_btn').attr('href', '#'+p);

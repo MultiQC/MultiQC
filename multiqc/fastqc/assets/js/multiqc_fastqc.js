@@ -146,8 +146,10 @@ $(function () {
     
     // Show the status next to the series name for original plots
     $('.mqc-section-fastqc .hc-plot-wrapper').on('mqc_original_chg_source', function(e, name){
-        var pid = $(this).attr('id');
-        var status = fastqc_s_statuses[pid][name];
+        var pid = $(this).find('.hc-plot').attr('id');
+        var s_name = get_orig_name(name, pid);
+        var status = fastqc_s_statuses[pid][s_name];
+        if (status === undefined) { status = '?'; }
         var label = $(this).find('.s_status');
         if(label.length == 0){
             $(this).find('h4').append(' <span class="label label-default s_status">status</span>');
@@ -157,6 +159,7 @@ $(function () {
         if(status == 'pass'){ label.removeClass().addClass('s_status label label-success'); }
         if(status == 'warn'){ label.removeClass().addClass('s_status label label-warning'); }
         if(status == 'fail'){ label.removeClass().addClass('s_status label label-danger'); }
+        if(status == 'status'){ label.removeClass().addClass('s_status label label-default'); }
     });
     
     // Specific behaviour for adapter plot series click
