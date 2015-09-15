@@ -208,6 +208,10 @@ input.form-control[type=color]{
 #mqc_renamesamples_bulk_update {
     margin-top: 5px;
 }
+#mqc_renamesamples_bulk_form textarea {
+    font-size: 8px;
+    color: #999;
+}
 
 /* General stats table */
 #general_stats_table thead th {

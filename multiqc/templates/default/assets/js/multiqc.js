@@ -221,11 +221,35 @@ $(function () {
     li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" tabindex="'+(mqc_renamesamples_idx+1)+'" />'
     li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
     $('#mqc_renamesamples_filters').append(li);
-      apply_mqc_renamesamples();
+    apply_mqc_renamesamples();
     $('#mqc_renamesamples_from').val('');
     $('#mqc_renamesamples_to').val('');
     mqc_renamesamples_idx += 2;
     $('#mqc_renamesamples_form input:first').focus();
+  });
+  
+  // Bulk rename samples
+  $('#mqc_renamesamples_bulk_collapse').on('shown.bs.collapse', function () {
+    $('#mqc_renamesamples_bulk_form textarea').focus();
+  });
+  $('#mqc_renamesamples_bulk_form').submit(function(e){
+    e.preventDefault();
+    var raw = $(this).find('textarea').val();
+    var lines = raw.match(/^.*([\n\r]+|$)/gm);
+    $.each(lines, function(i, l){
+      var sections = l.split("\t", 2);
+      if(sections.length < 2){ return true; }
+      var from_text = sections[0].trim();
+      var to_text = sections[1].trim();
+      if(from_text.length == 0){ return true; }
+      var li = '<li><input class="f_text from_text" value="'+from_text+'" tabindex="'+(mqc_renamesamples_idx)+'" />'
+      li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" tabindex="'+(mqc_renamesamples_idx+1)+'" />'
+      li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+      $('#mqc_renamesamples_filters').append(li);
+    });
+    apply_mqc_renamesamples();
+    $(this).find('textarea').val('');
+    $('#mqc_renamesamples_bulk_collapse').collapse('hide');
   });
   
   // Filter text is changed
