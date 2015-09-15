@@ -102,7 +102,7 @@ $(function () {
   $('table').each(function(){
     var table = $(this);
     table.find('thead th').each(function(idx){
-      var index = idx - 1;
+      var index = idx + 1;
       if($(this).hasClass('chroma-col')){
 
         // Get the colour scheme if set
