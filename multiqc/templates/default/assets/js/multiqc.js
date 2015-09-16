@@ -930,6 +930,11 @@ var intro_tour = new Tour({
   storage: false,
   steps: [
   {
+    orphan: true,
+    title: "Welcome to MultiQC!",
+    content: 'MultiQC generates reports based on analysis across many samples.<br>Click next to explore the tools availble in this report.',
+  },
+  {
     element: "#general_stats",
     placement: 'top',
     title: "General Statistics",
@@ -971,40 +976,34 @@ var intro_tour = new Tour({
     element: ".hc-plot-handle:first",
     placement: 'top',
     title: "Resize Plots",
-    content: "Drag this grey bar to resize any plot."
+    content: "Drag this grey bar to resize any plot.",
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
     placement: 'left',
     title: "MultiQC Toolbox",
     content: "Click one of the icons on the right to open the Toolbox",
-    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
     placement: 'left',
     title: "Highlight Samples",
     content: "This tool allows you to highlight samples across plots and tables",
-  },
-  {
-    element: "#mqc_cols .mqc_regex_mode",
-    placement: 'left',
-    title: "Regex Search",
-    content: "You can choose to use regexes for powerful pattern matching",
-    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_hidesamples]").trigger( "click" ); },
+    onShow: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_hidesamples]",
     placement: 'left',
     title: "Hide Samples",
     content: "This tool allows you to temporarily hide samples in the report",
-    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_renamesamples]").trigger( "click" ); },
+    onShow: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_hidesamples]").trigger( "click" ); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_renamesamples]",
     placement: 'left',
     title: "Rename Samples",
     content: "Here, you can rename samples, for example, cleaning up common suffixes.",
+    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_renamesamples]").trigger( "click" ); },
   },
   {
     element: "#mqc_renamesamples a[href=#mqc_renamesamples_bulk_collapse]",
@@ -1012,11 +1011,17 @@ var intro_tour = new Tour({
     title: "Bulk Rename",
     content: "Copy and paste from Excel to bulk rename samples.",
     onShown: function(tour){ $("#mqc_renamesamples a[href=#mqc_renamesamples_bulk_collapse]").trigger("click"); },
-    onNext: function(tour) { $(".mqc-toolbox-buttons a[href=#mqc_renamesamples]").trigger( "click" ); },
   },
   {
-    element: ".mqc-into-tour-alert",
-    placement: 'bottom',
+    element: "#mqc_cols .mqc_regex_mode",
+    placement: 'left',
+    title: "Regex Search",
+    content: "The highlight and hide tools have the option of using regexes for powerful pattern matching",
+    onShow: function(tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
+    onHide: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
+  },
+  {
+    orphan: true,
     title: "End of Tour",
     content: 'That\'s it for this tour - for more info, see the homepage: <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a>',
   },
