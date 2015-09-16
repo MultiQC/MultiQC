@@ -155,6 +155,39 @@ $(function () {
             $(this).css('color', '#EEEEEE').css('font-weight', '200');
           }
         });
+        
+        // Add to the key modal
+        var text = $(this).text();
+        var h_text = $(this).find('span').attr('title');
+        if(String(h_text).length == 0){
+          var h_text = $(this).find('span').data('original-title');
+        }
+        // Text Colours
+        var max_font_col = '#333';
+        var min_font_col = '#333';
+        if(chroma.contrast('#eeeeee', scale(maxval).css()) > chroma.contrast('#333333', scale(maxval).css())){ max_font_col = '#EEE'; }
+        if(chroma.contrast('#eeeeee', scale(minval).css()) > chroma.contrast('#333333', scale(minval).css())){ min_font_col = '#EEE'; }
+        // Make really complicated gradient string for this colour scheme
+        // Note - NOT simple linear gradients!
+        var grad_cols = [];
+        var wk_grad_cols = [];
+        for (i = 0; i <= 100; i+= 10) {
+          var val = ((i/100) * (maxval - minval)) + minval;
+          grad_cols.push(scale(val).css()+' '+i+'%');
+          wk_grad_cols.push('color-stop('+i+'%, '+scale(val).css()+')');
+        }
+        grad_cols = grad_cols.join();
+        wk_grad_cols = wk_grad_cols.join();
+        var grad_k = '<div class="general_stats_key_bar" style="color: '+min_font_col+'; ' +
+                        'background: -moz-linear-gradient(left, '+grad_cols+'); '+
+                        'background: -webkit-gradient(linear, left top, right top, '+wk_grad_cols+'); '+
+                        'background: -webkit-linear-gradient(left, '+grad_cols+'); '+
+                        'background: -o-linear-gradient(left, '+grad_cols+'); '+
+                        'background: -ms-linear-gradient(left, '+grad_cols+'); '+
+                        'background: linear-gradient(to right, '+grad_cols+'); '+
+                        '"><span style="float:right; color: '+max_font_col+';">'+maxval+'</span>'+minval+'</div>';
+        var tr = $('<tr><th>'+text+'</th><td>'+h_text+'</td><td>'+grad_k+'</td></tr>');
+        $('#general_stats_key_modal table tbody').append(tr);
       }
     });
   });
