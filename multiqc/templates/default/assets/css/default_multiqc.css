@@ -33,8 +33,6 @@ code {
 }
 .mainpage {
     padding: 20px;
-    -webkit-transition: width 0.5s;
-    transition: width 0.5s;
 }
 .side-nav {
     height: 100%;
@@ -163,8 +161,8 @@ input.form-control[type=color]{
     .mqc-toolbox.active {
         width: 282px;
     }
-    .mainpage.mqc-toolbox-active {
-        margin-right: 270px;
+    .mainpage {
+        padding-right: 40px;
     }
     .mqc-toolbox-buttons {
         position: absolute;
