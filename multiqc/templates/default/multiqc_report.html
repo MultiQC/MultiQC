@@ -164,8 +164,8 @@
           {{ s['content'] if s['content'] }}
           {{ '<hr>' if not loop.last }}
         </div>
-      </div>
     {% endfor %}
+    </div>
     {{ '<hr>' if not loop.last }}
   {% endfor %}
 
@@ -178,7 +178,8 @@
       <strong><a href="https://github.com/ewels/MultiQC" target="_blank">MultiQC v{{ config.VERSION }}</a></strong> -
       Written by <a href="http://phil.ewels.co.uk" target="_blank">Phil Ewels</a>, available on <a href="https://github.com/ewels/MultiQC" target="_blank">GitHub</a>.</p>
     <p>The report uses <a href="http://www.highcharts.com/" target="_blank">HighCharts</a>, <a href="https://jquery.com/" target="_blank">jQuery</a>,
-       <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> and <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a></p>
+       <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a>, <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a>
+       and <a href="http://bootstraptour.com/" target="_blank">Bootstrap Tour</a>.</p>
   </div>
 </div>
 
@@ -204,7 +205,7 @@
           <tbody>
           </tbody>
         </table>
-        <p>Colour schemes are generated using <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a></p>
+        <p>Colour schemes are generated using <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a>.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

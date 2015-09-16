@@ -90,6 +90,8 @@ If in doubt, feel free to get in touch with the author:
 * Bowtie module now works
 * New command line parameter `-d` prefixes sample names with the directory that
   they were found in. Allows duplicate filenames without being overwritten.
+* New sample highlighting, hiding and renaming report tools
+* Introduction walkthrough helps show what can be done in the report
 * Now compatible with both Python 2 and Python 3
 * Software version number now printed on command line properly, and in reports.
 * Bugfix: FastQC doesn't break when only one report found
