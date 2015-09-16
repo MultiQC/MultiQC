@@ -11,7 +11,7 @@ code {
     background-color: #f3f3f3;
     color: #666;
 }
-@media only screen and (max-width: 900px){
+@media only screen and (max-width: 992px){
     code {
         display: inline-block;
         max-width: 90%;
@@ -20,7 +20,7 @@ code {
 }
 
 /* Page Template */
-@media only screen and (min-width: 900px){
+@media only screen and (min-width: 992px){
     .mainpage { margin-left: 270px; }
     .footer { margin-left: 250px; }
     .side-nav {
@@ -137,30 +137,97 @@ input.form-control[type=color]{
     margin: 0 1px;
     background-color: #999;
 }
-.f_text {
-    border: 0;
-    padding: 5px 0 5px 10px;
+
+/* Toolbox */
+@media only screen and (max-width: 992px){
+    .mqc-toolbox {
+        padding: 0 15px;
+        background-color: #ededed;
+    }
+}
+@media only screen and (min-width: 992px){
+    .mqc-toolbox {
+        position: fixed;
+        z-index: 99999;
+        width: 32px;
+        height: 100%;
+        overflow: hidden;
+        top: 0;
+        right: 0;
+        -webkit-transition: width 0.5s;
+        transition: width 0.5s;
+    }
+    .mqc-toolbox.active {
+        width: 282px;
+    }
+    .mqc-toolbox-buttons {
+        position: absolute;
+        width: 32px;
+        top: 100px;
+        left:0;
+        z-index: 20;
+    }
+    .mqc-toolbox-wrapper {
+        position:absolute;
+        width: 250px;
+        height: 100%;
+        left:32px;
+        margin:0;
+        background-color: #ededed;
+        border-left: 1px solid #ccc;
+        z-index: 10;
+    }
+    .mqc_filter_section {
+        display: none;
+    }
+    .mqc_filter_section.active {
+        display: block;
+    }
+}
+.mqc-toolbox-header {
+    margin: 10px;
+    border-bottom: 1px solid #ccc;
+}
+.mqc-toolbox-buttons ul, .mqc-toolbox-buttons li {
+    padding: 0;
     margin: 0;
-    background-color: transparent;
-    outline: none;
-    width: -moz-calc(100% - 55px);
-    width: -webkit-calc(100% - 55px);
-    width: calc(100% - 55px);
+    list-style-type:none;
 }
-.from_text, .to_text {
-    width: -moz-calc(49% - 20px);
-    width: -webkit-calc(49% - 20px);
-    width: calc(49% - 20px);
+.mqc-toolbox-buttons li {
+    margin: 5px 0;
+    display: inline-block;
+    width: 32px;
+    height: 32px;
 }
-.mqc_filters button {
-    padding: 7px 10px 0;
+.mqc-toolbox-buttons a {
+    display: inline-block;
+    width: 33px;
+    height: 32px;
+    padding: 7px 8px 9px;
+    color: #666;
+    background-color: #dedede;
+    border: 1px solid transparent;
+    border-right: 1px solid #ccc;
 }
+.mqc-toolbox-buttons a:hover, .mqc-toolbox-buttons a.active {
+    color: #333;
+    background-color: #ededed;
+    border: 1px solid #ccc;
+}
+ .mqc-toolbox-buttons a.active {
+    border-right: 1px solid #ededed;
+}
+
+
 
 .mqc_filters {
     margin: 10px 0;
     padding: 0;
     list-style-type:none;
     font-size: 0.9em;
+}
+.mqc_filters button {
+    padding: 7px 10px 0;
 }
 .mqc_filters li {
     padding: 0;
@@ -192,7 +259,7 @@ input.form-control[type=color]{
 .mqc_filter_section .form-inline .form-control {
     vertical-align: middle;
 }
-@media only screen and (max-width: 900px){
+@media only screen and (max-width: 992px){
     .mqc_filter_section .form-control {
         display: inline-block;
     }
@@ -212,6 +279,25 @@ input.form-control[type=color]{
     font-size: 8px;
     color: #999;
 }
+.f_text {
+    border: 0;
+    padding: 5px 0 5px 10px;
+    margin: 0;
+    background-color: transparent;
+    outline: none;
+    width: -moz-calc(100% - 55px);
+    width: -webkit-calc(100% - 55px);
+    width: calc(100% - 55px);
+}
+.from_text, .to_text {
+    width: -moz-calc(49% - 20px);
+    width: -webkit-calc(49% - 20px);
+    width: calc(49% - 20px);
+}
+
+
+
+
 
 /* General stats table */
 #general_stats_table thead th {

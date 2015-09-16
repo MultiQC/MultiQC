@@ -158,6 +158,20 @@ $(function () {
       }
     });
   });
+  
+  // Toolbox buttons
+  $('.mqc-toolbox-buttons a').click(function(e){
+    e.preventDefault();
+    var target = $(this).attr('href');
+    if($(this).hasClass('active')){
+      $(this).removeClass('active');
+      $('.mqc-toolbox, '+target).removeClass('active');
+    } else {
+      $('.mqc-toolbox-buttons a, .mqc-toolbox, .mqc_filter_section').removeClass('active');
+      $(this).addClass('active');
+      $('.mqc-toolbox, '+target).addClass('active');
+    }
+  });
 
   // Highlight colour filters
   var mqc_colours = chroma.brewer.Set1;
