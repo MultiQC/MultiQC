@@ -15,6 +15,12 @@ $(function () {
   
   // Enable tablesorter on the general statistics table
   $("#general_stats_table").tablesorter({sortInitialOrder: 'desc'}); 
+  
+  // Introduction tour
+  intro_tour.init();
+  $('#mqc-launch-into-tour').click(function(){
+    intro_tour.start();
+  });  
 
   // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
@@ -914,3 +920,104 @@ function hc_original_chg_source (name, id) {
   target.trigger('mqc_original_chg_source', [name]);
   
 }
+
+
+
+
+// MultiQC Tour, using bootstrap tour
+var intro_tour = new Tour({
+  backdrop: true,
+  storage: false,
+  steps: [
+  {
+    element: "#general_stats",
+    placement: 'top',
+    title: "General Statistics",
+    content: "This table gives an overview of your samples, with data from all modules."
+  },
+  {
+    element: "#general_stats_table thead tr th:nth-child(3)",
+    title: "Sort Columns",
+    content: "Click a header to sort by that column, shift-click to sort by multiple."
+  },
+  {
+    element: "#general_stats_table tbody tr:first-child td:first-child",
+    title: "Reorder rows",
+    content: "Drag the handle on any row to re-arrange."
+  },
+  {
+    element: "#general_stats h2 button",
+    title: "View Key",
+    content: "Click here to see the colour scale key",
+  },
+  {
+    element: ".mqc-module-section:first h2",
+    placement: 'top',
+    title: "Modules",
+    content: "The report uses modules, each one understands one type of data and produces a section in the report."
+  },
+  {
+    element: ".hc-line-plot:first",
+    placement: 'top',
+    title: "Plots",
+    content: "Plots are dynamic and interactive - click and drag line charts to zoom."
+  },
+  {
+    element: ".switch_group:first",
+    title: "Counts / Percentages",
+    content: "Most bar plots let you switch between absolute counts and percentages"
+  },
+  {
+    element: ".hc-plot-handle:first",
+    placement: 'top',
+    title: "Resize Plots",
+    content: "Drag this grey bar to resize any plot."
+  },
+  {
+    element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
+    placement: 'left',
+    title: "MultiQC Toolbox",
+    content: "Click one of the icons on the right to open the Toolbox",
+    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
+  },
+  {
+    element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
+    placement: 'left',
+    title: "Highlight Samples",
+    content: "This tool allows you to highlight samples across plots and tables",
+  },
+  {
+    element: "#mqc_cols .mqc_regex_mode",
+    placement: 'left',
+    title: "Regex Search",
+    content: "You can choose to use regexes for powerful pattern matching",
+    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_hidesamples]").trigger( "click" ); },
+  },
+  {
+    element: ".mqc-toolbox-buttons a[href=#mqc_hidesamples]",
+    placement: 'left',
+    title: "Hide Samples",
+    content: "This tool allows you to temporarily hide samples in the report",
+    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_renamesamples]").trigger( "click" ); },
+  },
+  {
+    element: ".mqc-toolbox-buttons a[href=#mqc_renamesamples]",
+    placement: 'left',
+    title: "Rename Samples",
+    content: "Here, you can rename samples, for example, cleaning up common suffixes.",
+  },
+  {
+    element: "#mqc_renamesamples a[href=#mqc_renamesamples_bulk_collapse]",
+    placement: 'left',
+    title: "Bulk Rename",
+    content: "Copy and paste from Excel to bulk rename samples.",
+    onShown: function(tour){ $("#mqc_renamesamples a[href=#mqc_renamesamples_bulk_collapse]").trigger("click"); },
+    onNext: function(tour) { $(".mqc-toolbox-buttons a[href=#mqc_renamesamples]").trigger( "click" ); },
+  },
+  {
+    element: ".mqc-into-tour-alert",
+    placement: 'bottom',
+    title: "End of Tour",
+    content: 'That\'s it for this tour - for more info, see the homepage: <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a>',
+  },
+]});

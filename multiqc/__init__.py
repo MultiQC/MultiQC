@@ -187,7 +187,7 @@ class BaseMultiqcModule(object):
         
         # Regular plots (no original images)
         else:
-            html += '<div id="{id}" class="hc-plot"></div> \n'.format(id=config['id'])
+            html += '<div id="{id}" class="hc-plot hc-line-plot"></div> \n'.format(id=config['id'])
             orig_plots = ''
         
         # Javascript with data dump
@@ -286,7 +286,7 @@ class BaseMultiqcModule(object):
             html += '</div>\n\n'
         
         # Plot and javascript function
-        html += '<div id="{id}" class="hc-plot"></div> \n\
+        html += '<div id="{id}" class="hc-plot hc-bar-plot"></div> \n\
         <script type="text/javascript"> \n\
             var {id}_samples = {s}; \n\
             var {id}_datasets = {d}; \n\

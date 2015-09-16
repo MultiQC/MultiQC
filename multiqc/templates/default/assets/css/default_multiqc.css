@@ -149,7 +149,7 @@ input.form-control[type=color]{
 @media only screen and (min-width: 992px){
     .mqc-toolbox {
         position: fixed;
-        z-index: 99999;
+        z-index: 900;
         width: 36px;
         height: 100%;
         overflow: hidden;
@@ -315,7 +315,19 @@ input.form-control[type=color]{
 }
 
 
-
+#mqc-launch-into-tour {
+    margin: -10px 10px;
+}
+.tour-step-background {
+    border-radius: 0;
+}
+.tour-backdrop {
+    opacity: 0.6;
+    filter: alpha(opacity=60);
+}
+.tour-backdrop, .tour-step-background {
+    z-index: 3;
+}
 
 
 /* General stats table */

@@ -10,6 +10,7 @@
   <title>{{ config.title + ': ' if config.title != None }}MultiQC Report</title>
 
   <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/bootstrap-tour.min.css" rel="stylesheet">
   {%- for m in modules %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css %}
   <link href="{{ css_href }}" rel="stylesheet">
   {%- endfor %}{% endif %}{% endfor %}
@@ -18,6 +19,7 @@
   <script src="assets/js/jquery-1.11.3.min.js"></script>
   <script src="assets/js/jquery-ui.min.js"></script>
   <script src="assets/js/bootstrap.min.js"></script>
+  <script src="assets/js/bootstrap-tour.min.js"></script>
   <script src="assets/js/highcharts.js"></script>
   <script src="http://code.highcharts.com/modules/exporting.js"></script>
   <script src="assets/js/chroma.min.js"></script>
@@ -113,48 +115,50 @@
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
   <p>Report generated on {{ config.creation_date }} based on data in <code>{{ config.analysis_dir }}</code></p>
   <p>Report location: <code>{{ config.output_dir }}/multiqc_report.html</code></p>
-
+  <div class="alert alert-info hidden-print mqc-into-tour-alert"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> <strong>Usage tip:</strong> There's a lot you can do here! <button id="mqc-launch-into-tour" class="btn btn-info btn-sm">Take the tour</button></div>
+  
   {% if config.general_stats['headers']|length > 0 %}
-  <h2 id="general_stats">General Statistics &nbsp; 
-    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#general_stats_key_modal">Show Key</button>
-  </h2>
-  <p class="text-muted hidden-print"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> <strong>Usage tip:</strong> Click a header to sort by that column, shift-click to sort by multiple. Drag the handle on any row to re-arrange.</p>
-  <div class="table-responsive">
-    <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
-      <thead>
-        <tr>
-          <td class="sorthandle"></td>
-          <th class="rowheader"></th>
-          {%- for k, h in config.general_stats['headers'].items() %}
-            {{ h }}
-          {%- endfor -%}
-        </tr>
-      </thead>
-      <tbody>
-        {% for sn, r in config.general_stats['rows']|dictsort %}
-        <tr>
-          <td class="sorthandle">||</td>
-          <th class="rowheader">{{ sn }}</th>
-          {%- for k, h in config.general_stats['headers'].items() %}
-            {{ r[k] if r[k] else '<td></td>' }}
-          {%- endfor -%}
-        </tr>
-        {%- endfor %}
-      </tbody>
-    </table>
+  <div id="general_stats">
+    <h2>General Statistics &nbsp; 
+      <button type="button" class="btn btn-default" data-toggle="modal" data-target="#general_stats_key_modal">Show Key</button>
+    </h2>
+    <div class="table-responsive">
+      <table id="general_stats_table" class="table table-hover table-bordered table-condensed table-nostretch">
+        <thead>
+          <tr>
+            <td class="sorthandle"></td>
+            <th class="rowheader"></th>
+            {%- for k, h in config.general_stats['headers'].items() %}
+              {{ h }}
+            {%- endfor -%}
+          </tr>
+        </thead>
+        <tbody>
+          {% for sn, r in config.general_stats['rows']|dictsort %}
+          <tr>
+            <td class="sorthandle">||</td>
+            <th class="rowheader">{{ sn }}</th>
+            {%- for k, h in config.general_stats['headers'].items() %}
+              {{ r[k] if r[k] else '<td></td>' }}
+            {%- endfor -%}
+          </tr>
+          {%- endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
   {% endif %}
-  
-  <div class="alert alert-info hidden-print"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> <strong>Usage tip:</strong> Click and drag line plots to zoom in. Change plot heights with the grey bar.</div>
 
   {% for m in modules %}
-    <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
-    {{ m.intro if m.intro }}
-    {% for s in m.sections %}
-      <div class="mqc-section mqc-section-{{ m.anchor }}">
-        <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
-        {{ s['content'] if s['content'] }}
-        {{ '<hr>' if not loop.last }}
+    <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section">
+      <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
+      {{ m.intro if m.intro }}
+      {% for s in m.sections %}
+        <div class="mqc-section mqc-section-{{ m.anchor }}">
+          <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
+          {{ s['content'] if s['content'] }}
+          {{ '<hr>' if not loop.last }}
+        </div>
       </div>
     {% endfor %}
     {{ '<hr>' if not loop.last }}
