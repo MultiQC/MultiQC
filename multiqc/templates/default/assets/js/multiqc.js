@@ -165,11 +165,17 @@ $(function () {
     var target = $(this).attr('href');
     if($(this).hasClass('active')){
       $(this).removeClass('active');
-      $('.mqc-toolbox, '+target).removeClass('active');
+      $('.mqc-toolbox, .mqc-toolbox-label, '+target).removeClass('active');
+      $('.mainpage').removeClass('mqc-toolbox-active');
+      $(window).resize();
+      $(document).trigger('mqc_toolbox_open');
     } else {
       $('.mqc-toolbox-buttons a, .mqc-toolbox, .mqc_filter_section').removeClass('active');
       $(this).addClass('active');
-      $('.mqc-toolbox, '+target).addClass('active');
+      $('.mqc-toolbox, .mqc-toolbox-label, '+target).addClass('active');
+      $('.mainpage').addClass('mqc-toolbox-active');
+      $(window).resize();
+      $(document).trigger('mqc_toolbox_close');
     }
   });
 

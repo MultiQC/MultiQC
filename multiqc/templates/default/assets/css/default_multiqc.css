@@ -33,6 +33,8 @@ code {
 }
 .mainpage {
     padding: 20px;
+    -webkit-transition: width 0.5s;
+    transition: width 0.5s;
 }
 .side-nav {
     height: 100%;
@@ -143,13 +145,14 @@ input.form-control[type=color]{
     .mqc-toolbox {
         padding: 0 15px;
         background-color: #ededed;
+        border-bottom: 1px solid #ccc;
     }
 }
 @media only screen and (min-width: 992px){
     .mqc-toolbox {
         position: fixed;
         z-index: 99999;
-        width: 32px;
+        width: 36px;
         height: 100%;
         overflow: hidden;
         top: 0;
@@ -160,9 +163,12 @@ input.form-control[type=color]{
     .mqc-toolbox.active {
         width: 282px;
     }
+    .mainpage.mqc-toolbox-active {
+        margin-right: 270px;
+    }
     .mqc-toolbox-buttons {
         position: absolute;
-        width: 32px;
+        width: 36px;
         top: 100px;
         left:0;
         z-index: 20;
@@ -171,7 +177,7 @@ input.form-control[type=color]{
         position:absolute;
         width: 250px;
         height: 100%;
-        left:32px;
+        left:36px;
         margin:0;
         background-color: #ededed;
         border-left: 1px solid #ccc;
@@ -183,6 +189,20 @@ input.form-control[type=color]{
     .mqc_filter_section.active {
         display: block;
     }
+}
+.mqc-toolbox-label {
+    display: inline-block;
+    -ms-transform: rotate(270deg);
+    -webkit-transform: rotate(270deg);
+    transform: rotate(270deg);
+    height: 25px;
+    width: 55px;
+    margin-bottom: 30px;
+    -webkit-transition: color 0.5s;
+    transition: color 0.5s;
+}
+.mqc-toolbox-label.active {
+    color: transparent;
 }
 .mqc-toolbox-header {
     margin: 10px;
@@ -196,13 +216,14 @@ input.form-control[type=color]{
 .mqc-toolbox-buttons li {
     margin: 5px 0;
     display: inline-block;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
 }
 .mqc-toolbox-buttons a {
     display: inline-block;
-    width: 33px;
-    height: 32px;
+    font-size:18px;
+    width: 37px;
+    height: 36px;
     padding: 7px 8px 9px;
     color: #666;
     background-color: #dedede;
