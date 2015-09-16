@@ -115,7 +115,12 @@
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
   <p>Report generated on {{ config.creation_date }} based on data in <code>{{ config.analysis_dir }}</code></p>
   <p>Report location: <code>{{ config.output_dir }}/multiqc_report.html</code></p>
-  <div class="alert alert-info hidden-print mqc-into-tour-alert"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> <strong>Usage tip:</strong> There's a lot you can do here! <button id="mqc-launch-into-tour" class="btn btn-info btn-sm">Take the tour</button></div>
+  <div class="alert alert-info alert-dismissible hidden-print mqc-into-tour-alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+    <strong>Usage tip:</strong> There's a lot you can do here!
+    <button id="mqc-launch-into-tour" class="btn btn-info btn-sm">Take the tour</button>
+  </div>
   
   {% if config.general_stats['headers']|length > 0 %}
   <div id="general_stats">
