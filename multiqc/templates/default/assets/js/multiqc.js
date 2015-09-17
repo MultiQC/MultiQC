@@ -1307,5 +1307,6 @@ var intro_tour = new Tour({
     orphan: true,
     title: "End of Tour",
     content: 'That\'s it for this tour - for more info, see the homepage: <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a>',
+    onHide: function (tour) { $('.mqc-toolbox').css('z-index', 1200); }
   },
 ]});
