@@ -11,6 +11,10 @@ code {
     background-color: #f3f3f3;
     color: #666;
 }
+kbd {
+    background-color: #ccc;
+    color: #333;
+}
 @media only screen and (max-width: 992px){
     code {
         display: inline-block;
@@ -149,7 +153,7 @@ input.form-control[type=color]{
 @media only screen and (min-width: 992px){
     .mqc-toolbox {
         position: fixed;
-        z-index: 900;
+        z-index: 1200;
         width: 36px;
         height: 100%;
         overflow: hidden;
@@ -190,17 +194,21 @@ input.form-control[type=color]{
 }
 .mqc-toolbox-label {
     display: inline-block;
+    background-color: #ededed;
+    height: 31px;
+    width: 67px;
+    padding: 3px 6px;
+    margin-left: -6px;
+    margin-bottom: 30px;
     -ms-transform: rotate(270deg);
     -webkit-transform: rotate(270deg);
     transform: rotate(270deg);
-    height: 25px;
-    width: 55px;
-    margin-bottom: 30px;
-    -webkit-transition: color 0.5s;
-    transition: color 0.5s;
+    -webkit-transition: color, background-color 0.5s;
+    transition: color, background-color 0.5s;
 }
 .mqc-toolbox-label.active {
     color: transparent;
+    background-color: transparent;
 }
 .mqc-toolbox-header {
     margin: 10px;
@@ -223,7 +231,7 @@ input.form-control[type=color]{
     width: 37px;
     height: 36px;
     padding: 7px 8px 9px;
-    color: #666;
+    color: #999;
     background-color: #dedede;
     border: 1px solid transparent;
     border-right: 1px solid #ccc;
@@ -270,7 +278,6 @@ input.form-control[type=color]{
     padding:0;
     margin: 5px 0;
     color: #999;
-    font-style:italic;
 }
 .mqc_filter_section p a {
     color: #999;
@@ -325,9 +332,10 @@ input.form-control[type=color]{
     opacity: 0.6;
     filter: alpha(opacity=60);
 }
-.tour-backdrop, .tour-step-background {
-    z-index: 3;
+.popover.tour-tour {
+    z-index: 1200;
 }
+
 
 
 /* General stats table */

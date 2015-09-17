@@ -68,7 +68,8 @@
       <h3>MultiQC Toolbox</h3>
     </div>
     <div id="mqc_cols" class="mqc_filter_section col-sm-4 col-md-12">
-      <h5>Highlight samples:</h5>
+      <h4>Highlight samples:</h4>
+      <p>Shortcut key for this tool: <kbd>c</kbd></p>
       <form class="form-inline" id="mqc_color_form">
         <input id="mqc_colour_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
         <input id="mqc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
@@ -78,7 +79,8 @@
       <p class="mqc_regex_mode">Regex mode <strong>off</strong></p>
     </div>
     <div id="mqc_hidesamples" class="mqc_filter_section col-sm-4 col-md-12">
-      <h5>Hide samples:</h5>
+      <h4>Hide samples:</h4>
+      <p>Shortcut key for this tool: <kbd>h</kbd></p>
       <form class="form-inline" id="mqc_hidesamples_form">
         <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
         <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
@@ -88,7 +90,8 @@
       <p class="mqc_regex_mode">Regex mode <strong>off</strong></p>
     </div>
     <div id="mqc_renamesamples" class="mqc_filter_section col-sm-4 col-md-12">
-      <h5>Rename samples:</h5>
+      <h4>Rename samples:</h4>
+      <p>Shortcut key for this tool: <kbd>r</kbd></p>
       <form class="form-inline" id="mqc_renamesamples_form">
         <input id="mqc_renamesamples_from" type="text" placeholder="From" class="form-control input-sm">
         <input id="mqc_renamesamples_to" type="text" placeholder="To" class="form-control input-sm">
@@ -118,7 +121,7 @@
   <div class="alert alert-info alert-dismissible hidden-print mqc-into-tour-alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-    <strong>Usage tip:</strong> There's a lot you can do here!
+    <strong>Welcome!</strong> There's a lot you can do here!
     <button id="mqc-launch-into-tour" class="btn btn-info btn-sm">Take the tour</button>
   </div>
   
@@ -132,7 +135,7 @@
         <thead>
           <tr>
             <td class="sorthandle"></td>
-            <th class="rowheader"></th>
+            <th class="rowheader">Sample Name</th>
             {%- for k, h in config.general_stats['headers'].items() %}
               {{ h }}
             {%- endfor -%}

@@ -202,17 +202,16 @@ $(function () {
   $('.mqc-toolbox-buttons a').click(function(e){
     e.preventDefault();
     var target = $(this).attr('href');
-    if($(this).hasClass('active')){
-      $(this).removeClass('active');
-      $('.mqc-toolbox, .mqc-toolbox-label, '+target).removeClass('active');
-      $(document).trigger('mqc_toolbox_open');
-    } else {
-      $('.mqc-toolbox-buttons a, .mqc-toolbox, .mqc_filter_section').removeClass('active');
-      $(this).addClass('active');
-      $('.mqc-toolbox, .mqc-toolbox-label, '+target).addClass('active');
-      $(document).trigger('mqc_toolbox_close');
-    }
+    mqc_toolbox_openclose(target);
   });
+  // Shortcut keys
+  $(window).keydown(function (evt) {
+    if (evt.target.tagName.toLowerCase() !== 'input' && evt.target.tagName.toLowerCase() !== 'textarea') {
+      if(evt.which == 67){ mqc_toolbox_openclose('#mqc_cols'); } // c
+      if(evt.which == 72){ mqc_toolbox_openclose('#mqc_hidesamples'); } // h
+      if(evt.which == 82){ mqc_toolbox_openclose('#mqc_renamesamples'); } // r
+    }
+});
 
   // Highlight colour filters
   var mqc_colours = chroma.brewer.Set1;
@@ -568,6 +567,25 @@ function showhide_general_stats_rows(){
         $(this).hide();
       }
     });
+  }
+}
+
+// Toolbox functions
+function mqc_toolbox_openclose (target, open){
+  var btn = $('.mqc-toolbox-buttons a[href="'+target+'"]');
+  if(open === undefined){
+    if(btn.hasClass('active')){ open = false; }
+    else { open = true; }
+  }
+  if(open){
+    $('.mqc-toolbox, .mqc-toolbox-buttons a, .mqc_filter_section').removeClass('active');
+    btn.addClass('active');
+    $('.mqc-toolbox, .mqc-toolbox-label, '+target).addClass('active');
+    $(document).trigger('mqc_toolbox_close');
+  } else {
+    btn.removeClass('active');
+    $('.mqc-toolbox, .mqc-toolbox-buttons a, .mqc_filter_section, .mqc-toolbox-label, '+target).removeClass('active');
+    $(document).trigger('mqc_toolbox_open');
   }
 }
 
@@ -933,12 +951,17 @@ var intro_tour = new Tour({
     orphan: true,
     title: "Welcome to MultiQC!",
     content: 'MultiQC generates reports based on analysis across many samples.<br>Click next to explore the tools availble in this report.',
+    onShow: function(tour){
+      mqc_toolbox_openclose('#mqc_cols', false);
+      $('.mqc-toolbox').css('z-index', 0);
+    }
   },
   {
     element: "#general_stats",
     placement: 'top',
     title: "General Statistics",
-    content: "This table gives an overview of your samples, with data from all modules."
+    backdropPadding: {'left': 10},
+    content: "This table gives an overview of your samples, with data from all modules.",
   },
   {
     element: "#general_stats_table thead tr th:nth-child(3)",
@@ -953,11 +976,13 @@ var intro_tour = new Tour({
   {
     element: "#general_stats h2 button",
     title: "View Key",
+    backdropPadding: 5,
     content: "Click here to see the colour scale key",
   },
   {
     element: ".mqc-module-section:first h2",
     placement: 'top',
+    backdropPadding: {'bottom': 10, 'left': 10},
     title: "Modules",
     content: "The report uses modules, each one understands one type of data and produces a section in the report."
   },
@@ -970,14 +995,45 @@ var intro_tour = new Tour({
   {
     element: ".switch_group:first",
     title: "Counts / Percentages",
+    backdropPadding: 5,
     content: "Most bar plots let you switch between absolute counts and percentages"
   },
+  
+  // These steps won't play if FastQC not present
+  {
+    element: "#fastqc_quality_plot_wrapper",
+    placement: 'top',
+    title: "View Originals",
+    content: "Clicking a data point in some plots will show the original data.",
+    onShown: function(tour){
+      setTimeout(function(){
+        hc_original_chg_source (fastqc_quality_plot_orig_plots[0]['s_name'], 'fastqc_quality_plot');
+        $('#fastqc_quality_plot_wrapper .showhide_orig').delay(100).slideDown();
+        $('#fastqc_quality_plot_wrapper .hc-plot').delay(100).slideUp();
+      }, 500);
+    }
+  },
+  {
+    element: "#fastqc_quality_plot_wrapper",
+    placement: 'top',
+    title: "View Originals",
+    content: "Click the original plot again to get back to the overview.",
+    onShown: function(tour){
+      setTimeout(function(){
+        $('#fastqc_quality_plot_wrapper .showhide_orig img').trigger('click');
+      }, 500);
+    }
+  },
+  
   {
     element: ".hc-plot-handle:first",
     placement: 'top',
     title: "Resize Plots",
     content: "Drag this grey bar to resize any plot.",
+    backdropPadding: 10,
+    onHide: function (tour) { $('.mqc-toolbox').css('z-index', 1200); }
   },
+  
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
     placement: 'left',
@@ -989,36 +1045,39 @@ var intro_tour = new Tour({
     placement: 'left',
     title: "Highlight Samples",
     content: "This tool allows you to highlight samples across plots and tables",
-    onShow: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
+    onShow: function (tour) { mqc_toolbox_openclose('#mqc_cols', true); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_hidesamples]",
     placement: 'left',
     title: "Hide Samples",
     content: "This tool allows you to temporarily hide samples in the report",
-    onShow: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_hidesamples]").trigger( "click" ); },
+    onShow: function (tour) { mqc_toolbox_openclose('#mqc_hidesamples', true); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_renamesamples]",
     placement: 'left',
     title: "Rename Samples",
     content: "Here, you can rename samples, for example, cleaning up common suffixes.",
-    onNext: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_renamesamples]").trigger( "click" ); },
+    onShow: function (tour) { mqc_toolbox_openclose('#mqc_renamesamples', true); },
   },
   {
     element: "#mqc_renamesamples a[href=#mqc_renamesamples_bulk_collapse]",
     placement: 'left',
     title: "Bulk Rename",
     content: "Copy and paste from Excel to bulk rename samples.",
-    onShown: function(tour){ $("#mqc_renamesamples a[href=#mqc_renamesamples_bulk_collapse]").trigger("click"); },
+    onShown: function(tour){ $("#mqc_renamesamples_bulk_collapse").collapse('show'); },
   },
   {
     element: "#mqc_cols .mqc_regex_mode",
     placement: 'left',
     title: "Regex Search",
     content: "The highlight and hide tools have the option of using regexes for powerful pattern matching",
-    onShow: function(tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
-    onHide: function (tour) { $(".mqc-toolbox-buttons a[href=#mqc_cols]").trigger( "click" ); },
+    onShow: function(tour) { mqc_toolbox_openclose('#mqc_cols', true); },
+    onHide: function (tour) {
+      mqc_toolbox_openclose('#mqc_cols', false);
+      $('.mqc-toolbox').css('z-index', 0);
+    },
   },
   {
     orphan: true,

@@ -137,7 +137,6 @@ $(function () {
     $('.mqc-section-fastqc .hc-plot-wrapper').on('mqc_original_chg_source', function(e, name){
         var pid = $(this).find('.hc-plot').attr('id');
         var s_name = get_orig_name(name, pid);
-        console.log(pid);
         var status = fastqc_s_statuses[pid][s_name];
         if (status === undefined) { status = '?'; }
         var label = $(this).find('.s_status');
