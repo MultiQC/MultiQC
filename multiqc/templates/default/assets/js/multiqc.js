@@ -5,6 +5,8 @@ var brewer_scales = ['YlOrRd', 'YlOrBr', 'YlGnBu', 'YlGn', 'Reds', 'RdPu',
   'GnBu', 'BuPu', 'BuGn', 'Blues', 'Set3', 'Set2', 'Set1', 'Pastel2', 'Pastel1',
   'Paired', 'Dark2', 'Accent', 'Spectral', 'RdYlGn', 'RdYlBu', 'RdGy', 'RdBu',
   'PuOr', 'PRGn', 'PiYG', 'BrBG'];
+var mqc_colours_idx = 0;
+var mqc_colours = chroma.brewer.Set1;
 
 // Execute when page load has finished
 $(function () {
@@ -220,8 +222,6 @@ $(function () {
   });
 
   // Highlight colour filters
-  var mqc_colours = chroma.brewer.Set1;
-  var mqc_colours_idx = 0;
   $('#mqc_color_form').submit(function(e){
     e.preventDefault();
     var f_text = $('#mqc_colour_filter').val().trim();
@@ -1032,7 +1032,9 @@ function load_mqc_config(){
     $.each(config['highlights_f_texts'], function(idx, f_text){
       var f_col = config['highlights_f_cols'][idx];
       $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      mqc_colours_idx += 1;
     });
+    $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
     if(config['highlight_regex'] == true){
       $('#mqc_cols .mqc_regex_mode').html('Regex mode <strong>off</strong>');
     }
@@ -1263,6 +1265,7 @@ var intro_tour = new Tour({
     title: "Bulk Rename",
     content: "Copy and paste from Excel to bulk rename samples.",
     onShown: function(tour){ $("#mqc_renamesamples_bulk_collapse").collapse('show'); },
+    onNext: function(tour){ $("#mqc_renamesamples_bulk_collapse").collapse('hide'); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_hidesamples]",
@@ -1276,9 +1279,27 @@ var intro_tour = new Tour({
     placement: 'left',
     title: "Regex Search",
     content: "The highlight and hide tools have the option of using regexes for powerful pattern matching",
-    onShow: function(tour) { mqc_toolbox_openclose('#mqc_cols', true); },
+  },
+  {
+    element: ".mqc-toolbox-buttons a[href=#mqc_saveconfig]",
+    placement: 'left',
+    title: "Save Config",
+    content: "By default, every change you make is saved in the browser and will show again if you load the report at a later date.",
+    onShow: function(tour) { mqc_toolbox_openclose('#mqc_saveconfig', true); },
+  },
+  {
+    element: ".mqc_saveconfig_btn[data-target='local']",
+    placement: 'left',
+    title: "General Config",
+    content: "If you want your settings to apply to every MultiQC report you view, click here.",
+  },
+  {
+    element: ".mqc_saveconfig_btn[data-target='file']",
+    placement: 'left',
+    title: "Share Config",
+    content: "To share your config with the report, click here to download a config file - then move it to the report directory.",
     onHide: function (tour) {
-      mqc_toolbox_openclose('#mqc_cols', false);
+      mqc_toolbox_openclose('#mqc_saveconfig', false);
       $('.mqc-toolbox').css('z-index', 0);
     },
   },
