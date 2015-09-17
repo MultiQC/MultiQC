@@ -24,7 +24,9 @@
   <script src="http://code.highcharts.com/modules/exporting.js"></script>
   <script src="assets/js/chroma.min.js"></script>
   <script src="assets/js/jquery.tablesorter.min.js"></script> 
+  <script src="assets/js/FileSaver.min.js"></script> 
   <script src="assets/js/multiqc.js"></script>
+  <script src="multiqc_config.js"></script>
   {%- for m in modules %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js %}
   <script src="{{ js_href }}"></script>
   {%- endfor %}{% endif %}{% endfor %}
@@ -59,8 +61,9 @@
     <span class="mqc-toolbox-label">Toolbox</span>
     <ul>
       <li><a href="#mqc_cols" title="Highlight" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-pushpin"></span></a></li>
-      <li><a href="#mqc_hidesamples" title="Hide" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-eye-close"></span></a></li>
       <li><a href="#mqc_renamesamples" title="Rename" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-font"></span></a></li>
+      <li><a href="#mqc_hidesamples" title="Hide" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-eye-close"></span></a></li>
+      <li><a href="#mqc_saveconfig" title="Rename" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
     </ul>
   </div>
   <div class="mqc-toolbox-wrapper row">
@@ -68,7 +71,7 @@
       <h3>MultiQC Toolbox</h3>
     </div>
     <div id="mqc_cols" class="mqc_filter_section col-sm-4 col-md-12">
-      <h4>Highlight samples:</h4>
+      <h4>Highlight Samples</h4>
       <p>Shortcut key for this tool: <kbd>c</kbd></p>
       <form class="form-inline" id="mqc_color_form">
         <input id="mqc_colour_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
@@ -78,19 +81,8 @@
       <ul id="mqc_col_filters" class="mqc_filters"></ul>
       <p class="mqc_regex_mode">Regex mode <strong>off</strong></p>
     </div>
-    <div id="mqc_hidesamples" class="mqc_filter_section col-sm-4 col-md-12">
-      <h4>Hide samples:</h4>
-      <p>Shortcut key for this tool: <kbd>h</kbd></p>
-      <form class="form-inline" id="mqc_hidesamples_form">
-        <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
-        <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
-      </form>
-      {% if config.general_stats['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
-      <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
-      <p class="mqc_regex_mode">Regex mode <strong>off</strong></p>
-    </div>
     <div id="mqc_renamesamples" class="mqc_filter_section col-sm-4 col-md-12">
-      <h4>Rename samples:</h4>
+      <h4>Rename Samples</h4>
       <p>Shortcut key for this tool: <kbd>r</kbd></p>
       <form class="form-inline" id="mqc_renamesamples_form">
         <input id="mqc_renamesamples_from" type="text" placeholder="From" class="form-control input-sm">
@@ -108,6 +100,34 @@
       </div>
       <ul id="mqc_renamesamples_filters" class="mqc_filters"></ul>
     </div>
+    <div id="mqc_hidesamples" class="mqc_filter_section col-sm-4 col-md-12">
+      <h4>Hide Samples</h4>
+      <p>Shortcut key for this tool: <kbd>h</kbd></p>
+      <form class="form-inline" id="mqc_hidesamples_form">
+        <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
+        <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
+      </form>
+      {% if config.general_stats['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
+      <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
+      <p class="mqc_regex_mode">Regex mode <strong>off</strong></p>
+    </div>
+    <div id="mqc_saveconfig" class="mqc_filter_section col-sm-4 col-md-12">
+      <h4>Save Config</h4>
+      <p>Shortcut key for this tool: <kbd>s</kbd></p>
+      <hr>
+      <p>By default, MultiQC reports auto-save your tool settings to the browser.
+        You can turn that on and off here:</p>
+      <p><a href="#" data-target="autosave" id="mqc_saveconfig_autosave" class="mqc_saveconfig_btn btn btn-sm btn-default">Auto-save is <strong>on</strong></a></p>
+      <hr>
+      <p>You can also save a config file to the report directory. Your settings
+        will be applied the next time you open this report, and can be shared with others.</p>
+      <p><a href="#" data-target="file" class="mqc_saveconfig_btn btn btn-sm btn-default">Download Config File</a></p>
+      <hr>
+      <p>If your settings are more general, you can save them to your browser 
+        and have them applied to every MultiQC report you open.</p>
+      <p><a href="#" data-target="local" class="mqc_saveconfig_btn btn btn-sm btn-default">Save General Config</a></p>
+      <hr>
+    </div>
   </div>
 </div>
 
@@ -116,8 +136,8 @@
   <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
   {{ '<h2>'+config.title+'</h2>' if config.title != None }}
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
-  <p>Report generated on {{ config.creation_date }} based on data in <code>{{ config.analysis_dir }}</code></p>
-  <p>Report location: <code>{{ config.output_dir }}/multiqc_report.html</code></p>
+  <p>Report generated on {{ config.creation_date }} based on data in <code id="mqc_analysis_path">{{ config.analysis_dir }}</code></p>
+  <p id="mqc_report_location">Report location: <code id="mqc_output_path">{{ config.output_dir }}/multiqc_report.html</code></p>
   <div class="alert alert-info alert-dismissible hidden-print mqc-into-tour-alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>

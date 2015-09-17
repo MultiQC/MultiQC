@@ -85,6 +85,8 @@ If in doubt, feel free to get in touch with the author:
   functions now handle many more functions (plots, config, file import)
   * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
     for instructions on how to use these new helpers to make your own module
+* New report toolbox - sample highlighting, renaming, hiding
+  * Config is autosaved by default, can also export to a file for sharing
 * New Tophat, Bowtie 2 and QualiMap modules
   * Thanks to @guillermo-carrasco for the QualiMap module
 * Bowtie module now works

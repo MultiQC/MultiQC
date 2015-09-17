@@ -20,7 +20,11 @@ $(function () {
   intro_tour.init();
   $('#mqc-launch-into-tour').click(function(){
     intro_tour.start();
-  });  
+  });
+  
+  // Load any saved configuration
+  load_mqc_config();
+  
 
   // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
@@ -207,15 +211,17 @@ $(function () {
   // Shortcut keys
   $(window).keydown(function (evt) {
     if (evt.target.tagName.toLowerCase() !== 'input' && evt.target.tagName.toLowerCase() !== 'textarea') {
+      // console.log(evt.which);
       if(evt.which == 67){ mqc_toolbox_openclose('#mqc_cols'); } // c
-      if(evt.which == 72){ mqc_toolbox_openclose('#mqc_hidesamples'); } // h
       if(evt.which == 82){ mqc_toolbox_openclose('#mqc_renamesamples'); } // r
+      if(evt.which == 72){ mqc_toolbox_openclose('#mqc_hidesamples'); } // h
+      if(evt.which == 83){ mqc_toolbox_openclose('#mqc_saveconfig'); } // r
     }
-});
+  });
 
   // Highlight colour filters
   var mqc_colours = chroma.brewer.Set1;
-  var mqc_colours_idx = 100;
+  var mqc_colours_idx = 0;
   $('#mqc_color_form').submit(function(e){
     e.preventDefault();
     var f_text = $('#mqc_colour_filter').val().trim();
@@ -304,6 +310,30 @@ $(function () {
     apply_mqc_renamesamples();
     $(this).find('textarea').val('');
     $('#mqc_renamesamples_bulk_collapse').collapse('hide');
+  });
+  
+  // Save config
+  $('.mqc_saveconfig_btn').click(function(e){
+    e.preventDefault();
+    if($(this).data('target') == 'autosave'){
+      if($(this).text() == 'Auto-save is off'){
+        $(this).html('Auto-save is <strong>on</strong>');
+      } else {
+        mqc_save_config(undefined, undefined, true); // clear autosave
+        $(this).html('Auto-save is <strong>off</strong>');
+      }
+    }
+    if($(this).data('target') == 'local'){
+      mqc_save_config('general', 'local');
+      $('<p class="text-success" id="mqc-save-general-success">General config saved.</p>').hide().insertAfter($(this).parent()).slideDown(function(){
+        setTimeout(function(){
+          $('#mqc-save-general-success').slideUp(function(){ $(this).remove(); });
+        }, 5000);
+      });
+    }
+    if($(this).data('target') == 'file'){
+      mqc_save_config('general', 'file');
+    }
   });
   
   // Filter text is changed
@@ -577,15 +607,22 @@ function mqc_toolbox_openclose (target, open){
     if(btn.hasClass('active')){ open = false; }
     else { open = true; }
   }
+  var already_open = $('.mqc-toolbox').hasClass('active');
   if(open){
     $('.mqc-toolbox, .mqc-toolbox-buttons a, .mqc_filter_section').removeClass('active');
     btn.addClass('active');
     $('.mqc-toolbox, .mqc-toolbox-label, '+target).addClass('active');
-    $(document).trigger('mqc_toolbox_close');
+    $(document).trigger('mqc_toolbox_open');
+    var timeout = already_open ? 0 : 510;
+    setTimeout(function(){
+      if(target == '#mqc_cols'){ $('#mqc_colour_filter').focus(); }
+      if(target == '#mqc_renamesamples'){ $('#mqc_renamesamples_from').focus(); }
+      if(target == '#mqc_hidesamples'){ $('#mqc_hidesamples_filter').focus(); }
+    }, timeout);
   } else {
     btn.removeClass('active');
-    $('.mqc-toolbox, .mqc-toolbox-buttons a, .mqc_filter_section, .mqc-toolbox-label, '+target).removeClass('active');
-    $(document).trigger('mqc_toolbox_open');
+    $('.mqc-toolbox, .mqc-toolbox-buttons a, .mqc-toolbox-label').removeClass('active');
+    $(document).trigger('mqc_toolbox_close');
   }
 }
 
@@ -692,13 +729,12 @@ function apply_mqc_highlights(){
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
-  
+  mqc_autosave();
 }
 
 
 // Apply the Highlight highlights to highcharts plots
 function apply_mqc_hidesamples(){
-  console.log('CALLED');
   
   // Collect the filters into an array
   var f_texts = [];
@@ -715,6 +751,7 @@ function apply_mqc_hidesamples(){
     var plotid = $(this).attr('id');
     // Put in a try / catch so that one plot doesn't break all hiding
     try {
+      if($(this).highcharts() === undefined){ return true; }
       // Line plots
       if($(this).highcharts().options.chart.type == 'line'){
         $.each($(this).highcharts().series, function(j, s){
@@ -769,7 +806,7 @@ function apply_mqc_hidesamples(){
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
-  
+  mqc_autosave();
 }
 
 function apply_mqc_renamesamples(){
@@ -833,6 +870,7 @@ function apply_mqc_renamesamples(){
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_renamesamples');
+  mqc_autosave();
 }
 // Try to keep track of what samples are called
 // This dict works as a backup for non-standard plots
@@ -841,7 +879,6 @@ function get_new_name(s_name, obj_id, orig_name){
   // Collect the filters into an array
   var f_texts = [];
   var t_texts = [];
-  mqc_rename_filters = {};
   $('#mqc_renamesamples_filters .from_text').each(function(){
     f_texts.push($(this).val());
   });
@@ -879,6 +916,164 @@ function get_orig_name(s_name, obj_id){
   return s_name;
 }
 
+// Autosave function
+function mqc_autosave(){
+  if($('#mqc_saveconfig_autosave').text() == 'Auto-save is off'){
+    return;
+  }
+  mqc_save_config();
+}
+
+// Save the current configuration setup
+function mqc_save_config(target, method, clear){
+  if(target === undefined){ target = $('#mqc_output_path').text(); }
+  if(method === undefined){ method = 'local'; }
+  var config = {};
+  // Autosave status
+  config['autosave_tools'] = true;
+  if($('#mqc_saveconfig_autosave').text() == 'Auto-save is off'){
+    config['autosave_tools'] = false;
+  }
+  // Collect the highlight filters
+  config['highlight_regex'] = true;
+  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode off'){
+    config['highlight_regex'] = false;
+  }
+  config['highlights_f_texts'] = [];
+  config['highlights_f_cols'] = [];
+  $('#mqc_col_filters li .f_text').each(function(){
+    config['highlights_f_texts'].push($(this).val());
+    config['highlights_f_cols'].push($(this).css('color'));
+  });
+  // Collect the hide sample filters
+  config['hidesamples_regex'] = true;
+  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode off'){
+    config['hidesamples_regex'] = false;
+  }
+  config['hidesamples_f_texts'] = [];
+  $('#mqc_hidesamples_filters li .f_text').each(function(){
+    config['hidesamples_f_texts'].push($(this).val());
+  });
+  // Collect the rename filters
+  config['rename_from_texts'] = [];
+  config['rename_to_texts'] = [];
+  $('#mqc_renamesamples_filters .from_text').each(function(){
+    config['rename_from_texts'].push($(this).val());
+  });
+  $('#mqc_renamesamples_filters .to_text').each(function(){
+    config['rename_to_texts'].push($(this).val());
+  });
+  
+  if(method == 'local'){
+    var prev_config = {};
+    // Load existing configs (inc. from other reports)
+    try {
+      prev_config = localStorage.getItem("mqc_config");
+      if(prev_config !== null && prev_config !== undefined){
+        prev_config = JSON.parse(prev_config);
+      } else {
+        prev_config  = {};
+      }
+    } catch(e){ console.log('Error updating localstorage: '+e); }
+    // Update config obj with current config
+    if(clear == true){
+      prev_config[target] = {'autosave_tools': false};
+    } else {
+      prev_config[target] = config;
+      prev_config[target]['last_updated'] = Date();
+    }
+    localStorage.setItem("mqc_config", JSON.stringify(prev_config));
+  }
+  if(method == 'file'){
+    var f = "// Config file for MultiQC\n// https://github.com/ewels/MultiQC\n";
+    f += "// Generated "+Date()+"\n// Original report path: "+$('#mqc_output_path').text()+"\n";
+    f += "\nmqc_config_file_cfg = "+JSON.stringify(config, null, '  ');
+    var fblob = new Blob([f], {type: "application/javascript;charset=utf-8"});
+    saveAs(fblob, "multiqc_config.js");
+    setTimeout(function(){
+      alert('Now move multiqc_config.js from your downloads folder to the directory where this report is located.');
+    }, 500);
+  }
+}
+
+// Load previously saved config variables
+function load_mqc_config(){
+  var config = {};
+  // Get local configs - general and then this path
+  try {
+    var local_config = localStorage.getItem("mqc_config");
+    if(local_config !== null && local_config !== undefined){
+      local_config = JSON.parse(local_config);
+      if(local_config['general'] !== undefined){ console.log('Loaded local general config'); }
+      for (var attr in local_config['general']) {
+        config[attr] = local_config['general'][attr];
+      }
+      var path = $('#mqc_output_path').text();
+      if(local_config[path] !== undefined){ console.log('Loaded local report config'); }
+      for (var attr in local_config[path]) {
+        config[attr] = local_config[path][attr];
+      }
+    }
+  } catch(e){ console.log('Could not load local config: '+e); }
+  
+  // Local file
+  if(typeof mqc_config_file_cfg != "undefined"){
+    for (var attr in mqc_config_file_cfg) {
+      config[attr] = mqc_config_file_cfg[attr];
+    }
+    $('#mqc_report_location').after('<p>MultiQC report toolbox config loaded from file.</p>');
+    console.log('Loaded config from a file');
+  }
+  var update_highlights = false;
+  var update_rename = false;
+  var update_hide = false;
+  // Apply config - highlights
+  if(notEmptyObj(config['highlights_f_texts']) && notEmptyObj(config['highlights_f_cols'])){
+    $.each(config['highlights_f_texts'], function(idx, f_text){
+      var f_col = config['highlights_f_cols'][idx];
+      $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+    });
+    if(config['highlight_regex'] == true){
+      $('#mqc_cols .mqc_regex_mode').html('Regex mode <strong>off</strong>');
+    }
+    update_highlights = true;
+  }
+  // Rename samples
+  if(notEmptyObj(config['rename_from_texts']) && notEmptyObj(config['rename_to_texts'])){
+    $.each(config['rename_from_texts'], function(idx, from_text){
+      var to_text = config['rename_to_texts'][idx];
+      if(from_text.length == 0){ return true; }
+      var li = '<li><input class="f_text from_text" value="'+from_text+'" />'
+      li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" />'
+      li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+      $('#mqc_renamesamples_filters').append(li);
+    });
+    if(config['hidesamples_regex'] == true){
+      $('#mqc_hidesamples .mqc_regex_mode').html('Regex mode <strong>off</strong>');
+    }
+    update_rename = true;
+  }
+  // Hide samples
+  if(notEmptyObj(config['hidesamples_f_texts'])){
+    $.each(config['hidesamples_f_texts'], function(idx, f_text){
+      if(f_text.length == 0){ return true; }
+      $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+    });
+    update_hide = true;
+  }
+  // Autosave
+  if(config['autosave_tools'] == false){
+    $('#mqc_saveconfig_autosave').html('Auto-save is <strong>off</strong>');
+  }
+  // Wait for the rest of the page to render, then apply changes.
+  // This is ugly. Can anyone think of a better way?
+  setTimeout(function(){
+    if(update_highlights){ apply_mqc_highlights(); }
+    if(update_rename){ apply_mqc_renamesamples(); }
+    if(update_hide){ apply_mqc_hidesamples(); }
+  }, 1000);
+  
+}
 
 // Update an original plot source
 function hc_original_chg_source (name, id) {
@@ -931,12 +1126,20 @@ function hc_original_chg_source (name, id) {
     }
   } else {
     console.log("Couldn't find original image path for "+s_name+", id:"+id);
-    console.log(names);
   }
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   target.trigger('mqc_original_chg_source', [name]);
   
+}
+
+// Helper config - is defined and object length > 0?
+function notEmptyObj (obj){
+  try{
+    if(obj === undefined){ return false; }
+    if(obj.length == 0){ return false; }
+  } catch(e){ return false; }
+  return true;
 }
 
 
@@ -1048,13 +1251,6 @@ var intro_tour = new Tour({
     onShow: function (tour) { mqc_toolbox_openclose('#mqc_cols', true); },
   },
   {
-    element: ".mqc-toolbox-buttons a[href=#mqc_hidesamples]",
-    placement: 'left',
-    title: "Hide Samples",
-    content: "This tool allows you to temporarily hide samples in the report",
-    onShow: function (tour) { mqc_toolbox_openclose('#mqc_hidesamples', true); },
-  },
-  {
     element: ".mqc-toolbox-buttons a[href=#mqc_renamesamples]",
     placement: 'left',
     title: "Rename Samples",
@@ -1069,7 +1265,14 @@ var intro_tour = new Tour({
     onShown: function(tour){ $("#mqc_renamesamples_bulk_collapse").collapse('show'); },
   },
   {
-    element: "#mqc_cols .mqc_regex_mode",
+    element: ".mqc-toolbox-buttons a[href=#mqc_hidesamples]",
+    placement: 'left',
+    title: "Hide Samples",
+    content: "This tool allows you to temporarily hide samples in the report",
+    onShow: function (tour) { mqc_toolbox_openclose('#mqc_hidesamples', true); },
+  },
+  {
+    element: "#mqc_hidesamples .mqc_regex_mode",
     placement: 'left',
     title: "Regex Search",
     content: "The highlight and hide tools have the option of using regexes for powerful pattern matching",
