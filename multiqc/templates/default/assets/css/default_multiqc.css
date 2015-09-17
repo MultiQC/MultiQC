@@ -149,6 +149,9 @@ input.form-control[type=color]{
         background-color: #ededed;
         border-bottom: 1px solid #ccc;
     }
+    #mqc_saveconfig {
+        margin: 0 -15px;
+    }
 }
 @media only screen and (min-width: 992px){
     .mqc-toolbox {
@@ -164,6 +167,12 @@ input.form-control[type=color]{
     }
     .mqc-toolbox.active {
         width: 282px;
+    }
+    .mqc-toolbox .row {
+        margin: 0;
+    }
+    #mqc_saveconfig .bs-col {
+        padding:0;
     }
     .mainpage {
         padding-right: 40px;
