@@ -96,7 +96,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
         config.general_stats['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">% Dups</span></th>'
         for sn, data in self.picard_dupMetrics_data.items():
             try:
-                config.general_stats['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(data['PERCENT_DUPLICATION']*100)
+                config.general_stats['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(float(data['PERCENT_DUPLICATION'])*100)
             except KeyError:
                 print(sn)
                 print(self.picard_dupMetrics_data)
