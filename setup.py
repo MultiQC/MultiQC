@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import io
 import os
 
-version = '0.1.1dev0'
+version = '0.2.0'
 
 # Get the long description from the readme
 here = os.path.abspath(os.path.dirname(__file__))

@@ -80,19 +80,19 @@ If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ## Version History
-#### v0.1.1dev
-* Huge amount of code restructuring for nearly all modules. Common base module
+#### v0.2 - 2015-09-18
+* Code restructuring for nearly all modules. Common base module
   functions now handle many more functions (plots, config, file import)
   * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
     for instructions on how to use these new helpers to make your own module
 * New report toolbox - sample highlighting, renaming, hiding
   * Config is autosaved by default, can also export to a file for sharing
+  * Interactive tour to help users find their way around
 * New Tophat, Bowtie 2 and QualiMap modules
   * Thanks to @guillermo-carrasco for the QualiMap module
 * Bowtie module now works
 * New command line parameter `-d` prefixes sample names with the directory that
   they were found in. Allows duplicate filenames without being overwritten.
-* New sample highlighting, hiding and renaming report tools
 * Introduction walkthrough helps show what can be done in the report
 * Now compatible with both Python 2 and Python 3
 * Software version number now printed on command line properly, and in reports.

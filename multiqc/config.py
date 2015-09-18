@@ -12,7 +12,7 @@ import yaml
 import multiqc
 
 # Constants
-VERSION = '0.1.1dev0'
+VERSION = '0.2.0'
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
 # Create the config variables, with defaults
