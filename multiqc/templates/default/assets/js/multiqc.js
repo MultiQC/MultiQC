@@ -19,9 +19,20 @@ $(function () {
   $("#general_stats_table").tablesorter({sortInitialOrder: 'desc'}); 
   
   // Introduction tour
+  $.each(tour_steps, function(i, step){
+    step['title'] += '<span class="pull-right">'+(i+1)+'/'+tour_steps.length+'</span>';
+    var percent = parseInt(((i+1) / tour_steps.length) * 100);
+    step['content'] = '<div class="pbar_wrapper"><hr class="pbar" style="width:'+percent+'%;"></div>' + step['content'];
+  });
+  var intro_tour = new Tour({
+    backdrop: true,
+    storage: false,
+    steps: tour_steps
+  });
   intro_tour.init();
   $('#mqc-launch-into-tour').click(function(){
-    intro_tour.start();
+    try{ intro_tour.start(); }
+    catch(e){ console.log('Tour broke - '+e); }
   });
   
   // Load any saved configuration
@@ -1148,10 +1159,7 @@ function notEmptyObj (obj){
 
 
 // MultiQC Tour, using bootstrap tour
-var intro_tour = new Tour({
-  backdrop: true,
-  storage: false,
-  steps: [
+var tour_steps = [
   {
     orphan: true,
     title: "Welcome to MultiQC!",
@@ -1164,7 +1172,7 @@ var intro_tour = new Tour({
   {
     element: "#general_stats",
     placement: 'top',
-    title: "General Statistics",
+    title: 'General Statistics',
     backdropPadding: {'left': 10},
     content: "This table gives an overview of your samples, with data from all modules.",
   },
@@ -1176,20 +1184,7 @@ var intro_tour = new Tour({
   {
     element: "#general_stats_table tbody tr:first-child td:first-child",
     title: "Reorder rows",
-    content: "Drag the handle on any row to re-arrange."
-  },
-  {
-    element: "#general_stats h2 button",
-    title: "View Key",
-    backdropPadding: 5,
-    content: "Click here to see the colour scale key",
-  },
-  {
-    element: ".mqc-module-section:first h2",
-    placement: 'top',
-    backdropPadding: {'bottom': 10, 'left': 10},
-    title: "Modules",
-    content: "The report uses modules, each one understands one type of data and produces a section in the report."
+    content: "Drag the handle on any row to rearrange."
   },
   {
     element: ".hc-line-plot:first",
@@ -1201,44 +1196,32 @@ var intro_tour = new Tour({
     element: ".switch_group:first",
     title: "Counts / Percentages",
     backdropPadding: 5,
-    content: "Most bar plots let you switch between absolute counts and percentages"
+    content: "Bar plots can switch between counts and percentages."
   },
-  
+  {
+    element: ".hc-bar-plot:first",
+    title: "Show / Hide Categories",
+    placement: 'top',
+    content: "Click category names to hide (useful when looking at percentages)."
+  },
+
   // These steps won't play if FastQC not present
   {
     element: "#fastqc_quality_plot_wrapper",
     placement: 'top',
     title: "View Originals",
-    content: "Clicking a data point in some plots will show the original data.",
-    onShown: function(tour){
-      setTimeout(function(){
-        hc_original_chg_source (fastqc_quality_plot_orig_plots[0]['s_name'], 'fastqc_quality_plot');
-        $('#fastqc_quality_plot_wrapper .showhide_orig').delay(100).slideDown();
-        $('#fastqc_quality_plot_wrapper .hc-plot').delay(100).slideUp();
-      }, 500);
-    }
+    content: "Clicking a data point in some plots will show the original data. Click the original plot again to get back to the overview. (Try it now!)",
   },
-  {
-    element: "#fastqc_quality_plot_wrapper",
-    placement: 'top',
-    title: "View Originals",
-    content: "Click the original plot again to get back to the overview.",
-    onShown: function(tour){
-      setTimeout(function(){
-        $('#fastqc_quality_plot_wrapper .showhide_orig img').trigger('click');
-      }, 500);
-    }
-  },
-  
+
   {
     element: ".hc-plot-handle:first",
     placement: 'top',
     title: "Resize Plots",
-    content: "Drag this grey bar to resize any plot.",
+    content: "Drag the grey bar below plots to resize.",
     backdropPadding: 10,
     onHide: function (tour) { $('.mqc-toolbox').css('z-index', 1200); }
   },
-  
+
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
     placement: 'left',
@@ -1249,23 +1232,15 @@ var intro_tour = new Tour({
     element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
     placement: 'left',
     title: "Highlight Samples",
-    content: "This tool allows you to highlight samples across plots and tables",
+    content: "This tool allows you to highlight samples across plots and tables. Regexes mode allows for powerful pattern matching.",
     onShow: function (tour) { mqc_toolbox_openclose('#mqc_cols', true); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_renamesamples]",
     placement: 'left',
     title: "Rename Samples",
-    content: "Here, you can rename samples, for example, cleaning up common suffixes.",
+    content: "Here, you can rename samples, for example, cleaning up common suffixes. Data from excel can be pasted in for bulk renaming.",
     onShow: function (tour) { mqc_toolbox_openclose('#mqc_renamesamples', true); },
-  },
-  {
-    element: "#mqc_renamesamples a[href=#mqc_renamesamples_bulk_collapse]",
-    placement: 'left',
-    title: "Bulk Rename",
-    content: "Copy and paste from Excel to bulk rename samples.",
-    onShown: function(tour){ $("#mqc_renamesamples_bulk_collapse").collapse('show'); },
-    onNext: function(tour){ $("#mqc_renamesamples_bulk_collapse").collapse('hide'); },
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_hidesamples]",
@@ -1273,12 +1248,6 @@ var intro_tour = new Tour({
     title: "Hide Samples",
     content: "This tool allows you to temporarily hide samples in the report",
     onShow: function (tour) { mqc_toolbox_openclose('#mqc_hidesamples', true); },
-  },
-  {
-    element: "#mqc_hidesamples .mqc_regex_mode",
-    placement: 'left',
-    title: "Regex Search",
-    content: "The highlight and hide tools have the option of using regexes for powerful pattern matching",
   },
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_saveconfig]",
@@ -1308,5 +1277,4 @@ var intro_tour = new Tour({
     title: "End of Tour",
     content: 'That\'s it for this tour - for more info, see the homepage: <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a>',
     onHide: function (tour) { $('.mqc-toolbox').css('z-index', 1200); }
-  },
-]});
+  }];

@@ -354,6 +354,17 @@ input.form-control[type=color]{
 .popover.tour-tour {
     z-index: 1200;
 }
+.popover.tour-tour .popover-content {
+    padding-top: 0;
+}
+.popover.tour-tour .popover-content .pbar_wrapper {
+    padding-bottom: 9px;
+    margin: -1px -14px 0;
+}
+.popover.tour-tour .popover-content .pbar {
+    border-top: 1px solid #337ab7;
+    margin:0;
+}
 
 
 
