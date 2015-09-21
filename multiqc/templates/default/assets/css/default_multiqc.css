@@ -1,9 +1,6 @@
 /* CSS Styles for Default MultiQC Report Template */
 
 /* General Styles */
-.table-nostretch {
-    width: auto;
-}
 .table tr td {
     font-size:0.9em;
 }
@@ -369,6 +366,9 @@ input.form-control[type=color]{
 
 
 /* General stats table */
+#general_stats_table {
+    width: 98%;
+}
 #general_stats_table thead th {
     cursor: pointer;
 }
@@ -389,7 +389,12 @@ input.form-control[type=color]{
     border-top: 4px dashed;
 }
 #general_stats_table thead th.headerSortDown, #general_stats_table thead th.headerSortUp {
-    background-color: #fcf8e3;
+    background-color: #ededed;
+    color: #1ca8dd;
+    border-bottom: 2px solid #1ca8dd;
+}
+#general_stats_table thead td {
+    border-bottom: 2px solid #ddd;
 }
 #general_stats_table th {
     white-space: nowrap;
@@ -405,6 +410,39 @@ input.form-control[type=color]{
 #general_stats_table th.rowheader {
     border-left: none;
 }
+
+#general_stats_table td.data-coloured {
+    text-align: right;
+    padding: 0;
+}
+#general_stats_table .wrapper {
+    display: inline-block;
+    position: relative;
+    height:100%;
+    width:100%;
+}
+#general_stats_table .bar {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background-color: #dedede;
+    z-index:-1;
+    opacity: 0.1;
+    -webkit-transition: opacity 0.5s;
+    transition: opacity 0.5s;
+}
+#general_stats_table:hover .bar {
+    opacity: 0.5;
+}
+#general_stats_table .val {
+    display: block;
+    position: absolute;
+    padding: 5px;
+    right:0;
+}
+
 
 .general_stats_key_bar {
     padding: 3px 5px;

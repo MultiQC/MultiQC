@@ -171,12 +171,11 @@ $(function () {
           scale = chroma.scale(colscheme).domain([maxval, minval]);
         }
         table.find('tr td:nth-of-type('+(index)+')').each(function(){
-          var col = scale(parseFloat($(this).text())).css();
-          $(this).css('background-color', col);
-          // Change the colour of the text if we can get a better contrast ratio
-          if(chroma.contrast('#EEEEEE', col) > chroma.contrast($(this).css('color'), col)){
-            $(this).css('color', '#EEEEEE').css('font-weight', '200');
-          }
+          var val = parseFloat($(this).text());
+          var col = scale(val).css();
+          var percentage = ((val - minval) / (maxval - minval)) * 100;
+          $(this).html('<div class="wrapper"><span class="bar" style="width:'+percentage+'%; background-color: '+col+';"></span><span class="val">'+$(this).text()+'</span></div>');
+          $(this).addClass('data-coloured');
         });
         
         // Add to the key modal
