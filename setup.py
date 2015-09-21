@@ -28,8 +28,6 @@ from setuptools import setup, find_packages
 
 version = '0.2.1dev'
 
-print(__doc__)
-
 setup(
     name = 'multiqc',
     version = version,
