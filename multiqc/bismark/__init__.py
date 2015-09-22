@@ -175,7 +175,7 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
             for sn, data in self.bismark_data['merged'].items():
                 config.general_stats['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['percent_cpg_meth'])
                 config.general_stats['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['total_c']/1000000)
-            config.general_stats['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">% Meth</span></th>'
+            config.general_stats['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">% Meth</span></th>'
             config.general_stats['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (alignment)">M C\'s</span></th>'
         except KeyError:
             pass
