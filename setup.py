@@ -1,27 +1,22 @@
 #!/usr/bin/env python
 """
-MultiQC is a tool to aggregate bioinformatics results across many samples into
-a single report. It is written in Python and contains modules for a number of
-common tools (FastQC, Bowtie, Picard and many others).
+MultiQC is a tool to aggregate bioinformatics results across many samples into a single report. It is written in Python and contains modules for a number of common tools (FastQC, Bowtie, Picard and many others).
 
-You can install MultiQC from PyPI as follows:
+You can install MultiQC from PyPI as follows::
 
     pip install multiqc
 
-Then it's just a case of going to your analysis directory and running the script:
+Then it's just a case of going to your analysis directory and running the script::
 
     multiqc .
 
-MultiQC will scan the specified directory ('.' is the current dir)
-and produce a report detailing whatever it finds.
+MultiQC will scan the specified directory (:code:`'.'` is the current dir) and produce a report detailing whatever it finds.
 
-The report is created in `multiqc_report/multiqc_report.html` by default.
-A zip file of the report is also generated to facilitate easy transfer and sharing.
+The report is created in :code:`multiqc_report/multiqc_report.html` by default. A zip file of the report is also generated to facilitate easy transfer and sharing.
 
-Tab-delimited data files are created in `multiqc_report/report_data/` to give
-easy access for downstream processing.
+Tab-delimited data files are created in :code:`multiqc_report/report_data/` to give easy access for downstream processing.
 
-For more detailed instructions, run `multiqc -h`
+For more detailed instructions, run :code:`multiqc -h`
 """
 
 from setuptools import setup, find_packages

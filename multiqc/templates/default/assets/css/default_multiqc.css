@@ -172,7 +172,7 @@ input.form-control[type=color]{
         padding:0;
     }
     .mainpage {
-        padding-right: 40px;
+        padding-right: 50px;
     }
     .mqc-toolbox-buttons {
         position: absolute;
@@ -367,7 +367,7 @@ input.form-control[type=color]{
 
 /* General stats table */
 #general_stats_table {
-    width: 98%;
+    width: 100%;
 }
 #general_stats_table thead th {
     cursor: pointer;
@@ -377,7 +377,7 @@ input.form-control[type=color]{
     display: inline-block;
     width: 0;
     height: 0;
-    margin-left: 2px;
+    margin-left: 4px;
     vertical-align: middle;
     border-right: 4px solid transparent;
     border-left: 4px solid transparent;

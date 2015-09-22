@@ -19,6 +19,7 @@ $(function () {
   $("#general_stats_table").tablesorter({sortInitialOrder: 'desc'}); 
   
   // Introduction tour
+  $('#mqc-launch-into-tour').after(' <small><em>('+tour_steps.length+' steps - takes around 1 minute)</em></small>');
   $.each(tour_steps, function(i, step){
     step['title'] += '<span class="pull-right">'+(i+1)+'/'+tour_steps.length+'</span>';
     var percent = parseInt(((i+1) / tour_steps.length) * 100);
@@ -1207,7 +1208,7 @@ var tour_steps = [
     element: ".hc-bar-plot:first",
     title: "Show / Hide Categories",
     placement: 'top',
-    content: "Click category names to hide (useful when looking at percentages)."
+    content: "Click category names in the legend to hide that data category<br><em>(useful when looking at percentages)</em>."
   },
 
   // These steps won't play if FastQC not present
@@ -1215,14 +1216,14 @@ var tour_steps = [
     element: "#fastqc_quality_plot_wrapper",
     placement: 'top',
     title: "View Originals",
-    content: "Clicking a data point in some plots will show the original data. Click the original plot again to get back to the overview. (Try it now!)",
+    content: "Clicking a data point in some plots will show the original data. Click the original plot again to get back to the overview. (Have a go!)",
   },
 
   {
     element: ".hc-plot-handle:first",
     placement: 'top',
     title: "Resize Plots",
-    content: "Drag the grey bar below plots to resize.",
+    content: "Drag the grey bar below plots to change their height.",
     backdropPadding: 10,
     onHide: function (tour) { $('.mqc-toolbox').css('z-index', 1200); }
   },
@@ -1258,20 +1259,8 @@ var tour_steps = [
     element: ".mqc-toolbox-buttons a[href=#mqc_saveconfig]",
     placement: 'left',
     title: "Save Config",
-    content: "By default, every change you make is saved in the browser and will show again if you load the report at a later date.",
+    content: "By default, every toolbox setting is saved for the report. You can also share your set up with others and set defaults for all reports.",
     onShow: function(tour) { mqc_toolbox_openclose('#mqc_saveconfig', true); },
-  },
-  {
-    element: ".mqc_saveconfig_btn[data-target='local']",
-    placement: 'left',
-    title: "General Config",
-    content: "If you want your settings to apply to every MultiQC report you view, click here.",
-  },
-  {
-    element: ".mqc_saveconfig_btn[data-target='file']",
-    placement: 'left',
-    title: "Share Config",
-    content: "To share your config with the report, click here to download a config file - then move it to the report directory.",
     onHide: function (tour) {
       mqc_toolbox_openclose('#mqc_saveconfig', false);
       $('.mqc-toolbox').css('z-index', 0);
