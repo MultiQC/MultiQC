@@ -28,7 +28,7 @@ general_stats = {
     'headers': OrderedDict(),
     'rows': defaultdict(lambda:dict())
 }
-fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '_tophat', '_star_aligned', '_trimmed', '_val_1', '_val_2' ]
+fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '_tophat', '_star_aligned' ]
 
 # Load and parse installation config file if we find it
 try:
