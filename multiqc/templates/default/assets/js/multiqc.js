@@ -119,7 +119,13 @@ $(function () {
   });
   
   // Make rows in general stats table sortable
-  $('#general_stats_table tbody').sortable({ handle: '.sorthandle' });
+  $('#general_stats_table tbody').sortable({
+    handle: '.sorthandle',
+    helper: function fixWidthHelper(e, ui) {
+      ui.children().each(function() { $(this).width($(this).width()); });
+      return ui;
+    }
+  });
   
   // Colour code table cells using chroma.js
   $('table').each(function(){
