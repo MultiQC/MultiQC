@@ -28,10 +28,19 @@ $(function () {
   var intro_tour = new Tour({
     backdrop: true,
     storage: false,
+    onStart: function(tour){
+      $('.mqc-toolbox').css('z-index', 0);
+      mqc_toolbox_openclose('#mqc_cols', false);
+    },
+    onEnd: function (tour) {
+      $('.mqc-toolbox').css('z-index', 1200);
+      mqc_toolbox_openclose('#mqc_cols', false);
+    },
     steps: tour_steps
   });
   intro_tour.init();
-  $('#mqc-launch-into-tour').click(function(){
+  $('#mqc-launch-into-tour').click(function(ev){
+    ev.preventDefault();
     try{ intro_tour.start(); }
     catch(e){ console.log('Tour broke - '+e); }
   });
@@ -1170,10 +1179,6 @@ var tour_steps = [
     orphan: true,
     title: "Welcome to MultiQC!",
     content: 'MultiQC generates reports based on analysis across many samples.<br>Click next to explore the tools availble in this report.',
-    onShow: function(tour){
-      mqc_toolbox_openclose('#mqc_cols', false);
-      $('.mqc-toolbox').css('z-index', 0);
-    }
   },
   {
     element: "#general_stats",
@@ -1270,5 +1275,4 @@ var tour_steps = [
     orphan: true,
     title: "End of Tour",
     content: 'That\'s it for this tour - for more info, see the homepage: <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a>',
-    onHide: function (tour) { $('.mqc-toolbox').css('z-index', 1200); }
   }];
