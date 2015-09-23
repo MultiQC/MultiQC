@@ -25,6 +25,7 @@ $(function () {
     var percent = parseInt(((i+1) / tour_steps.length) * 100);
     step['content'] = '<div class="pbar_wrapper"><hr class="pbar" style="width:'+percent+'%;"></div>' + step['content'];
   });
+  orig_z_index = $('.mqc-toolbox').css('z-index'); 
   var intro_tour = new Tour({
     backdrop: true,
     storage: false,
@@ -41,7 +42,7 @@ $(function () {
   intro_tour.init();
   $('#mqc-launch-into-tour').click(function(ev){
     ev.preventDefault();
-    try{ intro_tour.start(); }
+    try{ intro_tour.restart(); }
     catch(e){ console.log('Tour broke - '+e); }
   });
   
@@ -1174,6 +1175,7 @@ function notEmptyObj (obj){
 
 
 // MultiQC Tour, using bootstrap tour
+var orig_z_index = 1200;
 var tour_steps = [
   {
     orphan: true,
@@ -1230,7 +1232,7 @@ var tour_steps = [
     title: "Resize Plots",
     content: "Drag the grey bar below plots to change their height.",
     backdropPadding: 10,
-    onHide: function (tour) { $('.mqc-toolbox').css('z-index', 1200); }
+    onHide: function (tour) { $('.mqc-toolbox').css('z-index', orig_z_index); }
   },
 
   {
