@@ -12,14 +12,14 @@ import multiqc
 from multiqc import config
 
 # Initialise the logger
-log = logging.getLogger('MultiQC : {0:<14}'.format('Cutadapt'))
+log = logging.getLogger()
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(log)
+        super(MultiqcModule, self).__init__()
 
         # Static variables
         self.name = "Cutadapt"

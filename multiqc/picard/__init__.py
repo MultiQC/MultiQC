@@ -12,7 +12,7 @@ import multiqc
 from multiqc import config
 
 # Initialise the logger
-log = logging.getLogger('MultiQC : {0:<14}'.format('Picard'))
+log = logging.getLogger(__name__)
 
 class MultiqcModule(multiqc.BaseMultiqcModule):
 
