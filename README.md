@@ -5,6 +5,8 @@ a single report.**
 
 [![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
 
+See an example reports here: [multiqc.info](http://multiqc.info/examples/rna-seq/multiqc_report.html)
+
 It is written in Python and contains modules for a number of common tools.
 Currently, these include:
 
