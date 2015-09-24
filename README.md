@@ -5,9 +5,11 @@ a single report.**
 
 [![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
 
-See an example report [here](http://multiqc.info/examples/rna-seq/multiqc_report.html) (more at [multiqc.info](http://multiqc.info)).
+See an example report [here](http://multiqc.info/examples/rna-seq/multiqc_report.html) _(find more at [multiqc.info](http://multiqc.info))._
 
-It is written in Python and contains modules for a number of common tools.
+-----
+
+MultiQC is written in Python and contains modules for a number of common tools.
 Currently, these include:
 
 * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
