@@ -20,8 +20,8 @@ The documentation has the following pages:
  - [Javascript helpers](writing_javascript.md)
 
 These docs can be read in any of three ways:
- - On the MultiQC Website: [http://multiqc.info](http://multiqc.info/docs/)
- - On GitHub: [https://github.com/ewels/MultiQC/](https://github.com/ewels/MultiQC/tree/master/docs)
+ - On the MultiQC Website: http://multiqc.info
+ - On GitHub: https://github.com/ewels/MultiQC/
  - As part of the distributed source code (in `/docs/`)
  
 If you're curious how the website works, check out the
