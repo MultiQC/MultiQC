@@ -11,8 +11,7 @@ Note that the above Python functions make use of these, so
 you typically won't need to call these directly.
 
 ## Plotting line graphs
-
-> `plot_xy_line_graph (target, data, config)`
+`plot_xy_line_graph (target, data, config)`
 
 Plots a line graph with multiple series of (x,y) data pairs. Used by
 the [self.plot_xy_data()](CONTRIBUTING.md#selfplot_xy_data-data-config)
@@ -62,8 +61,7 @@ An example of the markup expected, with the function being called:
 ```
 
 ## Plotting bar graphs
-
-> `plot_stacked_bar_graph (target, names, data, config)`
+`plot_stacked_bar_graph (target, names, data, config)`
 
 Plots a bar graph with multiple series containing multiple categories.
 Used by the [self.plot_bargraph()](CONTRIBUTING.md#selfplot_bargraph-data-cats-config)

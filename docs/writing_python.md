@@ -18,8 +18,7 @@ Doing so gives you access to common Python functions. These are currently
 few in number (just one) but may be extended in the near future.
 
 ## Writing data to a file
-
-> `self.dict_to_csv (data, delim="\t")`
+`self.dict_to_csv (data, delim="\t")`
 
 This function takes a 2D dictionary and returns a string suitable for
 writing to a .csv file. First key should be sample name (row header),
@@ -36,8 +35,7 @@ with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.t
 ```
 
 ## Plotting line graphs
-
-> `self.plot_xy_data (data, config, original_plots)`
+`self.plot_xy_data (data, config, original_plots)`
 
 This function takes a dict of data and plots an XY line graph.
 It expects a dictionary in the following format:
@@ -102,8 +100,7 @@ Note that the _Prev_ / _Next_ buttons will cycle through these images in the
 order supplied, so it makes sense to sort by sample name alphabetically.
 
 ## Plotting bar graphs
-
-> `self.plot_bargraph (data, cats, config)`
+`self.plot_bargraph (data, cats, config)`
 
 Takes a dict of data and plots a bar graph. The expected data structure
 is as follows:
