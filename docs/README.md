@@ -1,20 +1,36 @@
-# MultiQC Documentation
+---
+title: MultiQC v0.2
+layout: default
+---
 
-You've found the MultiQC docs, nice! These are written in markdown and
-are bundled with the source code for easier access.
+# Welcome!
 
-Whilst the raw markdown looks lovely (especially on GitHub), you may prefer
-to view these docs on the [MultiQC website](http://multiqc.info),
-where they are rendered into an aesthetically pleasing website for
-your delectation: [http://multiqc.info](http://multiqc.info)
+## MultiQC v0.2 Documentation
 
-If you'd rather stick with the raw docs, here's what's available:
+MultiQC is a tool to aggregate bioinformatics results across many samples
+into a single report. It's written in Python and contains modules for a number
+of common tools.
 
-- [Docs homepage](index.md)
-- [Installation and usage](installation.md)
-- [Getting started writing modules](writing_modules.md)
-- [Python helpers](writing_python.md)
-- [Javascript helpers](writing_javascript.md)
+The documentation has the following pages:
 
+ - [Docs homepage](README.md) _(this README file)_
+ - [Installation and usage](installation.md)
+ - [Getting started writing modules](writing_modules.md)
+ - [Python helpers](writing_python.md)
+ - [Javascript helpers](writing_javascript.md)
+
+These docs can be read in any of three ways:
+ - On the MultiQC Website: [http://multiqc.info](http://multiqc.info/docs/)
+ - On GitHub: [https://github.com/ewels/MultiQC/](https://github.com/ewels/MultiQC/tree/master/docs)
+ - As part of the distributed source code (in `/docs/`)
+ 
 If you're curious how the website works, check out the
 [MultiQC website repository](https://github.com/ewels/MultiQC_website).
+
+## Contributing to MultiQC
+
+If you write a module which could be of use to others, it would be great to
+merge those changes back into the core MultiQC project.
+
+For instructions on how best to do this, please see the
+[contributing instructions](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md).
