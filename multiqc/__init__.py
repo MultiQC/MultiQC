@@ -1,4 +1,6 @@
+import os
 import logging
+import pkgutil
 
 logger = logging.getLogger(__name__)
 
@@ -16,3 +18,13 @@ module_order = [
     # Pre-alignment QC
     'cutadapt', 'fastq_screen', 'fastqc'
 ]
+
+multiqc_submods = [name for _, name, _ in pkgutil.iter_modules(
+                    [config.modules_dir])
+                ]
+
+avail_modules = [ m for m in module_order if m in multiqc_submods ]
+
+# Available templates, in case extras have been added
+avail_templates = [ d for d in os.listdir(os.path.join(config.MULTIQC_DIR, 'templates'))
+                if os.path.isdir(os.path.join(config.MULTIQC_DIR, 'templates', d)) ]

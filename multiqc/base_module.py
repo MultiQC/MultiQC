@@ -11,14 +11,15 @@ import os
 import random
 import logging
 
+from multiqc import config
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, name='base'):
+        self.name = name
 
     def find_log_files(self, fn_match=None, contents_match=None, filehandles=False):
         """

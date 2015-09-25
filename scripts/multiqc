@@ -14,10 +14,11 @@ import re
 import shutil
 import sys
 import traceback
+import importlib
 
 import click
 
-from multiqc import (config, logger, module_order)
+from multiqc import (config, logger, module_order, multiqc_submods, avail_modules, avail_templates)
 from multiqc.utils import (check_app)
 
 __version__ = config.VERSION
@@ -37,127 +38,30 @@ def print_version(ctx, param, value):
     click.echo('MultiQC version: ' + __version__)
     ctx.exit()
 
+print(avail_modules)
+print(multiqc_submods)
 
-# Find submodules in multiqc and order them if possible. Tolerant of people
-# not adding their modules to the above list :)
-multiqc_submods = [name for _, name, _ in pkgutil.iter_modules([config.MULTIQC_DIR]) if name != 'config']
+# from multiqc.modules.bismark import MultiqcModule
+#
+# instance = MultiqcModule()
+# print(instance)
+# sys.exit()
+#
+# print(MultiqcModule)
 
-avail_modules = [ m for m in module_order if m in multiqc_submods ]
+# mod = __import__("multiqc.modules.bismark")
 
-if len(multiqc_submods) > len(avail_modules):
-    logger.warn("Modules missing from order declaration: {}".format(
-        [ m for m in multiqc_submods if m not in module_order ]))
+# mod = importlib.import_module("multiqc.modules.bismark")
+# print(mod)
+# instance = mod.MultiqcModule()
+#
+# sys.exit()
+# components = "multiqc.modules.bismark".split('.')
+# for comp in components[1:]:
+#     mod = getattr(mod, comp)
+#     print(mod)
 
-avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
-
-# Available templates, in case extras have been added
-avail_templates = [ d for d in os.listdir(os.path.join(config.MULTIQC_DIR, 'templates'))
-                if os.path.isdir(os.path.join(config.MULTIQC_DIR, 'templates', d)) ]
-
-# Main function to execute MultiQC
-def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=config.template, output_dir=os.path.join(os.getcwd(), config.output_dir), run_modules=avail_modules, exclude_modules=[], force_overwrite=False):
-
-    # Set up helper vars
-    template_dir = os.path.join(config.MULTIQC_DIR, 'templates', template.strip())
-    output_dir = output_dir.strip()
-    if OSX_APP:
-        output_dir = os.path.join(analysis_dir, 'multiqc_report')
-    
-    # Update the config with the command line options
-    config.title = title
-    config.prepend_dirs = prepend_dirs
-    config.analysis_dir = analysis_dir
-    config.output_dir = os.path.realpath(output_dir)
-    config.template_fn = os.path.join(output_dir, 'multiqc_report.html')
-    
-    # exclude modules
-    if len(exclude_modules) > 0:
-        logger.info('Excluding modules {}'.format(', '.join(exclude_modules)))
-        run_modules = [m for m in run_modules if m not in exclude_modules]
-        
-
-    # analysis_dir = os.path.realpath(analysis_dir)
-    logger.info("Scanning {}".format(analysis_dir))
-
-    # Copy the template directory to the output directory
-    if os.path.exists(output_dir):
-        if force_overwrite and os.path.basename(output_dir) == 'multiqc_report':
-            logger.warning("Deleting {} because -f was specified.".format(output_dir))
-            shutil.rmtree(output_dir)
-            if os.path.exists("{}.zip".format(output_dir)):
-                os.remove("{}.zip".format(output_dir))
-        elif force_overwrite:
-            logger.critical("Error - Force overwrite was specified but output directory was not called multiqc_report. Halting execution to avoid accidentally overwriting data.")
-            sys.exit(1)
-        else:
-            logger.error("Error - Output directory {} already exists. Use -f or --force to overwrite existing reports".format(output_dir))
-            return
-
-    logger.info("Saving to {}".format(output_dir))
-    shutil.copytree(template_dir, output_dir)
-
-    # Make the report data directory
-    os.mkdir(os.path.join(output_dir, 'report_data'))
-
-    # Run the modules!
-    modules_output = list()
-    sys_exit = 0
-    for m in run_modules:
-        try:
-            mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
-            modules_output.append(mod.MultiqcModule())
-        except UserWarning:
-            pass # No samples found
-        except:
-            # Flag the error, but carry on
-            logger.error("Oops! The '{}' MultiQC module broke... \n".format(m) + \
-                      (' '*20)+"Please copy the following traceback and report it at " + \
-                      "https://github.com/ewels/MultiQC/issues \n" + \
-                      (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
-                      ('='*60)+"\nModule {} raised an exception: {}".format(m, traceback.format_exc()) + ('='*60))
-            sys_exit = 1
-
-    # Did we find anything?
-    if len(modules_output) == 0:
-        logger.warn("No analysis results found. Cleaning up..")
-        shutil.rmtree(output_dir)
-        logger.info("MultiQC complete")
-        return
-
-    # Print the general stats table to a file
-    with open (os.path.join(output_dir, 'report_data', 'multiqc_general_stats.txt'), "w") as f:
-        hrow = '\t'.join([''] + list(config.general_stats['headers'].keys()) )
-        l = [hrow]
-        for sn, r in iter(sorted(config.general_stats['rows'].items())):
-            thesefields = [sn] + [ str(r.get(k, '')) for k in config.general_stats['headers'] ]
-            thesefields = [ re.sub('<[^<]+?>', '', field) for field in thesefields ]
-            l.append( '\t'.join( thesefields ) )
-        print( '\n'.join(l), file=f)
-
-    # Load the copied template
-    try:
-        env = jinja2.Environment(loader=jinja2.FileSystemLoader(output_dir))
-        j_template = env.get_template('multiqc_report.html')
-    except:
-        raise IOError ("Could not load template '{}'".format(config.template_fn))
-
-    # Use jinja2 to render the template and overwrite
-    config.analysis_dir = os.path.realpath(config.analysis_dir)
-    report = j_template.render(config=config, modules=modules_output)
-    try:
-        with open(config.template_fn, 'w') as f:
-            print(report, file=f)
-    except IOError as e:
-        raise IOError ("Could not print report to '{}' - {}".format(output_path, IOError(e)))
-
-    # Create a zip file of the report directory
-    shutil.make_archive(output_dir, 'zip', output_dir)
-
-    logger.info("MultiQC complete")
-    if OSX_APP: print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
-    
-    # Exit with an error code if a module broke
-    sys.exit(sys_exit)
+# sys.exit()
 
 @click.command()
 @click.argument('analysis_dir',
@@ -179,17 +83,17 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
                         ', '.join(avail_templates))
 )
 @click.option('-m', '--module',
-                    default = avail_modules,
-                    type = click.Choice(avail_modules),
+                    default = multiqc_submods,
+                    type = click.Choice(multiqc_submods),
                     multiple=True,
                     help = "Use only these modules. Choose from: {}".format(
-                        ', '.join(avail_modules))
+                        ', '.join(multiqc_submods))
 )
 @click.option('-e', '--exclude',
-                    type = click.Choice(avail_modules),
+                    type = click.Choice(multiqc_submods),
                     multiple=True,
                     help = "Use only these modules. Choose from: {}".format(
-                        ', '.join(avail_modules))
+                        ', '.join(multiqc_submods))
 )
 @click.option('-f', '--force',
                     is_flag = True,
@@ -218,6 +122,13 @@ force, verbose):
     loglevel = LEVELS.get(min(verbose,2), "WARNING")
     
     init_log(logger, loglevel="INFO")
+    
+    if len(multiqc_submods) > len(avail_modules):
+        logger.warning("Modules missing from order declaration: {}".format(
+            [m for m in multiqc_submods if m not in module_order]))
+
+    avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
+    
     
     logger.info("Using template {0}".format(template))
     
@@ -285,9 +196,9 @@ force, verbose):
     # Run the modules!
     modules_output = list()
     sys_exit = 0
-    for m in run_modules:
+    for module in multiqc_submods:
         try:
-            mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
+            mod = importlib.import_module("multiqc.modules.{0}".format(module))
             modules_output.append(mod.MultiqcModule())
         except UserWarning:
             pass # No samples found
@@ -337,7 +248,8 @@ force, verbose):
     shutil.make_archive(output_dir, 'zip', output_dir)
 
     logger.info("MultiQC complete")
-    if OSX_APP: print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
+    if osx_app: 
+        print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
     
     # Exit with an error code if a module broke
     sys.exit(sys_exit)
