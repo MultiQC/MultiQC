@@ -41,7 +41,8 @@ setup(
     install_requires = [
         'jinja2',
         'simplejson',
-        'pyyaml'
+        'pyyaml',
+        'click'
     ],
     classifiers = [
         'Development Status :: 4 - Beta',
