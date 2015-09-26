@@ -12,12 +12,13 @@ import yaml
 import multiqc
 
 # Constants
-VERSION = '0.2.1dev'
+VERSION = multiqc.__version__
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
 # Create the config variables, with defaults
 title = None
 prepend_dirs = False
+modules_dir = os.path.join(MULTIQC_DIR, 'modules')
 creation_date = datetime.now().strftime("%Y-%m-%d, %H:%m")
 working_dir = os.getcwd()
 analysis_dir = os.getcwd()

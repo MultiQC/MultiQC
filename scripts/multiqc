@@ -5,94 +5,147 @@
 
 from __future__ import print_function
 
-import argparse
 import jinja2
 import logging
 import os
-import pkgutil
 import re
 import shutil
 import sys
 import traceback
+import importlib
 
-from multiqc import config
+import click
 
-# Are we running as an OSX App?
-if os.environ.get('MULTQC_IS_APP') is not None:
-    OSX_APP = True
-    logging.basicConfig(stream=sys.stdout, format='<li>%(message)s</li>', level=20)
-    with open(os.path.join(os.getcwd(), 'multiqc_app_header.html'), 'r') as f: print(f.read())
-else:
-    OSX_APP = False
-    # logging config at bottom of script, for command line level flag
-
-# Initialise the logger
-log = logging.getLogger('MultiQC')
-
-# Order tha modules should appear in report. Try to list in order of analysis,
-# eg. FastQC is usually the first step, so should be last in this list.
-module_order = [
-    # Post-alignment analysis results
-    'qualimap', 'featureCounts', 'picard',
-    # Alignment tool stats
-    'bismark', 'star', 'tophat', 'bowtie2', 'bowtie1',
-    # Pre-alignment QC
-    'cutadapt', 'fastq_screen', 'fastqc'
-]
+from multiqc import (config, logger, module_order, multiqc_submods, 
+avail_templates, __version__)
+from multiqc.utils import (check_app, get_sorted_modules)
+from multiqc.log import init_log, LEVELS
 
 
-# Find submodules in multiqc and order them if possible. Tolerant of people
-# not adding their modules to the above list :)
-multiqc_submods = [name for _, name, _ in pkgutil.iter_modules([config.MULTIQC_DIR]) if name != 'config']
-avail_modules = [ m for m in module_order if m in multiqc_submods ]
-if len(multiqc_submods) > len(avail_modules):
-    log.warn("Modules missing from order declaration: {}".format([ m for m in multiqc_submods if m not in module_order ]))
-avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
-
-# Available templates, in case extras have been added
-avail_templates = [ d for d in os.listdir(os.path.join(config.MULTIQC_DIR, 'templates'))
-                if os.path.isdir(os.path.join(config.MULTIQC_DIR, 'templates', d)) ]
-
-# Main function to execute MultiQC
-def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=config.template, output_dir=os.path.join(os.getcwd(), config.output_dir), run_modules=avail_modules, exclude_modules=[], force_overwrite=False):
-
+@click.command()
+@click.argument('analysis_dir',
+                    type=click.Path(exists=True),
+                    metavar="<analysis directory>"
+)
+@click.option('-d', '--dirs',
+                    is_flag = True,
+                    help = "Prepend directory to sample names"
+)
+@click.option('-i', '--title',
+                    type = str,
+                    help = "Report title"
+)
+@click.option('-t', '--template',
+                    default = config.template,
+                    type = click.Choice(avail_templates),
+                    help = "Report template to use. Choose from: {}".format(
+                        ', '.join(avail_templates))
+)
+@click.option('-m', '--modules',
+                    default = multiqc_submods,
+                    type = click.Choice(multiqc_submods),
+                    multiple=True,
+                    help = "Use only these modules. Choose from: {}".format(
+                        ', '.join(multiqc_submods))
+)
+@click.option('-e', '--exclude',
+                    type = click.Choice(multiqc_submods),
+                    multiple=True,
+                    help = "Do not use these modules. Choose from: {}".format(
+                        ', '.join(multiqc_submods))
+)
+@click.option('-f', '--force',
+                    is_flag = True,
+                    help = "Overwrite any existing reports"
+)
+@click.option('-o', '--output_dir',
+                    default = os.path.join(os.getcwd(), config.output_dir),
+                    help = "Output directory. Default: {}".format(
+                            config.output_dir)
+)
+@click.option('-v', '--verbose', 
+                count=True,
+                default=0,
+                help=u"Increase output verbosity. Can be used multiple times, eg. -vv"
+)
+@click.version_option(__version__)
+def multiqc(analysis_dir, dirs, title, template, modules, exclude, output_dir, 
+force, verbose):
+    """MultiQC is a tool generate qc reports.
+    
+        It can be used to create an aggregate report summarising the results
+        of bioinformatics analyses across numerous samples.  
+        
+        To run, supply with a directory to scan for analysis results. 
+        To run here, use 'multiqc .'
+    """
+    
+    loglevel = LEVELS.get(min(verbose,2), "WARNING")
+    init_log(logger, loglevel=loglevel)
+    
+    sorted_modules = get_sorted_modules(
+        multiqc_submodules = modules, 
+        module_order = module_order
+    )
+    
+    logger.info("Using template {0}".format(template))
+    
+    osx_app = check_app()
+    
+    # Wierd thing that has to do with running the osx app:
+    if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and osx_app:
+            print("</ul><p>Please drag your analysis directory"\
+                    " here.</p><small>MultiQC version {0}</small>"\
+                    "</body></html>".format(config.VERSION))
+            sys.exit(0)
+    
     # Set up helper vars
     template_dir = os.path.join(config.MULTIQC_DIR, 'templates', template.strip())
     output_dir = output_dir.strip()
-    if OSX_APP:
+    
+    if osx_app:
         output_dir = os.path.join(analysis_dir, 'multiqc_report')
     
     # Update the config with the command line options
     config.title = title
-    config.prepend_dirs = prepend_dirs
+    logger.info("Using title {0} for report".format(title))
+    config.prepend_dirs = dirs
+    if dirs:
+        logger.info("Prepending directory to sample names")
     config.analysis_dir = analysis_dir
+    logger.info("Checking files in {0}".format(analysis_dir))
     config.output_dir = os.path.realpath(output_dir)
+    logger.info("Using output dir {0}".format(output_dir))
     config.template_fn = os.path.join(output_dir, 'multiqc_report.html')
     
+    run_modules = sorted_modules
     # exclude modules
-    if len(exclude_modules) > 0:
-        log.info('Excluding modules {}'.format(', '.join(exclude_modules)))
-        run_modules = [m for m in run_modules if m not in exclude_modules]
-        
-
-    # analysis_dir = os.path.realpath(analysis_dir)
-    log.info("Scanning {}".format(analysis_dir))
+    if exclude:
+        logger.info('Excluding modules {}'.format(', '.join(exclude)))
+        run_modules = [mod for mod in run_modules if mod not in exclude]
+    
+    logger.info("Analysing modules {0}".format(', '.join(run_modules)))
+    
+    logger.info("Scanning directory {}".format(analysis_dir))
 
     # Copy the template directory to the output directory
     if os.path.exists(output_dir):
-        if force_overwrite and os.path.basename(output_dir) == 'multiqc_report':
-            log.warning("Deleting {} because -f was specified.".format(output_dir))
+        if force and os.path.basename(output_dir) == 'multiqc_report':
+            logger.warning("Deleting {} because -f was specified.".format(output_dir))
             shutil.rmtree(output_dir)
             if os.path.exists("{}.zip".format(output_dir)):
                 os.remove("{}.zip".format(output_dir))
-        elif force_overwrite:
-            log.critical("Error - Force overwrite was specified but output directory was not called multiqc_report. Halting execution to avoid accidentally overwriting data.")
+        elif force:
+            logger.critical("Error - Force overwrite was specified but output"\
+            " directory was not called multiqc_report. Halting execution to"\
+            " avoid accidentally overwriting data.")
             sys.exit(1)
         else:
-            log.error("Error - Output directory {} already exists. Use -f or --force to overwrite existing reports".format(output_dir))
-            return
+            logger.error("Error - Output directory {} already exists. Use -f"\
+            " or --force to overwrite existing reports".format(output_dir))
+            sys.exit(1)
 
-    log.info("Saving to {}".format(output_dir))
+    logger.info("Saving to {}".format(output_dir))
     shutil.copytree(template_dir, output_dir)
 
     # Make the report data directory
@@ -101,26 +154,27 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
     # Run the modules!
     modules_output = list()
     sys_exit = 0
-    for m in run_modules:
+    for choosed_module in run_modules:
         try:
-            mod = __import__('multiqc.{}'.format(m), fromlist=['multiqc'])
+            mod = importlib.import_module("multiqc.modules.{0}".format(choosed_module))
             modules_output.append(mod.MultiqcModule())
         except UserWarning:
             pass # No samples found
         except:
             # Flag the error, but carry on
-            log.error("Oops! The '{}' MultiQC module broke... \n".format(m) + \
+            logger.error("Oops! The '{}' MultiQC module broke... \n".format(choosed_module) + \
                       (' '*20)+"Please copy the following traceback and report it at " + \
                       "https://github.com/ewels/MultiQC/issues \n" + \
                       (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
-                      ('='*60)+"\nModule {} raised an exception: {}".format(m, traceback.format_exc()) + ('='*60))
+                      ('='*60)+"\nModule {} raised an exception: {}".format(
+                          choosed_module, traceback.format_exc()) + ('='*60))
             sys_exit = 1
 
     # Did we find anything?
     if len(modules_output) == 0:
-        log.warn("No analysis results found. Cleaning up..")
+        logger.warn("No analysis results found. Cleaning up..")
         shutil.rmtree(output_dir)
-        log.info("MultiQC complete")
+        logger.info("MultiQC complete")
         return
 
     # Print the general stats table to a file
@@ -152,54 +206,13 @@ def multiqc (analysis_dir=os.getcwd(), prepend_dirs=False, title=None, template=
     # Create a zip file of the report directory
     shutil.make_archive(output_dir, 'zip', output_dir)
 
-    log.info("MultiQC complete")
-    if OSX_APP: print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
+    logger.info("MultiQC complete")
+    if osx_app: 
+        print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
     
     # Exit with an error code if a module broke
     sys.exit(sys_exit)
+    
 
-
-
-# This script is being run from the command line
 if __name__ == "__main__":
-
-    # Overwrite any of the config options specified on the command line
-    parser = argparse.ArgumentParser("multiqc", description="MultiQC is a tool to create an aggregate report summarising \
-        the results of bioinformatics analyses across numerous samples. To run, supply with a directory to scan for \
-        analysis results. To run here, use 'multiqc .'")
-    parser.add_argument('analysis_dir', metavar='<analysis directory>',
-        help="Directory with analysis results to parse. Use '.' for current working directory.")
-    parser.add_argument('-d', "--dirs", dest="prepend_dirs", action='store_true',
-        help="Prepend directory to sample names")
-    parser.add_argument('-i', "--title", dest="title", default=None,
-        help="Report title")
-    parser.add_argument('-t', "--template", dest="template", default=config.template, choices=avail_templates, metavar='TEMPLATE',
-        help="Report template to use. Choose from: {}".format(', '.join(avail_templates)))
-    parser.add_argument("-o", "--output_dir", dest="output_dir", default=os.path.join(os.getcwd(), config.output_dir),
-        help="Output directory. Default: {}".format(config.output_dir))
-    parser.add_argument('-m', "--module", dest="run_modules", default=avail_modules, nargs="*", choices=avail_modules, metavar='MODULE',
-        help="Use only these modules. Choose from: {}".format(', '.join(avail_modules)))
-    parser.add_argument('-e', "--exclude", dest="exclude_modules", default=[], nargs="*", choices=avail_modules, metavar='MODULE',
-        help="Exclude these modules. Choose from: {}".format(', '.join(avail_modules)))
-    parser.add_argument("-f", "--force", dest="force_overwrite", action='store_true',
-        help="Overwrite any existing reports")
-    parser.add_argument('-l', '--logging', dest="loglevel", default='INFO', type=str.lower, choices=['debug', 'info', 'warning', 'error', 'critical'], metavar='LEVEL',
-        help="Level of logging to be printed to the console. Choose from 'debug', 'info', 'warning', 'error', 'critical'")
-    parser.add_argument('-v', '--version', action='version', version="MultiQC v{}".format(config.VERSION),
-        help="Print the version of the program and exit")
-
-    if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and OSX_APP:
-        print('</ul><p>Please drag your analysis directory here.</p><small>MultiQC version {}</small></body></html>'.format(config.VERSION))
-        sys.exit(0)
-    else:
-        kwargs = vars(parser.parse_args())
-
-    # Set logging level
-    if not OSX_APP:
-        numeric_level = getattr(logging, kwargs['loglevel'].upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % kwargs['loglevel'])
-        logging.basicConfig(level=numeric_level, format='%(name)s : %(levelname)-8s: %(message)s')
-    kwargs.pop('loglevel', None)
-
-    multiqc(**kwargs)
+    multiqc()
