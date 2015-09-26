@@ -18,7 +18,7 @@ def init_log(logger, filename=None, loglevel=None):
                          be disabled.
         loglevel (str): Determines the level of the log output.
     """
-    template = '[%(asctime)s] %(levelname)-8s: %(name)-25s: %(message)s'
+    template = '[%(asctime)s] %(levelname)-5s: %(name)-30s: %(message)s'
     formatter = logging.Formatter(template)
 
     if loglevel:

@@ -16,25 +16,10 @@ import importlib
 
 import click
 
-from multiqc import (config, logger, module_order, multiqc_submods, avail_modules, avail_templates)
-from multiqc.utils import (check_app)
-
-__version__ = config.VERSION
-
-
-def print_version(ctx, param, value):
-    """Callback function for printing version and exiting
-    Args:
-        ctx (object) : Current context
-        param (object) : Click parameter(s)
-        value (boolean) : Click parameter was supplied or not
-    Returns:
-        None:
-    """
-    if not value or ctx.resilient_parsing:
-        return
-    click.echo('MultiQC version: ' + __version__)
-    ctx.exit()
+from multiqc import (config, logger, module_order, multiqc_submods, 
+avail_templates, __version__)
+from multiqc.utils import (check_app, get_sorted_modules)
+from multiqc.log import init_log, LEVELS
 
 
 @click.command()
@@ -56,7 +41,7 @@ def print_version(ctx, param, value):
                     help = "Report template to use. Choose from: {}".format(
                         ', '.join(avail_templates))
 )
-@click.option('-m', '--module',
+@click.option('-m', '--modules',
                     default = multiqc_submods,
                     type = click.Choice(multiqc_submods),
                     multiple=True,
@@ -66,7 +51,7 @@ def print_version(ctx, param, value):
 @click.option('-e', '--exclude',
                     type = click.Choice(multiqc_submods),
                     multiple=True,
-                    help = "Use only these modules. Choose from: {}".format(
+                    help = "Do not use these modules. Choose from: {}".format(
                         ', '.join(multiqc_submods))
 )
 @click.option('-f', '--force',
@@ -83,26 +68,18 @@ def print_version(ctx, param, value):
                 default=0,
                 help=u"Increase output verbosity. Can be used multiple times, eg. -vv"
 )
-@click.option('--version',
-                is_flag=True,
-                callback=print_version,
-                expose_value=False,
-                is_eager=True
-)
-def multiqc(analysis_dir, dirs, title, template, module, exclude, output_dir, 
+@click.version_option(__version__)
+def multiqc(analysis_dir, dirs, title, template, modules, exclude, output_dir, 
 force, verbose):
     """docstring for cli"""
-    from multiqc.log import init_log, LEVELS
+    
     loglevel = LEVELS.get(min(verbose,2), "WARNING")
+    init_log(logger, loglevel=loglevel)
     
-    init_log(logger, loglevel="INFO")
-    
-    if len(multiqc_submods) > len(avail_modules):
-        logger.warning("Modules missing from order declaration: {}".format(
-            [m for m in multiqc_submods if m not in module_order]))
-
-    avail_modules.extend([ m for m in multiqc_submods if m not in module_order ])
-    
+    sorted_modules = get_sorted_modules(
+        multiqc_submodules = modules, 
+        module_order = module_order
+    )
     
     logger.info("Using template {0}".format(template))
     
@@ -129,16 +106,16 @@ force, verbose):
     if dirs:
         logger.info("Prepending directory to sample names")
     config.analysis_dir = analysis_dir
-    logger.info("Checking files in {}".format(analysis_dir))
+    logger.info("Checking files in {0}".format(analysis_dir))
     config.output_dir = os.path.realpath(output_dir)
     logger.info("Using output dir {0}".format(output_dir))
     config.template_fn = os.path.join(output_dir, 'multiqc_report.html')
     
-    run_modules = module
+    run_modules = sorted_modules
     # exclude modules
     if exclude:
         logger.info('Excluding modules {}'.format(', '.join(exclude)))
-        run_modules = [m for m in run_modules if m not in exclude]
+        run_modules = [mod for mod in run_modules if mod not in exclude]
     
     logger.info("Analysing modules {0}".format(', '.join(run_modules)))
     
@@ -170,19 +147,20 @@ force, verbose):
     # Run the modules!
     modules_output = list()
     sys_exit = 0
-    for module in multiqc_submods:
+    for choosed_module in run_modules:
         try:
-            mod = importlib.import_module("multiqc.modules.{0}".format(module))
+            mod = importlib.import_module("multiqc.modules.{0}".format(choosed_module))
             modules_output.append(mod.MultiqcModule())
         except UserWarning:
             pass # No samples found
         except:
             # Flag the error, but carry on
-            logger.error("Oops! The '{}' MultiQC module broke... \n".format(m) + \
+            logger.error("Oops! The '{}' MultiQC module broke... \n".format(choosed_module) + \
                       (' '*20)+"Please copy the following traceback and report it at " + \
                       "https://github.com/ewels/MultiQC/issues \n" + \
                       (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
-                      ('='*60)+"\nModule {} raised an exception: {}".format(m, traceback.format_exc()) + ('='*60))
+                      ('='*60)+"\nModule {} raised an exception: {}".format(
+                          choosed_module, traceback.format_exc()) + ('='*60))
             sys_exit = 1
 
     # Did we find anything?
