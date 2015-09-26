@@ -36,30 +36,6 @@ def print_version(ctx, param, value):
     click.echo('MultiQC version: ' + __version__)
     ctx.exit()
 
-print(avail_modules)
-print(multiqc_submods)
-
-# from multiqc.modules.bismark import MultiqcModule
-#
-# instance = MultiqcModule()
-# print(instance)
-# sys.exit()
-#
-# print(MultiqcModule)
-
-# mod = __import__("multiqc.modules.bismark")
-
-# mod = importlib.import_module("multiqc.modules.bismark")
-# print(mod)
-# instance = mod.MultiqcModule()
-#
-# sys.exit()
-# components = "multiqc.modules.bismark".split('.')
-# for comp in components[1:]:
-#     mod = getattr(mod, comp)
-#     print(mod)
-
-# sys.exit()
 
 @click.command()
 @click.argument('analysis_dir',
@@ -131,8 +107,9 @@ force, verbose):
     logger.info("Using template {0}".format(template))
     
     osx_app = check_app()
-
-    if '-f' and osx_app:# or sys.argv[-1][:4] == '-psn'
+    
+    # Wierd thing that has to do with running the osx app:
+    if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and osx_app:
             print("</ul><p>Please drag your analysis directory"\
                     " here.</p><small>MultiQC version {0}</small>"\
                     "</body></html>".format(config.VERSION))
@@ -165,7 +142,6 @@ force, verbose):
     
     logger.info("Analysing modules {0}".format(', '.join(run_modules)))
     
-    # analysis_dir = os.path.realpath(analysis_dir)
     logger.info("Scanning directory {}".format(analysis_dir))
 
     # Copy the template directory to the output directory
@@ -255,47 +231,3 @@ force, verbose):
 
 if __name__ == "__main__":
     multiqc()
-
-# This script is being run from the command line
-# if __name__ == "__main__":
-#
-#     # Overwrite any of the config options specified on the command line
-#     parser = argparse.ArgumentParser("multiqc", description="MultiQC is a tool to create an aggregate report summarising \
-#         the results of bioinformatics analyses across numerous samples. To run, supply with a directory to scan for \
-#         analysis results. To run here, use 'multiqc .'")
-#     parser.add_argument('analysis_dir', metavar='<analysis directory>',
-#         help="Directory with analysis results to parse. Use '.' for current working directory.")
-#     parser.add_argument('-d', "--dirs", dest="prepend_dirs", action='store_true',
-#         help="Prepend directory to sample names")
-#     parser.add_argument('-i', "--title", dest="title", default=None,
-#         help="Report title")
-#     parser.add_argument('-t', "--template", dest="template", default=config.template, choices=avail_templates, metavar='TEMPLATE',
-#         help="Report template to use. Choose from: {}".format(', '.join(avail_templates)))
-#     parser.add_argument("-o", "--output_dir", dest="output_dir", default=os.path.join(os.getcwd(), config.output_dir),
-#         help="Output directory. Default: {}".format(config.output_dir))
-#     parser.add_argument('-m', "--module", dest="run_modules", default=avail_modules, nargs="*", choices=avail_modules, metavar='MODULE',
-#         help="Use only these modules. Choose from: {}".format(', '.join(avail_modules)))
-#     parser.add_argument('-e', "--exclude", dest="exclude_modules", default=[], nargs="*", choices=avail_modules, metavar='MODULE',
-#         help="Exclude these modules. Choose from: {}".format(', '.join(avail_modules)))
-#     parser.add_argument("-f", "--force", dest="force_overwrite", action='store_true',
-#         help="Overwrite any existing reports")
-#     parser.add_argument('-l', '--logging', dest="loglevel", default='INFO', type=str.lower, choices=['debug', 'info', 'warning', 'error', 'critical'], metavar='LEVEL',
-#         help="Level of logging to be printed to the console. Choose from 'debug', 'info', 'warning', 'error', 'critical'")
-#     parser.add_argument('-v', '--version', action='version', version="MultiQC v{}".format(config.VERSION),
-#         help="Print the version of the program and exit")
-#
-#     if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and OSX_APP:
-#         print('</ul><p>Please drag your analysis directory here.</p><small>MultiQC version {}</small></body></html>'.format(config.VERSION))
-#         sys.exit(0)
-#     else:
-#         kwargs = vars(parser.parse_args())
-#
-#     # Set logging level
-#     if not OSX_APP:
-#         numeric_level = getattr(logging, kwargs['loglevel'].upper(), None)
-#         if not isinstance(numeric_level, int):
-#             raise ValueError('Invalid log level: %s' % kwargs['loglevel'])
-#         logging.basicConfig(level=numeric_level, format='%(name)s : %(levelname)-8s: %(message)s')
-#     kwargs.pop('loglevel', None)
-#
-#     multiqc(**kwargs)
