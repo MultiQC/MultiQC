@@ -154,20 +154,20 @@ force, verbose):
     # Run the modules!
     modules_output = list()
     sys_exit = 0
-    for choosed_module in run_modules:
+    for this_module in run_modules:
         try:
-            mod = importlib.import_module("multiqc.modules.{0}".format(choosed_module))
+            mod = importlib.import_module("multiqc.modules.{0}".format(this_module))
             modules_output.append(mod.MultiqcModule())
         except UserWarning:
             pass # No samples found
         except:
             # Flag the error, but carry on
-            logger.error("Oops! The '{}' MultiQC module broke... \n".format(choosed_module) + \
+            logger.error("Oops! The '{}' MultiQC module broke... \n".format(this_module) + \
                       (' '*20)+"Please copy the following traceback and report it at " + \
                       "https://github.com/ewels/MultiQC/issues \n" + \
                       (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
                       ('='*60)+"\nModule {} raised an exception: {}".format(
-                          choosed_module, traceback.format_exc()) + ('='*60))
+                          this_module, traceback.format_exc()) + ('='*60))
             sys_exit = 1
 
     # Did we find anything?
