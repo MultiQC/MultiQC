@@ -18,7 +18,7 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
 
-    def __init__(self, name='base', anchor='bismark', target='',href='', info=''):
+    def __init__(self, name='base', anchor='base', target='',href='', info=''):
         self.name = name
         self.anchor = anchor
         if not target:
