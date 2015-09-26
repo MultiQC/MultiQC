@@ -1,11 +1,10 @@
 # [<img src="multiqc/templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">](https://github.com/ewels/MultiQC)
 
-**MultiQC is a tool to aggregate bioinformatics results across many samples into
-a single report.**
+### Aggregate bioinformatics results across many samples into a single report.
 
 [![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
 
-See an example report [here](http://multiqc.info/examples/rna-seq/multiqc_report.html) _(find more at [multiqc.info](http://multiqc.info))._
+##### Find [documentation](http://multiqc.info/docs/v0.2/README.md) and [example reports](http://multiqc.info/examples/rna-seq/multiqc_report.html) at [multiqc.info](http://multiqc.info)
 
 -----
 
