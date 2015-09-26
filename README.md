@@ -2,9 +2,9 @@
 
 ### Aggregate bioinformatics results across many samples into a single report.
 
-[![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
-
 ##### Find [documentation](http://multiqc.info/docs/v0.2/README.md) and [example reports](http://multiqc.info/examples/rna-seq/multiqc_report.html) at [multiqc.info](http://multiqc.info)
+
+[![Build Status](https://travis-ci.org/ewels/MultiQC.svg?branch=master)](https://travis-ci.org/ewels/MultiQC)
 
 -----
 
