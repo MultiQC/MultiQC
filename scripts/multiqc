@@ -71,7 +71,14 @@ from multiqc.log import init_log, LEVELS
 @click.version_option(__version__)
 def multiqc(analysis_dir, dirs, title, template, modules, exclude, output_dir, 
 force, verbose):
-    """docstring for cli"""
+    """MultiQC is a tool generate qc reports.
+    
+        It can be used to create an aggregate report summarising the results
+        of bioinformatics analyses across numerous samples.  
+        
+        To run, supply with a directory to scan for analysis results. 
+        To run here, use 'multiqc .'
+    """
     
     loglevel = LEVELS.get(min(verbose,2), "WARNING")
     init_log(logger, loglevel=loglevel)
