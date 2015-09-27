@@ -9,13 +9,12 @@ import logging
 import os
 import re
 
-import multiqc
-from multiqc import config
+from multiqc import config, BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(multiqc.BaseMultiqcModule):
+class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
 
