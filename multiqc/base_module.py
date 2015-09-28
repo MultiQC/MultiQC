@@ -18,8 +18,14 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
 
-    def __init__(self, name='base'):
+    def __init__(self, name='base', anchor='base', target='',href='', info='', extra=''):
         self.name = name
+        self.anchor = anchor
+        if not target:
+            target = self.name
+        self.intro = '<p><a href="{0}" target="_blank">{1}</a> {2}</p>{3}'.format(
+            href, target, info, extra
+        )
 
     def find_log_files(self, fn_match=None, contents_match=None, filehandles=False):
         """
