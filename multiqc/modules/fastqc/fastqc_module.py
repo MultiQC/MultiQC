@@ -49,31 +49,36 @@ class MultiqcModule(BaseMultiqcModule):
             'per_sequence_gc_content.png',
             'adapter_content.png'
         ]
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            # Extracted FastQC directory
-            if 'fastqc_data.txt' in filenames:
-                s_name = os.path.basename(root)
-                d_path = os.path.join(root, 'fastqc_data.txt')
-                with io.open (d_path, "r", encoding='utf-8') as f:
-                    r_data = f.read()
-
-                # Get the sample name from inside the file if possible
-                fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
-                if fn_search:
-                    s_name = fn_search.group(1).strip()
-                s_name = self.clean_s_name(s_name, root)
-                if s_name in fastqc_raw_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                fastqc_raw_data[s_name] = r_data
-
-                # Copy across the raw images
-                if not os.path.exists(self.data_dir):
-                    os.makedirs(self.data_dir)
-                for p in plot_fns:
-                    try:
-                        shutil.copyfile(os.path.join(root, 'Images', p), os.path.join(self.data_dir, "{}_{}".format(s_name, p)))
-                    except IOError:
-                        pass
+        filenames = []
+        for directory in config.analysis_dir:
+            for root, dirnames, filenames in os.walk(directory, followlinks=True):
+                # Extracted FastQC directory
+                if 'fastqc_data.txt' in filenames:
+                    s_name = os.path.basename(root)
+                    d_path = os.path.join(root, 'fastqc_data.txt')
+                    with io.open (d_path, "r", encoding='utf-8') as f:
+                        r_data = f.read()
+            
+                    # Get the sample name from inside the file if possible
+                    fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
+                    if fn_search:
+                        s_name = fn_search.group(1).strip()
+                    s_name = self.clean_s_name(s_name, root)
+                    if s_name in fastqc_raw_data:
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    fastqc_raw_data[s_name] = r_data
+            
+                    # Copy across the raw images
+                    if not os.path.exists(self.data_dir):
+                        os.makedirs(self.data_dir)
+                    for p in plot_fns:
+                        try:
+                            shutil.copyfile(
+                                os.path.join(root, 'Images', p), 
+                                os.path.join(self.data_dir, "{}_{}".format(s_name, p))
+                            )
+                        except IOError:
+                            pass
 
             # Zipped FastQC report
             for f in filenames:

@@ -39,70 +39,71 @@ class BaseMultiqcModule(object):
                  and either the file contents or file handle for the current matched file.
                  As yield is used, the function can be iterated over without 
         """
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            
-            for fn in filenames:
+        for directory in config.analysis_dir:
+            for root, dirnames, filenames in os.walk(directory, followlinks=True):
                 
-                # Make a sample name from the filename
-                s_name = self.clean_s_name(fn, root)
-                
-                # Make search strings into lists if a string is given
-                if type(fn_match) is str:
-                    fn_match = [fn_match]
-                if type(contents_match) is str:
-                    contents_match = [contents_match]
-                
-                # Search for file names ending in a certain string
-                readfile = False
-                if fn_match is not None:
-                    for m in fn_match:
-                        if m in fn:
-                            readfile = True
-                            break
-                else:
-                    readfile = True
-                    # Limit search to files under 1MB to avoid 30GB FastQ files etc.
-                    try:
-                        filesize = os.path.getsize(os.path.join(root,fn))
-                    except (IOError, OSError, ValueError, UnicodeDecodeError):
-                        log.debug("Couldn't read file when looking for output: {}".format(fn))
-                        readfile = False
-                    else:
-                        if filesize > 1000000:
-                            readfile = False
+                for fn in filenames:
                     
-                    # Use mimetypes to exclude binary files where possible
-                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                    if encoding is not None:
-                        readfile = False # eg. gzipped files
-                    if ftype is not None and ftype.startswith('text') is False:
-                        readfile = False # eg. images - 'image/jpeg'
-                            
-                if readfile:
-                    try:
-                        with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                            # Search this file for our string of interest
-                            returnfile = False
-                            if contents_match is not None:
-                                for line in f:
-                                    for m in contents_match:
-                                        if m in line:
-                                            returnfile = True
-                                            break
-                                f.seek(0)
-                            else:
-                                returnfile = True
-                            
-                            # Give back what was asked for. Yield instead of return
-                            # so that this function can be used as an interator
-                            # without loading all files at once.
-                            if returnfile:
-                                if filehandles:
-                                    yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
+                    # Make a sample name from the filename
+                    s_name = self.clean_s_name(fn, root)
+                    
+                    # Make search strings into lists if a string is given
+                    if type(fn_match) is str:
+                        fn_match = [fn_match]
+                    if type(contents_match) is str:
+                        contents_match = [contents_match]
+                    
+                    # Search for file names ending in a certain string
+                    readfile = False
+                    if fn_match is not None:
+                        for m in fn_match:
+                            if m in fn:
+                                readfile = True
+                                break
+                    else:
+                        readfile = True
+                        # Limit search to files under 1MB to avoid 30GB FastQ files etc.
+                        try:
+                            filesize = os.path.getsize(os.path.join(root,fn))
+                        except (IOError, OSError, ValueError, UnicodeDecodeError):
+                            log.debug("Couldn't read file when looking for output: {}".format(fn))
+                            readfile = False
+                        else:
+                            if filesize > 1000000:
+                                readfile = False
+                        
+                        # Use mimetypes to exclude binary files where possible
+                        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+                        if encoding is not None:
+                            readfile = False # eg. gzipped files
+                        if ftype is not None and ftype.startswith('text') is False:
+                            readfile = False # eg. images - 'image/jpeg'
+                                
+                    if readfile:
+                        try:
+                            with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                                # Search this file for our string of interest
+                                returnfile = False
+                                if contents_match is not None:
+                                    for line in f:
+                                        for m in contents_match:
+                                            if m in line:
+                                                returnfile = True
+                                                break
+                                    f.seek(0)
                                 else:
-                                    yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
-                    except (IOError, OSError, ValueError, UnicodeDecodeError):
-                        logger.debug("Couldn't read file when looking for output: {}".format(fn))
+                                    returnfile = True
+                                
+                                # Give back what was asked for. Yield instead of return
+                                # so that this function can be used as an interator
+                                # without loading all files at once.
+                                if returnfile:
+                                    if filehandles:
+                                        yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
+                                    else:
+                                        yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
+                        except (IOError, OSError, ValueError, UnicodeDecodeError):
+                            logger.debug("Couldn't read file when looking for output: {}".format(fn))
     
     
     def clean_s_name(self, s_name, root):

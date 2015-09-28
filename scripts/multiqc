@@ -25,6 +25,7 @@ from multiqc.log import init_log, LEVELS
 @click.command()
 @click.argument('analysis_dir',
                     type=click.Path(exists=True),
+                    nargs=-1,
                     metavar="<analysis directory>"
 )
 @click.option('-d', '--dirs',
@@ -80,7 +81,7 @@ force, verbose, quiet):
         It can be used to create an aggregate report summarising the results
         of bioinformatics analyses across numerous samples.  
         
-        To run, supply with a directory to scan for analysis results. 
+        To run, supply with one or more directory to scan for analysis results. 
         To run here, use 'multiqc .'
     """
     loglevel = LEVELS.get(min(verbose,1), "INFO")
@@ -117,8 +118,9 @@ force, verbose, quiet):
     config.prepend_dirs = dirs
     if dirs:
         logger.info("Prepending directory to sample names")
+    
     config.analysis_dir = analysis_dir
-    logger.info("Checking files in {0}".format(analysis_dir))
+    logger.info("Checking files in {0}".format(', '.join(analysis_dir)))
     config.output_dir = os.path.realpath(output_dir)
     logger.info("Using output dir {0}".format(output_dir))
     config.template_fn = os.path.join(output_dir, 'multiqc_report.html')
@@ -131,8 +133,6 @@ force, verbose, quiet):
     
     logger.info("Analysing modules {0}".format(', '.join(run_modules)))
     
-    logger.info("Scanning directory {}".format(analysis_dir))
-
     # Copy the template directory to the output directory
     if os.path.exists(output_dir):
         if force and os.path.basename(output_dir) == 'multiqc_report':
@@ -200,7 +200,10 @@ force, verbose, quiet):
         raise IOError ("Could not load template '{}'".format(config.template_fn))
 
     # Use jinja2 to render the template and overwrite
-    config.analysis_dir = os.path.realpath(config.analysis_dir)
+    full_paths = []
+    for directory in config.analysis_dir:
+        full_paths.append(os.path.realpath(directory))
+    config.analysis_dir = full_paths
     report = j_template.render(config=config, modules=modules_output)
     try:
         with open(config.template_fn, 'w') as f:
