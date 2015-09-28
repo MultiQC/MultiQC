@@ -29,24 +29,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find QualiMap reports
         qualimap_raw_data = {}
-        for root, dirnames, filenames in os.walk(config.analysis_dir, followlinks=True):
-            raw_data_dir = 'raw_data'
-            for d in dirnames:
-                if raw_data_dir in d:
-                    raw_data_dir = d
-            if 'genome_results.txt' in filenames and raw_data_dir in dirnames:
-                with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
-                    for l in gr:
-                        if 'bam file' in l:
-                            s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
-
-                s_name = self.clean_s_name(s_name, root)
-                if s_name in qualimap_raw_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-
-                qualimap_raw_data[s_name] = {}
-                qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, raw_data_dir, r) \
-                    for r in os.listdir(os.path.join(root, raw_data_dir))}
+        for directory in config.analysis_dir:
+            for root, dirnames, filenames in os.walk(directory, followlinks=True):
+                raw_data_dir = 'raw_data'
+                for d in dirnames:
+                    if raw_data_dir in d:
+                        raw_data_dir = d
+                if 'genome_results.txt' in filenames and raw_data_dir in dirnames:
+                    with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
+                        for l in gr:
+                            if 'bam file' in l:
+                                s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
+            
+                    s_name = self.clean_s_name(s_name, root)
+                    if s_name in qualimap_raw_data:
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            
+                    qualimap_raw_data[s_name] = {}
+                    qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, raw_data_dir, r) \
+                        for r in os.listdir(os.path.join(root, raw_data_dir))}
 
         if len(qualimap_raw_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
