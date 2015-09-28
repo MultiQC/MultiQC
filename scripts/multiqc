@@ -123,9 +123,9 @@ force, verbose, quiet):
         logger.info("Prepending directory to sample names")
     
     config.analysis_dir = analysis_dir
-    logger.info("Searching   : {0}/".format(', '.join(analysis_dir)))
+    logger.info("Searching   : {0}".format(', '.join(analysis_dir)))
     config.output_dir = os.path.realpath(output_dir)
-    logger.debug("Output dir  : {0}/".format(os.path.relpath(output_dir)))
+    logger.debug("Output dir  : {0}".format(os.path.relpath(output_dir)))
     config.template_fn = os.path.join(output_dir, 'multiqc_report.html')
     
     run_modules = sorted_modules
@@ -139,7 +139,7 @@ force, verbose, quiet):
     # Copy the template directory to the output directory
     if os.path.exists(output_dir):
         if force and os.path.basename(output_dir) == 'multiqc_report':
-            logger.warning("Deleting    : {}/   (-f was specified)".format(os.path.relpath(output_dir)))
+            logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(output_dir)))
             shutil.rmtree(output_dir)
             if os.path.exists("{}.zip".format(output_dir)):
                 os.remove("{}.zip".format(output_dir))
@@ -153,7 +153,7 @@ force, verbose, quiet):
             logger.info("Use -f or --force to overwrite existing reports")
             sys.exit(1)
 
-    logger.info("Saving to   : {}/".format(os.path.relpath(output_dir)))
+    logger.info("Saving to   : {}".format(os.path.relpath(output_dir)))
     shutil.copytree(template_dir, output_dir)
 
     # Make the report data directory

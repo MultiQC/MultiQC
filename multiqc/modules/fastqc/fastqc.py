@@ -79,40 +79,40 @@ class MultiqcModule(BaseMultiqcModule):
                         except IOError:
                             pass
 
-            # Zipped FastQC report
-            for f in filenames:
-                if f[-11:] == '_fastqc.zip':
-                    s_name = f[:-11]
-                    fqc_zip = zipfile.ZipFile(os.path.join(root, f))
-                    # FastQC zip files should have one directory inside, containing report
-                    d_name = fqc_zip.namelist()[0]
-                    try:
-                        with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
-                            r_data = f.read().decode('utf8')
+                # Zipped FastQC report
+                for f in filenames:
+                    if f[-11:] == '_fastqc.zip':
+                        s_name = f[:-11]
+                        fqc_zip = zipfile.ZipFile(os.path.join(root, f))
+                        # FastQC zip files should have one directory inside, containing report
+                        d_name = fqc_zip.namelist()[0]
+                        try:
+                            with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
+                                r_data = f.read().decode('utf8')
 
-                        # Get the sample name from inside the file if possible
-                        fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
-                        if fn_search:
-                            s_name = fn_search.group(1).strip()
-                        s_name = self.clean_s_name(s_name, root)
-                        if s_name in fastqc_raw_data:
-                            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                        fastqc_raw_data[s_name] = r_data
+                            # Get the sample name from inside the file if possible
+                            fn_search = re.search(r"^Filename\s+(.+)$", r_data, re.MULTILINE)
+                            if fn_search:
+                                s_name = fn_search.group(1).strip()
+                            s_name = self.clean_s_name(s_name, root)
+                            if s_name in fastqc_raw_data:
+                                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                            fastqc_raw_data[s_name] = r_data
 
-                    except KeyError:
-                        log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
-                    else:
-                        # Copy across the raw images
-                        if not os.path.exists(self.data_dir):
-                            os.makedirs(self.data_dir)
-                        for p in plot_fns:
-                            try:
-                                with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
-                                    img = f.read()
-                                with io.open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "wb") as f:
-                                    f.write(img)
-                            except KeyError:
-                                pass
+                        except KeyError:
+                            log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
+                        else:
+                            # Copy across the raw images
+                            if not os.path.exists(self.data_dir):
+                                os.makedirs(self.data_dir)
+                            for p in plot_fns:
+                                try:
+                                    with fqc_zip.open(os.path.join(d_name, 'Images', p)) as f:
+                                        img = f.read()
+                                    with io.open (os.path.join(self.data_dir, "{}_{}".format(s_name, p)), "wb") as f:
+                                        f.write(img)
+                                except KeyError:
+                                    pass
 
         if len(fastqc_raw_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
