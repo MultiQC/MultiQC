@@ -160,7 +160,7 @@ force, verbose, quiet):
 
     # Run the modules!
     modules_output = list()
-    sys_exit = 0
+    sys_exit_code = 0
     for this_module in run_modules:
         try:
             mod = importlib.import_module("multiqc.modules.{0}".format(this_module))
@@ -175,14 +175,15 @@ force, verbose, quiet):
                       (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
                       ('='*60)+"\nModule {} raised an exception: {}".format(
                           this_module, traceback.format_exc()) + ('='*60))
-            sys_exit = 1
+            sys_exit_code = 1
 
     # Did we find anything?
     if len(modules_output) == 0:
         logger.warn("No analysis results found. Cleaning up..")
         shutil.rmtree(output_dir)
         logger.info("MultiQC complete")
-        return
+        # Exit with an error code if a module broke
+        sys.exit(sys_exit_code)
 
     # Print the general stats table to a file
     with open (os.path.join(output_dir, 'report_data', 'multiqc_general_stats.txt'), "w") as f:
@@ -221,7 +222,7 @@ force, verbose, quiet):
         print('</ul><p><a href="file://{}/multiqc_report.html">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(output_dir))
     
     # Exit with an error code if a module broke
-    sys.exit(sys_exit)
+    sys.exit(sys_exit_code)
     
 
 if __name__ == "__main__":

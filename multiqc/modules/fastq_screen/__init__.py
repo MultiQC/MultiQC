@@ -1,3 +1,3 @@
 from __future__ import absolute_import
 
-from .fastq_screen_module import MultiqcModule
+from .fastq_screen import MultiqcModule
