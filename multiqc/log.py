@@ -3,9 +3,8 @@ import sys
 import logging
 
 LEVELS = {
-    0 : 'WARNING',
-    1 : 'INFO',
-    2 : 'DEBUG',
+    0 : 'INFO',
+    1 : 'DEBUG',
 }
 
 def init_log(logger, filename=None, loglevel=None):

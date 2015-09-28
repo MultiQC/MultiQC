@@ -68,9 +68,13 @@ from multiqc.log import init_log, LEVELS
                 default=0,
                 help=u"Increase output verbosity. Can be used multiple times, eg. -vv"
 )
+@click.option('-q', '--quiet', 
+                is_flag=True,
+                help=u"Set output verbosity to 'WARNING'"
+)
 @click.version_option(__version__)
 def multiqc(analysis_dir, dirs, title, template, modules, exclude, output_dir, 
-force, verbose):
+force, verbose, quiet):
     """MultiQC is a tool generate qc reports.
     
         It can be used to create an aggregate report summarising the results
@@ -79,8 +83,9 @@ force, verbose):
         To run, supply with a directory to scan for analysis results. 
         To run here, use 'multiqc .'
     """
-    
-    loglevel = LEVELS.get(min(verbose,2), "WARNING")
+    loglevel = LEVELS.get(min(verbose,1), "INFO")
+    if quiet:
+        loglevel = 'WARNING'
     init_log(logger, loglevel=loglevel)
     
     sorted_modules = get_sorted_modules(
