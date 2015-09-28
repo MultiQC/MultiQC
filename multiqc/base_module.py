@@ -44,6 +44,10 @@ class BaseMultiqcModule(object):
                 
                 for fn in filenames:
                     
+                    # Ignore files set in config
+                    if fn in config.fn_ignore_files:
+                        continue
+                    
                     # Make a sample name from the filename
                     s_name = self.clean_s_name(fn, root)
                     
@@ -66,7 +70,7 @@ class BaseMultiqcModule(object):
                         try:
                             filesize = os.path.getsize(os.path.join(root,fn))
                         except (IOError, OSError, ValueError, UnicodeDecodeError):
-                            log.debug("Couldn't read file when looking for output: {}".format(fn))
+                            log.debug("Couldn't read file when checking filesize: {}".format(fn))
                             readfile = False
                         else:
                             if filesize > 1000000:

@@ -30,6 +30,7 @@ general_stats = {
     'rows': defaultdict(lambda:dict())
 }
 fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '_tophat', '_star_aligned' ]
+fn_ignore_files = ['.DS_Store', 'glyphicons-halflings-regular.woff2']
 
 # Load and parse installation config file if we find it
 try:
