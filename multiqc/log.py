@@ -16,7 +16,7 @@ def init_log(logger, filename=None, loglevel=None):
     if loglevel == 'DEBUG':
         template = '[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s'
     else:
-        template = '%(module)-25s [%(levelname)-7s]  %(message)s'
+        template = '[%(levelname)-7s] %(module)15s : %(message)s'
     formatter = logging.Formatter(template)
 
     if loglevel:

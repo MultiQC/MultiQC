@@ -95,7 +95,8 @@ force, verbose, quiet):
         module_order = module_order
     )
     
-    logger.info("Using template {0}".format(template))
+    logger.info("Working dir : {0}".format(os.getcwd()))
+    logger.info("Template    : {0}".format(template))
     
     osx_app = check_app()
     
@@ -116,15 +117,15 @@ force, verbose, quiet):
     # Update the config with the command line options
     config.title = title
     if config.title is not None:
-        logger.info("Using title {0} for report".format(title))
+        logger.info("Report title: {0}".format(title))
     config.prepend_dirs = dirs
     if dirs:
         logger.info("Prepending directory to sample names")
     
     config.analysis_dir = analysis_dir
-    logger.info("Checking files in {0}".format(', '.join(analysis_dir)))
+    logger.info("Searching   : {0}/".format(', '.join(analysis_dir)))
     config.output_dir = os.path.realpath(output_dir)
-    logger.info("Using output dir {0}".format(output_dir))
+    logger.debug("Output dir  : {0}/".format(os.path.relpath(output_dir)))
     config.template_fn = os.path.join(output_dir, 'multiqc_report.html')
     
     run_modules = sorted_modules
@@ -138,7 +139,7 @@ force, verbose, quiet):
     # Copy the template directory to the output directory
     if os.path.exists(output_dir):
         if force and os.path.basename(output_dir) == 'multiqc_report':
-            logger.warning("Deleting {} because -f was specified.".format(output_dir))
+            logger.warning("Deleting    : {}/   (-f was specified)".format(os.path.relpath(output_dir)))
             shutil.rmtree(output_dir)
             if os.path.exists("{}.zip".format(output_dir)):
                 os.remove("{}.zip".format(output_dir))
@@ -148,11 +149,11 @@ force, verbose, quiet):
             " avoid accidentally overwriting data.")
             sys.exit(1)
         else:
-            logger.error("Error - Output directory {} already exists. Use -f"\
-            " or --force to overwrite existing reports".format(output_dir))
+            logger.error("Output directory {} already exists.".format(output_dir))
+            logger.info("Use -f or --force to overwrite existing reports")
             sys.exit(1)
 
-    logger.info("Saving to {}".format(output_dir))
+    logger.info("Saving to   : {}/".format(os.path.relpath(output_dir)))
     shutil.copytree(template_dir, output_dir)
 
     # Make the report data directory
