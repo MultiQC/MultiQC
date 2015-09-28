@@ -115,7 +115,8 @@ force, verbose, quiet):
     
     # Update the config with the command line options
     config.title = title
-    logger.info("Using title {0} for report".format(title))
+    if config.title is not None:
+        logger.info("Using title {0} for report".format(title))
     config.prepend_dirs = dirs
     if dirs:
         logger.info("Prepending directory to sample names")
@@ -132,7 +133,7 @@ force, verbose, quiet):
         logger.info('Excluding modules {}'.format(', '.join(exclude)))
         run_modules = [mod for mod in run_modules if mod not in exclude]
     
-    logger.info("Analysing modules {0}".format(', '.join(run_modules)))
+    logger.debug("Analysing modules {0}".format(', '.join(run_modules)))
     
     # Copy the template directory to the output directory
     if os.path.exists(output_dir):
