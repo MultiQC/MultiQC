@@ -26,6 +26,7 @@ from multiqc.log import init_log, LEVELS
 @click.argument('analysis_dir',
                     type=click.Path(exists=True),
                     nargs=-1,
+                    required=True,
                     metavar="<analysis directory>"
 )
 @click.option('-d', '--dirs',
