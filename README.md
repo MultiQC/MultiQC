@@ -39,7 +39,7 @@ A similar graphical utility for Windows is planned for a future release.
 
 ## Command Line Usage
 
-You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/0.1)
+You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
 using `pip` as follows:
 
 ```
@@ -83,7 +83,7 @@ If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ## Version History
-#### v0.2 - 2015-09-18
+#### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
   functions now handle many more functions (plots, config, file import)
   * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
