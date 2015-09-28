@@ -1,23 +1,22 @@
-import os
-import sys
+# -*- coding: utf-8 -*-
 import logging
 
-LEVELS = {
-    0 : 'INFO',
-    1 : 'DEBUG',
-}
+LEVELS = {0: 'INFO', 1: 'DEBUG'}
+
 
 def init_log(logger, filename=None, loglevel=None):
     """
     Initializes the log file in the proper format.
 
-    Arguments:
-
+    Args:
         filename (str): Path to a file. Or None if logging is to
-                         be disabled.
+                        be disabled.
         loglevel (str): Determines the level of the log output.
     """
-    template = '[%(asctime)s] %(levelname)-5s: %(name)-30s: %(message)s'
+    if loglevel == 'DEBUG':
+        template = '[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s'
+    else:
+        template = '%(module)-25s [%(levelname)-7s]  %(message)s'
     formatter = logging.Formatter(template)
 
     if loglevel:
@@ -41,6 +40,7 @@ def init_log(logger, filename=None, loglevel=None):
             console.setLevel(getattr(logging, loglevel))
 
     logger.addHandler(console)
+
 
 def get_log_stream(logger):
     """
