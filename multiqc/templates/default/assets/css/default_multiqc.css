@@ -323,6 +323,7 @@ input.form-control[type=color]{
 }
 .f_text {
     border: 0;
+    border-bottom: 1px solid #ccc;
     padding: 5px 0 5px 10px;
     margin: 0;
     background-color: transparent;
@@ -330,6 +331,9 @@ input.form-control[type=color]{
     width: -moz-calc(100% - 55px);
     width: -webkit-calc(100% - 55px);
     width: calc(100% - 55px);
+}
+.f_text:focus {
+    background-color: #f6f6f6;
 }
 .from_text, .to_text {
     width: -moz-calc(49% - 20px);
