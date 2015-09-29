@@ -23,6 +23,7 @@ function fastqc_seq_content_heatmap() {
     
     // Get sample names, skipping hidden samples
     sample_names = [];
+    var hidden_samples = 0;
     $.each(Object.keys(fastqc_seq_content_data), function(i, name){
         var hide_sample = false;
         $.each(hidesamples_f_texts, function(idx, f_text){
@@ -31,12 +32,19 @@ function fastqc_seq_content_heatmap() {
             }
         });
         if(!hide_sample){ sample_names.push(name); }
+        else { hidden_samples += 1; }
     });
     num_samples = sample_names.length;
+    $('#fastqc_seq_heatmap_div .samples-hidden-warning, #fastqc_seq_heatmap_div .fastqc-heatmap-no-samples').remove();
+    $('#fastqc_seq_heatmap_div .hc-plot-wrapper').show();
     if(num_samples == 0){
-        $('#fastqc_seq').html('<p class="text-muted">No samples found.</p>');
-        return;
+        $('#fastqc_seq_heatmap_div .hc-plot-wrapper').hide();
+        $('#fastqc_seq_heatmap_div').prepend('<p class="fastqc-heatmap-no-samples text-muted">No samples found.</p>');
     }
+    if(hidden_samples > 0){
+        $('#fastqc_seq_heatmap_div').prepend('<div class="samples-hidden-warning alert alert-danger"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+hidden_samples+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>');
+    }
+    if(num_samples == 0){ return; }
     
     // Convert the CSS percentage size into pixels
     c_width = $("#fastqc_seq_heatmap").parent().width();
