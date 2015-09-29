@@ -80,6 +80,8 @@ $(function () {
             var val = parseFloat($(this).text());
             var col = scale(val).css();
             var percentage = ((val - minval) / (maxval - minval)) * 100;
+            if(percentage > 100){ percentage = 100; }
+            if(percentage < 0){ percentage = 0; }
             $(this).html('<div class="wrapper"><span class="bar" style="width:'+percentage+'%; background-color: '+col+';"></span><span class="val">'+$(this).text()+'</span></div>');
             $(this).addClass('data-coloured');
           });

@@ -127,6 +127,53 @@ class BaseMultiqcModule(object):
         return s_name
     
     
+    def general_stats_addcols(self, data, headers=None):
+        """ Helper function to add to the General Statistics table.
+        Adds to config.general_stats and does not return anything.
+        :param data: A dict with the data. First key should be sample name,
+                     then the data key, then the data.
+        :param headers: Dict / OrderedDict with information for the headers, 
+                        such as colour scales, min and max values etc.
+                        See docs/writing_python.md for more information.
+        :return: None
+        """
+        keys = data.keys()
+        if headers is not None:
+            keys = headers.keys()
+        for k in keys:
+            # Build the header cell
+            try: scale = headers[k]['scale']
+            except KeyError: scale = 'GnBu'
+            
+            try: dmax = 'data-chroma-max="{0}"'.format(headers[k]['max'])
+            except KeyError: dmax = ''
+            
+            try: dmin = 'data-chroma-min="{0}"'.format(headers[k]['min'])
+            except KeyError: dmin = ''
+            
+            try: title = headers[k]['title']
+            except KeyError: title = k
+            
+            try: title = '<span data-toggle="tooltip" title="{0}">{1}</span>'.format(headers[k]['description'], title)
+            except KeyError: pass
+            
+            config.general_stats['headers'][k] = '<th class="chroma-col" data-chroma-scale="{0}" {1} {2}>{3}</th>'.format(scale, dmax, dmin, title)
+            
+            # Add the data cells
+            nrows = 0
+            for (sname, samp) in data.items():
+                if k in samp:
+                    config.general_stats['rows'][sname][k] = '<td>{}</td>'.format(samp[k])
+                    nrows += 1
+            
+            # Remove header if we don't have any filled cells for it
+            if nrows == 0:
+                config.general_stats['headers'].pop(k, None)
+        
+        return None # it's good to be explicit, right?
+        
+        
+    
     def plot_xy_data(self, data, config={}, original_plots=[]):
         """ Plot a line graph with X,Y data. See CONTRIBUTING.md for
         further instructions on use.

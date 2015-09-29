@@ -17,6 +17,43 @@ class MultiqcModule(multiqc.BaseMultiqcModule):
 Doing so gives you access to common Python functions. These are currently
 few in number (just one) but may be extended in the near future.
 
+## Adding to the general statistics table
+`self.general_stats_addcols(data, headers=None)`
+
+A helper function to add data to the General Statistics table at the top
+of the report. Takes a dictionary of data organised by sample name, then
+column key. Optionally then takes an additional dict / OrderedDict with
+information for the header and formatting. All keys are optional.
+
+Example of supplied data and headers dicts:
+
+```python
+data = {
+    'sample_1': {
+        'first_col': 91.4,
+        'second_col': '78.2%'
+    },
+    'sample_2': {
+        'first_col': 138.3,
+        'second_col': '66.3%'
+    }
+}
+headers = OrderedDict()
+headers['first_col'] = {
+    'title': 'First',
+    'description': 'My Module: My First Column',
+    'scale': 'RdYlGn-rev'
+}
+headers['second_col'] = {
+    'title': 'Second',
+    'description': 'My Module: My Second Column',
+    'max': 100,
+    'min': 0,
+    'scale': 'Blues'
+}
+self.general_stats_addcols(data, headers)
+```
+
 ## Writing data to a file
 `self.dict_to_csv (data, delim="\t")`
 

@@ -277,24 +277,35 @@ class MultiqcModule(BaseMultiqcModule):
     def fastqc_stats_table(self, parsed_stats):
         """ Take the parsed stats from the FastQC report and add them to the
         basic stats table at the top of the report """
-
-        config.general_stats['headers']['percent_duplicates'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: %&nbsp;Duplicate Reads">% Dups</span></th>'
-        config.general_stats['headers']['percent_gc'] = '<th class="chroma-col"  data-chroma-scale="PRGn" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="FastQC: Average %&nbsp;GC Content">% GC</span></th>'
-        config.general_stats['headers']['sequence_length'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Average Sequence Length (bp)">Length</span></th>'
-        config.general_stats['headers']['total_sequences_m'] = '<th class="chroma-col" data-chroma-scale="Blues" data-chroma-min="0"><span data-toggle="tooltip" title="FastQC: Total Sequences (millions)">M Seqs</span></th>'
-
-        rowcounts = { 'total_sequences_m' : 0, 'sequence_length' : 0,
-            'percent_gc' : 0, 'percent_duplicates' : 0 }
-
-        for samp, vals in parsed_stats.items():
-            for k, v in vals.items():
-                config.general_stats['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
-                rowcounts[k] += 1
-
-        # Remove header if we don't have any filled cells for it (eg. % dups in older FastQC reports)
-        for k in rowcounts.keys():
-            if rowcounts[k] == 0:
-                config.general_stats['headers'].pop(k, None)
+        
+        headers = OrderedDict()
+        headers['percent_duplicates'] = {
+            'title': '% Dups',
+            'description': 'FastQC: % Duplicate Reads',
+            'max': 100,
+            'min': 0,
+            'scale': 'RdYlGn-rev'
+        }
+        headers['percent_gc'] = {
+            'title': '% GC',
+            'description': 'FastQC: Average % GC Content',
+            'max': 80,
+            'min': 20,
+            'scale': 'PRGn'
+        }
+        headers['sequence_length'] = {
+            'title': 'Length',
+            'description': 'FastQC: Average Sequence Length (bp)',
+            'min': 0,
+            'scale': 'RdYlGn'
+        }
+        headers['total_sequences_m'] = {
+            'title': 'M Seqs',
+            'description': 'FastQC: Total Sequences (millions)',
+            'min': 0,
+            'scale': 'Blues'
+        }
+        self.general_stats_addcols(parsed_stats, headers)
 
     def parse_fastqc_seq_quality(self, fastqc_raw_data):
         """ Parse the 'Per base sequence quality' data from fastqc_data.txt
