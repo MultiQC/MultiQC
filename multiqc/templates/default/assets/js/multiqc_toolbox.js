@@ -5,7 +5,9 @@
 var mqc_colours_idx = 0;
 var mqc_colours = chroma.brewer.Set1;
 
-// Execute when page load has finished loading
+//////////////////////////////////////////////////////
+// TOOLBOX LISTENERS
+//////////////////////////////////////////////////////
 $(function () {
   
   // Load any saved configuration
@@ -192,8 +194,9 @@ $(function () {
 
 
 
-
-// Toolbox functions
+//////////////////////////////////////////////////////
+// GENERAL TOOLBOX FUNCTIONS
+//////////////////////////////////////////////////////
 function mqc_toolbox_openclose (target, open){
   var btn = $('.mqc-toolbox-buttons a[href="'+target+'"]');
   if(open === undefined){
@@ -219,36 +222,14 @@ function mqc_toolbox_openclose (target, open){
   }
 }
 
-// Highlight text with a fadeout background colour highlight
-function highlight_fade_text(obj){
-  var orig_col = $(obj).css('color');
-  obj.css({
-    'display'          : 'inline-block',
-    'background-color' : '#5bc0de',
-    'color'            : '#FFFFFF',
-    'WebkitTransition' : 'background-color 0s, color 0s',
-    'MozTransition'    : 'background-color 0s, color 0s',
-    'MsTransition'     : 'background-color 0s, color 0s',
-    'OTransition'      : 'background-color 0s, color 0s',
-    'transition'       : 'background-color 0s, color 0s'
-  });
-  setTimeout(function(){
-    obj.css({
-      'background-color' : '#FFFFFF',
-      'color'            : orig_col,
-      'WebkitTransition' : 'background-color 0.5s, color 0.5s',
-      'MozTransition'    : 'background-color 0.5s, color 0.5s',
-      'MsTransition'     : 'background-color 0.5s, color 0.5s',
-      'OTransition'      : 'background-color 0.5s, color 0.5s',
-      'transition'       : 'background-color 0.5s, color 0.5s'
-    });
-  }, 500);
-}
 
-// Apply the Highlight highlights to highcharts plots
+//////////////////////////////////////////////////////
+// HIGHLIGHT SAMPLES
+//////////////////////////////////////////////////////
 function apply_mqc_highlights(){
   
   // Collect the filters into an array
+  var f_matches = 0;
   var f_texts = [];
   var f_cols = [];
   var regex_mode = true;
@@ -281,6 +262,7 @@ function apply_mqc_highlights(){
           $.each(f_texts, function(idx, f_text){
             if((regex_mode && s.name.match(f_text)) || (!regex_mode && s.name.indexOf(f_text) > -1)){
               thiscol = f_cols[idx];
+              f_matches += 1;
             }
           });
           s.color = thiscol;
@@ -297,6 +279,7 @@ function apply_mqc_highlights(){
           $.each(f_texts, function(idx, f_text){
             if((regex_mode && labeltext.match(f_text)) || (!regex_mode && labeltext.indexOf(f_text) > -1)){
               thiscol = f_cols[idx];
+              f_matches += 1;
             }
           });
           $(this).css('fill', thiscol);
@@ -315,92 +298,27 @@ function apply_mqc_highlights(){
     $.each(f_texts, function(idx, f_text){
       if((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)){
         thiscol = f_cols[idx];
+        f_matches += 1;
       }
     });
     $(this).css('color', thiscol);
   });
+  
+  // If something was renamed, highlight the toolbox icon
+  if(f_matches > 0){
+    $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass('in_use');
+  } else {
+    $('.mqc-toolbox-buttons a[href="#mqc_cols"]').removeClass('in_use');
+  }
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
   mqc_autosave();
 }
 
-
-// Apply the Highlight highlights to highcharts plots
-function apply_mqc_hidesamples(){
-  
-  // Collect the filters into an array
-  var f_texts = [];
-  var regex_mode = true;
-  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode off'){
-    regex_mode = false;
-  }
-  $('#mqc_hidesamples_filters li .f_text').each(function(){
-    f_texts.push($(this).val());
-  });
-  
-  // Loop through each plot
-  $('.hc-plot').each(function(){
-    var plotid = $(this).attr('id');
-    // Put in a try / catch so that one plot doesn't break all hiding
-    try {
-      if($(this).highcharts() === undefined){ return true; }
-      // Line plots
-      if($(this).highcharts().options.chart.type == 'line'){
-        $.each($(this).highcharts().series, function(j, s){
-          var match = false;
-          $.each(f_texts, function(idx, f_text){
-            if((regex_mode && s.name.match(f_text)) || (!regex_mode && s.name.indexOf(f_text) > -1)){
-              match = true;
-            }
-          });
-          if (s.visible && match) { s.hide(); }
-          if (!s.visible && !match) { s.show(); }
-        });
-      }
-      // Bar charts
-      else if($(this).highcharts().options.chart.type == 'bar'){
-        var replot = $.extend(true, [], highcharts_plot_options['#'+plotid]); // make a copy, not reference
-        var matches = 0;
-        // Remove the categories
-        var idx = replot.xAxis.categories.length;
-        while (idx--) {
-          var val = replot.xAxis.categories[idx];
-          $.each(f_texts, function(i, f_text){
-            if((regex_mode && val.match(f_text)) || (!regex_mode && val.indexOf(f_text) > -1)){
-              matches += 1;
-              replot.xAxis.categories.splice(idx, 1);
-              $.each(replot.series, function(j, s){
-                replot.series[j].data.splice(idx, 1);
-              });
-              return true;
-            }
-          });
-        };
-        if(matches > 0){ highcharts_plots['#'+plotid] = new Highcharts.Chart(replot); }
-      }
-    } catch(err) {
-      console.log('Error hiding samples in '+$(this).attr('id')+' - '+err.message);
-    }
-  });
-  
-  // Hide rows in the general stats table
-  $("#general_stats_table tbody th").each(function(){
-    var match = false;
-    var hfilter = $(this).text();
-    $.each(f_texts, function(idx, f_text){
-      if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
-        match = true;
-      }
-    });
-    if(match){ $(this).parent().hide(); }
-    else { $(this).parent().show(); }
-  });
-  
-  // Fire off a custom jQuery event for other javascript chunks to tie into
-  $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
-  mqc_autosave();
-}
+//////////////////////////////////////////////////////
+// RENAME SAMPLES
+//////////////////////////////////////////////////////
 
 function apply_mqc_renamesamples(){
   // Loop through each plot
@@ -461,6 +379,13 @@ function apply_mqc_renamesamples(){
     $(this).text(get_new_name(s_name, '#general_stats_table', orig_name));
   });
   
+  // If something was renamed, highlight the toolbox icon
+  if($('#mqc_renamesamples_filters .from_text').length > 0){
+    $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').addClass('in_use');
+  } else {
+    $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').removeClass('in_use');
+  }
+  
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_renamesamples');
   mqc_autosave();
@@ -508,6 +433,104 @@ function get_orig_name(s_name, obj_id){
   });
   return s_name;
 }
+
+
+//////////////////////////////////////////////////////
+// HIDE SAMPLES
+//////////////////////////////////////////////////////
+
+function apply_mqc_hidesamples(){
+  
+  // Collect the filters into an array
+  var f_matches = 0;
+  var f_texts = [];
+  var regex_mode = true;
+  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode off'){
+    regex_mode = false;
+  }
+  $('#mqc_hidesamples_filters li .f_text').each(function(){
+    f_texts.push($(this).val());
+  });
+  
+  // Loop through each plot
+  $('.hc-plot').each(function(){
+    var plotid = $(this).attr('id');
+    // Put in a try / catch so that one plot doesn't break all hiding
+    try {
+      if($(this).highcharts() === undefined){ return true; }
+      // Line plots
+      if($(this).highcharts().options.chart.type == 'line'){
+        $.each($(this).highcharts().series, function(j, s){
+          var match = false;
+          $.each(f_texts, function(idx, f_text){
+            if((regex_mode && s.name.match(f_text)) || (!regex_mode && s.name.indexOf(f_text) > -1)){
+              match = true;
+              f_matches += 1;
+            }
+          });
+          if (s.visible && match) { s.hide(); }
+          if (!s.visible && !match) { s.show(); }
+        });
+      }
+      // Bar charts
+      else if($(this).highcharts().options.chart.type == 'bar'){
+        var replot = $.extend(true, [], highcharts_plot_options['#'+plotid]); // make a copy, not reference
+        var matches = 0;
+        // Remove the categories
+        var idx = replot.xAxis.categories.length;
+        while (idx--) {
+          var val = replot.xAxis.categories[idx];
+          $.each(f_texts, function(i, f_text){
+            if((regex_mode && val.match(f_text)) || (!regex_mode && val.indexOf(f_text) > -1)){
+              matches += 1;
+              f_matches += 1;
+              replot.xAxis.categories.splice(idx, 1);
+              $.each(replot.series, function(j, s){
+                replot.series[j].data.splice(idx, 1);
+              });
+              return true;
+            }
+          });
+        };
+        if(matches > 0){ highcharts_plots['#'+plotid] = new Highcharts.Chart(replot); }
+      }
+    } catch(err) {
+      console.log('Error hiding samples in '+$(this).attr('id')+' - '+err.message);
+    }
+  });
+  
+  // Hide rows in the general stats table
+  $("#general_stats_table tbody th").each(function(){
+    var match = false;
+    var hfilter = $(this).text();
+    $.each(f_texts, function(idx, f_text){
+      if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
+        match = true;
+        f_matches += 1;
+      }
+    });
+    if(match){ $(this).parent().hide(); }
+    else { $(this).parent().show(); }
+  });
+  
+  // If something was renamed, highlight the toolbox icon
+  if(f_matches > 0){
+    $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').addClass('in_use');
+  } else {
+    $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').removeClass('in_use');
+  }
+  
+  // Fire off a custom jQuery event for other javascript chunks to tie into
+  $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
+  mqc_autosave();
+}
+
+
+
+//////////////////////////////////////////////////////
+// SAVE TOOLBOX SETTINGS
+//////////////////////////////////////////////////////
+
 
 // Autosave function
 function mqc_autosave(){

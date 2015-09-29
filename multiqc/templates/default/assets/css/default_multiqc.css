@@ -247,7 +247,13 @@ input.form-control[type=color]{
     background-color: #ededed;
     border: 1px solid #ccc;
 }
- .mqc-toolbox-buttons a.active {
+.mqc-toolbox-buttons a.in_use {
+    color: #333;
+    border: 3px solid #5bc0de;
+    padding: 5px 8px 7px 6px;
+    border-right: 1px solid #ededed;
+}
+.mqc-toolbox-buttons a.active {
     border-right: 1px solid #ededed;
 }
 
