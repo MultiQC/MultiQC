@@ -495,8 +495,7 @@ function apply_mqc_hidesamples(){
         });
         // Reset warnings and plot hiding.
         $(this).parent().parent().find('.samples-hidden-warning').remove();
-        $(this).parent().parent().find('.hc-plot-wrapper').show();
-        $(this).parent().parent().find('.btn-group').show();
+        $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').show();
         // Some series hidden. Show a warning text string.
         if(num_hidden > 0) {
           var alert = '<div class="samples-hidden-warning alert alert-danger"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
@@ -508,8 +507,7 @@ function apply_mqc_hidesamples(){
         }
         // All series hidden. Hide the graph.
         if(num_hidden == $(this).highcharts().series.length){
-          $(this).parent().parent().find('.hc-plot-wrapper').hide();
-          $(this).parent().parent().find('.btn-group').hide();
+          $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').hide();
         }
         
       }
@@ -529,15 +527,14 @@ function apply_mqc_hidesamples(){
               $.each(replot.series, function(j, s){
                 replot.series[j].data.splice(idx, 1);
               });
-              return true;
+              return false;
             }
           });
         };
         
         // Reset warnings and plot hiding.
         $(this).parent().parent().find('.samples-hidden-warning').remove();
-        $(this).parent().parent().find('.hc-plot-wrapper').show();
-        $(this).parent().parent().find('.btn-group').show();
+        $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').show();
         
         // Replot graph
         highcharts_plots['#'+plotid] = new Highcharts.Chart(replot);
@@ -553,8 +550,7 @@ function apply_mqc_hidesamples(){
         }
         // All series hidden. Hide the graph.
         if(matches == highcharts_plot_options['#'+plotid].xAxis.categories.length){
-          $(this).parent().parent().find('.hc-plot-wrapper').hide();
-          $(this).parent().parent().find('.btn-group').hide();
+          $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').hide();
         }
       }
     } catch(err) {

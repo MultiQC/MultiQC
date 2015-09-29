@@ -159,7 +159,7 @@
   <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
   {{ '<h2>'+config.title+'</h2>' if config.title != None }}
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
-  <p>Report generated on {{ config.creation_date }} based on data in <code id="mqc_analysis_path">{{ config.analysis_dir }}</code></p>
+  <p>Report generated on {{ config.creation_date }} based on data in <code id="mqc_analysis_path">{{ config.analysis_dir |join('</code> and <code id="mqc_analysis_path">') }}</code></p>
   <p id="mqc_report_location">Report location: <code id="mqc_output_path">{{ config.output_dir }}/multiqc_report.html</code></p>
   <div class="alert alert-info alert-dismissible hidden-print mqc-into-tour-alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
