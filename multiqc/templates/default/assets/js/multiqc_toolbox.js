@@ -17,7 +17,23 @@ $(function () {
   $('.mqc-toolbox-buttons a').click(function(e){
     e.preventDefault();
     var target = $(this).attr('href');
-    mqc_toolbox_openclose(target);
+    if(target == '#mqc_cleartoolbox'){
+      // Empty the toolbox filter lists
+      $('#mqc_col_filters').empty();
+      $('#mqc_renamesamples_filters').empty();
+      $('#mqc_hidesamples_filters').empty();
+      // Reset the highlight colours
+      mqc_colours_idx = 0;
+      $('#mqc_colour_filter_color').val(mqc_colours[0]);
+      // Close the toolbox
+      mqc_toolbox_openclose ('#mqc_col_filters', false);
+      // Apply new set of filters (reset page)
+      apply_mqc_highlights();
+      apply_mqc_renamesamples();
+      apply_mqc_hidesamples();
+    } else {
+      mqc_toolbox_openclose(target);
+    }
   });
   // Shortcut keys
   $(window).keydown(function (evt) {
@@ -39,12 +55,15 @@ $(function () {
       alert('Error - highlight text must not be blank.');
       return false;
     }
+    var already_exists = false;
     $('#mqc_col_filters li .f_text').each(function(){
       if($(this).val() == f_text){
         alert('Error - highlight text "'+f_text+'" already exists');
+        already_exists = true;
         return false;
       }
     });
+    if(already_exists) { return false; }
     $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
     apply_mqc_highlights();
     $('#mqc_colour_filter').val('');
@@ -151,11 +170,11 @@ $(function () {
     if(target == 'mqc_col_filters'){
       apply_mqc_highlights();
     }
-    if(target == 'mqc_hidesamples_filters'){
-      apply_mqc_hidesamples();
-    }
     if(target == 'mqc_renamesamples_filters'){
       apply_mqc_renamesamples();
+    }
+    if(target == 'mqc_hidesamples_filters'){
+      apply_mqc_hidesamples();
     }
   });
   // Enter key pressed whilst editing a filter
@@ -198,6 +217,7 @@ $(function () {
 // GENERAL TOOLBOX FUNCTIONS
 //////////////////////////////////////////////////////
 function mqc_toolbox_openclose (target, open){
+  $('.mqc-toolbox-buttons a').tooltip('hide');
   var btn = $('.mqc-toolbox-buttons a[href="'+target+'"]');
   if(open === undefined){
     if(btn.hasClass('active')){ open = false; }

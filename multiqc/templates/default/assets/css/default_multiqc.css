@@ -156,7 +156,6 @@ input.form-control[type=color]{
         z-index: 1200;
         width: 36px;
         height: 100%;
-        overflow: hidden;
         top: 0;
         right: 0;
         -webkit-transition: width 0.5s;
