@@ -79,10 +79,17 @@ class MultiqcModule(BaseMultiqcModule):
     def bowtie2_general_stats_table(self):
         """ Take the parsed stats from the Bowtie 2 report and add it to the
         basic stats table at the top of the report """
-
-        config.general_stats['headers']['bowtie2_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Bowtie 2: overall alignment rate">% Aligned</span></th>'
-        for samp, vals in self.bowtie2_data.items():
-            config.general_stats['rows'][samp]['bowtie2_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['overall_aligned_rate'])
+        
+        headers = OrderedDict()
+        headers['overall_aligned_rate'] = {
+            'title': '% Aligned',
+            'description': 'overall alignment rate',
+            'max': 100,
+            'min': 0,
+            'scale': 'OrRd-rev',
+            'format': '{:.1f}%'
+        }
+        self.general_stats_addcols(self.bowtie2_data, headers)
 
     def bowtie2_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
