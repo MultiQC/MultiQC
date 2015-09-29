@@ -142,7 +142,11 @@ class BaseMultiqcModule(object):
             keys = headers.keys()
         for k in keys:
             # Unique id to avoid overwriting by other modules
-            rid = '{}_{}'.format(''.join(random.sample(letters, 10)), k)
+            if self.name is None:
+                rid = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
+            else:
+                safe_name = ''.join(c for c in self.name if c.isalnum()).lower()
+                rid = '{}_{}'.format(safe_name, k)
             
             # Build the header cell
             try: scale = headers[k]['scale']
@@ -157,7 +161,7 @@ class BaseMultiqcModule(object):
             try: title = headers[k]['title']
             except KeyError: title = k
             
-            try: title = '<span data-toggle="tooltip" title="{0}">{1}</span>'.format(headers[k]['description'], title)
+            try: title = '<span data-toggle="tooltip" title="{}: {}">{}</span>'.format(self.name, headers[k]['description'], title)
             except KeyError: pass
             
             config.general_stats['headers'][rid] = '<th id="header_{}" class="chroma-col" data-chroma-scale="{}" {} {}>{}</th>'.format(rid, scale, dmax, dmin, title)

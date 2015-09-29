@@ -447,6 +447,9 @@ input.form-control[type=color]{
     filter: alpha(opacity=50);
     opacity: 0.5;
 }
+#general_stats_table tbody td {
+    text-align: right;
+}
 #general_stats_table .val {
     display: block;
     position: absolute;

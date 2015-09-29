@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['percent_cpg_meth'] = {
             'title': '% Meth',
-            'description': 'Bismark: % Cytosines methylated in CpG context (alignment)',
+            'description': '% Cytosines methylated in CpG context (alignment)',
             'max': 100,
             'min': 0,
             'scale': 'Greens',
@@ -174,13 +174,13 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['total_c_m'] = {
             'title': "M C's",
-            'description': 'Bismark: Total number of C\'s analysed, in millions (alignment)',
+            'description': 'Total number of C\'s analysed, in millions (alignment)',
             'min': 0,
             'scale': 'Purples',
         }
         headers['dup_reads_percent'] = {
             'title': '% Dups',
-            'description': 'Bismark: Percent Duplicated Alignments',
+            'description': 'Percent Duplicated Alignments',
             'max': 100,
             'min': 0,
             'scale': 'RdYlGn-rev',
@@ -188,19 +188,19 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['dedup_reads_m'] = {
             'title': 'M Unique',
-            'description': 'Bismark: Deduplicated Alignments (millions)',
+            'description': 'Deduplicated Alignments (millions)',
             'min': 0,
             'scale': 'Greens',
         }
         headers['aligned_reads_m'] = {
             'title': 'M Aligned',
-            'description': 'Bismark: Total Aligned Sequences (millions)',
+            'description': 'Total Aligned Sequences (millions)',
             'min': 0,
             'scale': 'PuRd',
         }
         headers['percent_aligned'] = {
             'title': '% Aligned',
-            'description': 'Bismark: Percent Aligned Sequences',
+            'description': 'Percent Aligned Sequences',
             'max': 100,
             'min': 0,
             'scale': 'YlGn',

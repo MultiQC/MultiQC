@@ -281,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['percent_duplicates'] = {
             'title': '% Dups',
-            'description': 'FastQC: % Duplicate Reads',
+            'description': '% Duplicate Reads',
             'max': 100,
             'min': 0,
             'scale': 'RdYlGn-rev',
@@ -289,7 +289,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['percent_gc'] = {
             'title': '% GC',
-            'description': 'FastQC: Average % GC Content',
+            'description': 'Average % GC Content',
             'max': 80,
             'min': 20,
             'scale': 'PRGn',
@@ -297,14 +297,14 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['sequence_length'] = {
             'title': 'Length',
-            'description': 'FastQC: Average Sequence Length (bp)',
+            'description': 'Average Sequence Length (bp)',
             'min': 0,
             'scale': 'RdYlGn',
             'format': '{:.0f}'
         }
         headers['total_sequences_m'] = {
             'title': 'M Seqs',
-            'description': 'FastQC: Total Sequences (millions)',
+            'description': 'Total Sequences (millions)',
             'min': 0,
             'scale': 'Blues'
         }
