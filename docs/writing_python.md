@@ -49,7 +49,8 @@ headers['second_col'] = {
     'description': 'My Module: My Second Column',
     'max': 100,
     'min': 0,
-    'scale': 'Blues'
+    'scale': 'Blues',
+    'format': '{:.1f}%'
 }
 self.general_stats_addcols(data, headers)
 ```

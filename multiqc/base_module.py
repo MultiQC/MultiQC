@@ -141,6 +141,9 @@ class BaseMultiqcModule(object):
         if headers is not None:
             keys = headers.keys()
         for k in keys:
+            # Unique id to avoid overwriting by other modules
+            rid = '{}_{}'.format(''.join(random.sample(letters, 10)), k)
+            
             # Build the header cell
             try: scale = headers[k]['scale']
             except KeyError: scale = 'GnBu'
@@ -157,18 +160,25 @@ class BaseMultiqcModule(object):
             try: title = '<span data-toggle="tooltip" title="{0}">{1}</span>'.format(headers[k]['description'], title)
             except KeyError: pass
             
-            config.general_stats['headers'][k] = '<th class="chroma-col" data-chroma-scale="{0}" {1} {2}>{3}</th>'.format(scale, dmax, dmin, title)
+            config.general_stats['headers'][rid] = '<th id="header_{}" class="chroma-col" data-chroma-scale="{}" {} {}>{}</th>'.format(rid, scale, dmax, dmin, title)
             
             # Add the data cells
             nrows = 0
             for (sname, samp) in data.items():
                 if k in samp:
-                    config.general_stats['rows'][sname][k] = '<td>{}</td>'.format(samp[k])
+                    formatstring = headers[k].get('')
+                    try: formatstring = headers[k]['format']
+                    except: formatstring = '{:.1f}'
+                    try: val = formatstring.format(samp[k])
+                    except ValueError: val = formatstring.format(float(samp[k]))
+                    except: val = samp[k]
+                    config.general_stats['rows'][sname][rid] = '<td class="{}">{}</td>'.format(rid, val)
                     nrows += 1
             
             # Remove header if we don't have any filled cells for it
             if nrows == 0:
-                config.general_stats['headers'].pop(k, None)
+                config.general_stats['headers'].pop(rid, None)
+                logger.debug('Removing header {} from general stats table, as no data'.format(k))
         
         return None # it's good to be explicit, right?
         

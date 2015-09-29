@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             dups = re.search("#Total Deduplicated Percentage\s+([\d\.]+)", data)
             if dups:
-                parsed_data[s]['percent_duplicates'] = "{0:.1f}%".format(100 - float(dups.group(1)))
+                parsed_data[s]['percent_duplicates'] = 100 - float(dups.group(1))
 
             seqlen = re.search("Sequence length\s+([\d-]+)", data)
             if seqlen:
@@ -240,11 +240,11 @@ class MultiqcModule(BaseMultiqcModule):
 
             gc = re.search("%GC\s+(\d+)", data)
             if gc:
-                parsed_data[s]['percent_gc'] = "{}%".format(gc.group(1))
+                parsed_data[s]['percent_gc'] = gc.group(1)
 
             numseq = re.search("Total Sequences\s+(\d+)", data)
             if numseq:
-                parsed_data[s]['total_sequences_m'] = "{0:.1f}".format(float(numseq.group(1))/1000000)
+                parsed_data[s]['total_sequences_m'] = float(numseq.group(1)) / 1000000
 
             # Work out the average sequence length as the range is a bit useless
             if '-' in parsed_data[s]['sequence_length']:
@@ -270,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
                         except AttributeError:
                             pass
                 if total_count > 0:
-                    parsed_data[s]['sequence_length'] = '{:.0f}'.format(total_bp / total_count)
+                    parsed_data[s]['sequence_length'] = total_bp / total_count
 
         return parsed_data
 
@@ -284,20 +284,23 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'FastQC: % Duplicate Reads',
             'max': 100,
             'min': 0,
-            'scale': 'RdYlGn-rev'
+            'scale': 'RdYlGn-rev',
+            'format': '{:.1f}%'
         }
         headers['percent_gc'] = {
             'title': '% GC',
             'description': 'FastQC: Average % GC Content',
             'max': 80,
             'min': 20,
-            'scale': 'PRGn'
+            'scale': 'PRGn',
+            'format': '{:.0f}%'
         }
         headers['sequence_length'] = {
             'title': 'Length',
             'description': 'FastQC: Average Sequence Length (bp)',
             'min': 0,
-            'scale': 'RdYlGn'
+            'scale': 'RdYlGn',
+            'format': '{:.0f}'
         }
         headers['total_sequences_m'] = {
             'title': 'M Seqs',

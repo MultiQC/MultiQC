@@ -162,39 +162,89 @@ class MultiqcModule(BaseMultiqcModule):
     def bismark_stats_table(self):
         """ Take the parsed stats from the Bismark reports and add them to the
         basic stats table at the top of the report """
+        
+        headers = OrderedDict()
+        headers['percent_cpg_meth'] = {
+            'title': '% Meth',
+            'description': 'Bismark: % Cytosines methylated in CpG context (alignment)',
+            'max': 100,
+            'min': 0,
+            'scale': 'Greens',
+            'format': '{:.1f}%'
+        }
+        headers['total_c_m'] = {
+            'title': "M C's",
+            'description': 'Bismark: Total number of C\'s analysed, in millions (alignment)',
+            'min': 0,
+            'scale': 'Purples',
+        }
+        headers['dup_reads_percent'] = {
+            'title': '% Dups',
+            'description': 'Bismark: Percent Duplicated Alignments',
+            'max': 100,
+            'min': 0,
+            'scale': 'RdYlGn-rev',
+            'format': '{:.1f}%'
+        }
+        headers['dedup_reads_m'] = {
+            'title': 'M Unique',
+            'description': 'Bismark: Deduplicated Alignments (millions)',
+            'min': 0,
+            'scale': 'Greens',
+        }
+        headers['aligned_reads_m'] = {
+            'title': 'M Aligned',
+            'description': 'Bismark: Total Aligned Sequences (millions)',
+            'min': 0,
+            'scale': 'PuRd',
+        }
+        headers['percent_aligned'] = {
+            'title': '% Aligned',
+            'description': 'Bismark: Percent Aligned Sequences',
+            'max': 100,
+            'min': 0,
+            'scale': 'YlGn',
+            'format': '{:.1f}%'
+        }
+        for sn in self.bismark_data['merged']:
+            pc = (self.bismark_data['merged'][sn]['aligned_reads'] / self.bismark_data['merged'][sn]['total_reads']) * 100
+            self.bismark_data['merged'][sn]['percent_aligned'] = pc
+            self.bismark_data['merged'][sn]['total_c_m'] = self.bismark_data['merged'][sn]['total_c'] / 1000000
+            self.bismark_data['merged'][sn]['dedup_reads_m'] = self.bismark_data['merged'][sn]['dedup_reads'] / 1000000
+            self.bismark_data['merged'][sn]['aligned_reads_m'] = self.bismark_data['merged'][sn]['aligned_reads'] / 1000000
 
-        # Use several try blocks in case one of the report types is missing
-        # If data is missing, header rows won't be added
+        self.general_stats_addcols(self.bismark_data['merged'], headers)
         
-        # Alignment / Meth Extract data
-        try:
-            for sn, data in self.bismark_data['merged'].items():
-                config.general_stats['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['percent_cpg_meth'])
-                config.general_stats['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['total_c']/1000000)
-            config.general_stats['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">% Meth</span></th>'
-            config.general_stats['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (alignment)">M C\'s</span></th>'
-        except KeyError:
-            pass
-        
-        # Deduplication data
-        try:
-            for sn, data in self.bismark_data['merged'].items():
-                config.general_stats['rows'][sn]['bismark_dedup_reads_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['dup_reads_percent'])
-                config.general_stats['rows'][sn]['bismark_dedup_reads'] = '<td class="text-right">{:.1f}</td>'.format(data['dedup_reads']/1000000)
-            config.general_stats['headers']['bismark_dedup_reads_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">% Dups</span></th>'
-            config.general_stats['headers']['bismark_dedup_reads'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M Unique</span></th>'
-        except KeyError:
-            pass
-        
-        # Alignment / Dedup data
-        try:
-            for sn, data in self.bismark_data['merged'].items():
-                config.general_stats['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
-                config.general_stats['rows'][sn]['bismark_percent_aligned'] = '<td class="text-right">{:.1f}%</td>'.format((data['aligned_reads']/data['total_reads'])*100)
-            config.general_stats['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M Aligned</span></th>'
-            config.general_stats['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">% Aligned</span></th>'
-        except KeyError:
-            pass
+        # 
+        # # Alignment / Meth Extract data
+        # try:
+        #     for sn, data in self.bismark_data['merged'].items():
+        #         config.general_stats['rows'][sn]['percent_cpg_meth'] = '<td class="text-right">{:.1f}%</td>'.format(data['percent_cpg_meth'])
+        #         config.general_stats['rows'][sn]['total_c'] = '<td class="text-right">{:.1f}</td>'.format(data['total_c']/1000000)
+        #     config.general_stats['headers']['percent_cpg_meth'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: % Cytosines methylated in CpG context (alignment)">% Meth</span></th>'
+        #     config.general_stats['headers']['total_c'] = '<th class="chroma-col" data-chroma-scale="Purples" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total number of C\'s analysed, in millions (alignment)">M C\'s</span></th>'
+        # except KeyError:
+        #     pass
+        # 
+        # # Deduplication data
+        # try:
+        #     for sn, data in self.bismark_data['merged'].items():
+        #         config.general_stats['rows'][sn]['bismark_dedup_reads_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['dup_reads_percent'])
+        #         config.general_stats['rows'][sn]['bismark_dedup_reads'] = '<td class="text-right">{:.1f}</td>'.format(data['dedup_reads']/1000000)
+        #     config.general_stats['headers']['bismark_dedup_reads_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn-rev" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Duplicated Alignments">% Dups</span></th>'
+        #     config.general_stats['headers']['bismark_dedup_reads'] = '<th class="chroma-col" data-chroma-scale="Greens" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Deduplicated Alignments (millions)">M Unique</span></th>'
+        # except KeyError:
+        #     pass
+        # 
+        # # Alignment / Dedup data
+        # try:
+        #     for sn, data in self.bismark_data['merged'].items():
+        #         config.general_stats['rows'][sn]['bismark_aligned'] = '<td class="text-right">{:.1f}</td>'.format(data['aligned_reads']/1000000)
+        #         config.general_stats['rows'][sn]['bismark_percent_aligned'] = '<td class="text-right">{:.1f}%</td>'.format((data['aligned_reads']/data['total_reads'])*100)
+        #     config.general_stats['headers']['bismark_aligned'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Total Aligned Sequences (millions)">M Aligned</span></th>'
+        #     config.general_stats['headers']['bismark_percent_aligned'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Bismark: Percent Aligned Sequences">% Aligned</span></th>'
+        # except KeyError:
+        #     pass
 
 
     def bismark_alignment_chart (self):
