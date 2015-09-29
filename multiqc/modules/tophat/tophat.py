@@ -88,10 +88,24 @@ class MultiqcModule(BaseMultiqcModule):
     def tophat_general_stats_table(self):
         """ Take the parsed stats from the Tophat report and add it to the
         basic stats table at the top of the report """
-
-        config.general_stats['headers']['tophat_aligned'] = '<th class="chroma-col" data-chroma-scale="OrRd-rev" data-chroma-max="100" data-chroma-min="20"><span data-toggle="tooltip" title="Tophat: overall read mapping rate">% Aligned</span></th>'
-        for samp, vals in self.tophat_data.items():
-            config.general_stats['rows'][samp]['tophat_aligned'] = '<td class="text-right">{:.1f}%</td>'.format(vals['overall_aligned_percent'])
+        
+        headers = OrderedDict()
+        headers['overall_aligned_percent'] = {
+            'title': '% Aligned',
+            'description': 'overall read mapping rate',
+            'max': 100,
+            'min': 0,
+            'scale': 'YlGn',
+            'format': '{:.1f}%'
+        }
+        headers['aligned_not_multimapped_discordant'] = {
+            'title': 'M Aligned',
+            'description': 'Aligned reads, not multimapped or discordant (millions)',
+            'min': 0,
+            'scale': 'PuRd',
+            'modify': lambda x: x / 1000000
+        }
+        self.general_stats_addcols(self.tophat_data, headers)
 
     def tophat_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """

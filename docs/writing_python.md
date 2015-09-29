@@ -25,6 +25,19 @@ of the report. Takes a dictionary of data organised by sample name, then
 column key. Optionally then takes an additional dict / OrderedDict with
 information for the header and formatting. All keys are optional.
 
+All options for headers, with defaults:
+```python
+headers['name'] = {
+    'title': '[ dict key ]',        # Short title, table column title
+    'description': '[ dict key ]',  # Longer description, goes in mouse hover text
+    'max': None,                    # Minimum value in range, for bar / colour coding
+    'min': None,                    # Maximum value in range, for bar / colour coding
+    'scale': 'GnBu',                # Colour scale for colour coding
+    'format': '{:.1f}',             # Output format() string
+    'modify': None                  # Lambda function to modify values
+}
+```
+
 Example of supplied data and headers dicts:
 
 ```python
@@ -43,6 +56,7 @@ headers['first_col'] = {
     'title': 'First',
     'description': 'My Module: My First Column',
     'scale': 'RdYlGn-rev'
+    'modify': lambda x: x / 1000000
 }
 headers['second_col'] = {
     'title': 'Second',

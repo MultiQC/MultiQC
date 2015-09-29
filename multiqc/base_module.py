@@ -170,12 +170,17 @@ class BaseMultiqcModule(object):
             nrows = 0
             for (sname, samp) in data.items():
                 if k in samp:
+                    val = samp[k]
+                    if 'modify' in headers[k] and callable(headers[k]['modify']):
+                        val = headers[k]['modify'](val)
+                        
                     formatstring = headers[k].get('')
                     try: formatstring = headers[k]['format']
                     except: formatstring = '{:.1f}'
-                    try: val = formatstring.format(samp[k])
+                    try: val = formatstring.format(val)
                     except ValueError: val = formatstring.format(float(samp[k]))
                     except: val = samp[k]
+                    
                     config.general_stats['rows'][sname][rid] = '<td class="{}">{}</td>'.format(rid, val)
                     nrows += 1
             

@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from QualiMap """
 
 from __future__ import print_function
+from collections import OrderedDict
 import io
 import logging
 import os
@@ -264,25 +265,35 @@ class MultiqcModule(BaseMultiqcModule):
     def qualimap_stats_table(self):
         """ Take the parsed stats from the QualiMap report and add them to the
         basic stats table at the top of the report """
-
-        # General stats table headers
-        config.general_stats['headers']['median_coverage']    = '<th class="chroma-col" data-chroma-scale="RdBu"><span data-toggle="tooltip" title="Qualimap: Median coverage">Coverage</span></th>'
-        config.general_stats['headers']['median_insert_size'] = '<th class="chroma-col" data-chroma-scale="PuOr"><span data-toggle="tooltip" title="Qualimap: Median Insert Size">Insert Size</span></th>'
-        config.general_stats['headers']['thirty_x_pc']        = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Qualimap: Fraction of genome with at least 30X coverage">&ge; 30X</span></th>'
-        config.general_stats['headers']['avg_gc']             = '<th class="chroma-col" data-chroma-scale="BrBG" data-chroma-max="80" data-chroma-min="20"><span data-toggle="tooltip" title="Qualimap: Average GC content">Avg. GC</span></th>'
-
-        rowcounts = { 'median_coverage' : 0, 'median_insert_size': 0,
-                      'thirty_x_pc': 0, 'avg_gc': 0}
-
-        for samp, vals in self.parsed_stats.items():
-            for k, v in vals.items():
-                v = '{0:.1f}'.format(v) if type(v) == float else v
-                if k in ['thirty_x_pc', 'avg_gc']:
-                    v += '%'
-                config.general_stats['rows'][samp][k] = '<td class="text-right">{}</td>'.format(v)
-                rowcounts[k] += 1
-
-        # Remove header if we don't have any filled cells for it
-        for k in rowcounts.keys():
-            if rowcounts[k] == 0:
-                config.general_stats['headers'].pop(k, None)
+        
+        headers = OrderedDict()
+        headers['median_coverage'] = {
+            'title': 'Coverage',
+            'description': 'Median coverage',
+            'min': 0,
+            'scale': 'RdBu'
+        }
+        headers['median_insert_size'] = {
+            'title': 'Insert Size',
+            'description': 'Median Insert Size',
+            'min': 0,
+            'scale': 'PuOr',
+            'format': '{:.0f}'
+        }
+        headers['thirty_x_pc'] = {
+            'title': '&ge; 30X',
+            'description': 'Fraction of genome with at least 30X coverage',
+            'max': 100,
+            'min': 0,
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%'
+        }
+        headers['avg_gc'] = {
+            'title': 'Avg. GC',
+            'description': 'Average GC content',
+            'max': 80,
+            'min': 20,
+            'scale': 'BrBG',
+            'format': '{:.0f}%'
+        }
+        self.general_stats_addcols(self.parsed_stats, headers)

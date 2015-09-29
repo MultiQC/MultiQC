@@ -102,12 +102,24 @@ class MultiqcModule(BaseMultiqcModule):
     def star_stats_table(self):
         """ Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report """
-
-        config.general_stats['headers']['uniquely_mapped_percent'] = '<th class="chroma-col" data-chroma-scale="YlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: % Uniquely mapped reads">% Mapped</span></th>'
-        config.general_stats['headers']['uniquely_mapped'] = '<th class="chroma-col" data-chroma-scale="PuRd" data-chroma-min="0"><span data-toggle="tooltip" title="STAR: Uniquely mapped reads (millions)">M Mapped</span></th>'
-        for sn, data in self.star_data.items():
-            config.general_stats['rows'][sn]['uniquely_mapped_percent'] = '<td class="text-right">{:.1f}%</td>'.format(data['uniquely_mapped_percent'])
-            config.general_stats['rows'][sn]['uniquely_mapped'] = '<td class="text-right">{:.1f}</td>'.format(data['uniquely_mapped']/1000000)
+        
+        headers = OrderedDict()
+        headers['uniquely_mapped_percent'] = {
+            'title': '% Aligned',
+            'description': '% Uniquely mapped reads',
+            'max': 100,
+            'min': 0,
+            'scale': 'YlGn',
+            'format': '{:.1f}%'
+        }
+        headers['uniquely_mapped'] = {
+            'title': 'M Aligned',
+            'description': 'Uniquely mapped reads (millions)',
+            'min': 0,
+            'scale': 'PuRd',
+            'modify': lambda x: x / 1000000
+        }
+        self.general_stats_addcols(self.star_data, headers)
 
     def star_alignment_chart (self):
         """ Make the HighCharts HTML to plot the alignment rates """

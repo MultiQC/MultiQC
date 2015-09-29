@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from featureCounts """
 
 from __future__ import print_function
+from collections import OrderedDict
 import logging
 import re
 
@@ -77,6 +78,8 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data[k] = float(r_search.group(1))
                 total_count += float(r_search.group(1))
         parsed_data['Total'] = total_count
+        if 'Assigned' in parsed_data:
+            parsed_data['percent_assigned'] = (parsed_data['Assigned']/parsed_data['Total']) * 100
         if len(parsed_data) == 0: return None
         return parsed_data
 
@@ -84,12 +87,24 @@ class MultiqcModule(BaseMultiqcModule):
     def featurecounts_stats_table(self):
         """ Take the parsed stats from the featureCounts report and add them to the
         basic stats table at the top of the report """
-
-        config.general_stats['headers']['featureCounts_percent'] = '<th class="chroma-col" data-chroma-scale="RdYlGn" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: % Assigned reads">% Assigned</span></th>'
-        config.general_stats['headers']['featureCounts'] = '<th class="chroma-col" data-chroma-scale="PuBu" data-chroma-min="0"><span data-toggle="tooltip" title="featureCounts: Assigned reads (millions)">M Assigned</span></th>'
-        for sn, data in self.featurecounts_data.items():
-            config.general_stats['rows'][sn]['featureCounts_percent'] = '<td class="text-right">{:.1f}%</td>'.format((data['Assigned']/data['Total'])*100)
-            config.general_stats['rows'][sn]['featureCounts'] = '<td class="text-right">{:.1f}</td>'.format(data['Assigned']/1000000)
+        
+        headers = OrderedDict()
+        headers['percent_assigned'] = {
+            'title': '% Assigned',
+            'description': '% Assigned reads',
+            'max': 100,
+            'min': 0,
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%'
+        }
+        headers['Assigned'] = {
+            'title': 'M Assigned',
+            'description': 'Assigned reads (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'modify': lambda x: x / 1000000
+        }
+        self.general_stats_addcols(self.featurecounts_data, headers)
 
 
     def featureCounts_chart (self):

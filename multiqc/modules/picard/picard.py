@@ -88,14 +88,19 @@ class MultiqcModule(BaseMultiqcModule):
     def picard_stats_table(self):
         """ Take the parsed stats from the Picard report and add them to the
         basic stats table at the top of the report """
+        
+        headers = OrderedDict()
+        headers['PERCENT_DUPLICATION'] = {
+            'title': '% Dups',
+            'description': 'MarkDuplicates - Percent Duplication',
+            'max': 100,
+            'min': 0,
+            'scale': 'OrRd',
+            'format': '{:.1f}%',
+            'modify': lambda x: float(x) * 100
+        }
+        self.general_stats_addcols(self.picard_dupMetrics_data, headers)
 
-        config.general_stats['headers']['picard_percent_duplication'] = '<th class="chroma-col" data-chroma-scale="OrRd" data-chroma-max="100" data-chroma-min="0"><span data-toggle="tooltip" title="Picard MarkDuplicates: Percent&nbsp;Duplication">% Dups</span></th>'
-        for sn, data in self.picard_dupMetrics_data.items():
-            try:
-                config.general_stats['rows'][sn]['picard_percent_duplication'] = '<td class="text-right">{:.1f}%</td>'.format(float(data['PERCENT_DUPLICATION'])*100)
-            except KeyError:
-                print(sn)
-                print(self.picard_dupMetrics_data)
 
     def mark_duplicates_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """

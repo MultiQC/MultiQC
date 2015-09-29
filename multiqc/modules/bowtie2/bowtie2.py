@@ -86,8 +86,15 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'overall alignment rate',
             'max': 100,
             'min': 0,
-            'scale': 'OrRd-rev',
+            'scale': 'YlGn',
             'format': '{:.1f}%'
+        }
+        headers['reads_aligned'] = {
+            'title': 'M Aligned',
+            'description': 'reads aligned (millions)',
+            'min': 0,
+            'scale': 'PuRd',
+            'modify': lambda x: x / 1000000
         }
         self.general_stats_addcols(self.bowtie2_data, headers)
 

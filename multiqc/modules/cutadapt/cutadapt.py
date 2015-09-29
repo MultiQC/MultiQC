@@ -116,9 +116,16 @@ class MultiqcModule(BaseMultiqcModule):
         """ Take the parsed stats from the Cutadapt report and add it to the
         basic stats table at the top of the report """
 
-        config.general_stats['headers']['bp_trimmed'] = '<th class="chroma-col" data-chroma-scale="RdYlBu-rev" data-chroma-max="30" data-chroma-min="0"><span data-toggle="tooltip" title="Cutadapt: % Total Base Pairs trimmed">Trimmed</span></th>'
-        for samp, vals in self.cutadapt_data.items():
-            config.general_stats['rows'][samp]['bp_trimmed'] = '<td class="text-right">{:.1f}%</td>'.format(vals['percent_trimmed'])
+        headers = {}
+        headers['percent_trimmed'] = {
+            'title': 'Trimmed',
+            'description': '% Total Base Pairs trimmed',
+            'max': 30,
+            'min': 0,
+            'scale': 'RdYlBu-rev',
+            'format': '{:.1f}%'
+        }
+        self.general_stats_addcols(self.cutadapt_data, headers)
     
 
     def cutadapt_length_trimmed_plot (self):

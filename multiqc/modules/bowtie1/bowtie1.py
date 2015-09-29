@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Bowtie', anchor='bowtie1', 
+        super(MultiqcModule, self).__init__(name='Bowtie 1', anchor='bowtie1', 
         target='Bowtie 1', href="http://bowtie-bio.sourceforge.net/", 
         info="is an ultrafast, memory-efficient short read aligner.")
 
@@ -82,8 +82,15 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% reads with at least one reported alignment',
             'max': 100,
             'min': 0,
-            'scale': 'OrRd-rev',
+            'scale': 'YlGn',
             'format': '{:.1f}%'
+        }
+        headers['reads_aligned'] = {
+            'title': 'M Aligned',
+            'description': 'reads with at least one reported alignment (millions)',
+            'min': 0,
+            'scale': 'PuRd',
+            'modify': lambda x: x / 1000000
         }
         self.general_stats_addcols(self.bowtie_data, headers)
 
