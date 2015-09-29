@@ -83,6 +83,21 @@ If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ## Version History
+#### [v0.3dev]
+* New design for general statistics table (snazzy new background bars)
+* Further development of toolbox
+  * New button to clear all filters
+  * Warnings when samples are hidden, plus empty plots and table cols are hidden
+  * Active toolbar tab buttons are highlighted
+* Lots of refactoring by @moonso to please the Pythonic gods
+  * Switched to click instead of argparse to handle command line arguments
+  * Code generally conforms to best practices better now.
+* Now able to supply multiple directories to search for reports
+* Logging output improved (now controlled by `-q` and `-v` for quiet and verbose)
+* More HTML output dealt with by the base module, less left to the modules
+  * Module introduction text
+  * General statistics table now much easier to add to (new helper functions)
+
 #### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
   functions now handle many more functions (plots, config, file import)
