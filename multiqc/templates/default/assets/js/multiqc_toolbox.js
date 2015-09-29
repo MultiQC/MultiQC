@@ -72,29 +72,6 @@ $(function () {
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
   });
   
-  // Hide sample filters
-  var mqc_hidesamples_idx = 200;
-  $('#mqc_hidesamples_form').submit(function(e){
-    e.preventDefault();
-    var f_text = $('#mqc_hidesamples_filter').val().trim();
-    if(f_text.length == 0){
-      alert('Error - filter text must not be blank.');
-      return false;
-    }
-    var error = false;
-    $('#mqc_hidesamples_filters li .f_text').each(function(){
-      if($(this).val() == f_text){
-        alert('Error - highlight text "'+f_text+'" already exists');
-        error = true;
-      }
-    });
-    if(error){ return false; }
-    $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_hidesamples_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
-    apply_mqc_hidesamples();
-    $('#mqc_hidesamples_filter').val('');
-    mqc_hidesamples_idx += 1;
-  });
-  
   // Rename samples
   var mqc_renamesamples_idx = 300;
   $('#mqc_renamesamples_form').submit(function(e){
@@ -139,6 +116,30 @@ $(function () {
     $(this).find('textarea').val('');
     $('#mqc_renamesamples_bulk_collapse').collapse('hide');
   });
+  
+  // Hide sample filters
+  var mqc_hidesamples_idx = 200;
+  $('#mqc_hidesamples_form').submit(function(e){
+    e.preventDefault();
+    var f_text = $('#mqc_hidesamples_filter').val().trim();
+    if(f_text.length == 0){
+      alert('Error - filter text must not be blank.');
+      return false;
+    }
+    var error = false;
+    $('#mqc_hidesamples_filters li .f_text').each(function(){
+      if($(this).val() == f_text){
+        alert('Error - highlight text "'+f_text+'" already exists');
+        error = true;
+      }
+    });
+    if(error){ return false; }
+    $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_hidesamples_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+    apply_mqc_hidesamples();
+    $('#mqc_hidesamples_filter').val('');
+    mqc_hidesamples_idx += 1;
+  });
+  
   
   // Save config
   $('.mqc_saveconfig_btn').click(function(e){
@@ -455,12 +456,11 @@ function get_orig_name(s_name, obj_id){
 }
 
 
+
 //////////////////////////////////////////////////////
 // HIDE SAMPLES
 //////////////////////////////////////////////////////
-
 function apply_mqc_hidesamples(){
-  
   // Collect the filters into an array
   var f_matches = 0;
   var f_texts = [];
@@ -480,6 +480,7 @@ function apply_mqc_hidesamples(){
       if($(this).highcharts() === undefined){ return true; }
       // Line plots
       if($(this).highcharts().options.chart.type == 'line'){
+        var num_hidden = 0;
         $.each($(this).highcharts().series, function(j, s){
           var match = false;
           $.each(f_texts, function(idx, f_text){
@@ -490,7 +491,27 @@ function apply_mqc_hidesamples(){
           });
           if (s.visible && match) { s.hide(); }
           if (!s.visible && !match) { s.show(); }
+          if (!s.visible){ num_hidden += 1; }
         });
+        // Reset warnings and plot hiding.
+        $(this).parent().parent().find('.samples-hidden-warning').remove();
+        $(this).parent().parent().find('.hc-plot-wrapper').show();
+        $(this).parent().parent().find('.btn-group').show();
+        // Some series hidden. Show a warning text string.
+        if(num_hidden > 0) {
+          var alert = '<div class="samples-hidden-warning alert alert-danger"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+          if($(this).parent().prev().hasClass('btn-group')){
+            $(this).parent().prev().before(alert);
+          } else {
+            $(this).parent().before(alert);
+          }
+        }
+        // All series hidden. Hide the graph.
+        if(num_hidden == $(this).highcharts().series.length){
+          $(this).parent().parent().find('.hc-plot-wrapper').hide();
+          $(this).parent().parent().find('.btn-group').hide();
+        }
+        
       }
       // Bar charts
       else if($(this).highcharts().options.chart.type == 'bar'){
@@ -512,7 +533,29 @@ function apply_mqc_hidesamples(){
             }
           });
         };
-        if(matches > 0){ highcharts_plots['#'+plotid] = new Highcharts.Chart(replot); }
+        
+        // Reset warnings and plot hiding.
+        $(this).parent().parent().find('.samples-hidden-warning').remove();
+        $(this).parent().parent().find('.hc-plot-wrapper').show();
+        $(this).parent().parent().find('.btn-group').show();
+        
+        // Replot graph
+        highcharts_plots['#'+plotid] = new Highcharts.Chart(replot);
+        
+        // Some series hidden. Show a warning text string.
+        if(matches > 0) {
+          var alert = '<div class="samples-hidden-warning alert alert-danger"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+matches+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+          if($(this).parent().prev().hasClass('btn-group')){
+            $(this).parent().prev().before(alert);
+          } else {
+            $(this).parent().before(alert);
+          }
+        }
+        // All series hidden. Hide the graph.
+        if(matches == highcharts_plot_options['#'+plotid].xAxis.categories.length){
+          $(this).parent().parent().find('.hc-plot-wrapper').hide();
+          $(this).parent().parent().find('.btn-group').hide();
+        }
       }
     } catch(err) {
       console.log('Error hiding samples in '+$(this).attr('id')+' - '+err.message);
@@ -531,6 +574,23 @@ function apply_mqc_hidesamples(){
     });
     if(match){ $(this).parent().hide(); }
     else { $(this).parent().show(); }
+  });
+  // Hide empty columns
+  var gsthidx = 0;
+  $("#general_stats_table thead th, #general_stats_table tbody tr td").show();
+  $("#general_stats_table thead th").each(function(){
+    if(gsthidx == 0){ gsthidx += 1; return true; }
+    var count = 0;
+    var empties = 0;
+    $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").filter(":visible").each(function(){
+      count += 1;
+      if($(this).text() == ''){ empties += 1; }
+    });
+    if(count > 0 && count == empties){
+      $(this).hide();
+      $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").hide();
+    }
+    gsthidx += 1;
   });
   
   // If something was renamed, highlight the toolbox icon

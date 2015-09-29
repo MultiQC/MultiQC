@@ -46,7 +46,7 @@ function fastqc_seq_content_heatmap() {
     $("#fastqc_seq_heatmap").prop("width", c_width);
     $("#fastqc_seq_heatmap").prop("height", c_height+1);
     var canvas = document.getElementById("fastqc_seq_heatmap");
-    if (canvas.getContext) {
+    if (canvas && canvas.getContext) {
         var ctx = canvas.getContext("2d");
         ctx.strokeStyle = "#666666";
         // First, do labels and get max base pairs
