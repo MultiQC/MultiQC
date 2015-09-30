@@ -48,6 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
             'per_sequence_quality.png',
             'per_base_sequence_content.png',
             'per_sequence_gc_content.png',
+            'per_base_n_content.png',
             'adapter_content.png'
         ]
         for directory in config.analysis_dir:
@@ -128,6 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
             'fastqc_quals' : {},
             'fastqc_per_seq_quals' : {},
             'fastqc_gc' : {},
+            'fastqc_ncontent' : {},
             'fastqc_seq' : {},
             'fastqc_adapter' : {},
         }
@@ -167,8 +169,8 @@ class MultiqcModule(BaseMultiqcModule):
                 'content': self.fastqc_quality_overlay_plot()
             })
         
-        # Section 2 - Quality Histograms
-        self.parse_perseq_quality(fastqc_raw_data)
+        # Section 2 - Per Sequence Quality
+        self.parse_twocol_data(fastqc_raw_data, ">>Per sequence quality scores", 'fastqc_per_seq_quals')
         if len(self.sequence_quality) > 0:
             self.sections.append({
                 'name': 'Per Sequence Quality Scores',
@@ -184,8 +186,17 @@ class MultiqcModule(BaseMultiqcModule):
                 'anchor': 'gc-content',
                 'content': self.fastqc_gc_overlay_plot()
             })
+        
+        # Section 4 - Per base N content
+        self.parse_twocol_data(fastqc_raw_data, ">>Per base N content", 'fastqc_ncontent')
+        if len(self.gc_content) > 0:
+            self.sections.append({
+                'name': 'Per Base N Content',
+                'anchor': 'n-content',
+                'content': self.fastqc_ncontent_overlay_plot()
+            })
 
-        # Section 4 - Per-base sequence content
+        # Section 5 - Per-base sequence content
         self.parse_fastqc_seq_content(fastqc_raw_data)
         if len(self.seq_content) > 0:
             self.sections.append({
@@ -194,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'content': self.fastqc_seq_heatmap()
             })
 
-        # Section 5 - Adapter Content
+        # Section 6 - Adapter Content
         self.fastqc_adapter_content(fastqc_raw_data)
         if len(self.adapter_content) > 0:
             self.sections.append({
@@ -394,8 +405,8 @@ class MultiqcModule(BaseMultiqcModule):
         return html
 
 
-    def parse_perseq_quality(self, fastqc_raw_data):
-        """ Parse the 'Per sequence quality scores' data from fastqc_data.txt
+    def parse_twocol_data(self, fastqc_raw_data, section_string, datakey):
+        """ Parse the data from fastqc_data.txt that has two columns
         Creates self.perseq_sequence_quality with a dict - keys = qualities and 
         values = count. """
 
@@ -404,9 +415,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.perseq_sequence_quality[s] = {}
             in_module = False
             for l in data.splitlines():
-                if l.startswith(">>Per sequence quality scores"):
+                if l.startswith(section_string):
                     in_module = True
-                    self.statuses['fastqc_per_seq_quals'][s] = l.split()[-1]
+                    self.statuses[datakey][s] = l.split()[-1]
                 elif l == ">>END_MODULE":
                     in_module = False
                 elif in_module is True:
@@ -512,6 +523,47 @@ class MultiqcModule(BaseMultiqcModule):
         html += '<script type="text/javascript"> \n\
                     if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
                     fastqc_s_statuses["fastqc_gcontent_plot"] = {}; \n\
+                </script>'.format(json.dumps(statuses))
+        
+        return html
+    
+    
+    def fastqc_ncontent_overlay_plot (self):
+        """ Create the HTML for the per base n content plot """
+        
+        # Statuses
+        statuses = {}
+        s_colours = {}
+        for s_name, status in self.statuses['fastqc_ncontent'].items():
+            statuses[s_name] = status
+            s_colours[s_name] = self.status_colours.get(status, self.status_colours['default'])
+        
+        pconfig = {
+            'id': 'fastqc_ncontent_plot',
+            'title': 'Per Base N Content',
+            'ylab': 'Percentage N-Count',
+            'xlab': 'Position in Read (bp)',
+            'ymax': 100,
+            'ymin': 0,
+            'xmin': 0,
+            'xDecimals': False,
+            'colors': s_colours,
+            'yPlotBands': [
+                {'from': 20, 'to': 100, 'color': '#e6c3c3'},
+                {'from': 5, 'to': 20, 'color': '#e6dcc3'},
+                {'from': 0, 'to': 5, 'color': '#c3e6c3'},
+            ]
+        }
+        
+        # Original images
+        images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_base_n_content.png'.format(s)}
+                    for s in sorted(self.sequence_quality.keys())]
+        
+        html = self.plot_xy_data(self.perseq_sequence_quality, pconfig, images)
+        
+        html += '<script type="text/javascript"> \n\
+                    if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
+                    fastqc_s_statuses["fastqc_ncontent_plot"] = {}; \n\
                 </script>'.format(json.dumps(statuses))
         
         return html
