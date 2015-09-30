@@ -29,6 +29,8 @@ config = {
     ymax: undefined,            // Max y limit
     ymin: undefined,            // Min y limit
     yDecimals: true,            // Set to false to only show integer labels
+    yPlotBands: undefined,      // Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
+    xPlotBands: undefined,      // Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     tt_label: '{point.x}: {point.y:.2f}', // Use to customise tooltip label, eg. '{point.x} base pairs'
     click_func: function(){},   // Javascript function to be called when a point is clicked
     cursor: undefined           // CSS mouse cursor type. Defaults to pointer when 'click_func' specified

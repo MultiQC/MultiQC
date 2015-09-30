@@ -139,6 +139,7 @@ function plot_xy_line_graph(div, data, config){
       max: config['xmax'],
       min: config['xmin'],
       allowDecimals: config['xDecimals'],
+      plotBands: config['xPlotBands']
     },
     yAxis: {
       title: {
@@ -147,7 +148,7 @@ function plot_xy_line_graph(div, data, config){
       max: config['ymax'],
       min: config['ymin'],
       allowDecimals: config['yDecimals'],
-      plotBands: config['plotBands']
+      plotBands: config['yPlotBands']
     },
     plotOptions: {
       series: {
