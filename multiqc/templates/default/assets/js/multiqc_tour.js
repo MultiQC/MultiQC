@@ -77,15 +77,6 @@ var tour_steps = [
     placement: 'top',
     content: "Click category names in the legend to hide that data category<br><em>(useful when looking at percentages)</em>."
   },
-
-  // These steps won't play if FastQC not present
-  {
-    element: "#fastqc_quality_plot_wrapper",
-    placement: 'top',
-    title: "View Originals",
-    content: "Clicking a data point in some plots will show the original data. Click the original plot again to get back to the overview. (Have a go!)",
-  },
-
   {
     element: ".hc-plot-handle:first",
     placement: 'top',
