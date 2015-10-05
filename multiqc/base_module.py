@@ -27,7 +27,7 @@ class BaseMultiqcModule(object):
             href, target, info, extra
         )
 
-    def find_log_files(self, fn_match=None, contents_match=None, filehandles=False):
+    def find_log_files(self, fn_match=None, contents_match=None, filecontents=True, filehandles=False):
         """
         Search the analysis directory for log files of interest. Can take either a filename
         suffix or a search string to return only log files that contain relevant info.
@@ -104,8 +104,10 @@ class BaseMultiqcModule(object):
                                 if returnfile:
                                     if filehandles:
                                         yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
-                                    else:
+                                    elif filecontents:
                                         yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
+                                    else:
+                                        yield {'s_name': s_name, 'root': root, 'fn': fn}
                         except (IOError, OSError, ValueError, UnicodeDecodeError):
                             logger.debug("Couldn't read file when looking for output: {}".format(fn))
     
@@ -193,14 +195,11 @@ class BaseMultiqcModule(object):
         
         
     
-    def plot_xy_data(self, data, config={}, original_plots=[]):
+    def plot_xy_data(self, data, config={}):
         """ Plot a line graph with X,Y data. See CONTRIBUTING.md for
         further instructions on use.
         :param data: 2D dict, first keys as sample names, then x:y data pairs
-        :param original_plots: optional list of dicts with keys 's_name' and 'img_path'
         :param config: optional dict with config key:value pairs. See CONTRIBUTING.md
-        :param original_plots: optional list specifying original plot images. Each dict
-                               should have a key 's_name' and 'img_path'
         :return: HTML and JS, ready to be inserted into the page
         """
         
@@ -243,38 +242,14 @@ class BaseMultiqcModule(object):
                 html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         
-        # Markup needed if we have the option of clicking through to original plot images
-        if len(original_plots) > 0:
-            config['tt_label'] = 'Click to show original plot.<br>{}'.format(config.get('tt_label', '{point.x}: {point.y:.2f}'))
-            if len(original_plots) > 1:
-                next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
-                    <a href="#{prev}" class="btn btn-default original_plot_prev_btn" data-target="#{id}">&laquo; Previous</a> \n\
-                    <a href="#{next}" class="btn btn-default original_plot_nxt_btn" data-target="#{id}">Next &raquo;</a> \n\
-                </div></div>'.format(id=config['id'], prev=original_plots[-1]['s_name'], next=original_plots[1]['s_name'])
-            else:
-                next_prev_buttons = ''
-            html += '<p class="text-muted instr">Click to show original FastQC plot.</p>\n\
-                    <div id="{id}_wrapper" class="hc-plot-wrapper"> \n\
-                        <div class="showhide_orig" style="display:none;"> \n\
-                            <h4><span class="s_name">{n}</span></h4> \n\
-                            {b} <img data-toggle="tooltip" title="Click to return to overlay plot" class="original-plot" src="{f}"> \n\
-                        </div>\n\
-                        <div id="{id}" class="hc-plot"></div> \n\
-                    </div>'.format(id=config['id'], b=next_prev_buttons, n=original_plots[0]['s_name'], f=original_plots[0]['img_path'])
-            orig_plots = 'var {id}_orig_plots = {d}; \n'.format(id=config['id'], d=json.dumps(original_plots))
-            config['orig_click_func'] = True # Javascript prints the click function
-        
-        # Regular plots (no original images)
-        else:
-            html += '<div id="{id}" class="hc-plot hc-line-plot"></div> \n'.format(id=config['id'])
-            orig_plots = ''
+        # The plot div
+        html += '<div id="{id}" class="hc-plot hc-line-plot"></div> \n'.format(id=config['id'])
         
         # Javascript with data dump
         html += '<script type="text/javascript"> \n\
             var {id}_datasets = {d}; \n\
-            {o} \
             $(function () {{ plot_xy_line_graph("#{id}", {id}_datasets[0], {c}); }}); \n\
-        </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config), o=orig_plots);
+        </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config));
         return html
     
     
@@ -383,17 +358,23 @@ class BaseMultiqcModule(object):
     def dict_to_csv (self, d, delim="\t"):
         """ Converts a dict to a CSV string
         :param d: 2D dictionary, first keys sample names and second key
-                  column headers
+                  column headers. If second key is not a string, it is skipped.
         :param delim: optional delimiter character. Default: \t
         :return: Flattened string, suitable to write to a CSV file.
         """
 
-        h = None # We make a list of keys to ensure consistent order
-        l = list()
+        h = None    # Headers
+        l = list()  # File lines
         for sn in sorted(d.keys()):
+            # Create the header row
             if h is None:
-                h = list(d[sn].keys())
-                l.append(delim.join([''] + h))
+                h = list()
+                for k in d[sn].keys():
+                    # Skip if another dict
+                    if type(d[sn][k]) is not dict:
+                        h.append(k)
+                l.append(delim.join(['Sample'] + h))
+            # Make a list starting with the sample name, then each field in order of the header cols
             thesefields = [sn] + [ str(d[sn].get(k, '')) for k in h ]
             l.append( delim.join( thesefields ) )
         return ('\n'.join(l)).encode('utf-8', 'ignore').decode('utf-8')

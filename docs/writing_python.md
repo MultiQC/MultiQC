@@ -131,26 +131,6 @@ All of these config values are optional, the function will default
 to sensible values if things are missing. See the cutadapt module
 plots for an example of this in action.
 
-### Showing original plots
-Finally, it's possible to get the plots to show original data sources
-when clicked (for an example, see the FastQC plots). To achieve this
-magic, make sure that the images are copied to the report and pass
-the `original_plots` variable to the function. It should look like this:
-```python
-original_plots = [
-    {
-        's_name': "My First Sample",
-        'img_path': 'report_data/my_module/first_sample_original_image.png'
-    },
-    {
-        's_name': "My Second Sample",
-        'img_path': 'report_data/my_module/second_sample_original_image.png'
-    },
-]
-```
-Note that the _Prev_ / _Next_ buttons will cycle through these images in the
-order supplied, so it makes sense to sort by sample name alphabetically.
-
 ## Plotting bar graphs
 `self.plot_bargraph (data, cats, config)`
 

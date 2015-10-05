@@ -68,22 +68,6 @@ $(function () {
     });
   });
   
-  // Show the overlay plots again (clicking the original)
-  $('.original-plot').click(function(){
-    $(this).closest('.showhide_orig').next('.hc-plot').slideDown();
-    $(this).closest('.showhide_orig').slideUp();
-    $(this).closest('.mqc-section').find('.instr').text('Click to show original FastQC plot.');
-    highlight_fade_text($(this).closest('.mqc-section').find('.instr'));
-  });
-
-  // prev / next buttons for original images
-  $('.original_plot_prev_btn, .original_plot_nxt_btn').click(function(e){
-    e.preventDefault();
-    var name = $(this).attr('href').substr(1);
-    var target = $(this).data('target').substr(1);
-    hc_original_chg_source (name, target);
-  });
-  
 });
 
 
@@ -101,20 +85,6 @@ function plot_xy_line_graph(div, data, config){
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
-  if (config['orig_click_func'] === true){
-    config['cursor'] = 'pointer';
-    config['click_func'] = function (e) {
-      var id = e.toElement.offsetParent.offsetParent.id;
-      var p = $('#'+id).parent();
-      if(id !== undefined){
-        hc_original_chg_source (this.series.name, id);
-        p.find('.showhide_orig').delay(100).slideDown();
-        p.find('.hc-plot').delay(100).slideUp();
-      }
-      // Fire off a custom jQuery event for other javascript chunks to tie into
-      $('#'+id).trigger('mqc_original_series_click', [this.series.name]);
-    }
-  }
   // Collect the starting sample names to preserve after renaming
   var s_names = [];
   $.each(data, function(idx, d){
@@ -249,64 +219,6 @@ function plot_stacked_bar_graph(div, cats, data, config){
     s_names: cats // Not for highcharts - this is to remember original names for renaming
   }
   highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
-}
-
-// Update an original plot source
-function hc_original_chg_source (name, id) {
-  
-  // Get the plot image paths
-  try {
-    var names = eval(id+'_orig_plots');
-  } catch(err) {
-    console.log("Couldn't parse original plot paths array for "+id+'_orig_plots - '+err);
-    return false;
-  }
-  if(names.length == 0){
-    console.log("Couldn't find original plot paths array for "+id+'_orig_plots - '+err);
-    return false;
-  }
-  
-  var target = $('#'+id).parent();
-  
-  // Wipe the src in case it's not found later
-  target.find('img.original-plot').attr('src','assets/img/img_not_found.png');
-  
-  // Find the original sample name if it's been renamed
-  s_name = get_orig_name(name, id);
-  
-  // Find the image source
-  var src = undefined;
-  var i;
-  $.each(names, function(idx, n){
-    if(n['s_name'] == s_name){
-      src = n['img_path'];
-      i = idx;
-      return false;
-    }
-  });
-  if(src !== undefined){
-    target.find('img.original-plot').attr('src', src);
-    target.find('.s_name').text(get_new_name(name, id, s_name));
-
-    var l = names.length;
-    var n_i = i+1 < l ? i+1 : 0;
-    var p_i = i-1 >= 0 ? i-1 : l - 1;
-    // Sample names for next / prev links. Not renamed, but should be ok.
-    var n = names[n_i]['s_name'];
-    var p = names[p_i]['s_name'];
-    target.find('.original_plot_prev_btn').attr('href', '#'+p);
-    target.find('.original_plot_nxt_btn').attr('href', '#'+n);
-    if(target.closest('.mqc-section').find('.instr').text() != "Click plot to return to overview plot."){
-      target.closest('.mqc-section').find('.instr').text("Click plot to return to overview plot.");
-      highlight_fade_text(target.closest('.mqc-section').find('.instr'));
-    }
-  } else {
-    console.log("Couldn't find original image path for "+s_name+", id:"+id);
-  }
-  
-  // Fire off a custom jQuery event for other javascript chunks to tie into
-  target.trigger('mqc_original_chg_source', [name]);
-  
 }
 
 
