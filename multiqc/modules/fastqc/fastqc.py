@@ -273,33 +273,13 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the phred quality score plot """
         if 'sequence_quality' not in self.fastqc_data or len(self.fastqc_data['sequence_quality']) == 0:
             log.debug('sequence_quality not found in FastQC reports')
-            return None
-        
-        # Setup for multiple datasets
-        datasets = [
-            {'mean':            'Mean'},
-            {'median':          'Median'},
-            {'90_percentile':   '90<sup>th</sup> Percentile'},
-            {'upper_quart':     'Upper Quartile'},
-            {'lower_quart':     'Lower Quartile'},
-            {'10_percentile':   '10<sup>th</sup> Percentile'},
-        ]
-        pdata = [self.fastqc_data['sequence_quality'][dtype] for d in datasets for dtype in d.keys()]
-        
-        # Find the max phred score, so that we keep the y_max consistent
-        max_val = 35
-        for dtype in pdata:
-            for s_name in dtype:
-                for val in dtype[s_name].values():
-                    max_val = max(max_val, val)        
+            return None    
         
         pconfig = {
-            'data_labels': [{'name': name} for d in datasets for name in d.values()],
             'id': 'fastqc_sequence_quality_plot',
             'title': 'Mean Quality Scores',
             'ylab': 'Phred Score',
             'xlab': 'Position (bp)',
-            'ymax': max_val,
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
@@ -313,7 +293,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Sequence Quality Histograms',
             'anchor': 'sequence-quality',
-            'content': self.plot_xy_data(pdata, pconfig)
+            'content': self.plot_xy_data(self.fastqc_data['sequence_quality']['mean'], pconfig)
         })
 
 
