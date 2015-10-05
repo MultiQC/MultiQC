@@ -198,7 +198,8 @@ class MultiqcModule(BaseMultiqcModule):
                             pos = int(cols[0].split('-', 1)[0])
                             for idx, val in enumerate(cols[1:]):
                                 a = adapter_types[idx]
-                                self.fastqc_data['adapter_content'][s_name][a][pos] = float(val)
+                                k = "{} - {}".format(s_name, a)
+                                self.fastqc_data['adapter_content'][k][pos] = float(val)
                     
                     if in_module == 'kmer_content':
                         # fastqc_data.txt doesn't have the breakdown of this
@@ -312,6 +313,7 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'xDecimals': False,
             'colors': self.get_status_cols('per_seq_quality'),
+            'tt_label': '<b>Phred {point.x}</b>: {point.y} reads',
             'xPlotBands': [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
@@ -341,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'yDecimals': False,
             'tt_label': '<b>{point.x}% GC</b>: {point.y}',
-            'colors': self.get_status_cols('per_seq_quality'),
+            'colors': self.get_status_cols('gc_content'),
         }
         self.sections.append({
             'name': 'Per Sequence GC Content',
@@ -361,17 +363,18 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Per Base N Content',
             'ylab': 'Percentage N-Count',
             'xlab': 'Position in Read (bp)',
-            'ymax': 100,
             'ymin': 0,
             'xmin': 0,
             'xDecimals': False,
             'colors': self.get_status_cols('n_content'),
+            'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
             'yPlotBands': [
                 {'from': 20, 'to': 100, 'color': '#e6c3c3'},
                 {'from': 5, 'to': 20, 'color': '#e6dcc3'},
                 {'from': 0, 'to': 5, 'color': '#c3e6c3'},
             ]
         }
+    
         self.sections.append({
             'name': 'Per Base N Content',
             'anchor': 'n-content',
@@ -456,27 +459,25 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('adapter_content not found in FastQC reports')
             return None
         
-        # Check that there is some adapter contamination in some of the plots
-        max_val = 0
-        for s in self.fastqc_data['adapter_content'].keys():
-            for v in self.fastqc_data['adapter_content'][s].values():
-                max_val = max(max_val, v)
-        if max_val <= 0.1:
-            return '<p>No adapter contamination found in any samples.</p>'
-        
         pconfig = {
             'id': 'fastqc_adapter_content_plot',
             'title': 'Adapter Content',
             'ylab': '% of Sequences',
             'xlab': 'Position',
-            'ymax': 100,
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
-            'hide_empty': True
+            'hide_empty': True,
+            'yPlotBands': [
+                {'from': 20, 'to': 100, 'color': '#e6c3c3'},
+                {'from': 5, 'to': 20, 'color': '#e6dcc3'},
+                {'from': 0, 'to': 5, 'color': '#c3e6c3'},
+            ],
         }
-        # Note: No point in adding colour by status here. If there's anything to
-        # show, it's usually a fail. So everything is red. Boring.
+        # Note - colours are messy as we've added adapter names here. Not
+        # possible to break down pass / warn / fail for each adapter, which
+        # could lead to misleading labelling (fails on adapter types with
+        # little or no contamination)
         
         self.sections.append({
             'name': 'Adapter Content',
@@ -499,8 +500,8 @@ class MultiqcModule(BaseMultiqcModule):
     def get_status_cols(self, key):
         """ Helper function - returns a list of colours according to the FastQC
         status of this module for each sample. """
-        colours = list()
+        colours = dict()
         for s_name, status in self.fastqc_statuses[key].items():
-            colours.append( self.status_colours.get(status, self.status_colours['default']) )
+            colours[s_name] = self.status_colours.get(status, self.status_colours['default'])
         return colours
     
