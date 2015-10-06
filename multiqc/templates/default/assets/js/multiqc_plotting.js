@@ -85,6 +85,9 @@ function plot_xy_line_graph(div, data, config){
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
+  if (config['pointFormat'] === undefined){
+    config['pointFormat'] = '<div style="background-color:{series.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{series.name}</span><br>'+config['tt_label'];
+  }
   // Collect the starting sample names to preserve after renaming
   var s_names = [];
   $.each(data, function(idx, d){
@@ -108,6 +111,7 @@ function plot_xy_line_graph(div, data, config){
       },
       max: config['xmax'],
       min: config['xmin'],
+      minTickInterval: config['xMinTickInterval'],
       allowDecimals: config['xDecimals'],
       plotBands: config['xPlotBands']
     },
@@ -117,6 +121,7 @@ function plot_xy_line_graph(div, data, config){
       },
       max: config['ymax'],
       min: config['ymin'],
+      minTickInterval: config['yMinTickInterval'],
       allowDecimals: config['yDecimals'],
       plotBands: config['yPlotBands']
     },
@@ -141,7 +146,7 @@ function plot_xy_line_graph(div, data, config){
 		},
     tooltip: {
       headerFormat: '',
-			pointFormat: '<span style="color:{series.color}; text-decoration:underline;">{series.name}</span><br>'+config['tt_label'],
+			pointFormat: config['pointFormat'],
 			useHTML: true
     },
     series: data,

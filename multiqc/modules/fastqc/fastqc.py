@@ -114,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             'total_sequences':    r"Total Sequences\s+(\d+)",
             'sequence_length':    r"Sequence length\s+([\d-]+)",
             'percent_gc':         r"%GC\s+(\d+)",
-            'percent_duplicates': r"#Total Deduplicated Percentage\s+([\d\.]+)",
+            'percent_dedup':      r"#Total Deduplicated Percentage\s+([\d\.]+)",
         }
         
         s = defaultdict(lambda: dict())
@@ -219,6 +219,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Work out the average sequence length
         if s['seq_len_read_count'] > 0:
             s['avg_sequence_length'] = s['seq_len_bp'] / s['seq_len_read_count']
+        
+        # Get percent duplicates (percent unique given)
+        if 'percent_dedup' in s:
+            s['percent_duplicates'] = 100 - s['percent_dedup']
         
         # Make the sample name from the input filename if we found it
         if 'filename' in s:
@@ -364,6 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'Percentage N-Count',
             'xlab': 'Position in Read (bp)',
             'ymin': 0,
+            'yMinTickInterval': 0.1,
             'xmin': 0,
             'xDecimals': False,
             'colors': self.get_status_cols('n_content'),
@@ -465,6 +470,7 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '% of Sequences',
             'xlab': 'Position',
             'ymin': 0,
+            'yMinTickInterval': 0.1,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
             'hide_empty': True,
