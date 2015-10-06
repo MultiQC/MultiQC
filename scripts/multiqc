@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+import base64
 import io
 import jinja2
 import logging
@@ -208,15 +209,15 @@ force, verbose, quiet):
         print( '\n'.join(l), file=f)
 
     # Function to include file contents in Jinja template
-    def include_file(name, fdir=template_dir, base64=False):
-        if base64:
-            with open (os.path.join(fdir, name), "rb") as f:
-                return f.read().encode('base64').replace('\n', '')
+    def include_file(name, fdir=template_dir, b64=False):
+        if b64:
+            with io.open (os.path.join(fdir, name), "rb") as f:
+                return base64.b64encode(f.read()).decode('utf-8')
         else:
             with io.open (os.path.join(fdir, name), "r", encoding='utf-8') as f:
                 return f.read()
     
-    # Load the copied template
+    # Load the template
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
         env.globals['include_file'] = include_file
@@ -228,8 +229,8 @@ force, verbose, quiet):
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
     report = j_template.render(config=config, modules=modules_output)
     try:
-        with open(config.output_fn, 'w') as f:
-            print(report.encode('utf8'), file=f)
+        with io.open (config.output_fn, "w", encoding='utf-8') as f:
+            print(report, file=f)
     except IOError as e:
         raise IOError ("Could not print report to '{}' - {}".format(output_path, IOError(e)))
 
