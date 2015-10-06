@@ -8,43 +8,57 @@
   <meta name="description" content="MultiQC: A modular tool to aggregate results from bioinformatics analyses across many samples into a single report">
   <meta name="author" content="MultiQC">
   <title>{{ config.title + ': ' if config.title != None }}MultiQC Report</title>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}">
+  <link rel="icon" type="image/png" sizes="96x96" href="data:image/png;base64,{{ include_file('assets/img/favicon-96x96.png', b64=True) }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,{{ include_file('assets/img/favicon-16x16.png', b64=True) }}">
   
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
-
-  <link href="assets/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/css/bootstrap-tour.min.css" rel="stylesheet">
+  <!-- Include CSS -->
+  <style type="text/css">
+    @font-face{
+      font-family:'Glyphicons Halflings';
+      src:url(data:font/eot;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.eot', b64=True) }});
+      src:url(data:font/eot;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.eot', b64=True) }}) format('embedded-opentype'),
+          url(data:x-font-woff/woff2;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.woff2', b64=True) }}) format('woff2'),
+          url(data:x-font-woff/woff;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.woff', b64=True) }}) format('woff'),
+          url(data:font/ttf;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.ttf', b64=True) }}) format('truetype'),
+          url(data:image/svg;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.svg', b64=True) }}) format('svg');
+    }
+  </style>
+  <style type="text/css">{{ include_file('assets/css/bootstrap.min.css') }}</style>
+  <style type="text/css">{{ include_file('assets/css/bootstrap-tour.min.css') }}</style>
+  <style type="text/css">{{ include_file('assets/css/default_multiqc.css') }}</style>
   {%- for m in modules %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css %}
-  <link href="{{ css_href }}" rel="stylesheet">
+  <style type="text/css">{{ include_file(css_href, None) }}</style>
   {%- endfor %}{% endif %}{% endfor %}
-  <link href="assets/css/default_multiqc.css" rel="stylesheet">
-
-  <script src="assets/js/packages/jquery-1.11.3.min.js"></script>
-  <script src="assets/js/packages/jquery-ui.min.js"></script>
-  <script src="assets/js/packages/bootstrap.min.js"></script>
-  <script src="assets/js/packages/bootstrap-tour.min.js"></script>
-  <script src="assets/js/packages/highcharts.js"></script>
+  
+  <!-- Include javascript files -->
+  <script type="text/javascript">{{ include_file('assets/js/packages/jquery-1.11.3.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/jquery-ui.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/bootstrap.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/bootstrap-tour.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/highcharts.js') }}</script>
   <script src="http://code.highcharts.com/modules/exporting.js"></script>
-  <script src="assets/js/packages/chroma.min.js"></script>
-  <script src="assets/js/packages/jquery.tablesorter.min.js"></script> 
-  <script src="assets/js/packages/FileSaver.min.js"></script> 
-  <script src="assets/js/multiqc.js"></script>
-  <script src="assets/js/multiqc_generalstats.js"></script>
-  <script src="assets/js/multiqc_toolbox.js"></script>
-  <script src="assets/js/multiqc_plotting.js"></script>
-  <script src="assets/js/multiqc_tour.js"></script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/chroma.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/jquery.tablesorter.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/FileSaver.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/multiqc_generalstats.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/multiqc_toolbox.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/multiqc_plotting.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/multiqc_tour.js') }}</script>
   <script src="multiqc_config.js"></script>
   {%- for m in modules %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js %}
-  <script src="{{ js_href }}"></script>
+  <script type="text/javascript">{{ include_file( js_href, None ) }}</script>
   {%- endfor %}{% endif %}{% endfor %}
+
 </head>
 <body>
 
 <div class="side-nav">
   <h1>
     <a href="#">
-      <img src="assets/img/MultiQC_logo.png" title="MultiQC"><br>
+      <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC"><br>
       <small>v{{ config.VERSION }}</small>
     </a>
   </h1>
@@ -156,11 +170,10 @@
 
 <div class="mainpage">
 
-  <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="assets/img/MultiQC_logo.png" title="MultiQC"></a></h1>
+  <h1 id="page_title"><a href="https://github.com/ewels/MultiQC" target="_blank"><img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC"></a></h1>
   {{ '<h2>'+config.title+'</h2>' if config.title != None }}
   <p class="lead">A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.</p>
   <p>Report generated on {{ config.creation_date }} based on data in <code id="mqc_analysis_path">{{ config.analysis_dir |join('</code> and <code id="mqc_analysis_path">') }}</code></p>
-  <p id="mqc_report_location">Report location: <code id="mqc_output_path">{{ config.output_dir }}/multiqc_report.html</code></p>
   <div class="alert alert-info alert-dismissible hidden-print mqc-into-tour-alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
@@ -220,7 +233,7 @@
 <div class="footer">
   <div class="container-fluid">
     <p>
-      <a href="http://www.scilifelab.se/" target="_blank" class="pull-right"><img src="assets/img/SciLifeLab.png" style="height:41px;"></a>
+      <a href="http://www.scilifelab.se/" target="_blank" class="pull-right"><img src="data:image/png;base64,{{ include_file('assets/img/SciLifeLab.png', b64=True) }}" style="height:41px;"></a>
       <strong><a href="https://github.com/ewels/MultiQC" target="_blank">MultiQC v{{ config.VERSION }}</a></strong> -
       Written by <a href="http://phil.ewels.co.uk" target="_blank">Phil Ewels</a>, available on <a href="https://github.com/ewels/MultiQC" target="_blank">GitHub</a>.</p>
     <p>The report uses <a href="http://www.highcharts.com/" target="_blank">HighCharts</a>, <a href="https://jquery.com/" target="_blank">jQuery</a>,

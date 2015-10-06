@@ -45,8 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.tophat_data)))
 
         # Write parsed report data to a file
-        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_tophat.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( self.tophat_data ), file=f)
+        self.write_csv_file(self.tophat_data, 'multiqc_tophat.txt')
 
         self.sections = list()
 

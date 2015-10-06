@@ -40,9 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.cutadapt_data)))
 
         # Write parsed report data to a file
-        # Only the summary stats - skip the length data (t_lengths)
-        with io.open (os.path.join(config.output_dir, 'report_data', 'multiqc_cutadapt.txt'), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( self.cutadapt_data ), file=f)
+        self.write_csv_file(self.cutadapt_data, 'multiqc_cutadapt.txt')
 
         self.sections = list()
 

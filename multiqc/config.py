@@ -22,9 +22,11 @@ modules_dir = os.path.join(MULTIQC_DIR, 'modules')
 creation_date = datetime.now().strftime("%Y-%m-%d, %H:%m")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
-output_dir = os.path.realpath(os.path.join(os.getcwd(), 'multiqc_report'))
+output_dir = os.path.realpath(os.getcwd())
 template = 'default'
 template_fn = os.path.join(output_dir, 'multiqc_report.html')
+output_fn_name = 'multiqc_report.html'
+data_dir_name = 'multiqc_data'
 general_stats = {
     'headers': OrderedDict(),
     'rows': defaultdict(lambda:dict())

@@ -64,10 +64,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.fastqc_stats)))
         
-        # Copy required module assets - add to self.css and self.js to be included in template
-        self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
-        self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
-        self.copy_module_files(self.css + self.js, __file__)
+        # Add full paths to self.css and self.js to be included in template
+        self.css = [ os.path.realpath(os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css')) ]
+        self.js = [ os.path.realpath(os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js')) ]
         
         # Colours to be used for plotting lines
         self.status_colours = {
