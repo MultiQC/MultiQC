@@ -206,3 +206,24 @@ objects. Make sure that they are in the same order as the data. If not
 supplied, these will be guessed from the data keys.
 
 See the bismark module plots for an example of this in action.
+
+## Including module-specific files
+`self.copy_module_files(files, __file__)`
+
+To copy additional required files when the report is generated, use the
+`copy_module_files` function as above. `files` is a list of file paths, relative
+to the second argument (usually the module file calling the function, `__file__`)
+
+### Adding Custom CSS / Javascript
+If you would like module-specific CSS and / or JavaScript added to the template,
+create lists in the module called `self.css` and `self.js` with the relative file
+paths - these will be looped over in the template file and the files included
+appropriately. Make sure that the files themselves are copied using the above.
+_eg:_ From the FastQC module:
+
+```python
+self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
+self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
+self.copy_module_files(self.css + self.js, __file__)
+```
+

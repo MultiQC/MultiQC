@@ -6,10 +6,11 @@ from __future__ import print_function
 from collections import OrderedDict
 import io
 import json
+import logging
 import mimetypes
 import os
 import random
-import logging
+import shutil
 
 from multiqc import config
 logger = logging.getLogger(__name__)
@@ -353,6 +354,20 @@ class BaseMultiqcModule(object):
     def write_csv_file(self, data, fn):
         with io.open (os.path.join(config.output_dir, 'report_data', fn), "w", encoding='utf-8') as f:
             print( self.dict_to_csv( data ), file=f)
+
+    def copy_module_files(self, files, caller):
+        """ Copy required assets into the output directory.
+        Make sure we don't over-write any existing directory tree.
+        :param: files - list of files to copy. File paths will be retained.
+        :param: caller - __file__ of script calling function, used as a base
+                         to find the files to copy.
+        """
+        for f in files:
+            d = os.path.join(config.output_dir, os.path.dirname(f))
+            if not os.path.exists(d):
+                os.makedirs(d)
+            if not os.path.exists(os.path.join(config.output_dir, f)):
+                shutil.copy(os.path.join(os.path.dirname(caller), f), os.path.join(config.output_dir, f))
             
             
     def dict_to_csv (self, d, delim="\t"):
