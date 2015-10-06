@@ -98,6 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.seq_length_dist_plot()
         self.seq_dup_levels_plot()
         self.adapter_content_plot()
+        self.kmer_content_plot()
 
 
     def parse_fastqc_report(self, file_contents, s_name=None, root=None):
@@ -215,9 +216,14 @@ class MultiqcModule(BaseMultiqcModule):
                     if in_module == 'kmer_content':
                         # fastqc_data.txt doesn't have the breakdown of this
                         # per-base, which is what we need to replicate the
-                        # graph in the FastQC report. Hmmm...
-                        pass #TODO
-                    
+                        # graph in the FastQC report. Do a bar graph instead.
+                        if l[:1] == '#':
+                            self.fastqc_data['kmer_content_total'][s_name]['Cumulative Max Obs/Exp Scores'] = 0
+                            continue
+                        sections  = l.split()
+                        self.fastqc_data['kmer_content'][s_name][sections[0]] = float(sections[3])
+                        self.fastqc_data['kmer_content_total'][s_name]['Cumulative Max Obs/Exp Scores'] += float(sections[3])
+                                            
             else:
                 # See if this is the start of a new section
                 for k, r in section_headings.items():
@@ -534,7 +540,25 @@ class MultiqcModule(BaseMultiqcModule):
             'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position.</p>' +
                         self.plot_xy_data(self.fastqc_data['adapter_content'], pconfig)
         })
-
+    
+    
+    def kmer_content_plot (self):
+        """ Do the best we can for the FastQC Kmer plot """
+        if 'kmer_content' not in self.fastqc_data or len(self.fastqc_data['kmer_content']) == 0:
+            log.debug('kmer_content not found in FastQC reports')
+            return None
+        
+        pconfig = {
+            'id': 'fastqc_kmer_content_plot',
+            'title': 'Kmer Content',
+        }
+        
+        self.sections.append({
+            'name': 'Kmer Content',
+            'anchor': 'fastqc_kmer_content',
+            'content': '<p>The cumulative Observed / Expected scores of over-represented sequences in your library.</p>' +
+                        self.plot_bargraph(self.fastqc_data['kmer_content_total'], config=pconfig)
+        })
 
     def avg_bp_from_range(self, bp):
         """ Helper function - FastQC often gives base pair ranges (eg. 10-15)

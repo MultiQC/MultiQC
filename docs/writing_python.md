@@ -87,7 +87,7 @@ with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.t
 ```
 
 ## Plotting line graphs
-`self.plot_xy_data (data, config, original_plots)`
+`self.plot_xy_data (data, config={})`
 
 This function takes a dict of data and plots an XY line graph.
 It expects a dictionary in the following format:
@@ -134,7 +134,7 @@ to sensible values if things are missing. See the cutadapt module
 plots for an example of this in action.
 
 ## Plotting bar graphs
-`self.plot_bargraph (data, cats, config)`
+`self.plot_bargraph (data, cats=None, config={})`
 
 Takes a dict of data and plots a bar graph. The expected data structure
 is as follows:
