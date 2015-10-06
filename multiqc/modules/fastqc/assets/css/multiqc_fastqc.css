@@ -30,52 +30,26 @@
 #fastqc_seq_heatmap_div .hc-plot-wrapper {
   height: 300px;
 }
-#fastqc_seq_heatmap_key {
-  display:inline-block;
-  width: 250px;
-  float:right;
-  list-style-type: none;
-  margin-top: 15px;
-}
 #fastqc_seq_heatmap_footer {
   clear:both;
 }
-.heatmap_colourbar {
+#fastqc_sequence_content_plot h5 {
   display: inline-block;
-  width: 100px;
-  height: 10px;
-  float: right;
-  overflow:show;
+  height: 18px;
 }
-.heatmap_colourbar span {
+.fastqc_seq_heatmap_key {
+  font-size: 12px;
+}
+.fastqc_seq_heatmap_key div {
   display: inline-block;
-  width: 1px;
-  height: 14px;
-  float: left;
-  background-color: black;
+  width: 120px;
+  margin: 0 8px;
 }
-
-#fastqc_seq_heatmap_key_colourbar_t {
-  background: -webkit-linear-gradient(left, black, red);
-  background: -o-linear-gradient(right, black, red);
-  background: -moz-linear-gradient(right, black, red);
-  background: linear-gradient(to right, black, red);
+.fastqc_seq_heatmap_key > span, .fastqc_seq_heatmap_key div > span {
+  display:inline-block;
+  width: 60px;
 }
-#fastqc_seq_heatmap_key_colourbar_a {
-  background: -webkit-linear-gradient(left, black, green);
-  background: -o-linear-gradient(right, black, green);
-  background: -moz-linear-gradient(right, black, green);
-  background: linear-gradient(to right, black, green);
-}
-#fastqc_seq_heatmap_key_colourbar_c {
-  background: -webkit-linear-gradient(left, black, blue);
-  background: -o-linear-gradient(right, black, blue);
-  background: -moz-linear-gradient(right, black, blue);
-  background: linear-gradient(to right, black, blue);
-}
-#fastqc_seq_heatmap_key_colourbar_g {
-  background: -webkit-linear-gradient(left, black, white);
-  background: -o-linear-gradient(right, black, white);
-  background: -moz-linear-gradient(right, black, white);
-  background: linear-gradient(to right, black, white);
-}
+#fastqc_seq_heatmap_key_t { border-bottom: 1px solid red; }
+#fastqc_seq_heatmap_key_c { border-bottom: 1px solid blue; }
+#fastqc_seq_heatmap_key_a { border-bottom: 1px solid green; }
+#fastqc_seq_heatmap_key_g { border-bottom: 1px solid black; }

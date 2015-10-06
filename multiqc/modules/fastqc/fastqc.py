@@ -64,6 +64,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.fastqc_stats)))
         
+        # Copy required module assets - add to self.css and self.js to be included in template
+        self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
+        self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
+        self.copy_module_files(self.css + self.js, __file__)
+        
         # Colours to be used for plotting lines
         self.status_colours = {
             'pass': '#5cb85c',
@@ -89,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.per_seq_quality_plot()
         self.gc_content_plot()
         self.n_content_plot()
-        # self.sequence_content_plot()
+        self.sequence_content_plot()
         self.adapter_content_plot()
 
 
@@ -297,7 +302,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.sections.append({
             'name': 'Sequence Quality Histograms',
-            'anchor': 'sequence-quality',
+            'anchor': 'fastqc_sequence_quality',
             'content': '<p>The mean quality value across each base position in the read.</p>' + 
                         self.plot_xy_data(self.fastqc_data['sequence_quality']['mean'], pconfig)
         })
@@ -327,7 +332,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.sections.append({
             'name': 'Per Sequence Quality Scores',
-            'anchor': 'per-seq-quality',
+            'anchor': 'fastqc_per_seq_quality',
             'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality.</p>' +
                         self.plot_xy_data(self.fastqc_data['per_seq_quality'], pconfig)
         })
@@ -353,7 +358,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.sections.append({
             'name': 'Per Sequence GC Content',
-            'anchor': 'gc-content',
+            'anchor': 'fastqc_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.</p>' + 
                         self.plot_xy_data(self.fastqc_data['gc_content'], pconfig)
         })
@@ -385,7 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
     
         self.sections.append({
             'name': 'Per Base N Content',
-            'anchor': 'n-content',
+            'anchor': 'fastqc_n_content',
             'content': '<p>The percentage of base calls at each position for which an N was called.</p>' + 
                         self.plot_xy_data(self.fastqc_data['n_content'], pconfig)
         })
@@ -397,68 +402,35 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_content not found in FastQC reports')
             return None
         
-        self.status_classes = {
-            'pass': 'label-success',
-            'warn': 'label-warning',
-            'fail': 'label-danger',
-            'default': 'label-default'
-        }
+        html = '<p>The proportion of each base position for which each of the four normal DNA bases has been called.</p>'
         
-        # Get the sample statuses
-        data = dict()
-        names = list()
-        for s in sorted(self.seq_content):
-            names.append(s)
-            data[s] = self.seq_content[s]
-
-        # Order the table by the sample names
-        data = OrderedDict(sorted(data.items()))
+        # Order the data by the sample names
+        data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))
         
-        images = [{'s_name': s, 'img_path': 'report_data/fastqc/{}_per_base_sequence_content.png'.format(s)}
-                    for s in sorted(self.seq_content.keys())]
-        statuses = {s: self.statuses['fastqc_seq'][s] for s in self.statuses['fastqc_seq'].keys()}
-        
-        # Order the table by the sample names
-        data = OrderedDict(sorted(data.items()))
-        
-        if len(names) > 1:
-            next_prev_buttons = '<div class="clearfix"><div class="btn-group btn-group-sm"> \n\
-                <a href="#{p_n}" class="btn btn-default original_plot_prev_btn" data-target="#fastqc_seq">&laquo; Previous</a> \n\
-                <a href="#{n_n}" class="btn btn-default original_plot_nxt_btn" data-target="#fastqc_seq">Next &raquo;</a> \n\
-            </div></div>'.format(p_n=names[-1], n_n=names[1])
-        else: next_prev_buttons = ''
-        
-        html = '<div id="fastqc_sequence_content_plot"> \n\
-            <h4><span class="s_name">{fn}</span> <span class="label {status_class} s_status">{this_status}</span></h4> \n\
+        html += '<div id="fastqc_sequence_content_plot"> \n\
+            <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
+            <div class="fastqc_seq_heatmap_key">\n\
+                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>\n\
+                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>\n\
+                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>\n\
+                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>\n\
+                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>\n\
+            </div>\n\
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
                 <div id="fastqc_seq" class="hc-plot"> \n\
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
                 </div> \n\
-                <ul id="fastqc_seq_heatmap_key">\n\
-                    <li>Position: <span id="fastqc_seq_heatmap_key_pos"></span></li> \n\
-                    <li>%T: <span id="fastqc_seq_heatmap_key_t"></span> <span id="fastqc_seq_heatmap_key_colourbar_t" class="heatmap_colourbar"><span></span></span></li>\n\
-                    <li>%C: <span id="fastqc_seq_heatmap_key_c"></span> <span id="fastqc_seq_heatmap_key_colourbar_c" class="heatmap_colourbar"><span></span></span></li>\n\
-                    <li>%A: <span id="fastqc_seq_heatmap_key_a"></span> <span id="fastqc_seq_heatmap_key_colourbar_a" class="heatmap_colourbar"><span></span></span></li>\n\
-                    <li>%G: <span id="fastqc_seq_heatmap_key_g"></span> <span id="fastqc_seq_heatmap_key_colourbar_g" class="heatmap_colourbar"><span></span></span></li>\n\
-                    <li><small class="text-muted">Values are approximate</small></li>\n\
-                </ul>\n\
             </div> \n\
             <div class="clearfix"></div> \n\
         </div> \n\
         <script type="text/javascript"> \n\
             fastqc_seq_content_data = {d};\n\
-            if(typeof fastqc_s_names == "undefined"){{ fastqc_s_names = []; }} \n\
-            fastqc_s_names["fastqc_seq"] = {n};\n\
-            if(typeof fastqc_s_statuses == "undefined"){{ fastqc_s_statuses = []; }} \n\
-            fastqc_s_statuses["fastqc_seq"] = {s};\n\
-            $(function () {{ \n\
-                fastqc_seq_content_heatmap(); \n\
-            }}); \n\
-        </script>'.format(b=next_prev_buttons, fn=names[0], d=json.dumps(data), n=json.dumps(names), this_status=statuses[names[0]], status_class=self.status_classes.get(statuses[names[0]], 'label-default'), s=json.dumps(statuses))
+            $(function () {{ fastqc_seq_content_heatmap(); }}); \n\
+        </script>'.format(d=json.dumps(data))
         
         self.sections.append({
             'name': 'Per Base Sequence Content',
-            'anchor': 'sequence-content',
+            'anchor': 'fastqc_sequence_content',
             'content': html
         })
 
@@ -491,7 +463,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         self.sections.append({
             'name': 'Adapter Content',
-            'anchor': 'adapter-content',
+            'anchor': 'fastqc_adapter_content',
             'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position.</p>' +
                         self.plot_xy_data(self.fastqc_data['adapter_content'], pconfig)
         })
