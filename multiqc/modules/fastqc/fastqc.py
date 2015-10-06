@@ -298,7 +298,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Sequence Quality Histograms',
             'anchor': 'sequence-quality',
-            'content': self.plot_xy_data(self.fastqc_data['sequence_quality']['mean'], pconfig)
+            'content': '<p>The mean quality value across each base position in the read.</p>' + 
+                        self.plot_xy_data(self.fastqc_data['sequence_quality']['mean'], pconfig)
         })
 
 
@@ -327,7 +328,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Per Sequence Quality Scores',
             'anchor': 'per-seq-quality',
-            'content': self.plot_xy_data(self.fastqc_data['per_seq_quality'], pconfig)
+            'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality.</p>' +
+                        self.plot_xy_data(self.fastqc_data['per_seq_quality'], pconfig)
         })
 
 
@@ -352,7 +354,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'anchor': 'gc-content',
-            'content': self.plot_xy_data(self.fastqc_data['gc_content'], pconfig)
+            'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.</p>' + 
+                        self.plot_xy_data(self.fastqc_data['gc_content'], pconfig)
         })
     
     
@@ -383,7 +386,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Per Base N Content',
             'anchor': 'n-content',
-            'content': self.plot_xy_data(self.fastqc_data['n_content'], pconfig)
+            'content': '<p>The percentage of base calls at each position for which an N was called.</p>' + 
+                        self.plot_xy_data(self.fastqc_data['n_content'], pconfig)
         })
     
 
@@ -488,7 +492,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Adapter Content',
             'anchor': 'adapter-content',
-            'content': self.plot_xy_data(self.fastqc_data['adapter_content'], pconfig)
+            'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position.</p>' +
+                        self.plot_xy_data(self.fastqc_data['adapter_content'], pconfig)
         })
 
 
