@@ -402,7 +402,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_content not found in FastQC reports')
             return None
         
-        html = '<p>The proportion of each base position for which each of the four normal DNA bases has been called.</p>'
+        html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called.'
+        html += '<br><small class="text-muted"><em>Bars at the left edge show FastQC status (pass / warn / fail) or highlight colour.</em></small></p>'
         
         # Order the data by the sample names
         data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))

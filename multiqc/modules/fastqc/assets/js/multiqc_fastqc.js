@@ -48,8 +48,8 @@ function fastqc_seq_content_heatmap() {
     if(num_samples == 0){ return; }
     
     // Convert the CSS percentage size into pixels
-    c_width = $("#fastqc_seq_heatmap").parent().width();
-    c_height = $("#fastqc_seq_heatmap").parent().height();
+    c_width = $("#fastqc_seq_heatmap").parent().width() - 5; // -5 for status bar
+    c_height = $("#fastqc_seq_heatmap").parent().height() - 2; // -2 for bottom line padding
     s_height = c_height / num_samples;
     // Resize the canvas properties
     $("#fastqc_seq_heatmap").prop("width", c_width);
@@ -73,8 +73,25 @@ function fastqc_seq_content_heatmap() {
         });
         ypos = 0;
         $.each(sample_names, function(idx, s_name){
+          
+            // Add a 5px wide bar indicating either status or Highlight
+            status = fastqc_passfails['sequence_content'][s_name];
+            s_col = '#999999';
+            if(status == 'pass'){ s_col = '#5cb85c'; }
+            if(status == 'warn'){ s_col = '#f0ad4e'; }
+            if(status == 'fail'){ s_col = '#d9534f'; }
+            // Override status colour with highlights
+            $.each(highlight_f_texts, function(idx, f_text){
+                if((highlight_regex_mode && s_name.match(f_text)) || (!highlight_regex_mode && s_name.indexOf(f_text) > -1)){
+                  s_col = highlight_f_cols[idx];
+                }
+            });
+            ctx.fillStyle = s_col;
+            ctx.fillRect (0, ypos+1, 5, s_height-2);
+            
+            // Plot the squares for the heatmap
             var s = fastqc_seq_content_data[s_name]
-            var xpos = 0;
+            var xpos = 6;
             var last_bp = 0;
             $.each(s, function(bp, v){
                 bp = parseInt(bp);
@@ -90,47 +107,23 @@ function fastqc_seq_content_heatmap() {
             });
             // Draw a line under this row
             ctx.beginPath();
-            ctx.moveTo(0, ypos);
+            ctx.moveTo(6, ypos);
             ctx.lineTo(c_width, ypos);
             ctx.stroke();
             ypos += s_height;
         });
         // Final line under row
         ctx.beginPath();
-        ctx.moveTo(0, ypos);
+        ctx.moveTo(6, ypos);
         ctx.lineTo(c_width, ypos);
         ctx.stroke();
-        
-        // Draw custom highlights
-        $.each(highlight_f_texts, function(idx, f_text){
-            var f_col = highlight_f_cols[idx];
-            if(f_text == ''){ return true; } // no initial colour, so highlighting all makes no sense
-            $.each(labels, function(idx, label){
-                if((highlight_regex_mode && label.match(f_text)) || (!highlight_regex_mode && label.indexOf(f_text) > -1)){
-                    var c_width = $("#fastqc_seq_heatmap").width();
-                    var ypos = s_height * idx;
-                    var canvas = document.getElementById("fastqc_seq_heatmap");
-                    var ctx = canvas.getContext("2d");
-                    var thisy = ypos + 2;
-                    // Adjust height and position if we're next to another square of the same colour
-                    // this avoids having a double thickness line
-                    if(labels[idx-1] && labels[idx-1].indexOf(f_text) > -1){ thisy = ypos; }
-                    ctx.beginPath();
-                    ctx.lineWidth="2";
-                    ctx.strokeStyle = f_col;
-                    ctx.rect(1, thisy, c_width-2, s_height-2);
-                    ctx.stroke();
-                    ctx.closePath();
-                }
-            });
-        });
     }
 }
 
 // Set up listeners etc on page load
 $(function () {
 
-    // Add the pass / warning / fails counts to the headings
+    // Add the pass / warning / fails counts to each of the FastQC submodule headings
     $.each(fastqc_passfails, function(k, vals){
         var pid = '#fastqc_'+k;
         var total = 0;
