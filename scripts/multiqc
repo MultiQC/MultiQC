@@ -67,13 +67,13 @@ from multiqc.log import init_log, LEVELS
                     help = "Output filename prefix."
 )
 @click.option('-v', '--verbose', 
-                count=True,
-                default=0,
-                help=u"Increase output verbosity. Can be used multiple times, eg. -vv"
+                    count=True,
+                    default=0,
+                    help = "Increase output verbosity. Can be used multiple times, eg. -vv"
 )
 @click.option('-q', '--quiet', 
-                is_flag=True,
-                help=u"Set output verbosity to 'WARNING'"
+                    is_flag=True,
+                    help = "Set output verbosity to 'WARNING'"
 )
 @click.version_option(__version__)
 
@@ -109,10 +109,13 @@ force, verbose, quiet):
                     "</body></html>".format(config.VERSION))
             sys.exit(0)
     
-    # Set up helper vars
+    # Set up key variables (overwrite config vars from command line)
+    config.title = title
+    config.prepend_dirs = dirs
+    config.analysis_dir = analysis_dir
     template_dir = os.path.join(config.MULTIQC_DIR, 'templates', template.strip())
-    config.output_dir = os.path.realpath(config.output_dir)
     config.template_fn = os.path.join(template_dir, 'multiqc_report.html')
+    config.output_dir = os.path.realpath(config.output_dir)
     
     if osx_app:
         config.output_dir = os.path.join(analysis_dir, 'multiqc_report')
@@ -120,21 +123,23 @@ force, verbose, quiet):
     # If output prefix has been set, prepend to config variables
     if output_prefix is not None:
         output_prefix = output_prefix.strip()
-        config.output_fn_name = '{}_{}'.format(output_prefix, config.output_fn_name)
-        config.data_dir_name = '{}_{}'.format(output_prefix, config.data_dir_name)
+        # If we've just been given a directory, don't add the underscore
+        # TODO: Better way of doing this?
+        prefix = '_'
+        if os.path.basename('{}{}{}'.format(output_prefix, prefix, config.output_fn_name)) == '_{}'.format(config.output_fn_name):
+            prefix = ''
+        config.output_fn_name = '{}{}{}'.format(output_prefix, prefix, config.output_fn_name)
+        config.data_dir_name = '{}{}{}'.format(output_prefix, prefix, config.data_dir_name)
     
     # Make paths from the file names
     config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
     config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
     
-    # Update the config with the command line options
-    config.title = title
-    config.prepend_dirs = dirs
-    config.analysis_dir = analysis_dir
+    
     
     # Print some status updates
     if config.title is not None:
-        logger.info("Report title: {0}".format(title))
+        logger.info("Report title: {0}".format(config.title))
     if dirs:
         logger.info("Prepending directory to sample names")
     logger.info("Searching   : {0}".format(', '.join(config.analysis_dir)))
