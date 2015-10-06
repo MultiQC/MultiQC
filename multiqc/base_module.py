@@ -212,24 +212,19 @@ class BaseMultiqcModule(object):
         plotdata = list()
         for d in data:
             thisplotdata = list()
-            if 'categories' in config:
-                samples = d.keys()
-            else:
-                samples = sorted(d.keys())
-            for s in samples:
+            for s in sorted(d.keys()):
                 pairs = list()
                 maxval = 0
                 if 'categories' in config:
-                    skeys = d[s].keys()
-                else:
-                    skeys = sorted(d[s].keys())
-                for k in skeys:
-                    if 'categories' in config:
-                        config['categories'] = skeys
+                    config['categories'] = list()
+                    for k in d[s].keys():
+                        config['categories'].append(k)
                         pairs.append(d[s][k])
-                    else:
+                        maxval = max(maxval, d[s][k])
+                else:
+                    for k in sorted(d[s].keys()):
                         pairs.append([k, d[s][k]])
-                    maxval = max(maxval, d[s][k])
+                        maxval = max(maxval, d[s][k])
                 if maxval > 0 or config.get('hide_empty') is not True:
                     this_series = { 'name': s, 'data': pairs }
                     try:
