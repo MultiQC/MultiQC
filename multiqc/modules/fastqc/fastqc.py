@@ -92,9 +92,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Now add each section in order by calling its def
         self.sequence_quality_plot()
         self.per_seq_quality_plot()
+        self.sequence_content_plot()
         self.gc_content_plot()
         self.n_content_plot()
-        self.sequence_content_plot()
+        self.seq_length_dist_plot()
         self.adapter_content_plot()
 
 
@@ -125,6 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
         s = defaultdict(lambda: dict())
         s['seq_len_bp'] = 0
         s['seq_len_read_count'] = 0
+        self.seq_lengths = set()
         adapter_types = []
         in_module = None
         for l in file_contents.splitlines():
@@ -185,6 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                         if len_matches:
                             bp = self.avg_bp_from_range(len_matches.group(1))
                             self.fastqc_data['seq_length_dist'][s_name][bp] = float(len_matches.group(2))
+                            self.seq_lengths.add(bp)
                             s['seq_len_bp'] += float(len_matches.group(2)) * bp
                             s['seq_len_read_count'] += float(len_matches.group(2))
                     
@@ -337,7 +340,46 @@ class MultiqcModule(BaseMultiqcModule):
                         self.plot_xy_data(self.fastqc_data['per_seq_quality'], pconfig)
         })
 
-
+    
+    def sequence_content_plot (self):
+        """ Create the epic HTML for the FastQC sequence content heatmap """
+        if 'sequence_content' not in self.fastqc_data or len(self.fastqc_data['sequence_content']) == 0:
+            log.debug('sequence_content not found in FastQC reports')
+            return None
+        
+        html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called.</p>'
+        
+        # Order the data by the sample names
+        data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))
+        
+        html += '<div id="fastqc_sequence_content_plot"> \n\
+            <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
+            <div class="fastqc_seq_heatmap_key">\n\
+                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>\n\
+                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>\n\
+                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>\n\
+                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>\n\
+                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>\n\
+            </div>\n\
+            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
+                <div id="fastqc_seq" class="hc-plot"> \n\
+                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
+                </div> \n\
+            </div> \n\
+            <div class="clearfix"></div> \n\
+        </div> \n\
+        <script type="text/javascript"> \n\
+            fastqc_seq_content_data = {d};\n\
+            $(function () {{ fastqc_seq_content_heatmap(); }}); \n\
+        </script>'.format(d=json.dumps(data))
+        
+        self.sections.append({
+            'name': 'Per Base Sequence Content',
+            'anchor': 'fastqc_sequence_content',
+            'content': html
+        })
+    
+    
     def gc_content_plot (self):
         """ Create the HTML for the FastQC GC content plot """        
         if 'gc_content' not in self.fastqc_data or len(self.fastqc_data['gc_content']) == 0:
@@ -395,45 +437,36 @@ class MultiqcModule(BaseMultiqcModule):
                         self.plot_xy_data(self.fastqc_data['n_content'], pconfig)
         })
     
-
-    def sequence_content_plot (self):
-        """ Create the epic HTML for the FastQC sequence content heatmap """
-        if 'sequence_content' not in self.fastqc_data or len(self.fastqc_data['sequence_content']) == 0:
-            log.debug('sequence_content not found in FastQC reports')
+    
+    def seq_length_dist_plot(self):
+        """ Create the HTML for the Sequence Length Distribution plot """
+        if 'n_content' not in self.fastqc_data or len(self.fastqc_data['n_content']) == 0:
+            log.debug('n_content not found in FastQC reports')
             return None
         
-        html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called.'
-        html += '<br><small class="text-muted"><em>Bars at the left edge show FastQC status (pass / warn / fail) or highlight colour.</em></small></p>'
-        
-        # Order the data by the sample names
-        data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))
-        
-        html += '<div id="fastqc_sequence_content_plot"> \n\
-            <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
-            <div class="fastqc_seq_heatmap_key">\n\
-                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>\n\
-                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>\n\
-            </div>\n\
-            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
-                <div id="fastqc_seq" class="hc-plot"> \n\
-                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
-                </div> \n\
-            </div> \n\
-            <div class="clearfix"></div> \n\
-        </div> \n\
-        <script type="text/javascript"> \n\
-            fastqc_seq_content_data = {d};\n\
-            $(function () {{ fastqc_seq_content_heatmap(); }}); \n\
-        </script>'.format(d=json.dumps(data))
-        
+        if len(self.seq_lengths) < 2:
+            html = '<p>All samples have sequences of exactly {} bp in length.</p>'.format(list(self.seq_lengths)[0])
+        else:
+            pconfig = {
+                'id': 'fastqc_seq_length_dist_plot',
+                'title': 'Sequence Length Distribution',
+                'ylab': 'Read Count',
+                'xlab': 'Sequence Length (bp)',
+                'ymin': 0,
+                'yMinTickInterval': 0.1,
+                'xDecimals': False,
+                'colors': self.get_status_cols('seq_length_dist'),
+                'tt_label': '<b>{point.x} bp</b>: {point.y}',
+            }
+            html =  '<p>The distribution of fragment sizes (read lengths) found.</p>'
+            html += self.plot_xy_data(self.fastqc_data['seq_length_dist'], pconfig)
+    
         self.sections.append({
-            'name': 'Per Base Sequence Content',
-            'anchor': 'fastqc_sequence_content',
+            'name': 'Sequence Length Distribution',
+            'anchor': 'fastqc_seq_length_dist',
             'content': html
         })
+    
 
     def adapter_content_plot (self):
         """ Create the HTML for the FastQC adapter plot """
