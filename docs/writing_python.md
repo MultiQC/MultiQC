@@ -110,7 +110,9 @@ html += self.plot_xy_data(data)
 Additionally, a config dict can be supplied. The defaults are as follows:
 ```python
 config = {
-    'id': '<random string>', # HTML ID used for plot    
+    'id': '<random string>',     # HTML ID used for plot    
+    'categories': <anything>,    # Set key to use x values as categories instead of numbers.
+    'colors': dict()             # Provide dict with keys = sample names and values colours
 }
 ```
 This dictionary can also have any of the javascript config options.

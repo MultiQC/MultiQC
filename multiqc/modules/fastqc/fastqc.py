@@ -96,6 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.gc_content_plot()
         self.n_content_plot()
         self.seq_length_dist_plot()
+        self.seq_dup_levels_plot()
         self.adapter_content_plot()
 
 
@@ -193,10 +194,12 @@ class MultiqcModule(BaseMultiqcModule):
                     
                     if in_module == 'seq_dup_levels':
                         if l[:1] == '#':
-                            continue # headers
+                            # Start of module - replace default dict with an OrderedDict
+                            self.fastqc_data['seq_dup_levels'][s_name] = OrderedDict()
+                            continue # Skip header line
                         sections  = l.split()
-                        self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[1])
-                        self.fastqc_data['seq_dup_levels_dedup'][s_name][sections[0]] = float(sections[2])
+                        self.fastqc_data['seq_dup_levels_dedup'][s_name][sections[0]] = float(sections[1])
+                        self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[2])
         
                     if in_module == 'adapter_content':
                         if l[:1] == '#':
@@ -417,6 +420,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Per Base N Content',
             'ylab': 'Percentage N-Count',
             'xlab': 'Position in Read (bp)',
+            'yCeiling': 100,
             'ymin': 0,
             'yMinTickInterval': 0.1,
             'xmin': 0,
@@ -438,10 +442,10 @@ class MultiqcModule(BaseMultiqcModule):
         })
     
     
-    def seq_length_dist_plot(self):
+    def seq_length_dist_plot (self):
         """ Create the HTML for the Sequence Length Distribution plot """
-        if 'n_content' not in self.fastqc_data or len(self.fastqc_data['n_content']) == 0:
-            log.debug('n_content not found in FastQC reports')
+        if 'seq_length_dist' not in self.fastqc_data or len(self.fastqc_data['seq_length_dist']) == 0:
+            log.debug('seq_length_dist not found in FastQC reports')
             return None
         
         if len(self.seq_lengths) < 2:
@@ -467,7 +471,35 @@ class MultiqcModule(BaseMultiqcModule):
             'content': html
         })
     
-
+    
+    def seq_dup_levels_plot (self):
+        """ Create the HTML for the Sequence Duplication Levels plot """
+        if 'seq_dup_levels' not in self.fastqc_data or len(self.fastqc_data['seq_dup_levels']) == 0:
+            log.debug('seq_dup_levels not found in FastQC reports')
+            return None
+        
+        pconfig = {
+            'id': 'fastqc_seq_dup_levels_plot',
+            'title': 'Sequence Duplication Levels',
+            'categories': True,
+            'ylab': '% of Library',
+            'xlab': 'Sequence Duplication Level',
+            'yCeiling': 100,
+            'ymin': 0,
+            'yMinTickInterval': 0.1,
+            'colors': self.get_status_cols('seq_dup_levels'),
+            'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
+        }
+    
+        self.sections.append({
+            'name': 'Sequence Duplication Levels',
+            'anchor': 'fastqc_seq_dup_levels',
+            'content': '<p>The relative level of duplication found for every sequence.</p>' + 
+                        self.plot_xy_data(self.fastqc_data['seq_dup_levels'], pconfig)
+        })
+        
+        
+    
     def adapter_content_plot (self):
         """ Create the HTML for the FastQC adapter plot """
         if 'adapter_content' not in self.fastqc_data or len(self.fastqc_data['adapter_content']) == 0:
@@ -479,6 +511,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Adapter Content',
             'ylab': '% of Sequences',
             'xlab': 'Position',
+            'yCeiling': 100,
             'ymin': 0,
             'yMinTickInterval': 0.1,
             'xDecimals': False,

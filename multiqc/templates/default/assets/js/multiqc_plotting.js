@@ -109,6 +109,8 @@ function plot_xy_line_graph(div, data, config){
       title: {
         text: config['xlab']
       },
+      categories: config['categories'],
+      ceiling: config['xCeiling'],
       max: config['xmax'],
       min: config['xmin'],
       minTickInterval: config['xMinTickInterval'],
@@ -119,6 +121,7 @@ function plot_xy_line_graph(div, data, config){
       title: {
         text: config['ylab']
       },
+      ceiling: config['yCeiling'],
       max: config['ymax'],
       min: config['ymin'],
       minTickInterval: config['yMinTickInterval'],
