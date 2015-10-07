@@ -314,7 +314,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Sequence Quality Histograms',
             'anchor': 'fastqc_sequence_quality',
-            'content': '<p>The mean quality value across each base position in the read.</p>' + 
+            'content': '<p>The mean quality value across each base position in the read. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.</p>' + 
                         self.plot_xy_data(self.fastqc_data['sequence_quality']['mean'], pconfig)
         })
 
@@ -344,7 +345,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Per Sequence Quality Scores',
             'anchor': 'fastqc_per_seq_quality',
-            'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality.</p>' +
+            'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.</p>' +
                         self.plot_xy_data(self.fastqc_data['per_seq_quality'], pconfig)
         })
 
@@ -355,7 +357,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_content not found in FastQC reports')
             return None
         
-        html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called.</p>'
+        html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
+                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
         
         # Order the data by the sample names
         data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))
@@ -409,7 +412,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'anchor': 'fastqc_gc_content',
-            'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.</p>' + 
+            'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
                         self.plot_xy_data(self.fastqc_data['gc_content'], pconfig)
         })
     
@@ -442,7 +446,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Per Base N Content',
             'anchor': 'fastqc_n_content',
-            'content': '<p>The percentage of base calls at each position for which an N was called.</p>' + 
+            'content': '<p>The percentage of base calls at each position for which an N was called. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.</p>' +
                         self.plot_xy_data(self.fastqc_data['n_content'], pconfig)
         })
     
@@ -467,7 +472,8 @@ class MultiqcModule(BaseMultiqcModule):
                 'colors': self.get_status_cols('seq_length_dist'),
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
-            html =  '<p>The distribution of fragment sizes (read lengths) found.</p>'
+            html =  '<p>The distribution of fragment sizes (read lengths) found. \
+                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.</p>'
             html += self.plot_xy_data(self.fastqc_data['seq_length_dist'], pconfig)
     
         self.sections.append({
@@ -499,7 +505,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Sequence Duplication Levels',
             'anchor': 'fastqc_seq_dup_levels',
-            'content': '<p>The relative level of duplication found for every sequence.</p>' + 
+            'content': '<p>The relative level of duplication found for every sequence. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.</p>' +
                         self.plot_xy_data(self.fastqc_data['seq_dup_levels'], pconfig)
         })
         
@@ -536,7 +543,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Adapter Content',
             'anchor': 'fastqc_adapter_content',
-            'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position.</p>' +
+            'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html" target="_bkank">FastQC help</a>.</p>' +
                         self.plot_xy_data(self.fastqc_data['adapter_content'], pconfig)
         })
     
@@ -555,7 +563,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Kmer Content',
             'anchor': 'fastqc_kmer_content',
-            'content': '<p>The cumulative Observed / Expected scores of over-represented sequences in your library.</p>' +
+            'content': '<p>The cumulative Observed / Expected scores of over-represented sequences in your library. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/11%20Kmer%20Content.html" target="_bkank">FastQC help</a>.</p>' +
                         self.plot_bargraph(self.fastqc_data['kmer_content_total'], config=pconfig)
         })
 
