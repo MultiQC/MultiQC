@@ -19,7 +19,6 @@ import importlib
 import click
 
 from multiqc import (config, logger, __version__)
-from multiqc.utils import (check_app, get_sorted_modules)
 from multiqc.log import init_log, LEVELS
 
 
