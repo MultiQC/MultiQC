@@ -85,6 +85,18 @@ var tour_steps = [
     backdropPadding: 10,
     onHide: function (tour) { $('.mqc-toolbox').css('z-index', orig_z_index); }
   },
+  {
+    element: ".highcharts-button:first path",
+    title: "Export Plots",
+    placement: 'left',
+    backdropPadding: {
+      'top': 5,
+      'left': 5,
+      'bottom': 35,
+      'right': 35,
+    },
+    content: "Plots can be exported in a range of formats (including <code>svg</code> and <code>pdf</code>, suitable for publications)."
+  },
 
   {
     element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
