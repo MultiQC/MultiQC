@@ -183,9 +183,7 @@
   
   {% if config.general_stats['headers']|length > 0 %}
   <div id="general_stats">
-    <h2>General Statistics &nbsp; 
-      <button type="button" class="btn btn-default" data-toggle="modal" data-target="#general_stats_key_modal">Show Key</button>
-    </h2>
+    <h2>General Statistics</h2>
     <div class="table-responsive">
       <table id="general_stats_table" class="table table-condensed">
         <thead>
@@ -239,37 +237,6 @@
     <p>The report uses <a href="http://www.highcharts.com/" target="_blank">HighCharts</a>, <a href="https://jquery.com/" target="_blank">jQuery</a>,
        <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a>, <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a>
        and <a href="http://bootstraptour.com/" target="_blank">Bootstrap Tour</a>.</p>
-  </div>
-</div>
-
-
-<!-- General Stats Colouring Key -->
-<div class="modal fade" id="general_stats_key_modal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h3 class="modal-title" id="myModalLabel">General Statistics Table: Colour Scale Key</h3>
-      </div>
-      <div class="modal-body">
-        <p>Colouring is automated, to make it easier to spot patterns in the numbers. Always check the underlying numbers as a sanity check.</p>
-        <p><strong>Note:</strong> Most colour scales will not be comparable between different MultiQC reports.</p>
-        <table class="table table-bordered table-condensed table-hover">
-          <thead>
-            <tr>
-              <th>Column</th>
-              <th>Description</th>
-              <th>Scale</th>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <p>Colour schemes are generated using <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a>.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
   </div>
 </div>
 
