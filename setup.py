@@ -21,7 +21,7 @@ For more detailed instructions, run :code:`multiqc -h`
 
 from setuptools import setup, find_packages
 
-version = '0.2.1dev'
+version = '0.3.dev0'
 
 setup(
     name = 'multiqc',
