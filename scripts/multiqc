@@ -18,8 +18,7 @@ import importlib
 
 import click
 
-from multiqc import (config, logger, module_order, multiqc_submods, 
-avail_templates, __version__)
+from multiqc import (config, logger, __version__)
 from multiqc.utils import (check_app, get_sorted_modules)
 from multiqc.log import init_log, LEVELS
 
@@ -41,22 +40,18 @@ from multiqc.log import init_log, LEVELS
 )
 @click.option('-t', '--template',
                     default = config.template,
-                    type = click.Choice(avail_templates),
-                    help = "Report template to use. Choose from: {}".format(
-                        ', '.join(avail_templates))
+                    type = click.Choice(config.avail_templates),
+                    help = "Report template to use."
 )
 @click.option('-m', '--modules',
-                    default = multiqc_submods,
-                    type = click.Choice(multiqc_submods),
+                    type = click.Choice(config.avail_modules),
                     multiple=True,
-                    help = "Use only these modules. Choose from: {}".format(
-                        ', '.join(multiqc_submods))
+                    help = "Use only these modules."
 )
 @click.option('-e', '--exclude',
-                    type = click.Choice(multiqc_submods),
+                    type = click.Choice(config.avail_modules),
                     multiple=True,
-                    help = "Do not use these modules. Choose from: {}".format(
-                        ', '.join(multiqc_submods))
+                    help = "Do not use these modules."
 )
 @click.option('-f', '--force',
                     is_flag = True,
@@ -69,11 +64,11 @@ from multiqc.log import init_log, LEVELS
 @click.option('-v', '--verbose', 
                     count=True,
                     default=0,
-                    help = "Increase output verbosity. Can be used multiple times, eg. -vv"
+                    help = "Increase output verbosity."
 )
 @click.option('-q', '--quiet', 
                     is_flag=True,
-                    help = "Set output verbosity to 'WARNING'"
+                    help = "Only show log warnings"
 )
 @click.version_option(__version__)
 
@@ -92,11 +87,6 @@ force, verbose, quiet):
         loglevel = 'WARNING'
     init_log(logger, loglevel=loglevel)
     
-    sorted_modules = get_sorted_modules(
-        multiqc_submodules = modules, 
-        module_order = module_order
-    )
-    
     logger.info("Working dir : {0}".format(os.getcwd()))
     logger.info("Template    : {0}".format(template))
     
@@ -106,7 +96,7 @@ force, verbose, quiet):
     if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and osx_app:
             print("</ul><p>Please drag your analysis directory"\
                     " here.</p><small>MultiQC version {0}</small>"\
-                    "</body></html>".format(config.VERSION))
+                    "</body></html>".format(__version__))
             sys.exit(0)
     
     # Set up key variables (overwrite config vars from command line)
@@ -146,15 +136,20 @@ force, verbose, quiet):
     logger.debug("Output      : {0}".format(os.path.relpath(config.output_fn)))
     logger.debug("Data dir    : {0}".format(os.path.relpath(config.data_dir)))
     
-    run_modules = sorted_modules
-    # exclude modules
-    if exclude:
+    # Get the list of modules we want to run
+    run_modules = config.avail_modules.keys()
+    if modules:
+        run_modules = [m for m in config.avail_modules.keys() if m in modules]
+        logger.info('Only using modules {}'.format(', '.join(modules)))
+    elif exclude:
+        run_modules = [m for m in config.avail_modules.keys() if m not in exclude]
         logger.info('Excluding modules {}'.format(', '.join(exclude)))
-        run_modules = [mod for mod in run_modules if mod not in exclude]
+    if len(run_modules) == 0:
+        logger.critical('No analysis modules specified!')
+        sys.exit(1)
+    logger.debug("Analysing modules: {0}".format(', '.join(run_modules)))
     
-    logger.debug("Analysing modules {0}".format(', '.join(run_modules)))
-    
-    # Copy the template directory to the output directory
+    # Check for existing reports and remove if -f was specified
     if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
         if force:
             if os.path.exists(config.output_fn):
@@ -181,7 +176,7 @@ force, verbose, quiet):
     sys_exit_code = 0
     for this_module in run_modules:
         try:
-            mod = importlib.import_module("multiqc.modules.{0}".format(this_module))
+            mod = config.avail_modules[this_module].load()
             modules_output.append(mod.MultiqcModule())
         except UserWarning:
             pass # No samples found
