@@ -82,6 +82,8 @@ force, verbose, quiet):
         To run, supply with one or more directory to scan for analysis results. 
         To run here, use 'multiqc .'
     """
+    
+    # Set up logging level
     loglevel = LEVELS.get(min(verbose,1), "INFO")
     if quiet:
         loglevel = 'WARNING'
@@ -90,7 +92,13 @@ force, verbose, quiet):
     logger.info("Working dir : {0}".format(os.getcwd()))
     logger.info("Template    : {0}".format(template))
     
-    osx_app = check_app()
+    # Are we running as an OSX App?
+    osx_app = False
+    if os.environ.get('MULTQC_IS_APP') is not None:
+        osx_app = True
+        logging.basicConfig(stream=sys.stdout, format='<li>%(message)s</li>', level=20)
+        with open(os.path.join(os.getcwd(), 'multiqc_app_header.html'), 'r') as f:
+            print(f.read())
     
     # Weird thing that has to do with running the osx app:
     if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and osx_app:
