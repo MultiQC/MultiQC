@@ -79,15 +79,13 @@ for m in all_avail_modules.keys():
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
 
 # Get all templates, including those from other extension packages
-template_entry_points = pkg_resources.iter_entry_points('multiqc.templates.v1')
-
-avail_templates = [ d for d in os.listdir(os.path.join(MULTIQC_DIR, 'templates'))
-                if os.path.isdir(os.path.join(MULTIQC_DIR, 'templates', d)) ]
+avail_templates = {}
+for entry_point in pkg_resources.iter_entry_points('multiqc.templates.v1'):
+    nicename = str(entry_point).split('=')[0].strip()
+    avail_templates[nicename] = entry_point
 
 # Which template to use by default?
 template = 'default'
-template_dir = os.path.join(MULTIQC_DIR, 'templates', template.strip())
-template_fn = os.path.join(template_dir, 'multiqc_report.html')
 
 #######################
 # Overwrite defaults with config files

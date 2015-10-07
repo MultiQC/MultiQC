@@ -103,9 +103,12 @@ force, verbose, quiet):
     config.title = title
     config.prepend_dirs = dirs
     config.analysis_dir = analysis_dir
-    template_dir = os.path.join(config.MULTIQC_DIR, 'templates', template.strip())
-    config.template_fn = os.path.join(template_dir, 'multiqc_report.html')
     config.output_dir = os.path.realpath(config.output_dir)
+    
+    # Load the template
+    template_mod = config.avail_templates[template].load()
+    template_dir = template_mod.template_dir
+    template_fn = template_mod.template_fn
     
     if osx_app:
         config.output_dir = os.path.join(analysis_dir, 'multiqc_report')
@@ -221,9 +224,9 @@ force, verbose, quiet):
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
         env.globals['include_file'] = include_file
-        j_template = env.get_template('multiqc_report.html')
+        j_template = env.get_template(template_fn)
     except:
-        raise IOError ("Could not load template '{}'".format(config.template_fn))
+        raise IOError ("Could not load template '{}'".format(template_fn))
 
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
