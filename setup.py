@@ -44,6 +44,25 @@ setup(
         'pyyaml',
         'click'
     ],
+    entry_points = {
+        'multiqc.modules.v1': [
+            'qualimap = multiqc.modules.qualimap',
+            'featureCounts = multiqc.modules.featureCounts',
+            'picard = multiqc.modules.picard',
+            'bismark = multiqc.modules.bismark',
+            'star = multiqc.modules.star',
+            'tophat = multiqc.modules.tophat',
+            'bowtie2 = multiqc.modules.bowtie2',
+            'bowtie1 = multiqc.modules.bowtie1',
+            'cutadapt = multiqc.modules.cutadapt',
+            'fastq_screen = multiqc.modules.fastq_screen',
+            'fastqc = multiqc.modules.fastqc',
+        ],
+        'multiqc.templates.v1': [
+            'default = multiqc.templates.default',
+            'geo = multiqc.templates.geo',
+        ]
+    },
     classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Console',
