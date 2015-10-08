@@ -19,16 +19,6 @@ $(function () {
     var target = $(this).attr('href');
     mqc_toolbox_openclose(target);
   });
-  // Shortcut keys
-  $(window).keydown(function (evt) {
-    if (evt.target.tagName.toLowerCase() !== 'input' && evt.target.tagName.toLowerCase() !== 'textarea') {
-      // console.log(evt.which);
-      if(evt.which == 67){ mqc_toolbox_openclose('#mqc_cols'); } // c
-      if(evt.which == 82){ mqc_toolbox_openclose('#mqc_renamesamples'); } // r
-      if(evt.which == 72){ mqc_toolbox_openclose('#mqc_hidesamples'); } // h
-      if(evt.which == 83){ mqc_toolbox_openclose('#mqc_saveconfig'); } // r
-    }
-  });
 
   // Highlight colour filters
   $('#mqc_color_form').submit(function(e){
