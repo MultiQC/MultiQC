@@ -21,7 +21,6 @@ import click
 from multiqc import (config, logger, __version__)
 from multiqc.log import init_log, LEVELS
 
-
 @click.command()
 @click.argument('analysis_dir',
                     type=click.Path(exists=True),

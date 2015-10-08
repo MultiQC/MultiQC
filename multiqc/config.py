@@ -9,6 +9,7 @@ import inspect
 import logging
 import os
 import pkg_resources
+import sys
 import yaml
 
 import multiqc
@@ -42,6 +43,7 @@ fn_ignore_files = ['.DS_Store', 'glyphicons-halflings-regular.woff2']
 # Available modules
 #######################
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
+# We load them here so that they can be overwritten by a config file if desired.
 
 # Order that modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
@@ -56,21 +58,21 @@ module_order = [
 
 # Get all modules, including those from other extension packages
 all_avail_modules = {}
+avail_modules = OrderedDict()
 for entry_point in pkg_resources.iter_entry_points('multiqc.modules.v1'):
     nicename = str(entry_point).split('=')[0].strip()
     all_avail_modules[nicename] = entry_point
 
-# Create ordered list of modules, as defined above
-avail_modules = OrderedDict()
-for m in module_order:
-    if m in all_avail_modules.keys():
-        avail_modules[m] = all_avail_modules[m]
-
-# Add on any not described in the order above
+# Start with modules not described above - probably plugins
 for m in all_avail_modules.keys():
     if m not in module_order:
         avail_modules[m] = all_avail_modules[m]
         logger.debug("Module missing from order declaration: {}".format(m))
+
+# Add known modules, in order defined above
+for m in module_order:
+    if m in all_avail_modules.keys():
+        avail_modules[m] = all_avail_modules[m]
 
 
 #######################
@@ -86,6 +88,23 @@ for entry_point in pkg_resources.iter_entry_points('multiqc.templates.v1'):
 
 # Which template to use by default?
 template = 'default'
+
+#######################
+# Check we have modules & templates
+#######################
+# Check that we were able to find some modules and templates
+# If not, package probably hasn't been installed properly.
+# Need to do this before click, else will throw cryptic error
+# Note: Can't use logger here, not yet installed.
+if len(avail_modules) == 0 or len(avail_templates) == 0:
+    if len(avail_modules) == 0:
+        print("Error - No MultiQC modules found.")
+    if len(avail_templates) == 0:
+        print("Error - No MultiQC templates found.")
+    print("Could not load MultiQC - has it been installed? \n\
+        Please either install with pip (pip install multiqc) or by using \n\
+        the installation script (python setup.py install)")
+    sys.exit(1)
 
 #######################
 # Overwrite defaults with config files
