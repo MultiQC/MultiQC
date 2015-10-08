@@ -458,21 +458,6 @@ input.form-control[type=color]{
 }
 
 
-.general_stats_key_bar {
-    padding: 3px 5px;
-}
-#general_stats_key_modal table td {
-    vertical-align: middle;
-}
-#general_stats_key_modal table td:nth-child(3) {
-    width: 35%;
-    padding:0;
-}
-#general_stats_key_modal table td div {
-    line-height:24px;
-}
-
-
 /* Draggable height bar for HighCharts Plots */
 .hc-plot {
     height: 500px;

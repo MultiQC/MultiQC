@@ -117,7 +117,7 @@ with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.t
 ```
 
 ## Plotting line graphs
-`self.plot_xy_data (data, config, original_plots)`
+`self.plot_xy_data (data, config={})`
 
 This function takes a dict of data and plots an XY line graph.
 It expects a dictionary in the following format:
@@ -140,7 +140,9 @@ html += self.plot_xy_data(data)
 Additionally, a config dict can be supplied. The defaults are as follows:
 ```python
 config = {
-    'id': '<random string>', # HTML ID used for plot    
+    'id': '<random string>',     # HTML ID used for plot    
+    'categories': <anything>,    # Set key to use x values as categories instead of numbers.
+    'colors': dict()             # Provide dict with keys = sample names and values colours
 }
 ```
 This dictionary can also have any of the javascript config options.
@@ -161,28 +163,8 @@ All of these config values are optional, the function will default
 to sensible values if things are missing. See the cutadapt module
 plots for an example of this in action.
 
-### Showing original plots
-Finally, it's possible to get the plots to show original data sources
-when clicked (for an example, see the FastQC plots). To achieve this
-magic, make sure that the images are copied to the report and pass
-the `original_plots` variable to the function. It should look like this:
-```python
-original_plots = [
-    {
-        's_name': "My First Sample",
-        'img_path': 'report_data/my_module/first_sample_original_image.png'
-    },
-    {
-        's_name': "My Second Sample",
-        'img_path': 'report_data/my_module/second_sample_original_image.png'
-    },
-]
-```
-Note that the _Prev_ / _Next_ buttons will cycle through these images in the
-order supplied, so it makes sense to sort by sample name alphabetically.
-
 ## Plotting bar graphs
-`self.plot_bargraph (data, cats, config)`
+`self.plot_bargraph (data, cats=None, config={})`
 
 Takes a dict of data and plots a bar graph. The expected data structure
 is as follows:
@@ -256,3 +238,24 @@ objects. Make sure that they are in the same order as the data. If not
 supplied, these will be guessed from the data keys.
 
 See the bismark module plots for an example of this in action.
+
+## Including module-specific files
+`self.copy_module_files(files, __file__)`
+
+To copy additional required files when the report is generated, use the
+`copy_module_files` function as above. `files` is a list of file paths, relative
+to the second argument (usually the module file calling the function, `__file__`)
+
+### Adding Custom CSS / Javascript
+If you would like module-specific CSS and / or JavaScript added to the template,
+create lists in the module called `self.css` and `self.js` with the relative file
+paths - these will be looped over in the template file and the files included
+appropriately. Make sure that the files themselves are copied using the above.
+_eg:_ From the FastQC module:
+
+```python
+self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
+self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
+self.copy_module_files(self.css + self.js, __file__)
+```
+

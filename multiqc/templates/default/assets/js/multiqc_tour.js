@@ -77,15 +77,6 @@ var tour_steps = [
     placement: 'top',
     content: "Click category names in the legend to hide that data category<br><em>(useful when looking at percentages)</em>."
   },
-
-  // These steps won't play if FastQC not present
-  {
-    element: "#fastqc_quality_plot_wrapper",
-    placement: 'top',
-    title: "View Originals",
-    content: "Clicking a data point in some plots will show the original data. Click the original plot again to get back to the overview. (Have a go!)",
-  },
-
   {
     element: ".hc-plot-handle:first",
     placement: 'top',
@@ -93,6 +84,18 @@ var tour_steps = [
     content: "Drag the grey bar below plots to change their height.",
     backdropPadding: 10,
     onHide: function (tour) { $('.mqc-toolbox').css('z-index', orig_z_index); }
+  },
+  {
+    element: ".highcharts-button:first path",
+    title: "Export Plots",
+    placement: 'left',
+    backdropPadding: {
+      'top': 5,
+      'left': 5,
+      'bottom': 35,
+      'right': 35,
+    },
+    content: "Plots can be exported in a range of formats (including <code>svg</code> and <code>pdf</code>, suitable for publications)."
   },
 
   {

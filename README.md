@@ -97,6 +97,10 @@ If in doubt, feel free to get in touch with the author:
 * More HTML output dealt with by the base module, less left to the modules
   * Module introduction text
   * General statistics table now much easier to add to (new helper functions)
+* Images, CSS and Javascript now included in HTML, meaning that there is a single
+  report file to make sharing easier
+* Modules and templates now use setuptools entry points, facilitating plugins
+  by other packages. Allows niche extensions whilst keeping the core codebase clean.
 
 #### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
