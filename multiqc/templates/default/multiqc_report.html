@@ -41,6 +41,7 @@
   <script src="http://code.highcharts.com/modules/exporting.js"></script>
   <script type="text/javascript">{{ include_file('assets/js/packages/chroma.min.js') }}</script>
   <script type="text/javascript">{{ include_file('assets/js/packages/jquery.tablesorter.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/jquery.freezeheader.js') }}</script>
   <script type="text/javascript">{{ include_file('assets/js/packages/FileSaver.min.js') }}</script>
   <script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
   <script type="text/javascript">{{ include_file('assets/js/multiqc_generalstats.js') }}</script>
@@ -182,29 +183,31 @@
   {% if config.general_stats['headers']|length > 0 %}
   <div id="general_stats">
     <h2>General Statistics</h2>
-    <div class="table-responsive">
-      <table id="general_stats_table" class="table table-condensed">
-        <thead>
-          <tr>
-            <td class="sorthandle"></td>
-            <th class="rowheader">Sample Name</th>
-            {%- for k, h in config.general_stats['headers'].items() %}
-              {{ h }}
-            {%- endfor -%}
-          </tr>
-        </thead>
-        <tbody>
-          {% for sn, r in config.general_stats['rows']|dictsort %}
-          <tr>
-            <td class="sorthandle">||</td>
-            <th class="rowheader">{{ sn }}</th>
-            {%- for k, h in config.general_stats['headers'].items() %}
-              {{ r[k] if r[k] else '<td></td>' }}
-            {%- endfor -%}
-          </tr>
-          {%- endfor %}
-        </tbody>
-      </table>
+    <div id="general_stats_table_container">
+      <div class="table-responsive">
+        <table id="general_stats_table" class="table table-condensed">
+          <thead>
+            <tr>
+              <td class="sorthandle">&nbsp;</td>
+              <th class="rowheader">Sample Name</th>
+              {%- for k, h in config.general_stats['headers'].items() %}
+                {{ h }}
+              {%- endfor -%}
+            </tr>
+          </thead>
+          <tbody>
+            {% for sn, r in config.general_stats['rows']|dictsort %}
+            <tr>
+              <td class="sorthandle">||</td>
+              <th class="rowheader">{{ sn }}</th>
+              {%- for k, h in config.general_stats['headers'].items() %}
+                {{ r[k] if r[k] else '<td></td>' }}
+              {%- endfor -%}
+            </tr>
+            {%- endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
   {% endif %}

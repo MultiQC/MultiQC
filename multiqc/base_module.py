@@ -155,11 +155,33 @@ class BaseMultiqcModule(object):
             try: scale = headers[k]['scale']
             except KeyError: scale = 'GnBu'
             
-            try: dmax = 'data-chroma-max="{0}"'.format(headers[k]['max'])
-            except KeyError: dmax = ''
+            try:
+                dmax = float(headers[k]['max'])
+            except KeyError:
+                dmax = None
             
-            try: dmin = 'data-chroma-min="{0}"'.format(headers[k]['min'])
-            except KeyError: dmin = ''
+            try:
+                dmin = float(headers[k]['min'])
+            except KeyError:
+                dmin = None
+            
+            if dmax is None or dmin is None:
+                setdmax = False
+                setdmin = False
+                for (sname, samp) in data.items():
+                    val = float(samp[k])
+                    if 'modify' in headers[k] and callable(headers[k]['modify']):
+                        val = float(headers[k]['modify'](val))
+                    if dmax is None:
+                        dmax = val
+                        setdmax = True
+                    if dmin is None:
+                        dmin = val
+                        setdmin = True
+                    if setdmax:
+                        dmax = max(dmax, val)
+                    if setdmin:
+                        dmin = min(dmin, val)
             
             try: title = headers[k]['title']
             except KeyError: title = k
@@ -167,7 +189,7 @@ class BaseMultiqcModule(object):
             try: title = '<span data-toggle="tooltip" title="{}: {}">{}</span>'.format(self.name, headers[k]['description'], title)
             except KeyError: pass
             
-            config.general_stats['headers'][rid] = '<th id="header_{}" class="chroma-col" data-chroma-scale="{}" {} {}>{}</th>'.format(rid, scale, dmax, dmin, title)
+            config.general_stats['headers'][rid] = '<th id="header_{}" class="chroma-col" data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}">{}</th>'.format(rid, scale, dmax, dmin, title)
             
             # Add the data cells
             nrows = 0
@@ -176,6 +198,10 @@ class BaseMultiqcModule(object):
                     val = samp[k]
                     if 'modify' in headers[k] and callable(headers[k]['modify']):
                         val = headers[k]['modify'](val)
+                    
+                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
+                    percentage = min(percentage, 100)
+                    percentage = max(percentage, 0)
                         
                     formatstring = headers[k].get('')
                     try: formatstring = headers[k]['format']
@@ -184,7 +210,7 @@ class BaseMultiqcModule(object):
                     except ValueError: val = formatstring.format(float(samp[k]))
                     except: val = samp[k]
                     
-                    config.general_stats['rows'][sname][rid] = '<td class="{}">{}</td>'.format(rid, val)
+                    config.general_stats['rows'][sname][rid] = '<td class="data-coloured {}"><div class="wrapper"><span class="bar" style="width:{}%;"></span><span class="val">{}</span></div></td>'.format(rid, percentage, val)
                     nrows += 1
             
             # Remove header if we don't have any filled cells for it

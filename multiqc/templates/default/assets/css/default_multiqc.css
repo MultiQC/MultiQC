@@ -407,8 +407,9 @@ input.form-control[type=color]{
 }
 #general_stats_table thead th {
     cursor: pointer;
+    background-color: #fff;
 }
-#general_stats_table thead th.header:after {
+#general_stats_table thead th:after, #gsClone thead th:after {
     content: "";
     display: inline-block;
     width: 0;
@@ -435,6 +436,29 @@ input.form-control[type=color]{
 #general_stats_table th {
     white-space: nowrap;
 }
+/* Floating header */
+#gsCloneWrapper {
+    overflow: hidden;
+    border-bottom: 2px solid #ddd;
+    width: calc(100% - 340px);
+}
+#gsClone thead th, #gsClone thead td {
+    background-color: #FFFFFF;
+}
+@media only screen and (max-width: 992px){
+    #gsCloneWrapper {
+        width: calc(100% - 40px);
+    }
+}
+
+
+
+
+
+
+
+
+
 #general_stats_table .sorthandle {
     border-right: none;
     font-weight:bold;
