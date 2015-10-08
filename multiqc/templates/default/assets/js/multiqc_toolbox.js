@@ -729,7 +729,7 @@ function load_mqc_config(){
     });
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
     if(config['highlight_regex'] == true){
-      $('#mqc_cols .mqc_regex_mode').html('Regex mode <strong>off</strong>');
+      $('#mqc_cols .mqc_regex_mode span').removeClass('on').addClass('off').text('off');
     }
     update_highlights = true;
   }
@@ -744,7 +744,7 @@ function load_mqc_config(){
       $('#mqc_renamesamples_filters').append(li);
     });
     if(config['hidesamples_regex'] == true){
-      $('#mqc_hidesamples .mqc_regex_mode').html('Regex mode <strong>off</strong>');
+      $('#mqc_cols .mqc_regex_mode span').removeClass('on').addClass('off').text('off');
     }
     update_rename = true;
   }
