@@ -102,6 +102,8 @@ If in doubt, feel free to get in touch with the author:
   report file to make sharing easier
 * Modules and templates now use setuptools entry points, facilitating plugins
   by other packages. Allows niche extensions whilst keeping the core codebase clean.
+* The general stats table now has a sticky header row when scrolling, thanks to
+  some new javascript wizardry...
 
 #### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
