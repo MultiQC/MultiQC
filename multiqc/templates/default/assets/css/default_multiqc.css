@@ -280,6 +280,32 @@ input.form-control[type=color]{
 .mqc_regex_mode {
     cursor:pointer;
 }
+.mqc_regex_mode span {
+    display: inline-block;
+    border: 1px solid #999;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin-left: 5px;
+    background-color:#ddd;
+}
+.mqc_regex_mode span.off::after, .mqc_regex_mode span.on::before{
+    content: "";
+    display: inline-block;
+    height: 0;
+    width: 0;
+    border-radius: 6px;
+    border: 6px solid #fff;
+}
+.mqc_regex_mode span.off::after{
+    margin: 0 0 -2px 5px;
+}
+.mqc_regex_mode span.on::before{
+    margin: 0 5px -2px 0;
+}
+.mqc_regex_mode span.on {
+    background-color:#5bc0de;
+    color: #fff;
+}
 
 .mqc_filter_section {
     padding:10px;

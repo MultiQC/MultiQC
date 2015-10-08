@@ -200,10 +200,11 @@ $(function () {
   });
   // Regex mode text
   $('.mqc_regex_mode').click(function(){
-    if($(this).text() == 'Regex mode off'){
-      $(this).html('Regex mode <ins><strong>on</strong></ins>');
+    var rswitch = $(this).find('span');
+    if(rswitch.text() == 'off'){
+      rswitch.removeClass('off').addClass('on').text('on');
     } else {
-      $(this).html('Regex mode <strong>off</strong>');
+      rswitch.removeClass('on').addClass('off').text('off');
     }
     if($(this).parent().attr('id') == 'mqc_cols'){ apply_mqc_highlights(); }
     if($(this).parent().attr('id') == 'mqc_hidesamples'){ apply_mqc_hidesamples(); }

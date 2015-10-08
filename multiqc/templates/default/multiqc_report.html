@@ -103,7 +103,7 @@
           <button type="submit" id="mqc_colour_filter_update" class="btn btn-default btn-sm">+</button>
         </form>
         <ul id="mqc_col_filters" class="mqc_filters"></ul>
-        <p class="mqc_regex_mode">Regex mode <strong>off</strong></p>
+        <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
       </div>
       <div id="mqc_renamesamples" class="mqc_filter_section col-sm-4 col-md-12">
         <h4>Rename Samples</h4>
@@ -133,7 +133,7 @@
         </form>
         {% if config.general_stats['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
         <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
-        <p class="mqc_regex_mode">Regex mode <strong>off</strong></p>
+        <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
       </div>
     </div>
     <div id="mqc_saveconfig" class="mqc_filter_section">
