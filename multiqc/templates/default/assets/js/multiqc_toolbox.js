@@ -17,23 +17,7 @@ $(function () {
   $('.mqc-toolbox-buttons a').click(function(e){
     e.preventDefault();
     var target = $(this).attr('href');
-    if(target == '#mqc_cleartoolbox'){
-      // Empty the toolbox filter lists
-      $('#mqc_col_filters').empty();
-      $('#mqc_renamesamples_filters').empty();
-      $('#mqc_hidesamples_filters').empty();
-      // Reset the highlight colours
-      mqc_colours_idx = 0;
-      $('#mqc_colour_filter_color').val(mqc_colours[0]);
-      // Close the toolbox
-      mqc_toolbox_openclose ('#mqc_col_filters', false);
-      // Apply new set of filters (reset page)
-      apply_mqc_highlights();
-      apply_mqc_renamesamples();
-      apply_mqc_hidesamples();
-    } else {
-      mqc_toolbox_openclose(target);
-    }
+    mqc_toolbox_openclose(target);
   });
   // Shortcut keys
   $(window).keydown(function (evt) {
@@ -144,24 +128,18 @@ $(function () {
   // Save config
   $('.mqc_saveconfig_btn').click(function(e){
     e.preventDefault();
-    if($(this).data('target') == 'autosave'){
-      if($(this).text() == 'Auto-save is off'){
-        $(this).html('Auto-save is <strong>on</strong>');
-      } else {
-        mqc_save_config(undefined, undefined, true); // clear autosave
-        $(this).html('Auto-save is <strong>off</strong>');
-      }
+    var tgt = $(this).data('target');
+    var act = $(this).data('action');
+    if(tgt == 'report'){
+      if(act == 'save'){  mqc_save_config(undefined, 'local'); }
+      if(act == 'clear'){ mqc_save_config(undefined, 'local', true); }
     }
-    if($(this).data('target') == 'local'){
-      mqc_save_config('general', 'local');
-      $('<p class="text-success" id="mqc-save-general-success">General config saved.</p>').hide().insertAfter($(this).parent()).slideDown(function(){
-        setTimeout(function(){
-          $('#mqc-save-general-success').slideUp(function(){ $(this).remove(); });
-        }, 5000);
-      });
+    if(tgt == 'global'){
+      if(act == 'save'){  mqc_save_config('global', 'local'); }
+      if(act == 'clear'){ mqc_save_config('global', 'local', true); }
     }
-    if($(this).data('target') == 'file'){
-      mqc_save_config('general', 'file');
+    if(tgt == 'file'){
+      mqc_save_config('global', 'file');
     }
   });
   
@@ -336,7 +314,6 @@ function apply_mqc_highlights(){
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
-  mqc_autosave();
 }
 
 //////////////////////////////////////////////////////
@@ -410,7 +387,6 @@ function apply_mqc_renamesamples(){
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_renamesamples');
-  mqc_autosave();
 }
 // Try to keep track of what samples are called
 // This dict works as a backup for non-standard plots
@@ -604,7 +580,6 @@ function apply_mqc_hidesamples(){
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
-  mqc_autosave();
 }
 
 
@@ -613,26 +588,11 @@ function apply_mqc_hidesamples(){
 // SAVE TOOLBOX SETTINGS
 //////////////////////////////////////////////////////
 
-
-// Autosave function
-function mqc_autosave(){
-  if($('#mqc_saveconfig_autosave').text() == 'Auto-save is off'){
-    return;
-  }
-  mqc_save_config();
-}
-
 // Save the current configuration setup
 function mqc_save_config(target, method, clear){
-  if(target === undefined){ target = $('#mqc_output_path').text(); }
+  if(target === undefined){ target = $('#mqc_analysis_path').text(); }
   if(method === undefined){ method = 'local'; }
   var config = {};
-  
-  // Autosave status
-  config['autosave_tools'] = true;
-  if($('#mqc_saveconfig_autosave').text() == 'Auto-save is off'){
-    config['autosave_tools'] = false;
-  }
   
   // Collect the highlight filters
   config['highlight_regex'] = false;
@@ -683,12 +643,20 @@ function mqc_save_config(target, method, clear){
     } catch(e){ console.log('Error updating localstorage: '+e); }
     // Update config obj with current config
     if(clear == true){
-      prev_config[target] = {'autosave_tools': false};
+      prev_config[target] = {};
     } else {
       prev_config[target] = config;
       prev_config[target]['last_updated'] = Date();
     }
     localStorage.setItem("mqc_config", JSON.stringify(prev_config));
+    // Success message
+    var insAfter = '.mqc-save-config-report-section p:first-child';
+    if(target == 'global'){ insAfter = '.mqc-save-config-global-section p:first-child'; }
+    $('<p class="text-success" id="mqc-save-'+target+'-success">Config saved.</p>').hide().insertAfter($(insAfter)).slideDown(function(){
+      setTimeout(function(){
+        $('#mqc-save-'+target+'-success').slideUp(function(){ $(this).remove(); });
+      }, 5000);
+    });
   }
   if(method == 'file'){
     var f = "// Config file for MultiQC\n// https://github.com/ewels/MultiQC\n";
@@ -705,14 +673,14 @@ function mqc_save_config(target, method, clear){
 // Load previously saved config variables
 function load_mqc_config(){
   var config = {};
-  // Get local configs - general and then this path
+  // Get local configs - global and then this path
   try {
     var local_config = localStorage.getItem("mqc_config");
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
-      if(local_config['general'] !== undefined){ console.log('Loaded local general config'); }
-      for (var attr in local_config['general']) {
-        config[attr] = local_config['general'][attr];
+      if(local_config['global'] !== undefined){ console.log('Loaded local global config'); }
+      for (var attr in local_config['global']) {
+        config[attr] = local_config['global'][attr];
       }
       var path = $('#mqc_output_path').text();
       if(local_config[path] !== undefined){ console.log('Loaded local report config'); }
@@ -784,10 +752,7 @@ function load_mqc_config(){
     });
     update_hide = true;
   }
-  // Autosave
-  if(config['autosave_tools'] == false){
-    $('#mqc_saveconfig_autosave').html('Auto-save is <strong>off</strong>');
-  }
+
   // Wait for the rest of the page to render, then apply changes.
   // This is ugly. Can anyone think of a better way?
   setTimeout(function(){

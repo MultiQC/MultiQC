@@ -86,7 +86,6 @@
       <li><a href="#mqc_renamesamples" title="Rename" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-font"></span></a></li>
       <li><a href="#mqc_hidesamples" title="Hide" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-eye-close"></span></a></li>
       <li><a href="#mqc_saveconfig" title="Save" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
-      <li><a href="#mqc_cleartoolbox" title="Reset" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-trash"></span></a></li>
     </ul>
   </div>
   <div class="mqc-toolbox-wrapper">
@@ -146,22 +145,26 @@
         </div>
       </div>
       <div class="row">
-        <div class="bs-col col-sm-4 col-md-12">
-          <p>By default, MultiQC reports auto-save your tool settings to the browser.
-            You can turn that on and off here:</p>
-          <p><a href="#" data-target="autosave" id="mqc_saveconfig_autosave" class="mqc_saveconfig_btn btn btn-sm btn-default">Auto-save is <strong>on</strong></a></p>
+        <div class="bs-col col-sm-4 col-md-12 mqc-save-config-report-section">
+          <h5>Report Settings</h5>
+          <p>You can save the toolbox settings for this report to the browser.</p>
+          <p><a href="#" data-target="report" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
+             <a href="#" data-target="report" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
           <hr>
         </div>
-        <div class="bs-col col-sm-4 col-md-12">
-          <p>You can also save a config file to the report directory. Your settings
-            will be applied the next time you open this report, and can be shared with others.</p>
-          <p><a href="#" data-target="file" class="mqc_saveconfig_btn btn btn-sm btn-default">Download Config File</a></p>
-          <hr>
-        </div>
-        <div class="bs-col col-sm-4 col-md-12">
+        <div class="bs-col col-sm-4 col-md-12 mqc-save-config-global-section">
+          <h5>Global Settings</h5>
           <p>If your settings are more general, you can save them to your browser 
             and have them applied to every MultiQC report you open.</p>
-          <p><a href="#" data-target="local" class="mqc_saveconfig_btn btn btn-sm btn-default">Save General Config</a></p>
+          <p><a href="#" data-target="global" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
+             <a href="#" data-target="global" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
+          <hr>
+        </div>
+        <div class="bs-col col-sm-4 col-md-12 mqc-save-config-file-section">
+          <h5>Save to file</h5>
+          <p>You can also save a config file to directory containing the report. Your settings
+            will be applied the next time you open this report, and can be shared with others.</p>
+          <p><a href="#" data-target="file" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-download-alt"></span> Download Config File</a></p>
           <hr>
         </div>
       </div>
