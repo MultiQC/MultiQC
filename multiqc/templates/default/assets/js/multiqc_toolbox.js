@@ -207,6 +207,7 @@ $(function () {
       rswitch.removeClass('on').addClass('off').text('off');
     }
     if($(this).parent().attr('id') == 'mqc_cols'){ apply_mqc_highlights(); }
+    if($(this).parent().attr('id') == 'mqc_renamesamples'){ apply_mqc_renamesamples(); }
     if($(this).parent().attr('id') == 'mqc_hidesamples'){ apply_mqc_hidesamples(); }
   });
   
@@ -254,9 +255,9 @@ function apply_mqc_highlights(){
   var f_matches = 0;
   var f_texts = [];
   var f_cols = [];
-  var regex_mode = true;
-  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode off'){
-    regex_mode = false;
+  var regex_mode = false;
+  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode on'){
+    regex_mode = true;
   }
   $('#mqc_col_filters li .f_text').each(function(){
     f_texts.push($(this).val());
@@ -343,6 +344,12 @@ function apply_mqc_highlights(){
 //////////////////////////////////////////////////////
 
 function apply_mqc_renamesamples(){
+  // Are we using regexes?
+  var regex_mode = false;
+  if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){
+    regex_mode = true;
+  }
+  
   // Loop through each plot
   $('.hc-plot').each(function(){
     // Skip non-standard plot types
@@ -359,7 +366,7 @@ function apply_mqc_renamesamples(){
           try {
             orig_name = highcharts_plot_options['#'+pid]['s_names'][j];
           } catch(err) {}
-          s.name = get_new_name(s.name, pid, orig_name);
+          s.name = get_new_name(s.name, pid, orig_name, regex_mode);
         });
       }
       // Bar charts
@@ -372,7 +379,7 @@ function apply_mqc_renamesamples(){
           try {
             orig_name = replot['s_names'][idx];
           } catch(err) {}
-          var n_name = get_new_name(s_name, pid, orig_name);
+          var n_name = get_new_name(s_name, pid, orig_name, regex_mode);
           if(n_name != s_name){
             replot.xAxis.categories[idx] = n_name;
           }
@@ -384,13 +391,6 @@ function apply_mqc_renamesamples(){
     }
   });
   
-  // Rename original plot titles
-  $('.hc-plot-wrapper').each(function(){
-    var id = $(this).attr('id');
-    var t = $(this).find('.s_name');
-    t.text(get_new_name(t.text(), id));
-  });
-  
   // Rename samples in the general stats table
   $("#general_stats_table tbody th").each(function(){
     var s_name = $(this).text();
@@ -398,7 +398,7 @@ function apply_mqc_renamesamples(){
     if(orig_name === undefined){
       $(this).data('original-sample-name', s_name);
     }
-    $(this).text(get_new_name(s_name, '#general_stats_table', orig_name));
+    $(this).text(get_new_name(s_name, '#general_stats_table', orig_name, regex_mode));
   });
   
   // If something was renamed, highlight the toolbox icon
@@ -415,7 +415,7 @@ function apply_mqc_renamesamples(){
 // Try to keep track of what samples are called
 // This dict works as a backup for non-standard plots
 mqc_renamed_samples = {};
-function get_new_name(s_name, obj_id, orig_name){
+function get_new_name(s_name, obj_id, orig_name, regex_mode){
   // Collect the filters into an array
   var f_texts = [];
   var t_texts = [];
@@ -432,7 +432,12 @@ function get_new_name(s_name, obj_id, orig_name){
   s_name = orig_name;
   // Now rename it
   $.each(f_texts, function(idx, f_text){
-    s_name = s_name.replace(f_text, t_texts[idx]);
+    if(regex_mode){
+      var re = new RegExp(f_text,"g");
+      s_name = s_name.replace(re, t_texts[idx]);
+    } else {
+      s_name = s_name.replace(f_text, t_texts[idx]);
+    }
   });
   // Update list of names for this plot
   if(mqc_renamed_samples[obj_id] === undefined){
@@ -465,9 +470,9 @@ function apply_mqc_hidesamples(){
   // Collect the filters into an array
   var f_matches = 0;
   var f_texts = [];
-  var regex_mode = true;
-  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode off'){
-    regex_mode = false;
+  var regex_mode = false;
+  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode on'){
+    regex_mode = true;
   }
   $('#mqc_hidesamples_filters li .f_text').each(function(){
     f_texts.push($(this).val());
@@ -622,15 +627,17 @@ function mqc_save_config(target, method, clear){
   if(target === undefined){ target = $('#mqc_output_path').text(); }
   if(method === undefined){ method = 'local'; }
   var config = {};
+  
   // Autosave status
   config['autosave_tools'] = true;
   if($('#mqc_saveconfig_autosave').text() == 'Auto-save is off'){
     config['autosave_tools'] = false;
   }
+  
   // Collect the highlight filters
-  config['highlight_regex'] = true;
-  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode off'){
-    config['highlight_regex'] = false;
+  config['highlight_regex'] = false;
+  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode on'){
+    config['highlight_regex'] = true;
   }
   config['highlights_f_texts'] = [];
   config['highlights_f_cols'] = [];
@@ -638,23 +645,29 @@ function mqc_save_config(target, method, clear){
     config['highlights_f_texts'].push($(this).val());
     config['highlights_f_cols'].push($(this).css('color'));
   });
-  // Collect the hide sample filters
-  config['hidesamples_regex'] = true;
-  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode off'){
-    config['hidesamples_regex'] = false;
-  }
-  config['hidesamples_f_texts'] = [];
-  $('#mqc_hidesamples_filters li .f_text').each(function(){
-    config['hidesamples_f_texts'].push($(this).val());
-  });
+  
   // Collect the rename filters
   config['rename_from_texts'] = [];
   config['rename_to_texts'] = [];
+  config['rename_regex'] = false;
+  if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){
+    config['rename_regex'] = true;
+  }
   $('#mqc_renamesamples_filters .from_text').each(function(){
     config['rename_from_texts'].push($(this).val());
   });
   $('#mqc_renamesamples_filters .to_text').each(function(){
     config['rename_to_texts'].push($(this).val());
+  });
+  
+  // Collect the hide sample filters
+  config['hidesamples_regex'] = false;
+  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode on'){
+    config['hidesamples_regex'] = true;
+  }
+  config['hidesamples_f_texts'] = [];
+  $('#mqc_hidesamples_filters li .f_text').each(function(){
+    config['hidesamples_f_texts'].push($(this).val());
   });
   
   if(method == 'local'){
@@ -720,7 +733,14 @@ function load_mqc_config(){
   var update_highlights = false;
   var update_rename = false;
   var update_hide = false;
+  
   // Apply config - highlights
+  if(notEmptyObj(config['highlight_regex'])){
+    if(config['highlight_regex'] == true){
+      $('#mqc_cols .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+    }
+    update_highlights = true;
+  }
   if(notEmptyObj(config['highlights_f_texts']) && notEmptyObj(config['highlights_f_cols'])){
     $.each(config['highlights_f_texts'], function(idx, f_text){
       var f_col = config['highlights_f_cols'][idx];
@@ -728,12 +748,16 @@ function load_mqc_config(){
       mqc_colours_idx += 1;
     });
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
-    if(config['highlight_regex'] == true){
-      $('#mqc_cols .mqc_regex_mode span').removeClass('on').addClass('off').text('off');
-    }
     update_highlights = true;
   }
+  
   // Rename samples
+  if(notEmptyObj(config['rename_regex'])){
+    if(config['rename_regex'] == true){
+      $('#mqc_renamesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+    }
+    update_rename = true;
+  }
   if(notEmptyObj(config['rename_from_texts']) && notEmptyObj(config['rename_to_texts'])){
     $.each(config['rename_from_texts'], function(idx, from_text){
       var to_text = config['rename_to_texts'][idx];
@@ -743,12 +767,16 @@ function load_mqc_config(){
       li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
       $('#mqc_renamesamples_filters').append(li);
     });
-    if(config['hidesamples_regex'] == true){
-      $('#mqc_cols .mqc_regex_mode span').removeClass('on').addClass('off').text('off');
-    }
     update_rename = true;
   }
+  
   // Hide samples
+  if(notEmptyObj(config['hidesamples_regex'])){
+    if(config['hidesamples_regex'] == true){
+      $('#mqc_hidesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+    }
+    update_hide = true;
+  }
   if(notEmptyObj(config['hidesamples_f_texts'])){
     $.each(config['hidesamples_f_texts'], function(idx, f_text){
       if(f_text.length == 0){ return true; }
