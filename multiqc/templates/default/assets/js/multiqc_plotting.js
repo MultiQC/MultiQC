@@ -111,9 +111,10 @@ function plot_xy_line_graph(div, data, config){
       },
       categories: config['categories'],
       ceiling: config['xCeiling'],
+      floor: config['xFloor'],
       max: config['xmax'],
       min: config['xmin'],
-      minTickInterval: config['xMinTickInterval'],
+      minRange: config['xMinRange'],
       allowDecimals: config['xDecimals'],
       plotBands: config['xPlotBands']
     },
@@ -122,9 +123,10 @@ function plot_xy_line_graph(div, data, config){
         text: config['ylab']
       },
       ceiling: config['yCeiling'],
+      floor: config['yFloor'],
       max: config['ymax'],
       min: config['ymin'],
-      minTickInterval: config['yMinTickInterval'],
+      minRange: config['yMinRange'],
       allowDecimals: config['yDecimals'],
       plotBands: config['yPlotBands']
     },

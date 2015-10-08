@@ -24,15 +24,17 @@ config = {
     xlab: undefined,             // X axis label
     ylab: undefined,             // Y axis label
     xCeiling: undefined,         // Maximum value for automatic axis limit (good for percentages)
+    xFloor: undefined,           // Minimum value for automatic axis limit
+    xMinRange: undefined,        // Minimum range for axis
     xmax: undefined,             // Max x limit
     xmin: undefined,             // Min x limit
     xDecimals: true,             // Set to false to only show integer labels
-    xMinTickInterval: undefined, // Minimum distance between ticks. Good for setting minimum resolution on axis.
     yCeiling: undefined,         // Maximum value for automatic axis limit (good for percentages)
+    yFloor: undefined,           // Minimum value for automatic axis limit
+    yMinRange: undefined,        // Minimum range for axis
     ymax: undefined,             // Max y limit
     ymin: undefined,             // Min y limit
     yDecimals: true,             // Set to false to only show integer labels
-    yMinTickInterval: undefined, // Minimum distance between ticks. Good for setting minimum resolution on axis.
     yPlotBands: undefined,       // Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
     xPlotBands: undefined,       // Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     tt_label: '{point.x}: {point.y:.2f}', // Use to customise tooltip label, eg. '{point.x} base pairs'
