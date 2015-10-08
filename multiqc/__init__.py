@@ -9,3 +9,5 @@ __version__ = get_distribution("multiqc").version
 
 from . import config
 from . base_module import BaseMultiqcModule
+
+config.version = __version__
