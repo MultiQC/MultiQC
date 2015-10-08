@@ -1,11 +1,11 @@
 ---
-title: MultiQC v0.2
+title: MultiQC v0.3
 layout: default
 ---
 
 # Welcome!
 
-## MultiQC v0.2 Documentation
+## MultiQC v0.3 Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
