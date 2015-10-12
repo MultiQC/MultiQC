@@ -31,10 +31,6 @@ analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
 output_fn_name = 'multiqc_report.html'
 data_dir_name = 'multiqc_data'
-general_stats = {
-    'headers': OrderedDict(),
-    'rows': defaultdict(lambda:dict())
-}
 fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '_tophat', '_star_aligned', '_fastqc' ]
 fn_ignore_files = ['.DS_Store']
 

@@ -12,7 +12,7 @@ import os
 import random
 import shutil
 
-from multiqc import config
+from multiqc import report, config
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -132,7 +132,7 @@ class BaseMultiqcModule(object):
     
     def general_stats_addcols(self, data, headers=None):
         """ Helper function to add to the General Statistics table.
-        Adds to config.general_stats and does not return anything.
+        Adds to report.general_stats and does not return anything.
         :param data: A dict with the data. First key should be sample name,
                      then the data key, then the data.
         :param headers: Dict / OrderedDict with information for the headers, 
@@ -189,7 +189,7 @@ class BaseMultiqcModule(object):
             try: title = '<span data-toggle="tooltip" title="{}: {}">{}</span>'.format(self.name, headers[k]['description'], title)
             except KeyError: pass
             
-            config.general_stats['headers'][rid] = '<th id="header_{}" class="chroma-col" data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}">{}</th>'.format(rid, scale, dmax, dmin, title)
+            report.general_stats['headers'][rid] = '<th id="header_{}" class="chroma-col" data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}">{}</th>'.format(rid, scale, dmax, dmin, title)
             
             # Add the data cells
             nrows = 0
@@ -210,12 +210,12 @@ class BaseMultiqcModule(object):
                     except ValueError: val = formatstring.format(float(samp[k]))
                     except: val = samp[k]
                     
-                    config.general_stats['rows'][sname][rid] = '<td class="data-coloured {}"><div class="wrapper"><span class="bar" style="width:{}%;"></span><span class="val">{}</span></div></td>'.format(rid, percentage, val)
+                    report.general_stats['rows'][sname][rid] = '<td class="data-coloured {}"><div class="wrapper"><span class="bar" style="width:{}%;"></span><span class="val">{}</span></div></td>'.format(rid, percentage, val)
                     nrows += 1
             
             # Remove header if we don't have any filled cells for it
             if nrows == 0:
-                config.general_stats['headers'].pop(rid, None)
+                report.general_stats['headers'].pop(rid, None)
                 logger.debug('Removing header {} from general stats table, as no data'.format(k))
         
         return None # it's good to be explicit, right?

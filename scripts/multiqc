@@ -18,7 +18,7 @@ import importlib
 
 import click
 
-from multiqc import (config, logger, __version__)
+from multiqc import (report, config, logger, __version__)
 from multiqc.log import init_log, LEVELS
 
 @click.command()
@@ -207,10 +207,10 @@ force, verbose, quiet):
 
     # Print the general stats table to a file
     with open (os.path.join(config.data_dir, 'multiqc_general_stats.txt'), "w") as f:
-        hrow = '\t'.join([''] + list(config.general_stats['headers'].keys()) )
+        hrow = '\t'.join([''] + list(report.general_stats['headers'].keys()) )
         l = [hrow]
-        for sn, r in iter(sorted(config.general_stats['rows'].items())):
-            thesefields = [sn] + [ str(r.get(k, '')) for k in config.general_stats['headers'] ]
+        for sn, r in iter(sorted(report.general_stats['rows'].items())):
+            thesefields = [sn] + [ str(r.get(k, '')) for k in report.general_stats['headers'] ]
             thesefields = [ re.sub('<[^<]+?>', '', field) for field in thesefields ]
             l.append( '\t'.join( thesefields ) )
         print( '\n'.join(l), file=f)
@@ -234,10 +234,10 @@ force, verbose, quiet):
 
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
-    report = j_template.render(config=config, modules=modules_output)
+    report_output = j_template.render(report=report, config=config, modules=modules_output)
     try:
         with io.open (config.output_fn, "w", encoding='utf-8') as f:
-            print(report, file=f)
+            print(report_output, file=f)
     except IOError as e:
         raise IOError ("Could not print report to '{}' - {}".format(output_path, IOError(e)))
 
