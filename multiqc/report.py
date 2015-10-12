@@ -100,7 +100,7 @@ def general_stats_build_html():
         
         # Index for colouring by module
         midx += 1
-        if midx > len(modcols):
+        if midx > (len(modcols) - 1):
             midx = 0
         
     return None
