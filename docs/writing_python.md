@@ -64,9 +64,15 @@ headers['name'] = {
     'min': None,                    # Maximum value in range, for bar / colour coding
     'scale': 'GnBu',                # Colour scale for colour coding
     'format': '{:.1f}',             # Output format() string
-    'modify': None                  # Lambda function to modify values
+    'modify': None,                 # Lambda function to modify values
+    'shared_key': None              # See below for description
 }
 ```
+Note the `shared_key` config variable - any string can be specified here, if
+other columns are found that share the same key, a consistent colour scheme
+and data scale will be used in the table. Typically this is used with
+`headers['shared_key'] = 'read_count'`, so that the read count in a sample
+can be seen varying across analysis modules. Any string can be used, however.
 
 Example of supplied data and headers dicts:
 
@@ -100,20 +106,16 @@ self.general_stats_addcols(data, headers)
 ```
 
 ## Writing data to a file
-`self.dict_to_csv (data, delim="\t")`
+`self.write_csv_file (data, filename)`
 
-This function takes a 2D dictionary and returns a string suitable for
-writing to a .csv file. First key should be sample name (row header),
-second key should be field (column header).
-
-The function takes a dictionary as input, plus an optional 'delim'
-field to specify column delimiter (default: tab).
+This function takes a 2D dictionary and creates a tab-delimited data file
+in the report directory. Data should be supplied as a dict,
+first key should be sample name (row header), second key should be field
+(column header).
 
 You can see an example of this function in the featureCounts module:
 ```python
-# Write parsed report data to a file
-with open (os.path.join(self.output_dir, 'report_data', 'multiqc_featureCounts.txt'), "w") as f:
-    print( self.dict_to_csv( self.featurecounts_data ), file=f)
+self.write_csv_file(self.featurecounts_data, 'multiqc_featureCounts.txt')
 ```
 
 ## Plotting line graphs

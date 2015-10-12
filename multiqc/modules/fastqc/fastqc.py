@@ -285,7 +285,8 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Total Sequences (millions)',
             'min': 0,
             'scale': 'Blues',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / 1000000,
+            'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.fastqc_stats, headers)
 

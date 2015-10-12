@@ -117,7 +117,8 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Uniquely mapped reads (millions)',
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / 1000000,
+            'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.star_data, headers)
 
