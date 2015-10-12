@@ -182,10 +182,13 @@
   
   {% if report.general_stats_html['headers']|length > 0 %}
   <div id="general_stats">
-    <h2>General Statistics</h2>
+    <h2>
+      General Statistics &nbsp;
+      <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#general_stats_colsort_modal">Configure Columns</button>
+    </h2>
     <div id="general_stats_table_container">
       <div class="table-responsive">
-        <table id="general_stats_table" class="table table-condensed">
+        <table id="general_stats_table" class="table table-condensed mqc_table">
           <thead>
             <tr>
               <td class="sorthandle">&nbsp;</td>
@@ -201,7 +204,7 @@
               <td class="sorthandle">||</td>
               <th class="rowheader">{{ sn }}</th>
               {%- for k, h in report.general_stats_html['headers'].items() %}
-                {{ r[k] if r[k] else '<td></td>' }}
+                {{ r[k] if r[k] else '<td class="'+k+'"></td>' }}
               {%- endfor -%}
             </tr>
             {%- endfor %}
@@ -238,6 +241,48 @@
     <p>The report uses <a href="http://www.highcharts.com/" target="_blank">HighCharts</a>, <a href="https://jquery.com/" target="_blank">jQuery</a>,
        <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a>, <a href="https://github.com/gka/chroma.js" target="_blank">chroma.js</a>
        and <a href="http://bootstraptour.com/" target="_blank">Bootstrap Tour</a>.</p>
+  </div>
+</div>
+
+<!-- General Stats Columns Modal -->
+<div class="modal fade" id="general_stats_colsort_modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">General Statistics: Columns</h4>
+      </div>
+      <div class="modal-body">
+        <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order.</p>
+        <table class="table mqc_table" id="general_stats_colsort_table">
+          <thead>
+            <tr>
+              <th class="sorthandle" style="text-align:center;">Sort</th>
+              <th style="text-align:center;">Visible</th>
+              <th>Module</th>
+              <th>Column</th>
+              <th>Description</th>
+              <th>Scale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%- for m in report.general_stats -%}{%- for k in report.general_stats[m]['headers'].keys() %}
+              <tr class="{{ report.general_stats[m]['headers'][k]['rid'] }}" style="background-color: rgba({{report.general_stats[m]['headers'][k]['modcol'] }}, 0.15);">
+                <td class="sorthandle ui-sortable-handle">||</span></td>
+                <td style="text-align:center;"><input class="general_stats_col_visible" type="checkbox" checked="checked" value="{{ report.general_stats[m]['headers'][k]['rid'] }}"></td>
+                <td>{{ m }}</td>
+                <td>{{ report.general_stats[m]['headers'][k]['title'] }}</td>
+                <td>{{ report.general_stats[m]['headers'][k]['description'] }}</td>
+                <td>{{ report.general_stats[m]['headers'][k]['shared_key'] }}</td>
+              </tr>
+            {%- endfor -%}{%- endfor -%}
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
   </div>
 </div>
 

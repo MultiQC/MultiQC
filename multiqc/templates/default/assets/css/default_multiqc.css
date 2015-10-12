@@ -442,14 +442,11 @@ input.form-control[type=color]{
 
 
 /* General stats table */
-#general_stats_table {
-    width: 100%;
-}
-#general_stats_table thead th {
+.mqc_table thead th {
     cursor: pointer;
     background-color: #fff;
 }
-#general_stats_table thead th:after, #gsClone thead th:after {
+.mqc_table thead th:after, #gsClone thead th:after {
     content: "";
     display: inline-block;
     width: 0;
@@ -459,13 +456,13 @@ input.form-control[type=color]{
     border-right: 4px solid transparent;
     border-left: 4px solid transparent;
 }
-#general_stats_table thead th.headerSortDown:after {
+.mqc_table thead th.headerSortDown:after {
     border-bottom: 4px dashed;
 }
-#general_stats_table thead th.headerSortUp:after {
+.mqc_table thead th.headerSortUp:after {
     border-top: 4px dashed;
 }
-#general_stats_table thead th.headerSortDown, #general_stats_table thead th.headerSortUp {
+.mqc_table thead th.headerSortDown, .mqc_table thead th.headerSortUp {
     background-color: #ededed;
     color: #1ca8dd;
     border-bottom: 2px solid #1ca8dd;
@@ -498,14 +495,17 @@ input.form-control[type=color]{
 
 
 
-
-#general_stats_table .sorthandle {
+.sorthandle {
     border-right: none;
     font-weight:bold;
+    text-align: center;
 }
-#general_stats_table tbody .sorthandle {
+tbody .sorthandle {
     cursor: pointer;
     color: #ccc;
+}
+#general_stats_colsort_modal tbody .sorthandle {
+    color: #999;
 }
 #general_stats_table th.rowheader {
     border-left: none;

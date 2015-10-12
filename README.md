@@ -100,6 +100,7 @@ If in doubt, feel free to get in touch with the author:
   * General statistics table now much easier to add to (new helper functions)
 * Images, CSS and Javascript now included in HTML, meaning that there is a single
   report file to make sharing easier
+* More accessible scrolling in the report - styled scrollbars and 'to top' button.
 * Modules and templates now use setuptools entry points, facilitating plugins
   by other packages. Allows niche extensions whilst keeping the core codebase clean.
 * The general stats table now has a sticky header row when scrolling, thanks to
@@ -107,6 +108,7 @@ If in doubt, feel free to get in touch with the author:
 * General stats columns can have a _shared key_ which allows common colour schemes
   and data ranges. For instance, all columns describing a read count will now share
   their scale across modules.
+* General stats columns can be hidden and reordered with a new modal window.
 
 #### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module

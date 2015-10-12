@@ -37,11 +37,15 @@ def general_stats_build_html():
                 shared_keys[sk]['dmin']  = max(headers[k]['dmin'], shared_keys[sk].get('dmin', headers[k]['dmin']))
     
     # Now build required HTML
+    modcols = ['228,26,28', '55,126,184', '77,175,74', '152,78,163', '255,127,0', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
+    midx = 0
     for mod in general_stats.keys():
         headers = general_stats[mod]['headers']
         for k in headers.keys():
             
             rid = headers[k]['rid']
+            
+            headers[k]['modcol'] = modcols[midx]
             
             # Overwrite config with shared key settings
             sk = headers[k].get('shared_key', None)
@@ -55,13 +59,13 @@ def general_stats_build_html():
             
             general_stats_html['headers'][rid] = '<th \
                     id="header_{rid}" \
-                    class="chroma-col" \
+                    class="chroma-col {rid}" \
                     data-chroma-scale="{scale}" \
                     data-chroma-max="{max}" \
                     data-chroma-min="{min}" \
-                    {sk}><span data-toggle="tooltip" title="{descrip}">{title}</span></th>' \
+                    {sk}><span data-toggle="tooltip" title="{mod}: {descrip}">{title}</span></th>' \
                         .format(rid=rid, scale=headers[k]['scale'], max=headers[k]['dmax'],
-                            min=headers[k]['dmin'], sk=sk, \
+                            min=headers[k]['dmin'], sk=sk, mod=mod,
                             descrip=headers[k]['description'], title=headers[k]['title'])
             
             # Add the data table cells
@@ -80,13 +84,24 @@ def general_stats_build_html():
                     except ValueError: val = headers[k]['format'].format(float(samp[k]))
                     except: val = samp[k]
                     
-                    general_stats_html['rows'][sname][rid] = '<td class="data-coloured {}"><div class="wrapper"><span class="bar" style="width:{}%;"></span><span class="val">{}</span></div></td>'.format(rid, percentage, val)
+                    general_stats_html['rows'][sname][rid] = \
+                        '<td class="data-coloured {rid}">\
+                            <div class="wrapper">\
+                                <span class="bar" style="width:{percentage}%;"></span>\
+                                <span class="val">{val}</span>\
+                            </div>\
+                        </td>'.format(rid=rid, percentage=percentage, val=val)
                     nrows += 1
             
             # Remove header if we don't have any filled cells for it
             if nrows == 0:
                 general_stats_html['headers'].pop(rid, None)
                 logger.debug('Removing header {} from general stats table, as no data'.format(k))
+        
+        # Index for colouring by module
+        midx += 1
+        if midx > len(modcols):
+            midx = 0
         
     return None
     

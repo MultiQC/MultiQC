@@ -15,8 +15,8 @@ $(function () {
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
   
-  // Enable tablesorter on the general statistics table
-  $("#general_stats_table").tablesorter({sortInitialOrder: 'desc'});
+  // Enable tablesorter on the general statistics tables
+  $(".mqc_table").tablesorter({sortInitialOrder: 'desc'});
   
   // Freeze the top header when scrolling
   var gsTab = $('#general_stats_table');
@@ -59,8 +59,8 @@ $(function () {
     $("#gsClone").css('margin-left', -$(this).scrollLeft());
   });
   
-  // Make rows in general stats table sortable
-  $('#general_stats_table tbody').sortable({
+  // Make rows in general stats tables sortable
+  $('.mqc_table tbody').sortable({
     handle: '.sorthandle',
     helper: function fixWidthHelper(e, ui) {
       ui.children().each(function() { $(this).width($(this).width()); });
@@ -108,5 +108,58 @@ $(function () {
       }
     });
   });
-    
+  
+  
+  /////// COLUMN CONFIG
+  $('.general_stats_col_visible').change(function(){
+    var cclass = $(this).val();
+    if($(this).is(":checked")) {
+      $('#general_stats_table .'+cclass).show();
+      $('#general_stats_colsort_table .'+cclass).removeClass('text-muted');
+    } else {
+      $('#general_stats_table .'+cclass).hide();
+      $('#general_stats_colsort_table .'+cclass).addClass('text-muted');
+    }
+  });
+  
+  $('#general_stats_colsort_table tbody').on("sortstop", function(e, ui){
+    change_general_stats_col_order();
+  });
+  $("#general_stats_colsort_table").bind("sortEnd",function() { 
+    change_general_stats_col_order();
+  });
+  
 });
+
+
+// Reorder columns in the general stats table.
+// Note: Don't have to worry about floating header, as 'Configure Columns'
+// button is only visible when this is hidden. Ace!
+function change_general_stats_col_order(){
+  // Collect the desired order of columns
+  var classes = [];
+  $('#general_stats_colsort_table tbody tr').each(function(){
+    classes.push($(this).attr('class'));
+  });
+  // Go through each row
+  $('#general_stats_table tr').each(function(){
+    var cols = {};
+    var row = $(this);
+    // Detach any cell that matches a known class from above
+    row.find('td, th').each(function(){
+      var cell = $(this);
+      $.each(classes, function(idx, c){
+        if(cell.hasClass(c)){
+          cols[c] = cell.detach();
+        }
+      });
+    });
+    // Insert detached cells back in the order given in the sorted table
+    for (var idx in classes){
+      var c = classes[idx];
+      if(cols[c] !== undefined){
+        row.append(cols[c]);
+      }
+    }
+  });
+}

@@ -156,11 +156,9 @@ class BaseMultiqcModule(object):
             if 'title' not in headers[k]:
                 headers[k]['title'] = k
             
-            try:
-                headers[k]['description'] = '{}: {}'.format(self.name, headers[k]['description'])
-            except KeyError: 
+            if 'description' not in headers[k]:
                 headers[k]['description'] = '{}: {}'.format(self.name, headers[k]['title'])
-                
+
             if 'scale' not in headers[k]:
                 headers[k]['scale'] = 'GnBu'
             
