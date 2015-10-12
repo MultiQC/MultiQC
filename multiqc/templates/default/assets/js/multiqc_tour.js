@@ -83,7 +83,6 @@ var tour_steps = [
     title: "Resize Plots",
     content: "Drag the grey bar below plots to change their height.",
     backdropPadding: 10,
-    onHide: function (tour) { $('.mqc-toolbox').css('z-index', orig_z_index); }
   },
   {
     element: ".highcharts-button:first path",
@@ -95,7 +94,8 @@ var tour_steps = [
       'bottom': 35,
       'right': 35,
     },
-    content: "Plots can be exported in a range of formats (including <code>svg</code> and <code>pdf</code>, suitable for publications)."
+    content: "Plots can be exported in a range of formats (including <code>svg</code> and <code>pdf</code>, suitable for publications).",
+    onHide: function (tour) { $('.mqc-toolbox').css('z-index', orig_z_index); }
   },
 
   {
