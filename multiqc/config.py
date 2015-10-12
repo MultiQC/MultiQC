@@ -45,7 +45,7 @@ fn_ignore_files = ['.DS_Store']
 # eg. FastQC is usually the first step, so should be last in this list.
 module_order = [
     # Post-alignment analysis results
-    'qualimap', 'featureCounts', 'picard',
+    'qualimap', 'featureCounts', 'picard', 'preseq',
     # Alignment tool stats
     'bismark', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
