@@ -151,37 +151,51 @@ class BaseMultiqcModule(object):
                 safe_name = ''.join(c for c in self.name if c.isalnum()).lower()
                 rid = '{}_{}'.format(safe_name, k)
             
-            # Build the header cell
-            try: scale = headers[k]['scale']
-            except KeyError: scale = 'GnBu'
+            # Get min, max & colscheme from shared key if using it
+            sk = headers[k].get('shared_key', None)
+            if sk in report.general_stats['shared_keys']:
+                scale = report.general_stats['shared_keys'][sk]['scale']
+                dmax  = report.general_stats['shared_keys'][sk]['dmax']
+                dmin  = report.general_stats['shared_keys'][sk]['dmin']
             
-            try:
-                dmax = float(headers[k]['max'])
-            except KeyError:
-                dmax = None
-            
-            try:
-                dmin = float(headers[k]['min'])
-            except KeyError:
-                dmin = None
-            
-            if dmax is None or dmin is None:
-                setdmax = False
-                setdmin = False
-                for (sname, samp) in data.items():
-                    val = float(samp[k])
-                    if 'modify' in headers[k] and callable(headers[k]['modify']):
-                        val = float(headers[k]['modify'](val))
-                    if dmax is None:
-                        dmax = val
-                        setdmax = True
-                    if dmin is None:
-                        dmin = val
-                        setdmin = True
-                    if setdmax:
-                        dmax = max(dmax, val)
-                    if setdmin:
-                        dmin = min(dmin, val)
+            # Figure out colour scheme and min / max
+            else:
+                try: scale = headers[k]['scale']
+                except KeyError: scale = 'GnBu'
+                
+                try:
+                    dmax = float(headers[k]['max'])
+                except KeyError:
+                    dmax = None
+                
+                try:
+                    dmin = float(headers[k]['min'])
+                except KeyError:
+                    dmin = None
+                
+                if dmax is None or dmin is None:
+                    setdmax = False
+                    setdmin = False
+                    for (sname, samp) in data.items():
+                        val = float(samp[k])
+                        if 'modify' in headers[k] and callable(headers[k]['modify']):
+                            val = float(headers[k]['modify'](val))
+                        if dmax is None:
+                            dmax = val
+                            setdmax = True
+                        if dmin is None:
+                            dmin = val
+                            setdmin = True
+                        if setdmax:
+                            dmax = max(dmax, val)
+                        if setdmin:
+                            dmin = min(dmin, val)
+                
+                # Set if shared key is specified - must be the first time we've seen it
+                if sk is not None:
+                    report.general_stats['shared_keys'][sk]['scale'] = scale
+                    report.general_stats['shared_keys'][sk]['dmax']  = dmax
+                    report.general_stats['shared_keys'][sk]['dmin']  = dmin
             
             try: title = headers[k]['title']
             except KeyError: title = k

@@ -179,12 +179,12 @@ force, verbose, quiet):
     os.makedirs(config.data_dir)
 
     # Run the modules!
-    modules_output = list()
+    report.modules_output = list()
     sys_exit_code = 0
     for this_module in run_modules:
         try:
             mod = config.avail_modules[this_module].load()
-            modules_output.append(mod.MultiqcModule())
+            report.modules_output.append(mod.MultiqcModule())
         except UserWarning:
             pass # No samples found
         except:
@@ -198,7 +198,7 @@ force, verbose, quiet):
             sys_exit_code = 1
 
     # Did we find anything?
-    if len(modules_output) == 0:
+    if len(report.modules_output) == 0:
         logger.warn("No analysis results found. Cleaning up..")
         shutil.rmtree(config.data_dir)
         logger.info("MultiQC complete")
@@ -234,7 +234,7 @@ force, verbose, quiet):
 
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
-    report_output = j_template.render(report=report, config=config, modules=modules_output)
+    report_output = j_template.render(report=report, config=config)
     try:
         with io.open (config.output_fn, "w", encoding='utf-8') as f:
             print(report_output, file=f)
