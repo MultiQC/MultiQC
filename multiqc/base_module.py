@@ -130,9 +130,10 @@ class BaseMultiqcModule(object):
         return s_name
     
     
-    def general_stats_addcols(self, data, headers=None):
-        """ Helper function to add to the General Statistics table.
-        Adds to report.general_stats and does not return anything.
+    def general_stats_addcols(self, data, headers={}):
+        """ Helper function to add to the General Statistics variable.
+        Adds to report.general_stats and does not return anything. Fills
+        in required config variables if not supplied.
         :param data: A dict with the data. First key should be sample name,
                      then the data key, then the data.
         :param headers: Dict / OrderedDict with information for the headers, 
@@ -141,98 +142,62 @@ class BaseMultiqcModule(object):
         :return: None
         """
         keys = data.keys()
-        if headers is not None:
+        if len(headers.keys()) > 0:
             keys = headers.keys()
         for k in keys:
             # Unique id to avoid overwriting by other modules
             if self.name is None:
-                rid = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
+                headers[k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
             else:
                 safe_name = ''.join(c for c in self.name if c.isalnum()).lower()
-                rid = '{}_{}'.format(safe_name, k)
+                headers[k]['rid'] = '{}_{}'.format(safe_name, k)
             
-            # Get min, max & colscheme from shared key if using it
-            sk = headers[k].get('shared_key', None)
-            if sk in report.general_stats['shared_keys']:
-                scale = report.general_stats['shared_keys'][sk]['scale']
-                dmax  = report.general_stats['shared_keys'][sk]['dmax']
-                dmin  = report.general_stats['shared_keys'][sk]['dmin']
+            # Use defaults / data keys if headers not given
+            if 'title' not in headers[k]:
+                headers[k]['title'] = k
             
-            # Figure out colour scheme and min / max
-            else:
-                try: scale = headers[k]['scale']
-                except KeyError: scale = 'GnBu'
+            try:
+                headers[k]['description'] = '{}: {}'.format(self.name, headers[k]['description'])
+            except KeyError: 
+                headers[k]['description'] = '{}: {}'.format(self.name, headers[k]['title'])
                 
-                try:
-                    dmax = float(headers[k]['max'])
-                except KeyError:
-                    dmax = None
-                
-                try:
-                    dmin = float(headers[k]['min'])
-                except KeyError:
-                    dmin = None
-                
-                if dmax is None or dmin is None:
-                    setdmax = False
-                    setdmin = False
-                    for (sname, samp) in data.items():
-                        val = float(samp[k])
-                        if 'modify' in headers[k] and callable(headers[k]['modify']):
-                            val = float(headers[k]['modify'](val))
-                        if dmax is None:
-                            dmax = val
-                            setdmax = True
-                        if dmin is None:
-                            dmin = val
-                            setdmin = True
-                        if setdmax:
-                            dmax = max(dmax, val)
-                        if setdmin:
-                            dmin = min(dmin, val)
-                
-                # Set if shared key is specified - must be the first time we've seen it
-                if sk is not None:
-                    report.general_stats['shared_keys'][sk]['scale'] = scale
-                    report.general_stats['shared_keys'][sk]['dmax']  = dmax
-                    report.general_stats['shared_keys'][sk]['dmin']  = dmin
+            if 'scale' not in headers[k]:
+                headers[k]['scale'] = 'GnBu'
             
-            try: title = headers[k]['title']
-            except KeyError: title = k
+            if 'format' not in headers[k]:
+                headers[k]['format'] = '{:.1f}'
             
-            try: title = '<span data-toggle="tooltip" title="{}: {}">{}</span>'.format(self.name, headers[k]['description'], title)
-            except KeyError: pass
+            setdmax = False
+            setdmin = False
+            try:
+                headers[k]['dmax'] = float(headers[k]['max'])
+            except KeyError:
+                headers[k]['dmax'] = float("-inf")
+                setdmax = True
             
-            report.general_stats['headers'][rid] = '<th id="header_{}" class="chroma-col" data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}">{}</th>'.format(rid, scale, dmax, dmin, title)
+            try:
+                headers[k]['dmin'] = float(headers[k]['min'])
+            except KeyError:
+                headers[k]['dmin'] = float("inf")
+                setdmin = True
             
-            # Add the data cells
-            nrows = 0
-            for (sname, samp) in data.items():
-                if k in samp:
-                    val = samp[k]
+            # Figure out the min / max if not supplied
+            if setdmax or setdmin:
+                for (sname, samp) in data.items():
+                    val = float(samp[k])
                     if 'modify' in headers[k] and callable(headers[k]['modify']):
-                        val = headers[k]['modify'](val)
-                    
-                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
-                    percentage = min(percentage, 100)
-                    percentage = max(percentage, 0)
-                        
-                    formatstring = headers[k].get('')
-                    try: formatstring = headers[k]['format']
-                    except: formatstring = '{:.1f}'
-                    try: val = formatstring.format(val)
-                    except ValueError: val = formatstring.format(float(samp[k]))
-                    except: val = samp[k]
-                    
-                    report.general_stats['rows'][sname][rid] = '<td class="data-coloured {}"><div class="wrapper"><span class="bar" style="width:{}%;"></span><span class="val">{}</span></div></td>'.format(rid, percentage, val)
-                    nrows += 1
-            
-            # Remove header if we don't have any filled cells for it
-            if nrows == 0:
-                report.general_stats['headers'].pop(rid, None)
-                logger.debug('Removing header {} from general stats table, as no data'.format(k))
+                        val = float(headers[k]['modify'](val))
+                    if setdmax:
+                        headers[k]['dmax'] = max(headers[k]['dmax'], val)
+                    if setdmin:
+                        headers[k]['dmin'] = min(headers[k]['dmin'], val)
         
-        return None # it's good to be explicit, right?
+        report.general_stats[self.name] = {
+            'data': data,
+            'headers': headers
+        }
+        
+        return None
         
         
     
@@ -399,30 +364,10 @@ class BaseMultiqcModule(object):
         
     
     def write_csv_file(self, data, fn):
+        """ Write a tab-delimited data file to the reports directory.
+        :param: data - a 2D dict, first key sample name (row header),
+                second key field (column header). 
+        :param: fn - Desired filename. Directory will be prepended automatically.
+        :return: None """
         with io.open (os.path.join(config.data_dir, fn), "w", encoding='utf-8') as f:
-            print( self.dict_to_csv( data ), file=f)
-            
-            
-    def dict_to_csv (self, d, delim="\t"):
-        """ Converts a dict to a CSV string
-        :param d: 2D dictionary, first keys sample names and second key
-                  column headers. If second key is not a string, it is skipped.
-        :param delim: optional delimiter character. Default: \t
-        :return: Flattened string, suitable to write to a CSV file.
-        """
-
-        h = None    # Headers
-        l = list()  # File lines
-        for sn in sorted(d.keys()):
-            # Create the header row
-            if h is None:
-                h = list()
-                for k in d[sn].keys():
-                    # Skip if another dict
-                    if type(d[sn][k]) is not dict:
-                        h.append(k)
-                l.append(delim.join(['Sample'] + h))
-            # Make a list starting with the sample name, then each field in order of the header cols
-            thesefields = [sn] + [ str(d[sn].get(k, '')) for k in h ]
-            l.append( delim.join( thesefields ) )
-        return ('\n'.join(l)).encode('utf-8', 'ignore').decode('utf-8')
+            print( report.dict_to_csv( data ), file=f)

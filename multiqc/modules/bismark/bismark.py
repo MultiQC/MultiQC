@@ -198,14 +198,16 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Deduplicated Alignments (millions)',
             'min': 0,
             'scale': 'Greens',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / 1000000,
+            'shared_key': 'read_count'
         }
         headers['aligned_reads'] = {
             'title': 'M Aligned',
             'description': 'Total Aligned Sequences (millions)',
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / 1000000,
+            'shared_key': 'read_count'
         }
         headers['percent_aligned'] = {
             'title': '% Aligned',

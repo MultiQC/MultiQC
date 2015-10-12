@@ -63,7 +63,7 @@
     </a>
   </h1>
   <ul class="mqc-nav">
-    {% if report.general_stats['headers']|length > 0 %}
+    {% if report.general_stats_html['headers']|length > 0 %}
     <li><a href="#general_stats">General Stats</a></li>
     {% endif -%}
     {% for m in report.modules_output %}
@@ -128,7 +128,7 @@
           <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
           <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
         </form>
-        {% if report.general_stats['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
+        {% if report.general_stats_html['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
         <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
         <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
       </div>
@@ -180,7 +180,7 @@
     <button id="mqc-launch-into-tour" class="btn btn-info btn-sm">Take the tour</button>
   </div>
   
-  {% if report.general_stats['headers']|length > 0 %}
+  {% if report.general_stats_html['headers']|length > 0 %}
   <div id="general_stats">
     <h2>General Statistics</h2>
     <div id="general_stats_table_container">
@@ -190,17 +190,17 @@
             <tr>
               <td class="sorthandle">&nbsp;</td>
               <th class="rowheader">Sample Name</th>
-              {%- for k, h in report.general_stats['headers'].items() %}
+              {%- for k, h in report.general_stats_html['headers'].items() %}
                 {{ h }}
               {%- endfor -%}
             </tr>
           </thead>
           <tbody>
-            {% for sn, r in report.general_stats['rows']|dictsort %}
+            {% for sn, r in report.general_stats_html['rows']|dictsort %}
             <tr>
               <td class="sorthandle">||</td>
               <th class="rowheader">{{ sn }}</th>
-              {%- for k, h in report.general_stats['headers'].items() %}
+              {%- for k, h in report.general_stats_html['headers'].items() %}
                 {{ r[k] if r[k] else '<td></td>' }}
               {%- endfor -%}
             </tr>

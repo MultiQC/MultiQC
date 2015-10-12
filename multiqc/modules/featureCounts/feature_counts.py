@@ -102,7 +102,8 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Assigned reads (millions)',
             'min': 0,
             'scale': 'PuBu',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / 1000000,
+            'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.featurecounts_data, headers)
 

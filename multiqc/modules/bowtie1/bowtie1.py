@@ -90,7 +90,8 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'reads with at least one reported alignment (millions)',
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / 1000000,
+            'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.bowtie_data, headers)
 
