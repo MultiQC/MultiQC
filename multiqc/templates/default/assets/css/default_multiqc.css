@@ -112,10 +112,12 @@ kbd {
 /* Epic scroll bar of joy */
 ::-webkit-scrollbar {
     width: 10px;
+    height: 10px;
 }
 ::-webkit-scrollbar-track {
     background: #FFFFFF;
     border-left: 1px solid #D8D8D8;
+    border-right: 1px solid #D8D8D8;
 }
 ::-webkit-scrollbar-thumb {
     background: #dedede;
