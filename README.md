@@ -104,6 +104,9 @@ If in doubt, feel free to get in touch with the author:
   by other packages. Allows niche extensions whilst keeping the core codebase clean.
 * The general stats table now has a sticky header row when scrolling, thanks to
   some new javascript wizardry...
+* General stats columns can have a _shared key_ which allows common colour schemes
+  and data ranges. For instance, all columns describing a read count will now share
+  their scale across modules.
 
 #### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
