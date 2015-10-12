@@ -134,8 +134,6 @@ force, verbose, quiet):
     config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
     config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
     
-    
-    
     # Print some status updates
     if config.title is not None:
         logger.info("Report title: {0}".format(config.title))
