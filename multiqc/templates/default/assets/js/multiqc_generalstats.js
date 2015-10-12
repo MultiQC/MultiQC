@@ -99,7 +99,7 @@ $(function () {
         if(colscheme_rev){
           scale = chroma.scale(colscheme).domain([maxval, minval]);
         }
-        table.find('tr td:nth-of-type('+(idx)+')').each(function(){
+        table.find('tr td:nth-of-type('+(idx+1)+')').each(function(){
           var val = parseFloat($(this).text());
           var col = scale(val).css();
           $(this).find('.wrapper .bar').css('background-color', col);
