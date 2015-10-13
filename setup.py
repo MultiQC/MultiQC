@@ -48,6 +48,7 @@ setup(
         'multiqc.modules.v1': [
             'qualimap = multiqc.modules.qualimap',
             'featureCounts = multiqc.modules.featureCounts',
+            'preseq = multiqc.modules.preseq',
             'picard = multiqc.modules.picard',
             'bismark = multiqc.modules.bismark',
             'star = multiqc.modules.star',
