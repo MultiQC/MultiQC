@@ -11,7 +11,7 @@ import re
 from multiqc import config, BaseMultiqcModule
 
 # Initialise the logger
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
 

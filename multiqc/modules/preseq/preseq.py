@@ -11,7 +11,7 @@ import re
 from multiqc import config, BaseMultiqcModule
 
 # Initialise the logger
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
 
@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         href='http://smithlabresearch.org/software/preseq/', 
         info="estimates the complexity of a library, showing how many additional "\
          "unique reads are sequenced for increasing total read count.")
-
+        
         # Find and load any Preseq reports
         self.preseq_data = dict()
         
