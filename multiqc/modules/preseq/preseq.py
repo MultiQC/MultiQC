@@ -49,14 +49,17 @@ class MultiqcModule(BaseMultiqcModule):
         
         lines = f['f'].splitlines()
         header = lines.pop(0)
-        if header != 'TOTAL_READS     EXPECTED_DISTINCT       LOWER_0.95CI    UPPER_0.95CI':
+        if header != 'TOTAL_READS	EXPECTED_DISTINCT	LOWER_0.95CI	UPPER_0.95CI':
             log.debug("First line of preseq file {} did not look right".format(f['fn']))
             return None
         
         data = {}
         for l in lines:
             s = l.split()
-            data[float(s[1])] = float(s[0])
+            # Sometimes the Expected_distinct count drops to 0, not helpful
+            if float(s[1]) == 0 and float(s[0]) > 0:
+                continue
+            data[float(s[0])] = float(s[1])
         return data
 
 
