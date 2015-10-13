@@ -12,17 +12,17 @@ _Development docs can be found in this repository, in the [`docs`](docs/) direct
 MultiQC is written in Python and contains modules for a number of common tools.
 Currently, these include:
 
-* Quality Control & Pre-processing
+* Quality control & pre-processing
   * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
   * [Cutadapt](https://code.google.com/p/cutadapt/)
-* Read Aligners
+* Read aligners
   * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
   * [STAR](https://github.com/alexdobin/STAR)
   * [Tophat](https://ccb.jhu.edu/software/tophat/)
   * [Bowtie](http://bowtie-bio.sourceforge.net)
   * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
-* Post-alignment Tools
+* Post-alignment tools
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
