@@ -165,6 +165,28 @@ All of these config values are optional, the function will default
 to sensible values if things are missing. See the cutadapt module
 plots for an example of this in action.
 
+### Additional data series
+Sometimes, it's good to be able to specify specific data series manually.
+To do so, set `config['extra_series']` as a `list` of `dict`s. For example,
+the Preseq module does this to create the dotted `x = y` reference line:
+
+```python
+pconfig = {
+    ...
+    'extra_series': [{
+        'name': 'x = y',
+        'data': [[0, 0], [maxval, maxval]],
+        'dashStyle': 'Dash',
+        'lineWidth': 1,
+        'color': '#000000',
+        'marker': { 'enabled': False },
+        'enableMouseTracking': False,
+        'showInLegend': False,
+    }]
+}
+return self.plot_xy_data(self.preseq_data, pconfig)
+``` 
+
 ## Plotting bar graphs
 `self.plot_bargraph (data, cats=None, config={})`
 

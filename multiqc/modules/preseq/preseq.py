@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Find and load any Preseq reports
         self.preseq_data = dict()
-        
+        self.total_max = 0
         for f in self.find_log_files('ccurve.txt'):
             parsed_data = self.parse_preseq_logs(f)
             if parsed_data is not None:
@@ -60,6 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             if float(s[1]) == 0 and float(s[0]) > 0:
                 continue
             data[float(s[0])] = float(s[1])
+            self.total_max = max(float(s[1]), self.total_max)
         return data
 
 
@@ -72,5 +73,18 @@ class MultiqcModule(BaseMultiqcModule):
             'xlab': 'Total Molecules (including duplicates)',
             'ymin': 0,
             'xmin': 0,
+            'tt_label': '<b>{point.x:,.0f} total</b>: {point.y:,.0f} unique',
+            'extra_series': [{
+                'name': 'x = y',
+                'data': [[0, 0], [self.total_max, self.total_max]],
+                'dashStyle': 'Dash',
+                'lineWidth': 1,
+                'color': '#000000',
+                'marker': { 'enabled': False },
+                'enableMouseTracking': False,
+                'showInLegend': False,
+            }]
         }
-        return self.plot_xy_data(self.preseq_data, pconfig)
+        return "<p>A shallow curve indicates complexity saturation. The dashed line \
+                shows a perfectly complex library where total reads = unique reads.</o>" \
+                 + self.plot_xy_data(self.preseq_data, pconfig)

@@ -236,6 +236,13 @@ class BaseMultiqcModule(object):
                     thisplotdata.append(this_series)
             plotdata.append(thisplotdata)
         
+        # Add on annotation data series
+        try:
+            for s in config['extra_series']:
+                plotdata[0].append(s)
+        except KeyError:
+            pass
+        
         # Build the HTML for the page
         if config.get('id') is None:
             config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
