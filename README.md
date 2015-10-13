@@ -12,21 +12,25 @@ _Development docs can be found in this repository, in the [`docs`](docs/) direct
 MultiQC is written in Python and contains modules for a number of common tools.
 Currently, these include:
 
-* [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-* [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
-* [Cutadapt](https://code.google.com/p/cutadapt/)
-* [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
-* [STAR](https://github.com/alexdobin/STAR)
-* [Tophat](https://ccb.jhu.edu/software/tophat/)
-* [Bowtie](http://bowtie-bio.sourceforge.net)
-* [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
-* [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
-* [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
-* [Preseq](http://smithlabresearch.org/software/preseq/)
-* [Qualimap](http://qualimap.bioinfo.cipf.es/)
+* Quality Control & Pre-processing
+  * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+  * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
+  * [Cutadapt](https://code.google.com/p/cutadapt/)
+* Read Aligners
+  * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
+  * [STAR](https://github.com/alexdobin/STAR)
+  * [Tophat](https://ccb.jhu.edu/software/tophat/)
+  * [Bowtie](http://bowtie-bio.sourceforge.net)
+  * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
+* Post-alignment Tools
+  * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
+  * [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
+  * [Preseq](http://smithlabresearch.org/software/preseq/)
+  * [Qualimap](http://qualimap.bioinfo.cipf.es/)
 
 More to come soon. Please suggest any ideas as a new
-[issue](https://github.com/ewels/MultiQC/issues).
+[issue](https://github.com/ewels/MultiQC/issues) _(include an example log
+file if possible)_.
 
 ## Graphical Usage
 
