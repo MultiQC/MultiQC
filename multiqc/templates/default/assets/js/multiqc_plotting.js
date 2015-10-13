@@ -218,7 +218,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
         var s = '<table><tr><th colspan="3" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
         $.each(this.points.reverse(), function () {
           yval = this.y.toFixed(0)
-          s += '<tr><td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px;">' + this.series.name + ':</td><td style="text-align:right;">' + numberWithCommas(yval) + '</td><td style="text-align:right;">(' + this.percentage.toFixed(1) + '%)</td></tr>';
+          s += '<tr><td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px; border-bottom:1px solid #dedede;">' + this.series.name + ':</td><td style="text-align:right; border-bottom:1px solid #dedede;">' + numberWithCommas(yval) + '</td><td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td></tr>';
         });
         s += '</table>';
         return s;

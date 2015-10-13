@@ -26,6 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any FastQ Screen reports
         self.fq_screen_data = dict()
+        self.num_orgs = 0
         for f in self.find_log_files('_screen.txt', filehandles=True):
             parsed_data = self.parse_fqscreen(f['f'])
             if parsed_data is not None:
@@ -42,26 +43,32 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections = list()
 
         # Section 1 - Alignment Profiles
-        self.intro += self.fqscreen_plot()
+        # Posh plot only works for around 20 samples, 8 organisms.
+        if len(self.fq_screen_data) * self.num_orgs <= 160:
+            self.intro += self.fqscreen_plot()
+        # Use simpler plot that works with many samples
+        else:
+            self.intro += self.fqscreen_simple_plot()
         
         # Write the total counts and percentages to files
-        (total_counts, total_percentages) = self.get_totals()
-        self.write_csv_file(total_counts, 'multiqc_fastq_screen_counts.txt')
-        self.write_csv_file(total_percentages, 'multiqc_fastq_screen_percentages.txt')
+        self.write_csv_file(self.parse_csv(), 'multiqc_fastq_screen.txt')
 
 
     def parse_fqscreen(self, fh):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = OrderedDict()
+        total_analysed = None
         for l in fh:
-            if l.startswith('%Hit_no_libraries:'):
-                org = 'No hits'
-                parsed_data[org] = {'percentages':{}}
-                parsed_data[org]['percentages']['one_hit_one_library'] = float(l[19:])
-                parsed_data[org]['percentages']['unmapped'] = 0
-                parsed_data[org]['percentages']['multiple_hits_one_library'] = 0
-                parsed_data[org]['percentages']['one_hit_multiple_libraries'] = 0
-                parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = 0
+            # print(l)
+            tot = re.search(r"Reads in subset:\s+(\d+)", l)
+            if tot:
+                total_analysed = int(tot.group(1))
+            elif l.startswith('%Hit_no_libraries:'):
+                empty = { 'unmapped': 0, 'multiple_hits_one_library': 0, 'one_hit_multiple_libraries': 0, 'multiple_hits_multiple_libraries': 0 }
+                parsed_data['No hits'] = {'percentages': empty, 'counts': empty}
+                parsed_data['No hits']['percentages']['one_hit_one_library'] = float(l[19:])
+                if total_analysed is not None:
+                    parsed_data['No hits']['counts']['one_hit_one_library'] = (float(l[19:]) / 100) * total_analysed
             else:
                 fqs = re.search(r"^(\w+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
                 if fqs:
@@ -78,31 +85,37 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
                     parsed_data[org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
                     parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
-        if len(parsed_data) == 0: return None
+        if len(parsed_data) == 0:
+            return None
+        
+        self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data
     
-    def get_totals(self):
-        total_counts = OrderedDict()
-        total_percentages = OrderedDict()
+    def parse_csv(self):
+        totals = OrderedDict()
         for s in sorted(self.fq_screen_data.keys()):
-            total_counts[s] = OrderedDict()
-            total_percentages[s] = OrderedDict()
+            totals[s] = OrderedDict()
             for org in self.fq_screen_data[s]:
                 try:
-                    total_counts[s][org] = self.fq_screen_data[s][org]['counts']['one_hit_one_library']
-                    total_counts[s][org] += self.fq_screen_data[s][org]['counts']['multiple_hits_one_library']
-                    total_counts[s][org] += self.fq_screen_data[s][org]['counts']['one_hit_multiple_libraries']
-                    total_counts[s][org] += self.fq_screen_data[s][org]['counts']['multiple_hits_multiple_libraries']
+                    k = "{}_counts".format(org)
+                    totals[s][k] = self.fq_screen_data[s][org]['counts']['one_hit_one_library']
+                    totals[s][k] = self.fq_screen_data[s][org]['counts']['multiple_hits_one_library']
+                    totals[s][k] = self.fq_screen_data[s][org]['counts']['one_hit_multiple_libraries']
+                    totals[s][k] = self.fq_screen_data[s][org]['counts']['multiple_hits_multiple_libraries']
                 except KeyError: pass
                 try:
-                    total_percentages[s][org] = self.fq_screen_data[s][org]['percentages']['one_hit_one_library']
-                    total_percentages[s][org] += self.fq_screen_data[s][org]['percentages']['multiple_hits_one_library']
-                    total_percentages[s][org] += self.fq_screen_data[s][org]['percentages']['one_hit_multiple_libraries']
-                    total_percentages[s][org] += self.fq_screen_data[s][org]['percentages']['multiple_hits_multiple_libraries']
+                    k = "{}_percentage".format(org)
+                    totals[s][k] = self.fq_screen_data[s][org]['percentages']['one_hit_one_library']
+                    totals[s][k] = self.fq_screen_data[s][org]['percentages']['multiple_hits_one_library']
+                    totals[s][k] = self.fq_screen_data[s][org]['percentages']['one_hit_multiple_libraries']
+                    totals[s][k] = self.fq_screen_data[s][org]['percentages']['multiple_hits_multiple_libraries']
                 except KeyError: pass
-        return (total_counts, total_percentages)
+        return totals
 
     def fqscreen_plot (self):
+        """ Makes a fancy custom plot which replicates the plot seen in the main
+        FastQ Screen program. Not useful if lots of samples as gets too wide. """
+        
         categories = list()
         getCats = True
         data = list()
@@ -166,3 +179,24 @@ class MultiqcModule(BaseMultiqcModule):
         </script>'.format(json.dumps(data), json.dumps(categories))
 
         return html
+    
+    
+    def fqscreen_simple_plot(self):
+        """ Makes a simple bar plot with summed alignment counts for
+        each species, stacked. """
+        
+        # First, sum the different types of alignment counts
+        data = OrderedDict()
+        for s_name in self.fq_screen_data:
+            data[s_name] = {}
+            for org in self.fq_screen_data[s_name]:
+                data[s_name][org] = self.fq_screen_data[s_name][org]['counts']['one_hit_one_library']
+                data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['multiple_hits_one_library']
+                data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['one_hit_multiple_libraries']
+                data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['multiple_hits_multiple_libraries']
+        
+        return "<p>Summed alignment counts are shown below. Note that Percentages \
+                do <em>not</em> show percentage aligned reads for each organism.</p>" + self.plot_bargraph(data)
+
+        
+        
