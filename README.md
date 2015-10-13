@@ -22,6 +22,8 @@ Currently, these include:
 * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
 * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
 * [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
+* [Preseq](http://smithlabresearch.org/software/preseq/)
+* [Qualimap](http://qualimap.bioinfo.cipf.es/)
 
 More to come soon. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues).
@@ -85,6 +87,7 @@ If in doubt, feel free to get in touch with the author:
 
 ## Version History
 #### [v0.3dev]
+* New Preseq module
 * New design for general statistics table (snazzy new background bars)
 * Further development of toolbox
   * New button to clear all filters
