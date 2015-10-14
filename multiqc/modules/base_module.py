@@ -12,7 +12,7 @@ import os
 import random
 import shutil
 
-from multiqc import report, config
+from multiqc.utils import report, config
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'

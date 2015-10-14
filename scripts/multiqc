@@ -18,8 +18,9 @@ import importlib
 
 import click
 
-from multiqc import (report, config, logger, __version__)
-from multiqc.log import init_log, LEVELS
+from multiqc import (logger, __version__)
+from multiqc.utils import (report, config)
+from multiqc.utils.log import init_log, LEVELS
 
 @click.command()
 @click.argument('analysis_dir',
