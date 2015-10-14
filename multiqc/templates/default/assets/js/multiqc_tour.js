@@ -129,7 +129,7 @@ var tour_steps = [
     element: ".mqc-toolbox-buttons a[href=#mqc_saveconfig]",
     placement: 'left',
     title: "Save Config",
-    content: "By default, every toolbox setting is saved for the report. You can also share your set up with others and set defaults for all reports.",
+    content: "You can save your configuration for this report, or as a default for all reports. You can also share your set up with others via a downloaded file.",
     onShow: function(tour) { mqc_toolbox_openclose('#mqc_saveconfig', true); },
     onHide: function (tour) {
       mqc_toolbox_openclose('#mqc_saveconfig', false);
