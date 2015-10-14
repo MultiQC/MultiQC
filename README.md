@@ -9,17 +9,17 @@
     <th>Devel:</th>
     <td>
       <a title="Build Status" href="https://travis-ci.org/ewels/MultiQC"><img src="https://travis-ci.org/ewels/MultiQC.svg?branch=master"></a>
-      <a title="New commits" href="https://github.com/ewels/MultiQC/compare/v0.2...master"><img src="https://img.shields.io/github/commits-since/ewels/multiqc/v0.2.svg"></a>
       <a title="Devel docs" href="https://github.com/ewels/MultiQC/tree/master/docs"><img src="https://img.shields.io/badge/docs-devel-yellow.svg"></a>
+      <a title="New commits" href="https://github.com/ewels/MultiQC/compare/v0.2...master"><img src="https://img.shields.io/github/commits-since/ewels/multiqc/v0.2.svg"></a>
     </td>
   </tr>
   <tr>
     <th>Stable:</th>
     <td>
       <a title="PyPI Version" href="https://pypi.python.org/pypi/multiqc/"><img src="https://img.shields.io/pypi/v/multiqc.svg"></a>
+      <a title="Stable docs" href="http://multiqc.info/docs/"><img src="https://img.shields.io/badge/docs-stable-green.svg"></a>
       <a title="Licence" href="https://github.com/ewels/MultiQC/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/multiqc.svg"></a>
       <a title="PyPI Downloads" href="http://multiqc.info/stats.php"><img src="https://img.shields.io/pypi/dm/multiqc.svg"></a>
-      <a title="Stable docs" href="http://multiqc.info/docs/"><img src="https://img.shields.io/badge/docs-stable-green.svg"></a>
     </td>
   </tr>
 </table>
