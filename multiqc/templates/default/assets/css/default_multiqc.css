@@ -488,6 +488,11 @@ input.form-control[type=color]{
     }
 }
 
+#genstat_numrows_text {
+    padding: 5px 10px;
+    font-size: 12px;
+    vertical-align: middle;
+}
 
 
 

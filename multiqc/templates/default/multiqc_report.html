@@ -185,6 +185,7 @@
     <h2>
       General Statistics &nbsp;
       <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#general_stats_colsort_modal">Configure Columns</button>
+      <small id="genstat_numrows_text">Showing <span id="genstat_numrows">{{ report.general_stats_html['rows'].keys() | length }}</span> rows.</small>
     </h2>
     <div id="general_stats_table_container">
       <div class="table-responsive">

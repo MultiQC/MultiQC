@@ -543,6 +543,8 @@ function apply_mqc_hidesamples(){
     if(match){ $(this).parent().hide(); }
     else { $(this).parent().show(); }
   });
+  $('#genstat_numrows').text( $("#general_stats_table tbody tr:visible").length );
+  
   // Hide empty columns
   var gsthidx = 0;
   $("#general_stats_table thead th, #general_stats_table tbody tr td").show();
