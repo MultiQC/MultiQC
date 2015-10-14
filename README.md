@@ -3,7 +3,6 @@
 ### Aggregate bioinformatics results across many samples into a single report.
 
 ##### Find [documentation](http://multiqc.info/docs/0.2/README.md) and [example reports](http://multiqc.info/examples/rna-seq/multiqc_report.html) at [multiqc.info](http://multiqc.info)
-_Development docs can be found in this repository, in the [`docs`](docs/) directory._
 
 <table>
   <tr>
