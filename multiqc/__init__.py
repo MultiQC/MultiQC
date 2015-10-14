@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 __version__ = get_distribution("multiqc").version
 
-from . import config
-from . base_module import BaseMultiqcModule
+from utils import config
+from modules.base_module import BaseMultiqcModule
 
 config.version = __version__
