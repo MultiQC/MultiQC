@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         lines = f['f'].splitlines()
         header = lines.pop(0)
-        if header != 'TOTAL_READS	EXPECTED_DISTINCT':
+        if not header.startswith('TOTAL_READS	EXPECTED_DISTINCT'):
             log.debug("First line of preseq file {} did not look right".format(f['fn']))
             return None
         
