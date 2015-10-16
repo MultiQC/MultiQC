@@ -15,6 +15,7 @@ The documentation has the following pages:
 
  - [Docs homepage](README.md) _(this README file)_
  - [Installation and usage](installation.md)
+ - [Report Templates](templates.md)
  - [Getting started writing modules](writing_modules.md)
  - [Python helpers](writing_python.md)
  - [Javascript helpers](writing_javascript.md)
