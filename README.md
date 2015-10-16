@@ -108,6 +108,7 @@ If in doubt, feel free to get in touch with the author:
 
 ## Version History
 #### [v0.3dev]
+* Child templates - easily customise specific parts of the default report template
 * New Preseq module
 * New design for general statistics table (snazzy new background bars)
 * Further development of toolbox
