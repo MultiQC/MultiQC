@@ -1,0 +1,16 @@
+{# #######################
+  head.html
+##########################
+
+This block contains the meta tags for the HTML head. Note, this isn't
+page contents, it's machine-readable tags for browsers and search engines.
+
+#}
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="description" content="MultiQC: A modular tool to aggregate results from bioinformatics analyses across many samples into a single report">
+<meta name="author" content="MultiQC">
+<title>{{ config.title + ': ' if config.title != None }}MultiQC Report</title>

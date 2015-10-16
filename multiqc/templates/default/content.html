@@ -1,0 +1,23 @@
+{# #######################
+  content.html
+##########################
+
+This block prints the main content of the report - it should loop through
+the output from each module and print it in sections.
+
+#}
+
+{% for m in report.modules_output %}
+<div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section">
+  <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
+  {{ m.intro if m.intro }}
+  {% for s in m.sections %}
+    <div class="mqc-section mqc-section-{{ m.anchor }}">
+      <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
+      {{ s['content'] if s['content'] }}
+      {{ '<hr>' if not loop.last }}
+    </div>
+{% endfor %}
+</div>
+{{ '<hr>' if not loop.last }}
+{% endfor %}
