@@ -1,0 +1,46 @@
+{# #######################
+  base.html
+##########################
+
+This is the base file for the report. This is kept as a bare skeleton and
+imports the rest of the template in as blocks.
+
+This file is called when generating the report. It's filename must be
+specified in __init__.py, eg:
+
+template_fn = 'base.html'
+
+#}<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  {% include 'head.html' %}
+  
+  {% include 'includes.html' %}
+  
+</head>
+<body>
+
+{% include 'nav.html' %}
+
+{% include 'toolbox.html' %}
+
+
+<div class="mainpage">
+  
+  {% include 'header.html' %}
+  
+  {% include 'general_stats.html' %}
+
+  {% include 'content.html' %}
+
+</div>
+
+<div class="footer">
+  <div class="container-fluid">
+    {% include 'footer.html' %}
+  </div>
+</div>
+
+</body>
+</html>

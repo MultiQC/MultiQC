@@ -1,0 +1,44 @@
+{# #######################
+  includes.html
+##########################
+
+This is printed in the HTML head section of the report and includes all of
+the CSS and JavaScript dependencies (plus favicon images).
+
+Note - to make the report stand along (not requiring any associated files),
+it prints the contents of these files into the report.
+
+#}
+
+<!-- Favicon includes -->
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
+
+<!-- Include CSS -->
+<link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="assets/css/bootstrap-tour.min.css">
+<link rel="stylesheet" type="text/css" href="assets/css/default_multiqc.css">
+{%- for m in report.modules_output %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css %}
+<link rel="stylesheet" type="text/css" href="{{ css_href }}">
+{%- endfor %}{% endif %}{% endfor %}
+
+<!-- Include javascript files -->
+<script type="text/javascript" src="assets/js/packages/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="assets/js/packages/jquery-ui.min.js"></script>
+<script type="text/javascript" src="assets/js/packages/bootstrap.min.js"></script>
+<script type="text/javascript" src="assets/js/packages/bootstrap-tour.min.js"></script>
+<script type="text/javascript" src="assets/js/packages/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript" src="assets/js/packages/chroma.min.js"></script>
+<script type="text/javascript" src="assets/js/packages/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="assets/js/packages/FileSaver.min.js"></script>
+<script type="text/javascript" src="assets/js/multiqc.js"></script>
+<script type="text/javascript" src="assets/js/multiqc_generalstats.js"></script>
+<script type="text/javascript" src="assets/js/multiqc_toolbox.js"></script>
+<script type="text/javascript" src="assets/js/multiqc_plotting.js"></script>
+<script type="text/javascript" src="assets/js/multiqc_tour.js"></script>
+<script src="multiqc_config.js"></script>
+{%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js %}
+<script type="text/javascript" src="{{ js_href }}"></script>
+{%- endfor %}{% endif %}{% endfor %}

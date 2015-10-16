@@ -14,7 +14,7 @@ import yaml
 
 import multiqc
 from multiqc import (logger)
-from multiqc.log import init_log, LEVELS
+from multiqc.utils.log import init_log, LEVELS
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
