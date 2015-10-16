@@ -117,20 +117,11 @@ force, verbose, quiet):
     if osx_app:
         config.output_dir = os.path.join(analysis_dir, 'multiqc_report')
     
-    # If output prefix has been set, prepend to config variables
+    # Add an underscore to the end of the output prefix if it's not a directory
     if output_prefix is not None:
         output_prefix = output_prefix.strip()
-        # If we've just been given a directory, don't add the underscore
-        # TODO: Better way of doing this?
-        prefix = '_'
-        if os.path.basename('{}{}{}'.format(output_prefix, prefix, config.output_fn_name)) == '_{}'.format(config.output_fn_name):
-            prefix = ''
-        config.output_fn_name = '{}{}{}'.format(output_prefix, prefix, config.output_fn_name)
-        config.data_dir_name = '{}{}{}'.format(output_prefix, prefix, config.data_dir_name)
-    
-    # Make paths from the file names
-    config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-    config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        if output_prefix[-1:] != os.path.sep:
+            output_prefix += '_'
     
     # Print some status updates
     if config.title is not None:
@@ -138,8 +129,6 @@ force, verbose, quiet):
     if dirs:
         logger.info("Prepending directory to sample names")
     logger.info("Searching   : {0}".format(', '.join(config.analysis_dir)))
-    logger.debug("Output      : {0}".format(os.path.relpath(config.output_fn)))
-    logger.debug("Data dir    : {0}".format(os.path.relpath(config.data_dir)))
     
     # Get the list of modules we want to run
     run_modules = config.avail_modules.keys()
@@ -154,12 +143,35 @@ force, verbose, quiet):
         sys.exit(1)
     logger.debug("Analysing modules: {0}".format(', '.join(run_modules)))
     
+    # Load the template
+    template_mod = config.avail_templates[template].load()
+    tmp_dir = tempfile.mkdtemp()
+    logger.debug('Using temporary directory for rendering report: {}'.format(tmp_dir))
+    
+    # Make output file name now we've loaded the template
+    # try:
+    config.output_fn_name = os.path.join(template_mod.output_subdir, config.output_fn_name)
+    # except AttributeError:
+        # pass # No subdirectory variable given
+    if output_prefix is not None:
+        config.output_fn_name = '{}{}'.format(output_prefix, config.output_fn_name)
+    config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+    
+    # Output data directory
+    if output_prefix is not None:
+        config.data_dir_name = '{}{}'.format(output_prefix, config.data_dir_name)
+    config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+    
+    logger.debug("Output      : {0}".format(os.path.relpath(config.output_fn)))
+    logger.debug("Data dir    : {0}".format(os.path.relpath(config.data_dir)))
+    
     # Check for existing reports and remove if -f was specified
     if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
         if force:
-            if os.path.exists(config.output_fn):
-                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
-                os.remove(config.output_fn)
+            output_base = os.path.relpath(os.path.split(config.output_fn)[0])
+            if os.path.exists(output_base):
+                logger.warning("Deleting    : {}   (-f was specified)".format(output_base))
+                shutil.rmtree(output_base)
             if os.path.exists(config.data_dir):
                 logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
                 shutil.rmtree(config.data_dir)
@@ -173,8 +185,9 @@ force, verbose, quiet):
 
     logger.info("Saving to   : {}".format(os.path.relpath(config.output_fn)))
 
-    # Make the report data directory
+    # Make the report directories
     os.makedirs(config.data_dir)
+    os.makedirs(os.path.dirname(config.output_fn))
 
     # Run the modules!
     report.modules_output = list()
@@ -214,11 +227,6 @@ force, verbose, quiet):
                 d[k] = v
         print( report.dict_to_csv( d ), file=f)
     
-    # Load the template
-    template_mod = config.avail_templates[template].load()
-    tmp_dir = tempfile.mkdtemp()
-    logger.debug('Using temporary directory for rendering report: {}'.format(tmp_dir))
-    
     # Load in parent template files first if a child theme
     try:
         parent_template = config.avail_templates[template_mod.template_parent].load()
@@ -241,9 +249,9 @@ force, verbose, quiet):
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
         env.globals['include_file'] = include_file
-        j_template = env.get_template(template_mod.template_fn)
+        j_template = env.get_template(template_mod.base_fn)
     except:
-        raise IOError ("Could not load {} template file '{}'".format(template, template_mod.template_fn))
+        raise IOError ("Could not load {} template file '{}'".format(template, template_mod.base_fn))
 
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
@@ -252,7 +260,7 @@ force, verbose, quiet):
         with io.open (config.output_fn, "w", encoding='utf-8') as f:
             print(report_output, file=f)
     except IOError as e:
-        raise IOError ("Could not print report to '{}' - {}".format(output_path, IOError(e)))
+        raise IOError ("Could not print report to '{}' - {}".format(config.output_fn, IOError(e)))
     
     # Clean up temporary directory
     shutil.rmtree(tmp_dir)
