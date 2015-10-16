@@ -149,10 +149,10 @@ force, verbose, quiet):
     logger.debug('Using temporary directory for rendering report: {}'.format(tmp_dir))
     
     # Make output file name now we've loaded the template
-    # try:
-    config.output_fn_name = os.path.join(template_mod.output_subdir, config.output_fn_name)
-    # except AttributeError:
-        # pass # No subdirectory variable given
+    try:
+        config.output_fn_name = os.path.join(template_mod.output_subdir, config.output_fn_name)
+    except AttributeError:
+        pass # No subdirectory variable given
     if output_prefix is not None:
         config.output_fn_name = '{}{}'.format(output_prefix, config.output_fn_name)
     config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
@@ -169,6 +169,8 @@ force, verbose, quiet):
     if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
         if force:
             output_base = os.path.relpath(os.path.split(config.output_fn)[0])
+            if output_base == '.':
+                output_base = config.output_fn
             if os.path.exists(output_base):
                 logger.warning("Deleting    : {}   (-f was specified)".format(output_base))
                 shutil.rmtree(output_base)
@@ -187,7 +189,8 @@ force, verbose, quiet):
 
     # Make the report directories
     os.makedirs(config.data_dir)
-    os.makedirs(os.path.dirname(config.output_fn))
+    if not os.path.exists(os.path.dirname(config.output_fn)):
+        os.makedirs(os.path.dirname(config.output_fn))
 
     # Run the modules!
     report.modules_output = list()
@@ -261,6 +264,15 @@ force, verbose, quiet):
             print(report_output, file=f)
     except IOError as e:
         raise IOError ("Could not print report to '{}' - {}".format(config.output_fn, IOError(e)))
+    
+    # Copy over files if requested by the theme
+    try:
+        for f in template_mod.copy_files:
+            fn = os.path.join(tmp_dir, f)
+            dest_dir = os.path.join( os.path.dirname(config.output_fn), f)
+            copy_tree(fn, dest_dir)
+    except AttributeError:
+        pass # No files to copy
     
     # Clean up temporary directory
     shutil.rmtree(tmp_dir)
