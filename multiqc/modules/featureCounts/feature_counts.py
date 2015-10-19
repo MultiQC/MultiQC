@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
             'Unassigned_NoFeatures': r"Unassigned_NoFeatures\s+(\d+)",
             'Unassigned_Unmapped': r"Unassigned_Unmapped\s+(\d+)",
             'Unassigned_MappingQuality': r"Unassigned_MappingQuality\s+(\d+)",
-            'Unassigned_FragmentLength': r"Unassigned_FragmentLength\s+(\d+)",
+            'Unassigned_FragmentLength': r"Unassigned_Frage?mentLength\s+(\d+)",
             'Unassigned_Chimera': r"Unassigned_Chimera\s+(\d+)",
             'Unassigned_Secondary': r"Unassigned_Secondary\s+(\d+)",
             'Unassigned_Nonjunction': r"Unassigned_Nonjunction\s+(\d+)",
