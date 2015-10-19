@@ -182,8 +182,7 @@ class BaseMultiqcModule(object):
             # Figure out the min / max if not supplied
             if setdmax or setdmin:
                 for (sname, samp) in data.items():
-                    val = 0
-                    if samp[k]: val = float(samp[k])
+                    val = float(samp[k])
                     if 'modify' in headers[k] and callable(headers[k]['modify']):
                         val = float(headers[k]['modify'](val))
                     if setdmax:
