@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
             'Unassigned_NoFeatures': r"Unassigned_NoFeatures\s+(\d+)",
             'Unassigned_Unmapped': r"Unassigned_Unmapped\s+(\d+)",
             'Unassigned_MappingQuality': r"Unassigned_MappingQuality\s+(\d+)",
-            'Unassigned_FragementLength': r"Unassigned_FragementLength\s+(\d+)",
+            'Unassigned_FragmentLength': r"Unassigned_FragmentLength\s+(\d+)",
             'Unassigned_Chimera': r"Unassigned_Chimera\s+(\d+)",
             'Unassigned_Secondary': r"Unassigned_Secondary\s+(\d+)",
             'Unassigned_Nonjunction': r"Unassigned_Nonjunction\s+(\d+)",
@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Specify the order of the different possible categories
         keys = ['Assigned', 'Unassigned_Ambiguity', 'Unassigned_MultiMapping', 'Unassigned_NoFeatures',
-        'Unassigned_Unmapped', 'Unassigned_MappingQuality', 'Unassigned_FragementLength', 'Unassigned_Chimera',
+        'Unassigned_Unmapped', 'Unassigned_MappingQuality', 'Unassigned_FragmentLength', 'Unassigned_Chimera',
         'Unassigned_Secondary', 'Unassigned_Nonjunction', 'Unassigned_Duplicate']
         
         # Config for the plot
