@@ -1,6 +1,6 @@
 """
 =============
- deafult_dev
+ default_dev
 =============
 
 This theme is visually identical to 'default', however it keeps

@@ -170,8 +170,8 @@ force, verbose, quiet):
         if force:
             output_base = os.path.relpath(os.path.split(config.output_fn)[0])
             if output_base == '.':
-                output_base = config.output_fn
-            if os.path.exists(output_base):
+                os.remove(config.output_fn)
+            elif os.path.exists(output_base):
                 logger.warning("Deleting    : {}   (-f was specified)".format(output_base))
                 shutil.rmtree(output_base)
             if os.path.exists(config.data_dir):
