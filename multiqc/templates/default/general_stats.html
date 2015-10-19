@@ -67,7 +67,7 @@ This block generates the General Statistics table at the top of the report.
             </tr>
           </thead>
           <tbody>
-            {%- for m in report.general_stats -%}{%- for k in report.general_stats[m]['headers'].keys() %}
+            {%- for m in report.general_stats -%}{%- for k in report.general_stats[m]['headers'].keys() -%}{%- if report.general_stats[m]['headers'][k]['rid'] in report.general_stats_html['headers'] %}
               <tr class="{{ report.general_stats[m]['headers'][k]['rid'] }}" style="background-color: rgba({{report.general_stats[m]['headers'][k]['modcol'] }}, 0.15);">
                 <td class="sorthandle ui-sortable-handle">||</span></td>
                 <td style="text-align:center;"><input class="general_stats_col_visible" type="checkbox" checked="checked" value="{{ report.general_stats[m]['headers'][k]['rid'] }}"></td>
@@ -76,7 +76,7 @@ This block generates the General Statistics table at the top of the report.
                 <td>{{ report.general_stats[m]['headers'][k]['description'] }}</td>
                 <td>{{ report.general_stats[m]['headers'][k]['shared_key'] }}</td>
               </tr>
-            {%- endfor -%}{%- endfor -%}
+            {%- endif -%}{%- endfor -%}{%- endfor -%}
           </tbody>
         </table>
       </div>

@@ -5,6 +5,11 @@ module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
 
 from collections import defaultdict, OrderedDict
+import logging
+
+import multiqc
+from multiqc import (logger)
+from multiqc.utils.log import init_log, LEVELS
 
 general_stats = OrderedDict()
 general_stats_html = {

@@ -71,7 +71,7 @@ class BaseMultiqcModule(object):
                         try:
                             filesize = os.path.getsize(os.path.join(root,fn))
                         except (IOError, OSError, ValueError, UnicodeDecodeError):
-                            log.debug("Couldn't read file when checking filesize: {}".format(fn))
+                            logger.debug("Couldn't read file when checking filesize: {}".format(fn))
                             readfile = False
                         else:
                             if filesize > 1000000:
@@ -182,13 +182,16 @@ class BaseMultiqcModule(object):
             # Figure out the min / max if not supplied
             if setdmax or setdmin:
                 for (sname, samp) in data.items():
-                    val = float(samp[k])
-                    if 'modify' in headers[k] and callable(headers[k]['modify']):
-                        val = float(headers[k]['modify'](val))
-                    if setdmax:
-                        headers[k]['dmax'] = max(headers[k]['dmax'], val)
-                    if setdmin:
-                        headers[k]['dmin'] = min(headers[k]['dmin'], val)
+                    try:
+                        val = float(samp[k])
+                        if 'modify' in headers[k] and callable(headers[k]['modify']):
+                            val = float(headers[k]['modify'](val))
+                        if setdmax:
+                            headers[k]['dmax'] = max(headers[k]['dmax'], val)
+                        if setdmin:
+                            headers[k]['dmin'] = min(headers[k]['dmin'], val)
+                    except KeyError:
+                        pass # missing data - skip
         
         report.general_stats[self.name] = {
             'data': data,
