@@ -183,7 +183,7 @@ class BaseMultiqcModule(object):
             if setdmax or setdmin:
                 for (sname, samp) in data.items():
                     val = 0
-                    val = float(samp[k]) if samp[k]
+                    if samp[k]: val = float(samp[k])
                     if 'modify' in headers[k] and callable(headers[k]['modify']):
                         val = float(headers[k]['modify'](val))
                     if setdmax:
