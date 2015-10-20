@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f['fn'].rstrip('_fastqc.zip')
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
-            except BadZipfile:
+            except zipfile.BadZipfile:
                 continue
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
