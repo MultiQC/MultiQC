@@ -63,7 +63,8 @@ setup(
             'default = multiqc.templates.default',
             'default_dev = multiqc.templates.default_dev',
             'geo = multiqc.templates.geo',
-        ]
+        ],
+        'multiqc.hooks.v1': []
     },
     classifiers = [
         'Development Status :: 4 - Beta',
