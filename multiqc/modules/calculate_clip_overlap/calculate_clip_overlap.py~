@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+
+""" MultiQC module to parse output from Calculate_Clip_Overlap """
+
+from __future__ import print_function
+import io
+import logging
+import os
+import re
+
+from multiqc import config, BaseMultiqcModule
+
+# Initialise the logger
+log = logging.getLogger(__name__)
+
+class MultiqcModule(BaseMultiqcModule):
+
+    def __init__(self):
+
+        # Initialise the parent object
+        super(MultiqcModule, self).__init__(name='calculate_clip_overlap', anchor='calculate_clip_overlap',
+        href='http://github.com/avilella/calculate_clip_overlap/', 
+        info="calculates the overlap clipping of a given bam file under "\
+         "a variety of different Illumina sequencing conditions.")
+        
+        # Find and load any Calculate_Clip_Overlap reports
+        self.calculate_clip_overlap_data = dict()
+        self.total_max = 0
+        for f in self.find_log_files(contents_match='SEQ	read_PE	scov	total_nuc	mapped_nuc	lost_nuc	effic_pc'):
+            parsed_data = self.parse_calculate_clip_overlap_logs(f)
+            if parsed_data is not None:
+                self.calculate_clip_overlap_data[f['s_name']] = parsed_data
+
+        if len(self.calculate_clip_overlap_data) == 0:
+            log.debug("Could not find any calculate_clip_overlap data in {}".format(config.analysis_dir))
+            raise UserWarning
+
+        log.info("Found {} reports".format(len(self.calculate_clip_overlap_data)))
+
+        self.sections = list()
+
+        # Calculate_Clip_Overlap plot
+        # Only one section, so add to the intro
+        self.intro += self.calculate_clip_overlap_length_trimmed_plot()
+
+
+    def parse_calculate_clip_overlap_logs(self, s):
+        # Check that this isn't actually Bismark using bowtie
+        parsed_data = {}
+        regexes = {
+            'obs':   r"obs\t\d+\t[\d\.]+\d+\t\d+\t\d+\t([\d\.]+)",
+            '2x75':  r"2x75\t\d+\t[\d\.]+\d+\t\d+\t\d+\t([\d\.]+)",
+            '2x100': r"2x100\t\d+\t[\d\.]+\d+\t\d+\t\d+\t([\d\.]+)",
+            '2x125': r"2x125\t\d+\t[\d\.]+\d+\t\d+\t\d+\t([\d\.]+)",
+            '2x150': r"2x150\t\d+\t[\d\.]+\d+\t\d+\t\d+\t([\d\.]+)",
+            '2x250': r"2x250\t\d+\t[\d\.]+\d+\t\d+\t\d+\t([\d\.]+)",
+        }
+
+        for k, r in regexes.items():
+            match = re.search(r, s)
+            if match:
+                parsed_data[k] = float(match.group(1).replace(',', ''))
+            
+        if len(parsed_data) == 0: return None
+        parsed_data['reads_other'] = parsed_data['reads_processed'] - parsed_data.get('reads_aligned', 0) - parsed_data.get('not_aligned', 0) - parsed_data.get('multimapped', 0)
+        return parsed_data
+
+
+    def calculate_clip_overlap_length_trimmed_plot (self):
+        """ Generate the calculate_clip_overlap plot """    
+        pconfig = {
+            'id': 'calculate_clip_overlap_plot',
+            'title': 'calculate_clip_overlap barplot',
+            'ylab': 'Unique Molecules',
+            'xlab': 'Total Molecules (including duplicates)',
+            'ymin': 0,
+            'xmin': 0,
+            'tt_label': '<b>{point.x:,.0f} total</b>: {point.y:,.0f} unique',
+            'extra_series': [{
+                'name': 'x = y',
+                'data': [[0, 0], [self.total_max, self.total_max]],
+                'dashStyle': 'Dash',
+                'lineWidth': 1,
+                'color': '#000000',
+                'marker': { 'enabled': False },
+                'enableMouseTracking': False,
+                'showInLegend': False,
+            }]
+        }
+        return "<p>A shallow curve indicates complexity saturation. The dashed line \
+                shows a perfectly complex library where total reads = unique reads.</o>" \
+                 + self.plot_xy_data(self.calculate_clip_overlap_data, pconfig)
