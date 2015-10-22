@@ -49,6 +49,7 @@ setup(
             'qualimap = multiqc.modules.qualimap',
             'featureCounts = multiqc.modules.featureCounts',
             'preseq = multiqc.modules.preseq',
+            'calculate_clip_overlap = multiqc.modules.calculate_clip_overlap',
             'picard = multiqc.modules.picard',
             'bismark = multiqc.modules.bismark',
             'star = multiqc.modules.star',
