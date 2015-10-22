@@ -64,7 +64,12 @@ setup(
             'default_dev = multiqc.templates.default_dev',
             'geo = multiqc.templates.geo',
         ],
-        'multiqc.hooks.v1': []
+        # 'multiqc.hooks.v1': [
+            # 'execution_start = myplugin.hooks:execution_start',
+            # 'before_modules = myplugin.hooks:before_modules',
+            # 'after_modules = myplugin.hooks:after_modules',
+            # 'execution_finish = myplugin.hooks:execution_finish',
+        # ]
     },
     classifiers = [
         'Development Status :: 4 - Beta',
