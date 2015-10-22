@@ -21,7 +21,7 @@ import importlib
 import click
 
 from multiqc import (logger, __version__)
-from multiqc.utils import (report, config)
+from multiqc.utils import (report, plugin_hooks, config)
 from multiqc.utils.log import init_log, LEVELS
 
 @click.command()
@@ -89,6 +89,8 @@ force, verbose, quiet):
     if quiet:
         loglevel = 'WARNING'
     init_log(logger, loglevel=loglevel)
+    
+    plugin_hooks.mqc_trigger('execution_start')
     
     logger.info("Working dir : {0}".format(os.getcwd()))
     logger.info("Template    : {0}".format(template))
@@ -194,6 +196,7 @@ force, verbose, quiet):
         os.makedirs(os.path.dirname(config.output_fn))
 
     # Run the modules!
+    plugin_hooks.mqc_trigger('before_modules')
     report.modules_output = list()
     sys_exit_code = 0
     for this_module in run_modules:
@@ -219,6 +222,8 @@ force, verbose, quiet):
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
+    
+    plugin_hooks.mqc_trigger('after_modules')
     
     # Generate the General Statistics table HTML
     report.general_stats_build_html()
@@ -277,6 +282,8 @@ force, verbose, quiet):
     
     # Clean up temporary directory
     shutil.rmtree(tmp_dir)
+    
+    plugin_hooks.mqc_trigger('execution_finish')
 
     logger.info("MultiQC complete")
     if osx_app: 
