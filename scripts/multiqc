@@ -202,7 +202,7 @@ force, verbose, quiet):
     for this_module in run_modules:
         try:
             mod = config.avail_modules[this_module].load()
-            report.modules_output.append(mod.MultiqcModule())
+            report.modules_output.append(mod())
         except UserWarning:
             pass # No samples found
         except:
