@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_bowtie_logs(self, s):
         # Check that this isn't actually Bismark using bowtie
-        if s.find('Using bowtie 1 for aligning with bismark.', 0) >= 0: return None
+        if s.find('bismark', 0) >= 0: return None
         parsed_data = {}
         regexes = {
             'reads_processed': r"# reads processed:\s+(\d+)",

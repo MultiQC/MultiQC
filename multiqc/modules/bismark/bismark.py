@@ -115,7 +115,10 @@ class MultiqcModule(BaseMultiqcModule):
         for sn in self.bismark_data['merged']:
             aln = self.bismark_data['merged'][sn]['aligned_reads']
             tot = self.bismark_data['merged'][sn]['total_reads']
-            self.bismark_data['merged'][sn]['percent_aligned'] = (aln / tot) * 100
+            try:
+                self.bismark_data['merged'][sn]['percent_aligned'] = (aln / tot) * 100
+            except ZeroDivisionError:
+                pass # Zero total reads
         
         if len(self.bismark_data['merged']) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))

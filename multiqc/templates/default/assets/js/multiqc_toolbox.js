@@ -46,6 +46,24 @@ $(function () {
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
   });
   
+  // Sort general stats by highlight
+  $('#mqc_genstat_sort_highlight').click(function(e){
+    e.preventDefault();
+    // collect highlighted rows
+    var hrows = $('#general_stats_table tbody th.highlighted').parent().detach();
+    hrows = hrows.sort(function (a, b) {
+      return $(a).find('th').data('highlight') - $(b).find('th').data('highlight');
+    });
+    if($(this).data('direction') == 'desc'){
+      hrows = hrows.get().reverse();
+      $('#general_stats_table tbody').prepend(hrows);
+      $(this).data('direction', 'asc');
+    } else {
+      $('#general_stats_table tbody').append(hrows);
+      $(this).data('direction', 'desc');
+    }
+  });
+  
   // Rename samples
   var mqc_renamesamples_idx = 300;
   $('#mqc_renamesamples_form').submit(function(e){
@@ -283,13 +301,18 @@ function apply_mqc_highlights(){
   });
   
   // Colour the heading text on the general stats table
+  $('#mqc_genstat_sort_highlight').hide();
+  $('#general_stats_table tbody th').removeClass('highlighted').removeData('highlight');
   $('#general_stats_table tbody th').each(function(i){
+    var th = $(this);
     var thtext = $(this).text();
     var thiscol = '#333';
     $.each(f_texts, function(idx, f_text){
       if((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)){
         thiscol = f_cols[idx];
         f_matches += 1;
+        th.addClass('highlighted').data('highlight', idx);
+        $('#mqc_genstat_sort_highlight').show();
       }
     });
     $(this).css('color', thiscol);
