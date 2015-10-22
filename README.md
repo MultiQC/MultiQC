@@ -109,6 +109,7 @@ If in doubt, feel free to get in touch with the author:
 ## Version History
 #### [v0.3dev]
 * Child templates - easily customise specific parts of the default report template
+* Plugin hooks - allow other tools to execute custom code during MultiQC execution
 * New Preseq module
 * New design for general statistics table (snazzy new background bars)
 * Further development of toolbox
