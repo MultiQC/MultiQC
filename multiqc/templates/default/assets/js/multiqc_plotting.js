@@ -4,15 +4,21 @@
 
 // Execute when page load has finished loading
 $(function () {
-    
-    // Switch a HighCharts axis or data source
+  
+  // Render a plot when clicked
+  $('body').on('click', '.render_plot', function(e){
+    var target = $(this).parent().attr('id');
+    plot_graph(target);
+  });
+  
+  // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
     e.preventDefault();
     $(this).siblings('button.active').removeClass('active');
     $(this).addClass('active');
     var target = $(this).data('target');
     var action = $(this).data('action');
-    var plot_options = highcharts_plot_options[target];
+    var plot_options = highcharts_plots[target];
     // Switch between values and percentages
     if(action == 'set_percent' || action == 'set_numbers'){
       var sym = (action == 'set_percent') ? '%' : '#';
@@ -70,16 +76,36 @@ $(function () {
   
 });
 
-
-
-// We store the config options for every graph in an arrays.
-// This way, we can go back and change them via button clicks
-// eg. Changing an axis from values to percentages
-highcharts_plots = [];
-highcharts_plot_options = [];
+// Call to render any plot
+function plot_graph(target, ds, max_num){
+  if(mqc_plots[target] === undefined){ return false; }
+  else {
+    // XY Line charts
+    if(mqc_plots[target]['plot_type'] == 'xy_line'){
+      if(max_num === undefined || mqc_plots[target]['datasets'][0].length < max_num){
+        plot_xy_line_graph(target, ds);
+      }
+    }
+    // Bar graphs
+    else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
+      if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
+        plot_stacked_bar_graph(target, ds);
+      }
+    }
+    // Not recognised
+    else { console.log('Did not recognise plot type: '+mqc_plots[target]['plot_type']); }
+  }
+}
 
 // Basic Line Graph
-function plot_xy_line_graph(div, data, config){
+function plot_xy_line_graph(target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'xy_line'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  var data = mqc_plots[target]['datasets'];
+  if(ds === undefined){ ds = 0; }
+  
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
@@ -88,15 +114,10 @@ function plot_xy_line_graph(div, data, config){
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{series.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{series.name}</span><br>'+config['tt_label'];
   }
-  // Collect the starting sample names to preserve after renaming
-  var s_names = [];
-  $.each(data, function(idx, d){
-    s_names.push(d['name']);
-  });
-  // Make the highcharts config object
-  highcharts_plot_options[div] = {
+
+  // Make the highcharts plot
+  $('#'+target).highcharts({
     chart: {
-      renderTo: div.replace('#',''),
       type: 'line',
       zoomType: 'x',
       backgroundColor: null,
@@ -154,23 +175,29 @@ function plot_xy_line_graph(div, data, config){
 			pointFormat: config['pointFormat'],
 			useHTML: true
     },
-    series: data,
-    s_names: s_names // Not for highcharts - this is to remember original names for renaming
-  }
-  highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
+    series: data[ds]
+  });
 }
 
 // Stacked Bar Graph
-function plot_stacked_bar_graph(div, cats, data, config){
+function plot_stacked_bar_graph(target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'bar_graph'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  var data = mqc_plots[target]['datasets'];
+  var cats = mqc_plots[target]['samples'];
+  if(ds === undefined){ ds = 0; }
+  
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
-  // Make the highcharts config object
-  highcharts_plot_options[div] = {
+  
+  // Make the highcharts plot
+  $('#'+target).highcharts({
     chart: {
-      renderTo: div.replace('#',''),
       type: 'bar',
       backgroundColor: null,
     },
@@ -178,7 +205,7 @@ function plot_stacked_bar_graph(div, cats, data, config){
       text: config['title'],
     },
     xAxis: {
-      categories: cats,
+      categories: cats[ds],
       min: 0,
       title: {
         text: config['xlab']
@@ -226,10 +253,8 @@ function plot_stacked_bar_graph(div, cats, data, config){
       shared: true,
       useHTML: true
     },
-    series: data,
-    s_names: cats // Not for highcharts - this is to remember original names for renaming
-  }
-  highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
+    series: data[ds]
+  });
 }
 
 

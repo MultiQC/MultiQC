@@ -10,6 +10,14 @@ var mqc_colours = chroma.brewer.Set1;
 //////////////////////////////////////////////////////
 $(function () {
   
+  // Listener to plot graphs when config loaded
+  $(document).on('mqc_config_loaded', function(e){
+    $('.hc-plot').each(function(){
+      var target = $(this).attr('id');
+      plot_graph(target, undefined, '20');
+    });
+  });
+  
   // Load any saved configuration
   load_mqc_config();
 
@@ -767,13 +775,8 @@ function load_mqc_config(){
     update_hide = true;
   }
 
-  // Wait for the rest of the page to render, then apply changes.
-  // This is ugly. Can anyone think of a better way?
-  setTimeout(function(){
-    if(update_highlights){ apply_mqc_highlights(); }
-    if(update_rename){ apply_mqc_renamesamples(); }
-    if(update_hide){ apply_mqc_hidesamples(); }
-  }, 1000);
+  // Trigger loaded event to initialise plots
+  $(document).trigger('mqc_config_loaded');
   
 }
 

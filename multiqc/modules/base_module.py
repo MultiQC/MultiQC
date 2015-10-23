@@ -264,12 +264,15 @@ class BaseMultiqcModule(object):
             html += '</div>\n\n'
         
         # The plot div
-        html += '<div id="{id}" class="hc-plot hc-line-plot"></div> \n'.format(id=config['id'])
+        html += '<div id="{id}" class="hc-plot hc-line-plot"><button class="render_plot">Show plot</button></div> \n'.format(id=config['id'])
         
         # Javascript with data dump
         html += '<script type="text/javascript"> \n\
-            var {id}_datasets = {d}; \n\
-            $(function () {{ plot_xy_line_graph("#{id}", {id}_datasets[0], {c}); }}); \n\
+            mqc_plots["{id}"] = {{ \n\
+                "plot_type": "xy_line", \n\
+                "datasets": {d}, \n\
+                "config": {c} \n\
+            }} \n\
         </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config));
         return html
     
@@ -361,11 +364,14 @@ class BaseMultiqcModule(object):
             html += '</div>\n\n'
         
         # Plot and javascript function
-        html += '<div id="{id}" class="hc-plot hc-bar-plot"></div> \n\
+        html += '<div id="{id}" class="hc-plot hc-bar-plot"><button class="render_plot">Show plot</button></div> \n\
         <script type="text/javascript"> \n\
-            var {id}_samples = {s}; \n\
-            var {id}_datasets = {d}; \n\
-            $(function () {{ plot_stacked_bar_graph("#{id}", {id}_samples[0], {id}_datasets[0], {c}); }}); \
+            mqc_plots["{id}"] = {{ \n\
+                "plot_type": "bar_graph", \n\
+                "samples": {s}, \n\
+                "datasets": {d}, \n\
+                "config": {c} \n\
+            }} \n\
         </script>'.format(id=config['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(config));
         
         return html
