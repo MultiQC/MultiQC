@@ -260,11 +260,11 @@ class BaseMultiqcModule(object):
                 except: name = k+1
                 try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         
         # The plot div
-        html += '<div id="{id}" class="hc-plot hc-line-plot"><button class="render_plot">Show plot</button></div> \n'.format(id=config['id'])
+        html += '<div id="{id}" class="hc-plot hc-line-plot"><button class="btn btn-default btn-lg render_plot">Show plot</button></div> \n'.format(id=config['id'])
         
         # Javascript with data dump
         html += '<script type="text/javascript"> \n\
@@ -345,8 +345,8 @@ class BaseMultiqcModule(object):
             c_label = config.get('cpswitch_counts_label', 'Counts')
             p_label = config.get('cpswitch_percent_label', 'Percentages')
             html += '<div class="btn-group switch_group"> \n\
-    			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="#{id}">{c_l}</button> \n\
-    			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="#{id}">{p_l}</button> \n\
+    			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n\
+    			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n\
     		</div> '.format(id=config['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
             if len(plotdata) > 1:
                 html += ' &nbsp; &nbsp; '
@@ -360,11 +360,11 @@ class BaseMultiqcModule(object):
                 except: name = k+1
                 try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         
         # Plot and javascript function
-        html += '<div id="{id}" class="hc-plot hc-bar-plot"><button class="render_plot">Show plot</button></div> \n\
+        html += '<div id="{id}" class="hc-plot hc-bar-plot"><button class="btn btn-default btn-lg render_plot">Show plot</button></div> \n\
         <script type="text/javascript"> \n\
             mqc_plots["{id}"] = {{ \n\
                 "plot_type": "bar_graph", \n\

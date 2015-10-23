@@ -14,7 +14,7 @@ $(function () {
   $(document).on('mqc_config_loaded', function(e){
     $('.hc-plot').each(function(){
       var target = $(this).attr('id');
-      plot_graph(target, undefined, '20');
+      plot_graph(target, undefined, num_datasets_plot_limit);
     });
   });
   

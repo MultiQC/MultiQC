@@ -18,31 +18,17 @@ $(function () {
     $(this).addClass('active');
     var target = $(this).data('target');
     var action = $(this).data('action');
-    var plot_options = highcharts_plots[target];
     // Switch between values and percentages
     if(action == 'set_percent' || action == 'set_numbers'){
       var sym = (action == 'set_percent') ? '%' : '#';
       var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
-      if(plot_options.yAxis.title.text !== undefined){
-        plot_options.yAxis.title.text = sym+plot_options.yAxis.title.text.substr(1);
-      }
-      plot_options.plotOptions.series.stacking = stack_type;
-      $(target).highcharts(plot_options);
+      mqc_plots[target]['config']['stacking'] = stack_type;
+      plot_graph(target);
     }
     // Switch data source
     if(action == 'set_data'){
       var ds = $(this).data('newdata');
-      var data = eval(ds);
-      if(data === undefined){
-        console.log('Error switching plot dataset - '+ds+' not found..');
-      } else {
-        plot_options.series = data;
-        var ylab = $(this).data('ylab');
-        if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
-        var xlab = $(this).data('xlab');
-        if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
-        $(target).highcharts(plot_options);
-      }
+      plot_graph(target, ds);
     }
   });
 
@@ -84,12 +70,18 @@ function plot_graph(target, ds, max_num){
     if(mqc_plots[target]['plot_type'] == 'xy_line'){
       if(max_num === undefined || mqc_plots[target]['datasets'][0].length < max_num){
         plot_xy_line_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered');
       }
     }
     // Bar graphs
     else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
       if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
         plot_stacked_bar_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered');
       }
     }
     // Not recognised
