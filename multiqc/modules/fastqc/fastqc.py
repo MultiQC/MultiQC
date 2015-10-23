@@ -120,12 +120,16 @@ class MultiqcModule(BaseMultiqcModule):
             'kmer_content':     r'>>Kmer Content\s+(pass|warn|fail)',
         }
         stats_regexes = {
-            'filename':           r"^Filename\s+(.+)$",
             'total_sequences':    r"Total Sequences\s+(\d+)",
             'sequence_length':    r"Sequence length\s+([\d-]+)",
             'percent_gc':         r"%GC\s+(\d+)",
             'percent_dedup':      r"#Total Deduplicated Percentage\s+([\d\.]+)",
         }
+        
+        # Make the sample name from the input filename if we find it
+        fn_search = re.search(r"Filename\s+(.+)", file_contents)
+        if fn_search:
+            s_name = self.clean_s_name(fn_search.group(1) , root)
         
         s = defaultdict(lambda: dict())
         s['seq_len_bp'] = 0
@@ -242,10 +246,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Get percent duplicates (percent unique given)
         if 'percent_dedup' in s:
             s['percent_duplicates'] = 100 - s['percent_dedup']
-        
-        # Make the sample name from the input filename if we found it
-        if 'filename' in s:
-            s_name = self.clean_s_name(s['filename'], root)
         
         # Throw a warning if we already have this sample
         # Unzipped reports means that this can be quite frequent
