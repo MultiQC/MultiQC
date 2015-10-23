@@ -605,7 +605,7 @@ function apply_mqc_hidesamples(){
 
 // Save the current configuration setup
 function mqc_save_config(target, method, clear){
-  if(target === undefined){ target = $('#mqc_analysis_path').text(); }
+  if(target === undefined){ target = report_id }
   if(method === undefined){ method = 'local'; }
   var config = {};
   
@@ -697,10 +697,9 @@ function load_mqc_config(){
       for (var attr in local_config['global']) {
         config[attr] = local_config['global'][attr];
       }
-      var path = $('#mqc_output_path').text();
-      if(local_config[path] !== undefined){ console.log('Loaded local report config'); }
-      for (var attr in local_config[path]) {
-        config[attr] = local_config[path][attr];
+      if(local_config[report_id] !== undefined){ console.log('Loaded local report config'); }
+      for (var attr in local_config[report_id]) {
+        config[attr] = local_config[report_id][attr];
       }
     }
   } catch(e){ console.log('Could not load local config: '+e); }

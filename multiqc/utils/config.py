@@ -9,6 +9,7 @@ import inspect
 import logging
 import os
 import pkg_resources
+import random
 import sys
 import yaml
 
@@ -33,6 +34,7 @@ output_fn_name = 'multiqc_report.html'
 data_dir_name = 'multiqc_data'
 fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '_tophat', '_star_aligned', '_fastqc' ]
 fn_ignore_files = ['.DS_Store']
+report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 
 
 #######################
