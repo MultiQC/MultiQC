@@ -58,9 +58,15 @@ from multiqc.utils.log import init_log, LEVELS
                     is_flag = True,
                     help = "Overwrite any existing reports"
 )
-@click.option('-o', '--output_prefix',
+@click.option('-o', '--outdir',
                     type = str,
-                    help = "Output filename prefix."
+                    default=config.output_dir,
+                    help = "Create report in the specified output directory."
+)
+@click.option('-p', '--prefix',
+                    type = str,
+                    help = "Set a prefix for the report filename. " \
+                            "_{} will be added after this.".format(config.output_fn_name)
 )
 @click.option('-v', '--verbose', 
                     count=True,
@@ -73,7 +79,7 @@ from multiqc.utils.log import init_log, LEVELS
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, title, template, modules, exclude, output_prefix, 
+def multiqc(analysis_dir, dirs, title, template, modules, exclude, outdir, prefix, 
 force, verbose, quiet):
     """MultiQC is a tool generate qc reports.
     
@@ -92,8 +98,8 @@ force, verbose, quiet):
     
     plugin_hooks.mqc_trigger('execution_start')
     
-    logger.info("Working dir : {0}".format(os.getcwd()))
-    logger.info("Template    : {0}".format(template))
+    logger.debug("Working dir : {0}".format(os.getcwd()))
+    logger.debug("Template    : {0}".format(template))
     
     # Are we running as an OSX App?
     osx_app = False
@@ -114,16 +120,13 @@ force, verbose, quiet):
     config.title = title
     config.prepend_dirs = dirs
     config.analysis_dir = analysis_dir
-    config.output_dir = os.path.realpath(config.output_dir)
+    config.output_dir = outdir
+    if prefix is not None:
+        config.output_fn_name = "{}_{}".format(prefix, config.output_fn_name)
+        config.data_dir_name = '{}_{}'.format(prefix, config.data_dir_name)
     
     if osx_app:
         config.output_dir = os.path.join(analysis_dir, 'multiqc_report')
-    
-    # Add an underscore to the end of the output prefix if it's not a directory
-    if output_prefix is not None:
-        output_prefix = output_prefix.strip()
-        if output_prefix[-1:] != os.path.sep:
-            output_prefix += '_'
     
     # Print some status updates
     if config.title is not None:
@@ -150,18 +153,14 @@ force, verbose, quiet):
     tmp_dir = tempfile.mkdtemp()
     logger.debug('Using temporary directory for rendering report: {}'.format(tmp_dir))
     
-    # Make output file name now we've loaded the template
+    # Add an output subdirectory if specified by template
     try:
-        config.output_fn_name = os.path.join(template_mod.output_subdir, config.output_fn_name)
+        config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
     except AttributeError:
         pass # No subdirectory variable given
-    if output_prefix is not None:
-        config.output_fn_name = '{}{}'.format(output_prefix, config.output_fn_name)
-    config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
     
-    # Output data directory
-    if output_prefix is not None:
-        config.data_dir_name = '{}{}'.format(output_prefix, config.data_dir_name)
+    # Final report path & data directory
+    config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
     config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
     
     logger.debug("Output      : {0}".format(os.path.relpath(config.output_fn)))
@@ -170,13 +169,9 @@ force, verbose, quiet):
     # Check for existing reports and remove if -f was specified
     if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
         if force:
-            output_base = os.path.relpath(os.path.split(config.output_fn)[0])
-            if output_base == '.':
-                if os.path.exists(config.output_fn):
-                    os.remove(config.output_fn)
-            elif os.path.exists(output_base):
-                logger.warning("Deleting    : {}   (-f was specified)".format(output_base))
-                shutil.rmtree(output_base)
+            if os.path.exists(config.output_fn):
+                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
+                os.remove(config.output_fn)
             if os.path.exists(config.data_dir):
                 logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
                 shutil.rmtree(config.data_dir)
@@ -188,7 +183,8 @@ force, verbose, quiet):
             logger.info("Use -f or --force to overwrite existing reports")
             sys.exit(1)
 
-    logger.info("Saving to   : {}".format(os.path.relpath(config.output_fn)))
+    logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+    logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
 
     # Make the report directories
     os.makedirs(config.data_dir)
