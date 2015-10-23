@@ -2,6 +2,8 @@
 // HighCharts Plotting Code
 ////////////////////////////////////////////////
 
+mqc_highcharts = [];
+
 // Execute when page load has finished loading
 $(function () {
   
@@ -108,8 +110,9 @@ function plot_xy_line_graph(target, ds){
   }
 
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  mqc_highcharts[target] = new Highcharts.Chart({
     chart: {
+      renderTo: $('#'+target)[0],
       type: 'line',
       zoomType: 'x',
       backgroundColor: null,
@@ -187,9 +190,12 @@ function plot_stacked_bar_graph(target, ds){
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   
+  console.log('plotting to '+ '#'+target)
+  
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  mqc_highcharts[target] = new Highcharts.Chart({
     chart: {
+      renderTo: $('#'+target)[0],
       type: 'bar',
       backgroundColor: null,
     },
@@ -215,7 +221,8 @@ function plot_stacked_bar_graph(target, ds){
     plotOptions: {
       series: {
         stacking: config['stacking'],
-        groupPadding: 0.02
+        groupPadding: 0.02,
+        borderWidth: 2
       },
       cursor: config['cursor'],
       point: {
