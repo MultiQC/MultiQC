@@ -56,7 +56,7 @@ function fastqc_seq_content_heatmap() {
         $('#fastqc_seq_heatmap_div').prepend('<p class="fastqc-heatmap-no-samples text-muted">No samples found.</p>');
     }
     if(hidden_samples > 0){
-        $('#fastqc_seq_heatmap_div').prepend('<div class="samples-hidden-warning alert alert-danger"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+hidden_samples+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>');
+        $('#fastqc_seq_heatmap_div').prepend('<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+hidden_samples+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>');
     }
     if(num_samples == 0){ return; }
     

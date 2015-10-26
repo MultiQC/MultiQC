@@ -21,6 +21,15 @@ $(function () {
     plot_graph(target);
   });
   
+  // Replot graphs when something changed in filters
+  $(document).on('mqc_highlights mqc_renamesamples mqc_hidesamples', function(){
+    // Replot graphs
+    $('.hc-plot:not(.not_rendered)').each(function(){
+      var target = $(this).attr('id');
+      plot_graph(target);
+    });
+  });
+  
   // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
     e.preventDefault();

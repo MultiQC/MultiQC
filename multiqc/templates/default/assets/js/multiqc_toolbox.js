@@ -267,33 +267,9 @@ function apply_mqc_highlights(){
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').removeClass('in_use');
   }
   
-  // Add to global scope so that other code (multiqc_plotting.js) can access
   window.mqc_highlight_f_texts = f_texts;
   window.mqc_highlight_f_cols = f_cols;
   window.mqc_highlight_regex_mode = regex_mode;
-  
-  // Replot graphs
-  $('.hc-plot:not(.not_rendered)').each(function(){
-    var target = $(this).attr('id');
-    plot_graph(target);
-  });
-  
-  // Colour the heading text on the general stats table
-  $('#mqc_genstat_sort_highlight').hide();
-  $('#general_stats_table tbody th').removeClass('highlighted').removeData('highlight');
-  $('#general_stats_table tbody th').each(function(i){
-    var th = $(this);
-    var thtext = $(this).text();
-    var thiscol = '#333';
-    $.each(f_texts, function(idx, f_text){
-      if((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)){
-        thiscol = f_cols[idx];
-        th.addClass('highlighted').data('highlight', idx);
-        $('#mqc_genstat_sort_highlight').show();
-      }
-    });
-    $(this).css('color', thiscol);
-  });
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
@@ -313,31 +289,6 @@ function apply_mqc_renamesamples(){
   $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
   if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){ regex_mode = true; }
   
-  // Add to global scope so that other code (multiqc_plotting.js) can access
-  window.mqc_rename_f_texts = f_texts;
-  window.mqc_rename_t_texts = t_texts;
-  window.mqc_rename_regex_mode = regex_mode;
-  
-  // Replot graphs
-  $('.hc-plot:not(.not_rendered)').each(function(){
-    var target = $(this).attr('id');
-    plot_graph(target);
-  });
-  
-  // Rename samples in the general stats table
-  $("#general_stats_table tbody th").each(function(){
-    var s_name = $(this).data('original-sn');
-    $.each(f_texts, function(idx, f_text){
-      if(regex_mode){
-        var re = new RegExp(f_text,"g");
-        s_name = s_name.replace(re, t_texts[idx]);
-      } else {
-        s_name = s_name.replace(f_text, t_texts[idx]);
-      }
-    });
-    $(this).text(s_name);
-  });
-  
   // If something was renamed, highlight the toolbox icon
   if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').addClass('in_use');
@@ -345,8 +296,12 @@ function apply_mqc_renamesamples(){
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').removeClass('in_use');
   }
   
+  window.mqc_rename_f_texts = f_texts;
+  window.mqc_rename_t_texts = t_texts;
+  window.mqc_rename_regex_mode = regex_mode;
+  
   // Fire off a custom jQuery event for other javascript chunks to tie into
-  $(document).trigger('mqc_renamesamples');
+  $(document).trigger('mqc_renamesamples', [f_texts, t_texts, regex_mode]);
 }
 
 
@@ -364,54 +319,15 @@ function apply_mqc_hidesamples(){
     f_texts.push($(this).val());
   });
   
-  // Add to global scope so that other code (multiqc_plotting.js) can access
-  window.mqc_hide_f_texts = f_texts;
-  window.mqc_hide_regex_mode = regex_mode;
-  
-  // Replot graphs
-  $('.hc-plot:not(.not_rendered)').each(function(){
-    var target = $(this).attr('id');
-    plot_graph(target);
-  });
-  
-  // Hide rows in the general stats table
-  $("#general_stats_table tbody th").each(function(){
-    var match = false;
-    var hfilter = $(this).text();
-    $.each(f_texts, function(idx, f_text){
-      if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
-        match = true;
-      }
-    });
-    if(match){ $(this).parent().hide(); }
-    else { $(this).parent().show(); }
-  });
-  $('#genstat_numrows').text( $("#general_stats_table tbody tr:visible").length );
-  
-  // Hide empty columns
-  var gsthidx = 0;
-  $("#general_stats_table thead th, #general_stats_table tbody tr td").show();
-  $("#general_stats_table thead th").each(function(){
-    if(gsthidx == 0){ gsthidx += 1; return true; }
-    var count = 0;
-    var empties = 0;
-    $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").filter(":visible").each(function(){
-      count += 1;
-      if($(this).text() == ''){ empties += 1; }
-    });
-    if(count > 0 && count == empties){
-      $(this).hide();
-      $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").hide();
-    }
-    gsthidx += 1;
-  });
-  
   // If something was renamed, highlight the toolbox icon
   if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').removeClass('in_use');
   }
+  
+  window.mqc_hide_f_texts = f_texts;
+  window.mqc_hide_regex_mode = regex_mode;
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
