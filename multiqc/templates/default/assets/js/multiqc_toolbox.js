@@ -345,41 +345,15 @@ function mqc_save_config(target, method, clear){
   if(method === undefined){ method = 'local'; }
   var config = {};
   
-  // Collect the highlight filters
-  config['highlight_regex'] = false;
-  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode on'){
-    config['highlight_regex'] = true;
-  }
-  config['highlights_f_texts'] = [];
-  config['highlights_f_cols'] = [];
-  $('#mqc_col_filters li .f_text').each(function(){
-    config['highlights_f_texts'].push($(this).val());
-    config['highlights_f_cols'].push($(this).css('color'));
-  });
-  
-  // Collect the rename filters
-  config['rename_from_texts'] = [];
-  config['rename_to_texts'] = [];
-  config['rename_regex'] = false;
-  if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){
-    config['rename_regex'] = true;
-  }
-  $('#mqc_renamesamples_filters .from_text').each(function(){
-    config['rename_from_texts'].push($(this).val());
-  });
-  $('#mqc_renamesamples_filters .to_text').each(function(){
-    config['rename_to_texts'].push($(this).val());
-  });
-  
-  // Collect the hide sample filters
-  config['hidesamples_regex'] = false;
-  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode on'){
-    config['hidesamples_regex'] = true;
-  }
-  config['hidesamples_f_texts'] = [];
-  $('#mqc_hidesamples_filters li .f_text').each(function(){
-    config['hidesamples_f_texts'].push($(this).val());
-  });
+  // Collect the toolbox vars
+  config['highlights_f_texts'] =  window.mqc_highlight_f_texts;
+  config['highlights_f_cols'] =   window.mqc_highlight_f_cols;
+  config['highlight_regex'] =     window.mqc_highlight_regex_mode;
+  config['rename_from_texts'] =   window.mqc_rename_f_texts;
+  config['rename_to_texts'] =     window.mqc_rename_t_texts;
+  config['rename_regex'] =        window.mqc_rename_regex_mode;
+  config['hidesamples_f_texts'] = window.mqc_hide_f_texts;
+  config['hidesamples_regex'] =   window.mqc_hide_regex_mode;
   
   if(method == 'local'){
     var prev_config = {};
@@ -421,7 +395,9 @@ function mqc_save_config(target, method, clear){
   }
 }
 
-// Load previously saved config variables
+//////////////////////////////////////////////////////
+// LOAD TOOLBOX SETTINGS
+//////////////////////////////////////////////////////
 function load_mqc_config(){
   var config = {};
   // Get local configs - global and then this path
@@ -440,6 +416,7 @@ function load_mqc_config(){
     }
   } catch(e){ console.log('Could not load local config: '+e); }
   
+  
   // Local file
   if(typeof mqc_config_file_cfg != "undefined"){
     for (var attr in mqc_config_file_cfg) {
@@ -448,33 +425,32 @@ function load_mqc_config(){
     $('#mqc_report_location').after('<p>MultiQC report toolbox config loaded from file.</p>');
     console.log('Loaded config from a file');
   }
-  var update_highlights = false;
-  var update_rename = false;
-  var update_hide = false;
   
   // Apply config - highlights
   if(notEmptyObj(config['highlight_regex'])){
     if(config['highlight_regex'] == true){
       $('#mqc_cols .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+      window.mqc_highlight_regex_mode = true;
     }
-    update_highlights = true;
   }
   if(notEmptyObj(config['highlights_f_texts']) && notEmptyObj(config['highlights_f_cols'])){
     $.each(config['highlights_f_texts'], function(idx, f_text){
       var f_col = config['highlights_f_cols'][idx];
       $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      window.mqc_highlight_f_texts.push(f_text);
+      window.mqc_highlight_f_cols.push(f_col);
       mqc_colours_idx += 1;
     });
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
-    update_highlights = true;
+    $(document).trigger('mqc_highlights', [config['highlights_f_texts'], config['highlights_f_cols'], config['highlight_regex']]);
   }
   
   // Rename samples
   if(notEmptyObj(config['rename_regex'])){
     if(config['rename_regex'] == true){
       $('#mqc_renamesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+      window.mqc_rename_regex_mode = true;
     }
-    update_rename = true;
   }
   if(notEmptyObj(config['rename_from_texts']) && notEmptyObj(config['rename_to_texts'])){
     $.each(config['rename_from_texts'], function(idx, from_text){
@@ -483,24 +459,27 @@ function load_mqc_config(){
       var li = '<li><input class="f_text from_text" value="'+from_text+'" />'
       li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" />'
       li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+      window.mqc_rename_f_texts.push(from_text);
+      window.mqc_rename_t_texts.push(to_text);
       $('#mqc_renamesamples_filters').append(li);
     });
-    update_rename = true;
+    $(document).trigger('mqc_renamesamples', [config['rename_from_texts'], config['rename_from_texts'], config['rename_regex']]);
   }
   
   // Hide samples
   if(notEmptyObj(config['hidesamples_regex'])){
     if(config['hidesamples_regex'] == true){
       $('#mqc_hidesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+      window.mqc_hide_regex_mode = true;
     }
-    update_hide = true;
   }
   if(notEmptyObj(config['hidesamples_f_texts'])){
     $.each(config['hidesamples_f_texts'], function(idx, f_text){
       if(f_text.length == 0){ return true; }
       $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      window.mqc_hide_f_texts.push(f_text);
     });
-    update_hide = true;
+    $(document).trigger('mqc_hidesamples', [config['hidesamples_f_texts'], config['hidesamples_regex']]);
   }
 
   // Trigger loaded event to initialise plots
