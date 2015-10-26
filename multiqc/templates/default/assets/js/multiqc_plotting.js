@@ -9,6 +9,8 @@ window.mqc_highlight_regex_mode = false;
 window.mqc_rename_f_texts = [];
 window.mqc_rename_t_texts = [];
 window.mqc_rename_regex_mode = false;
+window.mqc_hide_f_texts = [];
+window.mqc_hide_regex_mode = false;
 
 // Execute when page load has finished loading
 $(function () {
@@ -119,17 +121,6 @@ function plot_xy_line_graph(target, ds){
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
   
-  // Highlight samples
-  if(window.mqc_highlight_f_texts.length > 0){
-    $.each(data, function(j, s){
-      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
-        if((window.mqc_highlight_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_highlight_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
-          data[j]['color'] = window.mqc_highlight_f_cols[idx];
-        }
-      });
-    });
-  }
-  
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -142,6 +133,45 @@ function plot_xy_line_graph(target, ds){
         }
       });
     });
+  }
+  
+  // Highlight samples
+  if(window.mqc_highlight_f_texts.length > 0){
+    $.each(data, function(j, s){
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if((window.mqc_highlight_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_highlight_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+          data[j]['color'] = window.mqc_highlight_f_cols[idx];
+        }
+      });
+    });
+  }
+  
+  // Hide samples
+  $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.mqc_hcplot_plotgroup').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var num_hidden = 0;
+    var num_total = data.length;
+    var j = data.length;
+    while (j--) {
+      $.each(window.mqc_hide_f_texts, function(idx, f_text){
+        if((window.mqc_hide_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_hide_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+          data.splice(j,1);
+          num_hidden += 1;
+          return false;
+        }
+      });
+    };
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.mqc_hcplot_plotgroup').hide();
+      return false;
+    }
   }
 
   // Make the highcharts plot
@@ -227,6 +257,20 @@ function plot_stacked_bar_graph(target, ds){
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
   var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
   
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    $.each(cats, function(j, s_name){
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          cats[j] = cats[j].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          cats[j] = cats[j].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    });
+  }
+  
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(cats, function(j, s_name){
@@ -248,18 +292,36 @@ function plot_stacked_bar_graph(target, ds){
   }
   if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
   
-  // Rename samples
-  if(window.mqc_rename_f_texts.length > 0){
-    $.each(cats, function(j, s_name){
-      $.each(window.mqc_rename_f_texts, function(idx, f_text){
-        if(window.mqc_rename_regex_mode){
-          var re = new RegExp(f_text,"g");
-          cats[j] = cats[j].replace(re, window.mqc_rename_t_texts[idx]);
-        } else {
-          cats[j] = cats[j].replace(f_text, window.mqc_rename_t_texts[idx]);
+  // Hide samples
+  $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.mqc_hcplot_plotgroup').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var num_hidden = 0;
+    var num_total = cats.length;
+    var j = cats.length;
+    while (j--) {
+      var s_name = cats[j];
+      $.each(window.mqc_hide_f_texts, function(idx, f_text){
+        if((window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
+          cats.splice(j, 1);
+          $.each(data, function(k, d){
+            data[k]['data'].splice(j, 1);
+          });
+          num_hidden += 1;
+          return false;
         }
       });
-    });
+    };
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.mqc_hcplot_plotgroup').hide();
+      return false;
+    }
   }
   
   // Make the highcharts plot

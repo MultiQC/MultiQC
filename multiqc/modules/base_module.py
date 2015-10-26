@@ -249,7 +249,7 @@ class BaseMultiqcModule(object):
         # Build the HTML for the page
         if config.get('id') is None:
             config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
-        html = ''
+        html = '<div class="mqc_hcplot_plotgroup">'
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
@@ -264,7 +264,7 @@ class BaseMultiqcModule(object):
             html += '</div>\n\n'
         
         # The plot div
-        html += '<div id="{id}" class="hc-plot hc-line-plot"><button class="btn btn-default btn-lg render_plot">Show plot</button></div> \n'.format(id=config['id'])
+        html += '<div id="{id}" class="hc-plot hc-line-plot"><button class="btn btn-default btn-lg render_plot">Show plot</button></div></div> \n'.format(id=config['id'])
         
         # Javascript with data dump
         html += '<script type="text/javascript"> \n\
@@ -331,7 +331,7 @@ class BaseMultiqcModule(object):
         # Build the HTML
         if config.get('id') is None:
             config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
-        html = ''
+        html = '<div class="mqc_hcplot_plotgroup">'
         
         # Counts / Percentages Switch
         if config.get('cpswitch') is not False:
@@ -365,6 +365,7 @@ class BaseMultiqcModule(object):
         
         # Plot and javascript function
         html += '<div id="{id}" class="hc-plot hc-bar-plot"><button class="btn btn-default btn-lg render_plot">Show plot</button></div> \n\
+        </div> \n\
         <script type="text/javascript"> \n\
             mqc_plots["{id}"] = {{ \n\
                 "plot_type": "bar_graph", \n\

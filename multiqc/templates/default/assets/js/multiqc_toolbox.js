@@ -355,7 +355,6 @@ function apply_mqc_renamesamples(){
 //////////////////////////////////////////////////////
 function apply_mqc_hidesamples(){
   // Collect the filters into an array
-  var f_matches = 0;
   var f_texts = [];
   var regex_mode = false;
   if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode on'){
@@ -365,90 +364,14 @@ function apply_mqc_hidesamples(){
     f_texts.push($(this).val());
   });
   
-  // Loop through each plot
-  $('.hc-plot').each(function(){
-    var plotid = $(this).attr('id');
-    // Put in a try / catch so that one plot doesn't break all hiding
-    try {
-      if($(this).highcharts() === undefined){ return true; }
-      // Line plots
-      if($(this).highcharts().options.chart.type == 'line'){
-        var num_hidden = 0;
-        $.each($(this).highcharts().series, function(j, s){
-          var match = false;
-          $.each(f_texts, function(idx, f_text){
-            if((regex_mode && s.name.match(f_text)) || (!regex_mode && s.name.indexOf(f_text) > -1)){
-              match = true;
-              f_matches += 1;
-            }
-          });
-          if (s.visible && match) { s.hide(); }
-          if (!s.visible && !match) { s.show(); }
-          if (!s.visible){ num_hidden += 1; }
-        });
-        // Reset warnings and plot hiding.
-        $(this).parent().parent().find('.samples-hidden-warning').remove();
-        $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').show();
-        // Some series hidden. Show a warning text string.
-        if(num_hidden > 0) {
-          var alert = '<div class="samples-hidden-warning alert alert-danger"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
-          if($(this).parent().prev().hasClass('btn-group')){
-            $(this).parent().prev().before(alert);
-          } else {
-            $(this).parent().before(alert);
-          }
-        }
-        // All series hidden. Hide the graph.
-        if(num_hidden == $(this).highcharts().series.length){
-          $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').hide();
-        }
-        
-      }
-      // Bar charts
-      else if($(this).highcharts().options.chart.type == 'bar'){
-        var replot = $.extend(true, [], highcharts_plot_options['#'+plotid]); // make a copy, not reference
-        var matches = 0;
-        // Remove the categories
-        var idx = replot.xAxis.categories.length;
-        while (idx--) {
-          var val = replot.xAxis.categories[idx];
-          $.each(f_texts, function(i, f_text){
-            if((regex_mode && val.match(f_text)) || (!regex_mode && val.indexOf(f_text) > -1)){
-              matches += 1;
-              f_matches += 1;
-              replot.xAxis.categories.splice(idx, 1);
-              $.each(replot.series, function(j, s){
-                replot.series[j].data.splice(idx, 1);
-              });
-              return false;
-            }
-          });
-        };
-        
-        // Reset warnings and plot hiding.
-        $(this).parent().parent().find('.samples-hidden-warning').remove();
-        $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').show();
-        
-        // Replot graph
-        highcharts_plots['#'+plotid] = new Highcharts.Chart(replot);
-        
-        // Some series hidden. Show a warning text string.
-        if(matches > 0) {
-          var alert = '<div class="samples-hidden-warning alert alert-danger"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+matches+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
-          if($(this).parent().prev().hasClass('btn-group')){
-            $(this).parent().prev().before(alert);
-          } else {
-            $(this).parent().before(alert);
-          }
-        }
-        // All series hidden. Hide the graph.
-        if(matches == highcharts_plot_options['#'+plotid].xAxis.categories.length){
-          $(this).parent().parent().find('.hc-plot-wrapper, .btn-group').hide();
-        }
-      }
-    } catch(err) {
-      console.log('Error hiding samples in '+$(this).attr('id')+' - '+err.message);
-    }
+  // Add to global scope so that other code (multiqc_plotting.js) can access
+  window.mqc_hide_f_texts = f_texts;
+  window.mqc_hide_regex_mode = regex_mode;
+  
+  // Replot graphs
+  $('.hc-plot:not(.not_rendered)').each(function(){
+    var target = $(this).attr('id');
+    plot_graph(target);
   });
   
   // Hide rows in the general stats table
@@ -458,7 +381,6 @@ function apply_mqc_hidesamples(){
     $.each(f_texts, function(idx, f_text){
       if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
         match = true;
-        f_matches += 1;
       }
     });
     if(match){ $(this).parent().hide(); }
@@ -485,7 +407,7 @@ function apply_mqc_hidesamples(){
   });
   
   // If something was renamed, highlight the toolbox icon
-  if(f_matches > 0){
+  if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').removeClass('in_use');
