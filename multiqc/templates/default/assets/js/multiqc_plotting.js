@@ -2,41 +2,64 @@
 // HighCharts Plotting Code
 ////////////////////////////////////////////////
 
+// Initialise the toolbox filters
+window.mqc_highlight_f_texts = [];
+window.mqc_highlight_f_cols = [];
+window.mqc_highlight_regex_mode = false;
+window.mqc_rename_f_texts = [];
+window.mqc_rename_t_texts = [];
+window.mqc_rename_regex_mode = false;
+window.mqc_hide_f_texts = [];
+window.mqc_hide_regex_mode = false;
+
 // Execute when page load has finished loading
 $(function () {
-    
-    // Switch a HighCharts axis or data source
+  
+  // Render a plot when clicked
+  $('body').on('click', '.render_plot', function(e){
+    var target = $(this).parent().attr('id');
+    plot_graph(target);
+    if($('.hc-plot.not_rendered').length == 0){
+      $('#mqc-warning-many-samples').hide();
+    }
+  });
+  
+  // Render all plots from header
+  $('#mqc-render-all-plots').click(function(){
+    $('.hc-plot.not_rendered').each(function(){
+      var target = $(this).attr('id');
+      plot_graph(target);
+    });
+    $('#mqc-warning-many-samples').hide();
+  });
+  
+  // Replot graphs when something changed in filters
+  $(document).on('mqc_highlights mqc_renamesamples mqc_hidesamples', function(){
+    // Replot graphs
+    $('.hc-plot:not(.not_rendered)').each(function(){
+      var target = $(this).attr('id');
+      plot_graph(target);
+    });
+  });
+  
+  // Switch a HighCharts axis or data source
   $('.switch_group button').click(function(e){
     e.preventDefault();
     $(this).siblings('button.active').removeClass('active');
     $(this).addClass('active');
     var target = $(this).data('target');
     var action = $(this).data('action');
-    var plot_options = highcharts_plot_options[target];
     // Switch between values and percentages
     if(action == 'set_percent' || action == 'set_numbers'){
       var sym = (action == 'set_percent') ? '%' : '#';
       var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
-      if(plot_options.yAxis.title.text !== undefined){
-        plot_options.yAxis.title.text = sym+plot_options.yAxis.title.text.substr(1);
-      }
-      plot_options.plotOptions.series.stacking = stack_type;
-      $(target).highcharts(plot_options);
+      mqc_plots[target]['config']['stacking'] = stack_type;
+      plot_graph(target);
     }
     // Switch data source
     if(action == 'set_data'){
       var ds = $(this).data('newdata');
-      var data = eval(ds);
-      if(data === undefined){
-        console.log('Error switching plot dataset - '+ds+' not found..');
-      } else {
-        plot_options.series = data;
-        var ylab = $(this).data('ylab');
-        if(ylab !== undefined){ plot_options.yAxis.title.text = ylab; }
-        var xlab = $(this).data('xlab');
-        if(xlab !== undefined){ plot_options.xAxis.title.text = xlab; }
-        $(target).highcharts(plot_options);
-      }
+      plot_graph(target, ds);
     }
   });
 
@@ -70,16 +93,42 @@ $(function () {
   
 });
 
-
-
-// We store the config options for every graph in an arrays.
-// This way, we can go back and change them via button clicks
-// eg. Changing an axis from values to percentages
-highcharts_plots = [];
-highcharts_plot_options = [];
+// Call to render any plot
+function plot_graph(target, ds, max_num){
+  if(mqc_plots[target] === undefined){ return false; }
+  else {
+    // XY Line charts
+    if(mqc_plots[target]['plot_type'] == 'xy_line'){
+      if(max_num === undefined || mqc_plots[target]['datasets'][0].length < max_num){
+        plot_xy_line_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered');
+      }
+    }
+    // Bar graphs
+    else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
+      if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
+        plot_stacked_bar_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered');
+      }
+    }
+    // Not recognised
+    else { console.log('Did not recognise plot type: '+mqc_plots[target]['plot_type']); }
+  }
+}
 
 // Basic Line Graph
-function plot_xy_line_graph(div, data, config){
+function plot_xy_line_graph(target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'xy_line'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  var data = mqc_plots[target]['datasets'];
+  if(ds === undefined){ ds = 0; }
+  
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
@@ -88,15 +137,67 @@ function plot_xy_line_graph(div, data, config){
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{series.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{series.name}</span><br>'+config['tt_label'];
   }
-  // Collect the starting sample names to preserve after renaming
-  var s_names = [];
-  $.each(data, function(idx, d){
-    s_names.push(d['name']);
-  });
-  // Make the highcharts config object
-  highcharts_plot_options[div] = {
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    $.each(data, function(j, s){
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          data[j]['name'] = data[j]['name'].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          data[j]['name'] = data[j]['name'].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    });
+  }
+  
+  // Highlight samples
+  if(window.mqc_highlight_f_texts.length > 0){
+    $.each(data, function(j, s){
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if((window.mqc_highlight_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_highlight_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+          data[j]['color'] = window.mqc_highlight_f_cols[idx];
+        }
+      });
+    });
+  }
+  
+  // Hide samples
+  $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.mqc_hcplot_plotgroup').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var num_hidden = 0;
+    var num_total = data.length;
+    var j = data.length;
+    while (j--) {
+      $.each(window.mqc_hide_f_texts, function(idx, f_text){
+        if((window.mqc_hide_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_hide_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+          data.splice(j,1);
+          num_hidden += 1;
+          return false;
+        }
+      });
+    };
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.mqc_hcplot_plotgroup').hide();
+      return false;
+    }
+  }
+
+  // Make the highcharts plot
+  $('#'+target).highcharts({
     chart: {
-      renderTo: div.replace('#',''),
       type: 'line',
       zoomType: 'x',
       backgroundColor: null,
@@ -154,23 +255,99 @@ function plot_xy_line_graph(div, data, config){
 			pointFormat: config['pointFormat'],
 			useHTML: true
     },
-    series: data,
-    s_names: s_names // Not for highcharts - this is to remember original names for renaming
-  }
-  highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
+    series: data
+  });
 }
 
 // Stacked Bar Graph
-function plot_stacked_bar_graph(div, cats, data, config){
+function plot_stacked_bar_graph(target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'bar_graph'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  if(ds === undefined){ ds = 0; }
+  
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
-  // Make the highcharts config object
-  highcharts_plot_options[div] = {
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
+  
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    $.each(cats, function(j, s_name){
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          cats[j] = cats[j].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          cats[j] = cats[j].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    });
+  }
+  
+  // Highlight samples
+  if(window.mqc_highlight_f_texts.length > 0){
+    $.each(cats, function(j, s_name){
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if(f_text == ''){ return true; } // skip blanks
+        if((window.mqc_highlight_regex_mode && s_name.match(f_text)) || (!window.mqc_highlight_regex_mode && s_name.indexOf(f_text) > -1)){
+          // Make the data point in each series with this index have a border colour
+          $.each(data, function(k, d){
+            data[k]['data'][j] = {
+              'y': data[k]['data'][j],
+              'borderColor': window.mqc_highlight_f_cols[idx]
+            }
+          });
+        }
+      });
+    });
+    // Bump the borderWidth to make the highlights more obvious
+    if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
+  }
+  if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
+  
+  // Hide samples
+  $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.mqc_hcplot_plotgroup').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var num_hidden = 0;
+    var num_total = cats.length;
+    var j = cats.length;
+    while (j--) {
+      var s_name = cats[j];
+      $.each(window.mqc_hide_f_texts, function(idx, f_text){
+        if((window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
+          cats.splice(j, 1);
+          $.each(data, function(k, d){
+            data[k]['data'].splice(j, 1);
+          });
+          num_hidden += 1;
+          return false;
+        }
+      });
+    };
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.mqc_hcplot_plotgroup').hide();
+      return false;
+    }
+  }
+  
+  // Make the highcharts plot
+  $('#'+target).highcharts({
     chart: {
-      renderTo: div.replace('#',''),
       type: 'bar',
       backgroundColor: null,
     },
@@ -196,7 +373,8 @@ function plot_stacked_bar_graph(div, cats, data, config){
     plotOptions: {
       series: {
         stacking: config['stacking'],
-        groupPadding: 0.02
+        groupPadding: 0.02,
+        borderWidth: config['borderWidth']
       },
       cursor: config['cursor'],
       point: {
@@ -226,10 +404,8 @@ function plot_stacked_bar_graph(div, cats, data, config){
       shared: true,
       useHTML: true
     },
-    series: data,
-    s_names: cats // Not for highcharts - this is to remember original names for renaming
-  }
-  highcharts_plots[div] = new Highcharts.Chart(highcharts_plot_options[div]);
+    series: data
+  });
 }
 
 

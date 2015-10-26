@@ -129,6 +129,79 @@ $(function () {
     change_general_stats_col_order();
   });
   
+  // TOOLBOX LISTENERS
+  
+  // highlight samples
+  $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
+    $('#mqc_genstat_sort_highlight').hide();
+    $('#general_stats_table tbody th').removeClass('highlighted').removeData('highlight');
+    $('#general_stats_table tbody th').each(function(i){
+      var th = $(this);
+      var thtext = $(this).text();
+      var thiscol = '#333';
+      $.each(f_texts, function(idx, f_text){
+        if((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)){
+          thiscol = f_cols[idx];
+          th.addClass('highlighted').data('highlight', idx);
+          $('#mqc_genstat_sort_highlight').show();
+        }
+      });
+      $(this).css('color', thiscol);
+    });
+  });
+  
+  // Rename samples
+  $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
+    $("#general_stats_table tbody th").each(function(){
+      var s_name = $(this).data('original-sn');
+      $.each(f_texts, function(idx, f_text){
+        if(regex_mode){
+          var re = new RegExp(f_text,"g");
+          s_name = s_name.replace(re, t_texts[idx]);
+        } else {
+          s_name = s_name.replace(f_text, t_texts[idx]);
+        }
+      });
+      $(this).text(s_name);
+    });
+  });
+  
+  // Hide samples
+  $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
+    
+    // Hide rows in the general stats table
+    $("#general_stats_table tbody th").each(function(){
+      var match = false;
+      var hfilter = $(this).text();
+      $.each(f_texts, function(idx, f_text){
+        if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
+          match = true;
+        }
+      });
+      if(match){ $(this).parent().hide(); }
+      else { $(this).parent().show(); }
+    });
+    $('#genstat_numrows').text( $("#general_stats_table tbody tr:visible").length );
+    
+    // Hide empty columns
+    var gsthidx = 0;
+    $("#general_stats_table thead th, #general_stats_table tbody tr td").show();
+    $("#general_stats_table thead th").each(function(){
+      if(gsthidx == 0){ gsthidx += 1; return true; }
+      var count = 0;
+      var empties = 0;
+      $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").filter(":visible").each(function(){
+        count += 1;
+        if($(this).text() == ''){ empties += 1; }
+      });
+      if(count > 0 && count == empties){
+        $(this).hide();
+        $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").hide();
+      }
+      gsthidx += 1;
+    });
+  });
+  
 });
 
 
