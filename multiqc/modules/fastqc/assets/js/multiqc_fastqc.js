@@ -13,11 +13,6 @@ c_width = 0;
 c_height = 0;
 ypos = 0;
 max_bp = 0;
-highlight_regex_mode = false;
-highlight_f_texts = [];
-highlight_f_cols = [];
-hidesamples_regex_mode = false;
-hidesamples_f_texts = [];
 
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
@@ -40,8 +35,8 @@ function fastqc_seq_content_heatmap() {
         p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
         
         var hide_sample = false;
-        $.each(hidesamples_f_texts, function(idx, f_text){
-            if((hidesamples_regex_mode && s_name.match(f_text))  || (!hidesamples_regex_mode && s_name.indexOf(f_text) > -1)){
+        $.each(window.mqc_hide_f_texts, function(idx, f_text){
+            if((window.mqc_hide_regex_mode && s_name.match(f_text))  || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
                 hide_sample = true;
             }
         });
@@ -94,9 +89,9 @@ function fastqc_seq_content_heatmap() {
             if(status == 'warn'){ s_col = '#f0ad4e'; }
             if(status == 'fail'){ s_col = '#d9534f'; }
             // Override status colour with highlights
-            $.each(highlight_f_texts, function(idx, f_text){
-                if((highlight_regex_mode && s_name.match(f_text)) || (!highlight_regex_mode && s_name.indexOf(f_text) > -1)){
-                  s_col = highlight_f_cols[idx];
+            $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+                if((window.mqc_highlight_regex_mode && s_name.match(f_text)) || (!window.mqc_highlight_regex_mode && s_name.indexOf(f_text) > -1)){
+                  s_col = window.mqc_highlight_f_cols[idx];
                 }
             });
             ctx.fillStyle = s_col;
@@ -205,27 +200,7 @@ $(function () {
     });
       
     // Highlight the custom heatmap
-    $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
-        highlight_regex_mode = regex_mode;
-        highlight_f_texts = f_texts;
-        highlight_f_cols = f_cols;
-        fastqc_seq_content_heatmap();
-    });
-    
-    // Hide samples the custom heatmap
-    $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
-        hidesamples_regex_mode = regex_mode;
-        hidesamples_f_texts = f_texts;
-        fastqc_seq_content_heatmap();
-    });
-    
-    // Rename samples on the custom heatmap
-    $(document).on('mqc_renamesamples', function(e, f_texts, t_texts){
-        fastqc_seq_content_heatmap();
-    });
-    
-    // Seq content heatmap drag handle resized
-    $('#fastqc_seq').on('mqc_plotresize', function(){
+    $(document).on('mqc_highlights mqc_hidesamples mqc_renamesamples mqc_plotresize', function(e){
         fastqc_seq_content_heatmap();
     });
     // Seq content - window resized
