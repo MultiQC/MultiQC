@@ -8,6 +8,7 @@
 s_height = 10;
 num_samples = 0;
 sample_names = [];
+sample_statuses = [];
 labels = [];
 c_width = 0;
 c_height = 0;
@@ -19,11 +20,12 @@ function fastqc_seq_content_heatmap() {
     
     // Get sample names, rename and skip hidden samples
     sample_names = [];
+    sample_statuses = [];
     var p_data = {};
     var hidden_samples = 0;
     $.each(fastqc_seq_content_data, function(s_name, data){
         // rename sample names
-        var old_s_name = s_name;
+        var t_status = fastqc_passfails['sequence_content'][s_name];
         $.each(window.mqc_rename_f_texts, function(idx, f_text){
             if(window.mqc_rename_regex_mode){
                 var re = new RegExp(f_text,"g");
@@ -32,6 +34,7 @@ function fastqc_seq_content_heatmap() {
                 s_name = s_name.replace(f_text, window.mqc_rename_t_texts[idx]);
             }
         });
+        sample_statuses[s_name] = t_status;
         p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
         
         var hide_sample = false;
@@ -83,7 +86,7 @@ function fastqc_seq_content_heatmap() {
         $.each(sample_names, function(idx, s_name){
           
             // Add a 5px wide bar indicating either status or Highlight
-            status = fastqc_passfails['sequence_content'][s_name];
+            status = sample_statuses[s_name];
             s_col = '#999999';
             if(status == 'pass'){ s_col = '#5cb85c'; }
             if(status == 'warn'){ s_col = '#f0ad4e'; }
@@ -164,7 +167,7 @@ $(function () {
         var idx = Math.floor(y/s_height);
         var s_name = sample_names[idx];
         if(s_name === undefined){ return false; }
-        var s_status = fastqc_passfails['sequence_content'][s_name];
+        var s_status = sample_statuses[s_name];
         s_status_class = 'label-default';
         if(s_status == 'pass'){ s_status_class = 'label-success'; }
         if(s_status == 'warn'){ s_status_class = 'label-warning'; }
