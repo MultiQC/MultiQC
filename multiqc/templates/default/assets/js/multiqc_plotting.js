@@ -2,7 +2,9 @@
 // HighCharts Plotting Code
 ////////////////////////////////////////////////
 
-mqc_highcharts = [];
+// Initialise the toolbox filters
+window.mqc_highlight_f_texts = [];
+window.mqc_highlight_f_cols = [];
 
 // Execute when page load has finished loading
 $(function () {
@@ -108,11 +110,26 @@ function plot_xy_line_graph(target, ds){
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{series.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{series.name}</span><br>'+config['tt_label'];
   }
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  
+  // Highlight samples
+  if(window.mqc_highlight_f_texts.length > 0){
+    // Look for any highlight string matches
+    $.each(data, function(j, s){
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if((window.mqc_highlight_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_highlight_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+          data[j]['color'] = window.mqc_highlight_f_cols[idx];
+        }
+      });
+    });
+  }
 
   // Make the highcharts plot
-  mqc_highcharts[target] = new Highcharts.Chart({
+  $('#'+target).highcharts({
     chart: {
-      renderTo: $('#'+target)[0],
       type: 'line',
       zoomType: 'x',
       backgroundColor: null,
@@ -170,7 +187,7 @@ function plot_xy_line_graph(target, ds){
 			pointFormat: config['pointFormat'],
 			useHTML: true
     },
-    series: data[ds]
+    series: data
   });
 }
 
@@ -180,8 +197,6 @@ function plot_stacked_bar_graph(target, ds){
     return false;
   }
   var config = mqc_plots[target]['config'];
-  var data = mqc_plots[target]['datasets'];
-  var cats = mqc_plots[target]['samples'];
   if(ds === undefined){ ds = 0; }
   
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
@@ -190,12 +205,36 @@ function plot_stacked_bar_graph(target, ds){
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   
-  console.log('plotting to '+ '#'+target)
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
+  
+  // Highlight samples
+  if(window.mqc_highlight_f_texts.length > 0){
+    // Find any matching sample names
+    $.each(cats, function(j, s_name){
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if(f_text == ''){ return true; } // skip blanks
+        if((window.mqc_highlight_regex_mode && s_name.match(f_text)) || (!window.mqc_highlight_regex_mode && s_name.indexOf(f_text) > -1)){
+          // Make the data point in each series with this index have a border colour
+          $.each(data, function(k, d){
+            data[k]['data'][j] = {
+              'y': data[k]['data'][j],
+              'borderColor': window.mqc_highlight_f_cols[idx]
+            }
+          });
+        }
+      });
+    });
+    // Bump the borderWidth to make the highlights more obvious
+    if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
+  }
+  if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
   
   // Make the highcharts plot
-  mqc_highcharts[target] = new Highcharts.Chart({
+  $('#'+target).highcharts({
     chart: {
-      renderTo: $('#'+target)[0],
       type: 'bar',
       backgroundColor: null,
     },
@@ -203,7 +242,7 @@ function plot_stacked_bar_graph(target, ds){
       text: config['title'],
     },
     xAxis: {
-      categories: cats[ds],
+      categories: cats,
       min: 0,
       title: {
         text: config['xlab']
@@ -222,7 +261,7 @@ function plot_stacked_bar_graph(target, ds){
       series: {
         stacking: config['stacking'],
         groupPadding: 0.02,
-        borderWidth: 2
+        borderWidth: config['borderWidth']
       },
       cursor: config['cursor'],
       point: {
@@ -252,7 +291,7 @@ function plot_stacked_bar_graph(target, ds){
       shared: true,
       useHTML: true
     },
-    series: data[ds]
+    series: data
   });
 }
 
