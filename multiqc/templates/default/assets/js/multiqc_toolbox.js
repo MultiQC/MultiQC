@@ -246,7 +246,6 @@ function mqc_toolbox_openclose (target, open){
 function apply_mqc_highlights(){
   
   // Collect the filters into an array
-  var f_matches = 0;
   var f_texts = [];
   var f_cols = [];
   var regex_mode = false;
@@ -259,9 +258,13 @@ function apply_mqc_highlights(){
   });
   
   // Apply a 'background' highlight to remove default colouring first
+  // Also highlight toolbox drawer icon
   if(f_texts.length > 0){
     f_texts.unshift('');
     f_cols.unshift('#cccccc');
+    $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass('in_use');
+  } else {
+    $('.mqc-toolbox-buttons a[href="#mqc_cols"]').removeClass('in_use');
   }
   
   // Add to global scope so that other code (multiqc_plotting.js) can access
@@ -285,20 +288,12 @@ function apply_mqc_highlights(){
     $.each(f_texts, function(idx, f_text){
       if((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)){
         thiscol = f_cols[idx];
-        f_matches += 1;
         th.addClass('highlighted').data('highlight', idx);
         $('#mqc_genstat_sort_highlight').show();
       }
     });
     $(this).css('color', thiscol);
   });
-  
-  // If something was renamed, highlight the toolbox icon
-  if(f_matches > 0){
-    $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass('in_use');
-  } else {
-    $('.mqc-toolbox-buttons a[href="#mqc_cols"]').removeClass('in_use');
-  }
   
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
