@@ -19,6 +19,18 @@ $(function () {
   $('body').on('click', '.render_plot', function(e){
     var target = $(this).parent().attr('id');
     plot_graph(target);
+    if($('.hc-plot.not_rendered').length == 0){
+      $('#mqc-warning-many-samples').hide();
+    }
+  });
+  
+  // Render all plots from header
+  $('#mqc-render-all-plots').click(function(){
+    $('.hc-plot.not_rendered').each(function(){
+      var target = $(this).attr('id');
+      plot_graph(target);
+    });
+    $('#mqc-warning-many-samples').hide();
   });
   
   // Replot graphs when something changed in filters

@@ -28,3 +28,12 @@ was generated and the button that launches the welcome tour.
   <strong>Welcome!</strong> There's a lot you can do here!
   <button id="mqc-launch-into-tour" class="btn btn-info btn-sm">Take the tour</button>
 </div>
+
+{% if report.general_stats_html['rows'] | length > config.num_datasets_plot_limit %}
+<div id="mqc-warning-many-samples" class="alert alert-warning alert-dismissible hidden-print">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+  Because this report contains a lot of samples, you may need to click 'Show plot' to see some graphs.
+  <button id="mqc-render-all-plots" class="btn btn-default btn-sm">Render all plots</button>
+</div>
+{% endif %}
