@@ -93,7 +93,7 @@ def general_stats_build_html():
                     except: val = samp[k]
                     
                     general_stats_html['rows'][sname][rid] = \
-                        '<td class="data-coloured {rid}">\
+                        '<td class="data-coloured {rid}" >\
                             <div class="wrapper">\
                                 <span class="bar" style="width:{percentage}%;"></span>\
                                 <span class="val">{val}</span>\

@@ -5,6 +5,10 @@
 // Initialise the toolbox filters
 window.mqc_highlight_f_texts = [];
 window.mqc_highlight_f_cols = [];
+window.mqc_highlight_regex_mode = false;
+window.mqc_rename_f_texts = [];
+window.mqc_rename_t_texts = [];
+window.mqc_rename_regex_mode = false;
 
 // Execute when page load has finished loading
 $(function () {
@@ -117,11 +121,24 @@ function plot_xy_line_graph(target, ds){
   
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
-    // Look for any highlight string matches
     $.each(data, function(j, s){
       $.each(window.mqc_highlight_f_texts, function(idx, f_text){
         if((window.mqc_highlight_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_highlight_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
           data[j]['color'] = window.mqc_highlight_f_cols[idx];
+        }
+      });
+    });
+  }
+  
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    $.each(data, function(j, s){
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          data[j]['name'] = data[j]['name'].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          data[j]['name'] = data[j]['name'].replace(f_text, window.mqc_rename_t_texts[idx]);
         }
       });
     });
@@ -212,7 +229,6 @@ function plot_stacked_bar_graph(target, ds){
   
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
-    // Find any matching sample names
     $.each(cats, function(j, s_name){
       $.each(window.mqc_highlight_f_texts, function(idx, f_text){
         if(f_text == ''){ return true; } // skip blanks
@@ -231,6 +247,20 @@ function plot_stacked_bar_graph(target, ds){
     if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
   }
   if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
+  
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    $.each(cats, function(j, s_name){
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          cats[j] = cats[j].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          cats[j] = cats[j].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    });
+  }
   
   // Make the highcharts plot
   $('#'+target).highcharts({

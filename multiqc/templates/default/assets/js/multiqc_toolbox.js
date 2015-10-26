@@ -172,7 +172,7 @@ $(function () {
       apply_mqc_hidesamples();
     }
   });
-  // Enter key pressed whilst editing a filter
+  // 'Enter' key pressed whilst editing a filter
   $('.mqc_filters').on('keyup', 'li input', function(e){
     if(e.keyCode == 13) { // Pressed enter
       $(this).blur();
@@ -304,65 +304,42 @@ function apply_mqc_highlights(){
 //////////////////////////////////////////////////////
 
 function apply_mqc_renamesamples(){
-  // Are we using regexes?
-  var regex_mode = false;
-  if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){
-    regex_mode = true;
-  }
   
-  // Loop through each plot
-  $('.hc-plot').each(function(){
-    // Skip non-standard plot types
-    if($(this).highcharts() === undefined){
-      return true;
-    }
-    // Put in a try / catch so that one plot doesn't break all hiding
-    try {
-      var pid = $(this).attr('id');
-      // Line plots
-      if($(this).highcharts().options.chart.type == 'line'){
-        $.each($(this).highcharts().series, function(j, s){
-          var orig_name = undefined;
-          try {
-            orig_name = highcharts_plot_options['#'+pid]['s_names'][j];
-          } catch(err) {}
-          s.name = get_new_name(s.name, pid, orig_name, regex_mode);
-        });
-      }
-      // Bar charts
-      else if($(this).highcharts().options.chart.type == 'bar'){
-        var replot = $.extend(true, [], highcharts_plot_options['#'+pid]); // make a copy, not reference
-        // Rename the categories
-        $.each(replot.xAxis.categories, function(idx, val){
-          var s_name = replot.xAxis.categories[idx];
-          var orig_name = undefined;
-          try {
-            orig_name = replot['s_names'][idx];
-          } catch(err) {}
-          var n_name = get_new_name(s_name, pid, orig_name, regex_mode);
-          if(n_name != s_name){
-            replot.xAxis.categories[idx] = n_name;
-          }
-        });
-        highcharts_plots['#'+pid] = new Highcharts.Chart(replot);
-      }
-    } catch(err) {
-      console.log('Error renaming samples in '+$(this).attr('id')+' - '+err.message);
-    }
+  // Collect filters
+  var f_texts = [];
+  var t_texts = [];
+  var regex_mode = false;
+  $('#mqc_renamesamples_filters .from_text').each(function(){ f_texts.push($(this).val()); });
+  $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
+  if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){ regex_mode = true; }
+  
+  // Add to global scope so that other code (multiqc_plotting.js) can access
+  window.mqc_rename_f_texts = f_texts;
+  window.mqc_rename_t_texts = t_texts;
+  window.mqc_rename_regex_mode = regex_mode;
+  
+  // Replot graphs
+  $('.hc-plot:not(.not_rendered)').each(function(){
+    var target = $(this).attr('id');
+    plot_graph(target);
   });
   
   // Rename samples in the general stats table
   $("#general_stats_table tbody th").each(function(){
-    var s_name = $(this).text();
-    var orig_name = $(this).data('original-sample-name');
-    if(orig_name === undefined){
-      $(this).data('original-sample-name', s_name);
-    }
-    $(this).text(get_new_name(s_name, '#general_stats_table', orig_name, regex_mode));
+    var s_name = $(this).data('original-sn');
+    $.each(f_texts, function(idx, f_text){
+      if(regex_mode){
+        var re = new RegExp(f_text,"g");
+        s_name = s_name.replace(re, t_texts[idx]);
+      } else {
+        s_name = s_name.replace(f_text, t_texts[idx]);
+      }
+    });
+    $(this).text(s_name);
   });
   
   // If something was renamed, highlight the toolbox icon
-  if($('#mqc_renamesamples_filters .from_text').length > 0){
+  if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').removeClass('in_use');
@@ -371,55 +348,6 @@ function apply_mqc_renamesamples(){
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_renamesamples');
 }
-// Try to keep track of what samples are called
-// This dict works as a backup for non-standard plots
-mqc_renamed_samples = {};
-function get_new_name(s_name, obj_id, orig_name, regex_mode){
-  // Collect the filters into an array
-  var f_texts = [];
-  var t_texts = [];
-  $('#mqc_renamesamples_filters .from_text').each(function(){
-    f_texts.push($(this).val());
-  });
-  $('#mqc_renamesamples_filters .to_text').each(function(){
-    t_texts.push($(this).val());
-  });
-  // Find the original name from what we currently have, if not supplied
-  if(orig_name === undefined){
-    orig_name = get_orig_name(s_name, obj_id);
-  }
-  s_name = orig_name;
-  // Now rename it
-  $.each(f_texts, function(idx, f_text){
-    if(regex_mode){
-      var re = new RegExp(f_text,"g");
-      s_name = s_name.replace(re, t_texts[idx]);
-    } else {
-      s_name = s_name.replace(f_text, t_texts[idx]);
-    }
-  });
-  // Update list of names for this plot
-  if(mqc_renamed_samples[obj_id] === undefined){
-    mqc_renamed_samples[obj_id] = {};
-  }
-  mqc_renamed_samples[obj_id][orig_name] = s_name;
-  return s_name;
-}
-// Try to guess the original sample name, based on the contents
-// of mqc_renamed_samples
-function get_orig_name(s_name, obj_id){
-  if(mqc_renamed_samples[obj_id] === undefined){
-    return s_name;
-  }
-  $.each(mqc_renamed_samples[obj_id], function(s, r){
-    if(r == s_name){
-      s_name = s;
-      return false; // end loop
-    }
-  });
-  return s_name;
-}
-
 
 
 //////////////////////////////////////////////////////

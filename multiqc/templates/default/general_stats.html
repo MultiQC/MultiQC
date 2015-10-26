@@ -31,7 +31,7 @@ This block generates the General Statistics table at the top of the report.
         {% for sn, r in report.general_stats_html['rows']|dictsort %}
         <tr>
           <td class="sorthandle">||</td>
-          <th class="rowheader">{{ sn }}</th>
+          <th class="rowheader" data-original-sn="{{ sn }}">{{ sn }}</th>
           {%- for k, h in report.general_stats_html['headers'].items() %}
             {{ r[k] if r[k] else '<td class="'+k+'"></td>' }}
           {%- endfor -%}
