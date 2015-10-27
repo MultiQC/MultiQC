@@ -122,6 +122,8 @@ class BaseMultiqcModule(object):
         :param trimmed: boolean, remove common trimming suffixes from name?
         :return: The cleaned sample name, ready to be used
         """
+        if root is None:
+            root = ''
         # Split then take first section to remove everything after these matches
         for ext in config.fn_clean_exts:
             s_name = s_name.split(ext ,1)[0]

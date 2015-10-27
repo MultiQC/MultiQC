@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files('fastqc_data.txt'):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
-            self.parse_fastqc_report(f['f'], s_name)
+            self.parse_fastqc_report(f['f'], s_name, f['root'])
         
         # Find and parse zipped FastQC reportrs
         for f in self.find_log_files('_fastqc.zip', filecontents=False):
@@ -55,9 +55,9 @@ class MultiqcModule(BaseMultiqcModule):
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
             try:
-                with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as f:
-                    r_data = f.read().decode('utf8')
-                    self.parse_fastqc_report(r_data, s_name)
+                with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as fh:
+                    r_data = fh.read().decode('utf8')
+                    self.parse_fastqc_report(r_data, s_name, f['root'])
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
