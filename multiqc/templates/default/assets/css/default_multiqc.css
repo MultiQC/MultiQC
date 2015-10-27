@@ -563,8 +563,14 @@ tbody .sorthandle {
     background-color: #ededed;
     text-align:center;
 }
+.hc-plot.not_rendered small {
+    display: inline-block;
+    font-style: italic;
+    padding-top: 40px;
+    color: #999;
+}
 .hc-plot .render_plot {
-    margin-top: 20px;
+    margin-top: 40px;
 }
 .hc-plot-wrapper{
     width: 100%;

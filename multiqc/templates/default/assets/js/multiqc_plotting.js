@@ -103,7 +103,7 @@ function plot_graph(target, ds, max_num){
         plot_xy_line_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered');
+        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Bar graphs
@@ -112,7 +112,7 @@ function plot_graph(target, ds, max_num){
         plot_stacked_bar_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered');
+        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Not recognised

@@ -264,7 +264,7 @@ class BaseMultiqcModule(object):
             html += '</div>\n\n'
         
         # The plot div
-        html += '<div id="{id}" class="hc-plot hc-line-plot"><button class="btn btn-default btn-lg render_plot">Show plot</button></div></div> \n'.format(id=config['id'])
+        html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=config['id'])
         
         # Javascript with data dump
         html += '<script type="text/javascript"> \n\
@@ -364,7 +364,7 @@ class BaseMultiqcModule(object):
             html += '</div>\n\n'
         
         # Plot and javascript function
-        html += '<div id="{id}" class="hc-plot hc-bar-plot"><button class="btn btn-default btn-lg render_plot">Show plot</button></div> \n\
+        html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div></div> \n\
         </div> \n\
         <script type="text/javascript"> \n\
             mqc_plots["{id}"] = {{ \n\
