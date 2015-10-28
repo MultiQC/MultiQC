@@ -74,7 +74,7 @@ class BaseMultiqcModule(object):
                             logger.debug("Couldn't read file when checking filesize: {}".format(fn))
                             readfile = False
                         else:
-                            if filesize > 1000000:
+                            if filesize > config.log_filesize_limit:
                                 readfile = False
                         
                         # Use mimetypes to exclude binary files where possible

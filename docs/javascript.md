@@ -7,7 +7,7 @@ layout: toc
 The javascript bundled in the default MultiQC template has a number of
 helper functions to make your life easier.
 
-Note that the above Python functions make use of these, so
+Note that the base module Python functions make use of these, so
 you typically won't need to call these directly.
 
 ## Plotting line graphs

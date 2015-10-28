@@ -36,6 +36,7 @@ fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '_tophat', '_star_alig
 fn_ignore_files = ['.DS_Store']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 num_datasets_plot_limit = 50
+log_filesize_limit = 1000000
 
 
 #######################
