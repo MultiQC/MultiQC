@@ -133,7 +133,8 @@ force, verbose, quiet):
         logger.info("Report title: {0}".format(config.title))
     if dirs:
         logger.info("Prepending directory to sample names")
-    logger.info("Searching   : {0}".format(', '.join(config.analysis_dir)))
+    for d in config.analysis_dir:
+        logger.info("Searching   : {0}".format(d))
     
     # Get the list of modules we want to run
     run_modules = config.avail_modules.keys()
