@@ -33,19 +33,6 @@ $(function () {
     e.preventDefault();
     var f_text = $('#mqc_colour_filter').val().trim();
     var f_col = $('#mqc_colour_filter_color').val().trim();
-    if(f_text.length == 0){
-      alert('Error - highlight text must not be blank.');
-      return false;
-    }
-    var already_exists = false;
-    $('#mqc_col_filters li .f_text').each(function(){
-      if($(this).val() == f_text){
-        alert('Error - highlight text "'+f_text+'" already exists');
-        already_exists = true;
-        return false;
-      }
-    });
-    if(already_exists) { return false; }
     $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
     apply_mqc_highlights();
     $('#mqc_colour_filter').val('');
@@ -126,14 +113,6 @@ $(function () {
       alert('Error - filter text must not be blank.');
       return false;
     }
-    var error = false;
-    $('#mqc_hidesamples_filters li .f_text').each(function(){
-      if($(this).val() == f_text){
-        alert('Error - highlight text "'+f_text+'" already exists');
-        error = true;
-      }
-    });
-    if(error){ return false; }
     $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_hidesamples_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
     apply_mqc_hidesamples();
     $('#mqc_hidesamples_filter').val('');
