@@ -321,7 +321,10 @@ class BaseMultiqcModule(object):
             for c in cats[idx].keys():
                 thisdata = list()
                 for s in hc_samples:
-                    thisdata.append(d[s][c])
+                    try:
+                        thisdata.append(d[s][c])
+                    except KeyError:
+                        pass
                 if max(thisdata) > 0:
                     thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
                     if 'color' in cats[idx][c]:
