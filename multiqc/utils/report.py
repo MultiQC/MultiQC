@@ -5,6 +5,11 @@ module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
 
 from collections import defaultdict, OrderedDict
+import logging
+
+import multiqc
+from multiqc import (logger)
+from multiqc.utils.log import init_log, LEVELS
 
 general_stats = OrderedDict()
 general_stats_html = {
@@ -76,16 +81,19 @@ def general_stats_build_html():
                     if 'modify' in headers[k] and callable(headers[k]['modify']):
                         val = headers[k]['modify'](val)
                     
-                    percentage = ((float(val) - headers[k]['dmin']) / (headers[k]['dmax'] - headers[k]['dmin'])) * 100;
-                    percentage = min(percentage, 100)
-                    percentage = max(percentage, 0)
+                    try:
+                        percentage = ((float(val) - headers[k]['dmin']) / (headers[k]['dmax'] - headers[k]['dmin'])) * 100;
+                        percentage = min(percentage, 100)
+                        percentage = max(percentage, 0)
+                    except ZeroDivisionError:
+                        percentage = 0
                     
                     try: val = headers[k]['format'].format(val)
                     except ValueError: val = headers[k]['format'].format(float(samp[k]))
                     except: val = samp[k]
                     
                     general_stats_html['rows'][sname][rid] = \
-                        '<td class="data-coloured {rid}">\
+                        '<td class="data-coloured {rid}" >\
                             <div class="wrapper">\
                                 <span class="bar" style="width:{percentage}%;"></span>\
                                 <span class="val">{val}</span>\

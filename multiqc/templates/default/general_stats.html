@@ -12,6 +12,7 @@ This block generates the General Statistics table at the top of the report.
 <h2>
   General Statistics &nbsp;
   <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#general_stats_colsort_modal">Configure Columns</button>
+  <button type="button" class="btn btn-default btn-sm" id="mqc_genstat_sort_highlight" data-direction="desc" style="display:none;">Sort by highlight</button>
   <small id="genstat_numrows_text">Showing <span id="genstat_numrows">{{ report.general_stats_html['rows'].keys() | length }}</span> rows.</small>
 </h2>
 <div id="general_stats_table_container">
@@ -30,7 +31,7 @@ This block generates the General Statistics table at the top of the report.
         {% for sn, r in report.general_stats_html['rows']|dictsort %}
         <tr>
           <td class="sorthandle">||</td>
-          <th class="rowheader">{{ sn }}</th>
+          <th class="rowheader" data-original-sn="{{ sn }}">{{ sn }}</th>
           {%- for k, h in report.general_stats_html['headers'].items() %}
             {{ r[k] if r[k] else '<td class="'+k+'"></td>' }}
           {%- endfor -%}
@@ -67,7 +68,7 @@ This block generates the General Statistics table at the top of the report.
             </tr>
           </thead>
           <tbody>
-            {%- for m in report.general_stats -%}{%- for k in report.general_stats[m]['headers'].keys() %}
+            {%- for m in report.general_stats -%}{%- for k in report.general_stats[m]['headers'].keys() -%}{%- if report.general_stats[m]['headers'][k]['rid'] in report.general_stats_html['headers'] %}
               <tr class="{{ report.general_stats[m]['headers'][k]['rid'] }}" style="background-color: rgba({{report.general_stats[m]['headers'][k]['modcol'] }}, 0.15);">
                 <td class="sorthandle ui-sortable-handle">||</span></td>
                 <td style="text-align:center;"><input class="general_stats_col_visible" type="checkbox" checked="checked" value="{{ report.general_stats[m]['headers'][k]['rid'] }}"></td>
@@ -76,7 +77,7 @@ This block generates the General Statistics table at the top of the report.
                 <td>{{ report.general_stats[m]['headers'][k]['description'] }}</td>
                 <td>{{ report.general_stats[m]['headers'][k]['shared_key'] }}</td>
               </tr>
-            {%- endfor -%}{%- endfor -%}
+            {%- endif -%}{%- endfor -%}{%- endfor -%}
           </tbody>
         </table>
       </div>

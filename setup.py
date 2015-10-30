@@ -46,24 +46,30 @@ setup(
     ],
     entry_points = {
         'multiqc.modules.v1': [
-            'qualimap = multiqc.modules.qualimap',
-            'featureCounts = multiqc.modules.featureCounts',
-            'preseq = multiqc.modules.preseq',
-            'picard = multiqc.modules.picard',
-            'bismark = multiqc.modules.bismark',
-            'star = multiqc.modules.star',
-            'tophat = multiqc.modules.tophat',
-            'bowtie2 = multiqc.modules.bowtie2',
-            'bowtie1 = multiqc.modules.bowtie1',
-            'cutadapt = multiqc.modules.cutadapt',
-            'fastq_screen = multiqc.modules.fastq_screen',
-            'fastqc = multiqc.modules.fastqc',
+            'qualimap = multiqc.modules.qualimap:MultiqcModule',
+            'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'preseq = multiqc.modules.preseq:MultiqcModule',
+            'picard = multiqc.modules.picard:MultiqcModule',
+            'bismark = multiqc.modules.bismark:MultiqcModule',
+            'star = multiqc.modules.star:MultiqcModule',
+            'tophat = multiqc.modules.tophat:MultiqcModule',
+            'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
+            'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
+            'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
+            'fastqc = multiqc.modules.fastqc:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
             'default_dev = multiqc.templates.default_dev',
             'geo = multiqc.templates.geo',
-        ]
+        ],
+        # 'multiqc.hooks.v1': [
+            # 'execution_start = myplugin.hooks:execution_start',
+            # 'before_modules = myplugin.hooks:before_modules',
+            # 'after_modules = myplugin.hooks:after_modules',
+            # 'execution_finish = myplugin.hooks:execution_finish',
+        # ]
     },
     classifiers = [
         'Development Status :: 4 - Beta',

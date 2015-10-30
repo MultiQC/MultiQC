@@ -109,6 +109,7 @@ If in doubt, feel free to get in touch with the author:
 ## Version History
 #### [v0.3dev]
 * Child templates - easily customise specific parts of the default report template
+* Plugin hooks - allow other tools to execute custom code during MultiQC execution
 * New Preseq module
 * New design for general statistics table (snazzy new background bars)
 * Further development of toolbox
@@ -134,6 +135,10 @@ If in doubt, feel free to get in touch with the author:
   and data ranges. For instance, all columns describing a read count will now share
   their scale across modules.
 * General stats columns can be hidden and reordered with a new modal window.
+* Plotting code refactored, reports with many samples (>50 by default) don't
+  automatically render to avoid freezing the browser.
+* Plots with highlighted and renamed samples now honour this when exporting to
+  different file types.
 
 #### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module

@@ -49,6 +49,13 @@ class BaseMultiqcModule(object):
                     if fn in config.fn_ignore_files:
                         continue
                     
+                    # Use mimetypes to exclude binary files where possible
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+                    if encoding is not None:
+                        continue
+                    if ftype is not None and ftype.startswith('text') is False:
+                        continue
+                    
                     # Make a sample name from the filename
                     s_name = self.clean_s_name(fn, root)
                     
@@ -60,36 +67,33 @@ class BaseMultiqcModule(object):
                     
                     # Search for file names ending in a certain string
                     readfile = False
+                    fn_matched = False
                     if fn_match is not None:
                         for m in fn_match:
                             if m in fn:
                                 readfile = True
+                                fn_matched = True
                                 break
-                    else:
-                        readfile = True
+                    
+                    if contents_match is not None and readfile is False:
                         # Limit search to files under 1MB to avoid 30GB FastQ files etc.
                         try:
                             filesize = os.path.getsize(os.path.join(root,fn))
                         except (IOError, OSError, ValueError, UnicodeDecodeError):
-                            log.debug("Couldn't read file when checking filesize: {}".format(fn))
-                            readfile = False
+                            logger.debug("Couldn't read file when checking filesize: {}".format(fn))
                         else:
-                            if filesize > 1000000:
-                                readfile = False
-                        
-                        # Use mimetypes to exclude binary files where possible
-                        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                        if encoding is not None:
-                            readfile = False # eg. gzipped files
-                        if ftype is not None and ftype.startswith('text') is False:
-                            readfile = False # eg. images - 'image/jpeg'
+                            if filesize > config.log_filesize_limit:
+                                logger.debug("Ignoring file as too large: {}".format(fn))
+                            else:
+                                readfile = True
                                 
                     if readfile:
                         try:
                             with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                                
                                 # Search this file for our string of interest
                                 returnfile = False
-                                if contents_match is not None:
+                                if contents_match is not None and fn_matched is False:
                                     for line in f:
                                         for m in contents_match:
                                             if m in line:
@@ -122,6 +126,8 @@ class BaseMultiqcModule(object):
         :param trimmed: boolean, remove common trimming suffixes from name?
         :return: The cleaned sample name, ready to be used
         """
+        if root is None:
+            root = ''
         # Split then take first section to remove everything after these matches
         for ext in config.fn_clean_exts:
             s_name = s_name.split(ext ,1)[0]
@@ -182,13 +188,16 @@ class BaseMultiqcModule(object):
             # Figure out the min / max if not supplied
             if setdmax or setdmin:
                 for (sname, samp) in data.items():
-                    val = float(samp[k])
-                    if 'modify' in headers[k] and callable(headers[k]['modify']):
-                        val = float(headers[k]['modify'](val))
-                    if setdmax:
-                        headers[k]['dmax'] = max(headers[k]['dmax'], val)
-                    if setdmin:
-                        headers[k]['dmin'] = min(headers[k]['dmin'], val)
+                    try:
+                        val = float(samp[k])
+                        if 'modify' in headers[k] and callable(headers[k]['modify']):
+                            val = float(headers[k]['modify'](val))
+                        if setdmax:
+                            headers[k]['dmax'] = max(headers[k]['dmax'], val)
+                        if setdmin:
+                            headers[k]['dmin'] = min(headers[k]['dmin'], val)
+                    except KeyError:
+                        pass # missing data - skip
         
         report.general_stats[self.name] = {
             'data': data,
@@ -246,7 +255,7 @@ class BaseMultiqcModule(object):
         # Build the HTML for the page
         if config.get('id') is None:
             config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
-        html = ''
+        html = '<div class="mqc_hcplot_plotgroup">'
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
@@ -257,16 +266,19 @@ class BaseMultiqcModule(object):
                 except: name = k+1
                 try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         
         # The plot div
-        html += '<div id="{id}" class="hc-plot hc-line-plot"></div> \n'.format(id=config['id'])
+        html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=config['id'])
         
         # Javascript with data dump
         html += '<script type="text/javascript"> \n\
-            var {id}_datasets = {d}; \n\
-            $(function () {{ plot_xy_line_graph("#{id}", {id}_datasets[0], {c}); }}); \n\
+            mqc_plots["{id}"] = {{ \n\
+                "plot_type": "xy_line", \n\
+                "datasets": {d}, \n\
+                "config": {c} \n\
+            }} \n\
         </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config));
         return html
     
@@ -313,7 +325,10 @@ class BaseMultiqcModule(object):
             for c in cats[idx].keys():
                 thisdata = list()
                 for s in hc_samples:
-                    thisdata.append(d[s][c])
+                    try:
+                        thisdata.append(d[s][c])
+                    except KeyError:
+                        pass
                 if max(thisdata) > 0:
                     thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
                     if 'color' in cats[idx][c]:
@@ -325,7 +340,7 @@ class BaseMultiqcModule(object):
         # Build the HTML
         if config.get('id') is None:
             config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
-        html = ''
+        html = '<div class="mqc_hcplot_plotgroup">'
         
         # Counts / Percentages Switch
         if config.get('cpswitch') is not False:
@@ -339,8 +354,8 @@ class BaseMultiqcModule(object):
             c_label = config.get('cpswitch_counts_label', 'Counts')
             p_label = config.get('cpswitch_percent_label', 'Percentages')
             html += '<div class="btn-group switch_group"> \n\
-    			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="#{id}">{c_l}</button> \n\
-    			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="#{id}">{p_l}</button> \n\
+    			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n\
+    			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n\
     		</div> '.format(id=config['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
             if len(plotdata) > 1:
                 html += ' &nbsp; &nbsp; '
@@ -354,15 +369,19 @@ class BaseMultiqcModule(object):
                 except: name = k+1
                 try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{id}_datasets[{k}]" data-target="#{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         
         # Plot and javascript function
-        html += '<div id="{id}" class="hc-plot hc-bar-plot"></div> \n\
+        html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div></div> \n\
+        </div> \n\
         <script type="text/javascript"> \n\
-            var {id}_samples = {s}; \n\
-            var {id}_datasets = {d}; \n\
-            $(function () {{ plot_stacked_bar_graph("#{id}", {id}_samples[0], {id}_datasets[0], {c}); }}); \
+            mqc_plots["{id}"] = {{ \n\
+                "plot_type": "bar_graph", \n\
+                "samples": {s}, \n\
+                "datasets": {d}, \n\
+                "config": {c} \n\
+            }} \n\
         </script>'.format(id=config['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(config));
         
         return html
