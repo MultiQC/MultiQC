@@ -46,6 +46,7 @@ setup(
     ],
     entry_points = {
         'multiqc.modules.v1': [
+<<<<<<< HEAD
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
@@ -58,6 +59,21 @@ setup(
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
+=======
+            'qualimap = multiqc.modules.qualimap',
+            'featureCounts = multiqc.modules.featureCounts',
+            'preseq = multiqc.modules.preseq',
+            'calculate_clip_overlap = multiqc.modules.calculate_clip_overlap',
+            'picard = multiqc.modules.picard',
+            'bismark = multiqc.modules.bismark',
+            'star = multiqc.modules.star',
+            'tophat = multiqc.modules.tophat',
+            'bowtie2 = multiqc.modules.bowtie2',
+            'bowtie1 = multiqc.modules.bowtie1',
+            'cutadapt = multiqc.modules.cutadapt',
+            'fastq_screen = multiqc.modules.fastq_screen',
+            'fastqc = multiqc.modules.fastqc',
+>>>>>>> 768c1ea5c8668e52396f4542cb92820a9627f426
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

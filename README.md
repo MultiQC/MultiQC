@@ -43,6 +43,7 @@ Currently, these include:
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
+  * [calculate_read_overlap](http://github.com/avilella/calculate_clip_overlap/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/)
 
 More to come soon. Please suggest any ideas as a new
