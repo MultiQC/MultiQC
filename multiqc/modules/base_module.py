@@ -77,12 +77,12 @@ class BaseMultiqcModule(object):
                             if filesize > config.log_filesize_limit:
                                 readfile = False
                         
-                        # Use mimetypes to exclude binary files where possible
-                        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                        if encoding is not None:
-                            readfile = False # eg. gzipped files
-                        if ftype is not None and ftype.startswith('text') is False:
-                            readfile = False # eg. images - 'image/jpeg'
+                    # Use mimetypes to exclude binary files where possible
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+                    if encoding is not None:
+                        readfile = False # eg. gzipped files
+                    if ftype is not None and ftype.startswith('text') is False:
+                        readfile = False # eg. images - 'image/jpeg'
                                 
                     if readfile:
                         try:
