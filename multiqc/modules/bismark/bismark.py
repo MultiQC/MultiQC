@@ -121,8 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except ZeroDivisionError:
                     log.debug('Missing total reads in {} - ignoring sample.'.format(sn))
             except KeyError:
-                log.warning('Missing data in {} - ignoring sample.'.format(sn))
-                self.bismark_data['merged'].pop(sn, None)
+                log.debug('Missing aligned or total reads in {}'.format(sn))
         
         if len(self.bismark_data['merged']) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
