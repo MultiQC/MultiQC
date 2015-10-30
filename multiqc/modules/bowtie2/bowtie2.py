@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_bowtie2_logs(self, s):
         # Check that this isn't actually Bismark using bowtie
-        if s.find('bismark', 0) >= 0: return None
+        if s.find('bisulfite', 0) >= 0: return None
         parsed_data = {}
         regexes = {
             'reads_processed': r"(\d+) reads; of these:",

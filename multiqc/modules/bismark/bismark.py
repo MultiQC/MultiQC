@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
             'merged': defaultdict(lambda: dict())
         }
         # Find and parse bismark alignment reports
-        for f in self.find_log_files(['_PE_report.txt', '_SE_report.txt']):
+        for f in self.find_log_files(contents_match='Writing a C -> T converted version of the input file'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['alignment'])
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['alignment']:
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bismark_data['dedup'][f['s_name']] = parsed_data
         
         # Find and parse bismark methylation extractor reports
-        for f in self.find_log_files('_splitting_report.txt'):
+        for f in self.find_log_files(contents_match='Bismark Extractor Version'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['methextract'])
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['methextract']:
@@ -113,12 +113,16 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Calculate percent_aligned
         for sn in self.bismark_data['merged']:
-            aln = self.bismark_data['merged'][sn]['aligned_reads']
-            tot = self.bismark_data['merged'][sn]['total_reads']
             try:
-                self.bismark_data['merged'][sn]['percent_aligned'] = (aln / tot) * 100
-            except ZeroDivisionError:
-                pass # Zero total reads
+                aln = self.bismark_data['merged'][sn]['aligned_reads']
+                tot = self.bismark_data['merged'][sn]['total_reads']
+                try:
+                    self.bismark_data['merged'][sn]['percent_aligned'] = (aln / tot) * 100
+                except ZeroDivisionError:
+                    log.debug('Missing total reads in {} - ignoring sample.'.format(sn))
+            except KeyError:
+                log.warning('Missing data in {} - ignoring sample.'.format(sn))
+                self.bismark_data['merged'].pop(sn, None)
         
         if len(self.bismark_data['merged']) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
