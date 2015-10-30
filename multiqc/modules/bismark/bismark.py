@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bismark_data['merged'][sn][k] = v
         
         # Calculate percent_aligned
-        for sn in self.bismark_data['merged']:
+        for sn in self.bismark_data['merged'].keys():
             try:
                 aln = self.bismark_data['merged'][sn]['aligned_reads']
                 tot = self.bismark_data['merged'][sn]['total_reads']
@@ -121,7 +121,8 @@ class MultiqcModule(BaseMultiqcModule):
                 except ZeroDivisionError:
                     log.debug('Missing total reads in {} - ignoring sample.'.format(sn))
             except KeyError:
-                log.debug('Missing aligned or total reads in {}'.format(sn))
+                log.warning('Missing data in {} - ignoring sample.'.format(sn))
+                self.bismark_data['merged'].pop(sn, None)
         
         if len(self.bismark_data['merged']) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
