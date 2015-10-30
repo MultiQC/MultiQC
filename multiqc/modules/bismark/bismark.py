@@ -18,49 +18,49 @@ log = logging.getLogger(__name__)
 # Log parsing regexes
 regexes = {
     'alignment': {
-        'total_reads': r"^Sequence(?:s| pairs) analysed in total:\s+(\d+)$",
-        'aligned_reads': r"^Number of(?: paired-end)? alignments with a unique best hit(?: from the different alignments)?:\s+(\d+)$",
-        'no_alignments': r"^Sequence(?:s| pairs) with no alignments under any condition:\s+(\d+)$",
-        'ambig_reads': r"^Sequence(?:s| pairs) did not map uniquely:\s+(\d+)$",
-        'discarded_reads': r"^Sequence(?:s| pairs) which were discarded because genomic sequence could not be extracted:\s+(\d+)$",
-        'total_c': r"^Total number of C's analysed:\s+(\d+)$",
-        'meth_cpg': r"^Total methylated C's in CpG context:\s+(\d+)",
-        'meth_chg': r"^Total methylated C's in CHG context:\s+(\d+)",
-        'meth_chh': r"^Total methylated C's in CHH context:\s+(\d+)",
-        'unmeth_cpg': r"^Total unmethylated C's in CpG context:\s+(\d+)",
-        'unmeth_chg': r"^Total unmethylated C's in CHG context:\s+(\d+)",
-        'unmeth_chh': r"^Total unmethylated C's in CHH context:\s+(\d+)",
-        'percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
-        'percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
-        'percent_chh_meth': r"^C methylated in CHH context:\s+([\d\.]+)%",
-        'strand_ot': r"^CT(?:\/GA)?\/CT:\s+(\d+)\s+\(\(converted\) top strand\)$",
-        'strand_ctot': r"^GA(?:\/CT)?\/CT:\s+(\d+)\s+\(complementary to \(converted\) top strand\)$",
-        'strand_ctob': r"^GA(?:\/CT)?\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)$",
-        'strand_ob': r"^CT(?:\/GA)?\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)$",
-        'strand_directional': r"^Option '--(directional)' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\)$"
+        'total_reads': r"Sequence(?:s| pairs) analysed in total:\s+(\d+)",
+        'aligned_reads': r"Number of(?: paired-end)? alignments with a unique best hit(?: from the different alignments)?:\s+(\d+)",
+        'no_alignments': r"Sequence(?:s| pairs) with no alignments under any condition:\s+(\d+)",
+        'ambig_reads': r"Sequence(?:s| pairs) did not map uniquely:\s+(\d+)",
+        'discarded_reads': r"Sequence(?:s| pairs) which were discarded because genomic sequence could not be extracted:\s+(\d+)",
+        'total_c': r"Total number of C's analysed:\s+(\d+)",
+        'meth_cpg': r"Total methylated C's in CpG context:\s+(\d+)",
+        'meth_chg': r"Total methylated C's in CHG context:\s+(\d+)",
+        'meth_chh': r"Total methylated C's in CHH context:\s+(\d+)",
+        'unmeth_cpg': r"Total unmethylated C's in CpG context:\s+(\d+)",
+        'unmeth_chg': r"Total unmethylated C's in CHG context:\s+(\d+)",
+        'unmeth_chh': r"Total unmethylated C's in CHH context:\s+(\d+)",
+        'percent_cpg_meth': r"C methylated in CpG context:\s+([\d\.]+)%",
+        'percent_chg_meth': r"C methylated in CHG context:\s+([\d\.]+)%",
+        'percent_chh_meth': r"C methylated in CHH context:\s+([\d\.]+)%",
+        'strand_ot': r"CT(?:\/GA)?\/CT:\s+(\d+)\s+\(\(converted\) top strand\)",
+        'strand_ctot': r"GA(?:\/CT)?\/CT:\s+(\d+)\s+\(complementary to \(converted\) top strand\)",
+        'strand_ctob': r"GA(?:\/CT)?\/GA:\s+(\d+)\s+\(complementary to \(converted\) bottom strand\)",
+        'strand_ob': r"CT(?:\/GA)?\/GA:\s+(\d+)\s+\(\(converted\) bottom strand\)",
+        'strand_directional': r"Option '--(directional)' specified \(default mode\): alignments to complementary strands \(CTOT, CTOB\) were ignored \(i.e. not performed\)"
     },
     'dedup': {
         # 'aligned_reads' overwrites previous, but I trust this more
-        'aligned_reads': r"^Total number of alignments analysed in .+:\s+(\d+)$",
-        'dup_reads': r"^Total number duplicated alignments removed:\s+(\d+)",
-        'dup_reads_percent': r"^Total number duplicated alignments removed:\s+\d+\s+\(([\d\.]+)%\)",
-        'dedup_reads': r"^Total count of deduplicated leftover sequences:\s+(\d+)",
-        'dedup_reads_percent': r"^Total count of deduplicated leftover sequences:\s+\d+\s+\(([\d\.]+)% of total\)"
+        'aligned_reads': r"Total number of alignments analysed in .+:\s+(\d+)",
+        'dup_reads': r"Total number duplicated alignments removed:\s+(\d+)",
+        'dup_reads_percent': r"Total number duplicated alignments removed:\s+\d+\s+\(([\d\.]+)%\)",
+        'dedup_reads': r"Total count of deduplicated leftover sequences:\s+(\d+)",
+        'dedup_reads_percent': r"Total count of deduplicated leftover sequences:\s+\d+\s+\(([\d\.]+)% of total\)"
     },
     'methextract': {
         # These calls are typically done after deduplication.
         # Overwrites what was found in the alignment report, but now
         # after deduplication (if that was done)
-        'total_c': r"^Total number of C's analysed:\s+(\d+)$",
-        'meth_cpg': r"^Total methylated C's in CpG context:\s+(\d+)",
-        'meth_chg': r"^Total methylated C's in CHG context:\s+(\d+)",
-        'meth_chh': r"^Total methylated C's in CHH context:\s+(\d+)",
-        'unmeth_cpg': r"^Total C to T conversions in CpG context:\s+(\d+)",
-        'unmeth_chg': r"^Total C to T conversions in CHG context:\s+(\d+)",
-        'unmeth_chh': r"^Total C to T conversions in CHH context:\s+(\d+)",
-        'percent_cpg_meth': r"^C methylated in CpG context:\s+([\d\.]+)%",
-        'percent_chg_meth': r"^C methylated in CHG context:\s+([\d\.]+)%",
-        'percent_chh_meth': r"^C methylated in CHH context:\s+([\d\.]+)%"
+        'total_c': r"Total number of C's analysed:\s+(\d+)",
+        'meth_cpg': r"Total methylated C's in CpG context:\s+(\d+)",
+        'meth_chg': r"Total methylated C's in CHG context:\s+(\d+)",
+        'meth_chh': r"Total methylated C's in CHH context:\s+(\d+)",
+        'unmeth_cpg': r"Total C to T conversions in CpG context:\s+(\d+)",
+        'unmeth_chg': r"Total C to T conversions in CHG context:\s+(\d+)",
+        'unmeth_chh': r"Total C to T conversions in CHH context:\s+(\d+)",
+        'percent_cpg_meth': r"C methylated in CpG context:\s+([\d\.]+)%",
+        'percent_chg_meth': r"C methylated in CHG context:\s+([\d\.]+)%",
+        'percent_chh_meth': r"C methylated in CHH context:\s+([\d\.]+)%"
     }
 }
 
@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
             'merged': defaultdict(lambda: dict())
         }
         # Find and parse bismark alignment reports
-        for f in self.find_log_files(contents_match='Writing a C -> T converted version of the input file'):
+        for f in self.find_log_files(fn_match=['_PE_report.txt', '_SE_report.txt'], contents_match='Writing a C -> T converted version of the input file'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['alignment'])
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['alignment']:
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bismark_data['dedup'][f['s_name']] = parsed_data
         
         # Find and parse bismark methylation extractor reports
-        for f in self.find_log_files(contents_match='Bismark Extractor Version'):
+        for f in self.find_log_files(fn_match='_splitting_report.txt', contents_match='Bismark Extractor Version'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['methextract'])
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['methextract']:
@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bismark_data['merged'][sn][k] = v
         
         # Calculate percent_aligned
-        for sn in self.bismark_data['merged'].keys():
+        for sn in list(self.bismark_data['merged'].keys()):
             try:
                 aln = self.bismark_data['merged'][sn]['aligned_reads']
                 tot = self.bismark_data['merged'][sn]['total_reads']

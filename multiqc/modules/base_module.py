@@ -49,6 +49,13 @@ class BaseMultiqcModule(object):
                     if fn in config.fn_ignore_files:
                         continue
                     
+                    # Use mimetypes to exclude binary files where possible
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+                    if encoding is not None:
+                        continue
+                    if ftype is not None and ftype.startswith('text') is False:
+                        continue
+                    
                     # Make a sample name from the filename
                     s_name = self.clean_s_name(fn, root)
                     
@@ -60,36 +67,33 @@ class BaseMultiqcModule(object):
                     
                     # Search for file names ending in a certain string
                     readfile = False
+                    fn_matched = False
                     if fn_match is not None:
                         for m in fn_match:
                             if m in fn:
                                 readfile = True
+                                fn_matched = True
                                 break
-                    else:
-                        readfile = True
+                    
+                    if contents_match is not None and readfile is False:
                         # Limit search to files under 1MB to avoid 30GB FastQ files etc.
                         try:
                             filesize = os.path.getsize(os.path.join(root,fn))
                         except (IOError, OSError, ValueError, UnicodeDecodeError):
                             logger.debug("Couldn't read file when checking filesize: {}".format(fn))
-                            readfile = False
                         else:
                             if filesize > config.log_filesize_limit:
-                                readfile = False
-                        
-                    # Use mimetypes to exclude binary files where possible
-                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                    if encoding is not None:
-                        readfile = False # eg. gzipped files
-                    if ftype is not None and ftype.startswith('text') is False:
-                        readfile = False # eg. images - 'image/jpeg'
+                                logger.debug("Ignoring file as too large: {}".format(fn))
+                            else:
+                                readfile = True
                                 
                     if readfile:
                         try:
                             with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                                
                                 # Search this file for our string of interest
                                 returnfile = False
-                                if contents_match is not None:
+                                if contents_match is not None and fn_matched is False:
                                     for line in f:
                                         for m in contents_match:
                                             if m in line:
