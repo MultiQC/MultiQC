@@ -1,8 +1,3 @@
----
-title: Installation & Usage
-layout: toc
----
-
 # MultiQC Installation and Usage
 
 ## Installing MultiQC

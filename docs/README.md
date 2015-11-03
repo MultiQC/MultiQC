@@ -1,6 +1,11 @@
 ---
-title: MultiQC v0.3
-layout: default
+pages:
+ - installation.md
+ - reports.md
+ - templates.md
+ - modules.md
+ - plugins.md
+ - javascript.md
 ---
 
 # Welcome!

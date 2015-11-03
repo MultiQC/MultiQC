@@ -1,8 +1,3 @@
----
-title: Writing Modules
-layout: toc
----
-
 # Writing Modules
 
 ## Introduction

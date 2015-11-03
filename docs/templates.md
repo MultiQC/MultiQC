@@ -1,8 +1,3 @@
----
-title: Templates
-layout: toc
----
-
 # Report Templates
 Documentation coming soon..
 
