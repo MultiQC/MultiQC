@@ -6,14 +6,6 @@
 
 <table>
   <tr>
-    <th>Devel:</th>
-    <td>
-      <a title="Build Status" href="https://travis-ci.org/ewels/MultiQC"><img src="https://travis-ci.org/ewels/MultiQC.svg?branch=master"></a>
-      <a title="Devel docs" href="https://github.com/ewels/MultiQC/tree/master/docs"><img src="https://img.shields.io/badge/docs-devel-yellow.svg"></a>
-      <a title="New commits" href="https://github.com/ewels/MultiQC/compare/v0.2...master"><img src="https://img.shields.io/github/commits-since/ewels/multiqc/v0.2.svg"></a>
-    </td>
-  </tr>
-  <tr>
     <th>Stable:</th>
     <td>
       <a title="PyPI Version" href="https://pypi.python.org/pypi/multiqc/"><img src="https://img.shields.io/pypi/v/multiqc.svg"></a>
@@ -22,11 +14,20 @@
       <a title="PyPI Downloads" href="http://multiqc.info/stats.php"><img src="https://img.shields.io/pypi/dm/multiqc.svg"></a>
     </td>
   </tr>
+  <tr>
+    <th>Devel:</th>
+    <td>
+      <a title="Build Status" href="https://travis-ci.org/ewels/MultiQC"><img src="https://travis-ci.org/ewels/MultiQC.svg?branch=master"></a>
+      <a title="Devel docs" href="https://github.com/ewels/MultiQC/tree/master/docs"><img src="https://img.shields.io/badge/docs-devel-yellow.svg"></a>
+      <img src="https://img.shields.io/badge/Python-2.7-green.svg">
+      <img src="https://img.shields.io/badge/Python-3.4-green.svg">
+    </td>
+  </tr>
 </table>
 
 -----
 
-MultiQC is written in Python and contains modules for a number of common tools.
+MultiQC is written in Python (v2.7 / v3.4) and contains modules for a number of common tools.
 Currently, these include:
 
 * Quality control & pre-processing
