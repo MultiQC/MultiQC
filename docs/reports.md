@@ -55,7 +55,7 @@ plus options to show/hide and change the order of columns.
 ![configure columns](images/genstats_config_cols.png)
 
 You can manually reorder the rows in the table by clicking and dragging the
-handle at the left side of a row:
+handle at the left side of a row.
 
 ## Plots
 MultiQC modules can take plot more extensive data in the sections below
@@ -70,6 +70,7 @@ will zoom into that area.
 ![plot zoom](images/plot_zoom.png)
 
 To reset the zoom, use the button in the top right:
+
 ![reset zoom](images/plot_reset_zoom.png)
 
 Plots have a grey bar along their base; clicking and dragging this will
