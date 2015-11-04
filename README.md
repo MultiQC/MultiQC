@@ -108,7 +108,8 @@ If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ## Version History
-#### [v0.3dev]
+#### [v0.3](https://github.com/ewels/MultiQC/releases/tag/v0.3) - 2015-11-04
+* Lots of lovely new documentation!
 * Child templates - easily customise specific parts of the default report template
 * Plugin hooks - allow other tools to execute custom code during MultiQC execution
 * New Preseq module
