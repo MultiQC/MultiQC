@@ -108,6 +108,10 @@ If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ## Version History
+#### v0.3.2dev
+* More vibrant colours in the general stats table
+
+
 #### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
 * Hotfix patch to fix broken FastQC module (wasn't finding `.zip` files properly)
 * General Stats table colours now flat. Should improve browser speed.
