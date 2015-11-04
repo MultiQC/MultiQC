@@ -120,6 +120,19 @@ $(function () {
       $('#general_stats_table .'+cclass).hide();
       $('#general_stats_colsort_table .'+cclass).addClass('text-muted');
     }
+    // Hide empty rows
+    $('#general_stats_table tbody tr').show();
+    $('#general_stats_table tbody tr').each(function(){
+      var hasVal = false;
+      $(this).find('td:visible').each(function(){
+        if(!$(this).hasClass('sorthandle') && $(this).text() !== ''){
+          hasVal = true;
+        }
+      });
+      if(!hasVal){
+        $(this).hide();
+      }
+    });
   });
   
   $('#general_stats_colsort_table tbody').on("sortstop", function(e, ui){
