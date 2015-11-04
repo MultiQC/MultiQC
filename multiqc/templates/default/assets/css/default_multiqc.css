@@ -534,14 +534,6 @@ tbody .sorthandle {
     bottom: 0;
     background-color: #dedede;
     z-index:-1;
-    filter: alpha(opacity=30);
-    opacity: 0.3;
-    -webkit-transition: opacity 0.5s;
-    transition: opacity 0.5s;
-}
-#general_stats_table:hover .bar {
-    filter: alpha(opacity=50);
-    opacity: 0.5;
 }
 #general_stats_table tbody td {
     text-align: right;

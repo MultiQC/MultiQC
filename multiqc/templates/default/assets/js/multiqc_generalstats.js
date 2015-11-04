@@ -101,7 +101,7 @@ $(function () {
         }
         table.find('tr td:nth-of-type('+(idx+1)+')').each(function(){
           var val = parseFloat($(this).text());
-          var col = scale(val).css();
+          var col = scale(val).luminance(0.7).css();
           $(this).find('.wrapper .bar').css('background-color', col);
         });
         
