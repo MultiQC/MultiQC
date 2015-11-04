@@ -101,7 +101,13 @@ $(function () {
         }
         table.find('tr td:nth-of-type('+(idx+1)+')').each(function(){
           var val = parseFloat($(this).text());
-          var col = scale(val).luminance(0.7).css();
+          var rgb = scale(val).rgb(); //.luminance(0.7).css();
+          for (i in rgb){
+            rgb[i] = 255+(rgb[i]-255)*0.3;
+            if(rgb[i] > 255){ rgb[i] = 255; }
+            if(rgb[i] < 0){ rgb[i] = 0; }
+          }
+          var col = chroma.rgb(rgb).hex();
           $(this).find('.wrapper .bar').css('background-color', col);
         });
         
