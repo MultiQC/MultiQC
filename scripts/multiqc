@@ -122,9 +122,7 @@ force, verbose, quiet):
     config.analysis_dir = analysis_dir
     config.output_dir = outdir
     if name == 'stdout':
-        config.output_fn_name = 'stdout'
         config.output_fn = sys.stdout
-        config.data_dir_name = None
         config.data_dir = None
     else:
         if name is not None:
@@ -225,7 +223,8 @@ force, verbose, quiet):
     # Did we find anything?
     if len(report.modules_output) == 0:
         logger.warn("No analysis results found. Cleaning up..")
-        shutil.rmtree(config.data_dir)
+        if config.data_dir is not None:
+            shutil.rmtree(config.data_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)

@@ -17,7 +17,7 @@ For a description of all command line parameters, run `multiqc --help`.
 ## Renaming reports
 The report is called `multiqc_report.html` by default. Tab-delimited data files
 are created in `multiqc_data/`, containing additional information.
-You can prefix a custom name to these using the `-p`/`--prefix` parameter, or instruct
+You can use a custom name for the report with the `-n`/`--name` parameter, or instruct
 MultiQC to create them in a subdirectory using the `-o`/`-outdir` parameter.
 
 Note that different MultiQC templates may have different defaults.
@@ -43,6 +43,11 @@ are listed with `multiqc --help`.
 
 If you're interested in creating your own custom template, see the
 [writing new templates](templates.md) section.
+
+## Printing to stdout
+If you would like to generate MultiQC reports on the fly, you can print the
+output to standard out by specifying `-n stdout`. Note that the data directory
+will not be generated and the template used must create stand-alone HTML reports.
 
 ## Choosing which modules to run
 Sometimes, it's desirable to choose which MultiQC modules run. This could be
