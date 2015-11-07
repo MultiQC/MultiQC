@@ -63,10 +63,10 @@ from multiqc.utils.log import init_log, LEVELS
                     default=config.output_dir,
                     help = "Create report in the specified output directory."
 )
-@click.option('-p', '--prefix',
+@click.option('-n', '--name',
                     type = str,
-                    help = "Set a prefix for the report filename. " \
-                            "_{} will be added after this.".format(config.output_fn_name)
+                    default = config.output_fn_name,
+                    help = "Report filename. Use 'stdout' to print to standard out."
 )
 @click.option('-v', '--verbose', 
                     count=True,
@@ -79,7 +79,7 @@ from multiqc.utils.log import init_log, LEVELS
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, title, template, modules, exclude, outdir, prefix, 
+def multiqc(analysis_dir, dirs, title, template, modules, exclude, outdir, name, 
 force, verbose, quiet):
     """MultiQC is a tool generate qc reports.
     
@@ -121,9 +121,17 @@ force, verbose, quiet):
     config.prepend_dirs = dirs
     config.analysis_dir = analysis_dir
     config.output_dir = outdir
-    if prefix is not None:
-        config.output_fn_name = "{}_{}".format(prefix, config.output_fn_name)
-        config.data_dir_name = '{}_{}'.format(prefix, config.data_dir_name)
+    if name == 'stdout':
+        config.output_fn = sys.stdout
+        config.data_dir = None
+    else:
+        if name is not None:
+            if name.endswith('.html'):
+                name = name[:-5]
+            config.output_fn_name = name
+            config.data_dir_name = '{}_data'.format(name)
+        if not config.output_fn_name.endswith('.html'):
+            config.output_fn_name = '{}.html'.format(config.output_fn_name)
     
     if osx_app:
         config.output_dir = os.path.join(analysis_dir, 'multiqc_report')
@@ -161,36 +169,36 @@ force, verbose, quiet):
         pass # No subdirectory variable given
     
     # Final report path & data directory
-    config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-    config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+    if name == 'stdout':
+        logger.info("Output      : stdout")
+    else:
+        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
     
-    logger.debug("Output      : {0}".format(os.path.relpath(config.output_fn)))
-    logger.debug("Data dir    : {0}".format(os.path.relpath(config.data_dir)))
-    
-    # Check for existing reports and remove if -f was specified
-    if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
-        if force:
-            if os.path.exists(config.output_fn):
-                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
-                os.remove(config.output_fn)
-            if os.path.exists(config.data_dir):
-                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
-                shutil.rmtree(config.data_dir)
-        else:
-            if os.path.exists(config.output_fn):
-                logger.error("MultiQC Report {} already exists.".format(config.output_fn))
-            if os.path.exists(config.data_dir):
-                logger.error("Output directory {} already exists.".format(config.data_dir))
-            logger.info("Use -f or --force to overwrite existing reports")
-            sys.exit(1)
+        # Check for existing reports and remove if -f was specified
+        if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
+            if force:
+                if os.path.exists(config.output_fn):
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
+                    os.remove(config.output_fn)
+                if os.path.exists(config.data_dir):
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                    shutil.rmtree(config.data_dir)
+            else:
+                if os.path.exists(config.output_fn):
+                    logger.error("MultiQC Report {} already exists.".format(config.output_fn))
+                if os.path.exists(config.data_dir):
+                    logger.error("Output directory {} already exists.".format(config.data_dir))
+                logger.info("Use -f or --force to overwrite existing reports")
+                sys.exit(1)
 
-    logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
-    logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+        logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+        logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
 
-    # Make the report directories
-    os.makedirs(config.data_dir)
-    if not os.path.exists(os.path.dirname(config.output_fn)):
-        os.makedirs(os.path.dirname(config.output_fn))
+        # Make the report directories
+        os.makedirs(config.data_dir)
+        if not os.path.exists(os.path.dirname(config.output_fn)):
+            os.makedirs(os.path.dirname(config.output_fn))
 
     # Run the modules!
     plugin_hooks.mqc_trigger('before_modules')
@@ -215,7 +223,8 @@ force, verbose, quiet):
     # Did we find anything?
     if len(report.modules_output) == 0:
         logger.warn("No analysis results found. Cleaning up..")
-        shutil.rmtree(config.data_dir)
+        if config.data_dir is not None:
+            shutil.rmtree(config.data_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
@@ -226,12 +235,13 @@ force, verbose, quiet):
     report.general_stats_build_html()
     
     # Print the general stats table to a file
-    with io.open (os.path.join(config.data_dir, 'multiqc_general_stats.txt'), "w", encoding='utf-8') as f:
-        d = {}
-        for m in report.general_stats.keys():
-            for (k, v) in report.general_stats[m]['data'].items():
-                d[k] = v
-        print( report.dict_to_csv( d ), file=f)
+    if config.data_dir is not None:
+        with io.open (os.path.join(config.data_dir, 'multiqc_general_stats.txt'), "w", encoding='utf-8') as f:
+            d = {}
+            for m in report.general_stats.keys():
+                for (k, v) in report.general_stats[m]['data'].items():
+                    d[k] = v
+            print( report.dict_to_csv( d ), file=f)
     
     # Load in parent template files first if a child theme
     try:
@@ -262,20 +272,23 @@ force, verbose, quiet):
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
     report_output = j_template.render(report=report, config=config)
-    try:
-        with io.open (config.output_fn, "w", encoding='utf-8') as f:
-            print(report_output, file=f)
-    except IOError as e:
-        raise IOError ("Could not print report to '{}' - {}".format(config.output_fn, IOError(e)))
-    
-    # Copy over files if requested by the theme
-    try:
-        for f in template_mod.copy_files:
-            fn = os.path.join(tmp_dir, f)
-            dest_dir = os.path.join( os.path.dirname(config.output_fn), f)
-            copy_tree(fn, dest_dir)
-    except AttributeError:
-        pass # No files to copy
+    if name == 'stdout':
+        print(report_output.encode('utf-8'), file = sys.stdout)
+    else:
+        try:
+            with io.open (config.output_fn, "w", encoding='utf-8') as f:
+                print(report_output, file=f)
+        except IOError as e:
+            raise IOError ("Could not print report to '{}' - {}".format(config.output_fn, IOError(e)))
+        
+        # Copy over files if requested by the theme
+        try:
+            for f in template_mod.copy_files:
+                fn = os.path.join(tmp_dir, f)
+                dest_dir = os.path.join( os.path.dirname(config.output_fn), f)
+                copy_tree(fn, dest_dir)
+        except AttributeError:
+            pass # No files to copy
     
     # Clean up temporary directory
     shutil.rmtree(tmp_dir)
