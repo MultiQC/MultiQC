@@ -394,5 +394,6 @@ class BaseMultiqcModule(object):
                 second key field (column header). 
         :param: fn - Desired filename. Directory will be prepended automatically.
         :return: None """
-        with io.open (os.path.join(config.data_dir, fn), "w", encoding='utf-8') as f:
-            print( report.dict_to_csv( data ), file=f)
+        if config.data_dir is not None:
+            with io.open (os.path.join(config.data_dir, fn), "w", encoding='utf-8') as f:
+                print( report.dict_to_csv( data ), file=f)
