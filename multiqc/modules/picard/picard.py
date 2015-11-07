@@ -123,7 +123,8 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'title': 'Picard Deduplication Stats',
             'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads'
+            'cpswitch_counts_label': 'Number of Reads',
+            'cpswitch_c_active': False
         }
         
         return self.plot_bargraph(self.picard_dupMetrics_data, keys, config)
