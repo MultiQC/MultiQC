@@ -208,6 +208,19 @@ force, verbose, quiet):
         try:
             mod = config.avail_modules[this_module].load()
             report.modules_output.append(mod())
+
+            # Copy over css & js files if requested by the theme
+            try:
+                for to, path in mod.css.items():
+                    shutil.copyfile(path, os.path.join(tmp_dir, to))
+            except AttributeError:
+                pass
+            try:
+                for to, path in mod.js.items():
+                    shutil.copyfile(path, os.path.join(tmp_dir, to))
+            except AttributeError:
+                pass
+
         except UserWarning:
             pass # No samples found
         except:
