@@ -6,4 +6,7 @@ python:
 # command to install dependencies
 install: python setup.py -q install
 # command to run tests
-script: multiqc -v -o tests/multiqc_report tests/data
+script:
+  - multiqc -v -o tests/multiqc_report tests/data
+  - multiqc -v -o tests/multiqc_report tests/data -t default_dev
+  - multiqc -v -o tests/multiqc_report tests/data -t geo
