@@ -107,6 +107,7 @@ kbd {
 .side-nav-sm {
     overflow: auto;
     height: 100%;
+    border-right: 1px solid #ccc;
 }
 .side-nav-sm h1 a {
     padding: 10px 0 10px;
