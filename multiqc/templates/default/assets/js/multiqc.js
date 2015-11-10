@@ -28,6 +28,7 @@ function notEmptyObj (obj){
 $(function () {
   $('#side-nav-handle').click(function(e){
     $('.side-nav-sm, .side-nav-main').toggle();
-    $('.mainpage').toggleClass('side-nav-mini');
+    $('body').toggleClass('side-nav-mini');
+    $(document).resize(); // send resize trigger for replotting
   });
 });
