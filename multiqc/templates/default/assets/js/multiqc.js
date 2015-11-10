@@ -22,3 +22,19 @@ function notEmptyObj (obj){
   } catch(e){ return false; }
   return true;
 }
+
+
+// Side nav expansion
+$(function () {
+  $('#side-nav-handle').click(function(e){
+    if($(this).hasClass('active')){
+      $('.mainpage').removeClass('side-nav-mini');
+      $('.side-nav').removeClass('side-nav-mini');
+      $(this).removeClass('active');
+    } else {
+      $('.mainpage').addClass('side-nav-mini');
+      $('.side-nav').addClass('side-nav-mini');
+      $(this).addClass('active');
+    }
+  });
+});

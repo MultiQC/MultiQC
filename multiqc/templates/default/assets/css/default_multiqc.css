@@ -26,10 +26,12 @@ kbd {
     .footer { margin-left: 250px; }
     .side-nav {
         position: fixed;
+    }
+    .side-nav-content {
+        height: 100%;
         width: 250px;
         border-right: 1px solid #ccc;
-        overflow-y: auto;
-        overflow-x: visible;
+        overflow: auto;
         padding-bottom: 30px;
     }
 }
@@ -70,12 +72,12 @@ kbd {
 .side-nav ul.mqc-nav {
     border-bottom: 1px solid #ccc;
 }
-.side-nav a.nav-txt {
+.side-nav a {
     display: inline-block;
     width: 100%;
     text-decoration: none;
 }
-.side-nav a.nav-txt:hover, .side-nav a.nav-txt:active, .side-nav a.nav-txt:focus {
+.side-nav a:hover, .side-nav a:active, .side-nav a:focus {
     background-color: #dedede;
 }
 .side-nav .mqc-nav a.nav-l1.nav-txt {
@@ -93,47 +95,63 @@ kbd {
 }
 
 /* Styles for mini-nav */
-.side-nav.side-nav-mini {
+.mainpage.side-nav-mini {
+    margin-left: 50px;
+}
+.side-nav.side-nav-mini .side-nav-content {
     width: auto;
+    overflow: visible;
+}
+.side-nav h1 .nav-mini {
+    display: none;
+}
+.side-nav.side-nav-mini h1 a {
+    padding: 10px 0 10px;
+    margin-bottom: 10px;
 }
 .side-nav.side-nav-mini h1 img.nav-mini {
-    display: block;
-    height: auto;
-    margin-top: 15px;
+    display: inline-block;
+    width: 25px;
 }
 .side-nav.side-nav-mini .nav-txt, .side-nav.side-nav-mini h1 .nav-main {
-    display:none !important;
+    display:none;
 }
+.side-nav.side-nav-mini ul.mqc-nav { border: 0; }
 .side-nav .nav-btn {
-    border-right: 2px solid #ccc;
-    margin: 0 15px;
-    display: block;
-    height: 30px;
-    width: 0;
-    padding-top: 7px;
+    display: none;
 }
-.side-nav .nav-btn:after {
-    content: "";
+.side-nav.side-nav-mini .nav-btn {
     display: block;
-    padding: 0;
-    height: 12px;
-    width: 12px;
-    margin-left: -5px;
+    width: 25px;
+    height: 25px;
+    margin: 0 5px 15px;
+    padding: 2px;
+    text-align: center;
+    color: #888;
+    font-weight: 200;
+    font-size: 16px;
     background-color: #ccc;
-    border: 1px solid #666;
-    border-radius: 10px;
+    border-radius: 5px;
 }
-.side-nav .nav-l2.nav-btn {
-    height: 20px;
-    padding-top: 5px;
-}
-.side-nav .nav-l2.nav-btn:after {
-    background-color: #ddd;
-    border: 1px solid #999;
-    height: 10px;
+#side-nav-handle {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: -9px;
+    height: 50px;
     width: 10px;
-    margin-left: -4px;
+    padding-top: 12px;
+    border: 1px solid #ccc;
+    border-left: 0;
+    background-color: #ededed;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    color: #ccc;
+    cursor: pointer;
 }
+
+
+
 
 #page_title {
     margin: 0 0 20px;
