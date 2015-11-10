@@ -28,7 +28,8 @@ kbd {
         position: fixed;
         width: 250px;
         border-right: 1px solid #ccc;
-        overflow: auto;
+        overflow-y: auto;
+        overflow-x: visible;
         padding-bottom: 30px;
     }
 }
@@ -43,6 +44,9 @@ kbd {
     font-size: 18px;
     text-align: center;
     margin:0;
+}
+.side-nav.side-nav-mini h1 img.nav-mini {
+    display: none;
 }
 .side-nav h1 a {
     padding: 20px 0 15px;
@@ -66,23 +70,69 @@ kbd {
 .side-nav ul.mqc-nav {
     border-bottom: 1px solid #ccc;
 }
-.side-nav a {
+.side-nav a.nav-txt {
     display: inline-block;
     width: 100%;
     text-decoration: none;
 }
-.side-nav a:hover, .side-nav a:active, .side-nav a:focus {
+.side-nav a.nav-txt:hover, .side-nav a.nav-txt:active, .side-nav a.nav-txt:focus {
     background-color: #dedede;
 }
-.side-nav ul.mqc-nav > li > a{
+.side-nav .mqc-nav a.nav-l1.nav-txt {
     padding: 10px;
     border-top: 1px solid #ccc;
 }
-.side-nav ul.mqc-nav > li > ul > li > a {
+.side-nav .mqc-nav a.nav-l2.nav-txt {
     padding: 5px 10px 5px 15px;
     border-top: 1px solid #dedede;
     font-size: 0.9em;
     color: #788fa4;
+}
+.side-nav .mqc-nav li {
+    position: relative;
+}
+
+/* Styles for mini-nav */
+.side-nav.side-nav-mini {
+    width: auto;
+}
+.side-nav.side-nav-mini h1 img.nav-mini {
+    display: block;
+    height: auto;
+    margin-top: 15px;
+}
+.side-nav.side-nav-mini .nav-txt, .side-nav.side-nav-mini h1 .nav-main {
+    display:none !important;
+}
+.side-nav .nav-btn {
+    border-right: 2px solid #ccc;
+    margin: 0 15px;
+    display: block;
+    height: 30px;
+    width: 0;
+    padding-top: 7px;
+}
+.side-nav .nav-btn:after {
+    content: "";
+    display: block;
+    padding: 0;
+    height: 12px;
+    width: 12px;
+    margin-left: -5px;
+    background-color: #ccc;
+    border: 1px solid #666;
+    border-radius: 10px;
+}
+.side-nav .nav-l2.nav-btn {
+    height: 20px;
+    padding-top: 5px;
+}
+.side-nav .nav-l2.nav-btn:after {
+    background-color: #ddd;
+    border: 1px solid #999;
+    height: 10px;
+    width: 10px;
+    margin-left: -4px;
 }
 
 #page_title {
