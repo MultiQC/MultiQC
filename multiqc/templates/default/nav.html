@@ -7,30 +7,41 @@ The side navigation for the report.
 #}
 
 <div class="side-nav">
+  
+  <!-- Mini nav with single letter icons -->
+  <div class="side-nav-sm" style="display:none;">
+    <h1><a href="#top"><img src="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}" title="MultiQC"></a></h1>
+    <ul>
+      {% if report.general_stats_html['headers']|length > 0 %}
+      <li><a href="#general_stats" title="General Stats" data-placement="right" data-toggle="tooltip">G</a></li>
+      {% endif -%}
+      {% for m in report.modules_output %}
+      <li><a href="#{{ m.anchor }}" title="{{ m.name }}" data-placement="right" data-toggle="tooltip">{{ m.name[0:1] }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  
+  <!-- Expanded Side Nav with full names -->
   <div class="side-nav-main">
     <h1>
       <a href="#top">
-        <img class="nav-mini" src="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}" title="MultiQC">
-        <img class="nav-main" src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
-        <br class="nav-main">
-        <small class="nav-main" >v{{ config.version }}</small>
+        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC"><br>
+        <small>v{{ config.version }}</small>
       </a>
     </h1>
     <ul class="mqc-nav">
       {% if report.general_stats_html['headers']|length > 0 %}
       <li>
-        <a href="#general_stats" class="nav-l1 nav-txt">General Stats</a>
-        <a href="#general_stats" class="nav-l1 nav-btn" title="General Stats" data-placement="right" data-toggle="tooltip">G</a>
+        <a href="#general_stats" class="nav-l1">General Stats</a>
       </li>
       {% endif -%}
       {% for m in report.modules_output %}
       <li>
-        <a href="#{{ m.anchor }}" class="nav-l1 nav-txt">{{ m.name }}</a>
-        <a href="#{{ m.anchor }}" class="nav-l1 nav-btn" title="{{ m.name }}" data-placement="right" data-toggle="tooltip">{{ m.name[0:1] }}</a>
+        <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
         <ul>
         {% for s in m.sections -%}
           <li>
-            <a href="#{{ s['anchor'] }}" class="nav-l2 nav-txt">{{ s['name']|striptags }}</a>
+            <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
           </li>
         {%- endfor %}
         </ul>
@@ -38,5 +49,7 @@ The side navigation for the report.
       {% endfor %}
     </ul>
   </div>
+  
+  <!-- Nav Width Toggle Button -->
   <div id="side-nav-handle">||</div>
 </div>

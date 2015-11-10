@@ -27,14 +27,7 @@ function notEmptyObj (obj){
 // Side nav expansion
 $(function () {
   $('#side-nav-handle').click(function(e){
-    if($(this).hasClass('active')){
-      $('.mainpage').removeClass('side-nav-mini');
-      $('.side-nav').removeClass('side-nav-mini');
-      $(this).removeClass('active');
-    } else {
-      $('.mainpage').addClass('side-nav-mini');
-      $('.side-nav').addClass('side-nav-mini');
-      $(this).addClass('active');
-    }
+    $('.side-nav-sm, .side-nav-main').toggle();
+    $('.mainpage').toggleClass('side-nav-mini');
   });
 });

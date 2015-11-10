@@ -27,7 +27,7 @@ kbd {
     .side-nav {
         position: fixed;
     }
-    .side-nav-content {
+    .side-nav-main {
         height: 100%;
         width: 250px;
         border-right: 1px solid #ccc;
@@ -46,9 +46,6 @@ kbd {
     font-size: 18px;
     text-align: center;
     margin:0;
-}
-.side-nav.side-nav-mini h1 img.nav-mini {
-    display: none;
 }
 .side-nav h1 a {
     padding: 20px 0 15px;
@@ -80,11 +77,11 @@ kbd {
 .side-nav a:hover, .side-nav a:active, .side-nav a:focus {
     background-color: #dedede;
 }
-.side-nav .mqc-nav a.nav-l1.nav-txt {
+.side-nav .mqc-nav a.nav-l1 {
     padding: 10px;
     border-top: 1px solid #ccc;
 }
-.side-nav .mqc-nav a.nav-l2.nav-txt {
+.side-nav .mqc-nav a.nav-l2 {
     padding: 5px 10px 5px 15px;
     border-top: 1px solid #dedede;
     font-size: 0.9em;
@@ -95,32 +92,31 @@ kbd {
 }
 
 /* Styles for mini-nav */
+@media only screen and (max-width: 992px){
+    .side-nav-sm { display: none !important; }
+    .side-nav-main { display: block !important; }
+}
 .mainpage.side-nav-mini {
     margin-left: 50px;
 }
-.side-nav.side-nav-mini .side-nav-content {
-    width: auto;
-    overflow: visible;
+.side-nav-sm {
+    overflow: auto;
+    height: 100%;
 }
-.side-nav h1 .nav-mini {
-    display: none;
-}
-.side-nav.side-nav-mini h1 a {
+.side-nav-sm h1 a {
     padding: 10px 0 10px;
     margin-bottom: 10px;
 }
-.side-nav.side-nav-mini h1 img.nav-mini {
+.side-nav-sm h1 img {
     display: inline-block;
     width: 25px;
 }
-.side-nav.side-nav-mini .nav-txt, .side-nav.side-nav-mini h1 .nav-main {
-    display:none;
+.side-nav-sm ul, .side-nav-sm ul li {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
 }
-.side-nav.side-nav-mini ul.mqc-nav { border: 0; }
-.side-nav .nav-btn {
-    display: none;
-}
-.side-nav.side-nav-mini .nav-btn {
+.side-nav-sm ul a {
     display: block;
     width: 25px;
     height: 25px;
@@ -130,8 +126,11 @@ kbd {
     color: #888;
     font-weight: 200;
     font-size: 16px;
-    background-color: #ccc;
+    background-color: #ddd;
     border-radius: 5px;
+}
+.side-nav-sm ul a:hover {
+    background-color: #ccc;
 }
 #side-nav-handle {
     display: block;
