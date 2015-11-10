@@ -97,10 +97,10 @@ kbd {
     .side-nav-main { display: block !important; }
 }
 @media only screen and (min-width: 792px){
-    body.side-nav-mini .mainpage {
+    body.side-nav-sm-active .mainpage {
         margin-left: 50px;
     }
-    body.side-nav-mini .footer {
+    body.side-nav-sm-active .footer {
         margin-left: 35px;
     }
 }
