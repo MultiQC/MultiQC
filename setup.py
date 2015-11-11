@@ -12,16 +12,14 @@ Then it's just a case of going to your analysis directory and running the script
 
 MultiQC will scan the specified directory (:code:`'.'` is the current dir) and produce a report detailing whatever it finds.
 
-The report is created in :code:`multiqc_report/multiqc_report.html` by default. A zip file of the report is also generated to facilitate easy transfer and sharing.
+The report is created in :code:`multiqc_report.html` by default. Tab-delimited data files are created in :code:`multiqc_data/` to give easy access for downstream processing.
 
-Tab-delimited data files are created in :code:`multiqc_report/report_data/` to give easy access for downstream processing.
-
-For more detailed instructions, run :code:`multiqc -h`
+For more detailed instructions, run :code:`multiqc -h` or see the MultiQC website at http://multiqc.info
 """
 
 from setuptools import setup, find_packages
 
-version = '0.3.dev0'
+version = '0.3.2dev'
 
 setup(
     name = 'multiqc',

@@ -1,8 +1,3 @@
----
-title: Plugins
-layout: toc
----
-
 # MultiQC Plugins
 MultiQC is written around a system designed for extensibility and plugins.
 These features allow custom code to be written without polluting the central

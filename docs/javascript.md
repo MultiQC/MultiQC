@@ -1,9 +1,4 @@
----
-title: Javascript Help
-layout: toc
----
-
-# Javascript Helper Functions
+# Javascript Functions
 The javascript bundled in the default MultiQC template has a number of
 helper functions to make your life easier.
 

@@ -49,13 +49,6 @@ class BaseMultiqcModule(object):
                     if fn in config.fn_ignore_files:
                         continue
                     
-                    # Use mimetypes to exclude binary files where possible
-                    (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                    if encoding is not None:
-                        continue
-                    if ftype is not None and ftype.startswith('text') is False:
-                        continue
-                    
                     # Make a sample name from the filename
                     s_name = self.clean_s_name(fn, root)
                     
@@ -76,6 +69,14 @@ class BaseMultiqcModule(object):
                                 break
                     
                     if contents_match is not None and readfile is False:
+                        
+                        # Use mimetypes to exclude binary files where possible
+                        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+                        if encoding is not None:
+                            continue
+                        if ftype is not None and ftype.startswith('text') is False:
+                            continue
+                        
                         # Limit search to files under 1MB to avoid 30GB FastQ files etc.
                         try:
                             filesize = os.path.getsize(os.path.join(root,fn))
@@ -86,7 +87,7 @@ class BaseMultiqcModule(object):
                                 logger.debug("Ignoring file as too large: {}".format(fn))
                             else:
                                 readfile = True
-                                
+                    
                     if readfile:
                         try:
                             with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
@@ -393,5 +394,6 @@ class BaseMultiqcModule(object):
                 second key field (column header). 
         :param: fn - Desired filename. Directory will be prepended automatically.
         :return: None """
-        with io.open (os.path.join(config.data_dir, fn), "w", encoding='utf-8') as f:
-            print( report.dict_to_csv( data ), file=f)
+        if config.data_dir is not None:
+            with io.open (os.path.join(config.data_dir, fn), "w", encoding='utf-8') as f:
+                print( report.dict_to_csv( data ), file=f)

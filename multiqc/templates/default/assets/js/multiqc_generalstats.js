@@ -101,7 +101,13 @@ $(function () {
         }
         table.find('tr td:nth-of-type('+(idx+1)+')').each(function(){
           var val = parseFloat($(this).text());
-          var col = scale(val).css();
+          var rgb = scale(val).rgb(); //.luminance(0.7).css();
+          for (i in rgb){
+            rgb[i] = 255+(rgb[i]-255)*0.3;
+            if(rgb[i] > 255){ rgb[i] = 255; }
+            if(rgb[i] < 0){ rgb[i] = 0; }
+          }
+          var col = chroma.rgb(rgb).hex();
           $(this).find('.wrapper .bar').css('background-color', col);
         });
         
@@ -120,6 +126,19 @@ $(function () {
       $('#general_stats_table .'+cclass).hide();
       $('#general_stats_colsort_table .'+cclass).addClass('text-muted');
     }
+    // Hide empty rows
+    $('#general_stats_table tbody tr').show();
+    $('#general_stats_table tbody tr').each(function(){
+      var hasVal = false;
+      $(this).find('td:visible').each(function(){
+        if(!$(this).hasClass('sorthandle') && $(this).text() !== ''){
+          hasVal = true;
+        }
+      });
+      if(!hasVal){
+        $(this).hide();
+      }
+    });
   });
   
   $('#general_stats_colsort_table tbody').on("sortstop", function(e, ui){

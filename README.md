@@ -6,14 +6,6 @@
 
 <table>
   <tr>
-    <th>Devel:</th>
-    <td>
-      <a title="Build Status" href="https://travis-ci.org/ewels/MultiQC"><img src="https://travis-ci.org/ewels/MultiQC.svg?branch=master"></a>
-      <a title="Devel docs" href="https://github.com/ewels/MultiQC/tree/master/docs"><img src="https://img.shields.io/badge/docs-devel-yellow.svg"></a>
-      <a title="New commits" href="https://github.com/ewels/MultiQC/compare/v0.2...master"><img src="https://img.shields.io/github/commits-since/ewels/multiqc/v0.2.svg"></a>
-    </td>
-  </tr>
-  <tr>
     <th>Stable:</th>
     <td>
       <a title="PyPI Version" href="https://pypi.python.org/pypi/multiqc/"><img src="https://img.shields.io/pypi/v/multiqc.svg"></a>
@@ -22,11 +14,20 @@
       <a title="PyPI Downloads" href="http://multiqc.info/stats.php"><img src="https://img.shields.io/pypi/dm/multiqc.svg"></a>
     </td>
   </tr>
+  <tr>
+    <th>Devel:</th>
+    <td>
+      <a title="Build Status" href="https://travis-ci.org/ewels/MultiQC"><img src="https://travis-ci.org/ewels/MultiQC.svg?branch=master"></a>
+      <a title="Devel docs" href="https://github.com/ewels/MultiQC/tree/master/docs"><img src="https://img.shields.io/badge/docs-devel-yellow.svg"></a>
+      <img src="https://img.shields.io/badge/Python-2.7-green.svg">
+      <img src="https://img.shields.io/badge/Python-3.4-green.svg">
+    </td>
+  </tr>
 </table>
 
 -----
 
-MultiQC is written in Python and contains modules for a number of common tools.
+MultiQC is written in Python (v2.7 / v3.4) and contains modules for a number of common tools.
 Currently, these include:
 
 * Quality control & pre-processing
@@ -106,64 +107,4 @@ for details. These notes include extensive help with how to use the built in cod
 
 If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
-
-## Version History
-#### [v0.3dev]
-* Child templates - easily customise specific parts of the default report template
-* Plugin hooks - allow other tools to execute custom code during MultiQC execution
-* New Preseq module
-* New design for general statistics table (snazzy new background bars)
-* Further development of toolbox
-  * New button to clear all filters
-  * Warnings when samples are hidden, plus empty plots and table cols are hidden
-  * Active toolbar tab buttons are highlighted
-* Lots of refactoring by @moonso to please the Pythonic gods
-  * Switched to click instead of argparse to handle command line arguments
-  * Code generally conforms to best practices better now.
-* Now able to supply multiple directories to search for reports
-* Logging output improved (now controlled by `-q` and `-v` for quiet and verbose)
-* More HTML output dealt with by the base module, less left to the modules
-  * Module introduction text
-  * General statistics table now much easier to add to (new helper functions)
-* Images, CSS and Javascript now included in HTML, meaning that there is a single
-  report file to make sharing easier
-* More accessible scrolling in the report - styled scrollbars and 'to top' button.
-* Modules and templates now use setuptools entry points, facilitating plugins
-  by other packages. Allows niche extensions whilst keeping the core codebase clean.
-* The general stats table now has a sticky header row when scrolling, thanks to
-  some new javascript wizardry...
-* General stats columns can have a _shared key_ which allows common colour schemes
-  and data ranges. For instance, all columns describing a read count will now share
-  their scale across modules.
-* General stats columns can be hidden and reordered with a new modal window.
-* Plotting code refactored, reports with many samples (>50 by default) don't
-  automatically render to avoid freezing the browser.
-* Plots with highlighted and renamed samples now honour this when exporting to
-  different file types.
-
-#### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
-* Code restructuring for nearly all modules. Common base module
-  functions now handle many more functions (plots, config, file import)
-  * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
-    for instructions on how to use these new helpers to make your own module
-* New report toolbox - sample highlighting, renaming, hiding
-  * Config is autosaved by default, can also export to a file for sharing
-  * Interactive tour to help users find their way around
-* New Tophat, Bowtie 2 and QualiMap modules
-  * Thanks to @guillermo-carrasco for the QualiMap module
-* Bowtie module now works
-* New command line parameter `-d` prefixes sample names with the directory that
-  they were found in. Allows duplicate filenames without being overwritten.
-* Introduction walkthrough helps show what can be done in the report
-* Now compatible with both Python 2 and Python 3
-* Software version number now printed on command line properly, and in reports.
-* Bugfix: FastQC doesn't break when only one report found
-* Bugfix: FastQC seq content heatmap highlighting
-* Many, many small bugfixes
-
-#### [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
-* The first public release of MultiQC, after a month of development. Basic
-structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark, 
-STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching
-stability, though still under fairly heavy development.
 
