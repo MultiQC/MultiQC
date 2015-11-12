@@ -183,8 +183,7 @@ $(function () {
     if($(this).parent().attr('id') == 'mqc_renamesamples'){ apply_mqc_renamesamples(); }
     if($(this).parent().attr('id') == 'mqc_hidesamples'){ apply_mqc_hidesamples(); }
   });
-  
-  
+    
 });
 
 

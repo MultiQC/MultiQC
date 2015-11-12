@@ -7,8 +7,10 @@ of the report.
 
 #}
 
-<div class="mqc-toolbox">
-  <div class="mqc-toolbox-buttons visible-md-block visible-lg-block">
+<div class="mqc-toolbox collapse">
+  
+  <!-- Toolbar show/hide buttons -->
+  <div class="mqc-toolbox-buttons hidden-xs">
     <span class="mqc-toolbox-label">Toolbox</span>
     <ul>
       <li><a href="#mqc_cols" title="Highlight" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-pushpin"></span></a></li>
@@ -17,82 +19,85 @@ of the report.
       <li><a href="#mqc_saveconfig" title="Save" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
     </ul>
   </div>
+  
+  
   <div class="mqc-toolbox-wrapper">
-    <div class="row">
-      <div class="mqc-toolbox-header visible-md-block visible-lg-block">
-        <h3>MultiQC Toolbox</h3>
-      </div>
-      <div id="mqc_cols" class="mqc_filter_section col-sm-4 col-md-12">
-        <h4>Highlight Samples</h4>
-        <form class="form-inline" id="mqc_color_form">
-          <input id="mqc_colour_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
-          <input id="mqc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
-          <button type="submit" id="mqc_colour_filter_update" class="btn btn-default btn-sm">+</button>
-        </form>
-        <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
-        <ul id="mqc_col_filters" class="mqc_filters"></ul>
-      </div>
-      <div id="mqc_renamesamples" class="mqc_filter_section col-sm-4 col-md-12">
-        <h4>Rename Samples</h4>
-        <form class="form-inline" id="mqc_renamesamples_form">
-          <input id="mqc_renamesamples_from" type="text" placeholder="From" class="form-control input-sm">
-          <input id="mqc_renamesamples_to" type="text" placeholder="To" class="form-control input-sm">
-          <button type="submit" id="mqc_renamesamples_filter_update" class="btn btn-default btn-sm">+</button>
-        </form>
-        <p><a data-toggle="collapse" href="#mqc_renamesamples_bulk_collapse">Click here for bulk input.</a></p>
-        <div class="collapse" id="mqc_renamesamples_bulk_collapse">
-          <p>Paste two columns of a tab-delimited table here (eg. from Excel).</p>
-          <p>First column should be the old name, second column the new name.</p>
-          <form id="mqc_renamesamples_bulk_form">
-            <textarea class="form-control" rows="5"></textarea>
-            <button type="submit" id="mqc_renamesamples_bulk_update" class="btn btn-default btn-sm">Add</button>
-          </form>
-        </div>
-        <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
-        <ul id="mqc_renamesamples_filters" class="mqc_filters"></ul>
-      </div>
-      <div id="mqc_hidesamples" class="mqc_filter_section col-sm-4 col-md-12">
-        <h4>Hide Samples</h4>
-        <form class="form-inline" id="mqc_hidesamples_form">
-          <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
-          <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
-        </form>
-        {% if report.general_stats_html['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
-        <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
-        <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
-      </div>
+    <!-- Header - always visible -->
+    <div class="mqc-toolbox-header hidden-xs">
+      <h3>MultiQC Toolbox</h3>
     </div>
-    <div id="mqc_saveconfig" class="mqc_filter_section">
-      <div class="row">
-        <div class="bs-col col-sm-12">
-          <h4>Save Settings</h4>
-        </div>
+    
+    <!-- Highlighting -->
+    <div id="mqc_cols" class="mqc_filter_section">
+      <h4>Highlight Samples</h4>
+      <form class="form-inline" id="mqc_color_form">
+        <input id="mqc_colour_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
+        <input id="mqc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
+        <button type="submit" id="mqc_colour_filter_update" class="btn btn-default btn-sm">+</button>
+      </form>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <ul id="mqc_col_filters" class="mqc_filters"></ul>
+    </div>
+    
+    <!-- Renaming -->
+    <div id="mqc_renamesamples" class="mqc_filter_section">
+      <h4>Rename Samples</h4>
+      <form class="form-inline" id="mqc_renamesamples_form">
+        <input id="mqc_renamesamples_from" type="text" placeholder="From" class="form-control input-sm">
+        <input id="mqc_renamesamples_to" type="text" placeholder="To" class="form-control input-sm">
+        <button type="submit" id="mqc_renamesamples_filter_update" class="btn btn-default btn-sm">+</button>
+      </form>
+      <p><a data-toggle="collapse" href="#mqc_renamesamples_bulk_collapse">Click here for bulk input.</a></p>
+      <div class="collapse" id="mqc_renamesamples_bulk_collapse">
+        <p>Paste two columns of a tab-delimited table here (eg. from Excel).</p>
+        <p>First column should be the old name, second column the new name.</p>
+        <form id="mqc_renamesamples_bulk_form">
+          <textarea class="form-control" rows="5"></textarea>
+          <button type="submit" id="mqc_renamesamples_bulk_update" class="btn btn-default btn-sm">Add</button>
+        </form>
       </div>
-      <div class="row">
-        <div class="bs-col col-sm-4 col-md-12 mqc-save-config-report-section">
-          <h5>Report Settings</h5>
-          <p>You can save the toolbox settings for this report to the browser.</p>
-          <p><a href="#" data-target="report" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
-             <a href="#" data-target="report" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
-          <hr>
-        </div>
-        <div class="bs-col col-sm-4 col-md-12 mqc-save-config-global-section">
-          <h5>Global Settings</h5>
-          <p>If your settings are more general, you can save them to your browser 
-            and have them applied to every MultiQC report you open.</p>
-          <p><a href="#" data-target="global" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
-             <a href="#" data-target="global" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
-          <hr>
-        </div>
-        <div class="bs-col col-sm-4 col-md-12 mqc-save-config-file-section">
-          <h5>Save to file</h5>
-          <p>You can also save a config file to directory containing the report. Your settings
-            will be applied the next time you open this report, and can be shared with others.</p>
-          <p><a href="#" data-target="file" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-download-alt"></span> Download Config File</a></p>
-        </div>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <ul id="mqc_renamesamples_filters" class="mqc_filters"></ul>
+    </div>
+    
+    <!-- Hiding -->
+    <div id="mqc_hidesamples" class="mqc_filter_section">
+      <h4>Hide Samples</h4>
+      <form class="form-inline" id="mqc_hidesamples_form">
+        <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
+        <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
+      </form>
+      {% if report.general_stats_html['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
+    </div>
+    
+    <!-- Save Config -->
+    <div id="mqc_saveconfig" class="mqc_filter_section">
+      <h4>Save Settings</h4>
+      <div class="mqc-save-config-report-section">
+        <h5>Report Settings</h5>
+        <p>You can save the toolbox settings for this report to the browser.</p>
+        <p><a href="#" data-target="report" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
+           <a href="#" data-target="report" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
+        <hr>
+      </div>
+      <div class="mqc-save-config-global-section">
+        <h5>Global Settings</h5>
+        <p>If your settings are more general, you can save them to your browser 
+          and have them applied to every MultiQC report you open.</p>
+        <p><a href="#" data-target="global" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
+           <a href="#" data-target="global" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
+        <hr>
+      </div>
+      <div class="mqc-save-config-file-section">
+        <h5>Save to file</h5>
+        <p>You can also save a config file to directory containing the report. Your settings
+          will be applied the next time you open this report, and can be shared with others.</p>
+        <p><a href="#" data-target="file" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-download-alt"></span> Download Config File</a></p>
       </div>
     </div>
   </div>
-  <a href="#top" class="mqc-toplink" title="Go to top"><span class="glyphicon glyphicon-chevron-up"></span></a>
+  <a href="#top" class="mqc-toplink hidden-xs" title="Go to top"><span class="glyphicon glyphicon-chevron-up"></span></a>
 </div>
 <script type="text/javascript">var report_id = '{{ config.report_id }}'; </script>
