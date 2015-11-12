@@ -47,9 +47,9 @@ class BaseMultiqcModule(object):
                 for fn in filenames:
                     
                     # Ignore files set in config
-                    for ifn in config.fn_ignore_files:
-                        if fnmatch.fnmatch(fn, ifn):
-                            continue
+                    i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
+                    if len(i_matches) > 0:
+                        continue
                     
                     # Make a sample name from the filename
                     s_name = self.clean_s_name(fn, root)
