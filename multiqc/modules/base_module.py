@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
+import fnmatch
 import io
 import json
 import logging
@@ -46,8 +47,9 @@ class BaseMultiqcModule(object):
                 for fn in filenames:
                     
                     # Ignore files set in config
-                    if fn in config.fn_ignore_files:
-                        continue
+                    for ifn in config.fn_ignore_files:
+                        if fnmatch.fnmatch(fn, ifn):
+                            continue
                     
                     # Make a sample name from the filename
                     s_name = self.clean_s_name(fn, root)
