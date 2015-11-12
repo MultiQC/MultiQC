@@ -284,6 +284,7 @@ input.form-control[type=color]{
 .mqc-toolbox-label {
     display: inline-block;
     background-color: #ededed;
+    color: #999;
     height: 31px;
     width: 67px;
     padding: 3px 6px;
@@ -292,12 +293,10 @@ input.form-control[type=color]{
     -ms-transform: rotate(270deg);
     -webkit-transform: rotate(270deg);
     transform: rotate(270deg);
-    -webkit-transition: color, background-color 0.5s;
-    transition: color, background-color 0.5s;
 }
-.mqc-toolbox-label.active {
-    color: transparent;
-    background-color: transparent;
+.mqc-toolbox-label:hover, .mqc-toolbox-label:focus, .mqc-toolbox-label:active {
+    color: #999;
+    text-decoration:none;
 }
 .mqc-toolbox-header {
     margin: 10px;
@@ -314,7 +313,7 @@ input.form-control[type=color]{
     width: 36px;
     height: 36px;
 }
-.mqc-toolbox-buttons a {
+.mqc-toolbox-buttons li a {
     display: inline-block;
     font-size:18px;
     width: 37px;
@@ -325,18 +324,18 @@ input.form-control[type=color]{
     border: 1px solid transparent;
     border-right: 1px solid #ccc;
 }
-.mqc-toolbox-buttons a:hover, .mqc-toolbox-buttons a.active {
+.mqc-toolbox-buttons li a:hover, .mqc-toolbox-buttons li a.active {
     color: #333;
     background-color: #ededed;
     border: 1px solid #ccc;
 }
-.mqc-toolbox-buttons a.in_use {
+.mqc-toolbox-buttons li a.in_use {
     color: #333;
     border: 3px solid #5bc0de;
     padding: 5px 8px 7px 6px;
     border-right: 1px solid #ededed;
 }
-.mqc-toolbox-buttons a.active {
+.mqc-toolbox-buttons li a.active {
     border-right: 1px solid #ededed;
 }
 
