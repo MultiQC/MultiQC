@@ -6,23 +6,8 @@ The side navigation for the report.
 
 #}
 
-<div class="side-nav">
-  
-  <!-- Mini nav with single letter icons -->
-  <div class="side-nav-sm">
-    <h1><a href="#"><img src="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}" title="MultiQC"></a></h1>
-    <ul>
-      {% if report.general_stats_html['headers']|length > 0 %}
-      <li><a href="#general_stats" title="General Stats" data-placement="right" data-toggle="tooltip">G</a></li>
-      {% endif -%}
-      {% for m in report.modules_output %}
-      <li><a href="#{{ m.anchor }}" title="{{ m.name }}" data-placement="right" data-toggle="tooltip">{{ m.name[0:1] }}</a></li>
-      {% endfor %}
-    </ul>
-  </div>
-  
-  <!-- Expanded Side Nav with full names -->
-  <div class="side-nav-main" style="display:none;">
+<div class="side-nav-wrapper">  
+  <div class="side-nav">
     <h1>
       <a href="#">
         <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC"><br>
@@ -49,7 +34,6 @@ The side navigation for the report.
       {% endfor %}
     </ul>
   </div>
-  
   <!-- Nav Width Toggle Button -->
-  <div id="side-nav-handle">||</div>
+  <div id="side-nav-handle"><span class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span></div>
 </div>

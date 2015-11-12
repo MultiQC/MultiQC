@@ -22,23 +22,34 @@ kbd {
 
 /* Page Template */
 @media only screen and (min-width: 792px){
-    .mainpage { margin-left: 270px; }
+    .mainpage {
+        margin-left: 270px;
+        -webkit-transition: margin-left 0.5s;
+        transition: margin-left 0.5s;
+    }
+    .mainpage.hidden-nav { margin-left: 0; }
     .footer { margin-left: 250px; }
-    .side-nav {
+    .side-nav-wrapper {
         position: fixed;
     }
-    .side-nav-main {
+    .side-nav {
         height: 100%;
         width: 250px;
         border-right: 1px solid #ccc;
         overflow: auto;
         padding-bottom: 30px;
+        -webkit-transition: margin-left 0.5s;
+        transition: margin-left 0.5s;
+        margin-left: 0;
+    }
+    .side-nav.hidden-nav {
+        margin-left: -250px;
     }
 }
 .mainpage {
     padding: 20px;
 }
-.side-nav {
+.side-nav-wrapper {
     height: 100%;
     background-color: #ededed;
 }
@@ -91,61 +102,14 @@ kbd {
     position: relative;
 }
 
-/* Styles for mini-nav */
-@media only screen and (max-width: 792px){
-    .side-nav-sm { display: none !important; }
-    .side-nav-main { display: block !important; }
-}
-@media only screen and (min-width: 792px){
-    body.side-nav-sm-active .mainpage {
-        margin-left: 50px;
-    }
-    body.side-nav-sm-active .footer {
-        margin-left: 35px;
-    }
-}
-.side-nav-sm {
-    overflow: auto;
-    height: 100%;
-    border-right: 1px solid #ccc;
-}
-.side-nav-sm h1 a {
-    padding: 10px 0 10px;
-    margin-bottom: 10px;
-}
-.side-nav-sm h1 img {
-    display: inline-block;
-    width: 25px;
-}
-.side-nav-sm ul, .side-nav-sm ul li {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-}
-.side-nav-sm ul a {
-    display: block;
-    width: 25px;
-    height: 25px;
-    margin: 0 5px 15px;
-    padding: 2px;
-    text-align: center;
-    color: #888;
-    font-weight: 200;
-    font-size: 16px;
-    background-color: #ddd;
-    border-radius: 5px;
-}
-.side-nav-sm ul a:hover {
-    background-color: #ccc;
-}
 #side-nav-handle {
     display: block;
     position: absolute;
     top: 50%;
-    right: -9px;
+    right: -14px;
     height: 50px;
-    width: 10px;
-    padding-top: 12px;
+    width: 15px;
+    padding-top: 14px;
     border: 1px solid #ccc;
     border-left: 0;
     background-color: #ededed;
@@ -153,6 +117,9 @@ kbd {
     border-bottom-right-radius: 5px;
     color: #ccc;
     cursor: pointer;
+}
+#side-nav-handle .glyphicon-triangle-right {
+    color: #999;
 }
 
 
