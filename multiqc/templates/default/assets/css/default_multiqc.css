@@ -73,6 +73,9 @@ kbd {
     color: #999;
     padding: 10px;
 }
+.side-nav ul.mqc-nav {
+    border-bottom: 1px solid #ccc;
+}
 .side-nav ul.mqc-nav, .side-nav ul.mqc-nav ul {
     margin:0;
     padding:0;
@@ -88,7 +91,10 @@ kbd {
 }
 .side-nav .mqc-nav a.nav-l1 {
     padding: 10px;
-    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+}
+.side-nav .mqc-nav li:first-child a.nav-l1 {
+    border-top: 0;
 }
 .side-nav .mqc-nav a.nav-l2 {
     padding: 5px 10px 5px 15px;
