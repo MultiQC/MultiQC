@@ -24,7 +24,9 @@ from multiqc import (logger, __version__)
 from multiqc.utils import (report, plugin_hooks, config)
 from multiqc.utils.log import init_log, LEVELS
 
-@click.command()
+@click.command(
+    context_settings = dict( help_option_names = ['-h', '--help'] )
+)
 @click.argument('analysis_dir',
                     type=click.Path(exists=True),
                     nargs=-1,
