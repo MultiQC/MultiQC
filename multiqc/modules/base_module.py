@@ -303,7 +303,7 @@ class BaseMultiqcModule(object):
             data = [data]
         
         # Check we have a list of cats
-        if type(cats) is not list or type(cats[0]) is str:
+        if type(cats) is not list or type(cats[0]) is not list:
             cats = [cats]
         
         # Check that we have cats at all - find them from the data
@@ -332,13 +332,18 @@ class BaseMultiqcModule(object):
                         thisdata.append(d[s][c])
                     except KeyError:
                         pass
-                if max(thisdata) > 0:
+                if len(thisdata) > 0 and max(thisdata) > 0:
                     thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
                     if 'color' in cats[idx][c]:
                         thisdict['color'] = cats[idx][c]['color']
                     hc_data.append(thisdict)
-            plotsamples.append(hc_samples)
-            plotdata.append(hc_data)
+            if len(hc_data) > 0:
+                plotsamples.append(hc_samples)
+                plotdata.append(hc_data)
+        
+        if len(plotdata) == 0:
+            logging.warning('Tried to make bar plot, but had no data')
+            return '<p class="text-danger">Error - was not able to plot data.</p>'
         
         # Build the HTML
         if config.get('id') is None:

@@ -377,10 +377,12 @@ config = {
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
     'yDecimals': True,                      # Set to false to only show integer labels
+    'ylab_format': None,                    # Format string for x axis labels. Defaults to {value}
     'stacking': 'normal',                   # Set to None to have category bars side by side
     'use_legend': True,                     # Show / hide the legend
     'click_func': None,                     # Javascript function to be called when a point is clicked
     'cursor': None,                         # CSS mouse cursor type.
+    'tt_percentages': True,                 # Show the percentages of each count in the tooltip
 }
 ```
 

@@ -272,6 +272,7 @@ function plot_stacked_bar_graph(target, ds){
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
+  if (config['tt_percentages'] === undefined){ config['tt_percentages'] = true; }
   
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
@@ -367,6 +368,9 @@ function plot_stacked_bar_graph(target, ds){
       },
       max: config['ymax'],
       min: config['ymin'],
+      labels: {
+        format: config['ylab_format']
+      },
       allowDecimals: config['yDecimals'],
       reversedStacks: false
     },
@@ -393,10 +397,15 @@ function plot_stacked_bar_graph(target, ds){
     },
     tooltip: {
       formatter: function () {
-        var s = '<table><tr><th colspan="3" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
+        var colspan = config['tt_percentages'] ? 3 : 2;
+        var pc_col = config['tt_percentages'] ? '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td>' : '';
+        var s = '<table><tr><th colspan="'+colspan+'" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
         $.each(this.points.reverse(), function () {
           yval = this.y.toFixed(0)
-          s += '<tr><td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px; border-bottom:1px solid #dedede;">' + this.series.name + ':</td><td style="text-align:right; border-bottom:1px solid #dedede;">' + numberWithCommas(yval) + '</td><td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td></tr>';
+          s += '<tr> \
+            <td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px; border-bottom:1px solid #dedede;">' + this.series.name + ':</td>\
+            <td style="text-align:right; border-bottom:1px solid #dedede;">' + numberWithCommas(yval) + '</td>\
+            '+pc_col+'</tr>';
         });
         s += '</table>';
         return s;
