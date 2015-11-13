@@ -68,6 +68,10 @@ from multiqc.utils.log import init_log, LEVELS
                     default = config.output_fn_name,
                     help = "Report filename. Use 'stdout' to print to standard out."
 )
+@click.option('--data-dir/--no-data-dir', 'make_data_dir',
+                    default=config.make_data_dir,
+                    help = "Specify whether the parsed data directory should be created."
+)
 @click.option('-v', '--verbose', 
                     count=True,
                     default=0,
@@ -80,7 +84,7 @@ from multiqc.utils.log import init_log, LEVELS
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, title, template, modules, exclude, outdir, name, 
-force, verbose, quiet):
+make_data_dir, force, verbose, quiet):
     """MultiQC is a tool generate qc reports.
     
         It can be used to create an aggregate report summarising the results
@@ -121,6 +125,7 @@ force, verbose, quiet):
     config.prepend_dirs = dirs
     config.analysis_dir = analysis_dir
     config.output_dir = outdir
+    config.make_data_dir = make_data_dir
     if name == 'stdout':
         config.output_fn = sys.stdout
         config.data_dir = None
@@ -172,33 +177,39 @@ force, verbose, quiet):
     if name == 'stdout':
         logger.info("Output      : stdout")
     else:
-        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-    
         # Check for existing reports and remove if -f was specified
-        if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
+        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        if os.path.exists(config.output_fn):
             if force:
-                if os.path.exists(config.output_fn):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
-                    os.remove(config.output_fn)
-                if os.path.exists(config.data_dir):
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
-                    shutil.rmtree(config.data_dir)
+                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
+                os.remove(config.output_fn)
             else:
-                if os.path.exists(config.output_fn):
-                    logger.error("MultiQC Report {} already exists.".format(config.output_fn))
-                if os.path.exists(config.data_dir):
-                    logger.error("Output directory {} already exists.".format(config.data_dir))
+                logger.error("MultiQC Report {} already exists.".format(config.output_fn))
                 logger.info("Use -f or --force to overwrite existing reports")
                 sys.exit(1)
-
         logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
-        logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+        
+        # Now do the same for the data directory
+        if config.make_data_dir == False:
+            config.data_dir = None
+            logger.info("Data        : None")
+        else:
+            config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+            if os.path.exists(config.data_dir):
+                if force:
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                    shutil.rmtree(config.data_dir)
+                else:
+                    logger.error("Output directory {} already exists.".format(config.data_dir))
+                    logger.info("Use -f or --force to overwrite existing reports")
+                    sys.exit(1)
 
-        # Make the report directories
-        os.makedirs(config.data_dir)
-        if not os.path.exists(os.path.dirname(config.output_fn)):
-            os.makedirs(os.path.dirname(config.output_fn))
+            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+
+            # Make the report directories
+            os.makedirs(config.data_dir)
+            if not os.path.exists(os.path.dirname(config.output_fn)):
+                os.makedirs(os.path.dirname(config.output_fn))
 
     # Run the modules!
     plugin_hooks.mqc_trigger('before_modules')

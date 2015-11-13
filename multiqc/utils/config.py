@@ -32,6 +32,7 @@ analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
 output_fn_name = 'multiqc_report.html'
 data_dir_name = 'multiqc_report_data'
+make_data_dir = True
 fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc' ]
 fn_ignore_files = ['.DS_Store']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
