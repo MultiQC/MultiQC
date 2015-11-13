@@ -112,7 +112,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 #######################
 # Load and parse installation config file if we find it
 try:
-    yaml_config = os.path.join(MULTIQC_DIR, 'multiqc_config.yaml')
+    yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
     with open(yaml_config) as f:
         config = yaml.load(f)
         for c, v in config.items():
