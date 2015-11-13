@@ -10,6 +10,7 @@
 * Fixed bug with module specific CSS / JS includes in some templates
 * Made Picard MarkDups show percent by default instead of counts
 * Made the 'ignore files' config use unix style file pattern matching
+* Fixed some bugs in the FastQ Screen module.
 
 #### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
 * Hotfix patch to fix broken FastQC module (wasn't finding `.zip` files properly)
