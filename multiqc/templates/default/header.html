@@ -18,9 +18,17 @@ was generated and the button that launches the welcome tour.
 <p class="lead">A modular tool to aggregate results from bioinformatics
     analyses across many samples into a single report.</p>
 
-<p>Report generated on {{ config.creation_date }} based on data in
-    <code id="mqc_analysis_path">{{ config.analysis_dir |join('</code>
-    and <code id="mqc_analysis_path">') }}</code></p>
+<div id="analysis_dirs_wrapper">
+  <p>Report generated on {{ config.creation_date }} based on data in:
+  {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>  
+  {% else %}
+  <ul>
+    {% for d in config.analysis_dir %}
+    <li><code class="mqc_analysis_path">{{ d }}</code></li>
+    {%  endfor %}
+  </ul>
+  {% endif %}
+</div>
 
 <div class="alert alert-info alert-dismissible hidden-print mqc-into-tour-alert">
   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
