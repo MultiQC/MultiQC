@@ -3,7 +3,10 @@
 #### v0.3.2dev
 * New option to stream report HTML to `stdout`
 * Files can now be specified as well as directories
-* New Config / command line options to specify whether the parsed data directory should be created (`--data` / `--no-data`)
+* New options to specify whether the parsed data directory should be created
+  * command line flags: `--data` / `--no-data`
+  * config option name: `make_data_dir`
+* Fixed bug with incorrect path to installation dir config YAML file
 * Report side navigation can now be hidden to maximise horizontal space
 * Mobile styling improved for narrow screen
 * More vibrant colours in the general stats table
