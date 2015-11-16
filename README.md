@@ -1,4 +1,4 @@
-# [<img src="multiqc/templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">](https://github.com/ewels/MultiQC)
+<img src="multiqc/templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">
 
 ### Aggregate bioinformatics results across many samples into a single report.
 

@@ -248,7 +248,7 @@ function plot_xy_line_graph(target, ds){
     credits: {
 			enabled: true,
       text: 'Created with MultiQC',
-      href: 'https://github.com/ewels/MultiQC'
+      href: 'http://multiqc.info'
 		},
     tooltip: {
       headerFormat: '',
@@ -390,7 +390,7 @@ function plot_stacked_bar_graph(target, ds){
     credits: {
 			enabled: true,
       text: 'Created with MultiQC',
-      href: 'https://github.com/ewels/MultiQC'
+      href: 'http://multiqc.info'
 		},
     legend: {
       enabled: config['use_legend']

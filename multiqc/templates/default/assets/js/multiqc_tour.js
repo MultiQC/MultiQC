@@ -139,5 +139,5 @@ var tour_steps = [
   {
     orphan: true,
     title: "End of Tour",
-    content: 'That\'s it for this tour - for more info, see the homepage: <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a>',
+    content: 'That\'s it for this tour - for more info, see the homepage: <a href="http://multiqc.info" target="_blank">http://multiqc.info</a>',
   }];

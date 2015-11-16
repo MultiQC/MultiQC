@@ -362,7 +362,7 @@ function mqc_save_config(target, method, clear){
     });
   }
   if(method == 'file'){
-    var f = "// Config file for MultiQC\n// https://github.com/ewels/MultiQC\n";
+    var f = "// Config file for MultiQC\n// http://multiqc.info\n";
     f += "// Generated "+Date()+"\n// Original report path: "+$('#mqc_output_path').text()+"\n";
     f += "\nmqc_config_file_cfg = "+JSON.stringify(config, null, '  ');
     var fblob = new Blob([f], {type: "application/javascript;charset=utf-8"});
