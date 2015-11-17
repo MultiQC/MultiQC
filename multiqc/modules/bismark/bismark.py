@@ -233,8 +233,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['dup_reads']       = { 'color': '#8bbc21', 'name': 'Deduplicated Unique Alignments' }
-        keys['dedup_reads']     = { 'color': '#2f7ed8', 'name': 'Duplicated Unique Alignments' }
+        keys['dedup_reads']     = { 'color': '#8bbc21', 'name': 'Deduplicated Unique Alignments' }
+        keys['dup_reads']       = { 'color': '#2f7ed8', 'name': 'Duplicated Unique Alignments' }
         keys['aligned_reads']   = { 'color': '#2f7ed8', 'name': 'Aligned Uniquely' }
         keys['ambig_reads']     = { 'color': '#492970', 'name': 'Aligned Ambiguously' }
         keys['no_alignments']   = { 'color': '#0d233a', 'name': 'Did Not Align' }
