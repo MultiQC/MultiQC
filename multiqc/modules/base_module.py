@@ -322,7 +322,7 @@ class BaseMultiqcModule(object):
             data = [data]
         
         # Check we have a list of cats
-        if type(cats) is not list or isinstance(cats[0], basestring): # not just type()==str as can be unicode
+        if type(cats) is not list or type(cats[0]) == str or type(cats[0]) == unicode:
             cats = [cats]
         
         # Check that we have cats at all - find them from the data
