@@ -56,8 +56,8 @@ def general_stats_build_html():
             sk = headers[k].get('shared_key', None)
             if sk is not None:
                 headers[k]['scale'] = shared_keys[sk]['scale']
-                headers[k]['dmax']  = shared_keys[sk]['dmax']
-                headers[k]['dmin']  = shared_keys[sk]['dmin']
+                headers[k]['dmax'] = shared_keys[sk]['dmax']
+                headers[k]['dmin'] = shared_keys[sk]['dmin']
                 sk = ' data-shared-key={}'.format(sk)
             else:
                 sk = ''
@@ -82,7 +82,9 @@ def general_stats_build_html():
                         val = headers[k]['modify'](val)
                     
                     try:
-                        percentage = ((float(val) - headers[k]['dmin']) / (headers[k]['dmax'] - headers[k]['dmin'])) * 100;
+                        dmin = headers[k]['dmin']
+                        dmax = headers[k]['dmax']
+                        percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
                         percentage = min(percentage, 100)
                         percentage = max(percentage, 0)
                     except ZeroDivisionError:

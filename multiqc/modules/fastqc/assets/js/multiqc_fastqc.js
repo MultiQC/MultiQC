@@ -28,7 +28,7 @@ function fastqc_seq_content_heatmap() {
         var t_status = fastqc_passfails['sequence_content'][s_name];
         $.each(window.mqc_rename_f_texts, function(idx, f_text){
             if(window.mqc_rename_regex_mode){
-                var re = new RegExp(f_text,"g");
+                var re = new RegExp(f_text,'g');
                 s_name = s_name.replace(re, window.mqc_rename_t_texts[idx]);
             } else {
                 s_name = s_name.replace(f_text, window.mqc_rename_t_texts[idx]);
@@ -54,21 +54,27 @@ function fastqc_seq_content_heatmap() {
         $('#fastqc_seq_heatmap_div').prepend('<p class="fastqc-heatmap-no-samples text-muted">No samples found.</p>');
     }
     if(hidden_samples > 0){
-        $('#fastqc_seq_heatmap_div').prepend('<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+hidden_samples+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>');
+        $('#fastqc_seq_heatmap_div').prepend('<div class="samples-hidden-warning alert alert-warning"> \
+            <span class="glyphicon glyphicon-info-sign"></span> \
+            <strong>Warning:</strong> '+hidden_samples+' samples hidden in toolbox. \
+            <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a>\
+        </div>');
     }
     if(num_samples == 0){ return; }
     
     // Convert the CSS percentage size into pixels
-    c_width = $("#fastqc_seq_heatmap").parent().width() - 5; // -5 for status bar
-    c_height = $("#fastqc_seq_heatmap").parent().height() - 2; // -2 for bottom line padding
+    c_width = $('#fastqc_seq_heatmap').parent().width() - 5; // -5 for status bar
+    c_height = $('#fastqc_seq_heatmap').parent().height() - 2; // -2 for bottom line padding
     s_height = c_height / num_samples;
     // Resize the canvas properties
-    $("#fastqc_seq_heatmap").prop("width", c_width);
-    $("#fastqc_seq_heatmap").prop("height", c_height+1);
-    var canvas = document.getElementById("fastqc_seq_heatmap");
+    $('#fastqc_seq_heatmap').prop({
+        'width': c_width,
+        'height': c_height+1
+    });
+    var canvas = document.getElementById('fastqc_seq_heatmap');
     if (canvas && canvas.getContext) {
-        var ctx = canvas.getContext("2d");
-        ctx.strokeStyle = "#666666";
+        var ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#666666';
         // First, do labels and get max base pairs
         max_bp = 0;
         labels = [];
@@ -86,8 +92,8 @@ function fastqc_seq_content_heatmap() {
         $.each(sample_names, function(idx, s_name){
           
             // Add a 5px wide bar indicating either status or Highlight
-            status = sample_statuses[s_name];
-            s_col = '#999999';
+            var status = sample_statuses[s_name];
+            var s_col = '#999999';
             if(status == 'pass'){ s_col = '#5cb85c'; }
             if(status == 'warn'){ s_col = '#f0ad4e'; }
             if(status == 'fail'){ s_col = '#d9534f'; }
@@ -108,9 +114,9 @@ function fastqc_seq_content_heatmap() {
                 bp = parseInt(bp);
                 var this_width = (bp - last_bp) * (c_width / max_bp);
                 last_bp = bp;
-                var r = (v["T"] / 100)*255;
-                var g = (v["A"] / 100)*255;
-                var b = (v["C"] / 100)*255;
+                var r = (v['T'] / 100)*255;
+                var g = (v['A'] / 100)*255;
+                var b = (v['C'] / 100)*255;
                 ctx.fillStyle = chroma(r,g,b).css();
                 // width+1 to avoid vertical white line gaps.
                 ctx.fillRect (xpos, ypos, this_width+1, s_height);
@@ -157,7 +163,7 @@ $(function () {
     /////////
     
     // Seq Content heatmap mouse rollover
-    $("#fastqc_seq_heatmap").mousemove(function(e) {
+    $('#fastqc_seq_heatmap').mousemove(function(e) {
         
         // Replace the heading above the heatmap
         var pos = findPos(this);
@@ -168,7 +174,7 @@ $(function () {
         var s_name = sample_names[idx];
         if(s_name === undefined){ return false; }
         var s_status = sample_statuses[s_name];
-        s_status_class = 'label-default';
+        var s_status_class = 'label-default';
         if(s_status == 'pass'){ s_status_class = 'label-success'; }
         if(s_status == 'warn'){ s_status_class = 'label-warning'; }
         if(s_status == 'fail'){ s_status_class = 'label-danger'; }
@@ -176,16 +182,16 @@ $(function () {
         
         // Show the sequence base percentages on the bar plots below
         // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
-        var ctx = this.getContext("2d");
+        var ctx = this.getContext('2d');
         var p = ctx.getImageData(x, y, 1, 1).data;
         var seq_t = (p[0]/255)*100;
         var seq_a = (p[1]/255)*100;
         var seq_c = (p[2]/255)*100;
         var seq_g = 100 - (seq_t + seq_a + seq_c);
-        $("#fastqc_seq_heatmap_key_t span").text(seq_t.toFixed(0)+"%");
-        $("#fastqc_seq_heatmap_key_c span").text(seq_c.toFixed(0)+"%");
-        $("#fastqc_seq_heatmap_key_a span").text(seq_a.toFixed(0)+"%");
-        $("#fastqc_seq_heatmap_key_g span").text(seq_g.toFixed(0)+"%");
+        $('#fastqc_seq_heatmap_key_t span').text(seq_t.toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_c span').text(seq_c.toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_a span').text(seq_a.toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_g span').text(seq_g.toFixed(0)+'%');
         
         // Get base pair position from x pos
         var this_bp = Math.floor((x/c_width)*max_bp);
@@ -193,13 +199,13 @@ $(function () {
     });
     
     // Remove sample name again when mouse leaves
-    $("#fastqc_seq_heatmap").mouseout(function(e) {
+    $('#fastqc_seq_heatmap').mouseout(function(e) {
       $('#fastqc_sequence_content_plot .s_name').html('<em class="text-muted">rollover for sample name</em>');
       $('#fastqc_seq_heatmap_key_pos').text('-');
-      $("#fastqc_seq_heatmap_key_t span").text('-');
-      $("#fastqc_seq_heatmap_key_c span").text('-');
-      $("#fastqc_seq_heatmap_key_a span").text('-');
-      $("#fastqc_seq_heatmap_key_g span").text('-');
+      $('#fastqc_seq_heatmap_key_t span').text('-');
+      $('#fastqc_seq_heatmap_key_c span').text('-');
+      $('#fastqc_seq_heatmap_key_a span').text('-');
+      $('#fastqc_seq_heatmap_key_g span').text('-');
     });
       
     // Highlight the custom heatmap
