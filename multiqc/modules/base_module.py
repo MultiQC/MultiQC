@@ -3,7 +3,7 @@
 """ MultiQC modules base class, contains helper functions """
 
 from __future__ import print_function
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 import fnmatch
 import io
 import json
@@ -322,7 +322,9 @@ class BaseMultiqcModule(object):
             data = [data]
         
         # Check we have a list of cats
-        if type(cats) is not list or type(cats[0]) == str or type(cats[0]) == unicode:
+        try:
+            cats[0].keys()
+        except (KeyError, AttributeError):
             cats = [cats]
         
         # Check that we have cats at all - find them from the data
