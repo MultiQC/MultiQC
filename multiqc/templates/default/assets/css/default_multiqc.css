@@ -153,6 +153,11 @@ kbd {
 #page_title img {
     width: 260px;
 }
+#analysis_dirs_wrapper {
+  max-height: 80px;
+  overflow: auto;
+  margin-bottom: 15px;
+}
 
 
 .footer {
