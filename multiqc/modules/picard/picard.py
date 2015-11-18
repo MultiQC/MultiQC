@@ -109,9 +109,9 @@ class MultiqcModule(BaseMultiqcModule):
             # Catch the histogram values
             if s_name is not None and in_hist is True:
                 try:
-                    ins, count = l.split("\t", 1)
-                    self.picard_insertSize_histogram[s_name][int(ins)] = int(count)
-                except ValueError:
+                    sections = l.split("\t")
+                    self.picard_insertSize_histogram[s_name][int(sections[0])] = int(sections[1])
+                except IndexError:
                     s_name = None
                     in_hist = False
             
