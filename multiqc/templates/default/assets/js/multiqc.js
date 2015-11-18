@@ -20,7 +20,7 @@ function notEmptyObj (obj){
 // Side nav expansion
 $(function () {
   $('#side-nav-handle').click(function(e){
-    $('.mainpage, .side-nav').toggleClass('hidden-nav');
+    $('.mainpage, .side-nav, .footer').toggleClass('hidden-nav');
     $('#side-nav-handle span').toggleClass('glyphicon-triangle-left glyphicon-triangle-right');
     // send resize trigger for replotting after css animation
     setTimeout(function(){ $(document).resize(); }, 510);

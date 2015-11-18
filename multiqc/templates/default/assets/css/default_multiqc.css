@@ -22,13 +22,14 @@ kbd {
 
 /* Page Template */
 @media only screen and (min-width: 768px){
-    .mainpage {
-        margin-left: 270px;
+    .mainpage { margin-left: 270px; }
+    .footer { margin-left: 250px; }
+    .mainpage, .footer {
         -webkit-transition: margin-left 0.5s;
         transition: margin-left 0.5s;
     }
-    .mainpage.hidden-nav { margin-left: 0; }
-    .footer { margin-left: 250px; }
+    .mainpage.hidden-nav, .footer.hidden-nav { margin-left: 0; }
+    
     .side-nav-wrapper {
         position: fixed;
     }
