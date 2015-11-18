@@ -23,36 +23,50 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a set of Java command line tools for manipulating high-"\
         "throughput sequencing data.")
 
-        # Find and load any Picard reports
+        # Find and load any Picard MarkDuplicates reports
         self.picard_dupMetrics_data = dict()
         for f in self.find_log_files(contents_match='picard.sam.MarkDuplicates', filehandles=True):
-            self.parse_picard_dupMetrics(f)   
-
-        if len(self.picard_dupMetrics_data) == 0:
+            self.parse_picard_dupMetrics(f)
+        
+        # Find and load any Picard CollectInsertSizeMetrics reports
+        self.picard_insertSize_data = dict()
+        self.picard_insertSize_histogram = dict()
+        for f in self.find_log_files(contents_match='picard.analysis.CollectInsertSizeMetrics', filehandles=True):
+            self.parse_picard_insertSize(f)
+        
+        num_reports = len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data)
+        
+        if num_reports == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.picard_dupMetrics_data)))
-
-        # Write parsed report data to a file
-        self.write_csv_file(self.picard_dupMetrics_data, 'multiqc_picard.txt')
-
+        log.info("Found {} reports".format(num_reports))
+        
         self.sections = list()
-
-        # Basic Stats Table
-        # Report table is immutable, so just updating it works
-        self.picard_stats_table()
-
-        # Section 1 - Column chart of alignment stats
-        self.sections.append({
-            'name': 'Mark Duplicates',
-            'anchor': 'picard-markduplicates',
-            'content': self.mark_duplicates_plot()
-        })
+        
+        # Mark Duplicates data
+        if len(self.picard_dupMetrics_data) > 0:
+            self.write_csv_file(self.picard_dupMetrics_data, 'multiqc_picard_dups.txt')
+            self.picard_stats_table_markdups()
+            self.sections.append({
+                'name': 'Mark Duplicates',
+                'anchor': 'picard-markduplicates',
+                'content': self.mark_duplicates_plot()
+            })
+        
+        # Insert Size data
+        if len(self.picard_insertSize_data) > 0:
+            self.write_csv_file(self.picard_insertSize_data, 'multiqc_picard_insertSize.txt')
+            self.picard_stats_table_insertSize()
+            self.sections.append({
+                'name': 'Insert Size',
+                'anchor': 'picard-insertsize',
+                'content': self.insert_size_plot()
+            })
 
 
     def parse_picard_dupMetrics(self, f):
-        """ Go through log file looking for picard output """
+        """ Parse MarkDuplicate Picard Output """
         s_name = None
         for l in f['f']:
             # New log starting
@@ -60,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = None
                 
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[([^\]]+)\]", l)
+                fn_search = re.search("INPUT=\[?([^\\\s]+)\]?", l)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
@@ -83,10 +97,63 @@ class MultiqcModule(BaseMultiqcModule):
             if len(self.picard_dupMetrics_data[s_name]) == 0:
                 self.picard_dupMetrics_data.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))
+    
+    
+    
+    def parse_picard_insertSize(self, f):
+        """ Parse CollectInsertSizeMetrics Picard Output """
+        s_name = None
+        in_hist = False
+        for l in f['f']:
+            
+            # Catch the histogram values
+            if s_name is not None and in_hist is True:
+                try:
+                    ins, count = l.split("\t", 1)
+                    self.picard_insertSize_histogram[s_name][int(ins)] = int(count)
+                except ValueError:
+                    s_name = None
+                    in_hist = False
+            
+            # New log starting
+            if 'InsertSizeMetrics' in l and 'INPUT' in l:
+                s_name = None
+                # Pull sample name from input
+                fn_search = re.search("INPUT=\[?([^\\\s]+)\]?", l)
+                if fn_search:
+                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = self.clean_s_name(s_name, f['root'])
+            
+            if s_name is not None:
+                if 'InsertSizeMetrics' in l and '## METRICS CLASS' in l:
+                    if s_name in self.picard_insertSize_data:
+                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.picard_insertSize_data[s_name] = dict()
+                    keys = f['f'].readline().split("\t")
+                    vals = f['f'].readline().split("\t")
+                    for i, k in enumerate(keys):
+                        try:
+                            self.picard_insertSize_data[s_name][k] = float(vals[i])
+                        except ValueError:
+                            self.picard_insertSize_data[s_name][k] = vals[i]
+                    
+                    # Skip lines on to histogram
+                    l = f['f'].readline()
+                    l = f['f'].readline()
+                    l = f['f'].readline()
+                    
+                    self.picard_insertSize_histogram[s_name] = dict()
+                    in_hist = True
+        
+        for s_name in self.picard_insertSize_data.keys():
+            if len(self.picard_insertSize_data[s_name]) == 0:
+                self.picard_insertSize_data.pop(s_name, None)
+                self.picard_insertSize_histogram.pop(s_name, None)
+                log.debug("Removing {} as no data parsed".format(s_name))
         
     
-    def picard_stats_table(self):
-        """ Take the parsed stats from the Picard report and add them to the
+    def picard_stats_table_markdups(self):
+        """ Take the parsed stats from the Picard Mark Duplicates report and add them to the
         basic stats table at the top of the report """
         
         headers = OrderedDict()
@@ -100,10 +167,24 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: float(x) * 100
         }
         self.general_stats_addcols(self.picard_dupMetrics_data, headers)
+    
+    
+    def picard_stats_table_insertSize(self):
+        """ Take the parsed stats from the Picard Insert Size report and add them to the
+        basic stats table at the top of the report """
+        
+        headers = OrderedDict()
+        headers['MEDIAN_INSERT_SIZE'] = {
+            'title': 'Insert Size',
+            'description': 'Median Insert Size',
+            'min': 0,
+            'scale': 'GnBu',
+        }
+        self.general_stats_addcols(self.picard_insertSize_data, headers)
 
 
     def mark_duplicates_plot (self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """ Make the Picard Mark Duplicates scores """
         
         # NOTE: I had a hard time getting these numbers to add up as expected.
         # If you think I've done something wrong, let me know! Please add an
@@ -128,3 +209,19 @@ class MultiqcModule(BaseMultiqcModule):
         }
         
         return self.plot_bargraph(self.picard_dupMetrics_data, keys, config)
+    
+    
+    def insert_size_plot(self):
+        """ Plot the Picard Insert Size histograms """
+        
+        pconfig = {
+            'id': 'picard_insert_size',
+            'title': 'Insert Size',
+            'ylab': 'Count',
+            'xlab': 'Insert Size (bp)',
+            'xDecimals': False,
+            'tt_label': '<b>{point.x} bp</b>: {point.y:.0f}',
+            'ymin': 0,
+        }
+        
+        return self.plot_xy_data(self.picard_insertSize_histogram, pconfig)
