@@ -99,13 +99,13 @@ var tour_steps = [
   },
 
   {
-    element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
+    element: ".mqc-toolbox-buttons ul li:first-child a",
     placement: 'left',
     title: "MultiQC Toolbox",
     content: "Click one of the icons on the right to open the Toolbox",
   },
   {
-    element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
+    element: ".mqc-toolbox-buttons ul li:first-child a",
     placement: 'left',
     title: "Highlight Samples",
     content: "This tool allows you to highlight samples across plots and tables. Regexes mode allows for powerful pattern matching.",
