@@ -117,7 +117,7 @@ def general_stats_build_html():
     
     
     
-def dict_to_csv (d, delim="\t"):
+def dict_to_csv (d, delim="\t", sort_cols=False):
     """ Converts a dict to a CSV string
     :param d: 2D dictionary, first keys sample names and second key
               column headers. If second key is not a string, it is skipped.
@@ -131,7 +131,10 @@ def dict_to_csv (d, delim="\t"):
         # Create the header row
         if h is None:
             h = list()
-            for k in d[sn].keys():
+            c_keys = d[sn].keys()
+            if sort_cols:
+                c_keys = sorted(c_keys)
+            for k in c_keys:
                 # Skip if another dict
                 if type(d[sn][k]) is not dict:
                     h.append(k)

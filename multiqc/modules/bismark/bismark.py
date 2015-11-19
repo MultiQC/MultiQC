@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.bismark_data['merged'])))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.bismark_data['merged'], 'multiqc_bismark.txt')
+        self.write_csv_file(self.bismark_data['merged'], 'multiqc_bismark.txt', sort_cols=True)
 
         self.sections = list()
         

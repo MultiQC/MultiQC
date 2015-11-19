@@ -416,7 +416,7 @@ class BaseMultiqcModule(object):
         return html
         
     
-    def write_csv_file(self, data, fn):
+    def write_csv_file(self, data, fn, sort_cols=False):
         """ Write a tab-delimited data file to the reports directory.
         :param: data - a 2D dict, first key sample name (row header),
                 second key field (column header). 
@@ -424,4 +424,4 @@ class BaseMultiqcModule(object):
         :return: None """
         if config.data_dir is not None:
             with io.open (os.path.join(config.data_dir, fn), "w", encoding='utf-8') as f:
-                print( report.dict_to_csv( data ), file=f)
+                print( report.dict_to_csv( data, sort_cols=sort_cols ), file=f)
