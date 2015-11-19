@@ -289,6 +289,10 @@ data = {
 }
 self.write_csv_file (data, 'multiqc_mymod.txt')
 ```
+
+If your output has a lot of columns, you can supply the additional
+argument `sort_cols = True` to have the columns alphabetically sorted.
+
 Note that the data format is the same as that used for the General
 Statistics table.
 

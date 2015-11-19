@@ -221,10 +221,10 @@ class BaseMultiqcModule(object):
                     except KeyError:
                         pass # missing data - skip
         
-        report.general_stats[self.name] = {
-            'data': data,
-            'headers': headers
-        }
+            report.general_stats[self.name] = {
+                'data': data,
+                'headers': headers
+            }
         
         return None
         

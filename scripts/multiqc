@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import base64
+from collections import defaultdict
 from distutils.dir_util import copy_tree
 import io
 import jinja2
@@ -261,17 +262,13 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     
     plugin_hooks.mqc_trigger('after_modules')
     
-    # Generate the General Statistics table HTML
-    report.general_stats_build_html()
+    # Generate the General Statistics table
+    report.general_stats_build_table()
     
     # Print the general stats table to a file
     if config.data_dir is not None:
         with io.open (os.path.join(config.data_dir, 'multiqc_general_stats.txt'), "w", encoding='utf-8') as f:
-            d = {}
-            for m in report.general_stats.keys():
-                for (k, v) in report.general_stats[m]['data'].items():
-                    d[k] = v
-            print( report.dict_to_csv( d ), file=f)
+            print( report.dict_to_csv( report.general_stats_raw ), file=f)
     
     # Load in parent template files first if a child theme
     try:
