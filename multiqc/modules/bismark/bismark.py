@@ -178,16 +178,32 @@ class MultiqcModule(BaseMultiqcModule):
         
         headers = OrderedDict()
         headers['percent_cpg_meth'] = {
-            'title': '% Meth',
-            'description': '% Cytosines methylated in CpG context (alignment)',
+            'title': '% mCpG',
+            'description': '% Cytosines methylated in CpG context',
             'max': 100,
             'min': 0,
             'scale': 'Greens',
             'format': '{:.1f}%'
         }
+        headers['percent_chg_meth'] = {
+            'title': '% mCHG',
+            'description': '% Cytosines methylated in CHG context',
+            'max': 100,
+            'min': 0,
+            'scale': 'Oranges',
+            'format': '{:.1f}%'
+        }
+        headers['percent_chh_meth'] = {
+            'title': '% mCHH',
+            'description': '% Cytosines methylated in CHH context',
+            'max': 100,
+            'min': 0,
+            'scale': 'Oranges',
+            'format': '{:.1f}%'
+        }
         headers['total_c'] = {
             'title': "M C's",
-            'description': 'Total number of C\'s analysed, in millions (alignment)',
+            'description': 'Total number of C\'s analysed, in millions',
             'min': 0,
             'scale': 'Purples',
             'modify': lambda x: x / 1000000
