@@ -288,7 +288,9 @@ class BaseMultiqcModule(object):
                 except: name = k+1
                 try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+                try: ymax = 'data-ymax="{}"'.format(config['data_labels'][k]['ymax'])
+                except: ymax = 'data-ymax="{}"'.format(name) if name != k+1 else ''
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, ym=ymax, k=k)
             html += '</div>\n\n'
         
         # The plot div

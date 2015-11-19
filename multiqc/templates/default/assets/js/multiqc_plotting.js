@@ -60,6 +60,7 @@ $(function () {
     if(action == 'set_data'){
       var ds = $(this).data('newdata');
       plot_graph(target, ds);
+      // TODO - deal with data-ylab and data-ymax
     }
   });
 
