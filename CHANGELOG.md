@@ -1,6 +1,7 @@
 # MultiQC Version History
 
 #### v0.3.2dev
+* New (sub)module - Picard Insert Size
 * New option to stream report HTML to `stdout`
 * Files can now be specified as well as directories
 * New options to specify whether the parsed data directory should be created
@@ -15,6 +16,9 @@
 * Made Picard MarkDups show percent by default instead of counts
 * Made the 'ignore files' config use unix style file pattern matching
 * Fixed some bugs in the FastQ Screen module
+* Fixed some bugs in the FastQC module
+* Fixed occasional general stats table bug
+* Added M-Bias plot to Bismark
 
 
 #### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
