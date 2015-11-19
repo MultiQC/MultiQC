@@ -31,8 +31,18 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any Picard CollectInsertSizeMetrics reports
         self.picard_insertSize_data = dict()
         self.picard_insertSize_histogram = dict()
+        self.picard_insertSize_medians = dict()
         for f in self.find_log_files(contents_match='picard.analysis.CollectInsertSizeMetrics', filehandles=True):
             self.parse_picard_insertSize(f)
+        # Calculate summed median values for all read orientations
+        for s_name in self.picard_insertSize_histogram:
+            median = None
+            j = 0
+            for idx, c in self.picard_insertSize_histogram[s_name].items():
+                j += c
+                if j > (self.picard_insertSize_medians[s_name]['total_count'] / 2):
+                    self.picard_insertSize_medians[s_name]['summed_median'] = idx
+                    break
         
         num_reports = len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data)
         
@@ -61,7 +71,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.sections.append({
                 'name': 'Insert Size',
                 'anchor': 'picard-insertsize',
-                'content': self.insert_size_plot()
+                'content': '<p>Plot shows the number of reads at a given insert size. Reads with different orientations are summed</p>' + 
+                                self.insert_size_plot()
             })
 
 
@@ -110,11 +121,15 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name is not None and in_hist is True:
                 try:
                     sections = l.split("\t")
-                    self.picard_insertSize_histogram[s_name][int(sections[0])] = int(sections[1])
-                except IndexError:
+                    ins = int(sections[0])
+                    tot_count = sum( [int(x) for x in sections[1:]] )
+                    self.picard_insertSize_histogram[s_name][ins] = tot_count
+                    self.picard_insertSize_medians[s_name]['total_count'] += tot_count
+                except ValueError:
+                    # Reset in case we have more in this log file
                     s_name = None
                     in_hist = False
-            
+                    
             # New log starting
             if 'InsertSizeMetrics' in l and 'INPUT' in l:
                 s_name = None
@@ -128,27 +143,35 @@ class MultiqcModule(BaseMultiqcModule):
                 if 'InsertSizeMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_insertSize_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
-                    self.picard_insertSize_data[s_name] = dict()
                     keys = f['f'].readline().split("\t")
                     vals = f['f'].readline().split("\t")
-                    for i, k in enumerate(keys):
-                        try:
-                            self.picard_insertSize_data[s_name][k] = float(vals[i])
-                        except ValueError:
-                            self.picard_insertSize_data[s_name][k] = vals[i]
+                    self.picard_insertSize_medians[s_name] = {'total_count': 0}
+                    while len(vals) == len(keys):
+                        pair_orientation = vals[7]
+                        rowkey = '{}_{}'.format(s_name, pair_orientation)
+                        self.picard_insertSize_data[rowkey] = OrderedDict()
+                        self.picard_insertSize_data[rowkey]['SAMPLE_NAME'] = s_name
+                        for i, k in enumerate(keys):
+                            try:
+                                self.picard_insertSize_data[rowkey][k] = float(vals[i])
+                            except ValueError:
+                                self.picard_insertSize_data[rowkey][k] = vals[i]
+                        vals = f['f'].readline().split("\t")
                     
                     # Skip lines on to histogram
                     l = f['f'].readline()
                     l = f['f'].readline()
-                    l = f['f'].readline()
                     
                     self.picard_insertSize_histogram[s_name] = dict()
-                    in_hist = True
+                    in_hist = True        
         
-        for s_name in self.picard_insertSize_data.keys():
-            if len(self.picard_insertSize_data[s_name]) == 0:
-                self.picard_insertSize_data.pop(s_name, None)
+        for key in self.picard_insertSize_data.keys():
+            if len(self.picard_insertSize_data[key]) == 0:
+                self.picard_insertSize_data.pop(key, None)
+        for s_name in self.picard_insertSize_histogram.keys():
+            if len(self.picard_insertSize_histogram[s_name]) == 0:
                 self.picard_insertSize_histogram.pop(s_name, None)
+                self.picard_insertSize_medians.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))
         
     
@@ -174,13 +197,14 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
         
         headers = OrderedDict()
-        headers['MEDIAN_INSERT_SIZE'] = {
-            'title': 'Insert Size',
-            'description': 'Median Insert Size',
+        headers['summed_median'] = {
+            'title': 'Insert Size (bp)',
+            'description': 'Median Insert Size (all read orientations)',
             'min': 0,
+            'format': '{:.0f}',
             'scale': 'GnBu',
         }
-        self.general_stats_addcols(self.picard_insertSize_data, headers)
+        self.general_stats_addcols(self.picard_insertSize_medians, headers)
 
 
     def mark_duplicates_plot (self):
