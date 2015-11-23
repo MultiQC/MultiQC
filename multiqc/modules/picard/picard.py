@@ -192,7 +192,8 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_picard_GCbiasMetrics(self, f):
         """ Parse GCBiasMetrics Picard Output """
         s_name = None
-        in_data = False
+        gc_col = None
+        cov_col = None
         for l in f['f']:
             # New log starting
             if 'picard.analysis.CollectGcBiasMetrics' in l and 'INPUT' in l:
@@ -205,21 +206,25 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = self.clean_s_name(s_name, f['root'])
             
             if s_name is not None:
-                if in_data:
+                if gc_col is not None and cov_col is not None :
                     try:
-                        # GC | WINDOWS | READ_STARTS | MEAN_BASE_QUALITY | NORMALIZED_COVERAGE | ERROR_BAR_WIDTH
+                        # Note that GC isn't always the first column.
                         s = l.split("\t")
-                        self.picard_GCbias_data[s_name][ int(s[0]) ] = float(s[4])
+                        self.picard_GCbias_data[s_name][ int(s[gc_col]) ] = float(s[cov_col])
                     except IndexError:
                         s_name = None
-                        in_data = False
+                        gc_col = None
+                        cov_col = None
                 
                 if 'picard.analysis.GcBiasDetailMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_GCbias_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.picard_GCbias_data[s_name] = dict()
-                    l = f['f'].readline() # skip header
-                    in_data = True
+                    # Get header - find columns with the data we want
+                    l = f['f'].readline()
+                    s = l.split("\t")
+                    gc_col = s.index('GC')
+                    cov_col = s.index('NORMALIZED_COVERAGE')
                     
         
         for s_name in self.picard_GCbias_data.keys():
