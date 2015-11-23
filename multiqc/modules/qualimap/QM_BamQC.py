@@ -22,7 +22,6 @@ def parse_reports(self):
     self.qualimap_bamqc_gc_content_dist = dict()
     
     # Find QualiMap reports
-    qualimap_raw_data = {}
     for directory in config.analysis_dir:
         for root, dirnames, filenames in os.walk(directory, followlinks=True):
             raw_data_dir = 'raw_data'
@@ -35,7 +34,7 @@ def parse_reports(self):
                         if 'bam file' in l:
                             s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
                 
-                if s_name in qualimap_raw_data:
+                if s_name in self.qualimap_bamqc_coverage_hist:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         
                 #### Coverage histogram

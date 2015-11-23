@@ -50,8 +50,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Add the submodule results to the report output
         self.sections = list()
         QM_BamQC.report_sections(self)
+        QM_RNASeq.report_sections(self)
 
         # General stats table columns
         QM_BamQC.stats_table(self)
+        QM_RNASeq.stats_table(self)
 
     
