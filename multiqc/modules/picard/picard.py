@@ -23,12 +23,12 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a set of Java command line tools for manipulating high-"\
         "throughput sequencing data.")
 
-        # Find and load any Picard MarkDuplicates reports
+        #### MarkDuplicates reports
         self.picard_dupMetrics_data = dict()
         for f in self.find_log_files(contents_match='picard.sam.MarkDuplicates', filehandles=True):
             self.parse_picard_dupMetrics(f)
         
-        # Find and load any Picard CollectInsertSizeMetrics reports
+        #### CollectInsertSizeMetrics reports
         self.picard_insertSize_data = dict()
         self.picard_insertSize_histogram = dict()
         self.picard_insertSize_medians = dict()
@@ -44,18 +44,22 @@ class MultiqcModule(BaseMultiqcModule):
                     self.picard_insertSize_medians[s_name]['summed_median'] = idx
                     break
         
-        num_reports = len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data)
+        #### CollectGcBias reports
+        self.picard_GCbias_data = dict()
+        for f in self.find_log_files(contents_match='picard.analysis.CollectGcBiasMetrics', filehandles=True):
+            self.parse_picard_GCbiasMetrics(f)
+        
+        num_reports = len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data) + len(self.picard_GCbias_data)
         
         if num_reports == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} reports".format(num_reports))
-        
         self.sections = list()
         
         # Mark Duplicates data
         if len(self.picard_dupMetrics_data) > 0:
+            log.info("Found {} dupMetrics reports".format(len(self.picard_dupMetrics_data)))
             self.write_csv_file(self.picard_dupMetrics_data, 'multiqc_picard_dups.txt')
             self.picard_stats_table_markdups()
             self.sections.append({
@@ -66,6 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Insert Size data
         if len(self.picard_insertSize_data) > 0:
+            log.info("Found {} insertSize reports".format(len(self.picard_insertSize_data)))
             self.write_csv_file(self.picard_insertSize_data, 'multiqc_picard_insertSize.txt')
             self.picard_stats_table_insertSize()
             self.sections.append({
@@ -73,6 +78,15 @@ class MultiqcModule(BaseMultiqcModule):
                 'anchor': 'picard-insertsize',
                 'content': '<p>Plot shows the number of reads at a given insert size. Reads with different orientations are summed</p>' + 
                                 self.insert_size_plot()
+            })
+        
+        # GC Bias data
+        if len(self.picard_GCbias_data) > 0:
+            log.info("Found {} GCbias reports".format(len(self.picard_GCbias_data)))
+            self.sections.append({
+                'name': 'GC Bias',
+                'anchor': 'picard-gcbias',
+                'content': self.GCbias_plot()
             })
 
 
@@ -85,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = None
                 
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[?([^\\\s]+)\]?", l)
+                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
@@ -134,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
             if 'InsertSizeMetrics' in l and 'INPUT' in l:
                 s_name = None
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[?([^\\\s]+)\]?", l)
+                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
@@ -174,6 +188,46 @@ class MultiqcModule(BaseMultiqcModule):
                 self.picard_insertSize_medians.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))
         
+    
+    def parse_picard_GCbiasMetrics(self, f):
+        """ Parse GCBiasMetrics Picard Output """
+        s_name = None
+        in_data = False
+        for l in f['f']:
+            # New log starting
+            if 'picard.analysis.CollectGcBiasMetrics' in l and 'INPUT' in l:
+                s_name = None
+                
+                # Pull sample name from input
+                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
+                if fn_search:
+                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = self.clean_s_name(s_name, f['root'])
+            
+            if s_name is not None:
+                if in_data:
+                    try:
+                        # GC | WINDOWS | READ_STARTS | MEAN_BASE_QUALITY | NORMALIZED_COVERAGE | ERROR_BAR_WIDTH
+                        s = l.split("\t")
+                        self.picard_GCbias_data[s_name][ int(s[0]) ] = float(s[4])
+                    except IndexError:
+                        s_name = None
+                        in_data = False
+                
+                if 'picard.analysis.GcBiasDetailMetrics' in l and '## METRICS CLASS' in l:
+                    if s_name in self.picard_GCbias_data:
+                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.picard_GCbias_data[s_name] = dict()
+                    l = f['f'].readline() # skip header
+                    in_data = True
+                    
+        
+        for s_name in self.picard_GCbias_data.keys():
+            if len(self.picard_GCbias_data[s_name]) == 0:
+                self.picard_GCbias_data.pop(s_name, None)
+                log.debug("Removing {} as no data parsed".format(s_name))
+    
+    
     
     def picard_stats_table_markdups(self):
         """ Take the parsed stats from the Picard Mark Duplicates report and add them to the
@@ -249,3 +303,25 @@ class MultiqcModule(BaseMultiqcModule):
         }
         
         return self.plot_xy_data(self.picard_insertSize_histogram, pconfig)
+
+    def GCbias_plot(self):
+        """ Plot the Picard GC Bias plot """
+        
+        pconfig = {
+            'id': 'picard_gcbias_plot',
+            'title': 'GC Bias',
+            'ylab': 'Normalized Coverage',
+            'xlab': '% GC',
+            'xmin': 0,
+            'xmax': 100,
+            'xDecimals': False,
+            'ymin': 0,
+            'yCeiling': 10,
+            'tt_label': '<b>{point.x} %GC</b>: {point.y:.2f}',
+            'yPlotLines': [
+                {'value': 1, 'color': '#999999', 'width': 2, 'dashStyle': 'LongDash'},
+            ]
+        }
+        
+        return self.plot_xy_data(self.picard_GCbias_data, pconfig)
+    

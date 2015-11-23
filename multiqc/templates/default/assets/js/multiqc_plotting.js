@@ -218,7 +218,8 @@ function plot_xy_line_graph(target, ds){
       min: config['xmin'],
       minRange: config['xMinRange'],
       allowDecimals: config['xDecimals'],
-      plotBands: config['xPlotBands']
+      plotBands: config['xPlotBands'],
+      plotLines: config['xPlotLines']
     },
     yAxis: {
       title: {
@@ -230,7 +231,8 @@ function plot_xy_line_graph(target, ds){
       min: config['ymin'],
       minRange: config['yMinRange'],
       allowDecimals: config['yDecimals'],
-      plotBands: config['yPlotBands']
+      plotBands: config['yPlotBands'],
+      plotLines: config['yPlotLines']
     },
     plotOptions: {
       series: {
