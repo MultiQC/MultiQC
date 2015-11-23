@@ -33,8 +33,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats = defaultdict(dict)
         
         # Initialise the BamQC submodule and parse logs
-        import BamQC
-        BamQC.parse_reports(self)
+        import QM_BamQC
+        QM_BamQC.parse_reports(self)
+        
+        # Initialise the RNASeq submodule and parse logs
+        import QM_RNASeq
+        QM_RNASeq.parse_reports(self)
 
 
         if len(self.general_stats) == 0:
@@ -45,9 +49,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add the submodule results to the report output
         self.sections = list()
-        BamQC.report_sections(self)
+        QM_BamQC.report_sections(self)
 
         # General stats table columns
-        BamQC.stats_table(self)
+        QM_BamQC.stats_table(self)
 
     
