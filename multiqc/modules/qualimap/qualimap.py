@@ -33,11 +33,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats = defaultdict(dict)
         
         # Initialise the BamQC submodule and parse logs
-        import QM_BamQC
+        from . import QM_BamQC
         QM_BamQC.parse_reports(self)
         
         # Initialise the RNASeq submodule and parse logs
-        import QM_RNASeq
+        from . import QM_RNASeq
         QM_RNASeq.parse_reports(self)
 
 
