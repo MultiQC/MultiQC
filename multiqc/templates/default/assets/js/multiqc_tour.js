@@ -12,23 +12,23 @@ $(function () {
     var percent = parseInt(((i+1) / tour_steps.length) * 100);
     step['content'] = '<div class="pbar_wrapper"><hr class="pbar" style="width:'+percent+'%;"></div>' + step['content'];
   });
-  orig_z_index = $('.mqc-toolbox').css('z-index'); 
-  var intro_tour = new Tour({
-    backdrop: true,
-    storage: false,
-    onStart: function(tour){
-      $('.mqc-toolbox').css('z-index', 0);
-      mqc_toolbox_openclose('#mqc_cols', false);
-    },
-    onEnd: function (tour) {
-      $('.mqc-toolbox').css('z-index', 1200);
-      mqc_toolbox_openclose('#mqc_cols', false);
-    },
-    steps: tour_steps
-  });
-  intro_tour.init();
   $('#mqc-launch-into-tour').click(function(ev){
     ev.preventDefault();
+    orig_z_index = $('.mqc-toolbox').css('z-index'); 
+    var intro_tour = new Tour({
+      backdrop: true,
+      storage: false,
+      onStart: function(tour){
+        $('.mqc-toolbox').css('z-index', 0);
+        mqc_toolbox_openclose('#mqc_cols', false);
+      },
+      onEnd: function (tour) {
+        $('.mqc-toolbox').css('z-index', 1200);
+        mqc_toolbox_openclose('#mqc_cols', false);
+      },
+      steps: tour_steps
+    });
+    intro_tour.init();
     try{ intro_tour.restart(); }
     catch(e){ console.log('Tour broke - '+e); }
   });
