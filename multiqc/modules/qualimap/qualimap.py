@@ -54,11 +54,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # BamQC General stats
         headers = OrderedDict()
-        headers['median_coverage'] = {
-            'title': 'Coverage',
-            'description': 'Median coverage',
-            'min': 0,
-            'scale': 'RdBu'
+        headers['avg_gc'] = {
+            'title': 'Avg. GC',
+            'description': 'Average GC content',
+            'max': 80,
+            'min': 20,
+            'format': '{:.0f}%'
         }
         headers['median_insert_size'] = {
             'title': 'Insert Size',
@@ -75,13 +76,29 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'format': '{:.1f}%'
         }
-        headers['avg_gc'] = {
-            'title': 'Avg. GC',
-            'description': 'Average GC content',
-            'max': 80,
-            'min': 20,
-            'format': '{:.0f}%'
+        headers['median_coverage'] = {
+            'title': 'Coverage',
+            'description': 'Median coverage',
+            'min': 0,
+            'scale': 'RdBu'
         }
+        headers['mapped_reads'] = {
+            'title': 'Aligned',
+            'description': 'Number of mapped reads (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        headers['total_reads'] = {
+            'title': 'Total Reads',
+            'description': 'Number of reads (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        
         
         # RNASeqQC General stats
         headers['5_3_bias'] = {

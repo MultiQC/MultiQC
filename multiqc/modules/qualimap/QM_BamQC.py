@@ -31,8 +31,16 @@ def parse_reports(self):
             if 'genome_results.txt' in filenames and raw_data_dir in dirnames:
                 with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
                     for l in gr:
+                        
                         if 'bam file' in l:
                             s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
+                        
+                        rhs = l.split(' = ')[-1].replace(',','')
+                        num = rhs.split('(')[0]
+                        if 'number of reads' in l:
+                            self.general_stats[s_name]['total_reads'] = float( num )
+                        if 'number of mapped reads' in l:
+                            self.general_stats[s_name]['mapped_reads'] = float( num )
                 
                 if s_name in self.qualimap_bamqc_coverage_hist:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
