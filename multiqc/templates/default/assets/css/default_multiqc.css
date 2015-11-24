@@ -582,7 +582,6 @@ tbody .sorthandle {
 }
 
 #general_stats_table td.data-coloured {
-    text-align: right;
     padding: 0;
 }
 #general_stats_table .wrapper {
@@ -600,14 +599,11 @@ tbody .sorthandle {
     background-color: #dedede;
     z-index:-1;
 }
-#general_stats_table tbody td {
-    text-align: right;
-}
 #general_stats_table .val {
     display: block;
     position: absolute;
     padding: 5px;
-    right:0;
+    left:0;
 }
 
 
