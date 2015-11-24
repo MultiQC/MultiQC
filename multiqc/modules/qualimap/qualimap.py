@@ -52,8 +52,58 @@ class MultiqcModule(BaseMultiqcModule):
         QM_BamQC.report_sections(self)
         QM_RNASeq.report_sections(self)
 
-        # General stats table columns
-        QM_BamQC.stats_table(self)
-        QM_RNASeq.stats_table(self)
+        # BamQC General stats
+        headers = OrderedDict()
+        headers['median_coverage'] = {
+            'title': 'Coverage',
+            'description': 'Median coverage',
+            'min': 0,
+            'scale': 'RdBu'
+        }
+        headers['median_insert_size'] = {
+            'title': 'Insert Size',
+            'description': 'Median Insert Size',
+            'min': 0,
+            'scale': 'PuOr',
+            'format': '{:.0f}'
+        }
+        headers['thirty_x_pc'] = {
+            'title': '&ge; 30X',
+            'description': 'Fraction of genome with at least 30X coverage',
+            'max': 100,
+            'min': 0,
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%'
+        }
+        headers['avg_gc'] = {
+            'title': 'Avg. GC',
+            'description': 'Average GC content',
+            'max': 80,
+            'min': 20,
+            'format': '{:.0f}%'
+        }
+        
+        # RNASeqQC General stats
+        headers['5_3_bias'] = {
+            'title': "5'-3' bias"
+        }
+        headers['reads_aligned_genes'] = {
+            'title': 'Reads in Genes',
+            'description': 'Reads Aligned - Genes (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        headers['reads_aligned'] = {
+            'title': 'Aligned',
+            'description': 'Reads Aligned (millions)',
+            'min': 0,
+            'scale': 'RdBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        
+        self.general_stats_addcols(self.general_stats, headers)
 
     
