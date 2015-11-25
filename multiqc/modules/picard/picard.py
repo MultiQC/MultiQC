@@ -3,7 +3,7 @@
 """ MultiQC module to parse output from Picard """
 
 from __future__ import print_function
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 import logging
 import os
 import re
@@ -57,11 +57,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.sections = list()
         
+        self.picard_stats_table()
+        
         # Mark Duplicates data
         if len(self.picard_dupMetrics_data) > 0:
             log.info("Found {} dupMetrics reports".format(len(self.picard_dupMetrics_data)))
             self.write_csv_file(self.picard_dupMetrics_data, 'multiqc_picard_dups.txt')
-            self.picard_stats_table_markdups()
             self.sections.append({
                 'name': 'Mark Duplicates',
                 'anchor': 'picard-markduplicates',
@@ -72,11 +73,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.picard_insertSize_data) > 0:
             log.info("Found {} insertSize reports".format(len(self.picard_insertSize_data)))
             self.write_csv_file(self.picard_insertSize_data, 'multiqc_picard_insertSize.txt')
-            self.picard_stats_table_insertSize()
             self.sections.append({
                 'name': 'Insert Size',
                 'anchor': 'picard-insertsize',
-                'content': '<p>Plot shows the number of reads at a given insert size. Reads with different orientations are summed</p>' + 
+                'content': '<p>Plot shows the number of reads at a given insert size. Reads with different orientations are summed.</p>' + 
                                 self.insert_size_plot()
             })
         
@@ -86,7 +86,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.sections.append({
                 'name': 'GC Coverage Bias',
                 'anchor': 'picard-gcbias',
-                'content': self.GCbias_plot()
+                'content': '<p>This plot shows bias in coverage across regions of the genome with varying GC content.'\
+                    ' A perfect library would be a flat line at <code>y = 1</code>.</p>'+self.GCbias_plot()
             })
 
 
@@ -234,9 +235,15 @@ class MultiqcModule(BaseMultiqcModule):
     
     
     
-    def picard_stats_table_markdups(self):
-        """ Take the parsed stats from the Picard Mark Duplicates report and add them to the
+    def picard_stats_table(self):
+        """ Take the parsed stats from Picard and add them to the
         basic stats table at the top of the report """
+        
+        data = defaultdict(lambda:dict())
+        for s_name in self.picard_dupMetrics_data:
+            data[s_name]['PERCENT_DUPLICATION'] = self.picard_dupMetrics_data[s_name]['PERCENT_DUPLICATION']
+        for s_name in self.picard_insertSize_medians:
+            data[s_name]['summed_median'] = self.picard_insertSize_medians[s_name]['summed_median']
         
         headers = OrderedDict()
         headers['PERCENT_DUPLICATION'] = {
@@ -248,22 +255,14 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%',
             'modify': lambda x: float(x) * 100
         }
-        self.general_stats_addcols(self.picard_dupMetrics_data, headers)
-    
-    
-    def picard_stats_table_insertSize(self):
-        """ Take the parsed stats from the Picard Insert Size report and add them to the
-        basic stats table at the top of the report """
-        
-        headers = OrderedDict()
         headers['summed_median'] = {
-            'title': 'Insert Size (bp)',
+            'title': 'Insert Size',
             'description': 'Median Insert Size (all read orientations)',
             'min': 0,
-            'format': '{:.0f}',
+            'format': '{:.0f} bp',
             'scale': 'GnBu',
         }
-        self.general_stats_addcols(self.picard_insertSize_medians, headers)
+        self.general_stats_addcols(data, headers)
 
 
     def mark_duplicates_plot (self):
