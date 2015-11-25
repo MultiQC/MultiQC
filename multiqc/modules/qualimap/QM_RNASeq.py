@@ -13,6 +13,9 @@ from collections import defaultdict
 
 from multiqc import config, BaseMultiqcModule
 
+# Initialise the logger
+log = logging.getLogger(__name__)
+
 def parse_reports(self):
     """ Find Qualimap RNASeq reports and parse their data """
     
