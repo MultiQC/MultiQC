@@ -257,9 +257,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['summed_median'] = {
             'title': 'Insert Size',
-            'description': 'Median Insert Size (all read orientations)',
+            'description': 'Median Insert Size, all read orientations (bp)',
             'min': 0,
-            'format': '{:.0f} bp',
+            'format': '{:.0f}',
             'scale': 'GnBu',
         }
         self.general_stats_addcols(data, headers)
