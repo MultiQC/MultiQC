@@ -84,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.picard_GCbias_data) > 0:
             log.info("Found {} GCbias reports".format(len(self.picard_GCbias_data)))
             self.sections.append({
-                'name': 'GC Bias',
+                'name': 'GC Coverage Bias',
                 'anchor': 'picard-gcbias',
                 'content': self.GCbias_plot()
             })
@@ -314,7 +314,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         pconfig = {
             'id': 'picard_gcbias_plot',
-            'title': 'GC Bias',
+            'title': 'GC Coverage Bias',
             'ylab': 'Normalized Coverage',
             'xlab': '% GC',
             'xmin': 0,
