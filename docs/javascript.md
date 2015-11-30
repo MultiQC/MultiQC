@@ -151,6 +151,14 @@ $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
     // search should be treated as a string or a regex (regex_mode)
 });
 
+$(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
+    // This trigger is called when samples are renamed
+    // Three variables are given - an array of search
+    // strings (f_texts), an array of replacements with corresponding
+    // indexes (t_texts) and a boolean var saying whether the
+    // search should be treated as a string or a regex (regex_mode)
+});
+
 $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
     // This trigger is called when the Hide Samples filters change.
     // Two variables are given - an array of search strings

@@ -147,7 +147,11 @@ of the sample names, which are the same for all samples:
 
 ![rename samples](images/toolbox_rename.png)
 
-Again, regular expressions can be used. See above for details.
+Again, regular expressions can be used. See above for details. Note that
+regex groups can be used - define a group match with parentheses and
+use the matching value with `$1`, `$2` etc. For example - a search string
+`SRR283(\d{3})` and replace string `$1_SRR283` would move the final three
+digits of matching sample names to the start of the name.
 
 Often, you may have a spreadsheet with filenames and informative sample
 names. To avoid having to manually enter each name, you can paste from a

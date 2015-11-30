@@ -20,6 +20,11 @@ $(function () {
     // Enable tablesorter on the general statistics tables
     $(".mqc_table").tablesorter({sortInitialOrder: 'desc'});
     
+    // Update the table sorter if samples renamed
+    $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
+      $(".mqc_table").trigger("update"); 
+    });
+    
     // Freeze the top header when scrolling
     var gsTab = $('#general_stats_table');
     var gsTabDiv = $('#general_stats_table_container .table-responsive');

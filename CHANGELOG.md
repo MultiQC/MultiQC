@@ -21,6 +21,7 @@
 * Fixed some bugs in the FastQ Screen module
 * Fixed some bugs in the FastQC module
 * Fixed occasional general stats table bug
+* Table sorting on sample names now works after renaming
 
 
 #### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
