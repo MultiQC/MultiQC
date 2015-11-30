@@ -42,9 +42,9 @@ Currently, these include:
   * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
 * Post-alignment tools
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
-  * [Picard MarkDuplicates](http://broadinstitute.github.io/picard/)
+  * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
-  * [Qualimap](http://qualimap.bioinfo.cipf.es/)
+  * [Qualimap](http://qualimap.bioinfo.cipf.es/) (BamQC, RNASeq)
 
 More to come soon. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log
