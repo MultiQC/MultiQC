@@ -49,7 +49,13 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(contents_match='picard.analysis.CollectGcBiasMetrics', filehandles=True):
             self.parse_picard_GCbiasMetrics(f)
         
-        num_reports = len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data) + len(self.picard_GCbias_data)
+        #### CalculateHsMetric
+        self.picard_HsMetrics_data = dict()
+        for f in self.find_log_files(contents_match='picard.analysis.directed.HsMetrics', filehandles=True):
+            self.parse_picard_HsMetrics(f)
+        
+        num_reports = ( len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data) +
+                len(self.picard_GCbias_data) + len(self.picard_HsMetrics_data) )
         
         if num_reports == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -89,6 +95,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'content': '<p>This plot shows bias in coverage across regions of the genome with varying GC content.'\
                     ' A perfect library would be a flat line at <code>y = 1</code>.</p>'+self.GCbias_plot()
             })
+        
+        # HsMetrics data
+        if len(self.picard_HsMetrics_data) > 0:
+            log.info("Found {} HsMetrics reports".format(len(self.picard_HsMetrics_data)))
+            self.write_csv_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics.txt')
 
 
     def parse_picard_dupMetrics(self, f):
@@ -234,6 +245,49 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Removing {} as no data parsed".format(s_name))
     
     
+    def parse_picard_HsMetrics(self, f):
+        """ Parse HsMetric Picard Output """
+        s_name = None
+        keys = None
+        for l in f['f']:
+            # New log starting
+            if 'picard.analysis.directed.CalculateHsMetrics' in l and 'INPUT' in l:
+                s_name = None
+                keys = None
+                
+                # Pull sample name from input
+                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
+                if fn_search:
+                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = self.clean_s_name(s_name, f['root'])
+            
+            if s_name is not None:
+                if 'picard.analysis.directed.HsMetrics' in l and '## METRICS CLASS' in l:
+                    keys = f['f'].readline().split("\t")
+                elif keys:
+                    vals = l.split("\t")
+                    if len(vals) == len(keys):
+                        this_s_name = s_name
+                        if keys[0] == 'BAIT_SET':
+                            this_s_name = "{}: {}".format(s_name, vals[0])
+                        if this_s_name in self.picard_HsMetrics_data:
+                            log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                        self.picard_HsMetrics_data[this_s_name] = dict()
+                        for i, k in enumerate(keys):
+                            try:
+                                self.picard_HsMetrics_data[this_s_name][k] = float(vals[i])
+                            except ValueError:
+                                self.picard_HsMetrics_data[this_s_name][k] = vals[i]
+                    else:
+                        s_name = None
+                        keys = None
+        
+        for s_name in self.picard_HsMetrics_data.keys():
+            if len(self.picard_HsMetrics_data[s_name]) == 0:
+                self.picard_HsMetrics_data.pop(s_name, None)
+                log.debug("Removing {} as no data parsed".format(s_name))
+    
+    
     
     def picard_stats_table(self):
         """ Take the parsed stats from Picard and add them to the
@@ -244,6 +298,9 @@ class MultiqcModule(BaseMultiqcModule):
             data[s_name]['PERCENT_DUPLICATION'] = self.picard_dupMetrics_data[s_name]['PERCENT_DUPLICATION']
         for s_name in self.picard_insertSize_medians:
             data[s_name]['summed_median'] = self.picard_insertSize_medians[s_name]['summed_median']
+        for s_name in self.picard_HsMetrics_data:
+            data[s_name]['FOLD_ENRICHMENT'] = self.picard_HsMetrics_data[s_name]['FOLD_ENRICHMENT']
+            data[s_name]['PCT_TARGET_BASES_30X'] = self.picard_HsMetrics_data[s_name]['PCT_TARGET_BASES_30X']
         
         headers = OrderedDict()
         headers['PERCENT_DUPLICATION'] = {
@@ -261,6 +318,21 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.0f}',
             'scale': 'GnBu',
+        }
+        headers['FOLD_ENRICHMENT'] = {
+            'title': 'Fold Enrichment',
+            'min': 0,
+            'format': '{:.0f}',
+            'scale': 'Blues',
+        }
+        headers['PCT_TARGET_BASES_30X'] = {
+            'title': 'Target Bases 30X',
+            'description': 'Percent of target bases with coverage &ge; 30X',
+            'max': 100,
+            'min': 0,
+            'format': '{:.0f}%',
+            'scale': 'RdYlGn',
+            'modify': lambda x: float(x) * 100
         }
         self.general_stats_addcols(data, headers)
 
