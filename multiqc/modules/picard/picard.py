@@ -247,6 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
     
     def parse_picard_HsMetrics(self, f):
         """ Parse HsMetric Picard Output """
+        parsed_data = dict()
         s_name = None
         keys = None
         for l in f['f']:
@@ -260,6 +261,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
+                    parsed_data[s_name] = dict()
             
             if s_name is not None:
                 if 'picard.analysis.directed.HsMetrics' in l and '## METRICS CLASS' in l:
@@ -267,26 +269,36 @@ class MultiqcModule(BaseMultiqcModule):
                 elif keys:
                     vals = l.split("\t")
                     if len(vals) == len(keys):
-                        this_s_name = s_name
+                        j = 'NA'
                         if keys[0] == 'BAIT_SET':
-                            this_s_name = "{}: {}".format(s_name, vals[0])
-                        if this_s_name in self.picard_HsMetrics_data:
-                            log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
-                        self.picard_HsMetrics_data[this_s_name] = dict()
+                            j = vals[0]
+                        parsed_data[s_name][j] = dict()
                         for i, k in enumerate(keys):
                             try:
-                                self.picard_HsMetrics_data[this_s_name][k] = float(vals[i])
+                                parsed_data[s_name][j][k] = float(vals[i])
                             except ValueError:
-                                self.picard_HsMetrics_data[this_s_name][k] = vals[i]
+                                parsed_data[s_name][j][k] = vals[i]
                     else:
                         s_name = None
                         keys = None
         
-        for s_name in self.picard_HsMetrics_data.keys():
-            if len(self.picard_HsMetrics_data[s_name]) == 0:
-                self.picard_HsMetrics_data.pop(s_name, None)
-                log.debug("Removing {} as no data parsed".format(s_name))
-    
+        # Remove empty dictionaries
+        for s_name in parsed_data.keys():
+            for j in parsed_data[s_name].keys():
+                if len(parsed_data[s_name][j]) == 0:
+                    parsed_data[s_name].pop(j, None)
+            if len(parsed_data[s_name]) == 0:
+                parsed_data.pop(s_name, None)
+        
+        # Manipulate sample names if multiple baits found
+        for s_name in parsed_data.keys():
+            for j in parsed_data[s_name].keys():
+                this_s_name = s_name
+                if(len(parsed_data[s_name]) > 1):
+                    this_s_name = "{}: {}".format(s_name, j)
+                if this_s_name in self.picard_HsMetrics_data:
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], this_s_name))
+                self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
     
     
     def picard_stats_table(self):
