@@ -1,7 +1,7 @@
 # MultiQC Version History
 
 #### v0.3.2dev
-* New Picard (sub)modules - Insert Size & GC Bias
+* New Picard (sub)modules - Insert Size, GC Bias & HsMetrics
 * New Qualimap (sub)module - RNA-Seq QC
 * Made Picard MarkDups show percent by default instead of counts
 * Added M-Bias plot to Bismark
