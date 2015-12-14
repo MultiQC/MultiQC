@@ -29,7 +29,7 @@ setup(
     description = "Create aggregate bioinformatics analysis report across many samples",
     long_description = __doc__,
     keywords = 'bioinformatics',
-    url = 'https://github.com/ewels/MultiQC',
+    url = 'http://multiqc.info',
     download_url = 'https://github.com/ewels/MultiQC/releases',
     license = 'MIT',
     packages = find_packages(),

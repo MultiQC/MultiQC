@@ -2,13 +2,6 @@
 // Base JS for MultiQC Reports
 ////////////////////////////////////////////////
 
-$(function () {
-  // Smooth scroll to top
-  $("a[href='#top']").click(function(e) {
-    $("html, body").animate({ scrollTop: 0 }, "slow");
-  });
-});
-
 // From http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
 function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -22,3 +15,14 @@ function notEmptyObj (obj){
   } catch(e){ return false; }
   return true;
 }
+
+
+// Side nav expansion
+$(function () {
+  $('#side-nav-handle').click(function(e){
+    $('.mainpage, .side-nav, .footer').toggleClass('hidden-nav');
+    $('#side-nav-handle span').toggleClass('glyphicon-triangle-left glyphicon-triangle-right');
+    // send resize trigger for replotting after css animation
+    setTimeout(function(){ $(document).resize(); }, 510);
+  });
+});

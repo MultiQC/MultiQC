@@ -1,0 +1,55 @@
+#######################################
+# Example MultiQC Configuration File
+#######################################
+
+# Note that this file can be saved either in the MultiQC installation
+# directory, or as ~/.multiqc_config.yaml
+
+# Configuration settings are taken from the following locations, in order:
+# - Hardcoded in MultiQC (multiqc/utils/config.py)
+# - <installation_dir>/multiqc_config.yaml
+# - ~/.multiqc_config.yaml
+# - Command line options
+
+---
+# Title to use for the report.
+title: None
+
+# Prepend sample names with their directory. Useful if analysing the
+# sample samples with different parameters.
+prepend_dirs: False
+
+# Default output filenames
+output_fn_name: multiqc_report.html
+data_dir_name: multiqc_report_data
+
+# Whether to create the parsed data directory in addition to the report
+make_data_dir: True
+
+# Cleaning options for sample names. Typically, sample names are detected
+# from an input filename. If any of these strings are found, they and any
+# text to their right will be discarded.
+# For example - file1.fq.gz_trimmed.bam_deduplicated_fastqc.zip
+# would be cleaned to 'file1'
+fn_clean_exts:
+    - .gz
+    - .fastq
+    - .fq
+    - .bam
+    - .sam
+    - .sra
+    - _tophat
+    - _star_aligned
+    - _fastqc
+
+# Ignore these files when searching for logs
+fn_ignore_files:
+    - .DS_Store
+
+# Ignore files larger than this when searcing for logs (bytes)
+log_filesize_limit: 1000000
+
+# Limit for datasets per plot in the report. If there are more than
+# this, the user will need to click 'plot graph' to see the data.
+# This is to prevent very large graphs from locking up the browser on load.
+num_datasets_plot_limit: 50

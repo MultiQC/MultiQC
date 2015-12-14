@@ -289,6 +289,10 @@ data = {
 }
 self.write_csv_file (data, 'multiqc_mymod.txt')
 ```
+
+If your output has a lot of columns, you can supply the additional
+argument `sort_cols = True` to have the columns alphabetically sorted.
+
 Note that the data format is the same as that used for the General
 Statistics table.
 
@@ -377,10 +381,12 @@ config = {
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
     'yDecimals': True,                      # Set to false to only show integer labels
+    'ylab_format': None,                    # Format string for x axis labels. Defaults to {value}
     'stacking': 'normal',                   # Set to None to have category bars side by side
     'use_legend': True,                     # Show / hide the legend
     'click_func': None,                     # Javascript function to be called when a point is clicked
     'cursor': None,                         # CSS mouse cursor type.
+    'tt_percentages': True,                 # Show the percentages of each count in the tooltip
 }
 ```
 
@@ -446,6 +452,8 @@ config = {
     'yDecimals': True,           # Set to false to only show integer labels
     'yPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
+    'yPlotLines': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotLines
+    'xPlotLines': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotLines
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked

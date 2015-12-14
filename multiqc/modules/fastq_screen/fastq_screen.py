@@ -57,20 +57,13 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_fqscreen(self, fh):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = OrderedDict()
-        total_analysed = None
         for l in fh:
-            # print(l)
-            tot = re.search(r"Reads in subset:\s+(\d+)", l)
-            if tot:
-                total_analysed = int(tot.group(1))
-            elif l.startswith('%Hit_no_libraries:'):
+            if l.startswith('%Hit_no_libraries:'):
                 empty = { 'unmapped': 0, 'multiple_hits_one_library': 0, 'one_hit_multiple_libraries': 0, 'multiple_hits_multiple_libraries': 0 }
                 parsed_data['No hits'] = {'percentages': empty, 'counts': empty}
                 parsed_data['No hits']['percentages']['one_hit_one_library'] = float(l[19:])
-                if total_analysed is not None:
-                    parsed_data['No hits']['counts']['one_hit_one_library'] = (float(l[19:]) / 100) * total_analysed
             else:
-                fqs = re.search(r"^(\w+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
+                fqs = re.search(r"^(\S+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
                 if fqs:
                     org = fqs.group(1)
                     parsed_data[org] = {'percentages':{}, 'counts':{}}
@@ -97,18 +90,18 @@ class MultiqcModule(BaseMultiqcModule):
             totals[s] = OrderedDict()
             for org in self.fq_screen_data[s]:
                 try:
-                    k = "{}_counts".format(org)
+                    k = "{} counts".format(org)
                     totals[s][k] = self.fq_screen_data[s][org]['counts']['one_hit_one_library']
-                    totals[s][k] = self.fq_screen_data[s][org]['counts']['multiple_hits_one_library']
-                    totals[s][k] = self.fq_screen_data[s][org]['counts']['one_hit_multiple_libraries']
-                    totals[s][k] = self.fq_screen_data[s][org]['counts']['multiple_hits_multiple_libraries']
+                    totals[s][k] += self.fq_screen_data[s][org]['counts']['multiple_hits_one_library']
+                    totals[s][k] += self.fq_screen_data[s][org]['counts']['one_hit_multiple_libraries']
+                    totals[s][k] += self.fq_screen_data[s][org]['counts']['multiple_hits_multiple_libraries']
                 except KeyError: pass
                 try:
-                    k = "{}_percentage".format(org)
+                    k = "{} percentage".format(org)
                     totals[s][k] = self.fq_screen_data[s][org]['percentages']['one_hit_one_library']
-                    totals[s][k] = self.fq_screen_data[s][org]['percentages']['multiple_hits_one_library']
-                    totals[s][k] = self.fq_screen_data[s][org]['percentages']['one_hit_multiple_libraries']
-                    totals[s][k] = self.fq_screen_data[s][org]['percentages']['multiple_hits_multiple_libraries']
+                    totals[s][k] += self.fq_screen_data[s][org]['percentages']['multiple_hits_one_library']
+                    totals[s][k] += self.fq_screen_data[s][org]['percentages']['one_hit_multiple_libraries']
+                    totals[s][k] += self.fq_screen_data[s][org]['percentages']['multiple_hits_multiple_libraries']
                 except KeyError: pass
         return totals
 
@@ -187,16 +180,28 @@ class MultiqcModule(BaseMultiqcModule):
         
         # First, sum the different types of alignment counts
         data = OrderedDict()
+        cats = list()
         for s_name in self.fq_screen_data:
-            data[s_name] = {}
+            data[s_name] = OrderedDict()
             for org in self.fq_screen_data[s_name]:
-                data[s_name][org] = self.fq_screen_data[s_name][org]['counts']['one_hit_one_library']
-                data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['multiple_hits_one_library']
-                data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['one_hit_multiple_libraries']
-                data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['multiple_hits_multiple_libraries']
+                if org == 'No hits':
+                    continue
+                data[s_name][org] = self.fq_screen_data[s_name][org]['percentages']['one_hit_one_library']
+                data[s_name][org] += self.fq_screen_data[s_name][org]['percentages']['multiple_hits_one_library']
+                data[s_name][org] += self.fq_screen_data[s_name][org]['percentages']['one_hit_multiple_libraries']
+                data[s_name][org] += self.fq_screen_data[s_name][org]['percentages']['multiple_hits_multiple_libraries']
+                if len(cats) < len(self.fq_screen_data[s_name]):
+                    cats.append(org)
         
-        return "<p>Summed alignment counts are shown below. Note that Percentages \
-                do <em>not</em> show percentage aligned reads for each organism.</p>" + self.plot_bargraph(data)
+        pconfig = {
+            'cpswitch': False,
+            'ylab_format': '{value}%',
+            'tt_percentages': False
+        }
+        
+        return ("<p>Summed alignment percentages are shown below. Note that percentages \
+                can sum to greater than 100% if reads align to multiple organisms.</p>" +
+                self.plot_bargraph(data, cats, config=pconfig) )
 
         
         

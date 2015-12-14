@@ -16,6 +16,9 @@ from multiqc import config, BaseMultiqcModule
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
+    """ Qualimap is really a collection of separate programs:
+    BamQC, RNASeq and Counts.. This module is split into separate
+    files to reflect this and help with code organisation. """
 
     def __init__(self):
 
@@ -25,253 +28,38 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a platform-independent application to facilitate the quality"\
         " control of alignment sequencing data and its derivatives like"\
         " feature counts.")
+        
+        # Global dict used by all submodules
+        self.general_stats = defaultdict(dict)
+        
+        # Initialise the BamQC submodule and parse logs
+        from . import QM_BamQC
+        QM_BamQC.parse_reports(self)
+        
+        # Initialise the RNASeq submodule and parse logs
+        from . import QM_RNASeq
+        QM_RNASeq.parse_reports(self)
 
-        self.parsed_stats = defaultdict(dict)
 
-        # Find QualiMap reports
-        qualimap_raw_data = {}
-        for directory in config.analysis_dir:
-            for root, dirnames, filenames in os.walk(directory, followlinks=True):
-                raw_data_dir = 'raw_data'
-                for d in dirnames:
-                    if raw_data_dir in d:
-                        raw_data_dir = d
-                if 'genome_results.txt' in filenames and raw_data_dir in dirnames:
-                    with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
-                        for l in gr:
-                            if 'bam file' in l:
-                                s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
-            
-                    s_name = self.clean_s_name(s_name, root)
-                    if s_name in qualimap_raw_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            
-                    qualimap_raw_data[s_name] = {}
-                    qualimap_raw_data[s_name]['reports'] = {os.path.splitext(r)[0]: os.path.join(root, raw_data_dir, r) \
-                        for r in os.listdir(os.path.join(root, raw_data_dir))}
-
-        if len(qualimap_raw_data) == 0:
+        if len(self.general_stats) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} reports".format(len(qualimap_raw_data)))
+        log.info("Found {} reports".format(len(self.general_stats)))
 
+        # Add the submodule results to the report output
         self.sections = list()
+        QM_BamQC.report_sections(self)
+        QM_RNASeq.report_sections(self)
 
-        # Section 1 - Coverage Histogram
-        histogram_data = self.qualimap_cov_his(qualimap_raw_data)
-        if len(histogram_data) > 0:
-            
-            # Chew back on histogram to prevent long flat tail
-            # (find a sensible max x - lose 1% of longest tail)
-            max_x = 0
-            for d in histogram_data.values():
-                total = sum(d.values())
-                cumulative = 0
-                for count in sorted(d.keys(), reverse=True):
-                    cumulative += d[count]
-                    if cumulative / total > 0.01:
-                        max_x = max(max_x, count)
-                        break                    
-            
-            self.sections.append({
-                'name': 'Coverage Histogram',
-                'anchor': 'qualimap-coverage-histogram',
-                'content': self.plot_xy_data(histogram_data, {
-                    'title': 'Coverage Histogram',
-                    'ylab': 'Genome Bin Counts',
-                    'xlab': 'Coverage (X)',
-                    'ymin': 0,
-                    'xmin': 0,
-                    'xmax': max_x,
-                    'xDecimals': False,
-                    'tt_label': '<b>{point.x}X</b>: {point.y}',
-                })
-            })
-
-        # Section 2 - Insert size histogram
-        histogram_data = self.qualimap_ins_size_his(qualimap_raw_data)
-        if len(histogram_data) > 0:
-            self.sections.append({
-                'name': 'Insert size Histogram',
-                'anchor': 'qualimap-insert-size-histogram',
-                'content': self.plot_xy_data(histogram_data, {
-                    'title': 'Insert Size Histogram',
-                    'ylab': 'Fraction of reads',
-                    'xlab': 'Insert Size (bp)',
-                    'ymin': 0,
-                    'xmin': 0,
-                    'tt_label': '<b>{point.x} bp</b>: {point.y}',
-                })
-            })
-
-        # Section 3 - Genome Fraction coverage
-        histogram_data = self.qualimap_gen_frac_his(qualimap_raw_data)
-        if len(histogram_data) > 0:
-            self.sections.append({
-                'name': 'Genome Fraction Coverage',
-                'anchor': 'qualimap-genome-fraction-coverage',
-                'content': self.plot_xy_data(histogram_data, {
-                    'title': 'Genome Fraction Coverage',
-                    'ylab': 'Fraction of reference (%)',
-                    'xlab': 'Coverage (X)',
-                    'ymax': 100,
-                    'ymin': 0,
-                    'xmin': 0,
-                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
-                })
-            })
-
-            # Section 4 - GC-content distribution
-            histogram_data = self.qualimap_gc_distribution(qualimap_raw_data)
-            if len(histogram_data) > 0:
-                self.sections.append({
-                    'name': 'GC-content distribution',
-                    'anchor': 'qualimap-gc-distribution',
-                    'content': self.plot_xy_data(histogram_data, {
-                        'title': 'GC-content distribution',
-                        'ylab': 'Fraction of reads',
-                        'xlab': 'GC content (%)',
-                        'ymin': 0,
-                        'xmin': 0,
-                        'xmax': 100,
-                        'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
-                    })
-                })
-
-        # General stats table
-        self.qualimap_stats_table()
-
-
-    def qualimap_gc_distribution(self, qualimap_raw_data):
-        parsed_data = {}
-        for sn, data in qualimap_raw_data.items():
-            gc_report = data['reports']['mapped_reads_gc-content_distribution']
-            if gc_report:
-                counts={}
-                avg_gc = 0
-                with io.open(gc_report, 'r') as fh:
-                    next(fh)
-                    for l in fh:
-                        sections = l.split(None, 2)
-                        gc = int(round(float(sections[0])))
-                        cont = float(sections[1])
-                        avg_gc += gc*cont
-                        counts[gc] = cont
-
-                parsed_data[sn] = counts
-
-                #Add reads avg. GC to the general stats table
-                self.parsed_stats[sn]['avg_gc'] = avg_gc
-
-        return parsed_data
-
-    def qualimap_cov_his(self, qualimap_raw_data):
-        parsed_data = {}
-        for sn, data in qualimap_raw_data.items():
-            cov_report = data['reports'].get('coverage_histogram')
-            if cov_report:
-                counts={}
-                with io.open(cov_report, 'r') as fh:
-                    next(fh)
-                    for l in fh:
-                        coverage, count = l.split(None, 1)
-                        coverage = int(round(float(coverage)))
-                        count = float(count)
-                        counts[coverage] = count
-
-                parsed_data[sn] = counts
-
-                # Find median
-                num_counts = sum(counts.values())
-                cum_counts = 0
-                median_coverage = None
-                for thiscov, thiscount in counts.items():
-                    cum_counts += thiscount
-                    if cum_counts >= num_counts/2:
-                        median_coverage = thiscov
-                        break
-
-                # Add median to the general stats table
-                self.parsed_stats[sn]['median_coverage'] = median_coverage
-
-        return parsed_data
-
-
-    def qualimap_ins_size_his(self, qualimap_raw_data):
-        parsed_data = {}
-        for sn, data in qualimap_raw_data.items():
-            ins_size = data['reports'].get('insert_size_histogram')
-            if ins_size:
-                counts = {}
-                zero_insertsize = 0
-                with io.open(ins_size, 'r') as fh:
-                    next(fh)
-                    for l in fh:
-                        insertsize, count = l.split(None, 1)
-                        insertsize = int(round(float(insertsize)))
-                        count = float(count) / 1000000
-                        if(insertsize == 0):
-                            zero_insertsize = count
-                        else:
-                            counts[insertsize] = count
-
-                parsed_data[sn] = counts
-
-                # Find median
-                num_counts = sum(counts.values())
-                cum_counts = 0
-                median_insert_size = None
-                for thisins, thiscount in counts.items():
-                    cum_counts += thiscount
-                    if cum_counts >= num_counts/2:
-                        median_insert_size = thisins
-                        break
-
-                # Add the median insert size to the general stats table
-                self.parsed_stats[sn]['median_insert_size'] = median_insert_size
-
-        return parsed_data
-
-
-    def qualimap_gen_frac_his(self, qualimap_raw_data):
-        parsed_data = {}
-        for sn, data in qualimap_raw_data.items():
-            frac_cov = data['reports'].get('genome_fraction_coverage')
-            if frac_cov:
-                thirty_x_pc = 100
-                max_obs_x = 0
-                halfway_cov = None
-                counts={}
-                with io.open(frac_cov, 'r') as fh:
-                    next(fh)
-                    for l in fh:
-                        coverage, percentage = l.split(None, 1)
-                        coverage = int(round(float(coverage)))
-                        percentage = float(percentage)
-                        counts[coverage] = percentage
-
-                        if coverage <= 30 and thirty_x_pc > percentage:
-                            thirty_x_pc = percentage
-
-                parsed_data[sn] = counts
-
-                # Add the median % genome >= 30X coverage to the general stats table
-                self.parsed_stats[sn]['thirty_x_pc'] = thirty_x_pc
-
-        return parsed_data
-
-
-    def qualimap_stats_table(self):
-        """ Take the parsed stats from the QualiMap report and add them to the
-        basic stats table at the top of the report """
-        
+        # BamQC General stats
         headers = OrderedDict()
-        headers['median_coverage'] = {
-            'title': 'Coverage',
-            'description': 'Median coverage',
-            'min': 0,
-            'scale': 'RdBu'
+        headers['avg_gc'] = {
+            'title': 'Avg. GC',
+            'description': 'Average GC content',
+            'max': 80,
+            'min': 20,
+            'format': '{:.0f}%'
         }
         headers['median_insert_size'] = {
             'title': 'Insert Size',
@@ -288,12 +76,51 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'format': '{:.1f}%'
         }
-        headers['avg_gc'] = {
-            'title': 'Avg. GC',
-            'description': 'Average GC content',
-            'max': 80,
-            'min': 20,
-            'scale': 'BrBG',
-            'format': '{:.0f}%'
+        headers['median_coverage'] = {
+            'title': 'Coverage',
+            'description': 'Median coverage',
+            'min': 0,
+            'scale': 'RdBu'
         }
-        self.general_stats_addcols(self.parsed_stats, headers)
+        headers['mapped_reads'] = {
+            'title': 'Aligned',
+            'description': 'Number of mapped reads (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        headers['total_reads'] = {
+            'title': 'Total Reads',
+            'description': 'Number of reads (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        
+        
+        # RNASeqQC General stats
+        headers['5_3_bias'] = {
+            'title': "5'-3' bias"
+        }
+        headers['reads_aligned_genes'] = {
+            'title': 'Reads in Genes',
+            'description': 'Reads Aligned - Genes (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        headers['reads_aligned'] = {
+            'title': 'Aligned',
+            'description': 'Reads Aligned (millions)',
+            'min': 0,
+            'scale': 'RdBu',
+            'shared_key': 'read_count',
+            'modify': lambda x: x / 1000000,
+        }
+        
+        self.general_stats_addcols(self.general_stats, headers)
+
+    

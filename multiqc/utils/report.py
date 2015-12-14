@@ -16,12 +16,14 @@ general_stats_html = {
     'headers': OrderedDict(),
     'rows': defaultdict(lambda:dict())
 }
+general_stats_raw = defaultdict(lambda:OrderedDict())
 
 
 
-def general_stats_build_html():
+def general_stats_build_table():
     """ Helper function to add to the General Statistics table.
     Parses report.general_stats and returns HTML for general stats table.
+    Also creates report.general_stats_raw for multiqc_general_stats.txt
     :param data: A dict with the data. First key should be sample name,
                  then the data key, then the data.
     :param headers: Dict / OrderedDict with information for the headers, 
@@ -56,8 +58,8 @@ def general_stats_build_html():
             sk = headers[k].get('shared_key', None)
             if sk is not None:
                 headers[k]['scale'] = shared_keys[sk]['scale']
-                headers[k]['dmax']  = shared_keys[sk]['dmax']
-                headers[k]['dmin']  = shared_keys[sk]['dmin']
+                headers[k]['dmax'] = shared_keys[sk]['dmax']
+                headers[k]['dmin'] = shared_keys[sk]['dmin']
                 sk = ' data-shared-key={}'.format(sk)
             else:
                 sk = ''
@@ -78,11 +80,15 @@ def general_stats_build_html():
             for (sname, samp) in general_stats[mod]['data'].items():
                 if k in samp:
                     val = samp[k]
+                    general_stats_raw[sname][rid] = val
+                    
                     if 'modify' in headers[k] and callable(headers[k]['modify']):
                         val = headers[k]['modify'](val)
                     
                     try:
-                        percentage = ((float(val) - headers[k]['dmin']) / (headers[k]['dmax'] - headers[k]['dmin'])) * 100;
+                        dmin = headers[k]['dmin']
+                        dmax = headers[k]['dmax']
+                        percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
                         percentage = min(percentage, 100)
                         percentage = max(percentage, 0)
                     except ZeroDivisionError:
@@ -110,31 +116,37 @@ def general_stats_build_html():
         midx += 1
         if midx > (len(modcols) - 1):
             midx = 0
-        
+    
     return None
     
     
     
-def dict_to_csv (d, delim="\t"):
+def dict_to_csv (d, delim="\t", sort_cols=False):
     """ Converts a dict to a CSV string
     :param d: 2D dictionary, first keys sample names and second key
               column headers. If second key is not a string, it is skipped.
     :param delim: optional delimiter character. Default: \t
     :return: Flattened string, suitable to write to a CSV file.
     """
-
-    h = None    # Headers
-    l = list()  # File lines
+    
+    # Get all headers
+    h = ['Sample']
     for sn in sorted(d.keys()):
-        # Create the header row
-        if h is None:
-            h = list()
-            for k in d[sn].keys():
-                # Skip if another dict
-                if type(d[sn][k]) is not dict:
-                    h.append(k)
-            l.append(delim.join(['Sample'] + h))
+        for k in d[sn].keys():
+            if type(d[sn][k]) is not dict and k not in h:
+                h.append(k)
+    if sort_cols:
+        h = sorted(h)
+    
+    # Get the rows
+    rows = [ delim.join(h) ]
+    for sn in sorted(d.keys()):
         # Make a list starting with the sample name, then each field in order of the header cols
-        thesefields = [sn] + [ str(d[sn].get(k, '')) for k in h ]
-        l.append( delim.join( thesefields ) )
-    return ('\n'.join(l)).encode('utf-8', 'ignore').decode('utf-8')
+        l = [sn] + [ str(d[sn].get(k, '')) for k in h[1:] ]
+        rows.append( delim.join(l) )
+    
+    body = '\n'.join(rows)
+    
+    return body.encode('utf-8', 'ignore').decode('utf-8')
+    
+    

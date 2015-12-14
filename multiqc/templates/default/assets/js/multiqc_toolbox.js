@@ -183,8 +183,7 @@ $(function () {
     if($(this).parent().attr('id') == 'mqc_renamesamples'){ apply_mqc_renamesamples(); }
     if($(this).parent().attr('id') == 'mqc_hidesamples'){ apply_mqc_hidesamples(); }
   });
-  
-  
+    
 });
 
 
@@ -193,17 +192,17 @@ $(function () {
 // GENERAL TOOLBOX FUNCTIONS
 //////////////////////////////////////////////////////
 function mqc_toolbox_openclose (target, open){
-  $('.mqc-toolbox-buttons a').tooltip('hide');
-  var btn = $('.mqc-toolbox-buttons a[href="'+target+'"]');
+  $('.mqc-toolbox-buttons li a').tooltip('hide');
+  var btn = $('.mqc-toolbox-buttons li a[href="'+target+'"]');
   if(open === undefined){
     if(btn.hasClass('active')){ open = false; }
     else { open = true; }
   }
   var already_open = $('.mqc-toolbox').hasClass('active');
   if(open){
-    $('.mqc-toolbox, .mqc-toolbox-buttons a, .mqc_filter_section').removeClass('active');
+    $('.mqc-toolbox, .mqc-toolbox-buttons li a, .mqc_filter_section').removeClass('active');
     btn.addClass('active');
-    $('.mqc-toolbox, .mqc-toolbox-label, '+target).addClass('active');
+    $('.mqc-toolbox, '+target).addClass('active');
     $(document).trigger('mqc_toolbox_open');
     var timeout = already_open ? 0 : 510;
     setTimeout(function(){
@@ -213,7 +212,7 @@ function mqc_toolbox_openclose (target, open){
     }, timeout);
   } else {
     btn.removeClass('active');
-    $('.mqc-toolbox, .mqc-toolbox-buttons a, .mqc-toolbox-label').removeClass('active');
+    $('.mqc-toolbox, .mqc-toolbox-buttons li a').removeClass('active');
     $(document).trigger('mqc_toolbox_close');
   }
 }
@@ -363,7 +362,7 @@ function mqc_save_config(target, method, clear){
     });
   }
   if(method == 'file'){
-    var f = "// Config file for MultiQC\n// https://github.com/ewels/MultiQC\n";
+    var f = "// Config file for MultiQC\n// http://multiqc.info\n";
     f += "// Generated "+Date()+"\n// Original report path: "+$('#mqc_output_path').text()+"\n";
     f += "\nmqc_config_file_cfg = "+JSON.stringify(config, null, '  ');
     var fblob = new Blob([f], {type: "application/javascript;charset=utf-8"});

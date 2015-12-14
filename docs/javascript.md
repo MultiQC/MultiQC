@@ -80,10 +80,12 @@ config = {
     ymax: undefined,            // Max y limit
     ymin: undefined,            // Min y limit
     yDecimals: true,            // Set to false to only show integer labels
+    ylab_format: undefined,     // Format string for x axis labels. Defaults to {value}
     stacking: 'normal',         // Set to null to have category bars side by side (None in python)
     use_legend: true,           // Show / hide the legend
     click_func: undefined,      // Javascript function to be called when a point is clicked
     cursor: undefined,          // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
+    tt_percentages: true,       // Show the percentages of each count in the tooltip
 }
 ```
 
@@ -146,6 +148,14 @@ $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
     // updated. Three variables are given - an array of search
     // strings (f_texts), an array of colours with corresponding
     // indexes (f_cols) and a boolean var saying whether the
+    // search should be treated as a string or a regex (regex_mode)
+});
+
+$(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
+    // This trigger is called when samples are renamed
+    // Three variables are given - an array of search
+    // strings (f_texts), an array of replacements with corresponding
+    // indexes (t_texts) and a boolean var saying whether the
     // search should be treated as a string or a regex (regex_mode)
 });
 

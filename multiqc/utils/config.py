@@ -32,7 +32,8 @@ analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
 output_fn_name = 'multiqc_report.html'
 data_dir_name = 'multiqc_report_data'
-fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '_tophat', '_star_aligned', '_fastqc' ]
+make_data_dir = True
+fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc' ]
 fn_ignore_files = ['.DS_Store']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 num_datasets_plot_limit = 50
@@ -111,7 +112,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 #######################
 # Load and parse installation config file if we find it
 try:
-    yaml_config = os.path.join(MULTIQC_DIR, 'multiqc_config.yaml')
+    yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
     with open(yaml_config) as f:
         config = yaml.load(f)
         for c, v in config.items():

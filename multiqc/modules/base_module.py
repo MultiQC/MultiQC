@@ -3,7 +3,8 @@
 """ MultiQC modules base class, contains helper functions """
 
 from __future__ import print_function
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
+import fnmatch
 import io
 import json
 import logging
@@ -40,82 +41,102 @@ class BaseMultiqcModule(object):
                  and either the file contents or file handle for the current matched file.
                  As yield is used, the function can be iterated over without 
         """
+        
+        # Step 1 - make a list of files to search
+        files = list()
         for directory in config.analysis_dir:
-            for root, dirnames, filenames in os.walk(directory, followlinks=True):
+            if os.path.isdir(directory):
+                for root, dirnames, filenames in os.walk(directory, followlinks=True):
+                    for fn in filenames:
+                        files.append({
+                            'root': root,
+                            'fn': fn
+                        })
+            elif os.path.isfile(directory):
+                files.append({
+                    'root': os.path.dirname(directory),
+                    'fn': os.path.basename(directory)
+                })
                 
-                for fn in filenames:
-                    
-                    # Ignore files set in config
-                    if fn in config.fn_ignore_files:
-                        continue
-                    
-                    # Make a sample name from the filename
-                    s_name = self.clean_s_name(fn, root)
-                    
-                    # Make search strings into lists if a string is given
-                    if type(fn_match) is str:
-                        fn_match = [fn_match]
-                    if type(contents_match) is str:
-                        contents_match = [contents_match]
-                    
-                    # Search for file names ending in a certain string
-                    readfile = False
-                    fn_matched = False
-                    if fn_match is not None:
-                        for m in fn_match:
-                            if m in fn:
-                                readfile = True
-                                fn_matched = True
-                                break
-                    
-                    if contents_match is not None and readfile is False:
+        # Step 2 - loop through files, yield results if we find something
+        for f in files:
+            
+            # Set up vars
+            root = f['root']
+            fn = f['fn']
+            
+            # Ignore files set in config
+            i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
+            if len(i_matches) > 0:
+                continue
+            
+            # Make a sample name from the filename
+            s_name = self.clean_s_name(fn, root)
+            
+            # Make search strings into lists if a string is given
+            if type(fn_match) is str:
+                fn_match = [fn_match]
+            if type(contents_match) is str:
+                contents_match = [contents_match]
+            
+            # Search for file names ending in a certain string
+            readfile = False
+            fn_matched = False
+            if fn_match is not None:
+                for m in fn_match:
+                    if m in fn:
+                        readfile = True
+                        fn_matched = True
+                        break
+            
+            if contents_match is not None and readfile is False:
+                
+                # Use mimetypes to exclude binary files where possible
+                (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+                if encoding is not None:
+                    continue
+                if ftype is not None and ftype.startswith('text') is False:
+                    continue
+                
+                # Limit search to files under 1MB to avoid 30GB FastQ files etc.
+                try:
+                    filesize = os.path.getsize(os.path.join(root,fn))
+                except (IOError, OSError, ValueError, UnicodeDecodeError):
+                    logger.debug("Couldn't read file when checking filesize: {}".format(fn))
+                else:
+                    if filesize > config.log_filesize_limit:
+                        logger.debug("Ignoring file as too large: {}".format(fn))
+                    else:
+                        readfile = True
+            
+            if readfile:
+                try:
+                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         
-                        # Use mimetypes to exclude binary files where possible
-                        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                        if encoding is not None:
-                            continue
-                        if ftype is not None and ftype.startswith('text') is False:
-                            continue
-                        
-                        # Limit search to files under 1MB to avoid 30GB FastQ files etc.
-                        try:
-                            filesize = os.path.getsize(os.path.join(root,fn))
-                        except (IOError, OSError, ValueError, UnicodeDecodeError):
-                            logger.debug("Couldn't read file when checking filesize: {}".format(fn))
+                        # Search this file for our string of interest
+                        returnfile = False
+                        if contents_match is not None and fn_matched is False:
+                            for line in f:
+                                for m in contents_match:
+                                    if m in line:
+                                        returnfile = True
+                                        break
+                            f.seek(0)
                         else:
-                            if filesize > config.log_filesize_limit:
-                                logger.debug("Ignoring file as too large: {}".format(fn))
+                            returnfile = True
+                        
+                        # Give back what was asked for. Yield instead of return
+                        # so that this function can be used as an interator
+                        # without loading all files at once.
+                        if returnfile:
+                            if filehandles:
+                                yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
+                            elif filecontents:
+                                yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
                             else:
-                                readfile = True
-                    
-                    if readfile:
-                        try:
-                            with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                                
-                                # Search this file for our string of interest
-                                returnfile = False
-                                if contents_match is not None and fn_matched is False:
-                                    for line in f:
-                                        for m in contents_match:
-                                            if m in line:
-                                                returnfile = True
-                                                break
-                                    f.seek(0)
-                                else:
-                                    returnfile = True
-                                
-                                # Give back what was asked for. Yield instead of return
-                                # so that this function can be used as an interator
-                                # without loading all files at once.
-                                if returnfile:
-                                    if filehandles:
-                                        yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
-                                    elif filecontents:
-                                        yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
-                                    else:
-                                        yield {'s_name': s_name, 'root': root, 'fn': fn}
-                        except (IOError, OSError, ValueError, UnicodeDecodeError):
-                            logger.debug("Couldn't read file when looking for output: {}".format(fn))
+                                yield {'s_name': s_name, 'root': root, 'fn': fn}
+                except (IOError, OSError, ValueError, UnicodeDecodeError):
+                    logger.debug("Couldn't read file when looking for output: {}".format(fn))
     
     
     def clean_s_name(self, s_name, root):
@@ -200,10 +221,10 @@ class BaseMultiqcModule(object):
                     except KeyError:
                         pass # missing data - skip
         
-        report.general_stats[self.name] = {
-            'data': data,
-            'headers': headers
-        }
+            report.general_stats[self.name] = {
+                'data': data,
+                'headers': headers
+            }
         
         return None
         
@@ -267,7 +288,9 @@ class BaseMultiqcModule(object):
                 except: name = k+1
                 try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+                try: ymax = 'data-ymax="{}"'.format(config['data_labels'][k]['ymax'])
+                except: ymax = 'data-ymax="{}"'.format(name) if name != k+1 else ''
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, ym=ymax, k=k)
             html += '</div>\n\n'
         
         # The plot div
@@ -301,7 +324,9 @@ class BaseMultiqcModule(object):
             data = [data]
         
         # Check we have a list of cats
-        if type(cats) is not list or type(cats[0]) is str:
+        try:
+            cats[0].keys()
+        except (KeyError, AttributeError):
             cats = [cats]
         
         # Check that we have cats at all - find them from the data
@@ -330,13 +355,18 @@ class BaseMultiqcModule(object):
                         thisdata.append(d[s][c])
                     except KeyError:
                         pass
-                if max(thisdata) > 0:
+                if len(thisdata) > 0 and max(thisdata) > 0:
                     thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
                     if 'color' in cats[idx][c]:
                         thisdict['color'] = cats[idx][c]['color']
                     hc_data.append(thisdict)
-            plotsamples.append(hc_samples)
-            plotdata.append(hc_data)
+            if len(hc_data) > 0:
+                plotsamples.append(hc_samples)
+                plotdata.append(hc_data)
+        
+        if len(plotdata) == 0:
+            logging.warning('Tried to make bar plot, but had no data')
+            return '<p class="text-danger">Error - was not able to plot data.</p>'
         
         # Build the HTML
         if config.get('id') is None:
@@ -388,7 +418,7 @@ class BaseMultiqcModule(object):
         return html
         
     
-    def write_csv_file(self, data, fn):
+    def write_csv_file(self, data, fn, sort_cols=False):
         """ Write a tab-delimited data file to the reports directory.
         :param: data - a 2D dict, first key sample name (row header),
                 second key field (column header). 
@@ -396,4 +426,4 @@ class BaseMultiqcModule(object):
         :return: None """
         if config.data_dir is not None:
             with io.open (os.path.join(config.data_dir, fn), "w", encoding='utf-8') as f:
-                print( report.dict_to_csv( data ), file=f)
+                print( report.dict_to_csv( data, sort_cols=sort_cols ), file=f)

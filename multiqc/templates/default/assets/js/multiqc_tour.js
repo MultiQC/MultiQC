@@ -12,23 +12,23 @@ $(function () {
     var percent = parseInt(((i+1) / tour_steps.length) * 100);
     step['content'] = '<div class="pbar_wrapper"><hr class="pbar" style="width:'+percent+'%;"></div>' + step['content'];
   });
-  orig_z_index = $('.mqc-toolbox').css('z-index'); 
-  var intro_tour = new Tour({
-    backdrop: true,
-    storage: false,
-    onStart: function(tour){
-      $('.mqc-toolbox').css('z-index', 0);
-      mqc_toolbox_openclose('#mqc_cols', false);
-    },
-    onEnd: function (tour) {
-      $('.mqc-toolbox').css('z-index', 1200);
-      mqc_toolbox_openclose('#mqc_cols', false);
-    },
-    steps: tour_steps
-  });
-  intro_tour.init();
   $('#mqc-launch-into-tour').click(function(ev){
     ev.preventDefault();
+    orig_z_index = $('.mqc-toolbox').css('z-index'); 
+    var intro_tour = new Tour({
+      backdrop: true,
+      storage: false,
+      onStart: function(tour){
+        $('.mqc-toolbox').css('z-index', 0);
+        mqc_toolbox_openclose('#mqc_cols', false);
+      },
+      onEnd: function (tour) {
+        $('.mqc-toolbox').css('z-index', 1200);
+        mqc_toolbox_openclose('#mqc_cols', false);
+      },
+      steps: tour_steps
+    });
+    intro_tour.init();
     try{ intro_tour.restart(); }
     catch(e){ console.log('Tour broke - '+e); }
   });
@@ -99,13 +99,13 @@ var tour_steps = [
   },
 
   {
-    element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
+    element: ".mqc-toolbox-buttons ul li:first-child a",
     placement: 'left',
     title: "MultiQC Toolbox",
     content: "Click one of the icons on the right to open the Toolbox",
   },
   {
-    element: ".mqc-toolbox-buttons a[href=#mqc_cols]",
+    element: ".mqc-toolbox-buttons ul li:first-child a",
     placement: 'left',
     title: "Highlight Samples",
     content: "This tool allows you to highlight samples across plots and tables. Regexes mode allows for powerful pattern matching.",
@@ -139,5 +139,5 @@ var tour_steps = [
   {
     orphan: true,
     title: "End of Tour",
-    content: 'That\'s it for this tour - for more info, see the homepage: <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a>',
+    content: 'That\'s it for this tour - for more info, see the homepage: <a href="http://multiqc.info" target="_blank">http://multiqc.info</a>',
   }];

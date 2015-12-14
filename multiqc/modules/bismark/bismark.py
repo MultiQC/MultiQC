@@ -124,6 +124,14 @@ class MultiqcModule(BaseMultiqcModule):
                 log.warning('Missing data in {} - ignoring sample.'.format(sn))
                 self.bismark_data['merged'].pop(sn, None)
         
+        # Find and parse M-bias plot data
+        self.bismark_mbias_data = {
+            'meth': {'CpG' : {}, 'CHG' : {}, 'CHH' : {}},
+            'cov': {'CpG' : {}, 'CHG' : {}, 'CHH' : {}}
+        }
+        for f in self.find_log_files('M-bias.txt', filehandles=True):
+            self.parse_bismark_mbias(f)
+        
         if len(self.bismark_data['merged']) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
@@ -131,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.bismark_data['merged'])))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.bismark_data['merged'], 'multiqc_bismark.txt')
+        self.write_csv_file(self.bismark_data['merged'], 'multiqc_bismark.txt', sort_cols=True)
 
         self.sections = list()
         
@@ -158,6 +166,13 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'bismark-strands',
             'content': self.bismark_strand_chart()
         })
+        
+        # Section 4 - M-Bias plots
+        self.sections.append({
+            'name': 'M-Bias',
+            'anchor': 'bismark-mbias',
+            'content': self.bismark_mbias_plot()
+        })
 
     def parse_bismark_report(self, report, regexes):
         """ Search a bismark report with a set of regexes """
@@ -171,23 +186,65 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[k] = r_search.group(1) # NaN
         if len(parsed_data) == 0: return None
         return parsed_data
-
+    
+    def parse_bismark_mbias(self, f):
+        """ Parse the Bismark M-Bias plot data """
+        s = f['s_name']
+        self.bismark_mbias_data['meth']['CpG'][s] = {}
+        self.bismark_mbias_data['meth']['CHG'][s] = {}
+        self.bismark_mbias_data['meth']['CHH'][s] = {}
+        self.bismark_mbias_data['cov']['CpG'][s] = {}
+        self.bismark_mbias_data['cov']['CHG'][s] = {}
+        self.bismark_mbias_data['cov']['CHH'][s] = {}
+        key = None
+        for l in f['f']:
+            if 'CpG context' in l:
+                key = 'CpG'
+            elif 'CHG context' in l:
+                key = 'CHG'
+            elif 'CHH context' in l:
+                key = 'CHH'
+            if key is not None:
+                sections = l.split()
+                try:
+                    pos = int(sections[0])
+                    self.bismark_mbias_data['meth'][key][s][pos] = float(sections[3])
+                    self.bismark_mbias_data['cov'][key][s][pos] = int(sections[4])
+                except (IndexError, ValueError):
+                    continue
+    
     def bismark_stats_table(self):
         """ Take the parsed stats from the Bismark reports and add them to the
         basic stats table at the top of the report """
         
         headers = OrderedDict()
         headers['percent_cpg_meth'] = {
-            'title': '% Meth',
-            'description': '% Cytosines methylated in CpG context (alignment)',
+            'title': '% mCpG',
+            'description': '% Cytosines methylated in CpG context',
             'max': 100,
             'min': 0,
             'scale': 'Greens',
             'format': '{:.1f}%'
         }
+        headers['percent_chg_meth'] = {
+            'title': '% mCHG',
+            'description': '% Cytosines methylated in CHG context',
+            'max': 100,
+            'min': 0,
+            'scale': 'Oranges',
+            'format': '{:.1f}%'
+        }
+        headers['percent_chh_meth'] = {
+            'title': '% mCHH',
+            'description': '% Cytosines methylated in CHH context',
+            'max': 100,
+            'min': 0,
+            'scale': 'Oranges',
+            'format': '{:.1f}%'
+        }
         headers['total_c'] = {
             'title': "M C's",
-            'description': 'Total number of C\'s analysed, in millions (alignment)',
+            'description': 'Total number of C\'s analysed, in millions',
             'min': 0,
             'scale': 'Purples',
             'modify': lambda x: x / 1000000
@@ -233,8 +290,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['dup_reads']       = { 'color': '#8bbc21', 'name': 'Deduplicated Unique Alignments' }
-        keys['dedup_reads']     = { 'color': '#2f7ed8', 'name': 'Duplicated Unique Alignments' }
+        keys['dedup_reads']     = { 'color': '#8bbc21', 'name': 'Deduplicated Unique Alignments' }
+        keys['dup_reads']       = { 'color': '#2f7ed8', 'name': 'Duplicated Unique Alignments' }
         keys['aligned_reads']   = { 'color': '#2f7ed8', 'name': 'Aligned Uniquely' }
         keys['ambig_reads']     = { 'color': '#492970', 'name': 'Aligned Ambiguously' }
         keys['no_alignments']   = { 'color': '#0d233a', 'name': 'Did Not Align' }
@@ -314,3 +371,40 @@ class MultiqcModule(BaseMultiqcModule):
         }
         
         return d_mode + self.plot_bargraph(self.bismark_data['merged'], keys, config)
+
+
+
+    def bismark_mbias_plot (self):
+        """ Make the M-Bias plot """
+        
+        html = '<p>This plot shows the average percentage methylation and coverage across reads. See the \n\
+        <a href="http://www.bioinformatics.babraham.ac.uk/projects/bismark/Bismark_User_Guide.pdf" target="_blank">bismark user guide</a> \n\
+        for more information on how these numbers are generated.</p>'
+        
+        pconfig = {
+            'id': 'bismark-mbias-plot',
+            'title': 'M-Bias',
+            'ylab': '% Methylation',
+            'xlab': 'Position (bp)',
+            'xDecimals': False,
+            'ymax': 100,
+            'ymin': 0,
+            'tt_label': '<b>{point.x} bp</b>: {point.y:.1f}%',
+            'data_labels': [
+                {'name': 'CpG Meth', 'ylab': '% Methylation', 'ymax': 100},
+                {'name': 'CHG Meth', 'ylab': '% Methylation', 'ymax': 100},
+                {'name': 'CHH Meth', 'ylab': '% Methylation', 'ymax': 100}
+            ]
+        }
+        
+        datasets = [
+            self.bismark_mbias_data['meth']['CpG'],
+            self.bismark_mbias_data['meth']['CHG'],
+            self.bismark_mbias_data['meth']['CHH']
+        ]
+        
+        html += self.plot_xy_data(datasets, pconfig)
+        
+        return html
+        
+        

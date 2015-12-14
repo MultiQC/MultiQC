@@ -12,7 +12,7 @@ kbd {
     background-color: #ccc;
     color: #333;
 }
-@media only screen and (max-width: 992px){
+@media only screen and (max-width: 768px){
     code {
         display: inline-block;
         max-width: 90%;
@@ -21,21 +21,36 @@ kbd {
 }
 
 /* Page Template */
-@media only screen and (min-width: 992px){
+@media only screen and (min-width: 768px){
     .mainpage { margin-left: 270px; }
     .footer { margin-left: 250px; }
-    .side-nav {
+    .mainpage, .footer {
+        -webkit-transition: margin-left 0.5s;
+        transition: margin-left 0.5s;
+    }
+    .mainpage.hidden-nav, .footer.hidden-nav { margin-left: 0; }
+    
+    .side-nav-wrapper {
         position: fixed;
+    }
+    .side-nav {
+        height: 100%;
         width: 250px;
         border-right: 1px solid #ccc;
         overflow: auto;
         padding-bottom: 30px;
+        -webkit-transition: margin-left 0.5s;
+        transition: margin-left 0.5s;
+        margin-left: 0;
+    }
+    .side-nav.hidden-nav {
+        margin-left: -250px;
     }
 }
 .mainpage {
     padding: 20px;
 }
-.side-nav {
+.side-nav-wrapper {
     height: 100%;
     background-color: #ededed;
 }
@@ -43,6 +58,7 @@ kbd {
     font-size: 18px;
     text-align: center;
     margin:0;
+    border-bottom: 1px solid #ccc;
 }
 .side-nav h1 a {
     padding: 20px 0 15px;
@@ -58,13 +74,13 @@ kbd {
     color: #999;
     padding: 10px;
 }
+.side-nav ul.mqc-nav {
+    border-bottom: 1px solid #ccc;
+}
 .side-nav ul.mqc-nav, .side-nav ul.mqc-nav ul {
     margin:0;
     padding:0;
     list-style-type: none;
-}
-.side-nav ul.mqc-nav {
-    border-bottom: 1px solid #ccc;
 }
 .side-nav a {
     display: inline-block;
@@ -74,22 +90,74 @@ kbd {
 .side-nav a:hover, .side-nav a:active, .side-nav a:focus {
     background-color: #dedede;
 }
-.side-nav ul.mqc-nav > li > a{
+.side-nav .mqc-nav a.nav-l1 {
     padding: 10px;
     border-top: 1px solid #ccc;
 }
-.side-nav ul.mqc-nav > li > ul > li > a {
+.side-nav .mqc-nav li:first-child a.nav-l1 {
+    border-top: 0;
+}
+.side-nav .mqc-nav a.nav-l2 {
     padding: 5px 10px 5px 15px;
     border-top: 1px solid #dedede;
     font-size: 0.9em;
     color: #788fa4;
 }
+.side-nav .mqc-nav li {
+    position: relative;
+}
+
+#side-nav-handle {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: -14px;
+    height: 50px;
+    width: 15px;
+    padding-top: 14px;
+    border: 1px solid #ccc;
+    border-left: 0;
+    background-color: #ededed;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    color: #ccc;
+    cursor: pointer;
+}
+#side-nav-handle .glyphicon-triangle-right {
+    color: #999;
+}
+@media only screen and (max-width: 768px){
+    #side-nav-handle { display: none; }
+}
+
+.side-nav .navbar-toggle {
+    background-color: #ddd;
+    border-color: #999;
+    position: absolute;
+    right: 10px;
+    top: 15px;
+    margin: 0;
+}
+.side-nav .navbar-toggle:hover, .side-nav .navbar-toggle:focus, .side-nav .navbar-toggle:active {
+    background-color: #ccc;
+}
+.side-nav .navbar-toggle .icon-bar {
+    background-color: #999;
+}
+
+
+
 
 #page_title {
     margin: 0 0 20px;
 }
 #page_title img {
     width: 260px;
+}
+#analysis_dirs_wrapper {
+  max-height: 80px;
+  overflow: auto;
+  margin-bottom: 15px;
 }
 
 
@@ -164,7 +232,7 @@ input.form-control[type=color]{
 }
 
 /* Toolbox */
-@media only screen and (max-width: 992px){
+@media only screen and (max-width: 768px){
     .mqc-toolbox {
         padding: 0 15px;
         background-color: #ededed;
@@ -174,12 +242,13 @@ input.form-control[type=color]{
         margin: 0 -15px;
     }
 }
-@media only screen and (min-width: 992px){
+@media only screen and (min-width: 768px){
     .mqc-toolbox {
+        display: block;
         position: fixed;
         z-index: 1200;
         width: 36px;
-        height: 100%;
+        height: 100% !important;
         top: 0;
         right: 0;
         -webkit-transition: width 0.5s;
@@ -190,9 +259,6 @@ input.form-control[type=color]{
     }
     .mqc-toolbox .row {
         margin: 0;
-    }
-    #mqc_saveconfig .bs-col {
-        padding:0;
     }
     .mainpage {
         padding-right: 50px;
@@ -224,6 +290,7 @@ input.form-control[type=color]{
 .mqc-toolbox-label {
     display: inline-block;
     background-color: #ededed;
+    color: #999;
     height: 31px;
     width: 67px;
     padding: 3px 6px;
@@ -232,12 +299,10 @@ input.form-control[type=color]{
     -ms-transform: rotate(270deg);
     -webkit-transform: rotate(270deg);
     transform: rotate(270deg);
-    -webkit-transition: color, background-color 0.5s;
-    transition: color, background-color 0.5s;
 }
-.mqc-toolbox-label.active {
-    color: transparent;
-    background-color: transparent;
+.mqc-toolbox-label:hover, .mqc-toolbox-label:focus, .mqc-toolbox-label:active {
+    color: #999;
+    text-decoration:none;
 }
 .mqc-toolbox-header {
     margin: 10px;
@@ -254,7 +319,7 @@ input.form-control[type=color]{
     width: 36px;
     height: 36px;
 }
-.mqc-toolbox-buttons a {
+.mqc-toolbox-buttons li a {
     display: inline-block;
     font-size:18px;
     width: 37px;
@@ -265,18 +330,18 @@ input.form-control[type=color]{
     border: 1px solid transparent;
     border-right: 1px solid #ccc;
 }
-.mqc-toolbox-buttons a:hover, .mqc-toolbox-buttons a.active {
+.mqc-toolbox-buttons li a:hover, .mqc-toolbox-buttons li a.active {
     color: #333;
     background-color: #ededed;
     border: 1px solid #ccc;
 }
-.mqc-toolbox-buttons a.in_use {
+.mqc-toolbox-buttons li a.in_use {
     color: #333;
     border: 3px solid #5bc0de;
     padding: 5px 8px 7px 6px;
     border-right: 1px solid #ededed;
 }
-.mqc-toolbox-buttons a.active {
+.mqc-toolbox-buttons li a.active {
     border-right: 1px solid #ededed;
 }
 
@@ -373,7 +438,7 @@ input.form-control[type=color]{
 .mqc_filter_section .form-inline .form-control {
     vertical-align: middle;
 }
-@media only screen and (max-width: 992px){
+@media only screen and (max-width: 768px){
     .mqc_filter_section .form-control {
         display: inline-block;
     }
@@ -482,7 +547,7 @@ input.form-control[type=color]{
 #gsClone thead th, #gsClone thead td {
     background-color: #FFFFFF;
 }
-@media only screen and (max-width: 992px){
+@media only screen and (max-width: 768px){
     #gsCloneWrapper {
         width: calc(100% - 40px);
     }
@@ -517,7 +582,6 @@ tbody .sorthandle {
 }
 
 #general_stats_table td.data-coloured {
-    text-align: right;
     padding: 0;
 }
 #general_stats_table .wrapper {
@@ -535,14 +599,11 @@ tbody .sorthandle {
     background-color: #dedede;
     z-index:-1;
 }
-#general_stats_table tbody td {
-    text-align: right;
-}
 #general_stats_table .val {
     display: block;
     position: absolute;
     padding: 5px;
-    right:0;
+    left:0;
 }
 
 

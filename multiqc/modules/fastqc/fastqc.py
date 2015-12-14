@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
             self.parse_fastqc_report(f['f'], s_name, f['root'])
         
-        # Find and parse zipped FastQC reportrs
+        # Find and parse zipped FastQC reports
         for f in self.find_log_files('_fastqc.zip', filecontents=False):
             s_name = f['fn'].rstrip('_fastqc.zip')
             try:
@@ -132,6 +132,29 @@ class MultiqcModule(BaseMultiqcModule):
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
             s_name = self.clean_s_name(fn_search.group(1) , root)
+        
+        # Throw a warning if we already have this sample and remove prev data
+        # Unzipped reports means that this can be quite frequent
+        # This gives a good idea of how horribly messy this module has become
+        # TODO: Refactorrrr!
+        if s_name in self.fastqc_stats:
+            for k in self.fastqc_data:
+                if k == 'sequence_quality':
+                    for j in self.fastqc_data[k]:
+                        self.fastqc_data[k][j].pop(s_name, None)
+                elif k == 'adapter_content':
+                    aks = self.fastqc_data[k].keys()
+                    for s in aks:
+                        sn, _ = s.split(' - ')
+                        if sn == s_name:
+                            self.fastqc_data[k].pop(s, None)
+                else :
+                    self.fastqc_data[k].pop(s_name, None)
+                
+            for k in self.fastqc_statuses:
+                self.fastqc_statuses[k].pop(s_name, None)
+            self.fastqc_stats.pop(s_name, None)
+            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         
         s = defaultdict(lambda: dict())
         s['seq_len_bp'] = 0
@@ -237,11 +260,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Get percent duplicates (percent unique given)
         if 'percent_dedup' in s:
             s['percent_duplicates'] = 100 - s['percent_dedup']
-        
-        # Throw a warning if we already have this sample
-        # Unzipped reports means that this can be quite frequent
-        if s_name in self.fastqc_stats:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         
         # Add parsed stats to dicts
         self.fastqc_stats[s_name] = s

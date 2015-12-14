@@ -49,6 +49,17 @@ If you would like to generate MultiQC reports on the fly, you can print the
 output to standard out by specifying `-n stdout`. Note that the data directory
 will not be generated and the template used must create stand-alone HTML reports.
 
+## Parsed data directory
+By default, MultiQC creates a directory alongside the report containing
+tab-delimited files with the parsed data. This is useful for downstream
+processing, especially if you're running MultiQC with very large numbers
+of samples.
+
+You can explicitly choose whether to produce this data by specifying either the
+`--data-dir` or `--no-data-dir` command line flags. You can also set a default 
+in your configuration settings (`make_data_dir`). Note that the data directory
+is never produced when printing the MultiQC report to `stdout`.
+
 ## Choosing which modules to run
 Sometimes, it's desirable to choose which MultiQC modules run. This could be
 because you're only interested in one type of output and want to keep the
@@ -58,3 +69,17 @@ situation.
 You can do this by using `-m`/`--modules` to explicitly define which modules
 you want to run. Alternatively, use `-e`/`--exclude` to run all modules
 except those listed.
+
+## MultiQC config settings
+Whilst most MultiQC settings can be specified on the command line, MultiQC
+is also able to parse system-wide and personal config files. At run time,
+it collects the configuration settings from the following places in this order
+(overwriting at each step if a conflicting config variable is found):
+
+1. Hardcoded defaults in MultiQC code
+2. System-wide config in `<installation_dir>/multiqc_config.yaml`
+3. User config in `~/.multiqc_config.yaml`
+4. Command line options
+
+You can find an example configuration file that comes with MultiQC, called
+`multiqc_config.yaml.example`
