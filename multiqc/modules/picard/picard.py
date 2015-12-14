@@ -312,7 +312,8 @@ class MultiqcModule(BaseMultiqcModule):
             data[s_name]['summed_median'] = self.picard_insertSize_medians[s_name]['summed_median']
         for s_name in self.picard_HsMetrics_data:
             data[s_name]['FOLD_ENRICHMENT'] = self.picard_HsMetrics_data[s_name]['FOLD_ENRICHMENT']
-            data[s_name]['FOLD_ENRICHMENT'] = -1 if data[s_name]['FOLD_ENRICHMENT'] == '?'
+            if data[s_name]['FOLD_ENRICHMENT'] == '?':
+                data[s_name]['FOLD_ENRICHMENT'] = -1
             data[s_name]['PCT_TARGET_BASES_30X'] = self.picard_HsMetrics_data[s_name]['PCT_TARGET_BASES_30X']
         
         headers = OrderedDict()
