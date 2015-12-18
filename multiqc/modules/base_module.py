@@ -158,7 +158,7 @@ class BaseMultiqcModule(object):
         return s_name
     
     
-    def general_stats_addcols(self, data, headers={}):
+    def general_stats_addcols(self, data, headers={}, namespace=None):
         """ Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
         in required config variables if not supplied.
@@ -169,6 +169,9 @@ class BaseMultiqcModule(object):
                         See docs/writing_python.md for more information.
         :return: None
         """
+        if namespace is None:
+            namespace = self.name
+        
         keys = data.keys()
         if len(headers.keys()) > 0:
             keys = headers.keys()
@@ -221,7 +224,7 @@ class BaseMultiqcModule(object):
                     except KeyError:
                         pass # missing data - skip
         
-            report.general_stats[self.name] = {
+            report.general_stats[namespace] = {
                 'data': data,
                 'headers': headers
             }
