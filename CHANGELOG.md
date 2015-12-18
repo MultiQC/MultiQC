@@ -22,6 +22,9 @@
 * Fixed some bugs in the FastQC module
 * Fixed occasional general stats table bug
 * Table sorting on sample names now works after renaming
+* Bismark module restructure
+  * Each report type now handled independently (alignment / dedup / meth extraction)
+  * M-Bias plot now shows R1 and R2
 
 
 #### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
