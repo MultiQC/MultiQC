@@ -126,6 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
             'sequence_length':    r"Sequence length\s+([\d-]+)",
             'percent_gc':         r"%GC\s+(\d+)",
             'percent_dedup':      r"#Total Deduplicated Percentage\s+([\d\.]+)",
+            'percent_duplicates': r"#Total Duplicate Percentage\s+([\d\.]+)", # old versions of FastQC
         }
         
         # Make the sample name from the input filename if we find it
@@ -230,8 +231,15 @@ class MultiqcModule(BaseMultiqcModule):
                             self.fastqc_data['seq_dup_levels'][s_name] = OrderedDict()
                             continue # Skip header line
                         sections  = l.split()
-                        self.fastqc_data['seq_dup_levels_dedup'][s_name][sections[0]] = float(sections[1])
-                        self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[2])
+                        try:
+                            # Version 11 of FastQC
+                            # #Duplication Level	Percentage of deduplicated	Percentage of total
+                            self.fastqc_data['seq_dup_levels_dedup'][s_name][sections[0]] = float(sections[1])
+                            self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[2])
+                        except IndexError:
+                            # Version 10 of FastQC and below just gives percentage, no % of dedup
+                            # #Duplication Level	Relative count
+                            self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[1])
         
                     if in_module == 'adapter_content':
                         if l[:1] == '#':
