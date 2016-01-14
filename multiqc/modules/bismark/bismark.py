@@ -98,11 +98,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse bismark deduplication reports
         for f in self.find_log_files('.deduplication_report.txt'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['dedup'])
-            s_name = f['s_name'][:-25]
             if parsed_data is not None:
-                if s_name in self.bismark_data['dedup']:
+                if f['s_name'] in self.bismark_data['dedup']:
                     log.debug("Duplicate deduplication sample log found! Overwriting: {}".format(f['s_name']))
-                self.bismark_data['dedup'][s_name] = parsed_data
+                self.bismark_data['dedup'][f['s_name']] = parsed_data
         
         # Find and parse bismark methylation extractor reports
         for f in self.find_log_files(fn_match='_splitting_report.txt', contents_match='Bismark Extractor Version'):
@@ -439,5 +438,3 @@ class MultiqcModule(BaseMultiqcModule):
         html += self.plot_xy_data(datasets, pconfig)
         
         return html
-        
-        
