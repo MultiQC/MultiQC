@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
             'aligned_total': r"Aligned pairs:\s+(\d+)",
             'aligned_multimap': r"Aligned pairs:\s+\d+\n\s+of these:\s+(\d+)",
             'aligned_discordant': r"(\d+) \([\s\d\.]+%\) are discordant alignments",
-            'total_reads': r"[Rr]eads:\n\s+Input\s+:\s+(\d+)",
+            'total_reads': r"[Rr]eads:\n\s+Input\s*:\s+(\d+)",
         }
         parsed_data = {}
         for k, r in regexes.items():
