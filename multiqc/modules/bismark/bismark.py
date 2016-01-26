@@ -137,11 +137,6 @@ class MultiqcModule(BaseMultiqcModule):
                 'anchor': 'bismark-alignment',
                 'content': self.bismark_alignment_chart()
             })
-            self.sections.append({
-                'name': 'Strand Alignment',
-                'anchor': 'bismark-strands',
-                'content': self.bismark_strand_chart()
-            })
         
         if len(self.bismark_data['dedup']) > 0:
             self.write_csv_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup.txt', sort_cols=True)
@@ -151,6 +146,13 @@ class MultiqcModule(BaseMultiqcModule):
                 'anchor': 'bismark-deduplication',
                 'content': self.bismark_dedup_chart()
             });
+        
+        if len(self.bismark_data['alignment']) > 0:
+            self.sections.append({
+                'name': 'Strand Alignment',
+                'anchor': 'bismark-strands',
+                'content': self.bismark_strand_chart()
+            })
         
         if len(self.bismark_data['methextract']) > 0:
             self.write_csv_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract.txt', sort_cols=True)
