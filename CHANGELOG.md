@@ -27,6 +27,7 @@
   * M-Bias plot now shows R1 and R2
 * Bugfix for older FastQC reports - handle old style sequence dup data
 * Bugfix for varying Tophat alignment report formats
+* Bugfix for Qualimap RNA Seq reports with paired end data
 
 
 #### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04

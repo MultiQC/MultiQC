@@ -41,7 +41,9 @@ def parse_reports(self):
                             self.qualimap_rnaseq_gorigin[s_name] = dict()
                         
                         # Reads alignment section
-                        if 'reads aligned' in l:
+                        if 'reads aligned' in l and '(left/right)' not in l:
+                            self.general_stats[s_name]['reads_aligned'] = float( num )
+                        if 'read pairs aligned' in l:
                             self.general_stats[s_name]['reads_aligned'] = float( num )
                         if 'aligned to genes' in l:
                             self.general_stats[s_name]['reads_aligned_genes'] = float( num )
@@ -55,6 +57,8 @@ def parse_reports(self):
                             self.qualimap_rnaseq_gorigin[s_name]['reads_aligned_intronic'] = float( num )
                         if 'intergenic' in l:
                             self.qualimap_rnaseq_gorigin[s_name]['reads_aligned_intergenic'] = float( num )
+                        if 'overlapping exon' in l:
+                            self.qualimap_rnaseq_gorigin[s_name]['reads_aligned_overlapping_exon'] = float( num )
                 
                 #### Coverage profile
                 cov_report = os.path.join(root, raw_data_dir, 'coverage_profile_along_genes_(total).txt')
