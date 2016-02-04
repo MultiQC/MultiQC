@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
-        for f in self.find_log_files(config['sp']['bowtie2']):
+        for f in self.find_log_files(config.sp['bowtie2']):
             parsed_data = self.parse_bowtie2_logs(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.bowtie2_data:

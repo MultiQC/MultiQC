@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
             'meth': {'CpG_R1' : {}, 'CHG_R1' : {}, 'CHH_R1' : {}, 'CpG_R2' : {}, 'CHG_R2' : {}, 'CHH_R2' : {}},
             'cov': {'CpG_R1' : {}, 'CHG_R1' : {}, 'CHH_R1' : {}, 'CpG_R2' : {}, 'CHG_R2' : {}, 'CHH_R2' : {}}
         }
-        sp = config['sp']['bismark']
+        sp = config.sp['bismark']
         
         # Find and parse bismark alignment reports
         for f in self.find_log_files(sp['align']):

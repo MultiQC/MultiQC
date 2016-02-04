@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any Preseq reports
         self.preseq_data = dict()
         self.total_max = 0
-        for f in self.find_log_files(config['sp']['preseq']):
+        for f in self.find_log_files(config.sp['preseq']):
             parsed_data = self.parse_preseq_logs(f)
             if parsed_data is not None:
                 self.preseq_data[f['s_name']] = parsed_data

@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a set of Java command line tools for manipulating high-"\
         "throughput sequencing data.")
         
-        sp = config['sp']['fastqc']['picard']
+        sp = config.sp['picard']
 
         #### MarkDuplicates reports
         self.picard_dupMetrics_data = dict()

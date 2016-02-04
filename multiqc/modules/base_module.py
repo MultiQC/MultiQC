@@ -51,7 +51,7 @@ class BaseMultiqcModule(object):
             contents_match = patterns['contents']
         if fn_match == None and contents_match == None:
             logger.warning("No file patterns specified for find_log_files")
-            return None
+            yield None
         
         # Step 1 - make a list of files to search
         files = list()

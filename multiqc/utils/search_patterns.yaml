@@ -19,7 +19,7 @@ bismark:
 bowtie:
     contents: '# reads processed:'
 bowtie2:
-    contents: reads; of these:
+    contents: 'reads; of these:'
 cutadapt:
     contents: This is cutadapt
 fastq_screen:
@@ -41,7 +41,7 @@ picard:
     hsmetrics:
         contents: picard.analysis.directed.HsMetrics
 preseq:
-    contents: TOTAL_READS	EXPECTED_DISTINCT
+    contents: 'TOTAL_READS	EXPECTED_DISTINCT'
 qualimap:
     bamqc:
         raw_data: raw_data
