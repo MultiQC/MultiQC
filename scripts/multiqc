@@ -66,6 +66,11 @@ from multiqc.utils.log import init_log, LEVELS
                     default=config.output_dir,
                     help = "Create report in the specified output directory."
 )
+@click.option('--ignore',
+                    type = str,
+                    multiple=True,
+                    help = "Ignore analysis files (glob expression)"
+)
 @click.option('-n', '--name',
                     type = str,
                     default = config.output_fn_name,
@@ -90,7 +95,7 @@ from multiqc.utils.log import init_log, LEVELS
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, title, template, modules, exclude, outdir, name, 
+def multiqc(analysis_dir, dirs, title, template, modules, exclude, outdir, ignore, name, 
 make_data_dir, zip_data_dir, force, verbose, quiet):
     """MultiQC is a tool generate qc reports.
     
@@ -133,6 +138,9 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     config.analysis_dir = analysis_dir
     config.output_dir = outdir
     config.make_data_dir = make_data_dir
+    if len(ignore) > 0:
+        logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))nm
+        config.fn_ignore_files.extend(ignore)
     if name == 'stdout':
         config.output_fn = sys.stdout
         config.data_dir = None

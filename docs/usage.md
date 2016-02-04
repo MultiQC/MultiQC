@@ -14,6 +14,23 @@ to use the generated report.
 
 For a description of all command line parameters, run `multiqc --help`.
 
+## Choosing where to scan
+You can supply MultiQC with as many directories or files as you like. Above,
+we supply `.` - just the current directory, but all of these would work too:
+```
+multiqc data/
+multiqc data/ ../proj_one/analysis/ /tmp/results
+multiqc data/*_fastqc.zip
+multiqc data/sample_1*
+```
+
+You can also ignore files using the `--ignore` flag (can be specified multiple
+times). This takes a string which it matches using glob expansion:
+```
+multiqc data/ --ignore *_R2*
+multiqc . --ignore run_two/
+```
+
 ## Renaming reports
 The report is called `multiqc_report.html` by default. Tab-delimited data files
 are created in `multiqc_data/`, containing additional information.
