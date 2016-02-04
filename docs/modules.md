@@ -171,8 +171,8 @@ if required - files will be returned if anything matches (`OR` not `AND`).
 This function yields a dictionary with various information about matching
 files. The `f` key contains the contents of matching files by default.
 ```python
-# Find all files whose filename contains '_my_prog.txt'
-for f in self.find_log_files('_my_prog.txt'):
+# Find all files for mymod
+for f in self.find_log_files(config.sp['mymod']):
     print f['f']        # File contents
     print f['s_name']   # Sample name (from cleaned fn)
     print f['root']     # Directory file was in
@@ -184,7 +184,7 @@ instead:
 ```python
 # Find all files which contain the string 'My Statistic:'
 # Return a filehandle instead of the file contents
-for f in self.find_log_files(fcontents_match='My Statistic:', filehandles=True):
+for f in self.find_log_files(config.sp['mymod'], filehandles=True):
     line = f['f'].readline()  # f['f'] is now a filehandle instead of contents
 ```
 
@@ -200,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # [...]
         self.mod_data = dict()
-        for f in self.find_log_files('my_prog.txt'):
+        for f in self.find_log_files(config.sp['mymod']):
             self.mod_data[f['s_name']] = self.parse_logs(f['f'])
     
     def parse_logs(self, f):
