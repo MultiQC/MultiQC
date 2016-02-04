@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any FastQ Screen reports
         self.fq_screen_data = dict()
         self.num_orgs = 0
-        for f in self.find_log_files('_screen.txt', filehandles=True):
+        for f in self.find_log_files(config['sp']['fastq_screen'], filehandles=True):
             parsed_data = self.parse_fqscreen(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.fq_screen_data:

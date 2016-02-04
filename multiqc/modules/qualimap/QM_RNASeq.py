@@ -25,12 +25,12 @@ def parse_reports(self):
     # Find QualiMap reports
     for directory in config.analysis_dir:
         for root, dirnames, filenames in os.walk(directory, followlinks=True):
-            raw_data_dir = 'raw_data'
+            raw_data_dir = config['sp']['qualimap']['raw_data']
             for d in dirnames:
                 if raw_data_dir in d:
                     raw_data_dir = d
-            if 'rnaseq_qc_results.txt' in filenames and raw_data_dir in dirnames:
-                with io.open(os.path.join(root, 'rnaseq_qc_results.txt'), 'r') as gr:
+            if config['sp']['qualimap']['rnaseq_results'] in filenames and raw_data_dir in dirnames:
+                with io.open(os.path.join(root, config['sp']['qualimap']['rnaseq_results']), 'r') as gr:
                     for l in gr:
                         rhs = l.split(' = ')[-1].replace(',','')
                         num = rhs.split('(')[0]
@@ -61,7 +61,7 @@ def parse_reports(self):
                             self.qualimap_rnaseq_gorigin[s_name]['reads_aligned_overlapping_exon'] = float( num )
                 
                 #### Coverage profile
-                cov_report = os.path.join(root, raw_data_dir, 'coverage_profile_along_genes_(total).txt')
+                cov_report = os.path.join(root, raw_data_dir, config['sp']['qualimap']['coverage'])
                 if os.path.exists(cov_report):
                     self.qualimap_rnaseq_cov_hist[s_name] = {}
                     with io.open(cov_report, 'r') as fh:

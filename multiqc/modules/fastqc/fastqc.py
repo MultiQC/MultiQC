@@ -41,12 +41,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_statuses = defaultdict(lambda: defaultdict())
         
         # Find and parse unzipped FastQC reports
-        for f in self.find_log_files('fastqc_data.txt'):
+        for f in self.find_log_files(config['sp']['fastqc']['data']):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
             self.parse_fastqc_report(f['f'], s_name, f['root'])
         
         # Find and parse zipped FastQC reports
-        for f in self.find_log_files('_fastqc.zip', filecontents=False):
+        for f in self.find_log_files(config['sp']['fastqc']['zip'], filecontents=False):
             s_name = f['fn'].rstrip('_fastqc.zip')
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))

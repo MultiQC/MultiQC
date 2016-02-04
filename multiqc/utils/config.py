@@ -43,7 +43,7 @@ log_filesize_limit = 1000000
 # Module fn search patterns
 #######################
 # Load here so that they can be overwritten by user configs
-searchp_fn = os.path.join( os.path.dirname(__FILE__), 'search_patterns.yaml')
+searchp_fn = os.path.join( MULTIQC_DIR, 'utils', 'search_patterns.yaml')
 with open(searchp_fn) as f:
     sp = yaml.load(f)
 

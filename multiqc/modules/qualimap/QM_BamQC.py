@@ -27,12 +27,12 @@ def parse_reports(self):
     # Find QualiMap reports
     for directory in config.analysis_dir:
         for root, dirnames, filenames in os.walk(directory, followlinks=True):
-            raw_data_dir = 'raw_data'
+            raw_data_dir = config['sp']['qualimap']['raw_data']
             for d in dirnames:
                 if raw_data_dir in d:
                     raw_data_dir = d
-            if 'genome_results.txt' in filenames and raw_data_dir in dirnames:
-                with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
+            if config['sp']['qualimap']['genome_results'] in filenames and raw_data_dir in dirnames:
+                with io.open(os.path.join(root, config['sp']['qualimap']['genome_results']), 'r') as gr:
                     for l in gr:
                         
                         if 'bam file' in l:
@@ -49,7 +49,7 @@ def parse_reports(self):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         
                 #### Coverage histogram
-                cov_report = os.path.join(root, raw_data_dir, 'coverage_histogram.txt')
+                cov_report = os.path.join(root, raw_data_dir, config['sp']['qualimap']['coverage'])
                 if os.path.exists(cov_report):
                     self.qualimap_bamqc_coverage_hist[s_name] = {}
                     with io.open(cov_report, 'r') as fh:
@@ -73,7 +73,7 @@ def parse_reports(self):
                 
                 
                 #### Insert size histogram
-                ins_size = os.path.join(root, raw_data_dir, 'insert_size_histogram.txt')
+                ins_size = os.path.join(root, raw_data_dir, config['sp']['qualimap']['insert_size'])
                 if os.path.exists(ins_size):
                     self.qualimap_bamqc_insert_size_hist[s_name] = {}
                     zero_insertsize = 0
@@ -101,7 +101,7 @@ def parse_reports(self):
                 
                 
                 #### Genome Fraction Coverage
-                frac_cov = os.path.join(root, raw_data_dir, 'genome_fraction_coverage.txt')
+                frac_cov = os.path.join(root, raw_data_dir, config['sp']['qualimap']['genome_fraction'])
                 if os.path.exists(frac_cov):
                     self.qualimap_bamqc_genome_fraction_cov[s_name] = {}
                     thirty_x_pc = 100
@@ -121,7 +121,7 @@ def parse_reports(self):
                 
                 
                 #### GC Distribution
-                gc_report = os.path.join(root, raw_data_dir, 'mapped_reads_gc-content_distribution.txt')
+                gc_report = os.path.join(root, raw_data_dir, config['sp']['qualimap']['gc_dist'])
                 if os.path.exists(gc_report):
                     self.qualimap_bamqc_gc_content_dist[s_name] = {}
                     avg_gc = 0
