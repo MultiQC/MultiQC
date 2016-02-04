@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         
         # Find and parse bismark alignment reports
-        for f in self.find_log_files(fn_match=['_PE_report.txt', '_SE_report.txt'], contents_match='Writing a C -> T converted version of the input file'):
+        for f in self.find_log_files(config['sp']['bismark']['align']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['alignment'])
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['alignment']:
@@ -96,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bismark_data['alignment'][f['s_name']] = parsed_data
         
         # Find and parse bismark deduplication reports
-        for f in self.find_log_files('.deduplication_report.txt'):
+        for f in self.find_log_files(config['sp']['bismark']['dedup']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['dedup'])
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['dedup']:
@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bismark_data['dedup'][f['s_name']] = parsed_data
         
         # Find and parse bismark methylation extractor reports
-        for f in self.find_log_files(fn_match='_splitting_report.txt', contents_match='Bismark Extractor Version'):
+        for f in self.find_log_files(config['sp']['bismark']['meth_extract']):
         # for f in self.find_log_files(fn_match='_splitting_report.txt'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['methextract'])
             s_name = f['s_name']
@@ -116,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bismark_data['methextract'][s_name] = parsed_data
         
         # Find and parse M-bias plot data
-        for f in self.find_log_files('M-bias.txt', filehandles=True):
+        for f in self.find_log_files(config['sp']['bismark']['m_bias'], filehandles=True):
             self.parse_bismark_mbias(f)
         
         if len(self.bismark_data['alignment']) == 0 and len(self.bismark_data['dedup']) == 0 and len(self.bismark_data['methextract']) == 0:

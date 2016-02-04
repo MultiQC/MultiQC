@@ -1,0 +1,18 @@
+
+# MultiQC search patterns.
+# Default configurations for how modules can find their log files.
+# Loaded by the config module so that these patterns can be overwritten in user config files.
+
+bismark:
+    align:
+        fn:
+            - _PE_report.txt
+            - _SE_report.txt
+        # contents: Writing a C -> T converted version of the input file
+    dedup:
+        fn: .deduplication_report.txt
+    meth_extract:
+        fn: _splitting_report.txt
+        # contents: Bismark Extractor Version
+    m_bias:
+        fn: M-bias.txt

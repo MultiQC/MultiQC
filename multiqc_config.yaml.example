@@ -53,3 +53,13 @@ log_filesize_limit: 1000000
 # this, the user will need to click 'plot graph' to see the data.
 # This is to prevent very large graphs from locking up the browser on load.
 num_datasets_plot_limit: 50
+
+# Overwrite module filename search patterns. See multiqc/utils/search_patterns.yaml
+# for the defaults. Remove a default by setting it to None.
+sp:
+    bismark:
+        meth_extract:
+            contents: Bismark Extractor Version
+
+
+
