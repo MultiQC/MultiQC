@@ -139,7 +139,7 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     config.output_dir = outdir
     config.make_data_dir = make_data_dir
     if len(ignore) > 0:
-        logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))nm
+        logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))
         config.fn_ignore_files.extend(ignore)
     if name == 'stdout':
         config.output_fn = sys.stdout
