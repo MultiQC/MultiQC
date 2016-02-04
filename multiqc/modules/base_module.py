@@ -33,8 +33,8 @@ class BaseMultiqcModule(object):
         """
         Search the analysis directory for log files of interest. Can take either a filename
         suffix or a search string to return only log files that contain relevant info.
-        :param fn_match: Optional string or list of strings. Filename suffixes to search for.
-        :param contents_match: Optional string or list of strings to look for in file.
+        :param patterns: Dict with keys 'fn' or 'contents' (or both). Keys can contain
+        string or a list of strings. 'fn' matches filenames, 'contents' matches file contents.
         NB: Both searches return file if *any* of the supplied strings are matched.
         :param filehandles: Set to true to return a file handle instead of slurped file contents
         :return: Yields a set with two items - a sample name generated from the filename

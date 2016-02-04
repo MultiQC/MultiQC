@@ -141,6 +141,15 @@ fastqc:
         fn: _fastqc.zip
 ```
 
+You can supply a list of strings if needed, eg. the `bismark` module:
+```yaml
+bismark:
+    align:
+        fn:
+            - _PE_report.txt
+            - _SE_report.txt
+```
+
 The value of adding these strings here is that they can be overwritten
 by users in their own config files. This is helpful as people have weird
 and wonderful processing pipelines with their own file naming conventions.
@@ -153,11 +162,11 @@ self.find_log_files(config.sp['mymod'], filehandles=False)
 ```
 
 This will recursively search the analysis directories looking for a matching
-file name (if the first argument, `fn_match`, is supplied) or a text string
-held within a file (if `contents_match` is supplied). Contents matching is
-only done on files smaller than `config.log_filesize_limit` (default 1MB).
-Note that both `fn_match` and `contents_match` can be used in combination
-if required (files will need to match both conditions).
+file name (if the `fn` key is there) or a text string held within a file
+(if the `contents` key is there). Contents matching is only done on files
+smaller than `config.log_filesize_limit` (default 1MB).
+Note that both `fn` and `contents` can be used in combination
+if required - files will be returned if anything matches (`OR` not `AND`).
 
 This function yields a dictionary with various information about matching
 files. The `f` key contains the contents of matching files by default.
