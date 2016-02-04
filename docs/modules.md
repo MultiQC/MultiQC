@@ -111,9 +111,45 @@ Log messages can come in a range of formats:
 
 ## Step 1 - Find log files
 The first thing that your module will need to do is to find analysis log
-files. You can use the base function `self.find_log_files()` for this:
+files. You can do this by searching for a filename fragment, or a string
+within the file. It's possible to search for both (a match on either
+will return the file) and also to have multiple strings possible.
+
+First, add your default patterns to:
+```
+install_dir/multiqc/utils/search_patterns.yaml
+```
+
+You should see the patterns for all other modules to give you an idea,
+but you want a yaml key with the name of your module, then either `fn`
+or `contents` for strings to match against filenames or file contents:
+```yaml
+mymod:
+    fn: _myprogram.txt
+myothermod:
+    contents: This is myotherprogram running
+```
+
+Note that if you want to find multiple log files, you can nest these
+dictionaries (though they must end with either `fn` or `contents`).
+For example, see the `FastQC` module:
+```yaml
+fastqc:
+    data:
+        fn: fastqc_data.txt
+    zip:
+        fn: _fastqc.zip
+```
+
+The value of adding these strings here is that they can be overwritten
+by users in their own config files. This is helpful as people have weird
+and wonderful processing pipelines with their own file naming conventions.
+
+Once your strings are added, you can call them in your module with the
+`config.sp['mymod']`. Next, use the base function `self.find_log_files()`
+to look for your files like this:
 ```python
-self.find_log_files(fn_match=None, contents_match=None, filehandles=False)
+self.find_log_files(config.sp['mymod'], filehandles=False)
 ```
 
 This will recursively search the analysis directories looking for a matching

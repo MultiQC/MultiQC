@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any featureCounts reports
         self.featurecounts_data = dict()
-        for f in self.find_log_files('_counts.txt.summary'):
+        for f in self.find_log_files(config.sp['featurecounts']):
             parsed_data = self.parse_featurecounts_report(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.featurecounts_data:

@@ -1,6 +1,9 @@
 # MultiQC Version History
 
 #### v0.3.2dev
+* All modules now load their log file search parameters from a config
+  file, allowing you to overwrite them using your user config file
+  * This is useful if your analysis pipeline renames program outputs
 * New Picard (sub)modules - Insert Size, GC Bias & HsMetrics
 * New Qualimap (sub)module - RNA-Seq QC
 * Made Picard MarkDups show percent by default instead of counts

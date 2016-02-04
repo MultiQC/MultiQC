@@ -22,17 +22,19 @@ class MultiqcModule(BaseMultiqcModule):
         href='http://broadinstitute.github.io/picard/', 
         info="is a set of Java command line tools for manipulating high-"\
         "throughput sequencing data.")
+        
+        sp = config.sp['picard']
 
         #### MarkDuplicates reports
         self.picard_dupMetrics_data = dict()
-        for f in self.find_log_files(contents_match='picard.sam.MarkDuplicates', filehandles=True):
+        for f in self.find_log_files(sp['markdups'], filehandles=True):
             self.parse_picard_dupMetrics(f)
         
         #### CollectInsertSizeMetrics reports
         self.picard_insertSize_data = dict()
         self.picard_insertSize_histogram = dict()
         self.picard_insertSize_medians = dict()
-        for f in self.find_log_files(contents_match='picard.analysis.CollectInsertSizeMetrics', filehandles=True):
+        for f in self.find_log_files(sp['insertsize'], filehandles=True):
             self.parse_picard_insertSize(f)
         # Calculate summed median values for all read orientations
         for s_name in self.picard_insertSize_histogram:
@@ -46,12 +48,12 @@ class MultiqcModule(BaseMultiqcModule):
         
         #### CollectGcBias reports
         self.picard_GCbias_data = dict()
-        for f in self.find_log_files(contents_match='picard.analysis.CollectGcBiasMetrics', filehandles=True):
+        for f in self.find_log_files(sp['gcbias'], filehandles=True):
             self.parse_picard_GCbiasMetrics(f)
         
         #### CalculateHsMetric
         self.picard_HsMetrics_data = dict()
-        for f in self.find_log_files(contents_match='picard.analysis.directed.HsMetrics', filehandles=True):
+        for f in self.find_log_files(sp['hsmetrics'], filehandles=True):
             self.parse_picard_HsMetrics(f)
         
         num_reports = ( len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data) +

@@ -1,0 +1,60 @@
+
+# MultiQC search patterns.
+# Default configurations for how modules can find their log files.
+# Loaded by the config module so that these patterns can be overwritten in user config files.
+
+bismark:
+    align:
+        fn:
+            - _PE_report.txt
+            - _SE_report.txt
+        # contents: Writing a C -> T converted version of the input file
+    dedup:
+        fn: .deduplication_report.txt
+    meth_extract:
+        fn: _splitting_report.txt
+        # contents: Bismark Extractor Version
+    m_bias:
+        fn: M-bias.txt
+bowtie:
+    contents: '# reads processed:'
+bowtie2:
+    contents: 'reads; of these:'
+cutadapt:
+    contents: This is cutadapt
+fastq_screen:
+    fn: _screen.txt
+fastqc:
+    data:
+        fn: fastqc_data.txt
+    zip:
+        fn: _fastqc.zip
+featurecounts:
+    fn: _counts.txt.summary
+picard:
+    markdups:
+        contents: picard.sam.MarkDuplicates
+    insertsize:
+        contents: picard.analysis.CollectInsertSizeMetrics
+    gcbias:
+        contents: picard.analysis.CollectGcBiasMetrics
+    hsmetrics:
+        contents: picard.analysis.directed.HsMetrics
+preseq:
+    contents: 'TOTAL_READS	EXPECTED_DISTINCT'
+qualimap:
+    bamqc:
+        raw_data: raw_data
+        genome_results: genome_results.txt
+        coverage: coverage_histogram.txt
+        insert_size: insert_size_histogram.txt
+        genome_fraction: genome_fraction_coverage.txt
+        gc_dist: mapped_reads_gc-content_distribution.txt
+    rnaseq:
+        raw_data: raw_data
+        rnaseq_results: rnaseq_qc_results.txt
+        coverage: coverage_profile_along_genes_(total).txt
+star:
+    fn: Log.final.out
+tophat:
+    fn: align_summary.txt

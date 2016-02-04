@@ -39,6 +39,13 @@ report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuv
 num_datasets_plot_limit = 50
 log_filesize_limit = 1000000
 
+#######################
+# Module fn search patterns
+#######################
+# Load here so that they can be overwritten by user configs
+searchp_fn = os.path.join( MULTIQC_DIR, 'utils', 'search_patterns.yaml')
+with open(searchp_fn) as f:
+    sp = yaml.load(f)
 
 #######################
 # Available modules

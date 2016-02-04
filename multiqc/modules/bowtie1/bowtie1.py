@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Bowtie reports
         self.bowtie_data = dict()
-        for f in self.find_log_files(contents_match='# reads processed:'):
+        for f in self.find_log_files(config.sp['bowtie']):
             parsed_data = self.parse_bowtie_logs(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.bowtie_data:

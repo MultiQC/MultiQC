@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Tophat reports
         self.tophat_data = dict()
-        for f in self.find_log_files('align_summary.txt'):
+        for f in self.find_log_files(config.sp['tophat']):
             parsed_data = self.parse_tophat_log(f['f'])
             if parsed_data is not None:
                 if f['s_name'] == "align_summary.txt":
