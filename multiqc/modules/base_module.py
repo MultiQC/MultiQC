@@ -29,7 +29,7 @@ class BaseMultiqcModule(object):
             href, target, info, extra
         )
 
-    def find_log_files(self, fn_match=None, contents_match=None, filecontents=True, filehandles=False):
+    def find_log_files(self, patterns, filecontents=True, filehandles=False):
         """
         Search the analysis directory for log files of interest. Can take either a filename
         suffix or a search string to return only log files that contain relevant info.
@@ -41,6 +41,17 @@ class BaseMultiqcModule(object):
                  and either the file contents or file handle for the current matched file.
                  As yield is used, the function can be iterated over without 
         """
+        
+        # Get the search parameters
+        fn_match = None
+        contents_match = None
+        if 'fn' in patterns:
+            fn_match = patterns['fn']
+        if 'contents' in patterns:
+            contents_match = patterns['contents']
+        if fn_match == None and contents_match == None:
+            logger.warning("No file patterns specified for find_log_files")
+            return None
         
         # Step 1 - make a list of files to search
         files = list()
