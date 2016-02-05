@@ -478,6 +478,21 @@ input.form-control[type=color]{
     width: calc(49% - 20px);
 }
 
+#mqc_exportplots .col-sm-6 {
+  padding: 0 10px 0 0;
+}
+#mqc_exportplots .checkbox {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: normal;
+}
+#mqc_exportplots .checkbox label {
+  min-height: 0;
+}
+#mqc_exportplots .checkbox input {
+  margin-top: 0;
+}
+
 #mqc-save-success {
     color: #3c763d;
     background-color: #dff0d8;

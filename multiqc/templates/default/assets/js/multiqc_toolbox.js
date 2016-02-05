@@ -16,9 +16,6 @@ $(function () {
     plot_graph(target, undefined, num_datasets_plot_limit);
   });
   
-  // Load the saved setting names
-  populate_mqc_saveselect();
-  
   // Listener to re-plot graphs when config loaded
   $(document).on('mqc_config_loaded', function(e){
     $('.hc-plot').each(function(){
@@ -125,7 +122,64 @@ $(function () {
     mqc_hidesamples_idx += 1;
   });
   
+  // EXPORTING PLOTS
+  // Load the plot exporter
+  $('.hc-plot').each(function(){
+    var fname = $(this).attr('id');
+    $('#mqc_export_selectplots').append('<div class="checkbox"><label><input type="checkbox" value="'+fname+'" checked> '+fname+'</label></div>');
+  });
+  // Select all / none for checkboxes
+  $('#mqc_export_sall').click(function(e){
+    e.preventDefault();
+    $('#mqc_export_selectplots input').prop('checked', true);
+  });
+  $('#mqc_export_snone').click(function(e){
+    e.preventDefault();
+    $('#mqc_export_selectplots input').prop('checked', false);
+  });
+  // Aspect ratio fixed
+  var mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
+  $('#mqc_export_aspratio').change(function(){
+    if($(this).is(':checked')){
+      mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
+    }
+  });
+  $('#mqc_exp_width').keyup(function(){
+    if($('#mqc_export_aspratio').is(':checked')){
+      $('#mqc_exp_height').val( $(this).val() / mqc_exp_aspect_ratio );
+    }
+  });
+  $('#mqc_exp_height').keyup(function(){
+    if($('#mqc_export_aspratio').is(':checked')){
+      $('#mqc_exp_width').val( $(this).val() * mqc_exp_aspect_ratio );
+    }
+  });
+  mqc_export_aspratio
+  // Export the plots
+  $('#mqc_exportplots').submit(function(e){
+    e.preventDefault();
+    var ft = $('#mqc_export_ft').val();
+    var f_scale = parseInt($('#mqc_export_scaling').val());
+    var f_width = parseInt($('#mqc_exp_width').val()) / f_scale;
+    var f_height = parseInt($('#mqc_exp_height').val()) / f_scale;
+    $('#mqc_export_selectplots input:checked').each(function(){
+      var fname = $(this).val();
+      var hc = $('#'+fname).highcharts();
+      if(hc !== undefined){
+        hc.exportChartLocal({
+          type: ft,
+          filename: fname,
+          sourceWidth: f_width,
+          sourceHeight: f_height,
+          scale: f_scale
+        });
+      }
+    });
+  });
   
+  /// SAVING STUFF
+  // Load the saved setting names
+  populate_mqc_saveselect();
   // Save config
   $('#mqc_saveconfig_form').submit(function(e){
     e.preventDefault();
@@ -331,33 +385,6 @@ function apply_mqc_hidesamples(){
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
 }
-
-
-//////////////////////////////////////////////////////
-// BULK EXPORT PLOTS
-//////////////////////////////////////////////////////
-$('#GIVE_ME_EVERYTHING').click(function(e){
-  e.preventDefault();
-  
-  // API instructions here
-  // http://api.highcharts.com/highcharts#exporting
-  
-  var ft = 'image/png';
-  // if($(this).data('filetype') == 'jpeg') ft = 'image/jpeg';
-  // if($(this).data('filetype') == 'pdf') ft = 'application/pdf';
-  if($(this).data('filetype') == 'svg') ft = 'image/svg+xml';
-  
-  $('.hc-plot').each(function(){
-    var fname = $(this).attr('id');
-    var hc = $(this).highcharts();
-    if(hc !== undefined){
-      hc.exportChartLocal({
-        type: ft,
-        filename: fname
-      });
-    }
-  });
-});
 
 
 //////////////////////////////////////////////////////

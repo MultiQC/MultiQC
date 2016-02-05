@@ -15,6 +15,21 @@ window.mqc_hide_regex_mode = false;
 // Execute when page load has finished loading
 $(function () {
   
+  // HighCharts Defaults
+  Highcharts.setOptions({
+    chart: {
+      backgroundColor: null,
+    },
+    credits: {
+			enabled: true,
+      text: 'Created with MultiQC',
+      href: 'http://multiqc.info'
+		},
+    exporting: { buttons: { contextButton: {
+          symbol: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAXNJREFUOBHNUsuqwkAMPX2g4kJd+wOCuKgL//8btAXXIogvtOhCax9xzkBqveLg8gamHZKck+RMgP9mnquh5XIpaZrC8zx0Oh1EUfQ1P3QRkeR6vcL3fdxuN1cqnERhGIKHREEQOIl8V1RE0DyuXCeRC/g39iFeHMdSlqUV+HK5oCgKeyew1+vZEauqwnQ6fcN+aJTnObbbLdrtttWGL0bjiBT/fr9jMBhYX/PzxsrA4/EQ8+zY7/dotVpgdRoFZ5F+v4/ZbPaBCw+Hg8znc5s8Ho8J9kxV04DAxCwZg6aAJWEO7XQ6yWKxQJZlGI1Gr+fXEZhkls8zCTUZfexkMpmg2+2+dUMci1qNlKS5K0YjC0iSRDgSO1EfiblfxOmpxaaDr3Q8HqWpC1+NFbnhu91OSMKC5/OZ19pqIoq5Xq+xWq3qIAnoZxFdCQ3Sx65o9WisqsYENb0rofr1T3Iexi1qs9mIgjTp1z9JhsPhq/qvwG95Tw3FukJt8JteAAAAAElFTkSuQmCC)',
+    } } }
+  });
+  
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
     var target = $(this).parent().attr('id');
@@ -200,8 +215,7 @@ function plot_xy_line_graph(target, ds){
   $('#'+target).highcharts({
     chart: {
       type: 'line',
-      zoomType: 'x',
-      backgroundColor: null,
+      zoomType: 'x'
     },
     title: {
       text: config['title'],
@@ -248,11 +262,6 @@ function plot_xy_line_graph(target, ds){
     legend: {
       enabled: false
     },
-    credits: {
-			enabled: true,
-      text: 'Created with MultiQC',
-      href: 'http://multiqc.info'
-		},
     tooltip: {
       headerFormat: '',
 			pointFormat: config['pointFormat'],
@@ -352,8 +361,7 @@ function plot_stacked_bar_graph(target, ds){
   // Make the highcharts plot
   $('#'+target).highcharts({
     chart: {
-      type: 'bar',
-      backgroundColor: null,
+      type: 'bar'
     },
     title: {
       text: config['title'],
@@ -390,11 +398,6 @@ function plot_stacked_bar_graph(target, ds){
         }
       }
     },
-    credits: {
-			enabled: true,
-      text: 'Created with MultiQC',
-      href: 'http://multiqc.info'
-		},
     legend: {
       enabled: config['use_legend']
     },

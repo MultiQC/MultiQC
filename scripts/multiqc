@@ -114,6 +114,7 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     
     plugin_hooks.mqc_trigger('execution_start')
     
+    logger.info("This is MultiQC v{}".format(__version__))
     logger.debug("Working dir : {0}".format(os.getcwd()))
     logger.debug("Template    : {0}".format(template))
     
