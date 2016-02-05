@@ -85,11 +85,13 @@ the top right of the plot:
 
 ![plot zoom](images/plot_export.png)
 
-This gives a range of options. PDF and SVG outputs are in a vector format,
+This gives a range of options. SVG output is a vector format,
 so can be edited in tools such as
 [Adobe Illustrator](http://www.adobe.com/products/illustrator.html) or
 the free tool [Inkscape](https://inkscape.org/en/). This makes them ideal
 for use in publications.
+
+You can get more control of exported plots using the toolbox, see below.
 
 ### Dynamic plots
 Some plots have buttons above them which allow you to change the data
@@ -169,6 +171,12 @@ _(Note that plots will tell you how many samples have been hidden)_
 
 ![hide samples](images/toolbox_hide_samples.png)
 
+### Export
+This tool enables you to configure the size and characteristics of exported
+plots, as well as allowing you to download some or all of the graphs with a
+single click.
+Width and Height set the output size of the images, scale sets how "zoomed-in"
+they should look (typically you want the plot to be more zoomed for printing).
 
 ### Save Settings
 To avoid having to re-enter the same toolbox setup repeatedly, you can

@@ -14,6 +14,7 @@
   * command line flags: `--data` / `--no-data`
   * config option name: `make_data_dir`
 * Fixed bug with incorrect path to installation dir config YAML file
+* New toolbox drawer for bulk-exporting graph images
 * Report side navigation can now be hidden to maximise horizontal space
 * Mobile styling improved for narrow screen
 * More vibrant colours in the general stats table
