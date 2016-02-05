@@ -75,27 +75,26 @@ of the report.
     <!-- Save Config -->
     <div id="mqc_saveconfig" class="mqc_filter_section">
       <h4>Save Settings</h4>
-      <div class="mqc-save-config-report-section">
-        <h5>Report Settings</h5>
-        <p>You can save the toolbox settings for this report to the browser.</p>
-        <p><a href="#" data-target="report" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
-           <a href="#" data-target="report" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
-        <hr>
-      </div>
-      <div class="mqc-save-config-global-section">
-        <h5>Global Settings</h5>
-        <p>If your settings are more general, you can save them to your browser 
-          and have them applied to every MultiQC report you open.</p>
-        <p><a href="#" data-target="global" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
-           <a href="#" data-target="global" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
-        <hr>
-      </div>
-      <div class="mqc-save-config-file-section">
-        <h5>Save to file</h5>
-        <p>You can also save a config file to directory containing the report. Your settings
-          will be applied the next time you open this report, and can be shared with others.</p>
-        <p><a href="#" data-target="file" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-download-alt"></span> Download Config File</a></p>
-      </div>
+      <p>You can save the toolbox settings for this report to the browser.</p>
+      <form class="form-inline" id="mqc_saveconfig_form">
+        <input type="text" class="form-control input-sm" placeholder="Config Name">
+        <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+      </form>
+      <hr>
+      
+      <h4>Load Settings</h4>
+      <p>Choose a saved report profile from the dropdown box below:</p>
+      <form id="mqc_loadconfig_form">
+        <div class="form-group">
+          <select class="form-control input-sm">
+            <option value="">[ select ]</option>
+          </select>
+        </div>
+        <div class="form-group actions">
+          <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-open"></span> Load</button>
+          <button class="mqc_config_clear btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Delete</button>
+        </div>
+      </form>
     </div>
   </div>
   <a href="#top" class="mqc-toplink hidden-xs" title="Go to top"><span class="glyphicon glyphicon-chevron-up"></span></a>

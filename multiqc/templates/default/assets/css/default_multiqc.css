@@ -478,6 +478,14 @@ input.form-control[type=color]{
     width: calc(49% - 20px);
 }
 
+#mqc-save-success {
+    color: #3c763d;
+    background-color: #dff0d8;
+}
+#mqc-cleared-success {
+    color: #a94442;
+    background-color: #f2dede;
+}
 
 #mqc-launch-into-tour {
     margin: -10px 10px;

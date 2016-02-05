@@ -10,16 +10,22 @@ var mqc_colours = chroma.brewer.Set1;
 //////////////////////////////////////////////////////
 $(function () {
   
-  // Listener to plot graphs when config loaded
+  // Load graphs on page load
+  $('.hc-plot').each(function(){
+    var target = $(this).attr('id');
+    plot_graph(target, undefined, num_datasets_plot_limit);
+  });
+  
+  // Load the saved setting names
+  populate_mqc_saveselect();
+  
+  // Listener to re-plot graphs when config loaded
   $(document).on('mqc_config_loaded', function(e){
     $('.hc-plot').each(function(){
       var target = $(this).attr('id');
       plot_graph(target, undefined, num_datasets_plot_limit);
     });
   });
-  
-  // Load any saved configuration
-  load_mqc_config();
 
   // Toolbox buttons
   $('.mqc-toolbox-buttons a').click(function(e){
@@ -121,20 +127,35 @@ $(function () {
   
   
   // Save config
-  $('.mqc_saveconfig_btn').click(function(e){
+  $('#mqc_saveconfig_form').submit(function(e){
     e.preventDefault();
-    var tgt = $(this).data('target');
-    var act = $(this).data('action');
-    if(tgt == 'report'){
-      if(act == 'save'){  mqc_save_config(undefined, 'local'); }
-      if(act == 'clear'){ mqc_save_config(undefined, 'local', true); }
+    var name = $(this).find('input').val().trim();
+    if(name == ''){
+      alert('Error - you must name the saved settings.');
+    } else {
+      mqc_save_config(name);
     }
-    if(tgt == 'global'){
-      if(act == 'save'){  mqc_save_config('global', 'local'); }
-      if(act == 'clear'){ mqc_save_config('global', 'local', true); }
+  });
+  // Load config
+  $('#mqc_loadconfig_form').submit(function(e){
+    e.preventDefault();
+    var name = $(this).find('select').val().trim();
+    if(name == ''){
+      alert('Error - No saved setting selected.');
+    } else {
+      load_mqc_config(name);
     }
-    if(tgt == 'file'){
-      mqc_save_config('global', 'file');
+  });
+  // Clear config
+  $('.mqc_config_clear').click(function(e){
+    e.preventDefault();
+    var name = $('#mqc_loadconfig_form select').val().trim();
+    if(name == ''){
+      alert('Error - no saved settings selected.');
+    } else {
+      if(confirm("Delete saved settings '"+name+"'?")){
+        mqc_save_config(name, true);
+      }
     }
   });
   
@@ -318,9 +339,8 @@ function apply_mqc_hidesamples(){
 //////////////////////////////////////////////////////
 
 // Save the current configuration setup
-function mqc_save_config(target, method, clear){
-  if(target === undefined){ target = report_id }
-  if(method === undefined){ method = 'local'; }
+function mqc_save_config(name, clear){
+  if(name === undefined){ return false; }
   var config = {};
   
   // Collect the toolbox vars
@@ -333,76 +353,78 @@ function mqc_save_config(target, method, clear){
   config['hidesamples_f_texts'] = window.mqc_hide_f_texts;
   config['hidesamples_regex'] =   window.mqc_hide_regex_mode;
   
-  if(method == 'local'){
-    var prev_config = {};
-    // Load existing configs (inc. from other reports)
-    try {
-      prev_config = localStorage.getItem("mqc_config");
-      if(prev_config !== null && prev_config !== undefined){
-        prev_config = JSON.parse(prev_config);
-      } else {
-        prev_config  = {};
-      }
-    } catch(e){ console.log('Error updating localstorage: '+e); }
+  var prev_config = {};
+  // Load existing configs (inc. from other reports)
+  try {
+    prev_config = localStorage.getItem("mqc_config");
+    if(prev_config !== null && prev_config !== undefined){
+      prev_config = JSON.parse(prev_config);
+    } else {
+      prev_config  = {};
+    }
+    
     // Update config obj with current config
     if(clear == true){
-      prev_config[target] = {};
+      delete prev_config[name];
     } else {
-      prev_config[target] = config;
-      prev_config[target]['last_updated'] = Date();
+      prev_config[name] = config;
+      prev_config[name]['last_updated'] = Date();
     }
     localStorage.setItem("mqc_config", JSON.stringify(prev_config));
-    // Success message
-    var insAfter = '.mqc-save-config-report-section p:first-child';
-    if(target == 'global'){ insAfter = '.mqc-save-config-global-section p:first-child'; }
-    $('<p class="text-success" id="mqc-save-'+target+'-success">Config saved.</p>').hide().insertAfter($(insAfter)).slideDown(function(){
-      setTimeout(function(){
-        $('#mqc-save-'+target+'-success').slideUp(function(){ $(this).remove(); });
-      }, 5000);
-    });
-  }
-  if(method == 'file'){
-    var f = "// Config file for MultiQC\n// http://multiqc.info\n";
-    f += "// Generated "+Date()+"\n// Original report path: "+$('#mqc_output_path').text()+"\n";
-    f += "\nmqc_config_file_cfg = "+JSON.stringify(config, null, '  ');
-    var fblob = new Blob([f], {type: "application/javascript;charset=utf-8"});
-    saveAs(fblob, "multiqc_config.js");
-    setTimeout(function(){
-      alert('Now move multiqc_config.js from your downloads folder to the directory where this report is located.');
-    }, 500);
-  }
+    
+    if(clear == true){
+      // Remove from load select box
+      $("#mqc_loadconfig_form select option:contains('"+name+"')").remove();
+      // Successfully deleted message
+      $('<p class="text-danger" id="mqc-cleared-success">Settings deleted.</p>').hide().insertBefore($('#mqc_loadconfig_form .actions')).slideDown(function(){
+        setTimeout(function(){
+          $('#mqc-cleared-success').slideUp(function(){ $(this).remove(); });
+        }, 5000);
+      });
+    } else {
+      // Add to load select box and select it
+      $('#mqc_loadconfig_form select').prepend('<option>'+name+'</option>').val(name);
+      // Success message
+      $('<p class="text-success" id="mqc-save-success">Settings saved.</p>').hide().insertBefore($('#mqc_saveconfig_form')).slideDown(function(){
+        setTimeout(function(){
+          $('#mqc-save-success').slideUp(function(){ $(this).remove(); });
+        }, 5000);
+      });
+    }
+  } catch(e){ console.log('Error updating localstorage: '+e); }
+}
+
+//////////////////////////////////////////////////////
+// LOAD TOOLBOX SAVE NAMES
+//////////////////////////////////////////////////////
+function populate_mqc_saveselect(){
+  try {
+    var local_config = localStorage.getItem("mqc_config");
+    if(local_config !== null && local_config !== undefined){
+      local_config = JSON.parse(local_config);
+      for (var name in local_config){
+        $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
+      }
+    }
+  } catch(e){ console.log('Could not load local config: '+e); }
+  $('#mqc_loadconfig_form select').val('');
 }
 
 //////////////////////////////////////////////////////
 // LOAD TOOLBOX SETTINGS
 //////////////////////////////////////////////////////
-function load_mqc_config(){
+function load_mqc_config(name){
+  if(name === undefined){ return false; }
   var config = {};
-  // Get local configs - global and then this path
   try {
     var local_config = localStorage.getItem("mqc_config");
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
-      if(local_config['global'] !== undefined){ console.log('Loaded local global config'); }
-      for (var attr in local_config['global']) {
-        config[attr] = local_config['global'][attr];
-      }
-      if(local_config[report_id] !== undefined){ console.log('Loaded local report config'); }
-      for (var attr in local_config[report_id]) {
-        config[attr] = local_config[report_id][attr];
+      for (var attr in local_config[name]) {
+        config[attr] = local_config[name][attr];
       }
     }
   } catch(e){ console.log('Could not load local config: '+e); }
-  
-  
-  // Local file
-  if(typeof mqc_config_file_cfg != "undefined"){
-    for (var attr in mqc_config_file_cfg) {
-      config[attr] = mqc_config_file_cfg[attr];
-    }
-    $('#mqc_report_location').after('<p>MultiQC report toolbox config loaded from file.</p>');
-    console.log('Loaded config from a file');
-  }
   
   // Apply config - highlights
   if(notEmptyObj(config['highlight_regex'])){
