@@ -401,14 +401,16 @@ function plot_stacked_bar_graph(target, ds){
     tooltip: {
       formatter: function () {
         var colspan = config['tt_percentages'] ? 3 : 2;
-        var pc_col = config['tt_percentages'] ? '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td>' : '';
         var s = '<table><tr><th colspan="'+colspan+'" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
         $.each(this.points.reverse(), function () {
           yval = this.y.toFixed(0)
           s += '<tr> \
-            <td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px; border-bottom:1px solid #dedede;">' + this.series.name + ':</td>\
-            <td style="text-align:right; border-bottom:1px solid #dedede;">' + numberWithCommas(yval) + '</td>\
-            '+pc_col+'</tr>';
+            <td style="font-weight:bold; color:'+this.series.color+'; border-bottom:1px solid #dedede;">' + this.series.name + ':</td>\
+            <td style="text-align:right; border-bottom:1px solid #dedede; padding: 0 15px;">' + numberWithCommas(yval) + '</td>';
+          if(config['tt_percentages']){
+            s += '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td>';
+          }
+          s += '</tr>';
         });
         s += '</table>';
         return s;
