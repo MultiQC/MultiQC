@@ -172,6 +172,9 @@ _(Note that plots will tell you how many samples have been hidden)_
 
 ### Save Settings
 To avoid having to re-enter the same toolbox setup repeatedly, you can
-save your settings using the 'Save Settings' panel. This interface is
-[likely to change soon](https://github.com/ewels/MultiQC/issues/90),
-so I won't go into much detail here now..
+save your settings using the 'Save Settings' panel. Just pick a name
+and click save. To load, choose your set of settings and press load 
+(or delete). Loaded settings are applied on top of current settings.
+All configs are saved in browser local storage - they do not travel
+with the report and may not work in older browsers.
+

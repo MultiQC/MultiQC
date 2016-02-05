@@ -333,6 +333,27 @@ function apply_mqc_hidesamples(){
 }
 
 
+//////////////////////////////////////////////////////
+// BULK EXPORT PLOTS
+//////////////////////////////////////////////////////
+$('#GIVE_ME_EVERYTHING').click(function(e){
+  e.preventDefault();
+  
+  var ft = 'image/png';
+  // if($(this).data('filetype') == 'jpeg') ft = 'image/jpeg';
+  // if($(this).data('filetype') == 'pdf') ft = 'application/pdf';
+  if($(this).data('filetype') == 'svg') ft = 'image/svg+xml';
+  
+  $('.hc-plot').each(function(){
+    var hc = $(this).highcharts();
+    if(hc !== undefined){
+      hc.exportChartLocal({
+        type: ft
+      });
+    }
+  });
+});
+
 
 //////////////////////////////////////////////////////
 // SAVE TOOLBOX SETTINGS

@@ -18,6 +18,10 @@
 * Mobile styling improved for narrow screen
 * More vibrant colours in the general stats table
 * General stats table numbers now left aligned
+* Settings now saved and loaded to named localstorage locations
+  * Simplified interface - no longer global / single report saving
+  * Removed static file config. Solves JS error, no-one was doing this
+    since we have standalone reports anyway.
 * Added support for Python 3.5
 * Fixed bug with module specific CSS / JS includes in some templates
 * Made the 'ignore files' config use unix style file pattern matching
@@ -28,6 +32,10 @@
 * Bismark module restructure
   * Each report type now handled independently (alignment / dedup / meth extraction)
   * M-Bias plot now shows R1 and R2
+* Bugfix for reports javascript
+  * Caused by updated to remotely loaded HighCharts export script
+  * Export script now bundled with multiqc, so does not depend on internet connection
+  * Other JS errors fixed in this work
 * Bugfix for older FastQC reports - handle old style sequence dup data
 * Bugfix for varying Tophat alignment report formats
 * Bugfix for Qualimap RNA Seq reports with paired end data
