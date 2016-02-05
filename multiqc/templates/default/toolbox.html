@@ -16,6 +16,7 @@ of the report.
       <li><a href="#mqc_cols" title="Highlight" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-pushpin"></span></a></li>
       <li><a href="#mqc_renamesamples" title="Rename" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-font"></span></a></li>
       <li><a href="#mqc_hidesamples" title="Hide" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-eye-close"></span></a></li>
+      <li><a href="#mqc_exportplots" title="Export" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-download-alt"></span></a></li>
       <li><a href="#mqc_saveconfig" title="Save" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
     </ul>
   </div>
@@ -70,6 +71,62 @@ of the report.
       {% if report.general_stats_html['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
       <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
       <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
+    </div>
+    
+    <!-- Export Plots -->
+    <div id="mqc_exportplots" class="mqc_filter_section">
+      <h4>Export Plots</h4>
+      <p>You can download individual graphs by using the icon in the top right of the plots.</p>
+      <p>To download multiple plots or customise settings, use the controls below:</p>
+      <form>
+        <hr>
+        <h5>Image Download Settings</h5>
+        <div class="row">
+          <div class="form-group col-sm-6">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control input-sm" id="mqc_exp_width" placeholder="Width" value="1200">
+              <span class="input-group-addon">px</span>
+            </div>
+          </div>
+          <div class="form-group col-sm-6">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control input-sm" id="mqc_exp_height" placeholder="Height" value="800">
+              <span class="input-group-addon">px</span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-sm-6 checkbox">
+            <label><input type="checkbox" id="mqc_export_aspratio" checked> Aspect ratio</label>
+          </div>
+          <div class="form-group col-sm-6">
+            <select id="mqc_export_ft" class="form-control input-sm">
+              <option value="image/png">PNG</option>
+              <option value="image/svg+xml">SVG</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6 checkbox">
+            <label for="mqc_export_scaling">Plot scaling</label>
+          </div>
+          <div class="col-sm-6">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="mqc_export_scaling" placeholder="Scale" value="2">
+              <span class="input-group-addon">X</span>
+            </div>
+          </div>
+        </div>
+        
+        <hr>
+        <h5>Choose Plots</h5>
+        <button class="btn btn-sm btn-default" id="mqc_export_sall"><span class="glyphicon glyphicon-check"></span> All</button>
+        <button class="btn btn-sm btn-default" id="mqc_export_snone"><span class="glyphicon glyphicon-unchecked"></span> None</button>
+        <div id="mqc_export_selectplots"></div>
+        
+        <hr>
+        <button type="submit" class="btn btn-block btn-default">Download Plots</button>
+      </form>
     </div>
     
     <!-- Save Config -->
