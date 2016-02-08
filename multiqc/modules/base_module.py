@@ -324,8 +324,7 @@ class BaseMultiqcModule(object):
     def plot_bargraph (self, data, cats=None, config={}):
         """ Plot a horizontal bar graph. Expects a 2D dict of sample
         data. Also can take info about categories. There are quite a
-        few variants of how to use this function, see CONTRIBUTING.md
-        for documentation and examples.
+        few variants of how to use this function, see the docs for details.
         :param data: 2D dict, first keys as sample names, then x:y data pairs
                      Can supply a list of dicts and will have buttons to switch
         :param cats: optional list, dict or OrderedDict with plot categories

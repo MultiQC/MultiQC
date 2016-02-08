@@ -429,13 +429,24 @@ class MultiqcModule(BaseMultiqcModule):
             'yDecimals': False,
             'tt_label': '<b>{point.x}% GC</b>: {point.y}',
             'colors': self.get_status_cols('gc_content'),
+            'data_labels': [
+                {'name': 'Counts', 'ylab': 'Count'},
+                {'name': 'Percentages', 'ylab': 'Percentage'}
+            ]
         }
+        data_norm = dict()
+        for samp in self.fastqc_data['gc_content']:
+            data_norm[samp] = dict()
+            total = sum( [ c for c in self.fastqc_data['gc_content'][samp].values() ] )
+            for gc, count in self.fastqc_data['gc_content'][samp].items():
+                data_norm[samp][gc] = (count / total) * 100
+        
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'anchor': 'fastqc_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data(self.fastqc_data['gc_content'], pconfig)
+                        self.plot_xy_data([self.fastqc_data['gc_content'], data_norm], pconfig)
         })
     
     
