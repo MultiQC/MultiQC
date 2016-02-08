@@ -274,6 +274,7 @@ input.form-control[type=color]{
         position:absolute;
         width: 250px;
         height: 100%;
+        overflow: auto;
         left:36px;
         margin:0;
         background-color: #ededed;
