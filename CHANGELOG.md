@@ -33,6 +33,8 @@
 * Bismark module restructure
   * Each report type now handled independently (alignment / dedup / meth extraction)
   * M-Bias plot now shows R1 and R2
+* FastQC GC content plot now has option for counts or percentages
+  * Allows comparison between samples with very different read counts
 * Bugfix for reports javascript
   * Caused by updated to remotely loaded HighCharts export script
   * Export script now bundled with multiqc, so does not depend on internet connection
