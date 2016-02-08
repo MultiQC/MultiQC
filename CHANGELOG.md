@@ -1,6 +1,9 @@
 # MultiQC Version History
 
-#### v0.3.2
+#### v0.4dev
+..nothing yet :wink:
+
+#### [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
 * All modules now load their log file search parameters from a config
   file, allowing you to overwrite them using your user config file
   * This is useful if your analysis pipeline renames program outputs
