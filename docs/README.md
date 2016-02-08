@@ -1,12 +1,17 @@
 ---
 pages:
- - installation.md
- - usage.md
- - reports.md
- - templates.md
- - modules.md
- - plugins.md
- - javascript.md
+ - Using MultiQC
+   - installation.md
+   - usage.md
+   - reports.md
+   - config.md
+ - MultiQC Modules
+   - modules/fastqc.md
+ - Coding with MultiQC
+   - templates.md
+   - modules.md
+   - plugins.md
+   - javascript.md
 ---
 
 # Welcome!
