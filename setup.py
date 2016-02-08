@@ -19,7 +19,7 @@ For more detailed instructions, run :code:`multiqc -h` or see the MultiQC websit
 
 from setuptools import setup, find_packages
 
-version = '0.3.2dev'
+version = '0.3.2'
 
 setup(
     name = 'multiqc',
