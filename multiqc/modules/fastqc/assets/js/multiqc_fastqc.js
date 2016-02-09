@@ -256,12 +256,17 @@ $(function () {
 function plot_single_seqcontent(s_name){
   current_single_plot = s_name;
   var data = fastqc_seq_content_data[s_name];
-  var plot_data = [{ 'name': '%T', 'data':[] },{ 'name': '%C', 'data':[] },{ 'name': '%A', 'data':[] },{ 'name': '%G', 'data':[] }];
+  var plot_data = [
+    {'name': '% T', 'data':[], pointStart: 1 },
+    {'name': '% C', 'data':[], pointStart: 1 },
+    {'name': '% A', 'data':[], pointStart: 1 },
+    {'name': '% G', 'data':[], pointStart: 1 }
+  ];
   for (var d in data){
-    plot_data[0]['data'][d-1] = [d, data[d]['T']];
-    plot_data[1]['data'][d-1] = [d, data[d]['C']];
-    plot_data[2]['data'][d-1] = [d, data[d]['A']];
-    plot_data[3]['data'][d-1] = [d, data[d]['G']];
+    plot_data[0]['data'][d-1] = data[d]['T'];
+    plot_data[1]['data'][d-1] = data[d]['C'];
+    plot_data[2]['data'][d-1] = data[d]['A'];
+    plot_data[3]['data'][d-1] = data[d]['G'];
   }
   
   // Create plot div if it doesn't exist, and hide overview
@@ -288,7 +293,7 @@ function plot_single_seqcontent(s_name){
     },
     xAxis: {
       title: { text: 'Position (bp)' },
-      allowDecimals: false
+      allowDecimals: false,
     },
     yAxis: {
       title: { text: '% Reads' },
@@ -303,9 +308,21 @@ function plot_single_seqcontent(s_name){
       y: 40
     },
     tooltip: {
-      headerFormat: '',
-			pointFormat: '<strong>{point.x} bp</strong>: {point.y:.2f} {series.name}',
-			useHTML: true
+      backgroundColor: '#FFFFFF',
+      borderColor: '#CCCCCC',
+      formatter: function () {
+        var texts = [];
+        var bars = [];
+        $.each(this.points, function () {
+          texts.push('<span style="display: inline-block; border-left: 3px solid '+this.color+'; padding-left:5px; margin-bottom: 2px;"></div>' + this.y.toFixed(1) + this.series.name + '</span>');
+          bars.push('<div class="progress-bar" style="width:'+this.y+'%; float:left; font-size:8px; line-height:12px; padding:0; background-color:'+this.color+';">'+this.series.name.replace('%','').trim()+'</div>');
+        });
+        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + this.x + ' bp</p>\
+            <p>'+texts.join('<br>')+'</p><div class="progress" style="height: 12px; width: 150px; margin:0;">'+bars.join('')+'</div>';
+      },
+			useHTML: true,
+      crosshairs: true,
+      shared: true,
     },
     plotOptions: {
       series: {
