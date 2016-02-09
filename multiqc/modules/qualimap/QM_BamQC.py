@@ -49,10 +49,12 @@ def parse_reports(self):
                 
                 if s_name in self.qualimap_bamqc_coverage_hist:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(s_name=s_name, source=os.path.abspath(os.path.join(root, sp['genome_results'])), section='genome_results')
         
                 #### Coverage histogram
                 cov_report = os.path.join(root, raw_data_dir, sp['coverage'])
                 if os.path.exists(cov_report):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(cov_report), section='coverage_histogram')
                     self.qualimap_bamqc_coverage_hist[s_name] = {}
                     with io.open(cov_report, 'r') as fh:
                         next(fh)
@@ -77,6 +79,7 @@ def parse_reports(self):
                 #### Insert size histogram
                 ins_size = os.path.join(root, raw_data_dir, sp['insert_size'])
                 if os.path.exists(ins_size):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(ins_size), section='insert_size_histogram')
                     self.qualimap_bamqc_insert_size_hist[s_name] = {}
                     zero_insertsize = 0
                     with io.open(ins_size, 'r') as fh:
@@ -105,6 +108,7 @@ def parse_reports(self):
                 #### Genome Fraction Coverage
                 frac_cov = os.path.join(root, raw_data_dir, sp['genome_fraction'])
                 if os.path.exists(frac_cov):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(frac_cov), section='genome_fraction')
                     self.qualimap_bamqc_genome_fraction_cov[s_name] = {}
                     thirty_x_pc = 100
                     max_obs_x = 0
@@ -125,6 +129,7 @@ def parse_reports(self):
                 #### GC Distribution
                 gc_report = os.path.join(root, raw_data_dir, sp['gc_dist'])
                 if os.path.exists(gc_report):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(gc_report), section='gc_distribution')
                     self.qualimap_bamqc_gc_content_dist[s_name] = {}
                     avg_gc = 0
                     with io.open(gc_report, 'r') as fh:

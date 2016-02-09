@@ -241,6 +241,20 @@ class BaseMultiqcModule(object):
             }
         
         return None
+    
+    def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
+        try:
+            if module is None:
+                module = self.name
+            if section is None:
+                section = 'all_sections'
+            if s_name is None:
+                s_name = f['s_name']
+            if source is None:
+                source = os.path.abspath(os.path.join(f['root'], f['fn']))
+            report.data_sources[module][section][s_name] = source
+        except AttributeError:
+            logging.warning('Tried to add data source for {}, but was missing fields data'.format(self.name))
         
         
     

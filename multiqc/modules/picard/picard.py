@@ -122,6 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if 'picard.sam.DuplicationMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_dupMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='DuplicationMetrics')
                     self.picard_dupMetrics_data[s_name] = dict()
                     keys = f['f'].readline().split("\t")
                     vals = f['f'].readline().split("\t")
@@ -171,6 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if 'InsertSizeMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_insertSize_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='InsertSizeMetrics')
                     keys = f['f'].readline().split("\t")
                     vals = f['f'].readline().split("\t")
                     self.picard_insertSize_medians[s_name] = {'total_count': 0}
@@ -233,6 +235,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if 'picard.analysis.GcBiasDetailMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_GCbias_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='GcBiasDetailMetrics')
                     self.picard_GCbias_data[s_name] = dict()
                     # Get header - find columns with the data we want
                     l = f['f'].readline()
@@ -300,6 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
                     this_s_name = "{}: {}".format(s_name, j)
                 if this_s_name in self.picard_HsMetrics_data:
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], this_s_name))
+                self.add_data_source(f, this_s_name, section='HsMetrics')
                 self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
     
     

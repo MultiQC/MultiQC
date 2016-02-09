@@ -32,6 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 if f['s_name'] in self.fq_screen_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
                 self.fq_screen_data[f['s_name']] = parsed_data
 
         if len(self.fq_screen_data) == 0:

@@ -188,6 +188,21 @@ for f in self.find_log_files(config.sp['mymod'], filehandles=True):
     line = f['f'].readline()  # f['f'] is now a filehandle instead of contents
 ```
 
+Finally, once you've found your file we want to add this information to the
+`multiqc_sources.txt` file in the MultiQC report data directory. This lists
+every sample name and the file from which this data came from. If you've used
+everything from the above function, this is as simple as adding the following
+line:
+```python
+self.add_data_source(f)
+```
+If you have multiple file sources for different sections of the module, or
+customise the sample name, you can tweak the fields. The default arguments
+are as shown:
+```python
+self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
+```
+
 ## Step 2 - Parse data from the input files
 What most MultiQC modules do once they have found matching analysis files
 is to pass the matched file contents to another function, responsible

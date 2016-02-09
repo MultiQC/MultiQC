@@ -21,7 +21,7 @@ import re
 import shutil
 import zipfile
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, utils, BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -43,11 +43,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files(config.sp['fastqc']['data']):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
+            self.add_data_source(f, s_name)
             self.parse_fastqc_report(f['f'], s_name, f['root'])
         
         # Find and parse zipped FastQC reports
         for f in self.find_log_files(config.sp['fastqc']['zip'], filecontents=False):
             s_name = f['fn'].rstrip('_fastqc.zip')
+            self.add_data_source(f, s_name)
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
             except zipfile.BadZipfile:
@@ -107,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def parse_fastqc_report(self, file_contents, s_name=None, root=None):
-        """ Takes contetns from a fastq_data.txt file and parses out required
+        """ Takes contents from a fastq_data.txt file and parses out required
         statistics and data. Returns a dict with keys 'stats' and 'data'.
         Data is for plotting graphs, stats are for top table. """
         

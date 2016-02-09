@@ -29,6 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(config.sp['preseq']):
             parsed_data = self.parse_preseq_logs(f)
             if parsed_data is not None:
+                if f['s_name'] in self.preseq_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
                 self.preseq_data[f['s_name']] = parsed_data
 
         if len(self.preseq_data) == 0:

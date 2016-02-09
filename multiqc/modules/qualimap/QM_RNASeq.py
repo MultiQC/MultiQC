@@ -40,6 +40,7 @@ def parse_reports(self):
                             s_name = self.clean_s_name(os.path.basename(l.split(' = ')[-1]), root)
                             if s_name in self.qualimap_rnaseq_gorigin:
                                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                            self.add_data_source(s_name=s_name, source=os.path.abspath(os.path.join(root, sp['rnaseq_results'])), section='rnaseq_results')
                             self.qualimap_rnaseq_gorigin[s_name] = dict()
                         
                         # Reads alignment section
@@ -65,6 +66,7 @@ def parse_reports(self):
                 #### Coverage profile
                 cov_report = os.path.join(root, raw_data_dir, sp['coverage'])
                 if os.path.exists(cov_report):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(cov_report), section='rnaseq_coverage')
                     self.qualimap_rnaseq_cov_hist[s_name] = {}
                     with io.open(cov_report, 'r') as fh:
                         next(fh)

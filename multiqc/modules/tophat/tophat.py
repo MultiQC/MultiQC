@@ -36,6 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = self.clean_s_name(s_name, f['root'])
                 if s_name in self.tophat_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
 
         if len(self.tophat_data) == 0:

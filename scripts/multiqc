@@ -278,10 +278,12 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     # Generate the General Statistics table
     report.general_stats_build_table()
     
-    # Print the general stats table to a file
+    # Write the general stats and report sources to disk
     if config.data_dir is not None:
         with io.open (os.path.join(config.data_dir, 'multiqc_general_stats.txt'), "w", encoding='utf-8') as f:
             print( report.dict_to_csv( report.general_stats_raw ), file=f)
+        with io.open (os.path.join(config.data_dir, 'multiqc_sources.txt'), "w", encoding='utf-8') as f:
+            print( report.data_sources_to_csv( report.data_sources ), file=f)
     
     # Load in parent template files first if a child theme
     try:

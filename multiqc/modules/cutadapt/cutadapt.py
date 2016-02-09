@@ -81,6 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.cutadapt_length_obsexp[s_name] = dict()
             
             if s_name is not None:
+                self.add_data_source(f, s_name)
                 # Search regexes for overview stats
                 for k, r in regexes.items():
                     match = re.search(r, l)

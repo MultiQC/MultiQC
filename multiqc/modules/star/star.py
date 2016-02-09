@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = f['s_name'].split('Log.final.out', 1)[0]
                 if s_name in self.star_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name)
                 self.star_data[s_name] = parsed_data
 
         if len(self.star_data) == 0:

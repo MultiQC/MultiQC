@@ -86,14 +86,15 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(sp['align']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['alignment'])
             if parsed_data is not None:
-                if f['s_name'] in self.bismark_data['alignment']:
-                    log.debug("Duplicate alignment sample log found! Overwriting: {}".format(f['s_name']))
                 # Calculate percent_aligned - doubles as a good check that stuff has worked
                 try:
                     parsed_data['percent_aligned'] = (parsed_data['aligned_reads'] / parsed_data['total_reads']) * 100
                 except (KeyError, ZeroDivisionError):
                     log.warning('Error calculating percentage for {} - ignoring sample.'.format(sn))
                 else:
+                    if f['s_name'] in self.bismark_data['alignment']:
+                        log.debug("Duplicate alignment sample log found! Overwriting: {}".format(f['s_name']))
+                    self.add_data_source(f, section='alignment')
                     self.bismark_data['alignment'][f['s_name']] = parsed_data
         
         # Find and parse bismark deduplication reports
@@ -102,6 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['dedup']:
                     log.debug("Duplicate deduplication sample log found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f, section='deduplication')
                 self.bismark_data['dedup'][f['s_name']] = parsed_data
         
         # Find and parse bismark methylation extractor reports
@@ -114,11 +116,13 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 if s_name in self.bismark_data['methextract']:
                     log.debug("Duplicate methylation extraction sample log found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name, section='methylation_extraction')
                 self.bismark_data['methextract'][s_name] = parsed_data
         
         # Find and parse M-bias plot data
         for f in self.find_log_files(sp['m_bias'], filehandles=True):
             self.parse_bismark_mbias(f)
+            self.add_data_source(f, section='m_bias')
         
         if len(self.bismark_data['alignment']) == 0 and len(self.bismark_data['dedup']) == 0 and len(self.bismark_data['methextract']) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))

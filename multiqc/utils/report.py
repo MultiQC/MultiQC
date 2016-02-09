@@ -17,6 +17,7 @@ general_stats_html = {
     'rows': defaultdict(lambda:dict())
 }
 general_stats_raw = defaultdict(lambda:OrderedDict())
+data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
 
 
 
@@ -147,6 +148,15 @@ def dict_to_csv (d, delim="\t", sort_cols=False):
     
     body = '\n'.join(rows)
     
+    return body.encode('utf-8', 'ignore').decode('utf-8')
+
+def data_sources_to_csv (d, delim="\t"):
+    lines = [['Module', 'Section', 'Sample Name', 'Source']]
+    for mod in d:
+        for sec in d[mod]:
+            for s_name, source in d[mod][sec].items():
+                lines.append([mod, sec, s_name, source])
+    body = '\n'.join([delim.join(l) for l in lines])
     return body.encode('utf-8', 'ignore').decode('utf-8')
     
     

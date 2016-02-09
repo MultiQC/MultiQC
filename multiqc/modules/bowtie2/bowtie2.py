@@ -29,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 if f['s_name'] in self.bowtie2_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
                 self.bowtie2_data[f['s_name']] = parsed_data
 
         if len(self.bowtie2_data) == 0:
