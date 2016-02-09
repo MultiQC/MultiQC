@@ -238,13 +238,17 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
 
             # Copy over css & js files if requested by the theme
             try:
-                for to, path in mod.css.items():
-                    shutil.copyfile(path, os.path.join(tmp_dir, to))
+                for to, path in report.modules_output[-1].css.items():
+                    copy_to = os.path.join(tmp_dir, to)
+                    os.makedirs(os.path.dirname(copy_to))
+                    shutil.copyfile(path, copy_to)
             except AttributeError:
                 pass
             try:
-                for to, path in mod.js.items():
-                    shutil.copyfile(path, os.path.join(tmp_dir, to))
+                for to, path in report.modules_output[-1].js.items():
+                    copy_to = os.path.join(tmp_dir, to)
+                    os.makedirs(os.path.dirname(copy_to))
+                    shutil.copyfile(path, copy_to)
             except AttributeError:
                 pass
 

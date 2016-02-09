@@ -3,6 +3,7 @@
 #### v0.4dev
 * Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
 * FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
+* Bugfix: MultiQC default_dev template now copies module assets properly
 
 #### [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
 * All modules now load their log file search parameters from a config
