@@ -2,6 +2,7 @@
 
 #### v0.4dev
 * Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
+* FastQC: Per base sequence content heatmap can now be clicked to show line graph for single sample
 * FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
 * Bugfix: MultiQC default_dev template now copies module assets properly
 
