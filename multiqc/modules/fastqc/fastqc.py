@@ -379,7 +379,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
-                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
+                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p> \
+                 <p class="text-primary"><span class="glyphicon glyphicon-info-sign"></span> Click a heatmap row to see a line plot for that dataset.</p>'
         
         # Order the data by the sample names
         data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))
