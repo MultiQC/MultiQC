@@ -567,6 +567,19 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 0, 'to': 5, 'color': '#c3e6c3'},
             ],
         }
+        
+        # Lots of these datasets will be all zeros. Remove anything that doesn't have
+        # at least 0.5% so that we don't bloat the report.
+        plotdata = {}
+        for ds in self.fastqc_data['adapter_content']:
+            if max(self.fastqc_data['adapter_content'][ds].values()) >= 0.1:
+                plotdata[ds] = self.fastqc_data['adapter_content'][ds]
+        
+        if len(plotdata) > 0:
+            plot_html = self.plot_xy_data(plotdata, pconfig)
+        else:
+            plot_html = '<div class="alert alert-warning">No samples found with any adapter contamination > 0.1%</div>'
+        
         # Note - colours are messy as we've added adapter names here. Not
         # possible to break down pass / warn / fail for each adapter, which
         # could lead to misleading labelling (fails on adapter types with
@@ -576,8 +589,8 @@ class MultiqcModule(BaseMultiqcModule):
             'name': 'Adapter Content',
             'anchor': 'fastqc_adapter_content',
             'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data(self.fastqc_data['adapter_content'], pconfig)
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html" target="_bkank">FastQC help</a>. ' +
+                        'Only samples with &ge; 0.1% adapter contamination are shown.</p>' + plot_html
         })
     
 
