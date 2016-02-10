@@ -7,6 +7,7 @@
 * FastQC: Per base sequence content heatmap can now be clicked to show line graph for single sample
 * FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
 * Bugfix: MultiQC default_dev template now copies module assets properly
+* Bufgix: General Stats table floating header now resizes properly when page width changes
 
 #### [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
 * All modules now load their log file search parameters from a config

@@ -47,12 +47,12 @@ $(function () {
           ct.find('thead').css({visibility:'visible'});
           // Wrap it and add to the container with position: fixed
           ctw = $('<div id="gsCloneWrapper" />').append(ct);
-          ctw.css({'position':'fixed', 'top':0, 'height': gsHeadHeight});
+          ctw.css({'position':'fixed', 'top':0, 'height': gsHeadHeight, 'width': gsTabDiv.width()});
           $("#general_stats_table_container").append(ctw);
         }
         // Nicely scroll out of the way instead of dissapearing
         if(gsVisible < gsHeadHeight * 2){
-          $("#gsCloneWrapper").css('top', gsVisible - (gsHeadHeight * 2) );
+          $("#gsClone").css('top', gsVisible - (gsHeadHeight * 2) );
         } else {
           $("#gsCloneWrapper").css('top', 0);
         }
@@ -60,6 +60,11 @@ $(function () {
         // Not needed - remove it (avoids printing errors etc)
         $("#gsCloneWrapper").remove();
       }
+    });
+    // Resize width of floating header if page changes
+    $(window).on('resize', function(){
+      $("#gsCloneWrapper").width(gsTabDiv.width());
+      $("#gsClone").width(gsTab.width());
     });
     // Scroll left and right in the responsive container
     gsTabDiv.scroll(function(){
