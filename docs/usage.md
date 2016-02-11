@@ -1,4 +1,4 @@
-# Basic Usage
+# Running MultiQC
 Once installed, just go to your analysis directory and run `multiqc`, followed
 by a list of directories to search. At it's simplest, this can just be `.`
 (the current working directory):

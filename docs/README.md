@@ -9,8 +9,8 @@
 - Coding with MultiQC
   Writing new templates: templates.md
   Writing new modules: modules.md
-  Plugins: plugins.md
-  JavaScript: javascript.md
+  MultiQC Plugins: plugins.md
+  JavaScript Functions: javascript.md
 ---
 
 # Welcome!

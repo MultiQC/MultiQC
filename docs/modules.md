@@ -1,4 +1,4 @@
-# Writing Modules
+# Writing New Modules
 
 ## Introduction
 Writing a new module can at first seem a daunting task. However, MultiQC
@@ -117,7 +117,7 @@ will return the file) and also to have multiple strings possible.
 
 First, add your default patterns to:
 ```
-install_dir/multiqc/utils/search_patterns.yaml
+MULTIQC_ROOT/multiqc/utils/search_patterns.yaml
 ```
 
 You should see the patterns for all other modules to give you an idea,
@@ -127,7 +127,7 @@ or `contents` for strings to match against filenames or file contents:
 mymod:
     fn: _myprogram.txt
 myothermod:
-    contents: This is myotherprogram running
+    contents: This is myprogram v1.3
 ```
 
 Note that if you want to find multiple log files, you can nest these
@@ -188,21 +188,6 @@ for f in self.find_log_files(config.sp['mymod'], filehandles=True):
     line = f['f'].readline()  # f['f'] is now a filehandle instead of contents
 ```
 
-Finally, once you've found your file we want to add this information to the
-`multiqc_sources.txt` file in the MultiQC report data directory. This lists
-every sample name and the file from which this data came from. If you've used
-everything from the above function, this is as simple as adding the following
-line:
-```python
-self.add_data_source(f)
-```
-If you have multiple file sources for different sections of the module, or
-customise the sample name, you can tweak the fields. The default arguments
-are as shown:
-```python
-self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
-```
-
 ## Step 2 - Parse data from the input files
 What most MultiQC modules do once they have found matching analysis files
 is to pass the matched file contents to another function, responsible
@@ -253,6 +238,32 @@ If modules find samples with identical names, then the previous sample
 is overwritten. It's good to print a log statement when this happens,
 for debugging. However, most of the time it makes sense - programs often
 create log files _and_ print to `stdout` for example.
+
+```python
+if f['s_name'] in self.bowtie_data:
+    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+```
+
+### Printing to the sources file
+Finally, once you've found your file we want to add this information to the
+`multiqc_sources.txt` file in the MultiQC report data directory. This lists
+every sample name and the file from which this data came from. This is especially
+useful if sample names are being overwritten as it lists the source used. This code
+is typically written immediately after the above warning.
+
+If you've used the `self.find_log_files` function, writing to the sources file
+is as simple as passing the log file variable to the `self.add_data_source` function:
+```python
+for f in self.find_log_files(config.sp['mymod']):
+    self.add_data_source(f)
+```
+
+If you have different files for different sections of the module, or are
+customising the sample name, you can tweak the fields. The default arguments
+are as shown:
+```python
+self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
+```
 
 ## Step 4 - Adding to the general statistics table
 Now that you have your parsed data, you can start inserting it into the
