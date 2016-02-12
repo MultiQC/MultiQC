@@ -36,7 +36,7 @@ of the report.
         <input id="mqc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
         <button type="submit" id="mqc_colour_filter_update" class="btn btn-default btn-sm">+</button>
       </form>
-      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span> <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#regex_help_modal">help</button></p>
       <ul id="mqc_col_filters" class="mqc_filters"></ul>
     </div>
     
@@ -57,7 +57,7 @@ of the report.
           <button type="submit" id="mqc_renamesamples_bulk_update" class="btn btn-default btn-sm">Add</button>
         </form>
       </div>
-      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span> <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#regex_help_modal">help</button></p>
       <ul id="mqc_renamesamples_filters" class="mqc_filters"></ul>
     </div>
     
@@ -69,7 +69,7 @@ of the report.
         <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
       </form>
       {% if report.general_stats_html['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
-      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span> <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#regex_help_modal">help</button></p>
       <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
     </div>
     

@@ -528,7 +528,16 @@ input.form-control[type=color]{
     margin:0;
 }
 
-
+/* Regex help modal */
+.regex_example_buttons button {
+    float: left;
+    clear: left;
+    margin-bottom: 8px;
+}
+.regex_example_demo input {
+    margin-bottom: 8px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
+}
 
 /* General stats table */
 .mqc_table thead th {
