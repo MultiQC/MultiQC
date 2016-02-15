@@ -63,10 +63,18 @@ of the report.
     
     <!-- Hiding -->
     <div id="mqc_hidesamples" class="mqc_filter_section">
-      <h4>Hide Samples</h4>
-      <form class="form-inline" id="mqc_hidesamples_form">
-        <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
-        <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
+      <h4>Show / Hide Samples</h4>
+      <form id="mqc_hidesamples_form">
+        <div class="radio input-sm">
+          <label><input type="radio" name="mqc_hidesamples_showhide" class="mqc_hidesamples_showhide" value="hide" checked> Hide matching samples</label>
+        </div>
+        <div class="radio input-sm">
+          <label><input type="radio" name="mqc_hidesamples_showhide" class="mqc_hidesamples_showhide" value="show"> Show only matching samples</label>
+        </div>
+        <div class="form-inline">
+          <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
+          <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
+        </div>
       </form>
       {% if report.general_stats_html['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
       <p class="mqc_regex_mode">Regex mode <span class="off">off</span> <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#regex_help_modal">help</button></p>

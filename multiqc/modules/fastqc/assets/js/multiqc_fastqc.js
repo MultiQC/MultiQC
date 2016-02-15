@@ -43,6 +43,9 @@ function fastqc_seq_content_heatmap() {
             if((window.mqc_hide_regex_mode && s_name.match(f_text))  || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
                 hide_sample = true;
             }
+            if(window.mqc_hide_mode == 'show'){
+                hide_sample = !hide_sample;
+            }
         });
         if(!hide_sample){ sample_names.push(s_name); }
         else { hidden_samples += 1; }

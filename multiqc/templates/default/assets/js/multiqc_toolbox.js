@@ -121,6 +121,9 @@ $(function () {
     $('#mqc_hidesamples_filter').val('');
     mqc_hidesamples_idx += 1;
   });
+  $('.mqc_hidesamples_showhide').change(function(e){
+    apply_mqc_hidesamples();
+  });
   
   // EXPORTING PLOTS
   // Load the plot exporter
@@ -391,6 +394,7 @@ function apply_mqc_renamesamples(){
 //////////////////////////////////////////////////////
 function apply_mqc_hidesamples(){
   // Collect the filters into an array
+  var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
   var f_texts = [];
   var regex_mode = false;
   if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode on'){
@@ -400,13 +404,14 @@ function apply_mqc_hidesamples(){
     f_texts.push($(this).val());
   });
   
-  // If something was renamed, highlight the toolbox icon
+  // If something was hidden, highlight the toolbox icon
   if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').removeClass('in_use');
   }
   
+  window.mqc_hide_mode = mode;
   window.mqc_hide_f_texts = f_texts;
   window.mqc_hide_regex_mode = regex_mode;
   
@@ -431,6 +436,7 @@ function mqc_save_config(name, clear){
   config['rename_from_texts'] =   window.mqc_rename_f_texts;
   config['rename_to_texts'] =     window.mqc_rename_t_texts;
   config['rename_regex'] =        window.mqc_rename_regex_mode;
+  config['hidesamples_mode'] =    window.mqc_hide_mode;
   config['hidesamples_f_texts'] = window.mqc_hide_f_texts;
   config['hidesamples_regex'] =   window.mqc_hide_regex_mode;
   
@@ -552,6 +558,13 @@ function load_mqc_config(name){
     if(config['hidesamples_regex'] == true){
       $('#mqc_hidesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
       window.mqc_hide_regex_mode = true;
+    }
+  }
+  if(notEmptyObj(config['hidesamples_mode'])){
+    if(config['hidesamples_mode'] == 'show'){
+      $('.mqc_hidesamples_showhide').prop('checked', false);
+      $('.mqc_hidesamples_showhide[val=show]').prop('checked', true);
+      window.mqc_hide_mode = 'show';
     }
   }
   if(notEmptyObj(config['hidesamples_f_texts'])){

@@ -11,7 +11,7 @@ This block generates the General Statistics table at the top of the report.
 <div id="general_stats">
 <h2>
   General Statistics &nbsp;
-  <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#general_stats_colsort_modal">Configure Columns</button>
+  <button type="button" id="general_status_colsort_btn" class="btn btn-default btn-sm" data-toggle="modal" data-target="#general_stats_colsort_modal">Configure Columns</button>
   <button type="button" class="btn btn-default btn-sm" id="mqc_genstat_sort_highlight" data-direction="desc" style="display:none;">Sort by highlight</button>
   <small id="genstat_numrows_text">Showing <span id="genstat_numrows">{{ report.general_stats_html['rows'].keys() | length }}</span> rows.</small>
 </h2>

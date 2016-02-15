@@ -9,6 +9,7 @@ window.mqc_highlight_regex_mode = false;
 window.mqc_rename_f_texts = [];
 window.mqc_rename_t_texts = [];
 window.mqc_rename_regex_mode = false;
+window.mqc_hide_mode = 'hide';
 window.mqc_hide_f_texts = [];
 window.mqc_hide_regex_mode = false;
 
@@ -204,7 +205,11 @@ function plot_xy_line_graph(target, ds){
     var j = data.length;
     while (j--) {
       $.each(window.mqc_hide_f_texts, function(idx, f_text){
-        if((window.mqc_hide_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_hide_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+        var match = (window.mqc_hide_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_hide_regex_mode && data[j]['name'].indexOf(f_text) > -1);
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
+        }
+        if(match){
           data.splice(j,1);
           num_hidden += 1;
           return false;
@@ -348,7 +353,11 @@ function plot_stacked_bar_graph(target, ds){
     while (j--) {
       var s_name = cats[j];
       $.each(window.mqc_hide_f_texts, function(idx, f_text){
-        if((window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
+        var match = (window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1);
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
+        }
+        if(match){
           cats.splice(j, 1);
           $.each(data, function(k, d){
             data[k]['data'].splice(j, 1);

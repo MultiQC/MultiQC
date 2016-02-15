@@ -217,6 +217,9 @@ $(function () {
           if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
             match = true;
           }
+          if(window.mqc_hide_mode == 'show'){
+            match = !match;
+          }
         });
         if(match){ $(this).parent().hide(); }
         else { $(this).parent().show(); }

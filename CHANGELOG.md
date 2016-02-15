@@ -8,6 +8,7 @@
 * FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
 * Changed command line option `--name` to `--filename`
 * `--name` also used for filename if `--filename` not specified.
+* Hide samples toolbox now has switch to _show only_ matching samples
 * New regex help box with examples added to report
 * General Stats table 'floating' header now sorts properly when scrolling
 * Bugfix: MultiQC default_dev template now copies module assets properly
