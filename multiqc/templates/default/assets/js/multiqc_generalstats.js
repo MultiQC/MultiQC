@@ -15,20 +15,29 @@ $(function () {
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
   
-  if($(".mqc_table").length > 0){
+  if($('.mqc_table').length > 0){
     
     // Enable tablesorter on the general statistics tables
-    $(".mqc_table").tablesorter({sortInitialOrder: 'desc'});
+    $('.mqc_table').tablesorter({sortInitialOrder: 'desc'});
     
     // Update the table sorter if samples renamed
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
-      $(".mqc_table").trigger("update"); 
+      $('.mqc_table').trigger('update'); 
     });
     
     // Freeze the top header when scrolling
     var gsTab = $('#general_stats_table');
     var gsTabDiv = $('#general_stats_table_container .table-responsive');
     var gsHeight = gsTab.height();
+    
+    // Sort table when frozen header clicked
+    $('#general_stats_table_container').on('click', '#gsClone thead tr th', function(){
+      var c_idx = $(this).index();
+      var sortDir = $(this).hasClass('headerSortUp') ? 0 : 1;
+      $('#general_stats_table').trigger('sorton', [[[ c_idx, sortDir ]]]);
+      $('#gsClone thead tr th').removeClass('headerSortDown headerSortUp');
+      $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
+    });
     
     $(window).scroll(function(){
       var wTop = $(window).scrollTop();
@@ -153,10 +162,10 @@ $(function () {
       });
     });
     
-    $('#general_stats_colsort_table tbody').on("sortstop", function(e, ui){
+    $('#general_stats_colsort_table tbody').on('sortstop', function(e, ui){
       change_general_stats_col_order();
     });
-    $("#general_stats_colsort_table").bind("sortEnd",function() { 
+    $('#general_stats_colsort_table').bind('sortEnd',function() { 
       change_general_stats_col_order();
     });
     
@@ -242,6 +251,7 @@ $(function () {
 // Note: Don't have to worry about floating header, as 'Configure Columns'
 // button is only visible when this is hidden. Ace!
 function change_general_stats_col_order(){
+  alert('called');
   // Collect the desired order of columns
   var classes = [];
   $('#general_stats_colsort_table tbody tr').each(function(){

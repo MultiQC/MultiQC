@@ -542,7 +542,9 @@ input.form-control[type=color]{
 /* General stats table */
 .mqc_table thead th {
     cursor: pointer;
-    background-color: #fff;
+}
+.mqc_table thead th, .mqc_table thead td {
+    background-color: #FFFFFF;
 }
 .mqc_table thead th:after, #gsClone thead th:after {
     content: "";
@@ -577,9 +579,9 @@ input.form-control[type=color]{
     border-bottom: 2px solid #ddd;
     width: calc(100% - 340px);
 }
-#gsClone thead th, #gsClone thead td {
+/*#gsClone thead th, #gsClone thead td {
     background-color: #FFFFFF;
-}
+}*/
 @media only screen and (max-width: 768px){
     #gsCloneWrapper {
         width: calc(100% - 40px);
