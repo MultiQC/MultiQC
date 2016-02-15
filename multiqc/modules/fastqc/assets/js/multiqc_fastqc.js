@@ -257,16 +257,18 @@ function plot_single_seqcontent(s_name){
   current_single_plot = s_name;
   var data = fastqc_seq_content_data[s_name];
   var plot_data = [
-    {'name': '% T', 'data':[], pointStart: 1 },
-    {'name': '% C', 'data':[], pointStart: 1 },
-    {'name': '% A', 'data':[], pointStart: 1 },
-    {'name': '% G', 'data':[], pointStart: 1 }
+    {'name': '% T', 'data':[]},
+    {'name': '% C', 'data':[]},
+    {'name': '% A', 'data':[]},
+    {'name': '% G', 'data':[]}
   ];
   for (var d in data){
-    plot_data[0]['data'][d-1] = data[d]['T'];
-    plot_data[1]['data'][d-1] = data[d]['C'];
-    plot_data[2]['data'][d-1] = data[d]['A'];
-    plot_data[3]['data'][d-1] = data[d]['G'];
+    var base = data[d]['base'].split('-');
+    base = parseFloat(base[0]);
+    plot_data[0]['data'].push([base, data[d]['T']]);
+    plot_data[1]['data'].push([base, data[d]['C']]);
+    plot_data[2]['data'].push([base, data[d]['A']]);
+    plot_data[3]['data'].push([base, data[d]['G']]);
   }
   
   // Create plot div if it doesn't exist, and hide overview

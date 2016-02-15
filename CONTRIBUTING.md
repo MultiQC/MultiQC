@@ -41,5 +41,6 @@ conda remove --name testing --all
 10. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
 11. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
 12. Update version numbers to new dev version in `setup.py`, `CHANGELOG.md`, `docs/README.md`
-13. Add a new section in the changelog for the development version
-14. Commit and push. Continue making more awesome :metal:
+13. Tell UPPMAX about the new version and ask for the module system to be updated.
+14. Add a new section in the changelog for the development version
+15. Commit and push. Continue making more awesome :metal:
