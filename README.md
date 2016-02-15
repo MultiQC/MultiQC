@@ -47,7 +47,7 @@ Currently, supported tools include:
   * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
 * Post-alignment tools
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
-  * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics)
+  * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics, OxoGMetrics)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (BamQC, RNASeq)
 

@@ -56,8 +56,14 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(sp['hsmetrics'], filehandles=True):
             self.parse_picard_HsMetrics(f)
         
+        #### CollectOxoGMetrics
+        self.picard_OxoGMetrics_data = dict()
+        for f in self.find_log_files(sp['oxogmetrics'], filehandles=True):
+            self.parse_picard_OxoGMetrics(f)
+        
         num_reports = ( len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data) +
-                len(self.picard_GCbias_data) + len(self.picard_HsMetrics_data) )
+                len(self.picard_GCbias_data) + len(self.picard_HsMetrics_data) + 
+                len(self.picard_OxoGMetrics_data) )
         
         if num_reports == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -102,6 +108,17 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.picard_HsMetrics_data) > 0:
             log.info("Found {} HsMetrics reports".format(len(self.picard_HsMetrics_data)))
             self.write_csv_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics.txt')
+        
+        # OxoGMetrics data
+        if len(self.picard_OxoGMetrics_data) > 0:
+            log.info("Found {} OxoGMetrics reports".format(len(self.picard_OxoGMetrics_data)))
+            # Collapse into 2D structure with sample_context keys
+            print_data = {
+                '{}_{}'.format(s, c):v
+                for s in self.picard_OxoGMetrics_data.keys()
+                for c,v in self.picard_OxoGMetrics_data[s].items()
+            }
+            self.write_csv_file(print_data, 'multiqc_picard_OxoGMetrics.txt')
 
 
     def parse_picard_dupMetrics(self, f):
@@ -306,6 +323,53 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, this_s_name, section='HsMetrics')
                 self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
     
+    def parse_picard_OxoGMetrics(self, f):
+        """ Parse CollectOxoGMetrics Picard Output """
+        s_name = None
+        keys = None
+        for l in f['f']:
+            # New log starting
+            if 'picard.analysis.CollectOxoGMetrics' in l and 'INPUT' in l:
+                s_name = None
+                keys = None
+                context_col = None
+                
+                # Pull sample name from input
+                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
+                if fn_search:
+                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = self.clean_s_name(s_name, f['root'])
+                    if s_name in self.picard_OxoGMetrics_data:
+                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='OxoGMetrics')
+                    self.picard_OxoGMetrics_data[s_name] = dict()
+            
+            if s_name is not None:
+                if 'picard.analysis.CollectOxoGMetrics$CpcgMetrics' in l and '## METRICS CLASS' in l:
+                    keys = f['f'].readline().split("\t")
+                    context_col = keys.index('CONTEXT')
+                elif keys:
+                    vals = l.split("\t")
+                    if len(vals) == len(keys) and context_col is not None:
+                        context = vals[context_col]
+                        self.picard_OxoGMetrics_data[s_name][context] = dict()
+                        for i, k in enumerate(keys):
+                            k = k.strip()
+                            try:
+                                self.picard_OxoGMetrics_data[s_name][context][k] = float(vals[i])
+                            except ValueError:
+                                vals[i] = vals[i].strip()
+                                self.picard_OxoGMetrics_data[s_name][context][k] = vals[i]
+                    else:
+                        s_name = None
+                        keys = None
+        
+        # Remove empty dictionaries
+        for s_name in self.picard_OxoGMetrics_data.keys():
+            if len(self.picard_OxoGMetrics_data[s_name]) == 0:
+                self.picard_OxoGMetrics_data.pop(s_name, None)
+                log.debug("Removing {} as no data parsed".format(s_name))
+    
     
     def picard_stats_table(self):
         """ Take the parsed stats from Picard and add them to the
@@ -321,6 +385,11 @@ class MultiqcModule(BaseMultiqcModule):
             if data[s_name]['FOLD_ENRICHMENT'] == '?':
                 data[s_name]['FOLD_ENRICHMENT'] = -1
             data[s_name]['PCT_TARGET_BASES_30X'] = self.picard_HsMetrics_data[s_name]['PCT_TARGET_BASES_30X']
+        for s_name in self.picard_OxoGMetrics_data:
+            try:
+                data[s_name]['CCG_OXIDATION_ERROR_RATE'] = self.picard_OxoGMetrics_data[s_name]['CCG']['OXIDATION_ERROR_RATE']
+            except KeyError:
+                log.warn("Couldn't find picard CCG oxidation error rate for {}".format(s_name))
         
         headers = OrderedDict()
         headers['PERCENT_DUPLICATION'] = {
@@ -352,6 +421,15 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.0f}%',
             'scale': 'RdYlGn',
+            'modify': lambda x: float(x) * 100
+        }
+        headers['CCG_OXIDATION_ERROR_RATE'] = {
+            'title': 'CCG Oxidation',
+            'description': 'CCG-CAG Oxidation Error Rate',
+            'max': 1,
+            'min': 0,
+            'format': '{:.0f}%',
+            'scale': 'RdYlGn-rev',
             'modify': lambda x: float(x) * 100
         }
         self.general_stats_addcols(data, headers)

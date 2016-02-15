@@ -40,6 +40,8 @@ picard:
         contents: picard.analysis.CollectGcBiasMetrics
     hsmetrics:
         contents: picard.analysis.directed.HsMetrics
+    oxogmetrics:
+        contents: picard.analysis.CollectOxoGMetrics
 preseq:
     contents: 'TOTAL_READS	EXPECTED_DISTINCT'
 qualimap:

@@ -6,10 +6,12 @@
 * Nicer export button. Now tied to the export toolbox, hopefully more intuitive.
 * FastQC: Per base sequence content heatmap can now be clicked to show line graph for single sample
 * FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
+* Picard: Added support for `CollectOxoGMetrics` reports.
 * Changed command line option `--name` to `--filename`
 * `--name` also used for filename if `--filename` not specified.
 * Hide samples toolbox now has switch to _show only_ matching samples
 * New regex help box with examples added to report
+* New button to copy general stats table to the clipboard
 * General Stats table 'floating' header now sorts properly when scrolling
 * Bugfix: MultiQC default_dev template now copies module assets properly
 * Bufgix: General Stats table floating header now resizes properly when page width changes
