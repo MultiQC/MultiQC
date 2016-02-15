@@ -40,22 +40,17 @@ from multiqc.utils.log import init_log, LEVELS
 )
 @click.option('-i', '--title',
                     type = str,
-                    help = "Report title"
+                    help = "Report title. Printed as page header, used for filename if not otherwise specified."
+)
+@click.option('-n', '--filename',
+                    type = str,
+                    default = config.output_fn_name,
+                    help = "Report filename. Use 'stdout' to print to standard out."
 )
 @click.option('-t', '--template',
                     default = config.template,
                     type = click.Choice(config.avail_templates),
                     help = "Report template to use."
-)
-@click.option('-m', '--modules',
-                    type = click.Choice(config.avail_modules),
-                    multiple=True,
-                    help = "Use only these modules."
-)
-@click.option('-e', '--exclude',
-                    type = click.Choice(config.avail_modules),
-                    multiple=True,
-                    help = "Do not use these modules."
 )
 @click.option('-f', '--force',
                     is_flag = True,
@@ -71,11 +66,6 @@ from multiqc.utils.log import init_log, LEVELS
                     multiple=True,
                     help = "Ignore analysis files (glob expression)"
 )
-@click.option('-n', '--name',
-                    type = str,
-                    default = config.output_fn_name,
-                    help = "Report filename. Use 'stdout' to print to standard out."
-)
 @click.option('--data-dir/--no-data-dir', 'make_data_dir',
                     default=config.make_data_dir,
                     help = "Specify whether the parsed data directory should be created."
@@ -83,6 +73,16 @@ from multiqc.utils.log import init_log, LEVELS
 @click.option('-z', '--zip-data-dir', 'zip_data_dir',
                     is_flag = True,
                     help = "Compress the data directory."
+)
+@click.option('-m', '--module', metavar='[module name]',
+                    type = click.Choice(config.avail_modules),
+                    multiple=True,
+                    help = "Use only this module. Can specify multiple times."
+)
+@click.option('-e', '--exclude', metavar='[module name]',
+                    type = click.Choice(config.avail_modules),
+                    multiple=True,
+                    help = "Do not use this module. Can specify multiple times."
 )
 @click.option('-v', '--verbose', 
                     count=True,
@@ -95,7 +95,7 @@ from multiqc.utils.log import init_log, LEVELS
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, title, template, modules, exclude, outdir, ignore, name, 
+def multiqc(analysis_dir, dirs, title, template, module, exclude, outdir, ignore, filename, 
 make_data_dir, zip_data_dir, force, verbose, quiet):
     """MultiQC is a tool generate qc reports.
     
@@ -142,15 +142,18 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     if len(ignore) > 0:
         logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))
         config.fn_ignore_files.extend(ignore)
-    if name == 'stdout':
+    if filename == 'stdout':
         config.output_fn = sys.stdout
         config.data_dir = None
     else:
-        if name is not None:
-            if name.endswith('.html'):
-                name = name[:-5]
-            config.output_fn_name = name
-            config.data_dir_name = '{}_data'.format(name)
+        if title is not None and filename == config.output_fn_name:
+            filename = re.sub('[^\w-]', '', re.sub('[-\s]+', '-', title) ).strip()
+            filename += '_multiqc_report'
+        if filename is not None:
+            if filename.endswith('.html'):
+                filename = filename[:-5]
+            config.output_fn_name = filename
+            config.data_dir_name = '{}_data'.format(filename)
         if not config.output_fn_name.endswith('.html'):
             config.output_fn_name = '{}.html'.format(config.output_fn_name)
     
@@ -167,9 +170,9 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     
     # Get the list of modules we want to run
     run_modules = config.avail_modules.keys()
-    if modules:
-        run_modules = [m for m in config.avail_modules.keys() if m in modules]
-        logger.info('Only using modules {}'.format(', '.join(modules)))
+    if module:
+        run_modules = [m for m in config.avail_modules.keys() if m in module]
+        logger.info('Only using modules {}'.format(', '.join(module)))
     elif exclude:
         run_modules = [m for m in config.avail_modules.keys() if m not in exclude]
         logger.info('Excluding modules {}'.format(', '.join(exclude)))
@@ -190,7 +193,7 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
         pass # No subdirectory variable given
     
     # Final report path & data directory
-    if name == 'stdout':
+    if filename == 'stdout':
         logger.info("Output      : stdout")
     else:
         # Check for existing reports and remove if -f was specified
@@ -314,7 +317,7 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
     report_output = j_template.render(report=report, config=config)
-    if name == 'stdout':
+    if filename == 'stdout':
         print(report_output.encode('utf-8'), file = sys.stdout)
     else:
         try:
