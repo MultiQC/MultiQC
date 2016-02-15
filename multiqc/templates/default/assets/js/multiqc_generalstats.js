@@ -39,6 +39,16 @@ $(function () {
       $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
     });
     
+    // Copy table contents to clipboard
+    var clipboard = new Clipboard('#general_stats_copy_btn');
+    clipboard.on('success', function(e) {
+      e.clearSelection();
+      $('#general_stats_copy_btn').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      setTimeout(function(){
+        $('#general_stats_copy_btn').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      }, 2000);
+    });
+    
     $(window).scroll(function(){
       var wTop = $(window).scrollTop();
       var gsOffset = gsTab.offset().top;

@@ -60,7 +60,7 @@ var tour_steps = [
     content: "Drag the handle on any row to rearrange."
   },
   {
-    element: "#general_status_colsort_btn",
+    element: "#general_stats_colsort_btn",
     title: "Configure columns",
     backdropPadding: 5,
     content: "Click here to hide / show / reorder columns."
