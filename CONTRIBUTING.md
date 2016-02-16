@@ -32,6 +32,7 @@ python setup.py sdist upload
 8. Test that it pip installs:
 ```
 conda create --name testing python=2.7
+source activate testing
 pip install multiqc
 multiqc .
 source deactivate
@@ -40,7 +41,7 @@ conda remove --name testing --all
 9. Commit and push version updates
 10. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
 11. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-12. Update version numbers to new dev version in `setup.py`, `CHANGELOG.md`, `docs/README.md`
-13. Tell UPPMAX about the new version and ask for the module system to be updated.
+12. Tell UPPMAX about the new version and ask for the module system to be updated.
+13. Update version numbers to new dev version in `setup.py` and `docs/README.md`
 14. Add a new section in the changelog for the development version
 15. Commit and push. Continue making more awesome :metal:
