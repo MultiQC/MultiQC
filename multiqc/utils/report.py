@@ -21,7 +21,10 @@ from multiqc.utils.log import init_log, LEVELS
 from yaml.representer import Representer, SafeRepresenter
 yaml.add_representer(defaultdict, Representer.represent_dict)
 yaml.add_representer(OrderedDict, Representer.represent_dict)
-yaml.add_representer(unicode, SafeRepresenter.represent_unicode)
+try:
+    yaml.add_representer(unicode, SafeRepresenter.represent_unicode)
+except NameError:
+    pass # Python 3
 
 general_stats = OrderedDict()
 general_stats_html = {

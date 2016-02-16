@@ -146,7 +146,7 @@ class MultiqcModule(BaseMultiqcModule):
                     for j in self.fastqc_data[k]:
                         self.fastqc_data[k][j].pop(s_name, None)
                 elif k == 'adapter_content':
-                    aks = self.fastqc_data[k].keys()
+                    aks = list(self.fastqc_data[k].keys())
                     for s in aks:
                         sn, _ = s.split(' - ')
                         if sn == s_name:
