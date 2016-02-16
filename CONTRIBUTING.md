@@ -14,7 +14,7 @@ even more welcome ;)
 ## Release checklist
 This checklist is for my own reference, as I forget the steps every time.
 
-1. Check that everything is up to date and read to go
+1. Check that everything is up to date and ready to go
 2. Figure out what this release should be called
 3. Update version numbers in code: `setup.py`, `CHANGELOG.md`, `docs/README.md`
 4. Link the changelog subheading to the as yet non-existant release URL. Add date.

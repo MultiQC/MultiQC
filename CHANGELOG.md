@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-#### v0.4dev
+#### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
 * New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample
 * Export parsed data as tab-delimited text, `JSON` or `YAML` using the new `-k`/`--data-format` command line option
 * Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
