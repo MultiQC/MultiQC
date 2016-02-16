@@ -92,12 +92,18 @@ def general_stats_build_table():
                         percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
                         percentage = min(percentage, 100)
                         percentage = max(percentage, 0)
-                    except ZeroDivisionError:
+                    except (ZeroDivisionError,ValueError):
                         percentage = 0
                     
-                    try: val = headers[k]['format'].format(val)
-                    except ValueError: val = headers[k]['format'].format(float(samp[k]))
-                    except: val = samp[k]
+                    try:
+                        val = headers[k]['format'].format(val)
+                    except ValueError:
+                        try:
+                            val = headers[k]['format'].format(float(samp[k]))
+                        except ValueError:
+                            val = samp[k]
+                    except:
+                        val = samp[k]
                     
                     general_stats_html['rows'][sname][rid] = \
                         '<td class="data-coloured {rid}" >\

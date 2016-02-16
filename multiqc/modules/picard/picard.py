@@ -397,6 +397,13 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 log.warn("Couldn't find picard CCG oxidation error rate for {}".format(s_name))
         
+        def multiply_hundred(val):
+            try:
+                val = float(val) * 100
+            except ValueError:
+                pass
+            return val
+        
         headers = OrderedDict()
         headers['PERCENT_DUPLICATION'] = {
             'title': '% Dups',
@@ -405,7 +412,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'OrRd',
             'format': '{:.1f}%',
-            'modify': lambda x: float(x) * 100
+            'modify': lambda x: multiply_hundred(x)
         }
         headers['summed_median'] = {
             'title': 'Insert Size',
@@ -427,7 +434,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.0f}%',
             'scale': 'RdYlGn',
-            'modify': lambda x: float(x) * 100
+            'modify': lambda x: multiply_hundred(x)
         }
         headers['CCG_OXIDATION_ERROR_RATE'] = {
             'title': 'CCG Oxidation',
@@ -436,7 +443,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.0f}%',
             'scale': 'RdYlGn-rev',
-            'modify': lambda x: float(x) * 100
+            'modify': lambda x: multiply_hundred(x)
         }
         self.general_stats_addcols(data, headers)
 
