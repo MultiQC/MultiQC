@@ -232,8 +232,8 @@ class BaseMultiqcModule(object):
                             headers[k]['dmax'] = max(headers[k]['dmax'], val)
                         if setdmin:
                             headers[k]['dmin'] = min(headers[k]['dmin'], val)
-                    except KeyError:
-                        pass # missing data - skip
+                    except (KeyError,ValueError):
+                        pass # missing data - skip. Modify function dies - skip
         
             report.general_stats[namespace] = {
                 'data': data,

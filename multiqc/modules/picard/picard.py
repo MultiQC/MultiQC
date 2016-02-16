@@ -325,6 +325,10 @@ class MultiqcModule(BaseMultiqcModule):
     
     def parse_picard_OxoGMetrics(self, f):
         """ Parse CollectOxoGMetrics Picard Output """
+        # We use lists to make sure that we don't overwrite when no data will be parsed
+        parsed_data = list()
+        sample_names = list()
+        s_files = list()
         s_name = None
         keys = None
         for l in f['f']:
@@ -339,10 +343,10 @@ class MultiqcModule(BaseMultiqcModule):
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
-                    if s_name in self.picard_OxoGMetrics_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
-                    self.add_data_source(f, s_name, section='OxoGMetrics')
-                    self.picard_OxoGMetrics_data[s_name] = dict()
+                    parsed_data.append(dict())
+                    sample_names.append(s_name)
+                    s_files.append(f)
+                    
             
             if s_name is not None:
                 if 'picard.analysis.CollectOxoGMetrics$CpcgMetrics' in l and '## METRICS CLASS' in l:
@@ -352,23 +356,25 @@ class MultiqcModule(BaseMultiqcModule):
                     vals = l.split("\t")
                     if len(vals) == len(keys) and context_col is not None:
                         context = vals[context_col]
-                        self.picard_OxoGMetrics_data[s_name][context] = dict()
+                        parsed_data[-1][context] = dict()
                         for i, k in enumerate(keys):
                             k = k.strip()
                             try:
-                                self.picard_OxoGMetrics_data[s_name][context][k] = float(vals[i])
+                                parsed_data[-1][context][k] = float(vals[i])
                             except ValueError:
                                 vals[i] = vals[i].strip()
-                                self.picard_OxoGMetrics_data[s_name][context][k] = vals[i]
+                                parsed_data[-1][context][k] = vals[i]
                     else:
                         s_name = None
                         keys = None
         
         # Remove empty dictionaries
-        for s_name in self.picard_OxoGMetrics_data.keys():
-            if len(self.picard_OxoGMetrics_data[s_name]) == 0:
-                self.picard_OxoGMetrics_data.pop(s_name, None)
-                log.debug("Removing {} as no data parsed".format(s_name))
+        for idx, s_name in enumerate(sample_names):
+            if len(parsed_data[idx]) > 0:
+                if s_name in self.picard_OxoGMetrics_data:
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(s_files[idx], s_name))
+                self.add_data_source(s_files[idx], s_name, section='OxoGMetrics')
+                self.picard_OxoGMetrics_data[s_name] = parsed_data[idx]
     
     
     def picard_stats_table(self):
