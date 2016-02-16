@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.bowtie2_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.bowtie2_data, 'multiqc_bowtie2.txt')
+        self.write_data_file(self.bowtie2_data, 'multiqc_bowtie2')
         
         self.sections = list()
 

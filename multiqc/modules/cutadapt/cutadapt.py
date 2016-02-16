@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.cutadapt_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.cutadapt_data, 'multiqc_cutadapt.txt')
+        self.write_data_file(self.cutadapt_data, 'multiqc_cutadapt')
 
         self.sections = list()
 

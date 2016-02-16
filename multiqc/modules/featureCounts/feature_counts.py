@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.featurecounts_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.featurecounts_data, 'multiqc_featureCounts.txt')
+        self.write_data_file(self.featurecounts_data, 'multiqc_featureCounts')
 
         self.sections = list()
 

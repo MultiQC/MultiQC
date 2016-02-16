@@ -72,9 +72,13 @@ tab-delimited files with the parsed data. This is useful for downstream
 processing, especially if you're running MultiQC with very large numbers
 of samples.
 
-You can explicitly choose whether to produce this data by specifying either the
-`--data-dir` or `--no-data-dir` command line flags. You can also set a default 
-in your configuration settings (`make_data_dir`). Note that the data directory
+Typically, these files are tab-delimited tables. However, you can get `JSON`
+or `YAML` output for easier downstream parsing by specifying `-k`/`--data-format`
+on the command line or `data_format` in your configuration file.
+
+You can also choose whether to produce the data by specifying either the
+`--data-dir` or `--no-data-dir` command line flags or the `make_data_dir`
+variable in your configuration file. Note that the data directory
 is never produced when printing the MultiQC report to `stdout`.
 
 To zip the data directory, use the `-z`/`--zip-data-dir` flag.

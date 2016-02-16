@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.intro += self.fqscreen_simple_plot()
         
         # Write the total counts and percentages to files
-        self.write_csv_file(self.parse_csv(), 'multiqc_fastq_screen.txt')
+        self.write_data_file(self.parse_csv(), 'multiqc_fastq_screen')
 
 
     def parse_fqscreen(self, fh):

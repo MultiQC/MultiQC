@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.star_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.star_data, 'multiqc_star.txt')
+        self.write_data_file(self.star_data, 'multiqc_star')
 
         self.sections = list()
 

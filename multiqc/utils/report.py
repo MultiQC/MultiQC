@@ -4,12 +4,24 @@
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
 
+from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import io
+import json
 import logging
+import os
+import yaml
 
 import multiqc
+from multiqc.utils import config
 from multiqc import (logger)
 from multiqc.utils.log import init_log, LEVELS
+
+# Treat defaultdict and OrderedDict as normal dicts for YAML output
+from yaml.representer import Representer, SafeRepresenter
+yaml.add_representer(defaultdict, Representer.represent_dict)
+yaml.add_representer(OrderedDict, Representer.represent_dict)
+yaml.add_representer(unicode, SafeRepresenter.represent_unicode)
 
 general_stats = OrderedDict()
 general_stats_html = {
@@ -126,43 +138,66 @@ def general_stats_build_table():
     
     return None
     
-    
-    
-def dict_to_csv (d, delim="\t", sort_cols=False):
-    """ Converts a dict to a CSV string
-    :param d: 2D dictionary, first keys sample names and second key
-              column headers. If second key is not a string, it is skipped.
-    :param delim: optional delimiter character. Default: \t
-    :return: Flattened string, suitable to write to a CSV file.
-    """
-    
-    # Get all headers
-    h = ['Sample']
-    for sn in sorted(d.keys()):
-        for k in d[sn].keys():
-            if type(d[sn][k]) is not dict and k not in h:
-                h.append(k)
-    if sort_cols:
-        h = sorted(h)
-    
-    # Get the rows
-    rows = [ delim.join(h) ]
-    for sn in sorted(d.keys()):
-        # Make a list starting with the sample name, then each field in order of the header cols
-        l = [sn] + [ str(d[sn].get(k, '')) for k in h[1:] ]
-        rows.append( delim.join(l) )
-    
-    body = '\n'.join(rows)
-    
-    return body.encode('utf-8', 'ignore').decode('utf-8')
 
-def data_sources_to_csv (d, delim="\t"):
-    lines = [['Module', 'Section', 'Sample Name', 'Source']]
-    for mod in d:
-        for sec in d[mod]:
-            for s_name, source in d[mod][sec].items():
-                lines.append([mod, sec, s_name, source])
-    body = '\n'.join([delim.join(l) for l in lines])
-    return body.encode('utf-8', 'ignore').decode('utf-8')
+def write_data_file(data, fn, sort_cols=False, data_format=None):
+    """ Write a data file to the report directory. Will not do anything
+    if config.data_dir is not set.
+    :param: data - a 2D dict, first key sample name (row header),
+            second key field (column header). 
+    :param: fn - Desired filename. Directory will be prepended automatically.
+    :param: sort_cols - Sort columns alphabetically
+    :param: data_format - Output format. Defaults to config.data_format (usually tsv)
+    :return: None """
+    if config.data_dir is not None:
+        if data_format is None:
+            data_format = config.data_format
+        fn = '{}.{}'.format(fn, config.data_format_extensions[data_format])
+        with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
+            if data_format == 'json':
+                jsonstr = json.dumps(data, indent=4, ensure_ascii=False)
+                print( jsonstr.encode('utf-8', 'ignore').decode('utf-8'), file=f)
+            elif data_format == 'yaml':
+                yaml.dump(data, f, default_flow_style=False)
+            else:
+                # Default - tab separated output
+                # Get all headers
+                h = ['Sample']
+                for sn in sorted(data.keys()):
+                    for k in data[sn].keys():
+                        if type(data[sn][k]) is not dict and k not in h:
+                            h.append(k)
+                if sort_cols:
+                    h = sorted(h)
+                
+                # Get the rows
+                rows = [ "\t".join(h) ]
+                for sn in sorted(data.keys()):
+                    # Make a list starting with the sample name, then each field in order of the header cols
+                    l = [sn] + [ str(data[sn].get(k, '')) for k in h[1:] ]
+                    rows.append( "\t".join(l) )
+                
+                body = '\n'.join(rows)
+                
+                print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
+    
+def general_stats_tofile():
+    write_data_file(general_stats_raw, 'multiqc_general_stats')
+
+def data_sources_tofile ():
+    fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])
+    with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
+        if config.data_format == 'json':
+            jsonstr = json.dumps(data_sources, indent=4, ensure_ascii=False)
+            print( jsonstr.encode('utf-8', 'ignore').decode('utf-8'), file=f)
+        elif config.data_format == 'yaml':
+            yaml.dump(data_sources, f, default_flow_style=False)
+        else:
+            lines = [['Module', 'Section', 'Sample Name', 'Source']]
+            for mod in data_sources:
+                for sec in data_sources[mod]:
+                    for s_name, source in data_sources[mod][sec].items():
+                        lines.append([mod, sec, s_name, source])
+            body = '\n'.join(["\t".join(l) for l in lines])
+            print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
     
     

@@ -61,7 +61,7 @@ from multiqc.utils.log import init_log, LEVELS
                     default=config.output_dir,
                     help = "Create report in the specified output directory."
 )
-@click.option('--ignore',
+@click.option('-x', '--ignore',
                     type = str,
                     multiple=True,
                     help = "Ignore analysis files (glob expression)"
@@ -69,6 +69,11 @@ from multiqc.utils.log import init_log, LEVELS
 @click.option('--data-dir/--no-data-dir', 'make_data_dir',
                     default=config.make_data_dir,
                     help = "Specify whether the parsed data directory should be created."
+)
+@click.option('-k', '--data-format', 'data_format',
+                    default=config.data_format,
+                    type = click.Choice(config.data_format_extensions.keys()),
+                    help = "Output parsed data in a different format"
 )
 @click.option('-z', '--zip-data-dir', 'zip_data_dir',
                     is_flag = True,
@@ -96,7 +101,7 @@ from multiqc.utils.log import init_log, LEVELS
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, title, template, module, exclude, outdir, ignore, filename, 
-make_data_dir, zip_data_dir, force, verbose, quiet):
+make_data_dir, data_format, zip_data_dir, force, verbose, quiet):
     """MultiQC is a tool generate qc reports.
     
         It can be used to create an aggregate report summarising the results
@@ -139,6 +144,7 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     config.analysis_dir = analysis_dir
     config.output_dir = outdir
     config.make_data_dir = make_data_dir
+    config.data_format = data_format
     if len(ignore) > 0:
         logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))
         config.fn_ignore_files.extend(ignore)
@@ -147,7 +153,7 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
         config.data_dir = None
     else:
         if title is not None and filename == config.output_fn_name:
-            filename = re.sub('[^\w-]', '', re.sub('[-\s]+', '-', title) ).strip()
+            filename = re.sub('[^\w\.-]', '', re.sub('[-\s]+', '-', title) ).strip()
             filename += '_multiqc_report'
         if filename is not None:
             if filename.endswith('.html'):
@@ -283,10 +289,8 @@ make_data_dir, zip_data_dir, force, verbose, quiet):
     
     # Write the general stats and report sources to disk
     if config.data_dir is not None:
-        with io.open (os.path.join(config.data_dir, 'multiqc_general_stats.txt'), "w", encoding='utf-8') as f:
-            print( report.dict_to_csv( report.general_stats_raw ), file=f)
-        with io.open (os.path.join(config.data_dir, 'multiqc_sources.txt'), "w", encoding='utf-8') as f:
-            print( report.data_sources_to_csv( report.data_sources ), file=f)
+        report.general_stats_tofile()
+        report.data_sources_tofile()
     
     # Load in parent template files first if a child theme
     try:

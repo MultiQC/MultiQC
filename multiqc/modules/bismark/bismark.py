@@ -108,7 +108,6 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Find and parse bismark methylation extractor reports
         for f in self.find_log_files(sp['meth_extract']):
-        # for f in self.find_log_files(fn_match='_splitting_report.txt'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['methextract'])
             s_name = f['s_name']
             if s_name.endswith('.deduplicated'):
@@ -135,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Write out to the report
         if len(self.bismark_data['alignment']) > 0:
-            self.write_csv_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment.txt', sort_cols=True)
+            self.write_data_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment', sort_cols=True)
             log.info("Found {} bismark alignment reports".format(len(self.bismark_data['alignment'])))
             self.sections.append({
                 'name': 'Alignment Rates',
@@ -144,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
             })
         
         if len(self.bismark_data['dedup']) > 0:
-            self.write_csv_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup.txt', sort_cols=True)
+            self.write_data_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup', sort_cols=True)
             log.info("Found {} bismark dedup reports".format(len(self.bismark_data['dedup'])))
             self.sections.append({
                 'name': 'Deduplication',
@@ -160,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             })
         
         if len(self.bismark_data['methextract']) > 0:
-            self.write_csv_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract.txt', sort_cols=True)
+            self.write_data_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract', sort_cols=True)
             log.info("Found {} bismark methextract reports".format(len(self.bismark_data['methextract'])))
             self.sections.append({
                 'name': 'Cytosine Methylation',

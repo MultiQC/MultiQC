@@ -345,7 +345,7 @@ applications. This also gives the opportunity to output additional data that
 may not be appropriate for the General Statistics table.
 
 Again, there is a base class function to help you with this - just supply it
-with a two-dimensional dictionary and a filename:
+with a dictionary and a filename:
 
 ```python
 data = {
@@ -358,14 +358,18 @@ data = {
         'second_col': '66.3%'
     }
 }
-self.write_csv_file (data, 'multiqc_mymod.txt')
+self.write_data_file(data, 'multiqc_mymod')
 ```
 
 If your output has a lot of columns, you can supply the additional
 argument `sort_cols = True` to have the columns alphabetically sorted.
 
-Note that the data format is the same as that used for the General
-Statistics table.
+This function will also pay attention to the default / command line
+supplied data format and behave accordingly. So the written file could
+be a tab-separated file (default), `JSON` or `YAML`.
+
+Note that any keys with more than 2 levels of nesting will be ignored
+when being written to tab-separated files.
 
 ## Step 6 - Create report sections
 Great! It's time to start creating sections of the report with more information.

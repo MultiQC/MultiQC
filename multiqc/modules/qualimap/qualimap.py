@@ -122,5 +122,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
         
         self.general_stats_addcols(self.general_stats, headers)
+        
+        # No point in writing to file, general stats is already there.
+        # Everything else is plot data rather than singular data values.
 
     

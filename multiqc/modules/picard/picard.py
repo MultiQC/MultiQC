@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Mark Duplicates data
         if len(self.picard_dupMetrics_data) > 0:
             log.info("Found {} dupMetrics reports".format(len(self.picard_dupMetrics_data)))
-            self.write_csv_file(self.picard_dupMetrics_data, 'multiqc_picard_dups.txt')
+            self.write_data_file(self.picard_dupMetrics_data, 'multiqc_picard_dups')
             self.sections.append({
                 'name': 'Mark Duplicates',
                 'anchor': 'picard-markduplicates',
@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Insert Size data
         if len(self.picard_insertSize_data) > 0:
             log.info("Found {} insertSize reports".format(len(self.picard_insertSize_data)))
-            self.write_csv_file(self.picard_insertSize_data, 'multiqc_picard_insertSize.txt')
+            self.write_data_file(self.picard_insertSize_data, 'multiqc_picard_insertSize')
             self.sections.append({
                 'name': 'Insert Size',
                 'anchor': 'picard-insertsize',
@@ -107,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         # HsMetrics data
         if len(self.picard_HsMetrics_data) > 0:
             log.info("Found {} HsMetrics reports".format(len(self.picard_HsMetrics_data)))
-            self.write_csv_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics.txt')
+            self.write_data_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics')
         
         # OxoGMetrics data
         if len(self.picard_OxoGMetrics_data) > 0:
@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for s in self.picard_OxoGMetrics_data.keys()
                 for c,v in self.picard_OxoGMetrics_data[s].items()
             }
-            self.write_csv_file(print_data, 'multiqc_picard_OxoGMetrics.txt')
+            self.write_data_file(print_data, 'multiqc_picard_OxoGMetrics')
 
 
     def parse_picard_dupMetrics(self, f):

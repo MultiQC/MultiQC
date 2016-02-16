@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_stats_table()
         
         # Write the basic stats table data to a file
-        self.write_csv_file(self.fastqc_stats, 'multiqc_fastqc.txt')
+        self.write_data_file(self.fastqc_stats, 'multiqc_fastqc')
         
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
         self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(self.fastqc_statuses))
