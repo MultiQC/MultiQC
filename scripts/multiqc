@@ -292,6 +292,8 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet):
         report.general_stats_tofile()
         report.data_sources_tofile()
     
+    plugin_hooks.mqc_trigger('before_template')
+    
     # Load in parent template files first if a child theme
     try:
         parent_template = config.avail_templates[template_mod.template_parent].load()
