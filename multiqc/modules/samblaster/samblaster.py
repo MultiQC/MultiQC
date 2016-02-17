@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from QualiMap """
+""" MultiQC module to parse output from Samblaster """
 
 from __future__ import print_function
 import os
@@ -20,35 +20,20 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Samblaster', anchor='samblaster',
                                             href="https://github.com/GregoryFaust/samblaster",
-                                            info="is a tools to remove duplicate molecules in a stream")
+                                            info="is a tool to mark duplicates and extract discordant and split reads from sam files.")
 
         self.samblaster_data = dict()
         for f in self.find_log_files(config.sp['samblaster'], filehandles=True):
             self.parse_samblaster(f)
 
         headers = OrderedDict()
-        headers['n_tot'] = {
-             'title': 'Read Pairs',
-             'description': 'Total number of read pairs processed',
-             'modify': lambda x: x / 1000000,
-             'min': 0,
-             'scale': 'RdYlGn',
-             'format': '{:.0f}'
-        }
-        headers['n_dups'] = {
-            'title': 'N Dups',
-            'description': 'Number of duplicate reads filtered by samblaster',
-            'modify': lambda x: x / 1000000,
-            'min': 0,
-            'scale': 'RdYlGn',
-            'format': '{:.0f}'
-        }
         headers['pct_dups'] = {
-            'title': 'Pct Dups',
-            'description': 'Percent Duplicates',
-            'scale': 'RdYlGn-rev',
+            'title': '% Dups',
+            'description': 'Percent Duplication',
             'max': 100,
-            'min': 0
+            'min': 0,
+            'scale': 'OrRd',
+            'format': '{:.1f}%'
         }
 
         self.general_stats_addcols(self.samblaster_data, headers)
@@ -63,21 +48,35 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.samblaster_data)))
 
     def parse_samblaster(self, f):
-        """ Go through log file looking for samblaster output """
-        dups_regex = "samblaster: Removed (\d+) of (\d+) \((\d+.\d+)%\) read ids as duplicates"
-        name_regex = "@RG\\\\tID:(\S*?)\\\\t"
+        """ Go through log file looking for samblaster output.
+        If the
+        Grab the name from the RG tag of the preceding bwa command """
+        dups_regex = "samblaster: (Removed|Marked) (\d+) of (\d+) \((\d+.\d+)%\) read ids as duplicates"
+        input_file_regex = "samblaster: Opening (\S+) for read."
+        rgtag_name_regex = "\\\\tSM:(\S*?)\\\\t"
         data = {}
         fh = f['f']
         for l in fh:
-            match = re.search(name_regex, l)
+            # try to find name from RG-tag. If bwa mem is used upstream samblaster with pipes, then the bwa mem command
+            # including the read group will be written in the log
+            match = re.search(rgtag_name_regex, l)
             if match:
                 data['s_name'] = match.group(1)
 
+            # try to find name from the input file name, if used
+            match = re.search(input_file_regex, l)
+            if match:
+                basefn = os.path.basename(match.group(1))
+                fname, ext = os.path.splitext(basefn)
+                # if it's stdin, then try bwa RG-tag instead
+                if fname != 'stdin':
+                    data['s_name'] = fname
+
             match = re.search(dups_regex, l)
             if match:
-                data['n_dups'] = match.group(1)
-                data['n_tot'] = match.group(2)
-                data['pct_dups'] = match.group(3)
+                data['n_dups'] = match.group(2)
+                data['n_tot'] = match.group(3)
+                data['pct_dups'] = match.group(4)
 
         if 's_name' in data:
             s_name = data['s_name']
@@ -85,17 +84,3 @@ class MultiqcModule(BaseMultiqcModule):
             self.samblaster_data[s_name] = dict(n_dups=int(data['n_dups']),
                                                 n_tot=int(data['n_tot']),
                                                 pct_dups=float(data['pct_dups']))
-
-    def add_skewer_data(self, s_name, data, f):
-        pass
-        # stats = ['r_processed', 'r_short_filtered', 'r_empty_filtered', 'r_avail', 'r_trimmed', 'r_untrimmed']
-        # if s_name in self.skewer_data:
-        #     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-        # self.skewer_data[s_name] = {}
-        # self.add_data_source(f, s_name)
-        # for k in stats:
-        #     self.skewer_data[s_name][k] = int(data[k])
-        #
-        # self.skewer_data[s_name]['pct_avail'] = 100.0 * float(data['r_avail']) / float(data['r_processed'])
-        # self.skewer_data[s_name]['pct_trimmed'] = 100.0 * float(data['r_trimmed']) / float(data['r_avail'])
-        # self.skewer_data[s_name]['pct_untrimmed'] = 100.0 * float(data['r_untrimmed']) / float(data['r_avail'])
