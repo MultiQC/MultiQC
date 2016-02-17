@@ -72,10 +72,12 @@ class MultiqcModule(BaseMultiqcModule):
     def add_readlen_dist_plot(self):
         pconfig = {
             'id': 'skewer_read_length_histogram',
-            'title': 'Read Length Distribution',
-            'categories': True,
+            'title': 'Read Length Distribution after trimming with Skewer',
+            'categories': False,
+            'xDecimals': False,
             'ylab': '% of Reads',
             'xlab': 'Read Length',
+            'xmin': '0',
             'ymax': 100,
             'ymin': 0,
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
@@ -119,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             match = re.search(regex_hist, l)
             if match:
-                read_length = str(match.group(1))
+                read_length = match.group(1)
                 pct_at_rl = float(match.group(3))
                 readlen_dist[read_length] = pct_at_rl
 
