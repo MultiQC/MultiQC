@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.debug("Found {} reports".format(len(self.samblaster_data)))
+        log.info("Found {} reports".format(len(self.samblaster_data)))
 
     def parse_samblaster(self, f):
         """ Go through log file looking for samblaster output """
