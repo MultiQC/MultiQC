@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from QualiMap """
+""" MultiQC module to parse logs from Skewer """
 
 from __future__ import print_function
 
@@ -21,8 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Skewer', anchor='skewer',
-                                            href="https://github.com/relipmoc/skewer.git",
-                                            info="is a tools to trim adapters off of reads")
+                                            href="https://github.com/relipmoc/skewer",
+                                            info="is an adapter trimming tool specially designed for processing next-generation sequencing (NGS) paired-end sequences.")
 
         self.sections = list()
         self.skewer_data = dict()
@@ -33,20 +33,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['r_processed'] = {
-            'title': 'Read Pairs',
-            'description': 'Total number of read pairs processed',
+            'title': 'M Read Pairs',
+            'description': 'Million read pairs processed',
             'modify': lambda x: x / 1000000.0,
             'min': 0,
             'scale': 'PuBu',
-            'format': '{:.0f}'
+            'format': '{:.0f}',
+            'shared_key': 'read_count'
         }
         headers['r_avail'] = {
-            'title': 'Kept',
-            'description': 'Read pairs available after trimming',
+            'title': 'M Kept',
+            'description': 'Million read pairs available after trimming',
             'modify': lambda x: x / 1000000.0,
             'min': 0,
             'scale': 'PuBu',
-            'format': '{:.0f}'
+            'format': '{:.0f}',
+            'shared_key': 'read_count'
         }
         headers['pct_trimmed'] = {
             'title': 'Pct Trimmed',
