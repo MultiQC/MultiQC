@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-import json
 import os
 from collections import OrderedDict
 import logging
@@ -32,27 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_skewer_log(f)
 
         headers = OrderedDict()
-        headers['r_processed'] = {
-            'title': 'M Read Pairs',
-            'description': 'Million read pairs processed',
-            'modify': lambda x: x / 1000000.0,
-            'min': 0,
-            'scale': 'PuBu',
-            'format': '{:.0f}',
-            'shared_key': 'read_count'
-        }
-        headers['r_avail'] = {
-            'title': 'M Kept',
-            'description': 'Million read pairs available after trimming',
-            'modify': lambda x: x / 1000000.0,
-            'min': 0,
-            'scale': 'PuBu',
-            'format': '{:.0f}',
-            'shared_key': 'read_count'
-        }
         headers['pct_trimmed'] = {
-            'title': 'Pct Trimmed',
-            'description': 'Percent Trimmed',
+            'title': '% Trimmed',
+            'description': '% of reads trimmed',
             'scale': 'RdYlGn-rev',
             'max': 100,
             'min': 0
