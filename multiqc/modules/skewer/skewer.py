@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 
+import json
 import os
 from collections import OrderedDict
 import logging
@@ -23,7 +24,10 @@ class MultiqcModule(BaseMultiqcModule):
                                             href="https://github.com/relipmoc/skewer.git",
                                             info="is a tools to trim adapters off of reads")
 
+        self.sections = list()
         self.skewer_data = dict()
+        self.skewer_readlen_dist = dict()
+
         for f in self.find_log_files(config.sp['skewer'], filehandles=True):
             self.parse_skewer_log(f)
 
@@ -31,17 +35,17 @@ class MultiqcModule(BaseMultiqcModule):
         headers['r_processed'] = {
             'title': 'Read Pairs',
             'description': 'Total number of read pairs processed',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x / 1000000.0,
             'min': 0,
-            'scale': 'RdYlGn',
+            'scale': 'PuBu',
             'format': '{:.0f}'
         }
         headers['r_avail'] = {
             'title': 'Kept',
             'description': 'Read pairs available after trimming',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x / 1000000.0,
             'min': 0,
-            'scale': 'RdYlGn',
+            'scale': 'PuBu',
             'format': '{:.0f}'
         }
         headers['pct_trimmed'] = {
@@ -56,12 +60,51 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write parsed report data to a file
         self.write_data_file(self.skewer_data, 'multiqc_skewer')
+        self.write_data_file(self.skewer_readlen_dist, 'multiqc_skewer_readlen_dist')
+
+        # set the value 0 for every x where a given sample doens't have a value
+        all_x_values = []
+        for s_name in self.skewer_readlen_dist:
+            for xval in self.skewer_readlen_dist[s_name]:
+                all_x_values.append(xval)
+
+        for s_name in self.skewer_readlen_dist:
+            for xval in all_x_values:
+                if not xval in self.skewer_readlen_dist[s_name]:
+                    self.skewer_readlen_dist[s_name][xval] = 0.0
+
+            # After adding new elements, the ordereddict needs to be re-sorted
+            items = self.skewer_readlen_dist[s_name]
+            self.skewer_readlen_dist[s_name] = OrderedDict(sorted(items.iteritems(), key=lambda x: int(x[0])))
+
+        # add the histogram to the report
+        self.add_readlen_dist_plot()
 
         if len(self.skewer_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.skewer_data)))
+
+    def add_readlen_dist_plot(self):
+        pconfig = {
+            'id': 'skewer_read_length_histogram',
+            'title': 'Read Length Distribution',
+            'categories': True,
+            'ylab': '% of Reads',
+            'xlab': 'Read Length',
+            'ymax': 100,
+            'ymin': 0,
+            'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
+        }
+
+        html_content = self.plot_xy_data(self.skewer_readlen_dist, pconfig)
+
+        self.sections.append({
+            'name': 'Read Length Distribution',
+            'anchor': 'skewer_hist',
+            'content': html_content
+        })
 
     def parse_skewer_log(self, f):
         """ Go through log file looking for skewer output """
@@ -76,12 +119,14 @@ class MultiqcModule(BaseMultiqcModule):
             'r_trimmed': "(\d+) \(\s*\d+.\d+%\) trimmed read",
             'r_untrimmed': "(\d+) \(\s*\d+.\d+%\) untrimmed read"
         }
+        regex_hist = "\s?(\d+)\s+(\d+)\s+(\d+.\d+)%"
 
         data = dict()
         for k, v in regexes.items():
             data[k] = 0
         data['fq1'] = None
         data['fq2'] = None
+        readlen_dist = OrderedDict()
 
         for l in fh:
             for k, r in regexes.items():
@@ -89,13 +134,21 @@ class MultiqcModule(BaseMultiqcModule):
                 if match:
                     data[k] = match.group(1).replace(',', '')
 
+            match = re.search(regex_hist, l)
+            if match:
+                read_length = str(match.group(1))
+                pct_at_rl = float(match.group(3))
+                readlen_dist[read_length] = pct_at_rl
+
         if data['fq1'] is not None:
             s_name = os.path.basename(data['fq1'])
             self.add_skewer_data(s_name, data, f)
+            self.skewer_readlen_dist[s_name] = readlen_dist
 
         if data['fq2'] is not None:
             s_name = os.path.basename(data['fq2'])
             self.add_skewer_data(s_name, data, f)
+            self.skewer_readlen_dist[s_name] = readlen_dist
 
     def add_skewer_data(self, s_name, data, f):
         stats = ['r_processed', 'r_short_filtered', 'r_empty_filtered', 'r_avail', 'r_trimmed', 'r_untrimmed']
