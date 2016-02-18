@@ -52,8 +52,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_barplot(self):
         cats = OrderedDict()
-        cats['n_dups'] = {'name': 'Duplicates'}
         cats['n_nondups'] = {'name': 'Non-duplicates'}
+        cats['n_dups'] = {'name': 'Duplicates'}
 
         pconfig = {
             'title': 'Number of duplicate reads',
