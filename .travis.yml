@@ -7,12 +7,13 @@ python:
 install:
   - python setup.py -q install
   - git clone https://github.com/ewels/MultiQC_TestData.git test_data
+  - cd test_data
 # commands to run tests
 script:
-  - multiqc test_data
-  - multiqc test_data -f -i "Forced Report"
-  - multiqc -n custom_fn --no-data-dir -e fastqc
-  - multiqc -f -z -m fastqc
-  - multiqc -o tests/multiqc_report_dev test_data -t default_dev -k json
-  - multiqc -o tests/multiqc_report_geo test_data -t geo -k yaml -v
+  - multiqc data
+  - multiqc data -f -i "Forced Report"
+  - multiqc data -n custom_fn --no-data-dir -e fastqc
+  - multiqc data -f -z -m fastqc
+  - multiqc data -o tests/multiqc_report_dev -t default_dev -k json
+  - multiqc data -o tests/multiqc_report_geo -t geo -k yaml -v
   
