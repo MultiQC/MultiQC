@@ -1,7 +1,7 @@
 # MultiQC Version History
 
 #### v0.5dev
-...none yet
+* New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 
 #### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
 * New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample

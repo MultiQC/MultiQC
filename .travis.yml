@@ -9,6 +9,10 @@ install:
   - git clone https://github.com/ewels/MultiQC_TestData.git test_data
 # commands to run tests
 script:
-  - multiqc -o tests/multiqc_report test_data
-  - multiqc -o tests/multiqc_report_dev test_data -t default_dev
-  - multiqc -o tests/multiqc_report_geo test_data -t geo
+  - multiqc test_data
+  - multiqc test_data -f -i "Forced Report"
+  - multiqc -n custom_fn --no-data-dir -e fastqc
+  - multiqc -f -z -m fastqc
+  - multiqc -o tests/multiqc_report_dev test_data -t default_dev -k json
+  - multiqc -o tests/multiqc_report_geo test_data -t geo -k yaml -v
+  

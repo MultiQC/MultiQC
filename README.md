@@ -39,6 +39,7 @@ Currently, supported tools include:
   * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
   * [Cutadapt](https://code.google.com/p/cutadapt/)
+  * [Skewer](https://github.com/relipmoc/skewer)
 * Read aligners
   * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
   * [STAR](https://github.com/alexdobin/STAR)
@@ -111,4 +112,12 @@ for details. These notes include extensive help with how to use the built in cod
 
 If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
+
+### Contributors
+Many thanks to those who have helped out with with project.
+* Project lead and main author: @ewels
+* Early code refactoring help: @moonso
+* Early version of Qualimap module: @guillermo-carrasco
+* Skewer module: @dakl
+* Tweaks: @robinandeer and @avilella
 
