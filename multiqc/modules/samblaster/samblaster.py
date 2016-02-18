@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
                                             href="https://github.com/GregoryFaust/samblaster",
                                             info="is a tool to mark duplicates and extract discordant and split reads from sam files.")
 
+        self.sections = list()
         self.samblaster_data = dict()
         for f in self.find_log_files(config.sp['samblaster'], filehandles=True):
             self.parse_samblaster(f)
@@ -47,6 +48,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.samblaster_data)))
 
+        self.add_barplot()
+
+    def add_barplot(self):
+        cats = OrderedDict()
+        cats['n_dups'] = {'name': 'Duplicates'}
+        cats['n_nondups'] = {'name': 'Non-duplicates'}
+
+        pconfig = {
+            'title': 'Number of duplicate reads',
+        }
+        self.sections.append({
+            'name': 'Duplicate reads',
+            'anchor': 'qualimap-reads-genomic-origin',
+            'content': self.plot_bargraph(self.samblaster_data, cats, pconfig)
+        })
+
     def parse_samblaster(self, f):
         """ Go through log file looking for samblaster output.
         If the
@@ -55,13 +72,14 @@ class MultiqcModule(BaseMultiqcModule):
         input_file_regex = "samblaster: Opening (\S+) for read."
         rgtag_name_regex = "\\\\tSM:(\S*?)\\\\t"
         data = {}
+        s_name = None
         fh = f['f']
         for l in fh:
             # try to find name from RG-tag. If bwa mem is used upstream samblaster with pipes, then the bwa mem command
             # including the read group will be written in the log
             match = re.search(rgtag_name_regex, l)
             if match:
-                data['s_name'] = match.group(1)
+                s_name = match.group(1)
 
             # try to find name from the input file name, if used
             match = re.search(input_file_regex, l)
@@ -70,17 +88,15 @@ class MultiqcModule(BaseMultiqcModule):
                 fname, ext = os.path.splitext(basefn)
                 # if it's stdin, then try bwa RG-tag instead
                 if fname != 'stdin':
-                    data['s_name'] = fname
+                    s_name = fname
 
             match = re.search(dups_regex, l)
             if match:
-                data['n_dups'] = match.group(2)
-                data['n_tot'] = match.group(3)
-                data['pct_dups'] = match.group(4)
+                data['n_dups'] = int(match.group(2))
+                data['n_tot'] = int(match.group(3))
+                data['n_nondups'] = data['n_tot'] - data['n_dups']
+                data['pct_dups'] = float(match.group(4))
 
-        if 's_name' in data:
-            s_name = data['s_name']
+        if s_name is not None:
             self.add_data_source(f, s_name)
-            self.samblaster_data[s_name] = dict(n_dups=int(data['n_dups']),
-                                                n_tot=int(data['n_tot']),
-                                                pct_dups=float(data['pct_dups']))
+            self.samblaster_data[s_name] = data
