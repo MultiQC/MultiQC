@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # After adding new elements, the ordereddict needs to be re-sorted
             items = self.skewer_readlen_dist[s_name]
-            self.skewer_readlen_dist[s_name] = OrderedDict(sorted(items.iteritems(), key=lambda x: int(x[0])))
+            self.skewer_readlen_dist[s_name] = OrderedDict(sorted(items.items(), key=lambda x: int(x[0])))
 
         # add the histogram to the report
         self.add_readlen_dist_plot()
@@ -73,11 +73,10 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'skewer_read_length_histogram',
             'title': 'Read Length Distribution after trimming with Skewer',
-            'categories': False,
             'xDecimals': False,
             'ylab': '% of Reads',
             'xlab': 'Read Length',
-            'xmin': '0',
+            'xmin': 0,
             'ymax': 100,
             'ymin': 0,
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
@@ -121,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             match = re.search(regex_hist, l)
             if match:
-                read_length = match.group(1)
+                read_length = int(match.group(1))
                 pct_at_rl = float(match.group(3))
                 readlen_dist[read_length] = pct_at_rl
 
