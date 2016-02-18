@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
         headers['percent_trimmed'] = {
-            'title': 'Trimmed',
+            'title': '% Trimmed',
             'description': '% Total Base Pairs trimmed',
             'max': 30,
             'min': 0,

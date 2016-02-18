@@ -168,7 +168,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 for sn in sorted(data.keys()):
                     for k in data[sn].keys():
                         if type(data[sn][k]) is not dict and k not in h:
-                            h.append(k)
+                            h.append(str(k))
                 if sort_cols:
                     h = sorted(h)
                 

@@ -60,3 +60,5 @@ star:
     fn: Log.final.out
 tophat:
     fn: align_summary.txt
+skewer:
+    contents: 'COMMAND LINE:	skewer'

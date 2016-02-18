@@ -56,6 +56,7 @@ setup(
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
+            'skewer = multiqc.modules.skewer:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
