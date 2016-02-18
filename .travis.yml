@@ -3,10 +3,12 @@ python:
   - "3.5"
   - "3.4"
   - "2.7"
-# command to install dependencies
-install: python setup.py -q install
-# command to run tests
+# commands to install dependencies
+install:
+  - python setup.py -q install
+  - git clone https://github.com/ewels/MultiQC_TestData.git test_data
+# commands to run tests
 script:
-  - multiqc -o tests/multiqc_report tests/data
-  - multiqc -o tests/multiqc_report_dev tests/data -t default_dev
-  - multiqc -o tests/multiqc_report_geo tests/data -t geo
+  - multiqc -o tests/multiqc_report test_data
+  - multiqc -o tests/multiqc_report_dev test_data -t default_dev
+  - multiqc -o tests/multiqc_report_geo test_data -t geo
