@@ -62,3 +62,5 @@ tophat:
     fn: align_summary.txt
 skewer:
     contents: 'COMMAND LINE:	skewer'
+samblaster:
+    contents: 'samblaster: Version'
