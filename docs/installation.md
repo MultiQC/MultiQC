@@ -2,7 +2,7 @@
 
 ## Installing Python
 To see if you have python installed, run `python --version` on the command line.
-If you see version 2.7+ or 3.4+ then you can skip this step.
+If you see version 2.7+, 3.4+ or 3.5+ then you can skip this step.
 
 We recommend using virtual environments to manage your Python installation.
 Our favourite is Anaconda, a cross-platform tool to manage Python environments.
@@ -37,8 +37,15 @@ If you would like the development version, the command is:
 pip install git+https://github.com/ewels/MultiQC.git
 ```
 
+## Installing with `conda`
+If you're using `conda` as described above, you can install MultiQC from the `bioconda`
+channel as follows:
+```
+conda install -c bioconda multiqc
+```
+
 ## Manual installation
-If you'd rather not use `pip`, you can clone the code and install the code yourself:
+If you'd rather not use either of these tools, you can clone the code and install the code yourself:
 ```
 git clone https://github.com/ewels/MultiQC.git
 cd MultiQC
@@ -74,11 +81,3 @@ python setup.py install
 
 If you downloaded the flat files, just repeat the installation procedure.
 
-## Graphical Mac OSX App
-MultiQC comes with a graphical app for OS X.
-See the [MultiQC_OSXApp](https://github.com/ewels/MultiQC_OSXApp)
-repository for more details and downloads.
-
-Note that this is currently quite simplistic. I'm considering teaching
-myself to use TkInter to make a proper cross-platform graphical interface.
-No promises about when this will happen though :)
