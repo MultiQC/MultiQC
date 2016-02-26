@@ -2,6 +2,8 @@
 
 #### v0.5dev
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
+* New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
+* MultiQC added to `bioconda` (with help from @dakl)
 
 #### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
 * New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample

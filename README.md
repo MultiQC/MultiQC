@@ -118,6 +118,6 @@ Many thanks to those who have helped out with with project.
 * Project lead and main author: @ewels
 * Early code refactoring help: @moonso
 * Early version of Qualimap module: @guillermo-carrasco
-* Skewer module: @dakl
+* Skewer and Samblaster modules: @dakl
 * Tweaks: @robinandeer and @avilella
 
