@@ -64,6 +64,9 @@ setup(
             'default_dev = multiqc.templates.default_dev',
             'geo = multiqc.templates.geo',
         ],
+        # 'multiqc.cli_options.v1': [
+            # 'my-new-option = myplugin.cli:new_option'
+        # ],
         # 'multiqc.hooks.v1': [
             # 'execution_start = myplugin.hooks:execution_start',
             # 'config_loaded = myplugin.hooks:config_loaded',
