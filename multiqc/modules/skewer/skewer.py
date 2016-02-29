@@ -29,6 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files(config.sp['skewer'], filehandles=True):
             self.parse_skewer_log(f)
+        
+        if len(self.skewer_data) == 0:
+            log.debug("Could not find any data in {}".format(config.analysis_dir))
+            raise UserWarning
 
         headers = OrderedDict()
         headers['pct_trimmed'] = {
@@ -63,10 +67,6 @@ class MultiqcModule(BaseMultiqcModule):
         # add the histogram to the report
         self.add_readlen_dist_plot()
 
-        if len(self.skewer_data) == 0:
-            log.debug("Could not find any data in {}".format(config.analysis_dir))
-            raise UserWarning
-
         log.info("Found {} reports".format(len(self.skewer_data)))
 
     def add_readlen_dist_plot(self):
@@ -83,12 +83,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         html_content = self.plot_xy_data(self.skewer_readlen_dist, pconfig)
-
-        self.sections.append({
-            'name': 'Read Length Distribution',
-            'anchor': 'skewer_hist',
-            'content': html_content
-        })
+        
+        # Only one section, so add to the intro
+        self.intro += html_content
 
     def parse_skewer_log(self, f):
         """ Go through log file looking for skewer output """

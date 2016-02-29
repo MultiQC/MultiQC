@@ -26,6 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.samblaster_data = dict()
         for f in self.find_log_files(config.sp['samblaster'], filehandles=True):
             self.parse_samblaster(f)
+        if len(self.samblaster_data) == 0:
+            log.debug("Could not find any data in {}".format(config.analysis_dir))
+            raise UserWarning
 
         headers = OrderedDict()
         headers['pct_dups'] = {
@@ -42,10 +45,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.samblaster_data, 'multiqc_samblaster')
 
-        if len(self.samblaster_data) == 0:
-            log.debug("Could not find any data in {}".format(config.analysis_dir))
-            raise UserWarning
-
         log.info("Found {} reports".format(len(self.samblaster_data)))
 
         self.add_barplot()
@@ -58,11 +57,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'title': 'Number of duplicate reads',
         }
-        self.sections.append({
-            'name': 'Duplicate reads',
-            'anchor': 'qualimap-reads-genomic-origin',
-            'content': self.plot_bargraph(self.samblaster_data, cats, pconfig)
-        })
+        # Only one section, so add to the intro
+        self.intro += self.plot_bargraph(self.samblaster_data, cats, pconfig)
 
     def parse_samblaster(self, f):
         """ Go through log file looking for samblaster output.

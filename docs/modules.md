@@ -221,6 +221,10 @@ if len(self.mod_data) == 0:
     raise UserWarning
 ```
 
+Note that this has to be raised as early as possible, so that it halts
+the module progress. For example, if no logs are found then the module
+should not create any files or try to do any computation.
+
 ### Custom sample names
 Typically, sample names are taken from cleaned log filenames (the default
 `f['s_name']` value returned). However, if possible, it's better to use
