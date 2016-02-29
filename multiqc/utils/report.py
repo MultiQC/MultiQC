@@ -13,8 +13,8 @@ import os
 import yaml
 
 import multiqc
+from multiqc import logger
 from multiqc.utils import config
-from multiqc import (logger)
 from multiqc.utils.log import init_log, LEVELS
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output

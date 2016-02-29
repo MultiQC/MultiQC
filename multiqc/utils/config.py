@@ -14,7 +14,7 @@ import sys
 import yaml
 
 import multiqc
-from multiqc import (logger)
+from multiqc import logger
 from multiqc.utils.log import init_log, LEVELS
 
 # Constants
@@ -116,28 +116,35 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
         the installation script (python setup.py install)")
     sys.exit(1)
 
-#######################
-# Overwrite defaults with config files
-#######################
-# Load and parse installation config file if we find it
-try:
-    yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
-    with open(yaml_config) as f:
-        config = yaml.load(f)
-        for c, v in config.items():
-            globals()[c] = v
-except (IOError, AttributeError):
-    pass
 
-# Load and parse a user config file if we find it
-try:
-    yaml_config = os.path.expanduser('~/.multiqc_config.yaml')
-    with open(yaml_config) as f:
-        config = yaml.load(f)
-        for c, v in config.items():
-            globals()[c] = v
-except (IOError, AttributeError):
-    pass
+# Load user config in a def. This is called by the main script after initialisation
+# This allows the plugin_hooks.mqc_trigger('config_loaded') hook to fire before the
+# defaults are overwritten.
+def mqc_load_userconfig():
+    """ Overwrite config defaults with user config files """
+    # Load and parse installation config file if we find it
+    try:
+        yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
+        with open(yaml_config) as f:
+            config = yaml.load(f)
+            for c, v in config.items():
+                globals()[c] = v
+    except (IOError, AttributeError):
+        pass
+
+    # Load and parse a user config file if we find it
+    try:
+        yaml_config = os.path.expanduser('~/.multiqc_config.yaml')
+        with open(yaml_config) as f:
+            config = yaml.load(f)
+            for c, v in config.items():
+                if c == 'sp':
+                    # Merge filename patterns instead of replacing
+                    sp.update(v)
+                else:
+                    globals()[c] = v
+    except (IOError, AttributeError):
+        pass
 
 # These config vars are imported by all modules and can be updated by anything.
 # The main launcher (scripts/multiqc) overwrites some of these variables

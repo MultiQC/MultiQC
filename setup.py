@@ -66,6 +66,7 @@ setup(
         ],
         # 'multiqc.hooks.v1': [
             # 'execution_start = myplugin.hooks:execution_start',
+            # 'config_loaded = myplugin.hooks:config_loaded',
             # 'before_modules = myplugin.hooks:before_modules',
             # 'after_modules = myplugin.hooks:after_modules',
             # 'execution_finish = myplugin.hooks:execution_finish',

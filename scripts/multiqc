@@ -21,9 +21,12 @@ import importlib
 
 import click
 
-from multiqc import (logger, __version__)
-from multiqc.utils import (report, plugin_hooks, config)
+from multiqc import logger, __version__
+from multiqc.utils import report, plugin_hooks, config
 from multiqc.utils.log import init_log, LEVELS
+
+plugin_hooks.mqc_trigger('config_loaded') 
+config.mqc_load_userconfig() # Overwrite defaults with user config
 
 @click.command(
     context_settings = dict( help_option_names = ['-h', '--help'] )
