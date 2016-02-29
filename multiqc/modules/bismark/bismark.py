@@ -3,11 +3,8 @@
 """ MultiQC module to parse output from Bismark """
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
-import io
-import json
+from collections import OrderedDict
 import logging
-import os
 import re
 
 from multiqc import config, BaseMultiqcModule

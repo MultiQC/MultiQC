@@ -11,7 +11,7 @@ import os
 
 from collections import defaultdict
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)

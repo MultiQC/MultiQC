@@ -8,14 +8,11 @@ from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import io
 import json
-import logging
 import os
 import yaml
 
-import multiqc
 from multiqc import logger
 from multiqc.utils import config
-from multiqc.utils.log import init_log, LEVELS
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
 from yaml.representer import Representer, SafeRepresenter

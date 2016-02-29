@@ -3,7 +3,7 @@
 """ MultiQC modules base class, contains helper functions """
 
 from __future__ import print_function
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
 import fnmatch
 import io
 import json
@@ -11,7 +11,6 @@ import logging
 import mimetypes
 import os
 import random
-import shutil
 
 from multiqc.utils import report, config
 logger = logging.getLogger(__name__)

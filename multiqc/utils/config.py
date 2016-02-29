@@ -3,10 +3,9 @@
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
 
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from datetime import datetime
 import inspect
-import logging
 import os
 import pkg_resources
 import random
@@ -15,7 +14,6 @@ import yaml
 
 import multiqc
 from multiqc import logger
-from multiqc.utils.log import init_log, LEVELS
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))

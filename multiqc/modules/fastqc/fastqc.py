@@ -13,15 +13,13 @@
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import io
 import json
 import logging
 import os
 import re
-import shutil
 import zipfile
 
-from multiqc import config, utils, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)

@@ -3,10 +3,7 @@
 """ MultiQC module to parse output from Preseq """
 
 from __future__ import print_function
-import io
 import logging
-import os
-import re
 
 from multiqc import config, BaseMultiqcModule
 
