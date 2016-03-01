@@ -37,8 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.preseq_data)))
 
-        self.sections = list()
-
         # Preseq plot
         # Only one section, so add to the intro
         self.intro += self.preseq_length_trimmed_plot()

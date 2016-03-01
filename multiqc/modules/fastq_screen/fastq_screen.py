@@ -41,8 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.fq_screen_data)))
 
-        self.sections = list()
-
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
         if len(self.fq_screen_data) * self.num_orgs <= 160:

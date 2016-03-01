@@ -22,7 +22,6 @@ class MultiqcModule(BaseMultiqcModule):
                                             href="https://github.com/GregoryFaust/samblaster",
                                             info="is a tool to mark duplicates and extract discordant and split reads from sam files.")
 
-        self.sections = list()
         self.samblaster_data = dict()
         for f in self.find_log_files(config.sp['samblaster'], filehandles=True):
             self.parse_samblaster(f)

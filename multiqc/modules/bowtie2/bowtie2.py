@@ -40,8 +40,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write parsed report data to a file
         self.write_data_file(self.bowtie2_data, 'multiqc_bowtie2')
-        
-        self.sections = list()
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
