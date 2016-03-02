@@ -41,13 +41,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files(config.sp['fastqc']['data']):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
-            self.add_data_source(f, s_name)
-            self.parse_fastqc_report(f['f'], s_name, f['root'])
+            self.parse_fastqc_report(f['f'], s_name, f)
         
         # Find and parse zipped FastQC reports
         for f in self.find_log_files(config.sp['fastqc']['zip'], filecontents=False):
             s_name = f['fn'].rstrip('_fastqc.zip')
-            self.add_data_source(f, s_name)
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
             except zipfile.BadZipfile:
@@ -57,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as fh:
                     r_data = fh.read().decode('utf8')
-                    self.parse_fastqc_report(r_data, s_name, f['root'])
+                    self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
@@ -106,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_content_plot()
 
 
-    def parse_fastqc_report(self, file_contents, s_name=None, root=None):
+    def parse_fastqc_report(self, file_contents, s_name=None, f=None):
         """ Takes contents from a fastq_data.txt file and parses out required
         statistics and data. Returns a dict with keys 'stats' and 'data'.
         Data is for plotting graphs, stats are for top table. """
@@ -132,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Make the sample name from the input filename if we find it
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
-            s_name = self.clean_s_name(fn_search.group(1) , root)
+            s_name = self.clean_s_name(fn_search.group(1) , f['root'])
         
         # Throw a warning if we already have this sample and remove prev data
         # Unzipped reports means that this can be quite frequent
@@ -271,6 +269,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Add parsed stats to dicts
         self.fastqc_stats[s_name] = s
+        self.add_data_source(f, s_name)
+        
 
     def fastqc_stats_table(self):
         """ Add some single-number stats to the basic statistics
