@@ -48,7 +48,6 @@ config.mqc_load_userconfig() # Overwrite defaults with user config
 )
 @click.option('-n', '--filename',
                     type = str,
-                    default = config.output_fn_name,
                     help = "Report filename. Use 'stdout' to print to standard out."
 )
 @click.option('-t', '--template',

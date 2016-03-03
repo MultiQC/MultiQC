@@ -127,6 +127,7 @@ def mqc_load_userconfig():
         yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
         with open(yaml_config) as f:
             config = yaml.load(f)
+            logger.debug("Loaded config settings from: {}".format(yaml_config))
             for c, v in config.items():
                 globals()[c] = v
     except (IOError, AttributeError):
@@ -137,6 +138,7 @@ def mqc_load_userconfig():
         yaml_config = os.path.expanduser('~/.multiqc_config.yaml')
         with open(yaml_config) as f:
             config = yaml.load(f)
+            logger.debug("Loaded config settings from: {}".format(yaml_config))
             for c, v in config.items():
                 if c == 'sp':
                     # Merge filename patterns instead of replacing
