@@ -26,7 +26,6 @@ from multiqc import logger, __version__
 from multiqc.utils import report, plugin_hooks, config, log
 
 plugin_hooks.mqc_trigger('config_loaded') 
-config.mqc_load_userconfig() # Overwrite defaults with user config
 
 @click.command(
     context_settings = dict( help_option_names = ['-h', '--help'] )
@@ -125,6 +124,9 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     logger.debug("Command     : {}".format(' '.join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     logger.debug("Template    : {}".format(template))
+    
+    # Overwrite config defaults with user yaml files
+    config.mqc_load_userconfig()
     
     # Set up key variables (overwrite config vars from command line)
     config.title = title

@@ -127,26 +127,28 @@ def mqc_load_userconfig():
         yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
         with open(yaml_config) as f:
             config = yaml.load(f)
-            logger.debug("Loaded config settings from: {}".format(yaml_config))
+            logger.debug("Loading config settings from: {}".format(yaml_config))
             for c, v in config.items():
+                logger.debug("New config '{}': {}".format(c, v))
                 globals()[c] = v
     except (IOError, AttributeError):
-        pass
+        logger.debug("No MultiQC installation config found: {}".format(yaml_config))
 
     # Load and parse a user config file if we find it
     try:
         yaml_config = os.path.expanduser('~/.multiqc_config.yaml')
         with open(yaml_config) as f:
             config = yaml.load(f)
-            logger.debug("Loaded config settings from: {}".format(yaml_config))
+            logger.debug("Loading config settings from: {}".format(yaml_config))
             for c, v in config.items():
                 if c == 'sp':
                     # Merge filename patterns instead of replacing
                     sp.update(v)
                 else:
+                    logger.debug("New config '{}': {}".format(c, v))
                     globals()[c] = v
     except (IOError, AttributeError):
-        pass
+        logger.debug("No MultiQC user config found: {}".format(yaml_config))
 
 # These config vars are imported by all modules and can be updated by anything.
 # The main launcher (scripts/multiqc) overwrites some of these variables
