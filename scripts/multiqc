@@ -122,8 +122,9 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     plugin_hooks.mqc_trigger('execution_start')
     
     logger.info("This is MultiQC v{}".format(__version__))
-    logger.debug("Working dir : {0}".format(os.getcwd()))
-    logger.debug("Template    : {0}".format(template))
+    logger.debug("Command     : {}".format(' '.join(sys.argv)))
+    logger.debug("Working dir : {}".format(os.getcwd()))
+    logger.debug("Template    : {}".format(template))
     
     # Set up key variables (overwrite config vars from command line)
     config.title = title
@@ -155,11 +156,11 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     
     # Print some status updates
     if config.title is not None:
-        logger.info("Report title: {0}".format(config.title))
+        logger.info("Report title: {}".format(config.title))
     if dirs:
         logger.info("Prepending directory to sample names")
     for d in config.analysis_dir:
-        logger.info("Searching   : {0}".format(d))
+        logger.info("Searching   : {}".format(d))
     
     # Get the list of modules we want to run
     run_modules = config.avail_modules.keys()
@@ -172,7 +173,7 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     if len(run_modules) == 0:
         logger.critical('No analysis modules specified!')
         sys.exit(1)
-    logger.debug("Analysing modules: {0}".format(', '.join(run_modules)))
+    logger.debug("Analysing modules: {}".format(', '.join(run_modules)))
     
     # Load the template
     template_mod = config.avail_templates[template].load()
@@ -339,6 +340,9 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     plugin_hooks.mqc_trigger('execution_finish')
 
     logger.info("MultiQC complete")
+    
+    # Move the log file into the data directory
+    log.copy_tmp_log()
     
     # Exit with an error code if a module broke
     sys.exit(sys_exit_code)
