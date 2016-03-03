@@ -23,8 +23,7 @@ import importlib
 import click
 
 from multiqc import logger, __version__
-from multiqc.utils import report, plugin_hooks, config
-from multiqc.utils.log import init_log, LEVELS
+from multiqc.utils import report, plugin_hooks, config, log
 
 plugin_hooks.mqc_trigger('config_loaded') 
 config.mqc_load_userconfig() # Overwrite defaults with user config
@@ -115,31 +114,16 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     """
     
     # Set up logging level
-    loglevel = LEVELS.get(min(verbose,1), "INFO")
+    loglevel = log.LEVELS.get(min(verbose,1), "INFO")
     if quiet:
         loglevel = 'WARNING'
-    init_log(logger, loglevel=loglevel)
+    log.init_log(logger, loglevel=loglevel)
     
     plugin_hooks.mqc_trigger('execution_start')
     
     logger.info("This is MultiQC v{}".format(__version__))
     logger.debug("Working dir : {0}".format(os.getcwd()))
     logger.debug("Template    : {0}".format(template))
-    
-    # Are we running as an OSX App?
-    osx_app = False
-    if os.environ.get('MULTQC_IS_APP') is not None:
-        osx_app = True
-        logging.basicConfig(stream=sys.stdout, format='<li>%(message)s</li>', level=20)
-        with open(os.path.join(os.getcwd(), 'multiqc_app_header.html'), 'r') as f:
-            print(f.read())
-    
-    # Weird thing that has to do with running the osx app:
-    if (sys.argv[-1] == '-f' or sys.argv[-1][:4] == '-psn') and osx_app:
-            print("</ul><p>Please drag your analysis directory"\
-                    " here.</p><small>MultiQC version {0}</small>"\
-                    "</body></html>".format(__version__))
-            sys.exit(0)
     
     # Set up key variables (overwrite config vars from command line)
     config.title = title
@@ -168,9 +152,6 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
             config.data_dir_name = '{}_data'.format(filename)
         if not config.output_fn_name.endswith('.html'):
             config.output_fn_name = '{}.html'.format(config.output_fn_name)
-    
-    if osx_app:
-        config.output_dir = os.path.join(analysis_dir, 'multiqc_report')
     
     # Print some status updates
     if config.title is not None:
@@ -358,8 +339,6 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     plugin_hooks.mqc_trigger('execution_finish')
 
     logger.info("MultiQC complete")
-    if osx_app: 
-        print('</ul><p><a href="file://{}">Click here to see the MultiQC report</a>.</p><small>Resize the window first</small></body></html>'.format(config.output_fn))
     
     # Exit with an error code if a module broke
     sys.exit(sys_exit_code)

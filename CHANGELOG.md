@@ -7,6 +7,7 @@
 * New plugin hook: `config_loaded`
 * Plugins can now add new command line options (thanks to @robinandeer)
 * Changed default data directory name from `multiqc_report_data` to `multiqc_data`
+* Removed support for depreciated MultiQC_OSXApp
 
 #### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
 * New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample
