@@ -55,7 +55,7 @@ def copy_tmp_log():
     try:
         shutil.copyfile(log_tmp_fn, os.path.join(config.data_dir, '.multiqc.log'))
         shutil.rmtree(log_tmp_dir)
-    except IOError:
+    except (AttributeError, IOError):
         pass
 
 
