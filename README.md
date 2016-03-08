@@ -41,11 +41,12 @@ Currently, supported tools include:
   * [Cutadapt](https://code.google.com/p/cutadapt/)
   * [Skewer](https://github.com/relipmoc/skewer)
 * Read aligners
-  * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
   * [STAR](https://github.com/alexdobin/STAR)
   * [Tophat](https://ccb.jhu.edu/software/tophat/)
   * [Bowtie](http://bowtie-bio.sourceforge.net)
   * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
+  * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
+  * [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
 * Post-alignment tools
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics, OxoGMetrics)

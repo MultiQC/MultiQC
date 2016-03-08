@@ -31,6 +31,8 @@ fastqc:
         fn: _fastqc.zip
 featurecounts:
     fn: _counts.txt.summary
+hicup:
+    fn: HiCUP_summary_report
 picard:
     markdups:
         contents: picard.sam.MarkDuplicates

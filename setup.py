@@ -49,6 +49,7 @@ setup(
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
+            'hicup = multiqc.modules.hicup:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',

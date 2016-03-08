@@ -61,7 +61,7 @@ module_order = [
     # Post-alignment analysis results
     'qualimap', 'featureCounts', 'picard', 'preseq', 'samblaster',
     # Alignment tool stats
-    'bismark', 'star', 'tophat', 'bowtie2', 'bowtie1',
+    'bismark', 'hicup', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
     'cutadapt', 'skewer', 'fastq_screen', 'fastqc',
 ]
