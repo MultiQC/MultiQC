@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import base64
+import click
 from collections import defaultdict
 from distutils import version
 from distutils.dir_util import copy_tree
@@ -20,9 +21,11 @@ import shutil
 import sys
 import tempfile
 import traceback
-import urllib2
 
-import click
+try:
+    from urllib.request import urlopen #py3
+except ImportError:
+    from urllib import urlopen #py2
 
 from multiqc import logger, __version__
 from multiqc.utils import report, plugin_hooks, config, log
@@ -133,12 +136,12 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
-            response = urllib2.urlopen('http://multiqc.info/version.php?v={}'.format(__version__))
-            remote_version = response.read()
+            response = urlopen('http://multiqc.info/version.php?v={}'.format(__version__))
+            remote_version = response.read().decode('utf-8')
             if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', __version__)):
                 logger.warn('MultiQC Version {} now available!'.format(remote_version))
-        except (ValueError, urllib2.URLError):
-            pass
+        except:
+            logger.debug('Could not connect to multiqc.info for version check')
     
     # Set up key variables (overwrite config vars from command line)
     config.title = title
