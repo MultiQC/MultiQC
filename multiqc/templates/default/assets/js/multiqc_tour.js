@@ -55,11 +55,6 @@ var tour_steps = [
     content: "Click a header to sort by that column, shift-click to sort by multiple."
   },
   {
-    element: "#general_stats_table tbody tr:first-child td:first-child",
-    title: "Reorder rows",
-    content: "Drag the handle on any row to rearrange."
-  },
-  {
     element: "#general_stats_colsort_btn",
     title: "Configure columns",
     backdropPadding: 5,

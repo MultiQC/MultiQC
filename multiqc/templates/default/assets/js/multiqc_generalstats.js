@@ -89,15 +89,6 @@ $(function () {
     gsTabDiv.scroll(function(){
       $("#gsClone").css('margin-left', -$(this).scrollLeft());
     });
-    
-    // Make rows in general stats tables sortable
-    $('.mqc_table tbody').sortable({
-      handle: '.sorthandle',
-      helper: function fixWidthHelper(e, ui) {
-        ui.children().each(function() { $(this).width($(this).width()); });
-        return ui;
-      }
-    });
 
     // Colour code table cells using chroma.js
     $('table').each(function(){
@@ -130,7 +121,7 @@ $(function () {
           if(colscheme_rev){
             scale = chroma.scale(colscheme).domain([maxval, minval]);
           }
-          table.find('tr td:nth-of-type('+(idx+1)+')').each(function(){
+          table.find('tr td:nth-of-type('+idx+')').each(function(){
             var val = parseFloat($(this).text());
             var rgb = scale(val).rgb(); //.luminance(0.7).css();
             for (i in rgb){

@@ -21,7 +21,6 @@ This block generates the General Statistics table at the top of the report.
     <table id="general_stats_table" class="table table-condensed mqc_table">
       <thead>
         <tr>
-          <td class="sorthandle">&nbsp;</td>
           <th class="rowheader">Sample Name</th>
           {%- for k, h in report.general_stats_html['headers'].items() %}
             {{ h }}
@@ -31,7 +30,6 @@ This block generates the General Statistics table at the top of the report.
       <tbody>
         {% for sn, r in report.general_stats_html['rows']|dictsort %}
         <tr>
-          <td class="sorthandle">||</td>
           <th class="rowheader" data-original-sn="{{ sn }}">{{ sn }}</th>
           {%- for k, h in report.general_stats_html['headers'].items() %}
             {{ r[k] if r[k] else '<td class="'+k+'"></td>' }}
