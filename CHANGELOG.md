@@ -11,6 +11,7 @@
 * Removed support for depreciated MultiQC_OSXApp
 * Updated logging so that a verbose `multiqc_data/.multiqc.log` file is always written
 * Now logs more stuff in verbose mode - command used, user configs and so on.
+* Added a call to multiqc.info to check for new versions. Disable with config `no_version_check`
 * Removed general stats manual row sorting.
 
 #### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
