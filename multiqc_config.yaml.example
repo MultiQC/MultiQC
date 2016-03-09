@@ -31,7 +31,9 @@ make_data_dir: True
 # text to their right will be discarded.
 # For example - file1.fq.gz_trimmed.bam_deduplicated_fastqc.zip
 # would be cleaned to 'file1'
-fn_clean_exts:
+# Two options here - fn_clean_exts will replace the defaults,
+# extra_fn_clean_exts will append to the defaults
+extra_fn_clean_exts:
     - .gz
     - .fastq
     - .fq
