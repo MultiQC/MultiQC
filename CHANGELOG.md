@@ -3,6 +3,7 @@
 #### v0.5dev
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
+* New [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) module
 * MultiQC added to `bioconda` (with help from @dakl)
 * New plugin hook: `config_loaded`
 * Plugins can now add new command line options (thanks to @robinandeer)

@@ -35,7 +35,7 @@ force = False
 zip_data_dir = False
 data_format = 'tsv'
 data_format_extensions = {'tsv': 'txt', 'json': 'json', 'yaml': 'yaml'}
-fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc' ]
+fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup' ]
 fn_ignore_files = ['.DS_Store']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 num_datasets_plot_limit = 50
@@ -61,7 +61,7 @@ module_order = [
     # Post-alignment analysis results
     'qualimap', 'featureCounts', 'picard', 'preseq', 'samblaster',
     # Alignment tool stats
-    'bismark', 'star', 'tophat', 'bowtie2', 'bowtie1',
+    'bismark', 'hicup', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
     'cutadapt', 'skewer', 'fastq_screen', 'fastqc',
 ]
@@ -123,20 +123,14 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 def mqc_load_userconfig():
     """ Overwrite config defaults with user config files """
     # Load and parse installation config file if we find it
-    try:
-        yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
-        with open(yaml_config) as f:
-            config = yaml.load(f)
-            logger.debug("Loading config settings from: {}".format(yaml_config))
-            for c, v in config.items():
-                logger.debug("New config '{}': {}".format(c, v))
-                globals()[c] = v
-    except (IOError, AttributeError):
-        logger.debug("No MultiQC installation config found: {}".format(yaml_config))
+    mqc_load_config(os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml'))
 
     # Load and parse a user config file if we find it
+    mqc_load_config(os.path.expanduser('~/.multiqc_config.yaml'))
+
+def mqc_load_config(yaml_config):
+    """ Load and parse a config file if we find it """
     try:
-        yaml_config = os.path.expanduser('~/.multiqc_config.yaml')
         with open(yaml_config) as f:
             config = yaml.load(f)
             logger.debug("Loading config settings from: {}".format(yaml_config))
@@ -144,6 +138,9 @@ def mqc_load_userconfig():
                 if c == 'sp':
                     # Merge filename patterns instead of replacing
                     sp.update(v)
+                if c == 'extra_fn_clean_exts':
+                    # Merge filename cleaning patterns instead of replacing
+                    fn_clean_exts.update(v)
                 else:
                     logger.debug("New config '{}': {}".format(c, v))
                     globals()[c] = v
