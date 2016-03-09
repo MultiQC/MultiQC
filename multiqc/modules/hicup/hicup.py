@@ -41,13 +41,18 @@ class MultiqcModule(BaseMultiqcModule):
         # Report sections
         self.sections = list()
         self.sections.append({
-            'name': 'Truncating and Mapping',
-            'anchor': 'hicup-truncating-mapping',
-            'content': self.hicup_truncating_chart() + self.hicup_alignment_chart()
+            'name': 'Read Truncation',
+            'anchor': 'hicup-truncating',
+            'content': self.hicup_truncating_chart()
+        })
+        self.sections.append({
+            'name': 'Read Mapping',
+            'anchor': 'hicup-mapping',
+            'content': self.hicup_alignment_chart()
         })
         
         self.sections.append({
-            'name': 'Filtering',
+            'name': 'Read Pair Filtering',
             'anchor': 'hicup-filtering',
             'content': self.hicup_filtering_chart()
         })
@@ -60,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
         # })
         
         self.sections.append({
-            'name': 'De-Duplication',
+            'name': 'De-Duplication &amp; Di-Tag Separation',
             'anchor': 'hicup-deduplication',
             'content': self.hicup_dedup_chart()
         })
@@ -160,8 +165,18 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['Not_Truncated_Reads_1'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
-        keys['Truncated_Read_1']      = { 'color': '#0d233a', 'name': 'Truncated' }
+        keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
+        keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
+        
+        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
+        data = {}
+        for s_name in self.hicup_data:
+            data['{} Read 1'.format(s_name)] = {}
+            data['{} Read 2'.format(s_name)] = {}
+            data['{} Read 1'.format(s_name)]['Not_Truncated_Reads'] = self.hicup_data[s_name]['Not_Truncated_Reads_1']
+            data['{} Read 2'.format(s_name)]['Not_Truncated_Reads'] = self.hicup_data[s_name]['Not_Truncated_Reads_2']
+            data['{} Read 1'.format(s_name)]['Truncated_Read'] = self.hicup_data[s_name]['Truncated_Read_1']
+            data['{} Read 2'.format(s_name)]['Truncated_Read'] = self.hicup_data[s_name]['Truncated_Read_2']
         
         # Config for the plot
         config = {
@@ -170,17 +185,31 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return self.plot_bargraph(self.hicup_data, keys, config)
+        return self.plot_bargraph(data, keys, config)
     
     def hicup_alignment_chart (self):
         """ Generate the HiCUP Aligned reads plot """    
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['Unique_Alignments_Read_1']   = { 'color': '#2f7ed8', 'name': 'Unique Alignments' }
-        keys['Multiple_Alignments_Read_1'] = { 'color': '#492970', 'name': 'Multiple Alignments' }
-        keys['Failed_To_Align_Read_1']     = { 'color': '#0d233a', 'name': 'Failed To Align' }
-        keys['Too_Short_To_Map_Read_1']    = { 'color': '#f28f43', 'name': 'Too short to map' }
+        keys['Unique_Alignments_Read']   = { 'color': '#2f7ed8', 'name': 'Unique Alignments' }
+        keys['Multiple_Alignments_Read'] = { 'color': '#492970', 'name': 'Multiple Alignments' }
+        keys['Failed_To_Align_Read']     = { 'color': '#0d233a', 'name': 'Failed To Align' }
+        keys['Too_Short_To_Map_Read']    = { 'color': '#f28f43', 'name': 'Too short to map' }
+        
+        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
+        data = {}
+        for s_name in self.hicup_data:
+            data['{} Read 1'.format(s_name)] = {}
+            data['{} Read 2'.format(s_name)] = {}
+            data['{} Read 1'.format(s_name)]['Unique_Alignments_Read'] = self.hicup_data[s_name]['Unique_Alignments_Read_1']
+            data['{} Read 2'.format(s_name)]['Unique_Alignments_Read'] = self.hicup_data[s_name]['Unique_Alignments_Read_2']
+            data['{} Read 1'.format(s_name)]['Multiple_Alignments_Read'] = self.hicup_data[s_name]['Multiple_Alignments_Read_1']
+            data['{} Read 2'.format(s_name)]['Multiple_Alignments_Read'] = self.hicup_data[s_name]['Multiple_Alignments_Read_2']
+            data['{} Read 1'.format(s_name)]['Failed_To_Align_Read'] = self.hicup_data[s_name]['Failed_To_Align_Read_1']
+            data['{} Read 2'.format(s_name)]['Failed_To_Align_Read'] = self.hicup_data[s_name]['Failed_To_Align_Read_2']
+            data['{} Read 1'.format(s_name)]['Too_Short_To_Map_Read'] = self.hicup_data[s_name]['Too_Short_To_Map_Read_1']
+            data['{} Read 2'.format(s_name)]['Too_Short_To_Map_Read'] = self.hicup_data[s_name]['Too_Short_To_Map_Read_2']
         
         # Config for the plot
         config = {
@@ -189,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return "<p>&nbsp;</p>"+self.plot_bargraph(self.hicup_data, keys, config)
+        return self.plot_bargraph(data, keys, config)
     
     def hicup_filtering_chart(self):
         """ Generate the HiCUP filtering plot """    

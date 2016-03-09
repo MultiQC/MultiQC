@@ -253,7 +253,7 @@ class BaseMultiqcModule(object):
                 source = os.path.abspath(os.path.join(f['root'], f['fn']))
             report.data_sources[module][section][s_name] = source
         except AttributeError:
-            logging.warning('Tried to add data source for {}, but was missing fields data'.format(self.name))
+            logger.warning('Tried to add data source for {}, but was missing fields data'.format(self.name))
         
         
     
@@ -391,7 +391,7 @@ class BaseMultiqcModule(object):
                 plotdata.append(hc_data)
         
         if len(plotdata) == 0:
-            logging.warning('Tried to make bar plot, but had no data')
+            logger.warning('Tried to make bar plot, but had no data')
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
         # Build the HTML
