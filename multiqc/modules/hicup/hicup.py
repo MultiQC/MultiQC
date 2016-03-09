@@ -32,9 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.hicup_data)))
         
-        import json
-        print(json.dumps(self.hicup_data, indent=4))
-        
         # Write parsed data to a file
         self.write_data_file(self.hicup_data, 'multiqc_hicup')
         
@@ -43,29 +40,30 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Report sections
         self.sections = list()
+        self.sections.append({
+            'name': 'Truncating and Mapping',
+            'anchor': 'hicup-truncating-mapping',
+            'content': self.hicup_truncating_chart() + self.hicup_alignment_chart()
+        })
+        
+        self.sections.append({
+            'name': 'Filtering',
+            'anchor': 'hicup-filtering',
+            'content': self.hicup_filtering_chart()
+        })
+        
+        # TODO: Is there a log file with this data for a line plot?
         # self.sections.append({
-        #     'name': 'Truncating and Mapping',
-        #     'anchor': 'hicup-truncating-mapping',
-        #     'content': self.hicup_truncating_chart() + self.hicup_alignment_chart()
-        # })
-        # 
-        # self.sections.append({
-        #     'name': 'Filtering',
-        #     'anchor': 'hicup-filtering',
-        #     'content': self.hicup_filtering_chart()
-        # })
-        # 
-        # self.sections.append({
-        #     'name': 'Di-tag length Distribution',
+        #     'name': 'Di-Tag Length Distribution',
         #     'anchor': 'hicup-lengths',
         #     'content': self.hicup_lengths_chart()
         # })
-        # 
-        # self.sections.append({
-        #     'name': 'De-Duplication',
-        #     'anchor': 'hicup-deduplication',
-        #     'content': self.hicup_dedup_chart()
-        # })
+        
+        self.sections.append({
+            'name': 'De-Duplication',
+            'anchor': 'hicup-deduplication',
+            'content': self.hicup_dedup_chart()
+        })
 
 
     def parse_hicup_logs(self, f):
@@ -81,13 +79,14 @@ class MultiqcModule(BaseMultiqcModule):
                     return None
                 header = s[1:]
             else:
-                s_name = s[0].lstrip('HiCUP_output/')
+                s_name = self.clean_s_name(s[0], f['root']).lstrip('HiCUP_output/')
                 parsed_data = {}
                 for idx, num in enumerate(s[1:]):
                     try:
                         parsed_data[header[idx]] = float(num)
                     except:
                         parsed_data[header[idx]] = num
+                parsed_data['Duplicate_Read_Pairs'] = parsed_data['Valid_Pairs'] - parsed_data['Deduplication_Read_Pairs_Uniques']
                 if s_name in self.hicup_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
@@ -154,29 +153,83 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'YlGn',
             'format': '{:.1f}%',
         }
-        self.general_stats_addcols(self.hicup_data, headers, 'hicup')
+        self.general_stats_addcols(self.hicup_data, headers, 'HiCUP')
     
-    def hicup_length_trimmed_plot (self):
-        """ Generate the hicup plot """    
-        pconfig = {
-            'id': 'hicup_plot',
-            'title': 'hicup complexity curve',
-            'ylab': 'Unique Molecules',
-            'xlab': 'Total Molecules (including duplicates)',
-            'ymin': 0,
-            'xmin': 0,
-            'tt_label': '<b>{point.x:,.0f} total</b>: {point.y:,.0f} unique',
-            'extra_series': [{
-                'name': 'x = y',
-                'data': [[0, 0], [self.total_max, self.total_max]],
-                'dashStyle': 'Dash',
-                'lineWidth': 1,
-                'color': '#000000',
-                'marker': { 'enabled': False },
-                'enableMouseTracking': False,
-                'showInLegend': False,
-            }]
+    def hicup_truncating_chart (self):
+        """ Generate the HiCUP Truncated reads plot """    
+        
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['Not_Truncated_Reads_1'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
+        keys['Truncated_Read_1']      = { 'color': '#0d233a', 'name': 'Truncated' }
+        
+        # Config for the plot
+        config = {
+            'title': 'HiCUP: Truncated Reads',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
         }
-        return "<p>A shallow curve indicates complexity saturation. The dashed line \
-                shows a perfectly complex library where total reads = unique reads.</o>" \
-                 + self.plot_xy_data(self.hicup_data, pconfig)
+        
+        return self.plot_bargraph(self.hicup_data, keys, config)
+    
+    def hicup_alignment_chart (self):
+        """ Generate the HiCUP Aligned reads plot """    
+        
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['Unique_Alignments_Read_1']   = { 'color': '#2f7ed8', 'name': 'Unique Alignments' }
+        keys['Multiple_Alignments_Read_1'] = { 'color': '#492970', 'name': 'Multiple Alignments' }
+        keys['Failed_To_Align_Read_1']     = { 'color': '#0d233a', 'name': 'Failed To Align' }
+        keys['Too_Short_To_Map_Read_1']    = { 'color': '#f28f43', 'name': 'Too short to map' }
+        
+        # Config for the plot
+        config = {
+            'title': 'HiCUP: Mapping Statistics',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+        
+        return "<p>&nbsp;</p>"+self.plot_bargraph(self.hicup_data, keys, config)
+    
+    def hicup_filtering_chart(self):
+        """ Generate the HiCUP filtering plot """    
+        
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['Valid_Pairs'] =            { 'color': '#2f7ed8', 'name': 'Valid Pairs' }
+        keys['Same_Fragment_Internal'] = { 'color': '#0d233a', 'name': 'Same Fragment - Internal' }
+        keys['Same_Circularised'] =      { 'color': '#910000', 'name': 'Same Fragment - Circularised' }
+        keys['Same_Dangling_Ends'] =     { 'color': '#8bbc21', 'name': 'Same Fragment - Dangling Ends' }
+        keys['Re_Ligation'] =            { 'color': '#1aadce', 'name': 'Re-ligation' }
+        keys['Contiguous_Sequence'] =    { 'color': '#f28f43', 'name': 'Contiguous Sequence' }
+        keys['Wrong_Size'] =             { 'color': '#492970', 'name': 'Wrong Size' }
+        
+        # Config for the plot
+        config = {
+            'title': 'HiCUP: Filtering Statistics',
+            'ylab': '# Read Pairs',
+            'cpswitch_counts_label': 'Number of Read Pairs',
+            'cpswitch_c_active': False
+        }
+        
+        return self.plot_bargraph(self.hicup_data, keys, config)
+    
+    def hicup_dedup_chart(self):
+        """ Generate the HiCUP Deduplication plot """    
+        
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['Deduplication_Cis_Close_Uniques'] = { 'color': '#2f7ed8', 'name': 'Unique: cis &lt; 10Kbp' }
+        keys['Deduplication_Cis_Far_Uniques']   = { 'color': '#0d233a', 'name': 'Unique: cis &gt; 10Kbp' }
+        keys['Deduplication_Trans_Uniques']     = { 'color': '#492970', 'name': 'Unique: trans' }
+        keys['Duplicate_Read_Pairs']            = { 'color': '#f28f43', 'name': 'Duplicate read pairs' }
+        
+        # Config for the plot
+        config = {
+            'title': 'HiCUP: De-Duplication Statistics',
+            'ylab': '# Di-Tags',
+            'cpswitch_counts_label': 'Number of Di-Tags',
+            'cpswitch_c_active': False
+        }
+        
+        return self.plot_bargraph(self.hicup_data, keys, config)

@@ -426,7 +426,7 @@ function plot_stacked_bar_graph(target, ds){
       formatter: function () {
         var colspan = config['tt_percentages'] ? 3 : 2;
         var s = '<table><tr><th colspan="'+colspan+'" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
-        $.each(this.points.reverse(), function () {
+        $.each(this.points, function () {
           yval = this.y.toFixed(0)
           s += '<tr> \
             <td style="font-weight:bold; color:'+this.series.color+'; border-bottom:1px solid #dedede;">' + this.series.name + ':</td>\
