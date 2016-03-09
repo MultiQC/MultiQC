@@ -51,6 +51,9 @@ fn_ignore_files:
 # Ignore files larger than this when searcing for logs (bytes)
 log_filesize_limit: 1000000
 
+# Opt-out of remotely checking that you're running the latest version
+no_version_check: True
+
 # Limit for datasets per plot in the report. If there are more than
 # this, the user will need to click 'plot graph' to see the data.
 # This is to prevent very large graphs from locking up the browser on load.

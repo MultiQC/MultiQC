@@ -7,7 +7,9 @@ from __future__ import print_function
 
 import base64
 from collections import defaultdict
+from distutils import version
 from distutils.dir_util import copy_tree
+import importlib
 import io
 import jinja2
 import logging
@@ -18,7 +20,7 @@ import shutil
 import sys
 import tempfile
 import traceback
-import importlib
+import urllib2
 
 import click
 
@@ -127,6 +129,16 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     
     # Overwrite config defaults with user yaml files
     config.mqc_load_userconfig()
+    
+    # Check that we're running the latest version of MultiQC
+    if config.no_version_check is not True:
+        try:
+            response = urllib2.urlopen('http://multiqc.info/version.php?v={}'.format(__version__))
+            remote_version = response.read()
+            if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', __version__)):
+                logger.warn('MultiQC Version {} now available!'.format(remote_version))
+        except (ValueError, urllib2.URLError):
+            pass
     
     # Set up key variables (overwrite config vars from command line)
     config.title = title
