@@ -333,7 +333,7 @@ function apply_mqc_highlights(){
   var f_texts = [];
   var f_cols = [];
   var regex_mode = false;
-  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode on'){
+  if($('#mqc_cols .mqc_regex_mode span').hasClass('on')){
     regex_mode = true;
   }
   $('#mqc_col_filters li .f_text').each(function(){
@@ -371,7 +371,7 @@ function apply_mqc_renamesamples(){
   var regex_mode = false;
   $('#mqc_renamesamples_filters .from_text').each(function(){ f_texts.push($(this).val()); });
   $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
-  if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){ regex_mode = true; }
+  if($('#mqc_renamesamples .mqc_regex_mode span').hasClass('on')){ regex_mode = true; }
   
   // If something was renamed, highlight the toolbox icon
   if(f_texts.length > 0){
@@ -397,7 +397,7 @@ function apply_mqc_hidesamples(){
   var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
   var f_texts = [];
   var regex_mode = false;
-  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode on'){
+  if($('#mqc_hidesamples .mqc_regex_mode span').hasClass('on')){
     regex_mode = true;
   }
   $('#mqc_hidesamples_filters li .f_text').each(function(){
