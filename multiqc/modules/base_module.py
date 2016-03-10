@@ -468,72 +468,105 @@ class BaseMultiqcModule(object):
         encoded image within it. Should be called by plot_bargraph, which properly
         formats the input data.
         """
+        
         if pconfig.get('id') is None:
             pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
         
-        # Set up figure
-        plt_height = min(30, max(6, len(plotsamples[0]) / 2.3))
-        fig = plt.figure(figsize=(14, plt_height), frameon=False)
-        axes = fig.add_subplot(111)
-        y_ind = range(len(plotsamples[0]))
-        bar_width = 0.8
+        html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
+        
         # Same defaults as HighCharts for consistency
         default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', 
                           '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
         
-        # Plot bars
-        dlabels = []
-        for idx, d in enumerate(plotdata[0]):
-            # Get offset for stacked bars
-            if idx == 0:
-                prevdata = [0] * len(plotsamples[0])
-            else:
-                for i, p in enumerate(prevdata):
-                    prevdata[i] += plotdata[0][idx-1]['data'][i]
-            # Default colour index
-            cidx = idx
-            while cidx > len(default_colors):
-                cidx -= len(default_colors)
-            # Save the name of this series
-            dlabels.append(d['name'])
-            # Add the series of bars to the plot
-            axes.barh(
-                y_ind, d['data'], bar_width, left=prevdata,
-                color=d.get('color', default_colors[cidx]), align='center', linewidth=1, edgecolor='w'
-            )
+        # Buttons to cycle through different datasets
+        pids = []
+        if len(plotdata) > 1:
+            html += '<div class="btn-group switch_group">\n'
+            for k, p in enumerate(plotdata):
+                pid = pconfig['id']+''.join(random.sample(letters, 5))
+                pids.append(pid)
+                active = 'active' if k == 0 else ''
+                try: name = pconfig['data_labels'][k]
+                except: name = k+1
+                html += '<button class="btn btn-default btn-sm {a}" onclick="$(\'#{id} .mqc_mplplot\').hide(); $(\'#{pid}\').show();">{n}</button>\n'.format(a=active, id=pconfig['id'], pid=pid, n=name)
+            html += '</div>\n\n'
+        else:
+            pids = [0]
         
-        # Tidy up axes
-        axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
-        axes.set_xlabel(pconfig.get('ylab', '')) # I know, I should fix the fact that the config is switched
-        axes.set_ylabel(pconfig.get('xlab', ''))
-        axes.set_yticks(y_ind) # Specify where to put the labels
-        axes.set_yticklabels(plotsamples[0]) # Set y axis sample name labels
-        axes.set_ylim((-0.5, len(y_ind)-0.5)) # Reduce padding around plot area
-        default_xlimits = axes.get_xlim()
-        axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
-        if 'title' in pconfig:
-            plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
-        axes.grid(True, zorder=0, which='both', axis='x', linestyle='-', color='#dedede', linewidth=1)
-        axes.set_axisbelow(True)
-        axes.spines['right'].set_visible(False)
-        axes.spines['top'].set_visible(False)
-        axes.spines['bottom'].set_visible(False)
-        axes.spines['left'].set_visible(False)
+        # Go through datasets creating plots
+        for pidx, pdata in enumerate(plotdata):
+            
+            pid = pids[pidx]
+            
+            # Set up figure
+            plt_height = min(30, max(6, len(plotsamples[pidx]) / 2.3))
+            fig = plt.figure(figsize=(14, plt_height), frameon=False)
+            axes = fig.add_subplot(111)
+            y_ind = range(len(plotsamples[pidx]))
+            bar_width = 0.8
+            
+            # Plot bars
+            dlabels = []
+            for idx, d in enumerate(pdata):
+                # Get offset for stacked bars
+                if idx == 0:
+                    prevdata = [0] * len(plotsamples[pidx])
+                else:
+                    for i, p in enumerate(prevdata):
+                        prevdata[i] += pdata[idx-1]['data'][i]
+                # Default colour index
+                cidx = idx
+                while cidx > len(default_colors):
+                    cidx -= len(default_colors)
+                # Save the name of this series
+                dlabels.append(d['name'])
+                # Add the series of bars to the plot
+                axes.barh(
+                    y_ind, d['data'], bar_width, left=prevdata,
+                    color=d.get('color', default_colors[cidx]), align='center', linewidth=1, edgecolor='w'
+                )
+            
+            # Tidy up axes
+            axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
+            axes.set_xlabel(pconfig.get('ylab', '')) # I know, I should fix the fact that the config is switched
+            axes.set_ylabel(pconfig.get('xlab', ''))
+            axes.set_yticks(y_ind) # Specify where to put the labels
+            axes.set_yticklabels(plotsamples[pidx]) # Set y axis sample name labels
+            axes.set_ylim((-0.5, len(y_ind)-0.5)) # Reduce padding around plot area
+            default_xlimits = axes.get_xlim()
+            axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
+            if 'title' in pconfig:
+                plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
+            axes.grid(True, zorder=0, which='both', axis='x', linestyle='-', color='#dedede', linewidth=1)
+            axes.set_axisbelow(True)
+            axes.spines['right'].set_visible(False)
+            axes.spines['top'].set_visible(False)
+            axes.spines['bottom'].set_visible(False)
+            axes.spines['left'].set_visible(False)
+            
+            # Legend
+            lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+            
+            # Tight layout - makes sure that legend fits in and stuff
+            plt.tight_layout(rect=[0,0.08,1,0.92])
+            
+            # Output the figure to a base64 encoded string
+            img_buffer = io.BytesIO()
+            fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+            b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
+            plt.close(fig)
+            img_buffer.close()
+            
+            hidediv = ''
+            if pidx > 0:
+                hidediv = ' style="display:none;"'
+            
+            html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}"/></div>'.format(pid, hidediv, b64_img)
         
-        # Legend
-        lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+        # Close wrapping div
+        html += '</div>'
         
-        # Tight layout - makes sure that legend fits in and stuff
-        plt.tight_layout(rect=[0,0.08,1,0.92])
-        
-        # Output the figure to a base64 encoded string
-        img_buffer = io.BytesIO()
-        fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
-        plt.close(fig)
-        img_buffer.close()
-        
-        return '<div class="mqc_mplplot_plotgroup"><img src="data:image/png;base64,{}"/></div>'.format(b64_img)
+        return html
         
     
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
