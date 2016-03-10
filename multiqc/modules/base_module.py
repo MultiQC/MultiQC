@@ -11,7 +11,10 @@ import logging
 import mimetypes
 import os
 import random
-import StringIO
+try:
+    from io import StringIO #py3
+except ImportError:
+    from StringIO import StringIO #py2
 
 # Import matplot lib but avoid default X environment
 import matplotlib
@@ -472,7 +475,7 @@ class BaseMultiqcModule(object):
             pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
         
         # Set up figure
-        plt_height = max(6, len(plotsamples[0]) / 2.3)
+        plt_height = min(30, max(6, len(plotsamples[0]) / 2.3))
         fig = plt.figure(figsize=(14, plt_height), frameon=False)
         axes = fig.add_subplot(111)
         y_ind = range(len(plotsamples[0]))
