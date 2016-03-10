@@ -3,6 +3,7 @@
 """ MultiQC modules base class, contains helper functions """
 
 from __future__ import print_function
+import base64
 from collections import OrderedDict
 import fnmatch
 import io
@@ -11,10 +12,6 @@ import logging
 import mimetypes
 import os
 import random
-try:
-    from io import StringIO #py3
-except ImportError:
-    from StringIO import StringIO #py2
 
 # Import matplot lib but avoid default X environment
 import matplotlib
@@ -527,10 +524,11 @@ class BaseMultiqcModule(object):
         axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.25, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
         
         # Output the figure to a base64 encoded string
-        output = StringIO.StringIO()
-        fig.savefig(output, format="png")
+        img_buffer = io.BytesIO()
+        fig.savefig(img_buffer, format='png')
+        b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
         plt.close(fig)
-        b64_img = output.getvalue().encode("base64").strip()
+        img_buffer.close()
         
         return '<div class="mqc_mplplot_plotgroup"><img src="data:image/png;base64,{}"/></div>'.format(b64_img)
         
