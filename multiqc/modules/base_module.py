@@ -257,11 +257,11 @@ class BaseMultiqcModule(object):
         
         
     
-    def plot_xy_data(self, data, config={}):
+    def plot_xy_data(self, data, pconfig={}):
         """ Plot a line graph with X,Y data. See CONTRIBUTING.md for
         further instructions on use.
         :param data: 2D dict, first keys as sample names, then x:y data pairs
-        :param config: optional dict with config key:value pairs. See CONTRIBUTING.md
+        :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
         :return: HTML and JS, ready to be inserted into the page
         """
         
@@ -276,34 +276,34 @@ class BaseMultiqcModule(object):
             for s in sorted(d.keys()):
                 pairs = list()
                 maxval = 0
-                if 'categories' in config:
-                    config['categories'] = list()
+                if 'categories' in pconfig:
+                    pconfig['categories'] = list()
                     for k in d[s].keys():
-                        config['categories'].append(k)
+                        pconfig['categories'].append(k)
                         pairs.append(d[s][k])
                         maxval = max(maxval, d[s][k])
                 else:
                     for k in sorted(d[s].keys()):
                         pairs.append([k, d[s][k]])
                         maxval = max(maxval, d[s][k])
-                if maxval > 0 or config.get('hide_empty') is not True:
+                if maxval > 0 or pconfig.get('hide_empty') is not True:
                     this_series = { 'name': s, 'data': pairs }
                     try:
-                        this_series['color'] = config['colors'][s]
+                        this_series['color'] = pconfig['colors'][s]
                     except: pass
                     thisplotdata.append(this_series)
             plotdata.append(thisplotdata)
         
         # Add on annotation data series
         try:
-            for s in config['extra_series']:
+            for s in pconfig['extra_series']:
                 plotdata[0].append(s)
         except KeyError:
             pass
         
         # Build the HTML for the page
-        if config.get('id') is None:
-            config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        if pconfig.get('id') is None:
+            pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
         html = '<div class="mqc_hcplot_plotgroup">'
         
         # Buttons to cycle through different datasets
@@ -311,17 +311,17 @@ class BaseMultiqcModule(object):
             html += '<div class="btn-group switch_group">\n'
             for k, p in enumerate(plotdata):
                 active = 'active' if k == 0 else ''
-                try: name = config['data_labels'][k]['name']
+                try: name = pconfig['data_labels'][k]['name']
                 except: name = k+1
-                try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
+                try: ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                try: ymax = 'data-ymax="{}"'.format(config['data_labels'][k]['ymax'])
+                try: ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
                 except: ymax = 'data-ymax="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, ym=ymax, k=k)
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
             html += '</div>\n\n'
         
         # The plot div
-        html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=config['id'])
+        html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
         
         # Javascript with data dump
         html += '<script type="text/javascript"> \n\
@@ -330,18 +330,18 @@ class BaseMultiqcModule(object):
                 "datasets": {d}, \n\
                 "config": {c} \n\
             }} \n\
-        </script>'.format(id=config['id'], d=json.dumps(plotdata), c=json.dumps(config));
+        </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
         return html
     
     
-    def plot_bargraph (self, data, cats=None, config={}):
+    def plot_bargraph (self, data, cats=None, pconfig={}):
         """ Plot a horizontal bar graph. Expects a 2D dict of sample
         data. Also can take info about categories. There are quite a
         few variants of how to use this function, see the docs for details.
         :param data: 2D dict, first keys as sample names, then x:y data pairs
                      Can supply a list of dicts and will have buttons to switch
         :param cats: optional list, dict or OrderedDict with plot categories
-        :param config: optional dict with config key:value pairs
+        :param pconfig: optional dict with config key:value pairs
         :return: HTML and JS, ready to be inserted into the page
         """
         
@@ -368,7 +368,7 @@ class BaseMultiqcModule(object):
                     newcats[c] = {'name': c}
                 cats[idx] = newcats
         
-        # Parse the data into a HighCharts friendly format
+        # Parse the data into a chart friendly format
         plotsamples = list()
         plotdata = list()
         for idx, d in enumerate(data):
@@ -395,25 +395,25 @@ class BaseMultiqcModule(object):
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
         # Build the HTML
-        if config.get('id') is None:
-            config['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        if pconfig.get('id') is None:
+            pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
         html = '<div class="mqc_hcplot_plotgroup">'
         
         # Counts / Percentages Switch
-        if config.get('cpswitch') is not False:
-            if config.get('cpswitch_c_active', True) is True:
+        if pconfig.get('cpswitch') is not False:
+            if pconfig.get('cpswitch_c_active', True) is True:
                 c_active = 'active'
                 p_active = ''
             else:
                 c_active = ''
                 p_active = 'active'
-                config['stacking'] = 'percent'
-            c_label = config.get('cpswitch_counts_label', 'Counts')
-            p_label = config.get('cpswitch_percent_label', 'Percentages')
+                pconfig['stacking'] = 'percent'
+            c_label = pconfig.get('cpswitch_counts_label', 'Counts')
+            p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
             html += '<div class="btn-group switch_group"> \n\
     			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n\
     			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n\
-    		</div> '.format(id=config['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
+    		</div> '.format(id=pconfig['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
             if len(plotdata) > 1:
                 html += ' &nbsp; &nbsp; '
         
@@ -422,11 +422,11 @@ class BaseMultiqcModule(object):
             html += '<div class="btn-group switch_group">\n'
             for k, p in enumerate(plotdata):
                 active = 'active' if k == 0 else ''
-                try: name = config['data_labels'][k]
+                try: name = pconfig['data_labels'][k]
                 except: name = k+1
-                try: ylab = 'data-ylab="{}"'.format(config['data_labels'][k]['ylab'])
+                try: ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=config['id'], n=name, y=ylab, k=k)
+                html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         
         # Plot and javascript function
@@ -439,7 +439,7 @@ class BaseMultiqcModule(object):
                 "datasets": {d}, \n\
                 "config": {c} \n\
             }} \n\
-        </script>'.format(id=config['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(config));
+        </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
         
         return html
         
