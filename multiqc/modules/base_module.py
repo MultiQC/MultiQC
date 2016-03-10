@@ -11,6 +11,12 @@ import logging
 import mimetypes
 import os
 import random
+import StringIO
+
+# Import matplot lib but avoid default X environment
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 from multiqc.utils import report, config
 logger = logging.getLogger(__name__)
@@ -394,7 +400,19 @@ class BaseMultiqcModule(object):
             logger.warning('Tried to make bar plot, but had no data')
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
-        # Build the HTML
+        # TODO: Swap this temporary switch with config / template options
+        if len(plotsamples[0]) > 50:
+            return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
+        else:
+            return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
+    
+    
+    
+    def highcharts_bargraph (self, plotdata, plotsamples=None, pconfig={}):
+        """
+        Build the HTML needed for a HighCharts bar graph. Should be
+        called by plot_bargraph, which properly formats input data.
+        """
         if pconfig.get('id') is None:
             pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
         html = '<div class="mqc_hcplot_plotgroup">'
@@ -442,6 +460,76 @@ class BaseMultiqcModule(object):
         </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
         
         return html
+    
+    
+    def matplotlib_bargraph (self, plotdata, plotsamples, pconfig={}):
+        """
+        Plot a bargraph with Matplot lib and return a HTML string with the base64
+        encoded image within it. Should be called by plot_bargraph, which properly
+        formats the input data.
+        """
+        if pconfig.get('id') is None:
+            pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+        
+        # Set up figure
+        plt_height = max(6, len(plotsamples[0]) / 2.3)
+        fig = plt.figure(figsize=(14, plt_height), frameon=False)
+        axes = fig.add_subplot(111)
+        y_ind = range(len(plotsamples[0]))
+        bar_width = 0.8
+        default_colors = ['#a6cee3','#b2df8a','#fb9a99','#fdbf6f','#cab2d6','#1f78b4',
+                          '#33a02c','#e31a1c','#ff7f00','#6a3d9a','#ffff99','#b15928']
+        
+        # Plot bars
+        dlabels = []
+        for idx, d in enumerate(plotdata[0]):
+            # Get offset for stacked bars
+            if idx == 0:
+                prevdata = [0] * len(plotsamples[0])
+            else:
+                for i, p in enumerate(prevdata):
+                    prevdata[i] += plotdata[0][idx-1]['data'][i]
+            # Default colour index
+            cidx = idx
+            while cidx > len(default_colors):
+                cidx -= len(default_colors)
+            # Save the name of this series
+            dlabels.append(d['name'])
+            # Add the series of bars to the plot
+            axes.barh(
+                y_ind, d['data'], bar_width, left=prevdata,
+                color=d.get('color', default_colors[cidx]), align='center', linewidth=1, edgecolor='w'
+            )
+        
+        # Tidy up axes
+        axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
+        axes.set_xlabel(pconfig.get('ylab', '')) # I know, I should fix the fact that the config is switched
+        axes.set_ylabel(pconfig.get('xlab', ''))
+        axes.set_yticks(y_ind) # Specify where to put the labels
+        axes.set_yticklabels(plotsamples[0]) # Set y axis sample name labels
+        axes.set_ylim((-0.5, len(y_ind)-0.5)) # Reduce padding around plot area
+        default_xlimits = axes.get_xlim()
+        axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
+        if 'title' in pconfig:
+            plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
+        axes.grid(True, zorder=0, which='both', axis='x', linestyle='-', color='#dedede', linewidth=1)
+        axes.set_axisbelow(True)
+        axes.spines['right'].set_visible(False)
+        axes.spines['top'].set_visible(False)
+        axes.spines['bottom'].set_visible(False)
+        axes.spines['left'].set_visible(False)
+        plt.tight_layout(rect=[0,0.08,1,0.92])
+        
+        # Legend
+        axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.25, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+        
+        # Output the figure to a base64 encoded string
+        output = StringIO.StringIO()
+        fig.savefig(output, format="png")
+        plt.close(fig)
+        b64_img = output.getvalue().encode("base64").strip()
+        
+        return '<div class="mqc_mplplot_plotgroup"><img src="data:image/png;base64,{}"/></div>'.format(b64_img)
         
     
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):

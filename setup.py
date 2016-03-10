@@ -53,7 +53,8 @@ setup(
         'jinja2',
         'simplejson',
         'pyyaml',
-        'click'
+        'click',
+        'matplotlib'
     ],
     entry_points = {
         'multiqc.modules.v1': [

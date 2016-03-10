@@ -648,6 +648,14 @@ tbody .sorthandle {
     left:0;
 }
 
+/* Flat MatPlotLib plots */
+.mqc_mplplot_plotgroup {
+    border: 1px solid #dedede;
+    margin-top: 15px;
+}
+.mqc_mplplot_plotgroup img {
+    max-width: 100%;
+}
 
 /* Draggable height bar for HighCharts Plots */
 .hc-plot {
