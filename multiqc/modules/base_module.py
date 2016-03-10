@@ -477,8 +477,9 @@ class BaseMultiqcModule(object):
         axes = fig.add_subplot(111)
         y_ind = range(len(plotsamples[0]))
         bar_width = 0.8
-        default_colors = ['#a6cee3','#b2df8a','#fb9a99','#fdbf6f','#cab2d6','#1f78b4',
-                          '#33a02c','#e31a1c','#ff7f00','#6a3d9a','#ffff99','#b15928']
+        # Same defaults as HighCharts for consistency
+        default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', 
+                          '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
         
         # Plot bars
         dlabels = []
@@ -518,14 +519,16 @@ class BaseMultiqcModule(object):
         axes.spines['top'].set_visible(False)
         axes.spines['bottom'].set_visible(False)
         axes.spines['left'].set_visible(False)
-        plt.tight_layout(rect=[0,0.08,1,0.92])
         
         # Legend
-        axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.25, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+        lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+        
+        # Tight layout - makes sure that legend fits in and stuff
+        plt.tight_layout(rect=[0,0.08,1,0.92])
         
         # Output the figure to a base64 encoded string
         img_buffer = io.BytesIO()
-        fig.savefig(img_buffer, format='png')
+        fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
         b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
         plt.close(fig)
         img_buffer.close()
