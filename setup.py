@@ -73,6 +73,7 @@ setup(
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
+            'samtools = multiqc.modules.samtools:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

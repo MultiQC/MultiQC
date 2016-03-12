@@ -66,3 +66,5 @@ skewer:
     contents: 'COMMAND LINE:	skewer'
 samblaster:
     contents: 'samblaster: Version'
+samtools:
+    contents: 'samtools stats'
