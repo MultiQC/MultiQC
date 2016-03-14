@@ -309,6 +309,20 @@ class BaseMultiqcModule(object):
         except KeyError:
             pass
         
+        # Make a plot - interactive or flat
+        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > 50):
+            return self.matplotlib_linegraph(plotdata, pconfig)
+        else:
+            return self.highcharts_linegraph(plotdata, pconfig)
+    
+    
+    
+    def highcharts_linegraph (self, plotdata, pconfig={}):
+        """
+        Build the HTML needed for a HighCharts line graph. Should be
+        called by plot_xy_data, which properly formats input data.
+        """
+        
         # Build the HTML for the page
         if pconfig.get('id') is None:
             pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
@@ -340,6 +354,137 @@ class BaseMultiqcModule(object):
             }} \n\
         </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
         return html
+    
+    
+    def matplotlib_linegraph (self, plotdata, pconfig={}):
+        """
+        Plot a line graph with Matplot lib and return a HTML string. Either embeds a base64
+        encoded image within HTML or writes the plot and links to it. Should be called by
+        plot_bargraph, which properly formats the input data.
+        """
+        
+        # Plot group ID
+        if pconfig.get('id') is None:
+            pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+        # Individual plot IDs
+        pids = []
+        for k in range(len(plotdata)):
+            try:
+                name = pconfig['data_labels'][k]['name']
+            except:
+                name = k+1
+            pid = 'mqc_{}_{}'.format(pconfig['id'], name)
+            pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
+            pids.append(pid)
+        
+        html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
+        
+        # Same defaults as HighCharts for consistency
+        default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', 
+                          '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
+        
+        # Buttons to cycle through different datasets
+        if len(plotdata) > 1:
+            html += '<div class="btn-group switch_group">\n'
+            for k, p in enumerate(plotdata):
+                pid = pids[k]
+                active = 'active' if k == 0 else ''
+                try:
+                    name = pconfig['data_labels'][k]['name']
+                except:
+                    name = k+1
+                html += '<button class="btn btn-default btn-sm {a} mqc_mplplot_bargraph_switchds" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
+            html += '</div>\n\n'
+        
+        # Go through datasets creating plots
+        for pidx, pdata in enumerate(plotdata):
+                
+            # Plot ID
+            pid = pids[pidx]
+            
+            # Set up figure
+            fig = plt.figure(figsize=(14, 6), frameon=False)
+            axes = fig.add_subplot(111)
+            
+            # Go through data series            
+            for idx, d in enumerate(pdata):
+                
+                # Default colour index
+                cidx = idx
+                while cidx >= len(default_colors):
+                    cidx -= len(default_colors)
+                
+                # Reformat data (again)
+                try:
+                    axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), marker=None)
+                except TypeError:
+                    # Categorical data on x axis
+                    axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), marker=None)
+                
+                
+            
+            # Tidy up axes
+            axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
+            axes.set_xlabel(pconfig.get('xlab', ''))
+            axes.set_ylabel(pconfig.get('ylab', ''))
+            default_ylimits = axes.get_ylim()
+            axes.set_ylim((pconfig.get('ymin', default_ylimits[0]),pconfig.get('ymax', default_ylimits[1])))
+            default_xlimits = axes.get_xlim()
+            axes.set_xlim((pconfig.get('xmin', default_xlimits[0]),pconfig.get('xmax', default_xlimits[1])))
+            if 'title' in pconfig:
+                plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
+            axes.grid(True, zorder=0, which='both', axis='y', linestyle='-', color='#dedede', linewidth=1)
+            # Thin grey x axis
+            xlim = axes.get_xlim()
+            axes.plot([xlim[0], xlim[1]], [0, 0], linestyle='-', color='#dedede', linewidth=2)
+            axes.set_axisbelow(True)
+            axes.spines['right'].set_visible(False)
+            axes.spines['top'].set_visible(False)
+            axes.spines['bottom'].set_visible(False)
+            axes.spines['left'].set_visible(False)
+            
+            # Tight layout - makes sure that legend fits in and stuff
+            if len(pdata) <= 15:
+                lgd = axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+                plt.tight_layout(rect=[0,0.08,1,0.92])
+            else:
+                plt.tight_layout(rect=[0,0,1,0.92])
+            
+            # Should this plot be hidden on report load?
+            hidediv = ''
+            if pidx > 0:
+                hidediv = ' style="display:none;"'
+            
+            # Output the figure to a base64 encoded string
+            try:
+                base64_plots = self.template_mod.base64_plots
+            except AttributeError:
+                base64_plots = True
+            if base64_plots is True:
+                img_buffer = io.BytesIO()
+                fig.savefig(img_buffer, format='png', bbox_inches='tight')
+                b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
+                img_buffer.close()
+                html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)
+            
+            # Save to a file and link <img>
+            else:
+                plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
+                if not os.path.exists(plot_dir):
+                    os.makedirs(plot_dir)
+                plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
+                fig.savefig(plot_fn, format='png', bbox_inches='tight')
+                html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_fn)
+            
+            plt.close(fig)
+                
+        
+        # Close wrapping div
+        html += '</div>'
+        
+        return html
+        
+
     
     
     def plot_bargraph (self, data, cats=None, pconfig={}):
@@ -466,9 +611,9 @@ class BaseMultiqcModule(object):
     
     def matplotlib_bargraph (self, plotdata, plotsamples, pconfig={}):
         """
-        Plot a bargraph with Matplot lib and return a HTML string with the base64
-        encoded image within it. Should be called by plot_bargraph, which properly
-        formats the input data.
+        Plot a bargraph with Matplot lib and return a HTML string. Either embeds a base64
+        encoded image within HTML or writes the plot and links to it. Should be called by
+        plot_bargraph, which properly formats the input data.
         """
         
         # Plot group ID
@@ -478,13 +623,12 @@ class BaseMultiqcModule(object):
         pids = []
         for k in range(len(plotdata)):
             try:
-                name = '_{}'.format(pconfig['data_labels'][k])
+                name = pconfig['data_labels'][k]
             except:
-                if k > 0:
-                    name = '_{}'.format(k+1)
-                else:
-                    name = ''
-            pids.append('{}{}'.format(pconfig['id'], name))
+                name = k+1
+            pid = 'mqc_{}_{}'.format(pconfig['id'], name)
+            pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
+            pids.append(pid)
         
         html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
         
@@ -552,10 +696,11 @@ class BaseMultiqcModule(object):
                 bar_width = 0.8
                 
                 # Count totals for each sample
-                s_totals = [0 for _ in pdata[0]['data']]
-                for series_idx, d in enumerate(pdata):
-                    for sample_idx, v in enumerate(d['data']):
-                        s_totals[sample_idx] += v
+                if plot_pct is True:
+                    s_totals = [0 for _ in pdata[0]['data']]
+                    for series_idx, d in enumerate(pdata):
+                        for sample_idx, v in enumerate(d['data']):
+                            s_totals[sample_idx] += v
                 
                 # Plot bars
                 dlabels = []
@@ -579,7 +724,7 @@ class BaseMultiqcModule(object):
                             prevdata[i] += pdata[idx-1]['data'][i]
                     # Default colour index
                     cidx = idx
-                    while cidx > len(default_colors):
+                    while cidx >= len(default_colors):
                         cidx -= len(default_colors)
                     # Save the name of this series
                     dlabels.append(d['name'])
