@@ -310,7 +310,7 @@ class BaseMultiqcModule(object):
             pass
         
         # Make a plot - interactive or flat
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > 50):
+        if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > 50):
             return self.matplotlib_linegraph(plotdata, pconfig)
         else:
             return self.highcharts_linegraph(plotdata, pconfig)
