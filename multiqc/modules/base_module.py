@@ -170,7 +170,7 @@ class BaseMultiqcModule(object):
             root = ''
         # Split then take first section to remove everything after these matches
         for ext in config.fn_clean_exts:
-            s_name = s_name.split(ext ,1)[0]
+            s_name = os.path.basename(s_name.split(ext ,1)[0])
         if config.prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
