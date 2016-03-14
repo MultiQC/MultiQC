@@ -33,6 +33,8 @@ class BaseMultiqcModule(object):
         self.intro = '<p><a href="{0}" target="_blank">{1}</a> {2}</p>{3}'.format(
             href, target, info, extra
         )
+        # Load the template so that we can access it's configuration
+        self.template_mod = config.avail_templates[config.template].load()
 
     def find_log_files(self, patterns, filecontents=True, filehandles=False):
         """
@@ -400,12 +402,11 @@ class BaseMultiqcModule(object):
             logger.warning('Tried to make bar plot, but had no data')
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
-        # TODO: Swap this temporary switch with config / template options
-        # if len(plotsamples[0]) > 50:
-        #     return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
-        # else:
-        #     return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
-        return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
+        # Make a plot - interactive or flat
+        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > 50):
+            return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
+        else:
+            return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
     
     
     
@@ -474,7 +475,16 @@ class BaseMultiqcModule(object):
         if pconfig.get('id') is None:
             pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
         # Individual plot IDs
-        pids = [ pconfig['id']+''.join(random.sample(letters, 5)) for _ in range(len(plotdata)) ]
+        pids = []
+        for k in range(len(plotdata)):
+            try:
+                name = '_{}'.format(pconfig['data_labels'][k])
+            except:
+                if k > 0:
+                    name = '_{}'.format(k+1)
+                else:
+                    name = ''
+            pids.append('{}{}'.format(pconfig['id'], name))
         
         html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
         
@@ -506,8 +516,10 @@ class BaseMultiqcModule(object):
             for k, p in enumerate(plotdata):
                 pid = pids[k]
                 active = 'active' if k == 0 else ''
-                try: name = pconfig['data_labels'][k]
-                except: name = k+1
+                try:
+                    name = pconfig['data_labels'][k]
+                except:
+                    name = k+1
                 html += '<button class="btn btn-default btn-sm {a} mqc_mplplot_bargraph_switchds" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
             html += '</div>\n\n'
         
@@ -586,6 +598,9 @@ class BaseMultiqcModule(object):
                 axes.set_ylim((-0.5, len(y_ind)-0.5)) # Reduce padding around plot area
                 if plot_pct is True:
                     axes.set_xlim((0, 100))
+                    # Add percent symbols
+                    vals = axes.get_xticks()
+                    axes.set_xticklabels(['{:.0f}%'.format(x) for x in vals])
                 else:
                     default_xlimits = axes.get_xlim()
                     axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
@@ -605,18 +620,34 @@ class BaseMultiqcModule(object):
                 # Tight layout - makes sure that legend fits in and stuff
                 plt.tight_layout(rect=[0,0.08,1,0.92])
                 
-                # Output the figure to a base64 encoded string
-                img_buffer = io.BytesIO()
-                fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-                b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
-                plt.close(fig)
-                img_buffer.close()
-                
+                # Should this plot be hidden on report load?
                 hidediv = ''
                 if pidx > 0 or hide_plot:
                     hidediv = ' style="display:none;"'
                 
-                html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}"/></div>'.format(pid, hidediv, b64_img)
+                # Output the figure to a base64 encoded string
+                try:
+                    base64_plots = self.template_mod.base64_plots
+                except AttributeError:
+                    base64_plots = True
+                if base64_plots is True:
+                    img_buffer = io.BytesIO()
+                    fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+                    b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
+                    img_buffer.close()
+                    html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)
+                
+                # Save to a file and link <img>
+                else:
+                    plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
+                    if not os.path.exists(plot_dir):
+                        os.makedirs(plot_dir)
+                    plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
+                    fig.savefig(plot_fn, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+                    html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_fn)
+                
+                plt.close(fig)
+                
         
         # Close wrapping div
         html += '</div>'

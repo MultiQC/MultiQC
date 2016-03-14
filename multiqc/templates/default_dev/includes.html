@@ -50,6 +50,7 @@ it prints the contents of these files into the report.
 <script type="text/javascript" src="assets/js/multiqc_generalstats.js"></script>
 <script type="text/javascript" src="assets/js/multiqc_toolbox.js"></script>
 <script type="text/javascript" src="assets/js/multiqc_plotting.js"></script>
+<script type="text/javascript" src="assets/js/multiqc_mpl.js"></script>
 <script type="text/javascript" src="assets/js/multiqc_tour.js"></script>
 {%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.keys() %}
 <script type="text/javascript" src="{{ js_href }}"></script>

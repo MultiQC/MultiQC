@@ -36,10 +36,10 @@ plugin_hooks.mqc_trigger('config_loaded')
     context_settings = dict( help_option_names = ['-h', '--help'] )
 )
 @click.argument('analysis_dir',
-                    type=click.Path(exists=True),
-                    nargs=-1,
-                    required=True,
-                    metavar="<analysis directory>"
+                    type = click.Path(exists=True),
+                    nargs = -1,
+                    required = True,
+                    metavar = "<analysis directory>"
 )
 @click.option('-d', '--dirs',
                     is_flag = True,
@@ -64,12 +64,12 @@ plugin_hooks.mqc_trigger('config_loaded')
 )
 @click.option('-o', '--outdir',
                     type = str,
-                    default=config.output_dir,
+                    default = config.output_dir,
                     help = "Create report in the specified output directory."
 )
 @click.option('-x', '--ignore',
                     type = str,
-                    multiple=True,
+                    multiple = True,
                     help = "Ignore analysis files (glob expression)"
 )
 @click.option('--data-dir/--no-data-dir', 'make_data_dir',
@@ -77,7 +77,7 @@ plugin_hooks.mqc_trigger('config_loaded')
                     help = "Specify whether the parsed data directory should be created."
 )
 @click.option('-k', '--data-format', 'data_format',
-                    default=config.data_format,
+                    default = config.data_format,
                     type = click.Choice(config.data_format_extensions.keys()),
                     help = "Output parsed data in a different format"
 )
@@ -87,27 +87,35 @@ plugin_hooks.mqc_trigger('config_loaded')
 )
 @click.option('-m', '--module', metavar='[module name]',
                     type = click.Choice(config.avail_modules),
-                    multiple=True,
+                    multiple = True,
                     help = "Use only this module. Can specify multiple times."
 )
 @click.option('-e', '--exclude', metavar='[module name]',
                     type = click.Choice(config.avail_modules),
-                    multiple=True,
+                    multiple = True,
                     help = "Do not use this module. Can specify multiple times."
 )
+@click.option('--flat', 'plots_flat',
+                    is_flag = True,
+                    help = "Use only flat plots (static images)"
+)
+@click.option('--interactive', 'plots_interactive',
+                    is_flag = True,
+                    help = "Use only interactive plots (HighCharts Javascript)"
+)
 @click.option('-v', '--verbose', 
-                    count=True,
-                    default=0,
+                    count = True,
+                    default = 0,
                     help = "Increase output verbosity."
 )
 @click.option('-q', '--quiet', 
-                    is_flag=True,
+                    is_flag = True,
                     help = "Only show log warnings"
 )
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, title, template, module, exclude, outdir, ignore, filename, 
-make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
+make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, verbose, quiet, **kwargs):
     """MultiQC is a tool generate qc reports.
     
         It can be used to create an aggregate report summarising the results
@@ -144,6 +152,7 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
             logger.debug('Could not connect to multiqc.info for version check')
     
     # Set up key variables (overwrite config vars from command line)
+    config.template = template
     config.title = title
     config.prepend_dirs = dirs
     config.analysis_dir = analysis_dir
@@ -152,6 +161,8 @@ make_data_dir, data_format, zip_data_dir, force, verbose, quiet, **kwargs):
     config.force = force
     config.zip_data_dir = zip_data_dir
     config.data_format = data_format
+    config.plots_force_flat = plots_flat
+    config.plots_force_interactive = plots_interactive
     config.kwargs = kwargs # Plugin command line options
     if len(ignore) > 0:
         logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))
