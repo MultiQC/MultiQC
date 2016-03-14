@@ -401,10 +401,11 @@ class BaseMultiqcModule(object):
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
         # TODO: Swap this temporary switch with config / template options
-        if len(plotsamples[0]) > 50:
-            return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
-        else:
-            return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
+        # if len(plotsamples[0]) > 50:
+        #     return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
+        # else:
+        #     return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
+        return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
     
     
     
@@ -469,8 +470,11 @@ class BaseMultiqcModule(object):
         formats the input data.
         """
         
+        # Plot group ID
         if pconfig.get('id') is None:
             pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+        # Individual plot IDs
+        pids = [ pconfig['id']+''.join(random.sample(letters, 5)) for _ in range(len(plotdata)) ]
         
         html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
         
@@ -478,90 +482,141 @@ class BaseMultiqcModule(object):
         default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', 
                           '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
         
+        # Counts / Percentages Switch
+        if pconfig.get('cpswitch') is not False:
+            if pconfig.get('cpswitch_c_active', True) is True:
+                c_active = 'active'
+                p_active = ''
+            else:
+                c_active = ''
+                p_active = 'active'
+                pconfig['stacking'] = 'percent'
+            c_label = pconfig.get('cpswitch_counts_label', 'Counts')
+            p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
+            html += '<div class="btn-group switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
+    			<button class="btn btn-default btn-sm {c_a} counts">{c_l}</button> \n\
+    			<button class="btn btn-default btn-sm {p_a} pcnt">{p_l}</button> \n\
+    		</div> '.format(c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
+            if len(plotdata) > 1:
+                html += ' &nbsp; &nbsp; '
+        
         # Buttons to cycle through different datasets
-        pids = []
         if len(plotdata) > 1:
             html += '<div class="btn-group switch_group">\n'
             for k, p in enumerate(plotdata):
-                pid = pconfig['id']+''.join(random.sample(letters, 5))
-                pids.append(pid)
+                pid = pids[k]
                 active = 'active' if k == 0 else ''
                 try: name = pconfig['data_labels'][k]
                 except: name = k+1
-                html += '<button class="btn btn-default btn-sm {a}" onclick="$(\'#{id} .mqc_mplplot\').hide(); $(\'#{pid}\').show();">{n}</button>\n'.format(a=active, id=pconfig['id'], pid=pid, n=name)
+                html += '<button class="btn btn-default btn-sm {a} mqc_mplplot_bargraph_switchds" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
             html += '</div>\n\n'
-        else:
-            pids = [0]
         
         # Go through datasets creating plots
         for pidx, pdata in enumerate(plotdata):
             
-            pid = pids[pidx]
+            # Plot percentage as well as counts
+            plot_pcts = [False]
+            if pconfig.get('cpswitch') is not False:
+                plot_pcts = [False, True]
             
-            # Set up figure
-            plt_height = min(30, max(6, len(plotsamples[pidx]) / 2.3))
-            fig = plt.figure(figsize=(14, plt_height), frameon=False)
-            axes = fig.add_subplot(111)
-            y_ind = range(len(plotsamples[pidx]))
-            bar_width = 0.8
-            
-            # Plot bars
-            dlabels = []
-            for idx, d in enumerate(pdata):
-                # Get offset for stacked bars
-                if idx == 0:
-                    prevdata = [0] * len(plotsamples[pidx])
+            for plot_pct in plot_pcts:
+                
+                # Plot ID
+                pid = pids[pidx]
+                hide_plot = False
+                if plot_pct is True:
+                    pid = '{}_pc'.format(pid)
+                    if pconfig.get('cpswitch_c_active', True) is True:
+                        hide_plot = True
                 else:
-                    for i, p in enumerate(prevdata):
-                        prevdata[i] += pdata[idx-1]['data'][i]
-                # Default colour index
-                cidx = idx
-                while cidx > len(default_colors):
-                    cidx -= len(default_colors)
-                # Save the name of this series
-                dlabels.append(d['name'])
-                # Add the series of bars to the plot
-                axes.barh(
-                    y_ind, d['data'], bar_width, left=prevdata,
-                    color=d.get('color', default_colors[cidx]), align='center', linewidth=1, edgecolor='w'
-                )
-            
-            # Tidy up axes
-            axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
-            axes.set_xlabel(pconfig.get('ylab', '')) # I know, I should fix the fact that the config is switched
-            axes.set_ylabel(pconfig.get('xlab', ''))
-            axes.set_yticks(y_ind) # Specify where to put the labels
-            axes.set_yticklabels(plotsamples[pidx]) # Set y axis sample name labels
-            axes.set_ylim((-0.5, len(y_ind)-0.5)) # Reduce padding around plot area
-            default_xlimits = axes.get_xlim()
-            axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
-            if 'title' in pconfig:
-                plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
-            axes.grid(True, zorder=0, which='both', axis='x', linestyle='-', color='#dedede', linewidth=1)
-            axes.set_axisbelow(True)
-            axes.spines['right'].set_visible(False)
-            axes.spines['top'].set_visible(False)
-            axes.spines['bottom'].set_visible(False)
-            axes.spines['left'].set_visible(False)
-            
-            # Legend
-            lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
-            
-            # Tight layout - makes sure that legend fits in and stuff
-            plt.tight_layout(rect=[0,0.08,1,0.92])
-            
-            # Output the figure to a base64 encoded string
-            img_buffer = io.BytesIO()
-            fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-            b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
-            plt.close(fig)
-            img_buffer.close()
-            
-            hidediv = ''
-            if pidx > 0:
-                hidediv = ' style="display:none;"'
-            
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}"/></div>'.format(pid, hidediv, b64_img)
+                    if pconfig.get('cpswitch_c_active', True) is not True:
+                        hide_plot = True
+                
+                # Set up figure
+                plt_height = min(30, max(6, len(plotsamples[pidx]) / 2.3))
+                fig = plt.figure(figsize=(14, plt_height), frameon=False)
+                axes = fig.add_subplot(111)
+                y_ind = range(len(plotsamples[pidx]))
+                bar_width = 0.8
+                
+                # Count totals for each sample
+                s_totals = [0 for _ in pdata[0]['data']]
+                for series_idx, d in enumerate(pdata):
+                    for sample_idx, v in enumerate(d['data']):
+                        s_totals[sample_idx] += v
+                
+                # Plot bars
+                dlabels = []
+                for idx, d in enumerate(pdata):
+                    
+                    # Plot percentages
+                    values = d['data']
+                    if plot_pct is True:
+                        for (key,var) in enumerate(values):
+                            s_total = s_totals[key]
+                            if s_total == 0:
+                                values[key] = 0
+                            else:
+                                values[key] = (float(var+0.0)/float(s_total))*100
+                    
+                    # Get offset for stacked bars
+                    if idx == 0:
+                        prevdata = [0] * len(plotsamples[pidx])
+                    else:
+                        for i, p in enumerate(prevdata):
+                            prevdata[i] += pdata[idx-1]['data'][i]
+                    # Default colour index
+                    cidx = idx
+                    while cidx > len(default_colors):
+                        cidx -= len(default_colors)
+                    # Save the name of this series
+                    dlabels.append(d['name'])
+                    # Add the series of bars to the plot
+                    axes.barh(
+                        y_ind, values, bar_width, left=prevdata,
+                        color=d.get('color', default_colors[cidx]), align='center', linewidth=1, edgecolor='w'
+                    )
+                
+                # Tidy up axes
+                axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
+                axes.set_xlabel(pconfig.get('ylab', '')) # I know, I should fix the fact that the config is switched
+                axes.set_ylabel(pconfig.get('xlab', ''))
+                axes.set_yticks(y_ind) # Specify where to put the labels
+                axes.set_yticklabels(plotsamples[pidx]) # Set y axis sample name labels
+                axes.set_ylim((-0.5, len(y_ind)-0.5)) # Reduce padding around plot area
+                if plot_pct is True:
+                    axes.set_xlim((0, 100))
+                else:
+                    default_xlimits = axes.get_xlim()
+                    axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
+                if 'title' in pconfig:
+                    plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
+                axes.grid(True, zorder=0, which='both', axis='x', linestyle='-', color='#dedede', linewidth=1)
+                axes.set_axisbelow(True)
+                axes.spines['right'].set_visible(False)
+                axes.spines['top'].set_visible(False)
+                axes.spines['bottom'].set_visible(False)
+                axes.spines['left'].set_visible(False)
+                plt.gca().invert_yaxis() # y axis is reverse sorted otherwise
+                
+                # Legend
+                lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+                
+                # Tight layout - makes sure that legend fits in and stuff
+                plt.tight_layout(rect=[0,0.08,1,0.92])
+                
+                # Output the figure to a base64 encoded string
+                img_buffer = io.BytesIO()
+                fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+                b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
+                plt.close(fig)
+                img_buffer.close()
+                
+                hidediv = ''
+                if pidx > 0 or hide_plot:
+                    hidediv = ' style="display:none;"'
+                
+                html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}"/></div>'.format(pid, hidediv, b64_img)
         
         # Close wrapping div
         html += '</div>'

@@ -649,11 +649,11 @@ tbody .sorthandle {
 }
 
 /* Flat MatPlotLib plots */
-.mqc_mplplot_plotgroup {
+.mqc_mplplot {
     border: 1px solid #dedede;
     margin-top: 15px;
 }
-.mqc_mplplot_plotgroup img {
+.mqc_mplplot img {
     max-width: 100%;
 }
 
