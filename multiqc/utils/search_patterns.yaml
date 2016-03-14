@@ -30,7 +30,9 @@ fastqc:
     zip:
         fn: _fastqc.zip
 featurecounts:
-    fn: _counts.txt.summary
+    fn:
+       - counts.summary
+       - _counts.txt.summary
 hicup:
     fn: HiCUP_summary_report
 picard:
@@ -67,4 +69,4 @@ skewer:
 samblaster:
     contents: 'samblaster: Version'
 samtools:
-    contents: 'samtools stats'
+    contents: 'This file was produced by samtools stats'

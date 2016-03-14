@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
         " with high-throughput sequencing data.")
         self.samtools_data = dict()
         for f in self.find_log_files(config.sp['samtools']):
-            s_name = f['s_name'].split(".txt")[0]
+            s_name = f['s_name']
             parsed_data = self.parse_samtools_report(f['f'])
             if parsed_data is not None:
                 if s_name in self.samtools_data:
@@ -48,23 +48,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_samtools_report (self, raw_data):
         """ Parse the samtools log file. """
-
-        regexes = {
-                'raw_total_seqs': r"raw\stotal\ssequences:\s+(\d+)",
-            'reads_mapped': r"reads\smapped:\s+(\d+)",
-            'non_primary': r"non-primary\salignments:\s+(\d+)",
-            'reads_paired': r"reads\smapped\sand\spaired:\s+(\d+)",
-            'reads_duplicated': r"reads\sduplicated:\s+(\d+)",
-            'error_rate': r"error\srate:\s+(\d+\.\d+e-\d+)\s+#",
-            'pairs_on_diff_chrom': r"pairs\son\sdifferent\schromosomes:\s+(\d+)"
-        }
         parsed_data = {}
-        for k, r in regexes.items():
-            r_search = re.search(r, raw_data, re.MULTILINE)
-            if r_search:
-                value = float(r_search.group(1))
-                if value > 0:
-                    parsed_data[k] = value
+        for line in raw_data.split("\n"):
+            if not line.startswith("SN"):
+                continue
+            fields = line.split("\t")
+            parsed_data[fields[1].strip()[:-1]] = float(fields[2].strip())
         if len(parsed_data) == 0: return None
         return parsed_data
 
@@ -74,55 +63,55 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['raw_total_seqs'] = {
-            'title': 'Total seqs',
+        headers['raw total sequences'] = {
+            'title': 'M Total seqs',
             'description': 'Total sequences in the bam file',
             'min': 0,
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
         }
-        headers['raw_total_seqs'] = {
-            'title': 'Total seqs',
-            'description': 'Total sequences in the bam file',
+        headers['reads mapped'] = {
+            'title': 'M Reads Mapped',
+            'description': 'Reads Mapped in the bam file',
             'min': 0,
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
         }
-        headers['error_rate'] = {
+        headers['error rate'] = {
             'title': 'Error rate',
             'description': 'Error rate using CIGAR',
             'min': 0,
-            'max': 1,
+            'max': 100,
             'scale': 'OrRd',
-            'format': '{:.4f}%',
+            'format': '{:.2f}%',
             'modify': lambda x: x * 100.0
         }
-        headers['non_primary'] = {
-            'title': 'Non primary alignment',
+        headers['non-primary alignments'] = {
+            'title': 'M Non-Primary Alignments',
             'description': 'Non primary alignment (millions)',
             'min': 0,
             'scale': 'PuBu',
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
             }
-        headers['reads_duplicated'] = {
-            'title': 'Duplicatd reads',
-            'description': 'PCR or optical duplicate bit set (millions)',
+        headers['reads duplicated'] = {
+            'title': 'M Duplicated reads',
+            'description': 'PCR or optical duplicates bit set (millions)',
             'min': 0,
             'scale': 'PuBu',
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
         }
-        headers['reads_paired'] = {
-            'title': 'Paired mapped reads',
+        headers['reads paired'] = {
+            'title': 'M Paired mapped reads',
             'description': 'Paired mapped reads (millions)',
             'min': 0,
             'scale': 'PuBu',
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
             }
-        headers['pairs_on_diff_chrom'] = {
-            'title': 'Non proper paired *',
+        headers['pairs on different chromosomes'] = {
+            'title': 'M Non proper paired*',
             'description': 'Paired in different chromosomes (millions)',
             'min': 0,
             'scale': 'PuBu',
