@@ -596,7 +596,7 @@ class BaseMultiqcModule(object):
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
         # Make a plot - interactive or flat
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > plots_flat_numseries):
+        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries):
             return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
         else:
             return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
