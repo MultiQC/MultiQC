@@ -53,23 +53,11 @@ Currently, supported tools include:
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (BamQC, RNASeq)
 
-More to come soon. Please suggest any ideas as a new
+More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log
 file if possible)_.
 
-## Graphical Usage
-
-MultiQC comes with a graphical app for OS X. To use, download `MultiQC.app.zip`
-from the [releases page](https://github.com/ewels/MultiQC/releases)
-and unzip the archive. Double click MultiQC.app to launch, then
-drag your analysis directory onto the window.
-
-The app can be run from anywhere, though we recommend copying to your
-Applications directory.
-
-A similar graphical utility for Windows is planned for a future release.
-
-## Command Line Usage
+## Installation & Usage
 
 You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
 using `pip` as follows:
@@ -82,6 +70,12 @@ If you would like the development version instead, the command is:
 
 ```
 pip install git+https://github.com/ewels/MultiQC.git
+```
+
+Alternatively, you can install using [Conda](http://anaconda.org/)
+from the [bioconda channel](https://bioconda.github.io/):
+```
+conda install -c bioconda multiqc
 ```
 
 Then it's just a case of going to your analysis directory and running the script:
