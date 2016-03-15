@@ -310,7 +310,7 @@ class BaseMultiqcModule(object):
             pass
         
         # Make a plot - interactive or flat
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > 50):
+        if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
             return self.matplotlib_linegraph(plotdata, pconfig)
         else:
             return self.highcharts_linegraph(plotdata, pconfig)
@@ -414,27 +414,65 @@ class BaseMultiqcModule(object):
                 while cidx >= len(default_colors):
                     cidx -= len(default_colors)
                 
+                # Line style
+                linestyle = 'solid'
+                if d.get('dashStyle', None) == 'Dash':
+                    linestyle = 'dashed'
+                
                 # Reformat data (again)
                 try:
-                    axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), marker=None)
+                    axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), linestyle=linestyle, linewidth=1.5, marker=None)
                 except TypeError:
                     # Categorical data on x axis
-                    axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), marker=None)
-                
-                
+                    axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), linewidth=1.5, marker=None)
             
             # Tidy up axes
             axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
             axes.set_xlabel(pconfig.get('xlab', ''))
             axes.set_ylabel(pconfig.get('ylab', ''))
+            
+            # Axis limits
             default_ylimits = axes.get_ylim()
-            axes.set_ylim((pconfig.get('ymin', default_ylimits[0]),pconfig.get('ymax', default_ylimits[1])))
+            ymin = default_ylimits[0]
+            if 'ymin' in pconfig:
+                ymin = pconfig['ymin']
+            elif 'yCeiling' in pconfig:
+                ymin = min(pconfig['yCeiling'], default_ylimits[0])
+            ymax = default_ylimits[1]
+            if 'ymax' in pconfig:
+                ymax = pconfig['ymax']
+            elif 'yFloor' in pconfig:
+                ymax = max(pconfig['yCeiling'], default_ylimits[1])
+            if (ymax - ymin) < pconfig.get('yMinRange', 0):
+                ymax = ymin + pconfig['yMinRange']
+            axes.set_ylim((ymin, ymax))
+            
             default_xlimits = axes.get_xlim()
-            axes.set_xlim((pconfig.get('xmin', default_xlimits[0]),pconfig.get('xmax', default_xlimits[1])))
+            xmin = default_xlimits[0]
+            if 'xmin' in pconfig:
+                xmin = pconfig['xmin']
+            elif 'xCeiling' in pconfig:
+                xmin = min(pconfig['xCeiling'], default_xlimits[0])
+            xmax = default_xlimits[1]
+            if 'xmax' in pconfig:
+                xmax = pconfig['xmax']
+            elif 'xFloor' in pconfig:
+                xmax = max(pconfig['xCeiling'], default_xlimits[1])
+            if (xmax - xmin) < pconfig.get('xMinRange', 0):
+                xmax = xmin + pconfig['xMinRange']
+            axes.set_xlim((xmin, xmax))
+            
+            # Plot title
             if 'title' in pconfig:
                 plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
-            axes.grid(True, zorder=0, which='both', axis='y', linestyle='-', color='#dedede', linewidth=1)
-            # Thin grey x axis
+            axes.grid(True, zorder=10, which='both', axis='y', linestyle='-', color='#dedede', linewidth=1)
+            
+            # X axis categories, if specified
+            if 'categories' in pconfig:
+                axes.set_xticks([i for i,v in enumerate(pconfig['categories'])])
+                axes.set_xticklabels(pconfig['categories'])
+            
+            # Axis lines
             xlim = axes.get_xlim()
             axes.plot([xlim[0], xlim[1]], [0, 0], linestyle='-', color='#dedede', linewidth=2)
             axes.set_axisbelow(True)
@@ -442,6 +480,16 @@ class BaseMultiqcModule(object):
             axes.spines['top'].set_visible(False)
             axes.spines['bottom'].set_visible(False)
             axes.spines['left'].set_visible(False)
+            
+            # Background colours, if specified
+            if 'yPlotBands' in pconfig:
+                xlim = axes.get_xlim()
+                for pb in pconfig['yPlotBands']:
+                    axes.barh(pb['from'], xlim[1], height = pb['to']-pb['from'], left=xlim[0], color=pb['color'], linewidth=0, zorder=0)
+            if 'xPlotBands' in pconfig:
+                ylim = axes.get_ylim()
+                for pb in pconfig['xPlotBands']:
+                    axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0)
             
             # Tight layout - makes sure that legend fits in and stuff
             if len(pdata) <= 15:
@@ -548,7 +596,7 @@ class BaseMultiqcModule(object):
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
         # Make a plot - interactive or flat
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > 50):
+        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > plots_flat_numseries):
             return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
         else:
             return self.highcharts_bargraph(plotdata, plotsamples, pconfig)

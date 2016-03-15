@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
-        if len(self.fq_screen_data) * self.num_orgs <= 160:
+        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
             self.intro += self.fqscreen_plot()
         # Use simpler plot that works with many samples
         else:
@@ -200,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         return ("<p>Summed alignment percentages are shown below. Note that percentages \
                 can sum to greater than 100% if reads align to multiple organisms.</p>" +
-                self.plot_bargraph(data, cats, config=pconfig) )
+                self.plot_bargraph(data, cats, pconfig) )
 
         
         

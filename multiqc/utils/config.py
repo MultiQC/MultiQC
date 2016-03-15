@@ -35,6 +35,7 @@ force = False
 zip_data_dir = False
 plots_force_flat = False
 plots_force_interactive = False
+plots_flat_numseries = 50
 data_format = 'tsv'
 data_format_extensions = {'tsv': 'txt', 'json': 'json', 'yaml': 'yaml'}
 fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup' ]

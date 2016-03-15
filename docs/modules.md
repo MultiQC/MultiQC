@@ -487,6 +487,15 @@ objects. Make sure that they are in the same order as the data. If not
 supplied, these will be guessed from the data keys. See the bismark module
 plots for an example of this in action.
 
+### Interactive / Flat image plots
+Note that the `self.plot_bargraph()` function can generate both interactive
+JavaScript (HighCharts) powered report plots _and_ flat image plots made using
+MatPlotLib. This choice is made within the function based on config variables
+such as number of dataseries and command line flags.
+
+Note that both plot types should come out looking pretty much identical. If
+you spot something that's missing in the flat image plots, let me know.
+
 
 ## Step 8 - Plotting line graphs
 This base function works much like the above, but for two-dimensional

@@ -14,6 +14,7 @@ script:
   - multiqc data -f -i "Forced Report"
   - multiqc data -n custom_fn --no-data-dir -e fastqc
   - multiqc data -f -z -m fastqc
+  - multiqc data -f --flat
   - multiqc data -o tests/multiqc_report_dev -t default_dev -k json
   - multiqc data -o tests/multiqc_report_geo -t geo -k yaml -v
   

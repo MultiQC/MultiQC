@@ -54,10 +54,15 @@ log_filesize_limit: 1000000
 # Opt-out of remotely checking that you're running the latest version
 no_version_check: True
 
-# Limit for datasets per plot in the report. If there are more than
-# this, the user will need to click 'plot graph' to see the data.
-# This is to prevent very large graphs from locking up the browser on load.
-num_datasets_plot_limit: 50
+# How to plot graphs. Different templates can override these settings, but
+# the default template can use interactive plots (Javascript using HighCharts)
+# or flat plots (images, using MatPlotLib). With interactive plots, the report
+# can prevent automatically rendering all graphs if there are lots of samples
+# to prevent the browser being locked up when the report opens.
+plots_force_flat = False          # Try to use only flat image graphs
+plots_force_interactive = False   # Try to use only interactive javascript graphs
+plots_flat_numseries = 50         # If neither of the above, use flat if > this number of datasets
+num_datasets_plot_limit: 50       # If interactive, don't plot on load if > this number of datasets
 
 # Overwrite module filename search patterns. See multiqc/utils/search_patterns.yaml
 # for the defaults. Remove a default by setting it to None.
