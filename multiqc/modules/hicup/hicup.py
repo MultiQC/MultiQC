@@ -248,8 +248,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['Deduplication_Cis_Close_Uniques'] = { 'color': '#2f7ed8', 'name': 'Unique: cis &lt; 10Kbp' }
-        keys['Deduplication_Cis_Far_Uniques']   = { 'color': '#0d233a', 'name': 'Unique: cis &gt; 10Kbp' }
+        keys['Deduplication_Cis_Close_Uniques'] = { 'color': '#2f7ed8', 'name': 'Unique: cis < 10Kbp' }
+        keys['Deduplication_Cis_Far_Uniques']   = { 'color': '#0d233a', 'name': 'Unique: cis > 10Kbp' }
         keys['Deduplication_Trans_Uniques']     = { 'color': '#492970', 'name': 'Unique: trans' }
         keys['Duplicate_Read_Pairs']            = { 'color': '#f28f43', 'name': 'Duplicate read pairs' }
         

@@ -313,6 +313,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_alignment',
             'title': 'Bismark Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
@@ -346,6 +347,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_strand_alignment',
             'title': 'Alignment to Individual Bisulfite Strands',
             'ylab': '% Reads',
             'cpswitch_c_active': False,
@@ -365,6 +367,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_deduplication',
             'title': 'Bismark Deduplication',
             'ylab': '% Reads',
             'cpswitch_c_active': False,
@@ -389,6 +392,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_percent_methylation',
             'title': 'Cytosine Methylation',
             'ylab': '% Calls',
             'cpswitch_c_active': False,
@@ -410,7 +414,7 @@ class MultiqcModule(BaseMultiqcModule):
         for more information on how these numbers are generated.</p>'
         
         pconfig = {
-            'id': 'bismark-mbias-plot',
+            'id': 'bismark_mbias',
             'title': 'M-Bias',
             'ylab': '% Methylation',
             'xlab': 'Position (bp)',

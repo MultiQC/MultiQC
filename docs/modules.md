@@ -487,6 +487,15 @@ objects. Make sure that they are in the same order as the data. If not
 supplied, these will be guessed from the data keys. See the bismark module
 plots for an example of this in action.
 
+### Interactive / Flat image plots
+Note that the `self.plot_bargraph()` function can generate both interactive
+JavaScript (HighCharts) powered report plots _and_ flat image plots made using
+MatPlotLib. This choice is made within the function based on config variables
+such as number of dataseries and command line flags.
+
+Note that both plot types should come out looking pretty much identical. If
+you spot something that's missing in the flat image plots, let me know.
+
 
 ## Step 8 - Plotting line graphs
 This base function works much like the above, but for two-dimensional
@@ -601,3 +610,20 @@ self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
 self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
 self.copy_module_files(self.css + self.js, __file__)
 ```
+
+### Appendix C - Custom plotting functions
+If you don't like the default plotting functions built into MultiQC, you
+can write your own! If you create a callable variable in a template called
+either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
+
+```python
+def custom_linegraph(plotdata, pconfig):
+    return '<h1>Awesome line graph here</h1>'
+linegraph = custom_linegraph
+  
+def custom_bargraph(plotdata, plotseries, pconfig):
+    return '<h1>Awesome bar graph here</h1>'
+bargraph = custom_bargraph
+```
+
+These plotting functions aren't very helpful, but hopefully you get the idea.

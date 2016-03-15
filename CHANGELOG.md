@@ -4,6 +4,11 @@
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
 * New [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) module
+* New "Flat" image plots, rendered at run time with MatPlotLib
+  * By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)
+  * Means that _very_ large numbers of samples can be viewed in reports. _eg._ single cell data.
+  * Templates can now specify their own plotting functions
+  * Use `--flat` and `--interactive` to override this behaviour
 * MultiQC added to `bioconda` (with help from @dakl)
 * New plugin hook: `config_loaded`
 * Plugins can now add new command line options (thanks to @robinandeer)
