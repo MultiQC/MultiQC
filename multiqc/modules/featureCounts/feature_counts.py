@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(config.sp['featurecounts']):
             parsed_data = self.parse_featurecounts_report(f['f'])
             if parsed_data is not None:
-                s_name = f['s_name'].replace(".counts.summary", "")
+                s_name = f['s_name']
                 if s_name in self.featurecounts_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f)
