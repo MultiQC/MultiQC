@@ -57,7 +57,7 @@ More modules are being written all of the time. Please suggest any ideas as a ne
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log
 file if possible)_.
 
-## Installation & Usage
+## Installation
 
 You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
 using `pip` as follows:
@@ -78,7 +78,9 @@ from the [bioconda channel](https://bioconda.github.io/):
 conda install -c bioconda multiqc
 ```
 
-Then it's just a case of going to your analysis directory and running the script:
+## Usage
+Once installed, you can use MultiQC by navigating to your analysis directory
+(or a parent directory) and running the tool:
 
 ```
 multiqc .
@@ -87,13 +89,13 @@ multiqc .
 That's it! MultiQC will scan the specified directory ('.' is the current dir)
 and produce a report detailing whatever it finds.
 
-The report is created in `multiqc_report/multiqc_report.html` by default.
-A zip file of the report is also generated to facilitate easy transfer and sharing.
+The report is created in `multiqc_report.html` by default. Tab-delimited data
+files are also created in `multiqc_data/`, containing extra information.
+These can be easily inspected using Excel (use `--data-format` to get `yaml`
+or `json` instead).
 
-Tab-delimited data files are also created in `multiqc_report/report_data/`,
-containing extra information. These can be easily inspected using Excel.
-
-For more detailed instructions, run `multiqc -h`
+For more detailed instructions, run `multiqc -h` or see the
+[documentation](http://multiqc.info/docs/#running-multiqc).
 
 ## Contributions & Support
 
