@@ -610,3 +610,20 @@ self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
 self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
 self.copy_module_files(self.css + self.js, __file__)
 ```
+
+### Appendix C - Custom plotting functions
+If you don't like the default plotting functions built into MultiQC, you
+can write your own! If you create a callable variable in a template called
+either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
+
+```python
+def custom_linegraph(plotdata, pconfig):
+    return '<h1>Awesome line graph here</h1>'
+linegraph = custom_linegraph
+  
+def custom_bargraph(plotdata, plotseries, pconfig):
+    return '<h1>Awesome bar graph here</h1>'
+bargraph = custom_bargraph
+```
+
+These plotting functions aren't very helpful, but hopefully you get the idea.

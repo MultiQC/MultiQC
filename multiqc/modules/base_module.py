@@ -309,11 +309,14 @@ class BaseMultiqcModule(object):
         except KeyError:
             pass
         
-        # Make a plot - interactive or flat
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
-            return self.matplotlib_linegraph(plotdata, pconfig)
-        else:
-            return self.highcharts_linegraph(plotdata, pconfig)
+        # Make a plot - template custom, or interactive or flat
+        try:
+            return self.template_mod.linegraph(plotdata, pconfig)
+        except (AttributeError, TypeError):
+            if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
+                return self.matplotlib_linegraph(plotdata, pconfig)
+            else:
+                return self.highcharts_linegraph(plotdata, pconfig)
     
     
     
@@ -504,11 +507,7 @@ class BaseMultiqcModule(object):
                 hidediv = ' style="display:none;"'
             
             # Output the figure to a base64 encoded string
-            try:
-                base64_plots = self.template_mod.base64_plots
-            except AttributeError:
-                base64_plots = True
-            if base64_plots is True:
+            if getattr(self.template_mod, 'base64_plots', True) is True:
                 img_buffer = io.BytesIO()
                 fig.savefig(img_buffer, format='png', bbox_inches='tight')
                 b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
@@ -595,11 +594,14 @@ class BaseMultiqcModule(object):
             logger.warning('Tried to make bar plot, but had no data')
             return '<p class="text-danger">Error - was not able to plot data.</p>'
         
-        # Make a plot - interactive or flat
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries):
-            return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
-        else:
-            return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
+        # Make a plot - custom, interactive or flat
+        try:
+            return self.template_mod.bargraph(plotdata, plotsamples, pconfig)
+        except (AttributeError, TypeError):
+            if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries):
+                return self.matplotlib_bargraph(plotdata, plotsamples, pconfig)
+            else:
+                return self.highcharts_bargraph(plotdata, plotsamples, pconfig)
     
     
     
@@ -819,11 +821,7 @@ class BaseMultiqcModule(object):
                     hidediv = ' style="display:none;"'
                 
                 # Output the figure to a base64 encoded string
-                try:
-                    base64_plots = self.template_mod.base64_plots
-                except AttributeError:
-                    base64_plots = True
-                if base64_plots is True:
+                if getattr(self.template_mod, 'base64_plots', True) is True:
                     img_buffer = io.BytesIO()
                     fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
                     b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
