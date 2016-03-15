@@ -127,58 +127,63 @@ $(function () {
   
   // EXPORTING PLOTS
   // Load the plot exporter
-  $('.hc-plot').each(function(){
-    var fname = $(this).attr('id');
-    $('#mqc_export_selectplots').append('<div class="checkbox"><label><input type="checkbox" value="'+fname+'" checked> '+fname+'</label></div>');
-  });
-  // Select all / none for checkboxes
-  $('#mqc_export_sall').click(function(e){
-    e.preventDefault();
-    $('#mqc_export_selectplots input').prop('checked', true);
-  });
-  $('#mqc_export_snone').click(function(e){
-    e.preventDefault();
-    $('#mqc_export_selectplots input').prop('checked', false);
-  });
-  // Aspect ratio fixed
-  var mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
-  $('#mqc_export_aspratio').change(function(){
-    if($(this).is(':checked')){
-      mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
-    }
-  });
-  $('#mqc_exp_width').keyup(function(){
-    if($('#mqc_export_aspratio').is(':checked')){
-      $('#mqc_exp_height').val( $(this).val() / mqc_exp_aspect_ratio );
-    }
-  });
-  $('#mqc_exp_height').keyup(function(){
-    if($('#mqc_export_aspratio').is(':checked')){
-      $('#mqc_exp_width').val( $(this).val() * mqc_exp_aspect_ratio );
-    }
-  });
-  mqc_export_aspratio
-  // Export the plots
-  $('#mqc_exportplots').submit(function(e){
-    e.preventDefault();
-    var ft = $('#mqc_export_ft').val();
-    var f_scale = parseInt($('#mqc_export_scaling').val());
-    var f_width = parseInt($('#mqc_exp_width').val()) / f_scale;
-    var f_height = parseInt($('#mqc_exp_height').val()) / f_scale;
-    $('#mqc_export_selectplots input:checked').each(function(){
-      var fname = $(this).val();
-      var hc = $('#'+fname).highcharts();
-      if(hc !== undefined){
-        hc.exportChartLocal({
-          type: ft,
-          filename: fname,
-          sourceWidth: f_width,
-          sourceHeight: f_height,
-          scale: f_scale
-        });
+  if($('.hc-plot').length > 0){
+    $('.hc-plot').each(function(){
+      var fname = $(this).attr('id');
+      $('#mqc_export_selectplots').append('<div class="checkbox"><label><input type="checkbox" value="'+fname+'" checked> '+fname+'</label></div>');
+    });
+    // Select all / none for checkboxes
+    $('#mqc_export_sall').click(function(e){
+      e.preventDefault();
+      $('#mqc_export_selectplots input').prop('checked', true);
+    });
+    $('#mqc_export_snone').click(function(e){
+      e.preventDefault();
+      $('#mqc_export_selectplots input').prop('checked', false);
+    });
+    // Aspect ratio fixed
+    var mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
+    $('#mqc_export_aspratio').change(function(){
+      if($(this).is(':checked')){
+        mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
       }
     });
-  });
+    $('#mqc_exp_width').keyup(function(){
+      if($('#mqc_export_aspratio').is(':checked')){
+        $('#mqc_exp_height').val( $(this).val() / mqc_exp_aspect_ratio );
+      }
+    });
+    $('#mqc_exp_height').keyup(function(){
+      if($('#mqc_export_aspratio').is(':checked')){
+        $('#mqc_exp_width').val( $(this).val() * mqc_exp_aspect_ratio );
+      }
+    });
+    mqc_export_aspratio
+    // Export the plots
+    $('#mqc_exportplots').submit(function(e){
+      e.preventDefault();
+      var ft = $('#mqc_export_ft').val();
+      var f_scale = parseInt($('#mqc_export_scaling').val());
+      var f_width = parseInt($('#mqc_exp_width').val()) / f_scale;
+      var f_height = parseInt($('#mqc_exp_height').val()) / f_scale;
+      $('#mqc_export_selectplots input:checked').each(function(){
+        var fname = $(this).val();
+        var hc = $('#'+fname).highcharts();
+        if(hc !== undefined){
+          hc.exportChartLocal({
+            type: ft,
+            filename: fname,
+            sourceWidth: f_width,
+            sourceHeight: f_height,
+            scale: f_scale
+          });
+        }
+      });
+    });
+  } else {
+    $('#mqc_exportplots').hide();
+    $('.mqc-toolbox-buttons a[href=#mqc_exportplots]').parent().hide();
+  }
   
   /// SAVING STUFF
   // Load the saved setting names
