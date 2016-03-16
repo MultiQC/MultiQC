@@ -45,6 +45,63 @@ class MultiqcModule(BaseMultiqcModule):
         # Report table is immutable, so just updating it works
         self.samtools_stats_table()
 
+        # Add the submodule results to the report output
+        self.sections = list()
+        self.report_sections()
+
+
+    def report_sections(self):
+        """Create barplots for different stats values"""
+        # Genomic Origin Bar Graph
+        bases_cats = []
+        pairs_cats = []
+        reads_cats = ['non-primary alignments']
+        if len(self.samtools_data) > 0:
+            for s_name in self.samtools_data:
+                for metric in self.samtools_data[s_name]:
+                    if metric.startswith("reads"):
+                        reads_cats.append(metric)
+                    elif metric.startswith("bases"):
+                        bases_cats.append(metric)
+                    elif metric.find("pairs") > -1:
+                        pairs_cats.append(metric)
+                break
+            reads_pconfig = {
+                'title': 'Reads statistics',
+                'cpswitch': False,
+                'cpswitch_c_active': True,
+                'stacking': 'normal',
+            }
+            bases_pconfig= {
+                'title': 'Bases statistics',
+                'cpswitch': False,
+                'cpswitch_c_active': True,
+                'stacking': 'normal',
+            }
+            pairs_pconfig = {
+                'title': 'Pairs statistics',
+                'cpswitch': False,
+                'cpswitch_c_active': True,
+                'stacking': 'normal',
+            }
+            self.sections.append({
+                'name': 'Reads mapping statistics',
+                'anchor': 'samtools-mapping-statistics',
+                'content': self.plot_bargraph(self.samtools_data, reads_cats, reads_pconfig)
+            })
+            self.sections.append({
+                'name': 'Bases mapping statistics',
+                'anchor': 'samtools-bases-statistics',
+                'content': self.plot_bargraph(self.samtools_data, bases_cats, bases_pconfig)
+            })
+            # only if data
+            if any([any([self.samtools_data[k][v] > 0 for v in pairs_cats]) for k in self.samtools_data]):
+                self.sections.append({
+                    'name': 'Reads pairs statistics',
+                    'anchor': 'samtools-pairs-statistics',
+                    'content': self.plot_bargraph(self.samtools_data, pairs_cats, pairs_pconfig)
+                })
+
 
     def parse_samtools_report (self, raw_data):
         """ Parse the samtools log file. """
@@ -61,7 +118,6 @@ class MultiqcModule(BaseMultiqcModule):
     def samtools_stats_table(self):
         """ Take the parsed stats from the samtools report and add them to the
         basic stats table at the top of the report """
-
         headers = OrderedDict()
         headers['raw total sequences'] = {
             'title': 'M Total seqs',
@@ -77,6 +133,14 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
         }
+        headers['non-primary alignments'] = {
+            'title': 'M Non-Primary Alignments',
+            'description': 'Non primary alignment (millions)',
+            'min': 0,
+            'scale': 'PuBu',
+            'modify': lambda x: x / 1000000,
+            'shared_key': 'read_count'
+        }
         headers['error rate'] = {
             'title': 'Error rate',
             'description': 'Error rate using CIGAR',
@@ -86,38 +150,6 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.2f}%',
             'modify': lambda x: x * 100.0
         }
-        headers['non-primary alignments'] = {
-            'title': 'M Non-Primary Alignments',
-            'description': 'Non primary alignment (millions)',
-            'min': 0,
-            'scale': 'PuBu',
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
-            }
-        headers['reads duplicated'] = {
-            'title': 'M Duplicated reads',
-            'description': 'PCR or optical duplicates bit set (millions)',
-            'min': 0,
-            'scale': 'PuBu',
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
-        }
-        headers['reads paired'] = {
-            'title': 'M Paired mapped reads',
-            'description': 'Paired mapped reads (millions)',
-            'min': 0,
-            'scale': 'PuBu',
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
-            }
-        headers['pairs on different chromosomes'] = {
-            'title': 'M Non proper paired*',
-            'description': 'Paired in different chromosomes (millions)',
-            'min': 0,
-            'scale': 'PuBu',
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
-            }
         self.general_stats_addcols(self.samtools_data, headers)
 
 
