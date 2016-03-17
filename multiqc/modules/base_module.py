@@ -424,10 +424,10 @@ class BaseMultiqcModule(object):
                 
                 # Reformat data (again)
                 try:
-                    axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), linestyle=linestyle, linewidth=1.5, marker=None)
+                    axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), linestyle=linestyle, linewidth=1, marker=None)
                 except TypeError:
                     # Categorical data on x axis
-                    axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), linewidth=1.5, marker=None)
+                    axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), linewidth=1, marker=None)
             
             # Tidy up axes
             axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
