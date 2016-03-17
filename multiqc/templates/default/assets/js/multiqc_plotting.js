@@ -71,7 +71,7 @@ $(function () {
   });
   
   // Switch a HighCharts axis or data source
-  $('.switch_group button').click(function(e){
+  $('.hc_switch_group button').click(function(e){
     e.preventDefault();
     $(this).siblings('button.active').removeClass('active');
     $(this).addClass('active');

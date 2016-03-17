@@ -333,7 +333,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group hc_switch_group">\n'
             for k, p in enumerate(plotdata):
                 active = 'active' if k == 0 else ''
                 try: name = pconfig['data_labels'][k]['name']
@@ -388,7 +388,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
             for k, p in enumerate(plotdata):
                 pid = pids[k]
                 active = 'active' if k == 0 else ''
@@ -396,7 +396,7 @@ class BaseMultiqcModule(object):
                     name = pconfig['data_labels'][k]['name']
                 except:
                     name = k+1
-                html += '<button class="btn btn-default btn-sm {a} mqc_mplplot_bargraph_switchds" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
+                html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
             html += '</div>\n\n'
         
         # Go through datasets creating plots
@@ -625,7 +625,7 @@ class BaseMultiqcModule(object):
                 pconfig['stacking'] = 'percent'
             c_label = pconfig.get('cpswitch_counts_label', 'Counts')
             p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
-            html += '<div class="btn-group switch_group"> \n\
+            html += '<div class="btn-group hc_switch_group"> \n\
     			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n\
     			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n\
     		</div> '.format(id=pconfig['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
@@ -634,7 +634,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group hc_switch_group">\n'
             for k, p in enumerate(plotdata):
                 active = 'active' if k == 0 else ''
                 try: name = pconfig['data_labels'][k]
@@ -697,7 +697,7 @@ class BaseMultiqcModule(object):
                 pconfig['stacking'] = 'percent'
             c_label = pconfig.get('cpswitch_counts_label', 'Counts')
             p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
-            html += '<div class="btn-group switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
+            html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
     			<button class="btn btn-default btn-sm {c_a} counts">{c_l}</button> \n\
     			<button class="btn btn-default btn-sm {p_a} pcnt">{p_l}</button> \n\
     		</div> '.format(c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
@@ -706,7 +706,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
             for k, p in enumerate(plotdata):
                 pid = pids[k]
                 active = 'active' if k == 0 else ''
@@ -714,7 +714,7 @@ class BaseMultiqcModule(object):
                     name = pconfig['data_labels'][k]
                 except:
                     name = k+1
-                html += '<button class="btn btn-default btn-sm {a} mqc_mplplot_bargraph_switchds" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
+                html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
             html += '</div>\n\n'
         
         # Go through datasets creating plots
