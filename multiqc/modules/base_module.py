@@ -9,7 +9,7 @@ import fnmatch
 import io
 import json
 import logging
-import mimetypes
+import math
 import os
 import random
 
@@ -46,7 +46,7 @@ class BaseMultiqcModule(object):
         :param filehandles: Set to true to return a file handle instead of slurped file contents
         :return: Yields a set with two items - a sample name generated from the filename
                  and either the file contents or file handle for the current matched file.
-                 As yield is used, the function can be iterated over without 
+                 As yield is used, the results can be iterated over without loading all files at once
         """
         
         # Get the search parameters
@@ -59,34 +59,13 @@ class BaseMultiqcModule(object):
         if fn_match == None and contents_match == None:
             logger.warning("No file patterns specified for find_log_files")
             yield None
-        
-        # Step 1 - make a list of files to search
-        files = list()
-        for directory in config.analysis_dir:
-            if os.path.isdir(directory):
-                for root, dirnames, filenames in os.walk(directory, followlinks=True):
-                    for fn in filenames:
-                        files.append({
-                            'root': root,
-                            'fn': fn
-                        })
-            elif os.path.isfile(directory):
-                files.append({
-                    'root': os.path.dirname(directory),
-                    'fn': os.path.basename(directory)
-                })
                 
-        # Step 2 - loop through files, yield results if we find something
-        for f in files:
+        # Loop through files, yield results if we find something
+        for f in report.files:
             
             # Set up vars
             root = f['root']
             fn = f['fn']
-            
-            # Ignore files set in config
-            i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
-            if len(i_matches) > 0:
-                continue
             
             # Make a sample name from the filename
             s_name = self.clean_s_name(fn, root)
@@ -98,36 +77,15 @@ class BaseMultiqcModule(object):
                 contents_match = [contents_match]
             
             # Search for file names ending in a certain string
-            readfile = False
             fn_matched = False
             if fn_match is not None:
                 for m in fn_match:
-                    if m in fn:
-                        readfile = True
+                    if fnmatch.fnmatch(fn, m):
                         fn_matched = True
-                        break
+                        if not filehandles and not filecontents:
+                            yield {'s_name': s_name, 'root': root, 'fn': fn}
             
-            if contents_match is not None and readfile is False:
-                
-                # Use mimetypes to exclude binary files where possible
-                (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                if encoding is not None:
-                    continue
-                if ftype is not None and ftype.startswith('text') is False:
-                    continue
-                
-                # Limit search to files under 1MB to avoid 30GB FastQ files etc.
-                try:
-                    filesize = os.path.getsize(os.path.join(root,fn))
-                except (IOError, OSError, ValueError, UnicodeDecodeError):
-                    logger.debug("Couldn't read file when checking filesize: {}".format(fn))
-                else:
-                    if filesize > config.log_filesize_limit:
-                        logger.debug("Ignoring file as too large: {}".format(fn))
-                    else:
-                        readfile = True
-            
-            if readfile:
+            if fn_matched or contents_match is not None:
                 try:
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         
@@ -143,16 +101,12 @@ class BaseMultiqcModule(object):
                         else:
                             returnfile = True
                         
-                        # Give back what was asked for. Yield instead of return
-                        # so that this function can be used as an interator
-                        # without loading all files at once.
                         if returnfile:
                             if filehandles:
                                 yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
                             elif filecontents:
                                 yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
-                            else:
-                                yield {'s_name': s_name, 'root': root, 'fn': fn}
+
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     logger.debug("Couldn't read file when looking for output: {}".format(fn))
     
@@ -333,7 +287,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group hc_switch_group">\n'
             for k, p in enumerate(plotdata):
                 active = 'active' if k == 0 else ''
                 try: name = pconfig['data_labels'][k]['name']
@@ -356,6 +310,8 @@ class BaseMultiqcModule(object):
                 "config": {c} \n\
             }} \n\
         </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
+        
+        report.num_hc_plots += 1
         return html
     
     
@@ -388,7 +344,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
             for k, p in enumerate(plotdata):
                 pid = pids[k]
                 active = 'active' if k == 0 else ''
@@ -396,7 +352,7 @@ class BaseMultiqcModule(object):
                     name = pconfig['data_labels'][k]['name']
                 except:
                     name = k+1
-                html += '<button class="btn btn-default btn-sm {a} mqc_mplplot_bargraph_switchds" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
+                html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
             html += '</div>\n\n'
         
         # Go through datasets creating plots
@@ -424,10 +380,10 @@ class BaseMultiqcModule(object):
                 
                 # Reformat data (again)
                 try:
-                    axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), linestyle=linestyle, linewidth=1.5, marker=None)
+                    axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), linestyle=linestyle, linewidth=1, marker=None)
                 except TypeError:
                     # Categorical data on x axis
-                    axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), linewidth=1.5, marker=None)
+                    axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), linewidth=1, marker=None)
             
             # Tidy up axes
             axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
@@ -529,6 +485,7 @@ class BaseMultiqcModule(object):
         # Close wrapping div
         html += '</div>'
         
+        report.num_mpl_plots += 1
         return html
         
 
@@ -625,7 +582,7 @@ class BaseMultiqcModule(object):
                 pconfig['stacking'] = 'percent'
             c_label = pconfig.get('cpswitch_counts_label', 'Counts')
             p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
-            html += '<div class="btn-group switch_group"> \n\
+            html += '<div class="btn-group hc_switch_group"> \n\
     			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n\
     			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n\
     		</div> '.format(id=pconfig['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
@@ -634,7 +591,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group hc_switch_group">\n'
             for k, p in enumerate(plotdata):
                 active = 'active' if k == 0 else ''
                 try: name = pconfig['data_labels'][k]
@@ -656,6 +613,7 @@ class BaseMultiqcModule(object):
             }} \n\
         </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
         
+        report.num_hc_plots += 1
         return html
     
     
@@ -697,7 +655,7 @@ class BaseMultiqcModule(object):
                 pconfig['stacking'] = 'percent'
             c_label = pconfig.get('cpswitch_counts_label', 'Counts')
             p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
-            html += '<div class="btn-group switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
+            html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
     			<button class="btn btn-default btn-sm {c_a} counts">{c_l}</button> \n\
     			<button class="btn btn-default btn-sm {p_a} pcnt">{p_l}</button> \n\
     		</div> '.format(c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
@@ -706,7 +664,7 @@ class BaseMultiqcModule(object):
         
         # Buttons to cycle through different datasets
         if len(plotdata) > 1:
-            html += '<div class="btn-group switch_group">\n'
+            html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
             for k, p in enumerate(plotdata):
                 pid = pids[k]
                 active = 'active' if k == 0 else ''
@@ -714,7 +672,7 @@ class BaseMultiqcModule(object):
                     name = pconfig['data_labels'][k]
                 except:
                     name = k+1
-                html += '<button class="btn btn-default btn-sm {a} mqc_mplplot_bargraph_switchds" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
+                html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
             html += '</div>\n\n'
         
         # Go through datasets creating plots
@@ -800,7 +758,8 @@ class BaseMultiqcModule(object):
                     default_xlimits = axes.get_xlim()
                     axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
                 if 'title' in pconfig:
-                    plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
+                    top_gap = 1 + (0.5 / plt_height)
+                    plt.text(0.5, top_gap, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
                 axes.grid(True, zorder=0, which='both', axis='x', linestyle='-', color='#dedede', linewidth=1)
                 axes.set_axisbelow(True)
                 axes.spines['right'].set_visible(False)
@@ -809,11 +768,15 @@ class BaseMultiqcModule(object):
                 axes.spines['left'].set_visible(False)
                 plt.gca().invert_yaxis() # y axis is reverse sorted otherwise
                 
-                # Legend
-                lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+                # Hide some labels if we have a lot of samples
+                show_nth = max(1, math.ceil(len(pdata[0]['data'])/150))
+                for idx, label in enumerate(axes.get_yticklabels()):
+                    if idx % show_nth != 0:
+                        label.set_visible(False)
                 
-                # Tight layout - makes sure that legend fits in and stuff
-                plt.tight_layout(rect=[0,0.08,1,0.92])
+                # Legend
+                bottom_gap = -1 * (1 - ((plt_height - 1.5) / plt_height))
+                lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, bottom_gap, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
                 
                 # Should this plot be hidden on report load?
                 hidediv = ''
@@ -823,7 +786,7 @@ class BaseMultiqcModule(object):
                 # Output the figure to a base64 encoded string
                 if getattr(self.template_mod, 'base64_plots', True) is True:
                     img_buffer = io.BytesIO()
-                    fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+                    fig.savefig(img_buffer, format='png', bbox_inches='tight')
                     b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
                     img_buffer.close()
                     html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)
@@ -843,6 +806,7 @@ class BaseMultiqcModule(object):
         # Close wrapping div
         html += '</div>'
         
+        report.num_mpl_plots += 1
         return html
         
     

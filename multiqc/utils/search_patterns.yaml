@@ -5,17 +5,15 @@
 
 bismark:
     align:
-        fn:
-            - _PE_report.txt
-            - _SE_report.txt
+        fn: '*_[SP]E_report.txt'
         # contents: Writing a C -> T converted version of the input file
     dedup:
-        fn: .deduplication_report.txt
+        fn: '*.deduplication_report.txt'
     meth_extract:
-        fn: _splitting_report.txt
+        fn: '*_splitting_report.txt'
         # contents: Bismark Extractor Version
     m_bias:
-        fn: M-bias.txt
+        fn: '*M-bias.txt'
 bowtie:
     contents: '# reads processed:'
 bowtie2:
@@ -23,18 +21,18 @@ bowtie2:
 cutadapt:
     contents: This is cutadapt
 fastq_screen:
-    fn: _screen.txt
+    fn: '*_screen.txt'
 fastqc:
     data:
-        fn: fastqc_data.txt
+        fn: 'fastqc_data.txt'
     zip:
-        fn: _fastqc.zip
+        fn: '*_fastqc.zip'
 featurecounts:
     fn:
-       - counts.summary
-       - _counts.txt.summary
+        - '*counts.summary'
+        - '*_counts.txt.summary'
 hicup:
-    fn: HiCUP_summary_report
+    fn: 'HiCUP_summary_report*'
 picard:
     markdups:
         contents: picard.sam.MarkDuplicates
@@ -61,9 +59,9 @@ qualimap:
         rnaseq_results: rnaseq_qc_results.txt
         coverage: coverage_profile_along_genes_(total).txt
 star:
-    fn: Log.final.out
+    fn: '*Log.final.out'
 tophat:
-    fn: align_summary.txt
+    fn: '*align_summary.txt'
 skewer:
     contents: 'COMMAND LINE:	skewer'
 samblaster:

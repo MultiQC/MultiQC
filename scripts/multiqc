@@ -251,7 +251,11 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
             os.makedirs(config.data_dir)
             if not os.path.exists(os.path.dirname(config.output_fn)):
                 os.makedirs(os.path.dirname(config.output_fn))
-
+    
+    
+    # Get the list of files to search
+    report.get_filelist()
+    
     # Run the modules!
     plugin_hooks.mqc_trigger('before_modules')
     report.modules_output = list()
