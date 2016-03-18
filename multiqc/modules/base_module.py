@@ -5,6 +5,7 @@
 from __future__ import print_function
 import base64
 from collections import OrderedDict
+import fnmatch
 import io
 import json
 import logging
@@ -79,7 +80,7 @@ class BaseMultiqcModule(object):
             fn_matched = False
             if fn_match is not None:
                 for m in fn_match:
-                    if m in fn:
+                    if fnmatch.fnmatch(fn, m):
                         fn_matched = True
                         if not filehandles and not filecontents:
                             yield {'s_name': s_name, 'root': root, 'fn': fn}
