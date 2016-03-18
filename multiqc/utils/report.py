@@ -30,7 +30,8 @@ general_stats_html = {
 }
 general_stats_raw = defaultdict(lambda:OrderedDict())
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
-
+num_hc_plots = 0
+num_mpl_plots = 0
 
 
 def general_stats_build_table():

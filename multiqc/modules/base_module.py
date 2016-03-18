@@ -357,6 +357,8 @@ class BaseMultiqcModule(object):
                 "config": {c} \n\
             }} \n\
         </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
+        
+        report.num_hc_plots += 1
         return html
     
     
@@ -530,6 +532,7 @@ class BaseMultiqcModule(object):
         # Close wrapping div
         html += '</div>'
         
+        report.num_mpl_plots += 1
         return html
         
 
@@ -657,6 +660,7 @@ class BaseMultiqcModule(object):
             }} \n\
         </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
         
+        report.num_hc_plots += 1
         return html
     
     
@@ -849,6 +853,7 @@ class BaseMultiqcModule(object):
         # Close wrapping div
         html += '</div>'
         
+        report.num_mpl_plots += 1
         return html
         
     
