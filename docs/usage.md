@@ -1,4 +1,4 @@
-# Basic Usage
+# Running MultiQC
 Once installed, just go to your analysis directory and run `multiqc`, followed
 by a list of directories to search. At it's simplest, this can just be `.`
 (the current working directory):
@@ -13,6 +13,23 @@ See [Using MultiQC Reports](reports.md) for more information about how
 to use the generated report.
 
 For a description of all command line parameters, run `multiqc --help`.
+
+## Choosing where to scan
+You can supply MultiQC with as many directories or files as you like. Above,
+we supply `.` - just the current directory, but all of these would work too:
+```
+multiqc data/
+multiqc data/ ../proj_one/analysis/ /tmp/results
+multiqc data/*_fastqc.zip
+multiqc data/sample_1*
+```
+
+You can also ignore files using the `--ignore` flag (can be specified multiple
+times). This takes a string which it matches using glob expansion:
+```
+multiqc data/ --ignore *_R2*
+multiqc . --ignore run_two/
+```
 
 ## Renaming reports
 The report is called `multiqc_report.html` by default. Tab-delimited data files
@@ -55,10 +72,16 @@ tab-delimited files with the parsed data. This is useful for downstream
 processing, especially if you're running MultiQC with very large numbers
 of samples.
 
-You can explicitly choose whether to produce this data by specifying either the
-`--data-dir` or `--no-data-dir` command line flags. You can also set a default 
-in your configuration settings (`make_data_dir`). Note that the data directory
+Typically, these files are tab-delimited tables. However, you can get `JSON`
+or `YAML` output for easier downstream parsing by specifying `-k`/`--data-format`
+on the command line or `data_format` in your configuration file.
+
+You can also choose whether to produce the data by specifying either the
+`--data-dir` or `--no-data-dir` command line flags or the `make_data_dir`
+variable in your configuration file. Note that the data directory
 is never produced when printing the MultiQC report to `stdout`.
+
+To zip the data directory, use the `-z`/`--zip-data-dir` flag.
 
 ## Choosing which modules to run
 Sometimes, it's desirable to choose which MultiQC modules run. This could be
@@ -69,17 +92,3 @@ situation.
 You can do this by using `-m`/`--modules` to explicitly define which modules
 you want to run. Alternatively, use `-e`/`--exclude` to run all modules
 except those listed.
-
-## MultiQC config settings
-Whilst most MultiQC settings can be specified on the command line, MultiQC
-is also able to parse system-wide and personal config files. At run time,
-it collects the configuration settings from the following places in this order
-(overwriting at each step if a conflicting config variable is found):
-
-1. Hardcoded defaults in MultiQC code
-2. System-wide config in `<installation_dir>/multiqc_config.yaml`
-3. User config in `~/.multiqc_config.yaml`
-4. Command line options
-
-You can find an example configuration file that comes with MultiQC, called
-`multiqc_config.yaml.example`

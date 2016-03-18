@@ -9,11 +9,39 @@ window.mqc_highlight_regex_mode = false;
 window.mqc_rename_f_texts = [];
 window.mqc_rename_t_texts = [];
 window.mqc_rename_regex_mode = false;
+window.mqc_hide_mode = 'hide';
 window.mqc_hide_f_texts = [];
 window.mqc_hide_regex_mode = false;
 
 // Execute when page load has finished loading
 $(function () {
+  
+  // HighCharts Defaults
+  Highcharts.setOptions({
+    chart: {
+      backgroundColor: null,
+    },
+    credits: {
+			enabled: true,
+      text: 'Created with MultiQC',
+      href: 'http://multiqc.info'
+		},
+    exporting: {
+      buttons: {
+        contextButton: {
+          menuItems: null,
+          onclick: function () {
+            // Tick only this plot in the toolbox and slide out
+            $('#mqc_export_selectplots input').prop('checked', false);
+            $('#mqc_export_selectplots input[value="'+this.renderTo.id+'"]').prop('checked', true);
+            mqc_toolbox_openclose('#mqc_exportplots', true);
+          },
+          text: '<span style="color:#999999;">Export Plot</span>',
+          symbol: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAXNJREFUOBHNUsuqwkAMPX2g4kJd+wOCuKgL//8btAXXIogvtOhCax9xzkBqveLg8gamHZKck+RMgP9mnquh5XIpaZrC8zx0Oh1EUfQ1P3QRkeR6vcL3fdxuN1cqnERhGIKHREEQOIl8V1RE0DyuXCeRC/g39iFeHMdSlqUV+HK5oCgKeyew1+vZEauqwnQ6fcN+aJTnObbbLdrtttWGL0bjiBT/fr9jMBhYX/PzxsrA4/EQ8+zY7/dotVpgdRoFZ5F+v4/ZbPaBCw+Hg8znc5s8Ho8J9kxV04DAxCwZg6aAJWEO7XQ6yWKxQJZlGI1Gr+fXEZhkls8zCTUZfexkMpmg2+2+dUMci1qNlKS5K0YjC0iSRDgSO1EfiblfxOmpxaaDr3Q8HqWpC1+NFbnhu91OSMKC5/OZ19pqIoq5Xq+xWq3qIAnoZxFdCQ3Sx65o9WisqsYENb0rofr1T3Iexi1qs9mIgjTp1z9JhsPhq/qvwG95Tw3FukJt8JteAAAAAElFTkSuQmCC)',
+        }
+      }
+    }
+  });
   
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
@@ -43,7 +71,7 @@ $(function () {
   });
   
   // Switch a HighCharts axis or data source
-  $('.switch_group button').click(function(e){
+  $('.hc_switch_group button').click(function(e){
     e.preventDefault();
     $(this).siblings('button.active').removeClass('active');
     $(this).addClass('active');
@@ -177,7 +205,11 @@ function plot_xy_line_graph(target, ds){
     var j = data.length;
     while (j--) {
       $.each(window.mqc_hide_f_texts, function(idx, f_text){
-        if((window.mqc_hide_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_hide_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+        var match = (window.mqc_hide_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_hide_regex_mode && data[j]['name'].indexOf(f_text) > -1);
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
+        }
+        if(match){
           data.splice(j,1);
           num_hidden += 1;
           return false;
@@ -200,8 +232,7 @@ function plot_xy_line_graph(target, ds){
   $('#'+target).highcharts({
     chart: {
       type: 'line',
-      zoomType: 'x',
-      backgroundColor: null,
+      zoomType: 'x'
     },
     title: {
       text: config['title'],
@@ -248,11 +279,6 @@ function plot_xy_line_graph(target, ds){
     legend: {
       enabled: false
     },
-    credits: {
-			enabled: true,
-      text: 'Created with MultiQC',
-      href: 'http://multiqc.info'
-		},
     tooltip: {
       headerFormat: '',
 			pointFormat: config['pointFormat'],
@@ -327,7 +353,11 @@ function plot_stacked_bar_graph(target, ds){
     while (j--) {
       var s_name = cats[j];
       $.each(window.mqc_hide_f_texts, function(idx, f_text){
-        if((window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
+        var match = (window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1);
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
+        }
+        if(match){
           cats.splice(j, 1);
           $.each(data, function(k, d){
             data[k]['data'].splice(j, 1);
@@ -352,8 +382,7 @@ function plot_stacked_bar_graph(target, ds){
   // Make the highcharts plot
   $('#'+target).highcharts({
     chart: {
-      type: 'bar',
-      backgroundColor: null,
+      type: 'bar'
     },
     title: {
       text: config['title'],
@@ -390,25 +419,22 @@ function plot_stacked_bar_graph(target, ds){
         }
       }
     },
-    credits: {
-			enabled: true,
-      text: 'Created with MultiQC',
-      href: 'http://multiqc.info'
-		},
     legend: {
       enabled: config['use_legend']
     },
     tooltip: {
       formatter: function () {
         var colspan = config['tt_percentages'] ? 3 : 2;
-        var pc_col = config['tt_percentages'] ? '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td>' : '';
         var s = '<table><tr><th colspan="'+colspan+'" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
-        $.each(this.points.reverse(), function () {
+        $.each(this.points, function () {
           yval = this.y.toFixed(0)
           s += '<tr> \
-            <td style="font-weight:bold; color:'+this.series.color+'; padding-right: 15px; border-bottom:1px solid #dedede;">' + this.series.name + ':</td>\
-            <td style="text-align:right; border-bottom:1px solid #dedede;">' + numberWithCommas(yval) + '</td>\
-            '+pc_col+'</tr>';
+            <td style="font-weight:bold; color:'+this.series.color+'; border-bottom:1px solid #dedede;">' + this.series.name + ':</td>\
+            <td style="text-align:right; border-bottom:1px solid #dedede; padding: 0 15px;">' + numberWithCommas(yval) + '</td>';
+          if(config['tt_percentages']){
+            s += '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td>';
+          }
+          s += '</tr>';
         });
         s += '</table>';
         return s;

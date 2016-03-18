@@ -23,12 +23,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any STAR reports
         self.star_data = dict()
-        for f in self.find_log_files('Log.final.out'):
+        for f in self.find_log_files(config.sp['star']):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
                 s_name = f['s_name'].split('Log.final.out', 1)[0]
                 if s_name in self.star_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name)
                 self.star_data[s_name] = parsed_data
 
         if len(self.star_data) == 0:
@@ -38,9 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.star_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.star_data, 'multiqc_star.txt')
-
-        self.sections = list()
+        self.write_data_file(self.star_data, 'multiqc_star')
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works

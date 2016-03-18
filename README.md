@@ -27,42 +27,38 @@
 
 -----
 
-MultiQC is written in Python (v2.7 / v3.4) and contains modules for a number of common tools.
-Currently, these include:
+MultiQC is a tool to create a single report with interactive plots
+for multiple bioinformatics analyses across many samples.
+
+MultiQC is written in Python (tested with v2.7 / v3.4 / v3.5) and is
+available on the [Python Package Index](https://pypi.python.org/pypi/multiqc/).
+
+Currently, supported tools include:
 
 * Quality control & pre-processing
   * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
   * [Cutadapt](https://code.google.com/p/cutadapt/)
+  * [Skewer](https://github.com/relipmoc/skewer)
 * Read aligners
-  * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
   * [STAR](https://github.com/alexdobin/STAR)
   * [Tophat](https://ccb.jhu.edu/software/tophat/)
   * [Bowtie](http://bowtie-bio.sourceforge.net)
   * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
+  * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
+  * [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
 * Post-alignment tools
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
-  * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics)
+  * [Samblaster](https://github.com/GregoryFaust/samblaster)
+  * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics, OxoGMetrics)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (BamQC, RNASeq)
 
-More to come soon. Please suggest any ideas as a new
+More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log
 file if possible)_.
 
-## Graphical Usage
-
-MultiQC comes with a graphical app for OS X. To use, download `MultiQC.app.zip`
-from the [releases page](https://github.com/ewels/MultiQC/releases)
-and unzip the archive. Double click MultiQC.app to launch, then
-drag your analysis directory onto the window.
-
-The app can be run from anywhere, though we recommend copying to your
-Applications directory.
-
-A similar graphical utility for Windows is planned for a future release.
-
-## Command Line Usage
+## Installation
 
 You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
 using `pip` as follows:
@@ -77,7 +73,15 @@ If you would like the development version instead, the command is:
 pip install git+https://github.com/ewels/MultiQC.git
 ```
 
-Then it's just a case of going to your analysis directory and running the script:
+Alternatively, you can install using [Conda](http://anaconda.org/)
+from the [bioconda channel](https://bioconda.github.io/):
+```
+conda install -c bioconda multiqc
+```
+
+## Usage
+Once installed, you can use MultiQC by navigating to your analysis directory
+(or a parent directory) and running the tool:
 
 ```
 multiqc .
@@ -86,13 +90,13 @@ multiqc .
 That's it! MultiQC will scan the specified directory ('.' is the current dir)
 and produce a report detailing whatever it finds.
 
-The report is created in `multiqc_report/multiqc_report.html` by default.
-A zip file of the report is also generated to facilitate easy transfer and sharing.
+The report is created in `multiqc_report.html` by default. Tab-delimited data
+files are also created in `multiqc_data/`, containing extra information.
+These can be easily inspected using Excel (use `--data-format` to get `yaml`
+or `json` instead).
 
-Tab-delimited data files are also created in `multiqc_report/report_data/`,
-containing extra information. These can be easily inspected using Excel.
-
-For more detailed instructions, run `multiqc -h`
+For more detailed instructions, run `multiqc -h` or see the
+[documentation](http://multiqc.info/docs/#running-multiqc).
 
 ## Contributions & Support
 
@@ -106,4 +110,12 @@ for details. These notes include extensive help with how to use the built in cod
 
 If in doubt, feel free to get in touch with the author:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
+
+### Contributors
+Many thanks to those who have helped out with with project.
+* Project lead and main author: @ewels
+* Early code refactoring help: @moonso
+* Early version of Qualimap module: @guillermo-carrasco
+* Skewer and Samblaster modules: @dakl
+* Tweaks / core help: @robinandeer and @avilella
 

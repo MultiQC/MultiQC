@@ -1,6 +1,47 @@
 # MultiQC Version History
 
-#### v0.3.2dev
+#### v0.5dev
+* New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
+* New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
+* New [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) module
+* New "Flat" image plots, rendered at run time with MatPlotLib
+  * By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)
+  * Means that _very_ large numbers of samples can be viewed in reports. _eg._ single cell data.
+  * Templates can now specify their own plotting functions
+  * Use `--flat` and `--interactive` to override this behaviour
+* MultiQC added to `bioconda` (with help from @dakl)
+* New plugin hook: `config_loaded`
+* Plugins can now add new command line options (thanks to @robinandeer)
+* Changed default data directory name from `multiqc_report_data` to `multiqc_data`
+* Removed support for depreciated MultiQC_OSXApp
+* Updated logging so that a verbose `multiqc_data/.multiqc.log` file is always written
+* Now logs more stuff in verbose mode - command used, user configs and so on.
+* Added a call to multiqc.info to check for new versions. Disable with config `no_version_check`
+* Removed general stats manual row sorting.
+* Made filename matching use glob unix style filename match patterns
+* A handful of performance updates for large analysis directories
+
+#### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
+* New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample
+* Export parsed data as tab-delimited text, `JSON` or `YAML` using the new `-k`/`--data-format` command line option
+* Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
+* Nicer export button. Now tied to the export toolbox, hopefully more intuitive.
+* FastQC: Per base sequence content heatmap can now be clicked to show line graph for single sample
+* FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
+* Picard: Added support for `CollectOxoGMetrics` reports.
+* Changed command line option `--name` to `--filename`
+* `--name` also used for filename if `--filename` not specified.
+* Hide samples toolbox now has switch to _show only_ matching samples
+* New regex help box with examples added to report
+* New button to copy general stats table to the clipboard
+* General Stats table 'floating' header now sorts properly when scrolling
+* Bugfix: MultiQC default_dev template now copies module assets properly
+* Bufgix: General Stats table floating header now resizes properly when page width changes
+
+#### [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
+* All modules now load their log file search parameters from a config
+  file, allowing you to overwrite them using your user config file
+  * This is useful if your analysis pipeline renames program outputs
 * New Picard (sub)modules - Insert Size, GC Bias & HsMetrics
 * New Qualimap (sub)module - RNA-Seq QC
 * Made Picard MarkDups show percent by default instead of counts
@@ -11,10 +52,15 @@
   * command line flags: `--data` / `--no-data`
   * config option name: `make_data_dir`
 * Fixed bug with incorrect path to installation dir config YAML file
+* New toolbox drawer for bulk-exporting graph images
 * Report side navigation can now be hidden to maximise horizontal space
 * Mobile styling improved for narrow screen
 * More vibrant colours in the general stats table
 * General stats table numbers now left aligned
+* Settings now saved and loaded to named localstorage locations
+  * Simplified interface - no longer global / single report saving
+  * Removed static file config. Solves JS error, no-one was doing this
+    since we have standalone reports anyway.
 * Added support for Python 3.5
 * Fixed bug with module specific CSS / JS includes in some templates
 * Made the 'ignore files' config use unix style file pattern matching
@@ -25,6 +71,15 @@
 * Bismark module restructure
   * Each report type now handled independently (alignment / dedup / meth extraction)
   * M-Bias plot now shows R1 and R2
+* FastQC GC content plot now has option for counts or percentages
+  * Allows comparison between samples with very different read counts
+* Bugfix for reports javascript
+  * Caused by updated to remotely loaded HighCharts export script
+  * Export script now bundled with multiqc, so does not depend on internet connection
+  * Other JS errors fixed in this work
+* Bugfix for older FastQC reports - handle old style sequence dup data
+* Bugfix for varying Tophat alignment report formats
+* Bugfix for Qualimap RNA Seq reports with paired end data
 
 
 #### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04

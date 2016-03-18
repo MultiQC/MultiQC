@@ -16,6 +16,7 @@ of the report.
       <li><a href="#mqc_cols" title="Highlight" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-pushpin"></span></a></li>
       <li><a href="#mqc_renamesamples" title="Rename" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-font"></span></a></li>
       <li><a href="#mqc_hidesamples" title="Hide" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-eye-close"></span></a></li>
+      <li><a href="#mqc_exportplots" title="Export" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-download-alt"></span></a></li>
       <li><a href="#mqc_saveconfig" title="Save" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
     </ul>
   </div>
@@ -35,7 +36,7 @@ of the report.
         <input id="mqc_colour_filter_color" type="color" value="#e41a1c" class="form-control input-sm">
         <button type="submit" id="mqc_colour_filter_update" class="btn btn-default btn-sm">+</button>
       </form>
-      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span> <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#regex_help_modal">help</button></p>
       <ul id="mqc_col_filters" class="mqc_filters"></ul>
     </div>
     
@@ -56,46 +57,111 @@ of the report.
           <button type="submit" id="mqc_renamesamples_bulk_update" class="btn btn-default btn-sm">Add</button>
         </form>
       </div>
-      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span> <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#regex_help_modal">help</button></p>
       <ul id="mqc_renamesamples_filters" class="mqc_filters"></ul>
     </div>
     
     <!-- Hiding -->
     <div id="mqc_hidesamples" class="mqc_filter_section">
-      <h4>Hide Samples</h4>
-      <form class="form-inline" id="mqc_hidesamples_form">
-        <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
-        <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
+      <h4>Show / Hide Samples</h4>
+      <form id="mqc_hidesamples_form">
+        <div class="radio input-sm">
+          <label><input type="radio" name="mqc_hidesamples_showhide" class="mqc_hidesamples_showhide" value="hide" checked> Hide matching samples</label>
+        </div>
+        <div class="radio input-sm">
+          <label><input type="radio" name="mqc_hidesamples_showhide" class="mqc_hidesamples_showhide" value="show"> Show only matching samples</label>
+        </div>
+        <div class="form-inline">
+          <input id="mqc_hidesamples_filter" type="text" placeholder="Custom Pattern" class="form-control input-sm">
+          <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-default btn-sm">+</button>
+        </div>
       </form>
       {% if report.general_stats_html['rows'] | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
-      <p class="mqc_regex_mode">Regex mode <span class="off">off</span></p>
+      <p class="mqc_regex_mode">Regex mode <span class="off">off</span> <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#regex_help_modal">help</button></p>
       <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
+    </div>
+    
+    <!-- Export Plots -->
+    <div id="mqc_exportplots" class="mqc_filter_section">
+      <h4>Export Plots</h4>
+      <p>To download images of plots, use the controls below:</p>
+      <form>
+        <hr>
+        <h5>Image Download Settings</h5>
+        <div class="row">
+          <div class="form-group col-sm-6">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control input-sm" id="mqc_exp_width" placeholder="Width" value="1200">
+              <span class="input-group-addon">px</span>
+            </div>
+          </div>
+          <div class="form-group col-sm-6">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control input-sm" id="mqc_exp_height" placeholder="Height" value="800">
+              <span class="input-group-addon">px</span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-sm-6 checkbox">
+            <label><input type="checkbox" id="mqc_export_aspratio" checked> Aspect ratio</label>
+          </div>
+          <div class="form-group col-sm-6">
+            <select id="mqc_export_ft" class="form-control input-sm">
+              <option value="image/png">PNG</option>
+              <option value="image/svg+xml">SVG</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6 checkbox">
+            <label for="mqc_export_scaling">Plot scaling</label>
+          </div>
+          <div class="col-sm-6">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="mqc_export_scaling" placeholder="Scale" value="2">
+              <span class="input-group-addon">X</span>
+            </div>
+          </div>
+        </div>
+        
+        <hr>
+        <h5>Choose Plots</h5>
+        <button class="btn btn-sm btn-default" id="mqc_export_sall"><span class="glyphicon glyphicon-check"></span> All</button>
+        <button class="btn btn-sm btn-default" id="mqc_export_snone"><span class="glyphicon glyphicon-unchecked"></span> None</button>
+        <div id="mqc_export_selectplots"></div>
+        
+        <hr>
+        <button type="submit" class="btn btn-block btn-default"><span class="glyphicon glyphicon-download-alt"></span> &nbsp; Download Plots</button>
+        <p class="text-center"><small>If you use plots from MultiQC in a publication or presentation, please cite:<br>
+          <code>MultiQC (http://multiqc.info)</code><br>
+          <em>(publication hopefully coming soon).</em></small></p>
+      </form>
     </div>
     
     <!-- Save Config -->
     <div id="mqc_saveconfig" class="mqc_filter_section">
       <h4>Save Settings</h4>
-      <div class="mqc-save-config-report-section">
-        <h5>Report Settings</h5>
-        <p>You can save the toolbox settings for this report to the browser.</p>
-        <p><a href="#" data-target="report" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
-           <a href="#" data-target="report" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
-        <hr>
-      </div>
-      <div class="mqc-save-config-global-section">
-        <h5>Global Settings</h5>
-        <p>If your settings are more general, you can save them to your browser 
-          and have them applied to every MultiQC report you open.</p>
-        <p><a href="#" data-target="global" data-action="save" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</a>
-           <a href="#" data-target="global" data-action="clear" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Clear</a></p>
-        <hr>
-      </div>
-      <div class="mqc-save-config-file-section">
-        <h5>Save to file</h5>
-        <p>You can also save a config file to directory containing the report. Your settings
-          will be applied the next time you open this report, and can be shared with others.</p>
-        <p><a href="#" data-target="file" class="mqc_saveconfig_btn btn btn-sm btn-default"><span class="glyphicon glyphicon-download-alt"></span> Download Config File</a></p>
-      </div>
+      <p>You can save the toolbox settings for this report to the browser.</p>
+      <form class="form-inline" id="mqc_saveconfig_form">
+        <input type="text" class="form-control input-sm" placeholder="Config Name">
+        <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+      </form>
+      <hr>
+      
+      <h4>Load Settings</h4>
+      <p>Choose a saved report profile from the dropdown box below:</p>
+      <form id="mqc_loadconfig_form">
+        <div class="form-group">
+          <select class="form-control input-sm">
+            <option value="">[ select ]</option>
+          </select>
+        </div>
+        <div class="form-group actions">
+          <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-open"></span> Load</button>
+          <button class="mqc_config_clear btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Delete</button>
+        </div>
+      </form>
     </div>
   </div>
   <a href="#top" class="mqc-toplink hidden-xs" title="Go to top"><span class="glyphicon glyphicon-chevron-up"></span></a>

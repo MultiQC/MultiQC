@@ -22,17 +22,19 @@ class MultiqcModule(BaseMultiqcModule):
         href='http://broadinstitute.github.io/picard/', 
         info="is a set of Java command line tools for manipulating high-"\
         "throughput sequencing data.")
+        
+        sp = config.sp['picard']
 
         #### MarkDuplicates reports
         self.picard_dupMetrics_data = dict()
-        for f in self.find_log_files(contents_match='picard.sam.MarkDuplicates', filehandles=True):
+        for f in self.find_log_files(sp['markdups'], filehandles=True):
             self.parse_picard_dupMetrics(f)
         
         #### CollectInsertSizeMetrics reports
         self.picard_insertSize_data = dict()
         self.picard_insertSize_histogram = dict()
         self.picard_insertSize_medians = dict()
-        for f in self.find_log_files(contents_match='picard.analysis.CollectInsertSizeMetrics', filehandles=True):
+        for f in self.find_log_files(sp['insertsize'], filehandles=True):
             self.parse_picard_insertSize(f)
         # Calculate summed median values for all read orientations
         for s_name in self.picard_insertSize_histogram:
@@ -46,16 +48,22 @@ class MultiqcModule(BaseMultiqcModule):
         
         #### CollectGcBias reports
         self.picard_GCbias_data = dict()
-        for f in self.find_log_files(contents_match='picard.analysis.CollectGcBiasMetrics', filehandles=True):
+        for f in self.find_log_files(sp['gcbias'], filehandles=True):
             self.parse_picard_GCbiasMetrics(f)
         
         #### CalculateHsMetric
         self.picard_HsMetrics_data = dict()
-        for f in self.find_log_files(contents_match='picard.analysis.directed.HsMetrics', filehandles=True):
+        for f in self.find_log_files(sp['hsmetrics'], filehandles=True):
             self.parse_picard_HsMetrics(f)
         
+        #### CollectOxoGMetrics
+        self.picard_OxoGMetrics_data = dict()
+        for f in self.find_log_files(sp['oxogmetrics'], filehandles=True):
+            self.parse_picard_OxoGMetrics(f)
+        
         num_reports = ( len(self.picard_dupMetrics_data) + len(self.picard_insertSize_data) +
-                len(self.picard_GCbias_data) + len(self.picard_HsMetrics_data) )
+                len(self.picard_GCbias_data) + len(self.picard_HsMetrics_data) + 
+                len(self.picard_OxoGMetrics_data) )
         
         if num_reports == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -68,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Mark Duplicates data
         if len(self.picard_dupMetrics_data) > 0:
             log.info("Found {} dupMetrics reports".format(len(self.picard_dupMetrics_data)))
-            self.write_csv_file(self.picard_dupMetrics_data, 'multiqc_picard_dups.txt')
+            self.write_data_file(self.picard_dupMetrics_data, 'multiqc_picard_dups')
             self.sections.append({
                 'name': 'Mark Duplicates',
                 'anchor': 'picard-markduplicates',
@@ -78,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Insert Size data
         if len(self.picard_insertSize_data) > 0:
             log.info("Found {} insertSize reports".format(len(self.picard_insertSize_data)))
-            self.write_csv_file(self.picard_insertSize_data, 'multiqc_picard_insertSize.txt')
+            self.write_data_file(self.picard_insertSize_data, 'multiqc_picard_insertSize')
             self.sections.append({
                 'name': 'Insert Size',
                 'anchor': 'picard-insertsize',
@@ -99,7 +107,18 @@ class MultiqcModule(BaseMultiqcModule):
         # HsMetrics data
         if len(self.picard_HsMetrics_data) > 0:
             log.info("Found {} HsMetrics reports".format(len(self.picard_HsMetrics_data)))
-            self.write_csv_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics.txt')
+            self.write_data_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics')
+        
+        # OxoGMetrics data
+        if len(self.picard_OxoGMetrics_data) > 0:
+            log.info("Found {} OxoGMetrics reports".format(len(self.picard_OxoGMetrics_data)))
+            # Collapse into 2D structure with sample_context keys
+            print_data = {
+                '{}_{}'.format(s, c):v
+                for s in self.picard_OxoGMetrics_data.keys()
+                for c,v in self.picard_OxoGMetrics_data[s].items()
+            }
+            self.write_data_file(print_data, 'multiqc_picard_OxoGMetrics')
 
 
     def parse_picard_dupMetrics(self, f):
@@ -120,6 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if 'picard.sam.DuplicationMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_dupMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='DuplicationMetrics')
                     self.picard_dupMetrics_data[s_name] = dict()
                     keys = f['f'].readline().split("\t")
                     vals = f['f'].readline().split("\t")
@@ -169,6 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if 'InsertSizeMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_insertSize_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='InsertSizeMetrics')
                     keys = f['f'].readline().split("\t")
                     vals = f['f'].readline().split("\t")
                     self.picard_insertSize_medians[s_name] = {'total_count': 0}
@@ -231,6 +252,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if 'picard.analysis.GcBiasDetailMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_GCbias_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='GcBiasDetailMetrics')
                     self.picard_GCbias_data[s_name] = dict()
                     # Get header - find columns with the data we want
                     l = f['f'].readline()
@@ -298,7 +320,61 @@ class MultiqcModule(BaseMultiqcModule):
                     this_s_name = "{}: {}".format(s_name, j)
                 if this_s_name in self.picard_HsMetrics_data:
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], this_s_name))
+                self.add_data_source(f, this_s_name, section='HsMetrics')
                 self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
+    
+    def parse_picard_OxoGMetrics(self, f):
+        """ Parse CollectOxoGMetrics Picard Output """
+        # We use lists to make sure that we don't overwrite when no data will be parsed
+        parsed_data = list()
+        sample_names = list()
+        s_files = list()
+        s_name = None
+        keys = None
+        for l in f['f']:
+            # New log starting
+            if 'picard.analysis.CollectOxoGMetrics' in l and 'INPUT' in l:
+                s_name = None
+                keys = None
+                context_col = None
+                
+                # Pull sample name from input
+                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
+                if fn_search:
+                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = self.clean_s_name(s_name, f['root'])
+                    parsed_data.append(dict())
+                    sample_names.append(s_name)
+                    s_files.append(f)
+                    
+            
+            if s_name is not None:
+                if 'picard.analysis.CollectOxoGMetrics$CpcgMetrics' in l and '## METRICS CLASS' in l:
+                    keys = f['f'].readline().split("\t")
+                    context_col = keys.index('CONTEXT')
+                elif keys:
+                    vals = l.split("\t")
+                    if len(vals) == len(keys) and context_col is not None:
+                        context = vals[context_col]
+                        parsed_data[-1][context] = dict()
+                        for i, k in enumerate(keys):
+                            k = k.strip()
+                            try:
+                                parsed_data[-1][context][k] = float(vals[i])
+                            except ValueError:
+                                vals[i] = vals[i].strip()
+                                parsed_data[-1][context][k] = vals[i]
+                    else:
+                        s_name = None
+                        keys = None
+        
+        # Remove empty dictionaries
+        for idx, s_name in enumerate(sample_names):
+            if len(parsed_data[idx]) > 0:
+                if s_name in self.picard_OxoGMetrics_data:
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(s_files[idx], s_name))
+                self.add_data_source(s_files[idx], s_name, section='OxoGMetrics')
+                self.picard_OxoGMetrics_data[s_name] = parsed_data[idx]
     
     
     def picard_stats_table(self):
@@ -315,6 +391,18 @@ class MultiqcModule(BaseMultiqcModule):
             if data[s_name]['FOLD_ENRICHMENT'] == '?':
                 data[s_name]['FOLD_ENRICHMENT'] = -1
             data[s_name]['PCT_TARGET_BASES_30X'] = self.picard_HsMetrics_data[s_name]['PCT_TARGET_BASES_30X']
+        for s_name in self.picard_OxoGMetrics_data:
+            try:
+                data[s_name]['CCG_OXIDATION_ERROR_RATE'] = self.picard_OxoGMetrics_data[s_name]['CCG']['OXIDATION_ERROR_RATE']
+            except KeyError:
+                log.warn("Couldn't find picard CCG oxidation error rate for {}".format(s_name))
+        
+        def multiply_hundred(val):
+            try:
+                val = float(val) * 100
+            except ValueError:
+                pass
+            return val
         
         headers = OrderedDict()
         headers['PERCENT_DUPLICATION'] = {
@@ -324,7 +412,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'OrRd',
             'format': '{:.1f}%',
-            'modify': lambda x: float(x) * 100
+            'modify': lambda x: multiply_hundred(x)
         }
         headers['summed_median'] = {
             'title': 'Insert Size',
@@ -346,7 +434,16 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.0f}%',
             'scale': 'RdYlGn',
-            'modify': lambda x: float(x) * 100
+            'modify': lambda x: multiply_hundred(x)
+        }
+        headers['CCG_OXIDATION_ERROR_RATE'] = {
+            'title': 'CCG Oxidation',
+            'description': 'CCG-CAG Oxidation Error Rate',
+            'max': 1,
+            'min': 0,
+            'format': '{:.0f}%',
+            'scale': 'RdYlGn-rev',
+            'modify': lambda x: multiply_hundred(x)
         }
         self.general_stats_addcols(data, headers)
 

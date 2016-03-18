@@ -6,11 +6,23 @@ Note that the base module Python functions make use of these, so
 you typically won't need to call these directly.
 
 ## Plotting line graphs
-`plot_xy_line_graph (target, data, config)`
+`plot_xy_line_graph (target, ds)`
 
 Plots a line graph with multiple series of (x,y) data pairs. Used by
 the [self.plot_xy_data()](CONTRIBUTING.md#selfplot_xy_data-data-config)
 python function.
+
+Data and configuration must be added to the document level
+`mqc_plots` variable on page load, using the target as the key.
+The variables used are as follows:
+```javascript
+mqc_plots[target]['plot_type'] = 'xy_line';
+mqc_plots[target]['config'];
+mqc_plots[target]['datasets'];
+```
+
+Multiple datasets can be added in the `['datasets']` array. The supplied
+variable `ds` specifies which is plotted (defaults to `0`).
 
 Available config options with default vars:
 ```javascript
@@ -43,7 +55,8 @@ An example of the markup expected, with the function being called:
 ```html
 <div id="my_awesome_line_graph" class="hc-plot"></div>
 <script type="text/javascript">
-    my_data = [
+    mqc_plots['#my_awesome_bar_plot']['plot_type'] = 'xy_line';
+    mqc_plots['#my_awesome_line_graph']['datasets'] = [
         {
             name: 'Sample 1',
             data: [[1, 1.5], [1.5, 3.1], [2, 6.4]]
@@ -53,23 +66,33 @@ An example of the markup expected, with the function being called:
             data: [[1, 1.7], [1.5, 4.3], [2, 8.4]]
         },
     ];
-    var my_config = {
+    mqc_plots['#my_awesome_line_graph']['config'] = {
         "title": "Best Plot Ever",
         "ylab": "Pings",
         "xlab": "Pongs"
     };
     $(function () {
-        plot_xy_line_graph("#my_awesome_line_graph", my_data, my_config);
+        plot_xy_line_graph('#my_awesome_line_graph');
     });
 </script>
 ```
 
 ## Plotting bar graphs
-`plot_stacked_bar_graph (target, names, data, config)`
+`plot_stacked_bar_graph (target, ds)`
 
 Plots a bar graph with multiple series containing multiple categories.
 Used by the [self.plot_bargraph()](CONTRIBUTING.md#selfplot_bargraph-data-cats-config)
 python function.
+
+Data and configuration must be added to the document level
+`mqc_plots` variable on page load, using the target as the key.
+The variables used are as follows:
+```javascript
+mqc_plots[target]['plot_type'] = 'bar_graph';
+mqc_plots[target]['config'];
+mqc_plots[target]['datasets'];
+mqc_plots[target]['samples'];
+```
 
 All available config options with default vars:
 ```javascript
@@ -93,16 +116,17 @@ An example of the markup expected, with the function being called:
 ```html
 <div id="my_awesome_bar_plot" class="hc-plot"></div>
 <script type="text/javascript">
-    my_sample_names = ['Sample 1', 'Sample 2']
-    my_sample_data = [{"data": [4, 7], "name": "Passed Test"}, {"data": [2, 3], "name": "Failed Test"}]
-    var my_config = {
+    mqc_plots['#my_awesome_bar_plot']['plot_type'] = 'bar_graph';
+    mqc_plots['#my_awesome_bar_plot']['samples'] = ['Sample 1', 'Sample 2']
+    mqc_plots['#my_awesome_bar_plot']['datasets'] = [{"data": [4, 7], "name": "Passed Test"}, {"data": [2, 3], "name": "Failed Test"}]
+    mqc_plots['#my_awesome_bar_plot']['config'] = {
         "title": "My Awesome Plot",
         "ylab": "# Observations",
         "ymin": 0,
         "stacking": "normal"
     };
     $(function () {
-        plot_stacked_bar_graph("#my_awesome_bar_plot", my_sample_names, my_sample_data, my_config);
+        plot_stacked_bar_graph("#my_awesome_bar_plot");
     });
 </script>
 ```

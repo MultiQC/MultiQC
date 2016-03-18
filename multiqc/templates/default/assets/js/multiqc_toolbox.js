@@ -10,16 +10,19 @@ var mqc_colours = chroma.brewer.Set1;
 //////////////////////////////////////////////////////
 $(function () {
   
-  // Listener to plot graphs when config loaded
+  // Load graphs on page load
+  $('.hc-plot').each(function(){
+    var target = $(this).attr('id');
+    plot_graph(target, undefined, num_datasets_plot_limit);
+  });
+  
+  // Listener to re-plot graphs when config loaded
   $(document).on('mqc_config_loaded', function(e){
     $('.hc-plot').each(function(){
       var target = $(this).attr('id');
       plot_graph(target, undefined, num_datasets_plot_limit);
     });
   });
-  
-  // Load any saved configuration
-  load_mqc_config();
 
   // Toolbox buttons
   $('.mqc-toolbox-buttons a').click(function(e){
@@ -118,23 +121,103 @@ $(function () {
     $('#mqc_hidesamples_filter').val('');
     mqc_hidesamples_idx += 1;
   });
+  $('.mqc_hidesamples_showhide').change(function(e){
+    apply_mqc_hidesamples();
+  });
   
+  // EXPORTING PLOTS
+  // Load the plot exporter
+  if($('.hc-plot').length > 0){
+    $('.hc-plot').each(function(){
+      var fname = $(this).attr('id');
+      $('#mqc_export_selectplots').append('<div class="checkbox"><label><input type="checkbox" value="'+fname+'" checked> '+fname+'</label></div>');
+    });
+    // Select all / none for checkboxes
+    $('#mqc_export_sall').click(function(e){
+      e.preventDefault();
+      $('#mqc_export_selectplots input').prop('checked', true);
+    });
+    $('#mqc_export_snone').click(function(e){
+      e.preventDefault();
+      $('#mqc_export_selectplots input').prop('checked', false);
+    });
+    // Aspect ratio fixed
+    var mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
+    $('#mqc_export_aspratio').change(function(){
+      if($(this).is(':checked')){
+        mqc_exp_aspect_ratio = $('#mqc_exp_width').val() / $('#mqc_exp_height').val();
+      }
+    });
+    $('#mqc_exp_width').keyup(function(){
+      if($('#mqc_export_aspratio').is(':checked')){
+        $('#mqc_exp_height').val( $(this).val() / mqc_exp_aspect_ratio );
+      }
+    });
+    $('#mqc_exp_height').keyup(function(){
+      if($('#mqc_export_aspratio').is(':checked')){
+        $('#mqc_exp_width').val( $(this).val() * mqc_exp_aspect_ratio );
+      }
+    });
+    mqc_export_aspratio
+    // Export the plots
+    $('#mqc_exportplots').submit(function(e){
+      e.preventDefault();
+      var ft = $('#mqc_export_ft').val();
+      var f_scale = parseInt($('#mqc_export_scaling').val());
+      var f_width = parseInt($('#mqc_exp_width').val()) / f_scale;
+      var f_height = parseInt($('#mqc_exp_height').val()) / f_scale;
+      $('#mqc_export_selectplots input:checked').each(function(){
+        var fname = $(this).val();
+        var hc = $('#'+fname).highcharts();
+        if(hc !== undefined){
+          hc.exportChartLocal({
+            type: ft,
+            filename: fname,
+            sourceWidth: f_width,
+            sourceHeight: f_height,
+            scale: f_scale
+          });
+        }
+      });
+    });
+  } else {
+    $('#mqc_exportplots').hide();
+    $('.mqc-toolbox-buttons a[href=#mqc_exportplots]').parent().hide();
+  }
   
+  /// SAVING STUFF
+  // Load the saved setting names
+  populate_mqc_saveselect();
   // Save config
-  $('.mqc_saveconfig_btn').click(function(e){
+  $('#mqc_saveconfig_form').submit(function(e){
     e.preventDefault();
-    var tgt = $(this).data('target');
-    var act = $(this).data('action');
-    if(tgt == 'report'){
-      if(act == 'save'){  mqc_save_config(undefined, 'local'); }
-      if(act == 'clear'){ mqc_save_config(undefined, 'local', true); }
+    var name = $(this).find('input').val().trim();
+    if(name == ''){
+      alert('Error - you must name the saved settings.');
+    } else {
+      mqc_save_config(name);
     }
-    if(tgt == 'global'){
-      if(act == 'save'){  mqc_save_config('global', 'local'); }
-      if(act == 'clear'){ mqc_save_config('global', 'local', true); }
+  });
+  // Load config
+  $('#mqc_loadconfig_form').submit(function(e){
+    e.preventDefault();
+    var name = $(this).find('select').val().trim();
+    if(name == ''){
+      alert('Error - No saved setting selected.');
+    } else {
+      load_mqc_config(name);
     }
-    if(tgt == 'file'){
-      mqc_save_config('global', 'file');
+  });
+  // Clear config
+  $('.mqc_config_clear').click(function(e){
+    e.preventDefault();
+    var name = $('#mqc_loadconfig_form select').val().trim();
+    if(name == ''){
+      alert('Error - no saved settings selected.');
+    } else {
+      if(confirm("Delete saved settings '"+name+"'?")){
+        mqc_save_config(name, true);
+      }
     }
   });
   
@@ -183,7 +266,35 @@ $(function () {
     if($(this).parent().attr('id') == 'mqc_renamesamples'){ apply_mqc_renamesamples(); }
     if($(this).parent().attr('id') == 'mqc_hidesamples'){ apply_mqc_hidesamples(); }
   });
-    
+  
+  
+  
+  /////////////////////////
+  // REGEX HELP MODAL
+  /////////////////////////
+  $('.regex_example_buttons button').click(function(e){
+    e.preventDefault();
+    $('.regex_example_demo input').val( $(this).data('example') );
+    regex_example_test();
+  });
+  $('.regex_example_demo input').keyup(function(e){
+    regex_example_test();
+  });
+  function regex_example_test(){
+    var re = $('.regex_example_demo input').val();
+    console.log('Testing '+re);
+    $('.regex_example_demo pre span').each(function(){
+      $(this).removeClass();
+      if( $(this).text().match(re) ){
+        console.log('Matches '+$(this).text());
+        $(this).addClass('mark text-success');
+      } else {
+        console.log('Matches '+$(this).text());
+        $(this).addClass('text-muted');
+      }
+    });
+  }
+  
 });
 
 
@@ -227,7 +338,7 @@ function apply_mqc_highlights(){
   var f_texts = [];
   var f_cols = [];
   var regex_mode = false;
-  if($('#mqc_cols .mqc_regex_mode').text() == 'Regex mode on'){
+  if($('#mqc_cols .mqc_regex_mode span').hasClass('on')){
     regex_mode = true;
   }
   $('#mqc_col_filters li .f_text').each(function(){
@@ -265,7 +376,7 @@ function apply_mqc_renamesamples(){
   var regex_mode = false;
   $('#mqc_renamesamples_filters .from_text').each(function(){ f_texts.push($(this).val()); });
   $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
-  if($('#mqc_renamesamples .mqc_regex_mode').text() == 'Regex mode on'){ regex_mode = true; }
+  if($('#mqc_renamesamples .mqc_regex_mode span').hasClass('on')){ regex_mode = true; }
   
   // If something was renamed, highlight the toolbox icon
   if(f_texts.length > 0){
@@ -288,22 +399,24 @@ function apply_mqc_renamesamples(){
 //////////////////////////////////////////////////////
 function apply_mqc_hidesamples(){
   // Collect the filters into an array
+  var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
   var f_texts = [];
   var regex_mode = false;
-  if($('#mqc_hidesamples .mqc_regex_mode').text() == 'Regex mode on'){
+  if($('#mqc_hidesamples .mqc_regex_mode span').hasClass('on')){
     regex_mode = true;
   }
   $('#mqc_hidesamples_filters li .f_text').each(function(){
     f_texts.push($(this).val());
   });
   
-  // If something was renamed, highlight the toolbox icon
+  // If something was hidden, highlight the toolbox icon
   if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').removeClass('in_use');
   }
   
+  window.mqc_hide_mode = mode;
   window.mqc_hide_f_texts = f_texts;
   window.mqc_hide_regex_mode = regex_mode;
   
@@ -312,15 +425,13 @@ function apply_mqc_hidesamples(){
 }
 
 
-
 //////////////////////////////////////////////////////
 // SAVE TOOLBOX SETTINGS
 //////////////////////////////////////////////////////
 
 // Save the current configuration setup
-function mqc_save_config(target, method, clear){
-  if(target === undefined){ target = report_id }
-  if(method === undefined){ method = 'local'; }
+function mqc_save_config(name, clear){
+  if(name === undefined){ return false; }
   var config = {};
   
   // Collect the toolbox vars
@@ -330,79 +441,82 @@ function mqc_save_config(target, method, clear){
   config['rename_from_texts'] =   window.mqc_rename_f_texts;
   config['rename_to_texts'] =     window.mqc_rename_t_texts;
   config['rename_regex'] =        window.mqc_rename_regex_mode;
+  config['hidesamples_mode'] =    window.mqc_hide_mode;
   config['hidesamples_f_texts'] = window.mqc_hide_f_texts;
   config['hidesamples_regex'] =   window.mqc_hide_regex_mode;
   
-  if(method == 'local'){
-    var prev_config = {};
-    // Load existing configs (inc. from other reports)
-    try {
-      prev_config = localStorage.getItem("mqc_config");
-      if(prev_config !== null && prev_config !== undefined){
-        prev_config = JSON.parse(prev_config);
-      } else {
-        prev_config  = {};
-      }
-    } catch(e){ console.log('Error updating localstorage: '+e); }
+  var prev_config = {};
+  // Load existing configs (inc. from other reports)
+  try {
+    prev_config = localStorage.getItem("mqc_config");
+    if(prev_config !== null && prev_config !== undefined){
+      prev_config = JSON.parse(prev_config);
+    } else {
+      prev_config  = {};
+    }
+    
     // Update config obj with current config
     if(clear == true){
-      prev_config[target] = {};
+      delete prev_config[name];
     } else {
-      prev_config[target] = config;
-      prev_config[target]['last_updated'] = Date();
+      prev_config[name] = config;
+      prev_config[name]['last_updated'] = Date();
     }
     localStorage.setItem("mqc_config", JSON.stringify(prev_config));
-    // Success message
-    var insAfter = '.mqc-save-config-report-section p:first-child';
-    if(target == 'global'){ insAfter = '.mqc-save-config-global-section p:first-child'; }
-    $('<p class="text-success" id="mqc-save-'+target+'-success">Config saved.</p>').hide().insertAfter($(insAfter)).slideDown(function(){
-      setTimeout(function(){
-        $('#mqc-save-'+target+'-success').slideUp(function(){ $(this).remove(); });
-      }, 5000);
-    });
-  }
-  if(method == 'file'){
-    var f = "// Config file for MultiQC\n// http://multiqc.info\n";
-    f += "// Generated "+Date()+"\n// Original report path: "+$('#mqc_output_path').text()+"\n";
-    f += "\nmqc_config_file_cfg = "+JSON.stringify(config, null, '  ');
-    var fblob = new Blob([f], {type: "application/javascript;charset=utf-8"});
-    saveAs(fblob, "multiqc_config.js");
-    setTimeout(function(){
-      alert('Now move multiqc_config.js from your downloads folder to the directory where this report is located.');
-    }, 500);
-  }
+    
+    if(clear == true){
+      // Remove from load select box
+      $("#mqc_loadconfig_form select option:contains('"+name+"')").remove();
+      // Successfully deleted message
+      $('<p class="text-danger" id="mqc-cleared-success">Settings deleted.</p>').hide().insertBefore($('#mqc_loadconfig_form .actions')).slideDown(function(){
+        setTimeout(function(){
+          $('#mqc-cleared-success').slideUp(function(){ $(this).remove(); });
+        }, 5000);
+      });
+    } else {
+      // Add to load select box and select it
+      $('#mqc_loadconfig_form select').prepend('<option>'+name+'</option>').val(name);
+      // Success message
+      $('<p class="text-success" id="mqc-save-success">Settings saved.</p>').hide().insertBefore($('#mqc_saveconfig_form')).slideDown(function(){
+        setTimeout(function(){
+          $('#mqc-save-success').slideUp(function(){ $(this).remove(); });
+        }, 5000);
+      });
+    }
+  } catch(e){ console.log('Error updating localstorage: '+e); }
+}
+
+//////////////////////////////////////////////////////
+// LOAD TOOLBOX SAVE NAMES
+//////////////////////////////////////////////////////
+function populate_mqc_saveselect(){
+  try {
+    var local_config = localStorage.getItem("mqc_config");
+    if(local_config !== null && local_config !== undefined){
+      local_config = JSON.parse(local_config);
+      for (var name in local_config){
+        $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
+      }
+    }
+  } catch(e){ console.log('Could not load local config: '+e); }
+  $('#mqc_loadconfig_form select').val('');
 }
 
 //////////////////////////////////////////////////////
 // LOAD TOOLBOX SETTINGS
 //////////////////////////////////////////////////////
-function load_mqc_config(){
+function load_mqc_config(name){
+  if(name === undefined){ return false; }
   var config = {};
-  // Get local configs - global and then this path
   try {
     var local_config = localStorage.getItem("mqc_config");
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
-      if(local_config['global'] !== undefined){ console.log('Loaded local global config'); }
-      for (var attr in local_config['global']) {
-        config[attr] = local_config['global'][attr];
-      }
-      if(local_config[report_id] !== undefined){ console.log('Loaded local report config'); }
-      for (var attr in local_config[report_id]) {
-        config[attr] = local_config[report_id][attr];
+      for (var attr in local_config[name]) {
+        config[attr] = local_config[name][attr];
       }
     }
   } catch(e){ console.log('Could not load local config: '+e); }
-  
-  
-  // Local file
-  if(typeof mqc_config_file_cfg != "undefined"){
-    for (var attr in mqc_config_file_cfg) {
-      config[attr] = mqc_config_file_cfg[attr];
-    }
-    $('#mqc_report_location').after('<p>MultiQC report toolbox config loaded from file.</p>');
-    console.log('Loaded config from a file');
-  }
   
   // Apply config - highlights
   if(notEmptyObj(config['highlight_regex'])){
@@ -449,6 +563,13 @@ function load_mqc_config(){
     if(config['hidesamples_regex'] == true){
       $('#mqc_hidesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
       window.mqc_hide_regex_mode = true;
+    }
+  }
+  if(notEmptyObj(config['hidesamples_mode'])){
+    if(config['hidesamples_mode'] == 'show'){
+      $('.mqc_hidesamples_showhide').prop('checked', false);
+      $('.mqc_hidesamples_showhide[val=show]').prop('checked', true);
+      window.mqc_hide_mode = 'show';
     }
   }
   if(notEmptyObj(config['hidesamples_f_texts'])){

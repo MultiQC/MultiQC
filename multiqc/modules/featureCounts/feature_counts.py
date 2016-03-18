@@ -26,11 +26,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any featureCounts reports
         self.featurecounts_data = dict()
-        for f in self.find_log_files('_counts.txt.summary'):
+        for f in self.find_log_files(config.sp['featurecounts']):
             parsed_data = self.parse_featurecounts_report(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.featurecounts_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
                 self.featurecounts_data[f['s_name']] = parsed_data
 
         if len(self.featurecounts_data) == 0:
@@ -40,9 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.featurecounts_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.featurecounts_data, 'multiqc_featureCounts.txt')
-
-        self.sections = list()
+        self.write_data_file(self.featurecounts_data, 'multiqc_featureCounts')
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works

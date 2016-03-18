@@ -14,6 +14,7 @@ c_width = 0;
 c_height = 0;
 ypos = 0;
 max_bp = 0;
+current_single_plot = undefined;
 
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
@@ -41,6 +42,9 @@ function fastqc_seq_content_heatmap() {
         $.each(window.mqc_hide_f_texts, function(idx, f_text){
             if((window.mqc_hide_regex_mode && s_name.match(f_text))  || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
                 hide_sample = true;
+            }
+            if(window.mqc_hide_mode == 'show'){
+                hide_sample = !hide_sample;
             }
         });
         if(!hide_sample){ sample_names.push(s_name); }
@@ -207,6 +211,39 @@ $(function () {
       $('#fastqc_seq_heatmap_key_a span').text('-');
       $('#fastqc_seq_heatmap_key_g span').text('-');
     });
+    
+    // Click sample
+    $('#fastqc_seq_heatmap').click(function(e) {
+      e.preventDefault();
+      // Get label from y position
+      var pos = findPos(this);
+      var x = e.pageX - pos.x;
+      var y = e.pageY - pos.y;
+      var idx = Math.floor(y/s_height);
+      var s_name = sample_names[idx];
+      if(s_name !== undefined){
+        plot_single_seqcontent(s_name);
+      }
+    });
+    $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_prev', function(e){
+        e.preventDefault();
+        var idx = sample_names.indexOf(current_single_plot) - 1;
+        if(idx < 0){ idx = sample_names.length - 1; }
+        plot_single_seqcontent(sample_names[idx]);
+    });
+    $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_next', function(e){
+        e.preventDefault();
+        var idx = sample_names.indexOf(current_single_plot) + 1;
+        if(idx == sample_names.length){ idx = 0; }
+        plot_single_seqcontent(sample_names[idx]);
+    });
+    $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_back', function(e){
+        e.preventDefault();
+        $('#fastqc_sequence_content_plot').slideDown();
+        $('#fastqc_sequence_content_single_wrapper').slideUp(function(){
+          $(this).remove();
+        });
+    });
       
     // Highlight the custom heatmap
     $(document).on('mqc_highlights mqc_hidesamples mqc_renamesamples mqc_plotresize', function(e){
@@ -218,6 +255,89 @@ $(function () {
     });
 
 });
+
+function plot_single_seqcontent(s_name){
+  current_single_plot = s_name;
+  var data = fastqc_seq_content_data[s_name];
+  var plot_data = [
+    {'name': '% T', 'data':[]},
+    {'name': '% C', 'data':[]},
+    {'name': '% A', 'data':[]},
+    {'name': '% G', 'data':[]}
+  ];
+  for (var d in data){
+    var base = data[d]['base'].split('-');
+    base = parseFloat(base[0]);
+    plot_data[0]['data'].push([base, data[d]['T']]);
+    plot_data[1]['data'].push([base, data[d]['C']]);
+    plot_data[2]['data'].push([base, data[d]['A']]);
+    plot_data[3]['data'].push([base, data[d]['G']]);
+  }
+  
+  // Create plot div if it doesn't exist, and hide overview
+  if($('#fastqc_sequence_content_single_wrapper').length == 0) {
+    $('#fastqc_sequence_content_plot').slideUp();
+    var newplot = '<div id="fastqc_sequence_content_single_wrapper"> \
+    <div id="fastqc_sequence_content_single_controls"><div class="btn-group"> \
+      <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_prev">&laquo; Prev</button> \
+      <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_next">Next &raquo;</button> \
+    </div> <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button></div>\
+    <div class="hc-plot-wrapper"><div id="fastqc_sequence_content_single" class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';
+    $(newplot).insertAfter('#fastqc_sequence_content_plot').hide().slideDown();      
+  }
+
+  $('#fastqc_sequence_content_single').highcharts({
+    chart: {
+      type: 'line',
+      zoomType: 'x'
+    },
+    colors: ['#dc0000', '#0000dc', '#00dc00', '#404040'],
+    title: {
+      text: 'Per Base Sequence Content: '+s_name,
+      x: 30 // fudge to center over plot area rather than whole plot
+    },
+    xAxis: {
+      title: { text: 'Position (bp)' },
+      allowDecimals: false,
+    },
+    yAxis: {
+      title: { text: '% Reads' },
+      max: 100,
+      min: 0,
+    },
+    legend: {
+      floating: true,
+      layout: 'vertical',
+      align: 'right',
+      verticalAlign: 'top',
+      y: 40
+    },
+    tooltip: {
+      backgroundColor: '#FFFFFF',
+      borderColor: '#CCCCCC',
+      formatter: function () {
+        var texts = [];
+        var bars = [];
+        $.each(this.points, function () {
+          texts.push('<span style="display: inline-block; border-left: 3px solid '+this.color+'; padding-left:5px; margin-bottom: 2px;"></div>' + this.y.toFixed(1) + this.series.name + '</span>');
+          bars.push('<div class="progress-bar" style="width:'+this.y+'%; float:left; font-size:8px; line-height:12px; padding:0; background-color:'+this.color+';">'+this.series.name.replace('%','').trim()+'</div>');
+        });
+        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + this.x + ' bp</p>\
+            <p>'+texts.join('<br>')+'</p><div class="progress" style="height: 12px; width: 150px; margin:0;">'+bars.join('')+'</div>';
+      },
+			useHTML: true,
+      crosshairs: true,
+      shared: true,
+    },
+    plotOptions: {
+      series: {
+        animation: false,
+        marker: { enabled: false },
+      }
+    },
+    series: plot_data
+  });
+}
 
 
 // Find the position of the mouse cursor over the canvas

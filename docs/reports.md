@@ -54,9 +54,6 @@ plus options to show/hide and change the order of columns.
 
 ![configure columns](images/genstats_config_cols.png)
 
-You can manually reorder the rows in the table by clicking and dragging the
-handle at the left side of a row.
-
 ## Plots
 MultiQC modules can take plot more extensive data in the sections below
 the general statistics table. These plotting use the
@@ -85,11 +82,13 @@ the top right of the plot:
 
 ![plot zoom](images/plot_export.png)
 
-This gives a range of options. PDF and SVG outputs are in a vector format,
+This gives a range of options. SVG output is a vector format,
 so can be edited in tools such as
 [Adobe Illustrator](http://www.adobe.com/products/illustrator.html) or
 the free tool [Inkscape](https://inkscape.org/en/). This makes them ideal
 for use in publications.
+
+You can get more control of exported plots using the toolbox, see below.
 
 ### Dynamic plots
 Some plots have buttons above them which allow you to change the data
@@ -169,9 +168,18 @@ _(Note that plots will tell you how many samples have been hidden)_
 
 ![hide samples](images/toolbox_hide_samples.png)
 
+### Export
+This tool enables you to configure the size and characteristics of exported
+plots, as well as allowing you to download some or all of the graphs with a
+single click.
+Width and Height set the output size of the images, scale sets how "zoomed-in"
+they should look (typically you want the plot to be more zoomed for printing).
 
 ### Save Settings
 To avoid having to re-enter the same toolbox setup repeatedly, you can
-save your settings using the 'Save Settings' panel. This interface is
-[likely to change soon](https://github.com/ewels/MultiQC/issues/90),
-so I won't go into much detail here now..
+save your settings using the 'Save Settings' panel. Just pick a name
+and click save. To load, choose your set of settings and press load 
+(or delete). Loaded settings are applied on top of current settings.
+All configs are saved in browser local storage - they do not travel
+with the report and may not work in older browsers.
+

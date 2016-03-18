@@ -3,11 +3,8 @@
 """ MultiQC module to parse output from Bismark """
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
-import io
-import json
+from collections import OrderedDict
 import logging
-import os
 import re
 
 from multiqc import config, BaseMultiqcModule
@@ -80,33 +77,34 @@ class MultiqcModule(BaseMultiqcModule):
             'meth': {'CpG_R1' : {}, 'CHG_R1' : {}, 'CHH_R1' : {}, 'CpG_R2' : {}, 'CHG_R2' : {}, 'CHH_R2' : {}},
             'cov': {'CpG_R1' : {}, 'CHG_R1' : {}, 'CHH_R1' : {}, 'CpG_R2' : {}, 'CHG_R2' : {}, 'CHH_R2' : {}}
         }
+        sp = config.sp['bismark']
         
         # Find and parse bismark alignment reports
-        for f in self.find_log_files(fn_match=['_PE_report.txt', '_SE_report.txt'], contents_match='Writing a C -> T converted version of the input file'):
+        for f in self.find_log_files(sp['align']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['alignment'])
             if parsed_data is not None:
-                if f['s_name'] in self.bismark_data['alignment']:
-                    log.debug("Duplicate alignment sample log found! Overwriting: {}".format(f['s_name']))
                 # Calculate percent_aligned - doubles as a good check that stuff has worked
                 try:
                     parsed_data['percent_aligned'] = (parsed_data['aligned_reads'] / parsed_data['total_reads']) * 100
                 except (KeyError, ZeroDivisionError):
                     log.warning('Error calculating percentage for {} - ignoring sample.'.format(sn))
                 else:
+                    if f['s_name'] in self.bismark_data['alignment']:
+                        log.debug("Duplicate alignment sample log found! Overwriting: {}".format(f['s_name']))
+                    self.add_data_source(f, section='alignment')
                     self.bismark_data['alignment'][f['s_name']] = parsed_data
         
         # Find and parse bismark deduplication reports
-        for f in self.find_log_files('.deduplication_report.txt'):
+        for f in self.find_log_files(sp['dedup']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['dedup'])
-            s_name = f['s_name'][:-25]
             if parsed_data is not None:
-                if s_name in self.bismark_data['dedup']:
+                if f['s_name'] in self.bismark_data['dedup']:
                     log.debug("Duplicate deduplication sample log found! Overwriting: {}".format(f['s_name']))
-                self.bismark_data['dedup'][s_name] = parsed_data
+                self.add_data_source(f, section='deduplication')
+                self.bismark_data['dedup'][f['s_name']] = parsed_data
         
         # Find and parse bismark methylation extractor reports
-        for f in self.find_log_files(fn_match='_splitting_report.txt', contents_match='Bismark Extractor Version'):
-        # for f in self.find_log_files(fn_match='_splitting_report.txt'):
+        for f in self.find_log_files(sp['meth_extract']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['methextract'])
             s_name = f['s_name']
             if s_name.endswith('.deduplicated'):
@@ -114,11 +112,13 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 if s_name in self.bismark_data['methextract']:
                     log.debug("Duplicate methylation extraction sample log found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name, section='methylation_extraction')
                 self.bismark_data['methextract'][s_name] = parsed_data
         
         # Find and parse M-bias plot data
-        for f in self.find_log_files('M-bias.txt', filehandles=True):
+        for f in self.find_log_files(sp['m_bias'], filehandles=True):
             self.parse_bismark_mbias(f)
+            self.add_data_source(f, section='m_bias')
         
         if len(self.bismark_data['alignment']) == 0 and len(self.bismark_data['dedup']) == 0 and len(self.bismark_data['methextract']) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -131,21 +131,16 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Write out to the report
         if len(self.bismark_data['alignment']) > 0:
-            self.write_csv_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment.txt', sort_cols=True)
+            self.write_data_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment', sort_cols=True)
             log.info("Found {} bismark alignment reports".format(len(self.bismark_data['alignment'])))
             self.sections.append({
                 'name': 'Alignment Rates',
                 'anchor': 'bismark-alignment',
                 'content': self.bismark_alignment_chart()
             })
-            self.sections.append({
-                'name': 'Strand Alignment',
-                'anchor': 'bismark-strands',
-                'content': self.bismark_strand_chart()
-            })
         
         if len(self.bismark_data['dedup']) > 0:
-            self.write_csv_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup.txt', sort_cols=True)
+            self.write_data_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup', sort_cols=True)
             log.info("Found {} bismark dedup reports".format(len(self.bismark_data['dedup'])))
             self.sections.append({
                 'name': 'Deduplication',
@@ -153,8 +148,15 @@ class MultiqcModule(BaseMultiqcModule):
                 'content': self.bismark_dedup_chart()
             });
         
+        if len(self.bismark_data['alignment']) > 0:
+            self.sections.append({
+                'name': 'Strand Alignment',
+                'anchor': 'bismark-strands',
+                'content': self.bismark_strand_chart()
+            })
+        
         if len(self.bismark_data['methextract']) > 0:
-            self.write_csv_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract.txt', sort_cols=True)
+            self.write_data_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract', sort_cols=True)
             log.info("Found {} bismark methextract reports".format(len(self.bismark_data['methextract'])))
             self.sections.append({
                 'name': 'Cytosine Methylation',
@@ -311,6 +313,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_alignment',
             'title': 'Bismark Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
@@ -344,6 +347,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_strand_alignment',
             'title': 'Alignment to Individual Bisulfite Strands',
             'ylab': '% Reads',
             'cpswitch_c_active': False,
@@ -363,6 +367,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_deduplication',
             'title': 'Bismark Deduplication',
             'ylab': '% Reads',
             'cpswitch_c_active': False,
@@ -387,6 +392,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'bismark_percent_methylation',
             'title': 'Cytosine Methylation',
             'ylab': '% Calls',
             'cpswitch_c_active': False,
@@ -408,7 +414,7 @@ class MultiqcModule(BaseMultiqcModule):
         for more information on how these numbers are generated.</p>'
         
         pconfig = {
-            'id': 'bismark-mbias-plot',
+            'id': 'bismark_mbias',
             'title': 'M-Bias',
             'ylab': '% Methylation',
             'xlab': 'Position (bp)',
@@ -439,5 +445,3 @@ class MultiqcModule(BaseMultiqcModule):
         html += self.plot_xy_data(datasets, pconfig)
         
         return html
-        
-        

@@ -15,20 +15,39 @@ $(function () {
   // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
   
-  if($(".mqc_table").length > 0){
+  if($('.mqc_table').length > 0){
     
     // Enable tablesorter on the general statistics tables
-    $(".mqc_table").tablesorter({sortInitialOrder: 'desc'});
+    $('.mqc_table').tablesorter({sortInitialOrder: 'desc'});
     
     // Update the table sorter if samples renamed
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
-      $(".mqc_table").trigger("update"); 
+      $('.mqc_table').trigger('update'); 
     });
     
     // Freeze the top header when scrolling
     var gsTab = $('#general_stats_table');
     var gsTabDiv = $('#general_stats_table_container .table-responsive');
     var gsHeight = gsTab.height();
+    
+    // Sort table when frozen header clicked
+    $('#general_stats_table_container').on('click', '#gsClone thead tr th', function(){
+      var c_idx = $(this).index();
+      var sortDir = $(this).hasClass('headerSortUp') ? 0 : 1;
+      $('#general_stats_table').trigger('sorton', [[[ c_idx, sortDir ]]]);
+      $('#gsClone thead tr th').removeClass('headerSortDown headerSortUp');
+      $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
+    });
+    
+    // Copy table contents to clipboard
+    var clipboard = new Clipboard('#general_stats_copy_btn');
+    clipboard.on('success', function(e) {
+      e.clearSelection();
+      $('#general_stats_copy_btn').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      setTimeout(function(){
+        $('#general_stats_copy_btn').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      }, 2000);
+    });
     
     $(window).scroll(function(){
       var wTop = $(window).scrollTop();
@@ -47,12 +66,12 @@ $(function () {
           ct.find('thead').css({visibility:'visible'});
           // Wrap it and add to the container with position: fixed
           ctw = $('<div id="gsCloneWrapper" />').append(ct);
-          ctw.css({'position':'fixed', 'top':0, 'height': gsHeadHeight});
+          ctw.css({'position':'fixed', 'top':0, 'height': gsHeadHeight, 'width': gsTabDiv.width()});
           $("#general_stats_table_container").append(ctw);
         }
         // Nicely scroll out of the way instead of dissapearing
         if(gsVisible < gsHeadHeight * 2){
-          $("#gsCloneWrapper").css('top', gsVisible - (gsHeadHeight * 2) );
+          $("#gsClone").css('top', gsVisible - (gsHeadHeight * 2) );
         } else {
           $("#gsCloneWrapper").css('top', 0);
         }
@@ -61,18 +80,14 @@ $(function () {
         $("#gsCloneWrapper").remove();
       }
     });
+    // Resize width of floating header if page changes
+    $(window).on('resize', function(){
+      $("#gsCloneWrapper").width(gsTabDiv.width());
+      $("#gsClone").width(gsTab.width());
+    });
     // Scroll left and right in the responsive container
     gsTabDiv.scroll(function(){
       $("#gsClone").css('margin-left', -$(this).scrollLeft());
-    });
-    
-    // Make rows in general stats tables sortable
-    $('.mqc_table tbody').sortable({
-      handle: '.sorthandle',
-      helper: function fixWidthHelper(e, ui) {
-        ui.children().each(function() { $(this).width($(this).width()); });
-        return ui;
-      }
     });
 
     // Colour code table cells using chroma.js
@@ -106,7 +121,7 @@ $(function () {
           if(colscheme_rev){
             scale = chroma.scale(colscheme).domain([maxval, minval]);
           }
-          table.find('tr td:nth-of-type('+(idx+1)+')').each(function(){
+          table.find('tr td:nth-of-type('+idx+')').each(function(){
             var val = parseFloat($(this).text());
             var rgb = scale(val).rgb(); //.luminance(0.7).css();
             for (i in rgb){
@@ -148,10 +163,10 @@ $(function () {
       });
     });
     
-    $('#general_stats_colsort_table tbody').on("sortstop", function(e, ui){
+    $('#general_stats_colsort_table tbody').on('sortstop', function(e, ui){
       change_general_stats_col_order();
     });
-    $("#general_stats_colsort_table").bind("sortEnd",function() { 
+    $('#general_stats_colsort_table').bind('sortEnd',function() { 
       change_general_stats_col_order();
     });
     
@@ -203,6 +218,9 @@ $(function () {
           if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
             match = true;
           }
+          if(window.mqc_hide_mode == 'show'){
+            match = !match;
+          }
         });
         if(match){ $(this).parent().hide(); }
         else { $(this).parent().show(); }
@@ -237,6 +255,7 @@ $(function () {
 // Note: Don't have to worry about floating header, as 'Configure Columns'
 // button is only visible when this is hidden. Ace!
 function change_general_stats_col_order(){
+  alert('called');
   // Collect the desired order of columns
   var classes = [];
   $('#general_stats_colsort_table tbody tr').each(function(){

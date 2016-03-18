@@ -3,10 +3,7 @@
 """ MultiQC module to parse output from Preseq """
 
 from __future__ import print_function
-import io
 import logging
-import os
-import re
 
 from multiqc import config, BaseMultiqcModule
 
@@ -26,9 +23,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any Preseq reports
         self.preseq_data = dict()
         self.total_max = 0
-        for f in self.find_log_files(contents_match='TOTAL_READS	EXPECTED_DISTINCT'):
+        for f in self.find_log_files(config.sp['preseq']):
             parsed_data = self.parse_preseq_logs(f)
             if parsed_data is not None:
+                if f['s_name'] in self.preseq_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
                 self.preseq_data[f['s_name']] = parsed_data
 
         if len(self.preseq_data) == 0:
@@ -36,8 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.preseq_data)))
-
-        self.sections = list()
 
         # Preseq plot
         # Only one section, so add to the intro

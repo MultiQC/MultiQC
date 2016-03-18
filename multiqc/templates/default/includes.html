@@ -40,16 +40,18 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/packages/bootstrap.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/bootstrap-tour.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/highcharts.js') }}</script>
-<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script type="text/javascript">{{ include_file('assets/js/packages/highcharts.exporting.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/packages/highcharts.offline-exporting.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/chroma.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery.tablesorter.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/FileSaver.min.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/packages/clipboard.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_generalstats.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_plotting.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/multiqc_mpl.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_toolbox.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_tour.js') }}</script>
-<script src="multiqc_config.js"></script>
 {%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.values() %}
 <script type="text/javascript">{{ include_file( js_href, None ) }}</script>
 {%- endfor %}{% endif %}{% endfor %}

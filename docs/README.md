@@ -1,17 +1,21 @@
 ---
-pages:
- - installation.md
- - usage.md
- - reports.md
- - templates.md
- - modules.md
- - plugins.md
- - javascript.md
+- Using MultiQC
+  Installation: installation.md
+  Running MultiQC: usage.md
+  Using Reports: reports.md
+  Configuration: config.md
+- MultiQC Modules
+  FastQC: modules/fastqc.md
+- Coding with MultiQC
+  Writing new templates: templates.md
+  Writing new modules: modules.md
+  MultiQC Plugins: plugins.md
+  JavaScript Functions: javascript.md
 ---
 
 # Welcome!
 
-## MultiQC v0.3 Documentation
+## MultiQC v0.5dev Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
@@ -20,13 +24,18 @@ of common tools.
 The documentation has the following pages:
 
  - [Docs homepage](README.md) _(this README file)_
- - [Installing MultiQC](installation.md)
- - [Running MultiQC](usage.md)
- - [Using Reports](reports.md)
- - [Writing new templates](templates.md)
- - [Writing new modules](modules.md)
- - [Plugins](plugins.md)
- - [Javascript](javascript.md)
+ - Using MultiQC
+   - [Installing MultiQC](installation.md)
+   - [Running MultiQC](usage.md)
+   - [Using Reports](reports.md)
+   - [Configuration](config.md)
+ - MultiQC Modules
+   - [FastQC](fastqc.md)
+ - Coding with MultiQC
+   - [Writing new templates](templates.md)
+   - [Writing new modules](modules.md)
+   - [Plugins](plugins.md)
+   - [JavaScript](javascript.md)
 
 These docs can be read in any of three ways:
  - On the MultiQC Website: http://multiqc.info

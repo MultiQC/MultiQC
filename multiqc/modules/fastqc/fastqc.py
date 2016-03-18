@@ -13,12 +13,10 @@
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
-import io
 import json
 import logging
 import os
 import re
-import shutil
 import zipfile
 
 from multiqc import config, BaseMultiqcModule
@@ -41,12 +39,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_statuses = defaultdict(lambda: defaultdict())
         
         # Find and parse unzipped FastQC reports
-        for f in self.find_log_files('fastqc_data.txt'):
+        for f in self.find_log_files(config.sp['fastqc']['data']):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
-            self.parse_fastqc_report(f['f'], s_name, f['root'])
+            self.parse_fastqc_report(f['f'], s_name, f)
         
         # Find and parse zipped FastQC reports
-        for f in self.find_log_files('_fastqc.zip', filecontents=False):
+        for f in self.find_log_files(config.sp['fastqc']['zip'], filecontents=False):
             s_name = f['fn'].rstrip('_fastqc.zip')
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
@@ -57,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as fh:
                     r_data = fh.read().decode('utf8')
-                    self.parse_fastqc_report(r_data, s_name, f['root'])
+                    self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
@@ -87,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_stats_table()
         
         # Write the basic stats table data to a file
-        self.write_csv_file(self.fastqc_stats, 'multiqc_fastqc.txt')
+        self.write_data_file(self.fastqc_stats, 'multiqc_fastqc')
         
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
         self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(self.fastqc_statuses))
@@ -106,8 +104,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_content_plot()
 
 
-    def parse_fastqc_report(self, file_contents, s_name=None, root=None):
-        """ Takes contetns from a fastq_data.txt file and parses out required
+    def parse_fastqc_report(self, file_contents, s_name=None, f=None):
+        """ Takes contents from a fastq_data.txt file and parses out required
         statistics and data. Returns a dict with keys 'stats' and 'data'.
         Data is for plotting graphs, stats are for top table. """
         
@@ -126,12 +124,13 @@ class MultiqcModule(BaseMultiqcModule):
             'sequence_length':    r"Sequence length\s+([\d-]+)",
             'percent_gc':         r"%GC\s+(\d+)",
             'percent_dedup':      r"#Total Deduplicated Percentage\s+([\d\.]+)",
+            'percent_duplicates': r"#Total Duplicate Percentage\s+([\d\.]+)", # old versions of FastQC
         }
         
         # Make the sample name from the input filename if we find it
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
-            s_name = self.clean_s_name(fn_search.group(1) , root)
+            s_name = self.clean_s_name(fn_search.group(1) , f['root'])
         
         # Throw a warning if we already have this sample and remove prev data
         # Unzipped reports means that this can be quite frequent
@@ -143,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
                     for j in self.fastqc_data[k]:
                         self.fastqc_data[k][j].pop(s_name, None)
                 elif k == 'adapter_content':
-                    aks = self.fastqc_data[k].keys()
+                    aks = list(self.fastqc_data[k].keys())
                     for s in aks:
                         sn, _ = s.split(' - ')
                         if sn == s_name:
@@ -230,8 +229,15 @@ class MultiqcModule(BaseMultiqcModule):
                             self.fastqc_data['seq_dup_levels'][s_name] = OrderedDict()
                             continue # Skip header line
                         sections  = l.split()
-                        self.fastqc_data['seq_dup_levels_dedup'][s_name][sections[0]] = float(sections[1])
-                        self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[2])
+                        try:
+                            # Version 11 of FastQC
+                            # #Duplication Level	Percentage of deduplicated	Percentage of total
+                            self.fastqc_data['seq_dup_levels_dedup'][s_name][sections[0]] = float(sections[1])
+                            self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[2])
+                        except IndexError:
+                            # Version 10 of FastQC and below just gives percentage, no % of dedup
+                            # #Duplication Level	Relative count
+                            self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[1])
         
                     if in_module == 'adapter_content':
                         if l[:1] == '#':
@@ -263,6 +269,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Add parsed stats to dicts
         self.fastqc_stats[s_name] = s
+        self.add_data_source(f, s_name)
+        
 
     def fastqc_stats_table(self):
         """ Add some single-number stats to the basic statistics
@@ -371,7 +379,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
-                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
+                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p> \
+                 <p class="text-primary"><span class="glyphicon glyphicon-info-sign"></span> Click a heatmap row to see a line plot for that dataset.</p>'
         
         # Order the data by the sample names
         data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))
@@ -421,13 +430,24 @@ class MultiqcModule(BaseMultiqcModule):
             'yDecimals': False,
             'tt_label': '<b>{point.x}% GC</b>: {point.y}',
             'colors': self.get_status_cols('gc_content'),
+            'data_labels': [
+                {'name': 'Counts', 'ylab': 'Count'},
+                {'name': 'Percentages', 'ylab': 'Percentage'}
+            ]
         }
+        data_norm = dict()
+        for samp in self.fastqc_data['gc_content']:
+            data_norm[samp] = dict()
+            total = sum( [ c for c in self.fastqc_data['gc_content'][samp].values() ] )
+            for gc, count in self.fastqc_data['gc_content'][samp].items():
+                data_norm[samp][gc] = (count / total) * 100
+        
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'anchor': 'fastqc_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data(self.fastqc_data['gc_content'], pconfig)
+                        self.plot_xy_data([self.fastqc_data['gc_content'], data_norm], pconfig)
         })
     
     
@@ -548,6 +568,19 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 0, 'to': 5, 'color': '#c3e6c3'},
             ],
         }
+        
+        # Lots of these datasets will be all zeros. Remove anything that doesn't have
+        # at least 0.5% so that we don't bloat the report.
+        plotdata = {}
+        for ds in self.fastqc_data['adapter_content']:
+            if max(self.fastqc_data['adapter_content'][ds].values()) >= 0.1:
+                plotdata[ds] = self.fastqc_data['adapter_content'][ds]
+        
+        if len(plotdata) > 0:
+            plot_html = self.plot_xy_data(plotdata, pconfig)
+        else:
+            plot_html = '<div class="alert alert-warning">No samples found with any adapter contamination > 0.1%</div>'
+        
         # Note - colours are messy as we've added adapter names here. Not
         # possible to break down pass / warn / fail for each adapter, which
         # could lead to misleading labelling (fails on adapter types with
@@ -557,8 +590,8 @@ class MultiqcModule(BaseMultiqcModule):
             'name': 'Adapter Content',
             'anchor': 'fastqc_adapter_content',
             'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data(self.fastqc_data['adapter_content'], pconfig)
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html" target="_bkank">FastQC help</a>. ' +
+                        'Only samples with &ge; 0.1% adapter contamination are shown.</p>' + plot_html
         })
     
 

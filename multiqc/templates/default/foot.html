@@ -1,0 +1,63 @@
+{# #######################
+  foot.html
+##########################
+
+Content for the base of the report HTML.
+eg. Modals / other HTML to be hidden out of the way.
+
+#}
+
+
+<!-- Regex Help Modal -->
+<div class="modal fade" id="regex_help_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title">Regex Help</h3>
+      </div>
+      <div class="modal-body">
+        <p>Toolbox search strings can behave as regular expressions (regexes). Click a button below to see an example of it in action. Try modifying them yourself in the text box.</p>
+        <div class="row">
+          <div class="col-sm-6 regex_example_buttons">
+            <button class="btn btn-default" data-example="^samp_1"><code>^</code> (start of string)</button>
+            <button class="btn btn-default" data-example="samp_1$"><code>$</code> (end of string)</button>
+            <button class="btn btn-default" data-example="samp_[13]"><code>[]</code> (character choice)</button>
+            <button class="btn btn-default" data-example="\d$"><code>\d</code> (shorthand for <code>[0-9]</code>)</button>
+            <button class="btn btn-default" data-example="^\w"><code>\w</code> (shorthand for <code>[0-9a-zA-Z_]</code>)</button>
+            <button class="btn btn-default" data-example="._samp"><code>.</code> (any character)</button>
+            <button class="btn btn-default" data-example="\."><code>\.</code> (literal full stop)</button>
+            <button class="btn btn-default" data-example="(tmp|prepended)_samp"><code>()</code> <code>|</code> (group / separator)</button>
+            <button class="btn btn-default" data-example="tmpp*_"><code>*</code> (prev char 0 or more)</button>
+            <button class="btn btn-default" data-example="tmpp+_"><code>+</code> (prev char 1 or more)</button>
+            <button class="btn btn-default" data-example="tmpp?_"><code>?</code> (prev char 0 or 1)</button>
+            <button class="btn btn-default" data-example="_1{5}"><code>{}</code> (char num times)</button>
+            <button class="btn btn-default" data-example="_1{2,5}"><code>{,}</code> (count range)</button>
+          </div>
+          <div class="col-sm-6 regex_example_demo">
+            <input type="text" class="form-control" />
+<pre>
+<span>samp_1</span>
+<span>samp_1_edited</span>
+<span>samp_2</span>
+<span>samp_2_edited</span>
+<span>samp_3</span>
+<span>samp_3_edited</span>
+<span>prepended_samp_1</span>
+<span>tmp_samp_1_edited</span>
+<span>tmpp_samp_1_edited</span>
+<span>tmppp_samp_1_edited</span>
+<span>#samp_1_edited.tmp</span>
+<span>samp_11</span>
+<span>samp_11111</span>
+</pre>
+            <p>See <a href="https://regex101.com/" target="_blank">regex101.com</a> for a more heavy duty testing suite.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

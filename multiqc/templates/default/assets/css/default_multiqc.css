@@ -20,6 +20,13 @@ kbd {
     }
 }
 
+.radio.input-sm {
+    height: 20px;
+}
+.radio.input-sm input {
+    margin: 2px 0 0 -20px;
+}
+
 /* Page Template */
 @media only screen and (min-width: 768px){
     .mainpage { margin-left: 270px; }
@@ -274,6 +281,7 @@ input.form-control[type=color]{
         position:absolute;
         width: 250px;
         height: 100%;
+        overflow: auto;
         left:36px;
         margin:0;
         background-color: #ededed;
@@ -478,6 +486,29 @@ input.form-control[type=color]{
     width: calc(49% - 20px);
 }
 
+#mqc_exportplots .col-sm-6 {
+  padding: 0 10px 0 0;
+}
+#mqc_exportplots .checkbox {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: normal;
+}
+#mqc_exportplots .checkbox label {
+  min-height: 0;
+}
+#mqc_exportplots .checkbox input {
+  margin-top: 0;
+}
+
+#mqc-save-success {
+    color: #3c763d;
+    background-color: #dff0d8;
+}
+#mqc-cleared-success {
+    color: #a94442;
+    background-color: #f2dede;
+}
 
 #mqc-launch-into-tour {
     margin: -10px 10px;
@@ -504,12 +535,23 @@ input.form-control[type=color]{
     margin:0;
 }
 
-
+/* Regex help modal */
+.regex_example_buttons button {
+    float: left;
+    clear: left;
+    margin-bottom: 8px;
+}
+.regex_example_demo input {
+    margin-bottom: 8px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
+}
 
 /* General stats table */
 .mqc_table thead th {
     cursor: pointer;
-    background-color: #fff;
+}
+.mqc_table thead th, .mqc_table thead td {
+    background-color: #FFFFFF;
 }
 .mqc_table thead th:after, #gsClone thead th:after {
     content: "";
@@ -544,9 +586,9 @@ input.form-control[type=color]{
     border-bottom: 2px solid #ddd;
     width: calc(100% - 340px);
 }
-#gsClone thead th, #gsClone thead td {
+/*#gsClone thead th, #gsClone thead td {
     background-color: #FFFFFF;
-}
+}*/
 @media only screen and (max-width: 768px){
     #gsCloneWrapper {
         width: calc(100% - 40px);
@@ -606,6 +648,14 @@ tbody .sorthandle {
     left:0;
 }
 
+/* Flat MatPlotLib plots */
+.mqc_mplplot {
+    border: 1px solid #dedede;
+    margin-top: 15px;
+}
+.mqc_mplplot img {
+    max-width: 100%;
+}
 
 /* Draggable height bar for HighCharts Plots */
 .hc-plot {

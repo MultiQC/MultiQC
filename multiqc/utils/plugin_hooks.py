@@ -4,12 +4,7 @@
 to run their own custom subroutines at predefined
 trigger points during MultiQC execution. """
 
-import logging
 import pkg_resources
-
-import multiqc
-from multiqc import (logger)
-from multiqc.utils.log import init_log, LEVELS
 
 # Load the hooks
 hook_functions = {}

@@ -24,11 +24,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
-        for f in self.find_log_files(contents_match='reads; of these:'):
+        for f in self.find_log_files(config.sp['bowtie2']):
             parsed_data = self.parse_bowtie2_logs(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.bowtie2_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
                 self.bowtie2_data[f['s_name']] = parsed_data
 
         if len(self.bowtie2_data) == 0:
@@ -38,9 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.bowtie2_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.bowtie2_data, 'multiqc_bowtie2.txt')
-        
-        self.sections = list()
+        self.write_data_file(self.bowtie2_data, 'multiqc_bowtie2')
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works

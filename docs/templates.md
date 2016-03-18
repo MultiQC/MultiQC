@@ -1,4 +1,4 @@
-# Report Templates
+# Writing New Templates
 MultiQC is built around a templating system that uses the 
 [Jinja](http://jinja.pocoo.org/) python package. This makes it very
 easy to create new report templates that fit your needs.
@@ -51,7 +51,7 @@ base_fn = 'base.html'
 
 ## Child templates
 The default MultiQC template contains a _lot_ of code. Importantly, it includes
-1309 lines of custom JavaScript (at time of writing) which powers the plotting
+1448 lines of custom JavaScript (at time of writing) which powers the plotting
 and dynamic functions in the report. You probably don't want to rewrite all of
 this for your template, so to make your life easier you can create a
 _child template_.

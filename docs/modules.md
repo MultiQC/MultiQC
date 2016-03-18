@@ -1,4 +1,4 @@
-# Writing Modules
+# Writing New Modules
 
 ## Introduction
 Writing a new module can at first seem a daunting task. However, MultiQC
@@ -111,23 +111,68 @@ Log messages can come in a range of formats:
 
 ## Step 1 - Find log files
 The first thing that your module will need to do is to find analysis log
-files. You can use the base function `self.find_log_files()` for this:
+files. You can do this by searching for a filename fragment, or a string
+within the file. It's possible to search for both (a match on either
+will return the file) and also to have multiple strings possible.
+
+First, add your default patterns to:
+```
+MULTIQC_ROOT/multiqc/utils/search_patterns.yaml
+```
+
+You should see the patterns for all other modules to give you an idea,
+but you want a yaml key with the name of your module, then either `fn`
+or `contents` for strings to match against filenames or file contents:
+```yaml
+mymod:
+    fn: _myprogram.txt
+myothermod:
+    contents: This is myprogram v1.3
+```
+
+Note that if you want to find multiple log files, you can nest these
+dictionaries (though they must end with either `fn` or `contents`).
+For example, see the `FastQC` module:
+```yaml
+fastqc:
+    data:
+        fn: fastqc_data.txt
+    zip:
+        fn: _fastqc.zip
+```
+
+You can supply a list of strings if needed, eg. the `bismark` module:
+```yaml
+bismark:
+    align:
+        fn:
+            - _PE_report.txt
+            - _SE_report.txt
+```
+
+The value of adding these strings here is that they can be overwritten
+by users in their own config files. This is helpful as people have weird
+and wonderful processing pipelines with their own file naming conventions.
+
+Once your strings are added, you can call them in your module with the
+`config.sp['mymod']`. Next, use the base function `self.find_log_files()`
+to look for your files like this:
 ```python
-self.find_log_files(fn_match=None, contents_match=None, filehandles=False)
+self.find_log_files(config.sp['mymod'], filehandles=False)
 ```
 
 This will recursively search the analysis directories looking for a matching
-file name (if the first argument, `fn_match`, is supplied) or a text string
-held within a file (if `contents_match` is supplied). Contents matching is
-only done on files smaller than `config.log_filesize_limit` (default 1MB).
-Note that both `fn_match` and `contents_match` can be used in combination
-if required (files will need to match both conditions).
+file name (if the `fn` key is there) or a text string held within a file
+(if the `contents` key is there). Contents matching is only done on files
+smaller than `config.log_filesize_limit` (default 1MB).
+Note that both `fn` and `contents` can be used in combination
+if required - files will be returned if anything matches (`OR` not `AND`).
 
 This function yields a dictionary with various information about matching
 files. The `f` key contains the contents of matching files by default.
 ```python
-# Find all files whose filename contains '_my_prog.txt'
-for f in self.find_log_files('_my_prog.txt'):
+# Find all files for mymod
+for f in self.find_log_files(config.sp['mymod']):
     print f['f']        # File contents
     print f['s_name']   # Sample name (from cleaned fn)
     print f['root']     # Directory file was in
@@ -139,7 +184,7 @@ instead:
 ```python
 # Find all files which contain the string 'My Statistic:'
 # Return a filehandle instead of the file contents
-for f in self.find_log_files(fcontents_match='My Statistic:', filehandles=True):
+for f in self.find_log_files(config.sp['mymod'], filehandles=True):
     line = f['f'].readline()  # f['f'] is now a filehandle instead of contents
 ```
 
@@ -155,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # [...]
         self.mod_data = dict()
-        for f in self.find_log_files('my_prog.txt'):
+        for f in self.find_log_files(config.sp['mymod']):
             self.mod_data[f['s_name']] = self.parse_logs(f['f'])
     
     def parse_logs(self, f):
@@ -176,6 +221,10 @@ if len(self.mod_data) == 0:
     raise UserWarning
 ```
 
+Note that this has to be raised as early as possible, so that it halts
+the module progress. For example, if no logs are found then the module
+should not create any files or try to do any computation.
+
 ### Custom sample names
 Typically, sample names are taken from cleaned log filenames (the default
 `f['s_name']` value returned). However, if possible, it's better to use
@@ -193,6 +242,32 @@ If modules find samples with identical names, then the previous sample
 is overwritten. It's good to print a log statement when this happens,
 for debugging. However, most of the time it makes sense - programs often
 create log files _and_ print to `stdout` for example.
+
+```python
+if f['s_name'] in self.bowtie_data:
+    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+```
+
+### Printing to the sources file
+Finally, once you've found your file we want to add this information to the
+`multiqc_sources.txt` file in the MultiQC report data directory. This lists
+every sample name and the file from which this data came from. This is especially
+useful if sample names are being overwritten as it lists the source used. This code
+is typically written immediately after the above warning.
+
+If you've used the `self.find_log_files` function, writing to the sources file
+is as simple as passing the log file variable to the `self.add_data_source` function:
+```python
+for f in self.find_log_files(config.sp['mymod']):
+    self.add_data_source(f)
+```
+
+If you have different files for different sections of the module, or are
+customising the sample name, you can tweak the fields. The default arguments
+are as shown:
+```python
+self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
+```
 
 ## Step 4 - Adding to the general statistics table
 Now that you have your parsed data, you can start inserting it into the
@@ -274,7 +349,7 @@ applications. This also gives the opportunity to output additional data that
 may not be appropriate for the General Statistics table.
 
 Again, there is a base class function to help you with this - just supply it
-with a two-dimensional dictionary and a filename:
+with a dictionary and a filename:
 
 ```python
 data = {
@@ -287,14 +362,18 @@ data = {
         'second_col': '66.3%'
     }
 }
-self.write_csv_file (data, 'multiqc_mymod.txt')
+self.write_data_file(data, 'multiqc_mymod')
 ```
 
 If your output has a lot of columns, you can supply the additional
 argument `sort_cols = True` to have the columns alphabetically sorted.
 
-Note that the data format is the same as that used for the General
-Statistics table.
+This function will also pay attention to the default / command line
+supplied data format and behave accordingly. So the written file could
+be a tab-separated file (default), `JSON` or `YAML`.
+
+Note that any keys with more than 2 levels of nesting will be ignored
+when being written to tab-separated files.
 
 ## Step 6 - Create report sections
 Great! It's time to start creating sections of the report with more information.
@@ -407,6 +486,15 @@ If supplying multiple datasets, you can also supply a list of category
 objects. Make sure that they are in the same order as the data. If not
 supplied, these will be guessed from the data keys. See the bismark module
 plots for an example of this in action.
+
+### Interactive / Flat image plots
+Note that the `self.plot_bargraph()` function can generate both interactive
+JavaScript (HighCharts) powered report plots _and_ flat image plots made using
+MatPlotLib. This choice is made within the function based on config variables
+such as number of dataseries and command line flags.
+
+Note that both plot types should come out looking pretty much identical. If
+you spot something that's missing in the flat image plots, let me know.
 
 
 ## Step 8 - Plotting line graphs
@@ -522,3 +610,20 @@ self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
 self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
 self.copy_module_files(self.css + self.js, __file__)
 ```
+
+### Appendix C - Custom plotting functions
+If you don't like the default plotting functions built into MultiQC, you
+can write your own! If you create a callable variable in a template called
+either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
+
+```python
+def custom_linegraph(plotdata, pconfig):
+    return '<h1>Awesome line graph here</h1>'
+linegraph = custom_linegraph
+  
+def custom_bargraph(plotdata, plotseries, pconfig):
+    return '<h1>Awesome bar graph here</h1>'
+bargraph = custom_bargraph
+```
+
+These plotting functions aren't very helpful, but hopefully you get the idea.

@@ -3,9 +3,7 @@
 """ MultiQC module to parse output from Cutadapt """
 
 from __future__ import print_function
-import io
 import logging
-import os
 import re
 
 from multiqc import config, BaseMultiqcModule
@@ -30,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_exp = dict()
         self.cutadapt_length_obsexp = dict()
         
-        for f in self.find_log_files(contents_match='This is cutadapt', filehandles=True):
+        for f in self.find_log_files(config.sp['cutadapt'], filehandles=True):
             self.parse_cutadapt_logs(f)        
 
         if len(self.cutadapt_data) == 0:
@@ -40,9 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.cutadapt_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.cutadapt_data, 'multiqc_cutadapt.txt')
-
-        self.sections = list()
+        self.write_data_file(self.cutadapt_data, 'multiqc_cutadapt')
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
@@ -81,6 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.cutadapt_length_obsexp[s_name] = dict()
             
             if s_name is not None:
+                self.add_data_source(f, s_name)
                 # Search regexes for overview stats
                 for k, r in regexes.items():
                     match = re.search(r, l)
@@ -116,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
         headers['percent_trimmed'] = {
-            'title': 'Trimmed',
+            'title': '% Trimmed',
             'description': '% Total Base Pairs trimmed',
             'max': 30,
             'min': 0,

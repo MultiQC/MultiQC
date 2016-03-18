@@ -4,14 +4,11 @@
 """ Submodule to handle code for Qualimap BamQC """
 
 from __future__ import print_function
-from collections import OrderedDict
 import io
 import logging
 import os
 
-from collections import defaultdict
-
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -24,15 +21,17 @@ def parse_reports(self):
     self.qualimap_bamqc_genome_fraction_cov = dict()
     self.qualimap_bamqc_gc_content_dist = dict()
     
+    sp = config.sp['qualimap']['bamqc']
+    
     # Find QualiMap reports
     for directory in config.analysis_dir:
         for root, dirnames, filenames in os.walk(directory, followlinks=True):
-            raw_data_dir = 'raw_data'
+            raw_data_dir = sp['raw_data']
             for d in dirnames:
                 if raw_data_dir in d:
                     raw_data_dir = d
-            if 'genome_results.txt' in filenames and raw_data_dir in dirnames:
-                with io.open(os.path.join(root, 'genome_results.txt'), 'r') as gr:
+            if sp['genome_results'] in filenames and raw_data_dir in dirnames:
+                with io.open(os.path.join(root, sp['genome_results']), 'r') as gr:
                     for l in gr:
                         
                         if 'bam file' in l:
@@ -47,10 +46,12 @@ def parse_reports(self):
                 
                 if s_name in self.qualimap_bamqc_coverage_hist:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(s_name=s_name, source=os.path.abspath(os.path.join(root, sp['genome_results'])), section='genome_results')
         
                 #### Coverage histogram
-                cov_report = os.path.join(root, raw_data_dir, 'coverage_histogram.txt')
+                cov_report = os.path.join(root, raw_data_dir, sp['coverage'])
                 if os.path.exists(cov_report):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(cov_report), section='coverage_histogram')
                     self.qualimap_bamqc_coverage_hist[s_name] = {}
                     with io.open(cov_report, 'r') as fh:
                         next(fh)
@@ -73,8 +74,9 @@ def parse_reports(self):
                 
                 
                 #### Insert size histogram
-                ins_size = os.path.join(root, raw_data_dir, 'insert_size_histogram.txt')
+                ins_size = os.path.join(root, raw_data_dir, sp['insert_size'])
                 if os.path.exists(ins_size):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(ins_size), section='insert_size_histogram')
                     self.qualimap_bamqc_insert_size_hist[s_name] = {}
                     zero_insertsize = 0
                     with io.open(ins_size, 'r') as fh:
@@ -101,8 +103,9 @@ def parse_reports(self):
                 
                 
                 #### Genome Fraction Coverage
-                frac_cov = os.path.join(root, raw_data_dir, 'genome_fraction_coverage.txt')
+                frac_cov = os.path.join(root, raw_data_dir, sp['genome_fraction'])
                 if os.path.exists(frac_cov):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(frac_cov), section='genome_fraction')
                     self.qualimap_bamqc_genome_fraction_cov[s_name] = {}
                     thirty_x_pc = 100
                     max_obs_x = 0
@@ -121,8 +124,9 @@ def parse_reports(self):
                 
                 
                 #### GC Distribution
-                gc_report = os.path.join(root, raw_data_dir, 'mapped_reads_gc-content_distribution.txt')
+                gc_report = os.path.join(root, raw_data_dir, sp['gc_dist'])
                 if os.path.exists(gc_report):
+                    self.add_data_source(s_name=s_name, source=os.path.abspath(gc_report), section='gc_distribution')
                     self.qualimap_bamqc_gc_content_dist[s_name] = {}
                     avg_gc = 0
                     with io.open(gc_report, 'r') as fh:

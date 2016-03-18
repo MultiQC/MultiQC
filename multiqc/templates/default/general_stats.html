@@ -11,8 +11,9 @@ This block generates the General Statistics table at the top of the report.
 <div id="general_stats">
 <h2>
   General Statistics &nbsp;
-  <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#general_stats_colsort_modal">Configure Columns</button>
-  <button type="button" class="btn btn-default btn-sm" id="mqc_genstat_sort_highlight" data-direction="desc" style="display:none;">Sort by highlight</button>
+  <button type="button" id="general_stats_copy_btn" class="btn btn-default btn-sm" data-clipboard-target="#general_stats_table"><span class="glyphicon glyphicon-copy"></span> Copy table</button>
+  <button type="button" id="general_stats_colsort_btn" class="btn btn-default btn-sm" data-toggle="modal" data-target="#general_stats_colsort_modal"><span class="glyphicon glyphicon-th"></span> Configure Columns</button>
+  <button type="button" class="btn btn-default btn-sm" id="mqc_genstat_sort_highlight" data-direction="desc" style="display:none;"><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight</button>
   <small id="genstat_numrows_text">Showing <span id="genstat_numrows">{{ report.general_stats_html['rows'].keys() | length }}</span> rows.</small>
 </h2>
 <div id="general_stats_table_container">
@@ -20,7 +21,6 @@ This block generates the General Statistics table at the top of the report.
     <table id="general_stats_table" class="table table-condensed mqc_table">
       <thead>
         <tr>
-          <td class="sorthandle">&nbsp;</td>
           <th class="rowheader">Sample Name</th>
           {%- for k, h in report.general_stats_html['headers'].items() %}
             {{ h }}
@@ -30,7 +30,6 @@ This block generates the General Statistics table at the top of the report.
       <tbody>
         {% for sn, r in report.general_stats_html['rows']|dictsort %}
         <tr>
-          <td class="sorthandle">||</td>
           <th class="rowheader" data-original-sn="{{ sn }}">{{ sn }}</th>
           {%- for k, h in report.general_stats_html['headers'].items() %}
             {{ r[k] if r[k] else '<td class="'+k+'"></td>' }}

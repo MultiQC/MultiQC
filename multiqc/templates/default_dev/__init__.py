@@ -21,6 +21,8 @@ import os
 
 template_parent = 'default'
 
+base64_plots = False
+
 template_dir = os.path.dirname(__file__)
 base_fn = 'base.html'
 

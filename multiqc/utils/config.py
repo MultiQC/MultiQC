@@ -3,10 +3,9 @@
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
 
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from datetime import datetime
 import inspect
-import logging
 import os
 import pkg_resources
 import random
@@ -14,8 +13,7 @@ import sys
 import yaml
 
 import multiqc
-from multiqc import (logger)
-from multiqc.utils.log import init_log, LEVELS
+from multiqc import logger
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
@@ -31,14 +29,29 @@ working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
 output_fn_name = 'multiqc_report.html'
-data_dir_name = 'multiqc_report_data'
+data_dir_name = 'multiqc_data'
 make_data_dir = True
-fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc' ]
-fn_ignore_files = ['.DS_Store']
+force = False
+zip_data_dir = False
+plots_force_flat = False
+plots_force_interactive = False
+plots_flat_numseries = 100
+data_format = 'tsv'
+data_format_extensions = {'tsv': 'txt', 'json': 'json', 'yaml': 'yaml'}
+fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup' ]
+fn_ignore_files = ['.DS_Store', '*.bam']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
+no_version_check = False
 num_datasets_plot_limit = 50
-log_filesize_limit = 1000000
+log_filesize_limit = 5000000
 
+#######################
+# Module fn search patterns
+#######################
+# Load here so that they can be overwritten by user configs
+searchp_fn = os.path.join( MULTIQC_DIR, 'utils', 'search_patterns.yaml')
+with open(searchp_fn) as f:
+    sp = yaml.load(f)
 
 #######################
 # Available modules
@@ -50,11 +63,11 @@ log_filesize_limit = 1000000
 # eg. FastQC is usually the first step, so should be last in this list.
 module_order = [
     # Post-alignment analysis results
-    'qualimap', 'featureCounts', 'picard', 'preseq',
+    'qualimap', 'featureCounts', 'picard', 'preseq', 'samblaster',
     # Alignment tool stats
-    'bismark', 'star', 'tophat', 'bowtie2', 'bowtie1',
+    'bismark', 'hicup', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
-    'cutadapt', 'fastq_screen', 'fastqc'
+    'cutadapt', 'skewer', 'fastq_screen', 'fastqc',
 ]
 
 # Get all modules, including those from other extension packages
@@ -107,28 +120,36 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
         the installation script (python setup.py install)")
     sys.exit(1)
 
-#######################
-# Overwrite defaults with config files
-#######################
-# Load and parse installation config file if we find it
-try:
-    yaml_config = os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml')
-    with open(yaml_config) as f:
-        config = yaml.load(f)
-        for c, v in config.items():
-            globals()[c] = v
-except (IOError, AttributeError):
-    pass
 
-# Load and parse a user config file if we find it
-try:
-    yaml_config = os.path.expanduser('~/.multiqc_config.yaml')
-    with open(yaml_config) as f:
-        config = yaml.load(f)
-        for c, v in config.items():
-            globals()[c] = v
-except (IOError, AttributeError):
-    pass
+# Load user config in a def. This is called by the main script after initialisation
+# This allows the plugin_hooks.mqc_trigger('config_loaded') hook to fire before the
+# defaults are overwritten.
+def mqc_load_userconfig():
+    """ Overwrite config defaults with user config files """
+    # Load and parse installation config file if we find it
+    mqc_load_config(os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml'))
+
+    # Load and parse a user config file if we find it
+    mqc_load_config(os.path.expanduser('~/.multiqc_config.yaml'))
+
+def mqc_load_config(yaml_config):
+    """ Load and parse a config file if we find it """
+    try:
+        with open(yaml_config) as f:
+            config = yaml.load(f)
+            logger.debug("Loading config settings from: {}".format(yaml_config))
+            for c, v in config.items():
+                if c == 'sp':
+                    # Merge filename patterns instead of replacing
+                    sp.update(v)
+                if c == 'extra_fn_clean_exts':
+                    # Merge filename cleaning patterns instead of replacing
+                    fn_clean_exts.update(v)
+                else:
+                    logger.debug("New config '{}': {}".format(c, v))
+                    globals()[c] = v
+    except (IOError, AttributeError):
+        logger.debug("No MultiQC user config found: {}".format(yaml_config))
 
 # These config vars are imported by all modules and can be updated by anything.
 # The main launcher (scripts/multiqc) overwrites some of these variables

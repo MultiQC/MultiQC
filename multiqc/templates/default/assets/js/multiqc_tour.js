@@ -55,9 +55,10 @@ var tour_steps = [
     content: "Click a header to sort by that column, shift-click to sort by multiple."
   },
   {
-    element: "#general_stats_table tbody tr:first-child td:first-child",
-    title: "Reorder rows",
-    content: "Drag the handle on any row to rearrange."
+    element: "#general_stats_colsort_btn",
+    title: "Configure columns",
+    backdropPadding: 5,
+    content: "Click here to hide / show / reorder columns."
   },
   {
     element: ".hc-line-plot:first",
@@ -83,18 +84,6 @@ var tour_steps = [
     title: "Resize Plots",
     content: "Drag the grey bar below plots to change their height.",
     backdropPadding: 10,
-  },
-  {
-    element: ".highcharts-button:first path",
-    title: "Export Plots",
-    placement: 'left',
-    backdropPadding: {
-      'top': 5,
-      'left': 5,
-      'bottom': 35,
-      'right': 35,
-    },
-    content: "Plots can be exported in a range of formats (including <code>svg</code> and <code>pdf</code>, suitable for publications).",
     onHide: function (tour) { $('.mqc-toolbox').css('z-index', orig_z_index); }
   },
 
@@ -126,10 +115,17 @@ var tour_steps = [
     onShow: function (tour) { mqc_toolbox_openclose('#mqc_hidesamples', true); },
   },
   {
+    element: ".mqc-toolbox-buttons a[href=#mqc_exportplots]",
+    placement: 'left',
+    title: "Export Plots",
+    content: "Plots can be exported in a range of formats (including <code>svg</code>, suitable for publications).",
+    onShow: function (tour) { mqc_toolbox_openclose('#mqc_exportplots', true); },
+  },
+  {
     element: ".mqc-toolbox-buttons a[href=#mqc_saveconfig]",
     placement: 'left',
     title: "Save Config",
-    content: "You can save your configuration for this report, or as a default for all reports. You can also share your set up with others via a downloaded file.",
+    content: "You can save your configuration for future use here.",
     onShow: function(tour) { mqc_toolbox_openclose('#mqc_saveconfig', true); },
     onHide: function (tour) {
       mqc_toolbox_openclose('#mqc_saveconfig', false);

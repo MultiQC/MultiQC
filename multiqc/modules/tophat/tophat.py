@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import io
 import logging
 import os
 import re
@@ -26,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Tophat reports
         self.tophat_data = dict()
-        for f in self.find_log_files('align_summary.txt'):
+        for f in self.find_log_files(config.sp['tophat']):
             parsed_data = self.parse_tophat_log(f['f'])
             if parsed_data is not None:
                 if f['s_name'] == "align_summary.txt":
@@ -36,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = self.clean_s_name(s_name, f['root'])
                 if s_name in self.tophat_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
 
         if len(self.tophat_data) == 0:
@@ -45,9 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.tophat_data)))
 
         # Write parsed report data to a file
-        self.write_csv_file(self.tophat_data, 'multiqc_tophat.txt')
-
-        self.sections = list()
+        self.write_data_file(self.tophat_data, 'multiqc_tophat.txt')
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
@@ -67,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
             'aligned_total': r"Aligned pairs:\s+(\d+)",
             'aligned_multimap': r"Aligned pairs:\s+\d+\n\s+of these:\s+(\d+)",
             'aligned_discordant': r"(\d+) \([\s\d\.]+%\) are discordant alignments",
-            'total_reads': r"[Rr]eads:\n\s+Input\s+:\s+(\d+)",
+            'total_reads': r"[Rr]eads:\n\s+Input\s*:\s+(\d+)",
         }
         parsed_data = {}
         for k, r in regexes.items():

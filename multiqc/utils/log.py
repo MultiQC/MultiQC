@@ -1,45 +1,62 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
+"""
+Code to initilise the MultiQC logging
+"""
+
 import logging
+import os
+import shutil
+import tempfile
+
+from multiqc.utils import config
 
 LEVELS = {0: 'INFO', 1: 'DEBUG'}
+log_tmp_dir = tempfile.mkdtemp()
+log_tmp_fn = os.path.join(log_tmp_dir, '.multiqc.log')
 
-
-def init_log(logger, filename=None, loglevel=None):
+def init_log(logger, loglevel=0):
     """
-    Initializes the log file in the proper format.
+    Initializes logging.
+    Prints logs to console with level defined by loglevel
+    Also prints verbose log to the multiqc data directory if available.
+    (multiqc_data/.multiqc_log)
 
     Args:
-        filename (str): Path to a file. Or None if logging is to
-                        be disabled.
         loglevel (str): Determines the level of the log output.
     """
-    if loglevel == 'DEBUG':
-        template = '[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s'
-    else:
-        template = '[%(levelname)-7s] %(module)15s : %(message)s'
-    formatter = logging.Formatter(template)
-
-    if loglevel:
-        logger.setLevel(getattr(logging, loglevel))
-
-    # We will always print warnings and higher to stderr
+    # Logging templates
+    debug_template = '[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s'
+    info_template = '[%(levelname)-7s] %(module)15s : %(message)s'
+    
+    # Base level setup
+    logger.setLevel(getattr(logging, 'DEBUG'))
+    
+    # Set up the console logging stream
     console = logging.StreamHandler()
-    console.setLevel('WARNING')
-    console.setFormatter(formatter)
-
-    if filename:
-        file_handler = logging.FileHandler(filename, encoding='utf-8')
-        if loglevel:
-            file_handler.setLevel(getattr(logging, loglevel))
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-    # If no logfile is provided we print all log messages that the user has
-    # defined to stderr
+    console.setLevel(getattr(logging, loglevel))
+    if loglevel == 'DEBUG':
+        console.setFormatter(logging.Formatter(debug_template))
     else:
-        if loglevel:
-            console.setLevel(getattr(logging, loglevel))
-
+        console.setFormatter(logging.Formatter(info_template))
     logger.addHandler(console)
+    
+    # Now set up the file logging stream if we have a data directory
+    file_handler = logging.FileHandler(log_tmp_fn, encoding='utf-8')
+    file_handler.setLevel(getattr(logging, 'DEBUG')) # always DEBUG for the file
+    file_handler.setFormatter(logging.Formatter(debug_template))
+    logger.addHandler(file_handler)
+
+
+def copy_tmp_log():
+    """ Copy the temporary log file to the MultiQC data directory
+    if it exists. """
+    
+    try:
+        shutil.copyfile(log_tmp_fn, os.path.join(config.data_dir, '.multiqc.log'))
+        shutil.rmtree(log_tmp_dir)
+    except (AttributeError, TypeError, IOError):
+        pass
 
 
 def get_log_stream(logger):
