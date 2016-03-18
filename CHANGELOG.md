@@ -3,6 +3,7 @@
 #### v0.5dev
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
+* New [Samtools stats](http://www.htslib.org/) module, written by @lpantano
 * New [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) module
 * New "Flat" image plots, rendered at run time with MatPlotLib
   * By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)

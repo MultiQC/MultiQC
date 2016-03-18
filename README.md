@@ -117,5 +117,6 @@ Many thanks to those who have helped out with with project.
 * Early code refactoring help: @moonso
 * Early version of Qualimap module: @guillermo-carrasco
 * Skewer and Samblaster modules: @dakl
+* Samtools stats module: @lpantano
 * Tweaks / core help: @robinandeer and @avilella
 

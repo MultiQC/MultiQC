@@ -17,11 +17,11 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='samtools',
-        anchor='samtools', target='samtools',
+        super(MultiqcModule, self).__init__(name='Samtools',
+        anchor='Samtools', target='Samtools',
         href='http://www.htslib.org',
-        info="Samtools is a suite of programs for interacting"\
-        " with high-throughput sequencing data.")
+        info=" is a suite of programs for interacting with high-throughput sequencing data." \
+             " This module parses the output from <code>samtools stats</code>.")
         self.samtools_data = dict()
         for f in self.find_log_files(config.sp['samtools']):
             s_name = f['s_name']
@@ -42,7 +42,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.samtools_data, 'multiqc_samtools')
 
         # Basic Stats Table
-        # Report table is immutable, so just updating it works
         self.samtools_stats_table()
 
         # Add the submodule results to the report output
@@ -61,44 +60,38 @@ class MultiqcModule(BaseMultiqcModule):
                 for metric in self.samtools_data[s_name]:
                     if metric.startswith("reads"):
                         reads_cats.append(metric)
-                    elif metric.startswith("bases"):
+                    elif metric.startswith("bases") and metric != "bases mapped":
                         bases_cats.append(metric)
                     elif metric.find("pairs") > -1:
                         pairs_cats.append(metric)
                 break
             reads_pconfig = {
-                'title': 'Reads statistics',
-                'cpswitch': False,
-                'cpswitch_c_active': True,
-                'stacking': 'normal',
+                'title': 'Read Statistics',
+                'cpswitch': False
             }
             bases_pconfig= {
-                'title': 'Bases statistics',
-                'cpswitch': False,
-                'cpswitch_c_active': True,
-                'stacking': 'normal',
+                'title': 'Base Statistics',
+                'cpswitch': False
             }
             pairs_pconfig = {
-                'title': 'Pairs statistics',
-                'cpswitch': False,
-                'cpswitch_c_active': True,
-                'stacking': 'normal',
+                'title': 'Pair Statistics',
+                'cpswitch': False
             }
             self.sections.append({
-                'name': 'Reads mapping statistics',
-                'anchor': 'samtools-mapping-statistics',
+                'name': 'Reads Mapping',
+                'anchor': 'samtools-mapping',
                 'content': self.plot_bargraph(self.samtools_data, reads_cats, reads_pconfig)
             })
             self.sections.append({
-                'name': 'Bases mapping statistics',
-                'anchor': 'samtools-bases-statistics',
+                'name': 'Bases Mapping',
+                'anchor': 'samtools-bases',
                 'content': self.plot_bargraph(self.samtools_data, bases_cats, bases_pconfig)
             })
             # only if data
             if any([any([self.samtools_data[k][v] > 0 for v in pairs_cats]) for k in self.samtools_data]):
                 self.sections.append({
-                    'name': 'Reads pairs statistics',
-                    'anchor': 'samtools-pairs-statistics',
+                    'name': 'Read Pairs',
+                    'anchor': 'samtools-pairs',
                     'content': self.plot_bargraph(self.samtools_data, pairs_cats, pairs_pconfig)
                 })
 
