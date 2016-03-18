@@ -42,11 +42,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.star_data, 'multiqc_star')
 
         # Basic Stats Table
-        # Report table is immutable, so just updating it works
         self.star_stats_table()
 
-        # Alignment bar plot
-        # Only one section, so add to the intro
+        # Alignment bar plot - only one section, so add to the module intro
         self.intro += self.star_alignment_chart()
 
 

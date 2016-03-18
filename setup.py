@@ -60,6 +60,7 @@ setup(
         'multiqc.modules.v1': [
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',

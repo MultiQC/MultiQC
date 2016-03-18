@@ -478,7 +478,7 @@ and graph labels:
 config = {
     'data_labels': [
         {'name': 'Reads', 'ylab': 'Number of Reads'},
-        {'name': 'Frags', 'ylab': 'Percentage of Fragments'}
+        {'name': 'Frags', 'ylab': 'Percentage of Fragments', 'ymax':100}
     ]
 }
 ```
