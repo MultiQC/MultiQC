@@ -5,12 +5,10 @@
 from __future__ import print_function
 import base64
 from collections import OrderedDict
-import fnmatch
 import io
 import json
 import logging
 import math
-import mimetypes
 import os
 import random
 
@@ -47,7 +45,7 @@ class BaseMultiqcModule(object):
         :param filehandles: Set to true to return a file handle instead of slurped file contents
         :return: Yields a set with two items - a sample name generated from the filename
                  and either the file contents or file handle for the current matched file.
-                 As yield is used, the function can be iterated over without 
+                 As yield is used, the results can be iterated over without loading all files at once
         """
         
         # Get the search parameters
@@ -60,34 +58,13 @@ class BaseMultiqcModule(object):
         if fn_match == None and contents_match == None:
             logger.warning("No file patterns specified for find_log_files")
             yield None
-        
-        # Step 1 - make a list of files to search
-        files = list()
-        for directory in config.analysis_dir:
-            if os.path.isdir(directory):
-                for root, dirnames, filenames in os.walk(directory, followlinks=True):
-                    for fn in filenames:
-                        files.append({
-                            'root': root,
-                            'fn': fn
-                        })
-            elif os.path.isfile(directory):
-                files.append({
-                    'root': os.path.dirname(directory),
-                    'fn': os.path.basename(directory)
-                })
                 
-        # Step 2 - loop through files, yield results if we find something
-        for f in files:
+        # Loop through files, yield results if we find something
+        for f in report.files:
             
             # Set up vars
             root = f['root']
             fn = f['fn']
-            
-            # Ignore files set in config
-            i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
-            if len(i_matches) > 0:
-                continue
             
             # Make a sample name from the filename
             s_name = self.clean_s_name(fn, root)
@@ -99,36 +76,15 @@ class BaseMultiqcModule(object):
                 contents_match = [contents_match]
             
             # Search for file names ending in a certain string
-            readfile = False
             fn_matched = False
             if fn_match is not None:
                 for m in fn_match:
                     if m in fn:
-                        readfile = True
                         fn_matched = True
-                        break
+                        if not filehandles and not filecontents:
+                            yield {'s_name': s_name, 'root': root, 'fn': fn}
             
-            if contents_match is not None and readfile is False:
-                
-                # Use mimetypes to exclude binary files where possible
-                (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-                if encoding is not None:
-                    continue
-                if ftype is not None and ftype.startswith('text') is False:
-                    continue
-                
-                # Limit search to files under 1MB to avoid 30GB FastQ files etc.
-                try:
-                    filesize = os.path.getsize(os.path.join(root,fn))
-                except (IOError, OSError, ValueError, UnicodeDecodeError):
-                    logger.debug("Couldn't read file when checking filesize: {}".format(fn))
-                else:
-                    if filesize > config.log_filesize_limit:
-                        logger.debug("Ignoring file as too large: {}".format(fn))
-                    else:
-                        readfile = True
-            
-            if readfile:
+            if fn_matched or contents_match is not None:
                 try:
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
                         
@@ -144,16 +100,12 @@ class BaseMultiqcModule(object):
                         else:
                             returnfile = True
                         
-                        # Give back what was asked for. Yield instead of return
-                        # so that this function can be used as an interator
-                        # without loading all files at once.
                         if returnfile:
                             if filehandles:
                                 yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
                             elif filecontents:
                                 yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
-                            else:
-                                yield {'s_name': s_name, 'root': root, 'fn': fn}
+
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     logger.debug("Couldn't read file when looking for output: {}".format(fn))
     

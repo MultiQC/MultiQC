@@ -39,11 +39,11 @@ plots_flat_numseries = 100
 data_format = 'tsv'
 data_format_extensions = {'tsv': 'txt', 'json': 'json', 'yaml': 'yaml'}
 fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup' ]
-fn_ignore_files = ['.DS_Store']
+fn_ignore_files = ['.DS_Store', '*.bam']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 no_version_check = False
 num_datasets_plot_limit = 50
-log_filesize_limit = 1000000
+log_filesize_limit = 5000000
 
 #######################
 # Module fn search patterns

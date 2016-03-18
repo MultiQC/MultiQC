@@ -6,8 +6,10 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import fnmatch
 import io
 import json
+import mimetypes
 import os
 import yaml
 
@@ -23,6 +25,7 @@ try:
 except NameError:
     pass # Python 3
 
+# Set up global variables shared across modules
 general_stats = OrderedDict()
 general_stats_html = {
     'headers': OrderedDict(),
@@ -32,6 +35,52 @@ general_stats_raw = defaultdict(lambda:OrderedDict())
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
 num_hc_plots = 0
 num_mpl_plots = 0
+
+# Make a list of files to search
+files = list()
+def get_filelist():
+    
+    def add_file(fn, root):
+        
+        # Check that we don't want to ignore this file
+        i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
+        if len(i_matches) > 0:
+            logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
+            return None
+    
+        # Use mimetypes to exclude binary files where possible
+        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
+        if encoding is not None:
+            logger.debug("Ignoring file as is encoded: {}".format(fn))
+            return None
+        if ftype is not None and ftype.startswith('image'):
+            logger.debug("Ignoring file as has filetype '{}': {}".format(ftype, fn))
+            return None
+        
+        # Limit search to files under 5MB to avoid 30GB FastQ files etc.
+        try:
+            filesize = os.path.getsize(os.path.join(root,fn))
+        except (IOError, OSError, ValueError, UnicodeDecodeError):
+            logger.debug("Couldn't read file when checking filesize: {}".format(fn))
+        else:
+            if filesize > config.log_filesize_limit:
+                logger.debug("Ignoring file as too large: {}".format(fn))
+                return None
+        
+        # Looks good! Remember this file
+        files.append({
+            'root': root,
+            'fn': fn
+        })
+    
+    # Go through the analysis directories
+    for directory in config.analysis_dir:
+        if os.path.isdir(directory):
+            for root, dirnames, filenames in os.walk(directory, followlinks=True):
+                for fn in filenames:
+                    add_file(fn, root)
+        elif os.path.isfile(directory):
+            add_file(os.path.basename(directory), os.path.dirname(directory))
 
 
 def general_stats_build_table():
