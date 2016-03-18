@@ -28,7 +28,9 @@ fastqc:
     zip:
         fn: '*_fastqc.zip'
 featurecounts:
-    fn: '*_counts.txt.summary'
+    fn:
+        - '*counts.summary'
+        - '*_counts.txt.summary'
 hicup:
     fn: 'HiCUP_summary_report*'
 methylQA:
@@ -66,3 +68,5 @@ skewer:
     contents: 'COMMAND LINE:	skewer'
 samblaster:
     contents: 'samblaster: Version'
+samtools:
+    contents: 'This file was produced by samtools stats'

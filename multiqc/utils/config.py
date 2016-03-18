@@ -38,7 +38,7 @@ plots_force_interactive = False
 plots_flat_numseries = 100
 data_format = 'tsv'
 data_format_extensions = {'tsv': 'txt', 'json': 'json', 'yaml': 'yaml'}
-fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup' ]
+fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup', '.counts', '_counts', '.txt' ]
 fn_ignore_files = ['.DS_Store', '*.bam']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 no_version_check = False
@@ -63,7 +63,7 @@ with open(searchp_fn) as f:
 # eg. FastQC is usually the first step, so should be last in this list.
 module_order = [
     # Post-alignment analysis results
-    'qualimap', 'featureCounts', 'methylQA', 'picard', 'preseq', 'samblaster',
+    'qualimap', 'featureCounts', 'methylQA', 'picard', 'preseq', 'samblaster', 'samtools',
     # Alignment tool stats
     'bismark', 'hicup', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
