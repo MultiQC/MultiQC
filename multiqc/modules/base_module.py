@@ -9,6 +9,7 @@ import fnmatch
 import io
 import json
 import logging
+import math
 import mimetypes
 import os
 import random
@@ -800,7 +801,8 @@ class BaseMultiqcModule(object):
                     default_xlimits = axes.get_xlim()
                     axes.set_xlim((pconfig.get('ymin', default_xlimits[0]),pconfig.get('ymax', default_xlimits[1])))
                 if 'title' in pconfig:
-                    plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
+                    top_gap = 1 + (0.5 / plt_height)
+                    plt.text(0.5, top_gap, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
                 axes.grid(True, zorder=0, which='both', axis='x', linestyle='-', color='#dedede', linewidth=1)
                 axes.set_axisbelow(True)
                 axes.spines['right'].set_visible(False)
@@ -809,11 +811,15 @@ class BaseMultiqcModule(object):
                 axes.spines['left'].set_visible(False)
                 plt.gca().invert_yaxis() # y axis is reverse sorted otherwise
                 
-                # Legend
-                lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+                # Hide some labels if we have a lot of samples
+                show_nth = max(1, math.ceil(len(pdata[0]['data'])/150))
+                for idx, label in enumerate(axes.get_yticklabels()):
+                    if idx % show_nth != 0:
+                        label.set_visible(False)
                 
-                # Tight layout - makes sure that legend fits in and stuff
-                plt.tight_layout(rect=[0,0.08,1,0.92])
+                # Legend
+                bottom_gap = -1 * (1 - ((plt_height - 1.5) / plt_height))
+                lgd = axes.legend(dlabels, loc='lower center', bbox_to_anchor=(0, bottom_gap, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
                 
                 # Should this plot be hidden on report load?
                 hidediv = ''
@@ -823,7 +829,7 @@ class BaseMultiqcModule(object):
                 # Output the figure to a base64 encoded string
                 if getattr(self.template_mod, 'base64_plots', True) is True:
                     img_buffer = io.BytesIO()
-                    fig.savefig(img_buffer, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+                    fig.savefig(img_buffer, format='png', bbox_inches='tight')
                     b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
                     img_buffer.close()
                     html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)

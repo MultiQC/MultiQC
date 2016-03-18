@@ -193,6 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
                     cats.append(org)
         
         pconfig = {
+            'title': 'FastQ Screen',
             'cpswitch': False,
             'ylab_format': '{value}%',
             'tt_percentages': False
