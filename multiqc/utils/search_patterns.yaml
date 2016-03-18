@@ -5,7 +5,7 @@
 
 bismark:
     align:
-        fn: '*_{S,P}E_report.txt'
+        fn: '*_[SP]E_report.txt'
         # contents: Writing a C -> T converted version of the input file
     dedup:
         fn: '*.deduplication_report.txt'
@@ -57,9 +57,9 @@ qualimap:
         rnaseq_results: rnaseq_qc_results.txt
         coverage: coverage_profile_along_genes_(total).txt
 star:
-    fn: Log.final.out
+    fn: '*Log.final.out'
 tophat:
-    fn: align_summary.txt
+    fn: '*align_summary.txt'
 skewer:
     contents: 'COMMAND LINE:	skewer'
 samblaster:
