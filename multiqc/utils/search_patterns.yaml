@@ -31,6 +31,8 @@ featurecounts:
     fn: '*_counts.txt.summary'
 hicup:
     fn: 'HiCUP_summary_report*'
+methylQA:
+    fn: '*.report'
 picard:
     markdups:
         contents: picard.sam.MarkDuplicates

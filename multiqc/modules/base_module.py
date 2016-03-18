@@ -390,6 +390,13 @@ class BaseMultiqcModule(object):
             axes.set_xlabel(pconfig.get('xlab', ''))
             axes.set_ylabel(pconfig.get('ylab', ''))
             
+            # Dataset specific y label
+            try:
+                print('{} - {}'.format(pidx, pconfig['data_labels'][pidx]['ylab']))
+                axes.set_ylabel(pconfig['data_labels'][pidx]['ylab'])
+            except:
+                pass
+            
             # Axis limits
             default_ylimits = axes.get_ylim()
             ymin = default_ylimits[0]
@@ -405,6 +412,12 @@ class BaseMultiqcModule(object):
             if (ymax - ymin) < pconfig.get('yMinRange', 0):
                 ymax = ymin + pconfig['yMinRange']
             axes.set_ylim((ymin, ymax))
+            
+            # Dataset specific ymax
+            try:
+                axes.set_ylim((ymin, pconfig['data_labels'][pidx]['ymax']))
+            except:
+                pass
             
             default_xlimits = axes.get_xlim()
             xmin = default_xlimits[0]
