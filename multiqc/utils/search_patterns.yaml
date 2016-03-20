@@ -60,6 +60,8 @@ qualimap:
         raw_data: raw_data
         rnaseq_results: rnaseq_qc_results.txt
         coverage: coverage_profile_along_genes_(total).txt
+snpeff:
+    fn: '*snpEff.summary.csv'
 star:
     fn: '*Log.final.out'
 tophat:

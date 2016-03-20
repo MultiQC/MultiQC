@@ -93,10 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.methylqa_coverage_counts[s_name] = hist['counts']
             self.methylqa_coverage_percentages[s_name] = hist['percentages']
         
-        if len(parsed_data) == 0:
-            return None
-        
-        if parsed_data is not None:
+        if len(parsed_data) > 0:
             if s_name in self.methylqa_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name)

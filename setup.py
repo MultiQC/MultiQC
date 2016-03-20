@@ -75,6 +75,7 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
+            'snpeff = multiqc.modules.snpeff:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
