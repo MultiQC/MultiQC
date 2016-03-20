@@ -112,10 +112,10 @@ class MultiqcModule(BaseMultiqcModule):
         getCats = True
         data = list()
         p_types = OrderedDict()
-        p_types['multiple_hits_multiple_libraries'] = {'col': '#7f0000', 'name': 'Multiple Hits, Multiple Libraries' }
-        p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Libraries' }
-        p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Library' }
-        p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Library' }
+        p_types['multiple_hits_multiple_libraries'] = {'col': '#7f0000', 'name': 'Multiple Hits, Multiple Genomes' }
+        p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Genomes' }
+        p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Genome' }
+        p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Genome' }
         for k, t in p_types.items():
             first = True
             for s in sorted(self.fq_screen_data.keys()):
