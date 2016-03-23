@@ -105,10 +105,12 @@ config = {
     yDecimals: true,            // Set to false to only show integer labels
     ylab_format: undefined,     // Format string for x axis labels. Defaults to {value}
     stacking: 'normal',         // Set to null to have category bars side by side (None in python)
+    xtype: 'linear',            // Axis type. 'linear' or 'logarithmic'
     use_legend: true,           // Show / hide the legend
     click_func: undefined,      // Javascript function to be called when a point is clicked
     cursor: undefined,          // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
     tt_percentages: true,       // Show the percentages of each count in the tooltip
+    reversedStacks: false,      // Reverse the order of the categories in the stack.
 }
 ```
 

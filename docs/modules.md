@@ -453,6 +453,9 @@ config = {
     'cpswitch_c_active': True,              # Initial display with 'Counts' specified? False for percentages.
     'cpswitch_counts_label': 'Counts',      # Label for 'Counts' button
     'cpswitch_percent_label': 'Percentages' # Label for 'Percentages' button
+    'logswitch': False,                     # Show the 'Log10' switch?
+    'logswitch_active': False,              # Initial display with 'Log10' active?
+    'logswitch_label': 'Log10',             # Label for 'Log10' button
     # Customising the plot
     'title': None,                          # Plot title
     'xlab': None,                           # X axis label
@@ -546,6 +549,7 @@ config = {
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
+    'reversedStacks': False      # Reverse the order of the category stacks. Defaults True for plots with Log10 option
 }
 html_content = self.plot_xy_data(data, config)
 ```

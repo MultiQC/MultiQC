@@ -82,6 +82,12 @@ $(function () {
       var sym = (action == 'set_percent') ? '%' : '#';
       var stack_type = (action == 'set_percent') ? 'percent' : 'normal';
       mqc_plots[target]['config']['stacking'] = stack_type;
+      mqc_plots[target]['config']['ytype'] = 'linear';
+      plot_graph(target);
+    }
+    // Switch to log10 axis
+    if(action == 'set_log'){
+      mqc_plots[target]['config']['ytype'] = 'logarithmic';
       plot_graph(target);
     }
     // Switch data source
@@ -295,8 +301,9 @@ function plot_stacked_bar_graph(target, ds){
   }
   var config = mqc_plots[target]['config'];
   if(ds === undefined){ ds = 0; }
-  
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
+  if (config['ytype'] === undefined){ config['ytype'] = 'linear'; }
+  if (config['reversedStacks'] === undefined){ config['reversedStacks'] = false; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
@@ -307,6 +314,15 @@ function plot_stacked_bar_graph(target, ds){
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
   var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
+  
+  if (config['ytype'] == 'logarithmic'){
+    if(config['ymin'] == 0 || config['ymin'] == undefined){
+      config['ymin'] = 1;
+    }
+    var minTickInt = 'auto';
+  } else {
+    var minTickInt = undefined;
+  }
   
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
@@ -392,7 +408,7 @@ function plot_stacked_bar_graph(target, ds){
       min: 0,
       title: {
         text: config['xlab']
-      }
+      },
     },
     yAxis: {
       title: {
@@ -400,11 +416,13 @@ function plot_stacked_bar_graph(target, ds){
       },
       max: config['ymax'],
       min: config['ymin'],
+      type: config['ytype'],
       labels: {
         format: config['ylab_format']
       },
       allowDecimals: config['yDecimals'],
-      reversedStacks: false
+      reversedStacks: config['reversedStacks'],
+      minorTickInterval: minTickInt
     },
     plotOptions: {
       series: {

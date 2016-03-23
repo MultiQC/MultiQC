@@ -20,10 +20,12 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='SnpEff', anchor='snpeff',
-                                            href="http://snpeff.sourceforge.net/",
-                                            info=" is a tool to annotate SNPs.")
+            href="http://snpeff.sourceforge.net/",
+            info=" is a genetic variant annotation and effect prediction toolbox. " \
+                 "It annotates and predicts the effects of variants on genes (such as amino acid changes). ")
 
         self.snpeff_data = dict()
+        self.snpeff_qualities = dict()
 
         for f in self.find_log_files(config.sp['snpeff'], filehandles=True):
             self.parse_snpeff_log(f)
@@ -43,10 +45,31 @@ class MultiqcModule(BaseMultiqcModule):
         # Report sections
         self.sections = list()
         self.sections.append({
-            'name': 'Counts by effect',
+            'name': 'Effects by Impact',
+            'anchor': 'snpeff-effects-impact',
+            'content': self.effects_impact_plot()
+        })
+        self.sections.append({
+            'name': 'Effects by Class',
+            'anchor': 'snpeff-functional-class',
+            'content': self.effects_function_plot()
+        })
+        self.sections.append({
+            'name': 'Counts by Effect',
             'anchor': 'snpeff-effects',
             'content': self.count_effects_plot()
         })
+        self.sections.append({
+            'name': 'Counts by Genomic Region',
+            'anchor': 'snpeff-genomic-regions',
+            'content': self.count_genomic_region_plot()
+        })
+        if len(self.snpeff_qualities) > 0:
+            self.sections.append({
+                'name': 'Qualities',
+                'anchor': 'snpeff-qualities',
+                'content': self.qualities_plot()
+            })
     
 
     def parse_snpeff_log(self, f):
@@ -72,7 +95,25 @@ class MultiqcModule(BaseMultiqcModule):
                 section = l
                 continue
             s = l.split(',')
-            if section in keys:
+            
+            # Quality values / counts
+            if section == '# Quality':
+                quals = OrderedDict()
+                if l.startswith('Values'):
+                    values = [int(c) for c in l.split(',')[1:] ]
+                    counts = f['f'].readline()
+                    counts = [int(c) for c in counts.split(',')[1:] ]
+                    c = 0
+                    total = sum(counts)
+                    for i, v in enumerate(values):
+                        if c < (total * 0.995):
+                            quals[v] = counts[i]
+                            c += counts[i]
+                if len(quals) > 0:
+                    self.snpeff_qualities[f['s_name']] = quals
+            
+            # Everything else
+            elif section in keys:                    
                 if keys[section] == 'all' or any([k in s[0].strip() for k in keys[section]]):
                     try:
                         parsed_data[ s[0].strip() ] = float(s[1].strip())
@@ -111,9 +152,45 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.snpeff_data, headers)
     
-    def count_effects_plot(self):
-        """ Generate the HiCUP Truncated reads plot """    
+    def effects_impact_plot(self):
+        # Choose the categories to ply
+        keys = [ 'MODIFIER', 'LOW', 'MODERATE', 'HIGH' ]
         
+        # Make nicer label names
+        pkeys = OrderedDict()
+        for k in keys:
+            pkeys[k] = {'name': k.title() }
+        
+        # Config for the plot
+        pconfig = {
+            'title': 'SnpEff: Counts by Genomic Region',
+            'ylab': '# Reads',
+            'logswitch': True
+        }
+        
+        return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+        
+    def effects_function_plot(self):
+        # Choose the categories to ply
+        keys = [ 'SILENT', 'MISSENSE', 'NONSENSE' ]
+        
+        # Make nicer label names
+        pkeys = OrderedDict()
+        for k in keys:
+            pkeys[k] = {'name': k.title() }
+        
+        # Config for the plot
+        pconfig = {
+            'title': 'SnpEff: Counts by Genomic Region',
+            'ylab': '# Reads',
+            'logswitch': True
+        }
+        
+        return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+        
+    
+    
+    def count_effects_plot(self):        
         # Choose the categories to ply
         keys = [
             '3_prime_UTR_variant',
@@ -151,8 +228,64 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         pconfig = {
-            'title': 'SnpEff: Count by effects',
+            'title': 'SnpEff: Counts by Effect',
             'ylab': '# Reads',
+            'logswitch': True
         }
         
         return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+    
+    def count_genomic_region_plot(self):
+        """ Generate the HiCUP Truncated reads plot """    
+        
+        # Choose the categories to ply
+        keys = [
+            'DOWNSTREAM',
+            'EXON',
+            'INTERGENIC',
+            'INTRON',
+            'MOTIF',
+            'NONE',
+            'SPLICE_SITE_ACCEPTOR',
+            'SPLICE_SITE_DONOR',
+            'SPLICE_SITE_REGION',
+            'TRANSCRIPT',
+            'UPSTREAM',
+            'UTR_3_PRIME',
+            'UTR_5_PRIME',
+        ]
+        
+        # Sort the keys based on the first dataset
+        for s_name in self.snpeff_data:
+            sorted_keys = sorted(keys, reverse=True, key=self.snpeff_data[s_name].__getitem__)
+            break
+        
+        # Make nicer label names
+        pkeys = OrderedDict()
+        for k in sorted_keys:
+            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
+        
+        # Config for the plot
+        pconfig = {
+            'title': 'SnpEff: Counts by Genomic Region',
+            'ylab': '# Reads',
+            'logswitch': True
+        }
+        
+        return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+    
+    
+    def qualities_plot(self):
+        """ Generate the qualities plot """
+        
+        pconfig = {
+            'id': 'snpeff_qualities',
+            'title': 'SnpEff: Qualities',
+            'ylab': 'Values',
+            'xlab': 'Count',
+            'xDecimals': False,
+            'ymin': 0
+        }
+        
+        return self.plot_xy_data(self.snpeff_qualities, pconfig)
+    

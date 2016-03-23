@@ -584,21 +584,32 @@ class BaseMultiqcModule(object):
             pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
         html = '<div class="mqc_hcplot_plotgroup">'
         
-        # Counts / Percentages Switch
-        if pconfig.get('cpswitch') is not False:
+        # Counts / Percentages / Log Switches
+        if pconfig.get('cpswitch') is not False or pconfig.get('logswitch') is True:
             if pconfig.get('cpswitch_c_active', True) is True:
                 c_active = 'active'
                 p_active = ''
+                l_active = ''
+            elif pconfig.get('logswitch_active') is True:
+                c_active = ''
+                p_active = ''
+                l_active = 'active'
             else:
                 c_active = ''
                 p_active = 'active'
+                l_active = ''
                 pconfig['stacking'] = 'percent'
             c_label = pconfig.get('cpswitch_counts_label', 'Counts')
             p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
-            html += '<div class="btn-group hc_switch_group"> \n\
-    			<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n\
-    			<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n\
-    		</div> '.format(id=pconfig['id'], c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
+            l_label = pconfig.get('logswitch_label', 'Log10')
+            html += '<div class="btn-group hc_switch_group"> \n'
+            html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n'.format(id=pconfig['id'], c_a=c_active, c_l=c_label)
+            if pconfig.get('cpswitch', True) is True:
+                html += '<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n'.format(id=pconfig['id'], p_a=p_active, p_l=p_label)
+            if pconfig.get('logswitch') is True:
+                html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}">{l_l}</button> \n'.format(id=pconfig['id'], l_a=l_active, l_l=l_label)
+                pconfig['reversedStacks'] = True
+            html += '</div> '
             if len(plotdata) > 1:
                 html += ' &nbsp; &nbsp; '
         
