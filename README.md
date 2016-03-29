@@ -50,6 +50,7 @@ Currently, supported tools include:
 * Post-alignment tools
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
+  * [Samtools stats](http://www.htslib.org)
   * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics, OxoGMetrics)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (BamQC, RNASeq)
