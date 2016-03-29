@@ -108,7 +108,8 @@ class BaseMultiqcModule(object):
                                 yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
 
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
-                    logger.debug("Couldn't read file when looking for output: {}".format(fn))
+                    if config.report_readerrors:
+                        logger.debug("Couldn't read file when looking for output: {}".format(fn))
     
     
     def clean_s_name(self, s_name, root):

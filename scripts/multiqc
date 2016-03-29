@@ -169,7 +169,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
         config.fn_ignore_files.extend(ignore)
     if filename == 'stdout':
         config.output_fn = sys.stdout
-        config.data_dir = None
+        logger.info("Printing report to stdout")
     else:
         if title is not None and filename == config.output_fn_name:
             filename = re.sub('[^\w\.-]', '', re.sub('[-\s]+', '-', title) ).strip()
@@ -181,6 +181,22 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
             config.data_dir_name = '{}_data'.format(filename)
         if not config.output_fn_name.endswith('.html'):
             config.output_fn_name = '{}.html'.format(config.output_fn_name)
+        
+        # Check that we're not going to overwrite anything before we run
+        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        if not config.force:
+            if os.path.exists(config.output_fn):
+                logger.error("MultiQC Report '{}' already exists.".format(os.path.relpath(config.output_fn)))
+                logger.info("Use -f or --force to overwrite existing reports")
+                sys.exit(1)
+            if config.make_data_dir == True and os.path.exists(config.data_dir):
+                logger.error("Output directory '{}' already exists.".format(os.path.relpath(config.data_dir)))
+                logger.info("Use -f or --force to overwrite existing reports")
+                sys.exit(1)
+        else:
+            logger.debug('Running in --force mode, will overwrite any existing reports.')
+            
     
     # Print some status updates
     if config.title is not None:
@@ -188,7 +204,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     if dirs:
         logger.info("Prepending directory to sample names")
     for d in config.analysis_dir:
-        logger.info("Searching   : {}".format(d))
+        logger.info("Searching '{}'".format(d))
     
     # Get the list of modules we want to run
     run_modules = config.avail_modules.keys()
@@ -203,54 +219,24 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
         sys.exit(1)
     logger.debug("Analysing modules: {}".format(', '.join(run_modules)))
     
+    # Create the temporary working directories
+    tmp_dir = tempfile.mkdtemp()
+    logger.debug('Using temporary directory for creating report: {}'.format(tmp_dir))
+    config.data_tmp_dir = os.path.join(tmp_dir, 'multiqc_data')
+    if filename != 'stdout' and config.make_data_dir == True:
+        config.data_dir = config.data_tmp_dir
+        os.makedirs(config.data_dir)
+    else:
+        config.data_dir = None
+    
     # Load the template
     template_mod = config.avail_templates[template].load()
-    tmp_dir = tempfile.mkdtemp()
-    logger.debug('Using temporary directory for rendering report: {}'.format(tmp_dir))
     
     # Add an output subdirectory if specified by template
     try:
         config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
     except AttributeError:
         pass # No subdirectory variable given
-    
-    # Final report path & data directory
-    if filename == 'stdout':
-        logger.info("Output      : stdout")
-    else:
-        # Check for existing reports and remove if -f was specified
-        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-        if os.path.exists(config.output_fn):
-            if config.force:
-                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
-                os.remove(config.output_fn)
-            else:
-                logger.error("MultiQC Report {} already exists.".format(config.output_fn))
-                logger.info("Use -f or --force to overwrite existing reports")
-                sys.exit(1)
-        logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
-        
-        # Now do the same for the data directory
-        if config.make_data_dir == False:
-            config.data_dir = None
-            logger.info("Data        : None")
-        else:
-            config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-            if os.path.exists(config.data_dir):
-                if config.force:
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
-                    shutil.rmtree(config.data_dir)
-                else:
-                    logger.error("Output directory {} already exists.".format(config.data_dir))
-                    logger.info("Use -f or --force to overwrite existing reports")
-                    sys.exit(1)
-
-            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
-
-            # Make the report directories
-            os.makedirs(config.data_dir)
-            if not os.path.exists(os.path.dirname(config.output_fn)):
-                os.makedirs(os.path.dirname(config.output_fn))
     
     
     # Get the list of files to search
@@ -296,8 +282,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     # Did we find anything?
     if len(report.modules_output) == 0:
         logger.warn("No analysis results found. Cleaning up..")
-        if config.data_dir is not None:
-            shutil.rmtree(config.data_dir)
+        shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
@@ -311,6 +296,48 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     if config.data_dir is not None:
         report.general_stats_tofile()
         report.data_sources_tofile()
+    
+    # Make the final report path & data directories
+    if filename != 'stdout':
+        # Check for existing reports and remove if -f was specified
+        # We repeat this check in case the output name has been altered since launch
+        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        if os.path.exists(config.output_fn):
+            if config.force:
+                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
+                os.remove(config.output_fn)
+            else:
+                logger.error("MultiQC Report {} already exists.".format(config.output_fn))
+                logger.info("Use -f or --force to overwrite existing reports")
+                shutil.rmtree(tmp_dir)
+                sys.exit(1)
+        # Make directories for report if not already existing
+        if not os.path.exists(os.path.dirname(config.output_fn)):
+            os.makedirs(os.path.dirname(config.output_fn))
+        logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+        
+        # Now do the same for the data directory
+        if config.make_data_dir == False:
+            logger.info("Data        : None")
+        else:
+            config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+            if os.path.exists(config.data_dir):
+                if config.force:
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                    shutil.rmtree(config.data_dir)
+                else:
+                    logger.error("Output directory {} already exists.".format(config.data_dir))
+                    logger.info("Use -f or --force to overwrite existing reports")
+                    shutil.rmtree(tmp_dir)
+                    sys.exit(1)
+            os.makedirs(config.data_dir)
+            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+            
+            # Modules have run, so data directory should be complete by now. Move its contents.
+            for f in os.listdir(config.data_tmp_dir):
+                fn = os.path.join(config.data_tmp_dir, f)
+                logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
+                shutil.move(fn, config.data_dir)
     
     plugin_hooks.mqc_trigger('before_template')
     
@@ -333,6 +360,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
             with io.open (os.path.join(fdir, name), "r", encoding='utf-8') as f:
                 return f.read()
     
+    # Load the report template
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
         env.globals['include_file'] = include_file

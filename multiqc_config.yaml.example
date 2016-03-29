@@ -2,7 +2,7 @@
 # Example MultiQC Configuration File
 #######################################
 
-# Note that this file can be saved either in the MultiQC installation
+# This file can be saved either in the MultiQC installation
 # directory, or as ~/.multiqc_config.yaml
 
 # Configuration settings are taken from the following locations, in order:
@@ -10,6 +10,9 @@
 # - <installation_dir>/multiqc_config.yaml
 # - ~/.multiqc_config.yaml
 # - Command line options
+
+# Note that all of the values below are set to the MultiQC defaults.
+# It's recommended that you delete any that you don't need.
 
 ---
 # Title to use for the report.
@@ -51,6 +54,10 @@ fn_ignore_files:
 # Ignore files larger than this when searcing for logs (bytes)
 log_filesize_limit: 1000000
 
+# MultiQC can save a DEBUG log message when it can't read a file. These are disabled
+# by default as they can be very verbose. Enable by setting to True for debugging.
+report_readerrors: False
+
 # Opt-out of remotely checking that you're running the latest version
 no_version_check: True
 
@@ -61,7 +68,7 @@ no_version_check: True
 # to prevent the browser being locked up when the report opens.
 plots_force_flat = False          # Try to use only flat image graphs
 plots_force_interactive = False   # Try to use only interactive javascript graphs
-plots_flat_numseries = 50         # If neither of the above, use flat if > this number of datasets
+plots_flat_numseries = 100        # If neither of the above, use flat if > this number of datasets
 num_datasets_plot_limit: 50       # If interactive, don't plot on load if > this number of datasets
 
 # Overwrite module filename search patterns. See multiqc/utils/search_patterns.yaml

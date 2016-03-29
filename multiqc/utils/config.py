@@ -44,6 +44,7 @@ report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuv
 no_version_check = False
 num_datasets_plot_limit = 50
 log_filesize_limit = 5000000
+report_readerrors = False
 
 #######################
 # Module fn search patterns
