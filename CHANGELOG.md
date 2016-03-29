@@ -1,5 +1,8 @@
 # MultiQC Version History
 
+#### v0.6dev
+_..nothing to see here yet.._
+
 #### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl

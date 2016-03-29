@@ -15,7 +15,7 @@
 
 # Welcome!
 
-## MultiQC v0.5 Documentation
+## MultiQC v0.6dev Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
