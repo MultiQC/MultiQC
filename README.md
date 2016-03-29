@@ -114,10 +114,10 @@ If in doubt, feel free to get in touch with the author:
 
 ### Contributors
 Many thanks to those who have helped out with with project.
-* Project lead and main author: @ewels
-* Early code refactoring help: @moonso
-* Early version of Qualimap module: @guillermo-carrasco
-* Skewer and Samblaster modules: @dakl
-* Samtools stats module: @lpantano
-* Tweaks / core help: @robinandeer and @avilella
+* Project lead and main author: [@ewels](https://github.com/ewels)
+* Early code refactoring help: [@moonso](https://github.com/moonso)
+* Early version of Qualimap module: [@guillermo-carrasco](https://github.com/guillermo-carrasco)
+* Skewer and Samblaster modules: [@dakl](https://github.com/dakl)
+* Samtools stats module: [@lpantano](https://github.com/lpantano)
+* Tweaks / core help: [@robinandeer](https://github.com/robinandeer) and [@avilella](https://github.com/avilella)
 
