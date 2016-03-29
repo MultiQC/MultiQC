@@ -1,10 +1,12 @@
 # MultiQC Version History
 
-#### v0.5dev
+#### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
 * New [Samtools stats](http://www.htslib.org/) module, written by @lpantano
 * New [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) module
+* New [SnpEff](http://snpeff.sourceforge.net/) module
+* New [methylQA](http://methylqa.sourceforge.net/) module
 * New "Flat" image plots, rendered at run time with MatPlotLib
   * By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)
   * Means that _very_ large numbers of samples can be viewed in reports. _eg._ single cell data.

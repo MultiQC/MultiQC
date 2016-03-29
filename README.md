@@ -30,8 +30,9 @@
 MultiQC is a tool to create a single report with interactive plots
 for multiple bioinformatics analyses across many samples.
 
-MultiQC is written in Python (tested with v2.7 / v3.4 / v3.5) and is
-available on the [Python Package Index](https://pypi.python.org/pypi/multiqc/).
+MultiQC is written in Python (tested with v2.7 / v3.4 / v3.5). It is
+available on the [Python Package Index](https://pypi.python.org/pypi/multiqc/)
+and through conda using [Bioconda](http://bioconda.github.io/).
 
 Currently, supported tools include:
 
@@ -53,7 +54,9 @@ Currently, supported tools include:
   * [Samtools stats](http://www.htslib.org)
   * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics, OxoGMetrics)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
+  * [methylQA](http://methylqa.sourceforge.net/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (BamQC, RNASeq)
+  * [SnpEff](http://snpeff.sourceforge.net/)
 
 More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log
