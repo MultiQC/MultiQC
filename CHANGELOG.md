@@ -1,7 +1,7 @@
 # MultiQC Version History
 
 #### v0.6dev
-_..nothing to see here yet.._
+* Bugfix: Made SnpEff less fussy about required fields for making plots
 
 #### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
