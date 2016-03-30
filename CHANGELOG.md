@@ -2,6 +2,7 @@
 
 #### v0.6dev
 * Bugfix: Made SnpEff less fussy about required fields for making plots
+* Bugfix: Extending two config variables wasn't working. Now fixed.
 
 #### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl

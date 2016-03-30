@@ -138,20 +138,23 @@ def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
     try:
         with open(yaml_config) as f:
-            config = yaml.load(f)
+            new_config = yaml.load(f)
             logger.debug("Loading config settings from: {}".format(yaml_config))
-            for c, v in config.items():
+            for c, v in new_config.items():
                 if c == 'sp':
                     # Merge filename patterns instead of replacing
-                    sp.update(v)
+                    sp.extend(v)
+                    logger.debug("Added to filename patterns: {}".format(sp))
                 if c == 'extra_fn_clean_exts':
                     # Merge filename cleaning patterns instead of replacing
-                    fn_clean_exts.update(v)
+                    fn_clean_exts.extend(v)
+                    logger.debug("Added to filename clean extensions: {}".format(fn_clean_exts))
                 else:
                     logger.debug("New config '{}': {}".format(c, v))
                     globals()[c] = v
-    except (IOError, AttributeError):
+    except (IOError, AttributeError) as e:
         logger.debug("No MultiQC user config found: {}".format(yaml_config))
+        logger.debug("Config error: {}".format(e))
 
 # These config vars are imported by all modules and can be updated by anything.
 # The main launcher (scripts/multiqc) overwrites some of these variables

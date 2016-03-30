@@ -51,6 +51,7 @@ git push
 # Submit a Pull Request
 ```
 13. Tell UPPMAX about the new version and ask for the module system to be updated.
-14. Update version numbers to new dev version in `setup.py` and `docs/README.md`
-15. Add a new section in the changelog for the development version
-16. Commit and push. Continue making more awesome :metal:
+14. Create new demo reports for the website and upload.
+15. Update version numbers to new dev version in `setup.py` and `docs/README.md`
+16. Add a new section in the changelog for the development version
+17. Commit and push. Continue making more awesome :metal:
