@@ -25,6 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
                  "It annotates and predicts the effects of variants on genes (such as amino acid changes). ")
 
         self.snpeff_data = dict()
+        self.snpeff_section_keys = dict()
         self.snpeff_qualities = dict()
 
         for f in self.find_log_files(config.sp['snpeff'], filehandles=True):
@@ -93,6 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
             l = l.strip()
             if l[:1] == '#':
                 section = l
+                self.snpeff_section_keys[section] = list()
                 continue
             s = l.split(',')
             
@@ -121,6 +123,8 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_data[ s[0].strip() ] = s[1].strip()
                     except IndexError:
                         pass
+                    else:
+                        self.snpeff_section_keys[section].append(s[0].strip())
                     if len(s) > 2 and s[2][-1:] == '%':
                         parsed_data[ '{}_percent'.format(s[0].strip()) ] = float(s[2][:-1])
         
@@ -153,7 +157,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.snpeff_data, headers)
     
     def effects_impact_plot(self):
-        # Choose the categories to ply
+        """ Generate the SnpEff Counts by Genomic Region plot """
+        
+        # Put keys in a more logical order
         keys = [ 'MODIFIER', 'LOW', 'MODERATE', 'HIGH' ]
         
         # Make nicer label names
@@ -171,7 +177,9 @@ class MultiqcModule(BaseMultiqcModule):
         return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
         
     def effects_function_plot(self):
-        # Choose the categories to ply
+        """ Generate the SnpEff Counts by Functional Class plot """
+        
+        # Cats to plot in a sensible order
         keys = [ 'SILENT', 'MISSENSE', 'NONSENSE' ]
         
         # Make nicer label names
@@ -181,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         pconfig = {
-            'title': 'SnpEff: Counts by Genomic Region',
+            'title': 'SnpEff: Counts by Functional Class',
             'ylab': '# Reads',
             'logswitch': True
         }
@@ -190,33 +198,11 @@ class MultiqcModule(BaseMultiqcModule):
         
     
     
-    def count_effects_plot(self):        
-        # Choose the categories to ply
-        keys = [
-            '3_prime_UTR_variant',
-            '5_prime_UTR_premature_start_codon_gain_variant',
-            '5_prime_UTR_variant',
-            'TF_binding_site_variant',
-            'downstream_gene_variant',
-            'initiator_codon_variant',
-            'intergenic_region',
-            'intragenic_variant',
-            'intron_variant',
-            'missense_variant',
-            'missense_variant',
-            'non_coding_exon_variant',
-            'sequence_feature',
-            'sequence_feature',
-            'splice_region_variant',
-            'start_lost',
-            'stop_gained',
-            'stop_lost',
-            'stop_retained_variant',
-            'synonymous_variant',
-            'upstream_gene_variant',
-        ]
+    def count_effects_plot(self):
+        """ Generate the SnpEff Counts by Effect plot """
         
         # Sort the keys based on the first dataset
+        keys = self.snpeff_section_keys['# Count by effects']
         for s_name in self.snpeff_data:
             sorted_keys = sorted(keys, reverse=True, key=self.snpeff_data[s_name].__getitem__)
             break
@@ -236,26 +222,10 @@ class MultiqcModule(BaseMultiqcModule):
         return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
     
     def count_genomic_region_plot(self):
-        """ Generate the HiCUP Truncated reads plot """    
-        
-        # Choose the categories to ply
-        keys = [
-            'DOWNSTREAM',
-            'EXON',
-            'INTERGENIC',
-            'INTRON',
-            'MOTIF',
-            'NONE',
-            'SPLICE_SITE_ACCEPTOR',
-            'SPLICE_SITE_DONOR',
-            'SPLICE_SITE_REGION',
-            'TRANSCRIPT',
-            'UPSTREAM',
-            'UTR_3_PRIME',
-            'UTR_5_PRIME',
-        ]
+        """ Generate the SnpEff Counts by Genomic Region plot """
         
         # Sort the keys based on the first dataset
+        keys = self.snpeff_section_keys['# Count by genomic region']
         for s_name in self.snpeff_data:
             sorted_keys = sorted(keys, reverse=True, key=self.snpeff_data[s_name].__getitem__)
             break
