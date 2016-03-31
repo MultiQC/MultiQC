@@ -4,26 +4,9 @@
 
 ##### Find [documentation](http://multiqc.info/docs/0.2/README.md) and [example reports](http://multiqc.info/examples/rna-seq/multiqc_report.html) at [multiqc.info](http://multiqc.info)
 
-<table>
-  <tr>
-    <th>Stable:</th>
-    <td>
-      <a title="PyPI Version" href="https://pypi.python.org/pypi/multiqc/"><img src="https://img.shields.io/pypi/v/multiqc.svg"></a>
-      <a title="Stable docs" href="http://multiqc.info/docs/"><img src="https://img.shields.io/badge/docs-stable-green.svg"></a>
-      <a title="Licence" href="https://github.com/ewels/MultiQC/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/multiqc.svg"></a>
-      <a title="PyPI Downloads" href="http://multiqc.info/stats.php"><img src="https://img.shields.io/pypi/dm/multiqc.svg"></a>
-    </td>
-  </tr>
-  <tr>
-    <th>Devel:</th>
-    <td>
-      <a title="Build Status" href="https://travis-ci.org/ewels/MultiQC"><img src="https://travis-ci.org/ewels/MultiQC.svg?branch=master"></a>
-      <a title="Devel docs" href="https://github.com/ewels/MultiQC/tree/master/docs"><img src="https://img.shields.io/badge/docs-devel-yellow.svg"></a>
-      <img src="https://img.shields.io/badge/Python-2.7-green.svg">
-      <img src="https://img.shields.io/badge/Python-3.4-green.svg">
-    </td>
-  </tr>
-</table>
+<a title="PyPI Version" href="https://pypi.python.org/pypi/multiqc/"><img src="https://img.shields.io/pypi/v/multiqc.svg?style=flat-square"></a>
+<a href="https://anaconda.org/bioconda/multiqc"><img src="https://anaconda.org/bioconda/multiqc/badges/version.svg"></a>
+<a title="Build Status" href="https://travis-ci.org/ewels/MultiQC"><img src="https://img.shields.io/travis/ewels/MultiQC.svg?style=flat-square"></a>
 
 -----
 
