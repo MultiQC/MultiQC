@@ -115,8 +115,9 @@ $(function () {
     var startHeight = wrapper.height();
     var pY = e.pageY;
     $(document).on('mouseup', function(e){
+      // Clear listeners now that we've let go
       $(document).off('mousemove');
-      $(document).resize(); // send resize trigger for replotting
+      $(document).off('mouseup');
       // Fire off a custom jQuery event for other javascript chunks to tie into
       // Bind to the plot div, which should have a custom ID
       $(wrapper.parent().find('.hc-plot')).trigger('mqc_plotresize');
@@ -124,6 +125,12 @@ $(function () {
     $(document).on('mousemove', function(me){
       wrapper.css('height', startHeight + (me.pageY - pY));
     });
+  });
+  // Trigger HighCharts reflow when a plot is resized
+  $('.hc-plot').on('mqc_plotresize', function(e){
+    if($(this).highcharts()) {
+      $(this).highcharts().reflow();
+    }
   });
   
 });
