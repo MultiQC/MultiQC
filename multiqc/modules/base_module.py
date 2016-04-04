@@ -296,7 +296,7 @@ class BaseMultiqcModule(object):
                 try: ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
                 try: ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
-                except: ymax = 'data-ymax="{}"'.format(name) if name != k+1 else ''
+                except: ymax = ''
                 html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
             html += '</div>\n\n'
         
@@ -606,11 +606,11 @@ class BaseMultiqcModule(object):
             p_label = pconfig.get('cpswitch_percent_label', 'Percentages')
             l_label = pconfig.get('logswitch_label', 'Log10')
             html += '<div class="btn-group hc_switch_group"> \n'
-            html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}">{c_l}</button> \n'.format(id=pconfig['id'], c_a=c_active, c_l=c_label)
+            html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}" data-ylab="{c_l}">{c_l}</button> \n'.format(id=pconfig['id'], c_a=c_active, c_l=c_label)
             if pconfig.get('cpswitch', True) is True:
-                html += '<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}">{p_l}</button> \n'.format(id=pconfig['id'], p_a=p_active, p_l=p_label)
+                html += '<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}" data-ylab="{p_l}">{p_l}</button> \n'.format(id=pconfig['id'], p_a=p_active, p_l=p_label)
             if pconfig.get('logswitch') is True:
-                html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}">{l_l}</button> \n'.format(id=pconfig['id'], l_a=l_active, l_l=l_label)
+                html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}" data-ylab="{l_l}">{l_l}</button> \n'.format(id=pconfig['id'], l_a=l_active, l_l=l_label)
                 pconfig['reversedStacks'] = True
             html += '</div> '
             if len(plotdata) > 1:
@@ -625,6 +625,8 @@ class BaseMultiqcModule(object):
                 except: name = k+1
                 try: ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
                 except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
+                try: ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
+                except: ymax = ''
                 html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, k=k)
             html += '</div>\n\n'
         

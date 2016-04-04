@@ -84,6 +84,10 @@ $(function () {
       mqc_plots[target]['config']['stacking'] = stack_type;
       mqc_plots[target]['config']['ytype'] = 'linear';
       plot_graph(target);
+      var ylab = $(this).data('ylab');
+      if(ylab != undefined){
+        $('#'+target).highcharts().yAxis[0].setTitle({ text: ylab });
+      }
     }
     // Switch to log10 axis
     if(action == 'set_log'){
@@ -94,7 +98,14 @@ $(function () {
     if(action == 'set_data'){
       var ds = $(this).data('newdata');
       plot_graph(target, ds);
-      // TODO - deal with data-ylab and data-ymax
+      var ylab = $(this).data('ylab');
+      var ymax = $(this).data('ymax');
+      if(ylab != undefined){
+        $('#'+target).highcharts().yAxis[0].setTitle({ text: ylab });
+      }
+      if(ymax != undefined){
+        $('#'+target).highcharts().yAxis[0].setExtremes(null, ymax);
+      }
     }
   });
 
