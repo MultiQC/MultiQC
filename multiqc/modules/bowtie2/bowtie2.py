@@ -225,6 +225,10 @@ class MultiqcModule(BaseMultiqcModule):
         keys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
         keys['paired_aligned_none'] = { 'color': '#981919', 'name': 'PE not aligned' }
         
+        half_warning = ''
+        for s_name in self.bowtie2_data:
+            if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name]:
+                half_warning = '<p><em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em></p>'
         
         
         # Config for the plot
@@ -234,4 +238,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return self.plot_bargraph(self.bowtie2_data, keys, config)
+        return half_warning + self.plot_bargraph(self.bowtie2_data, keys, config)
