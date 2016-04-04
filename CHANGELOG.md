@@ -2,6 +2,7 @@
 
 #### v0.6dev
 * Rewrote bowtie2 module: Now better at parsing logs and tries to scrape input from wrapper logs.
+* Made cutadapt show counts by default instead of obs/exp
 * Bugfix: Made SnpEff less fussy about required fields for making plots
 * Bugfix: Extending two config variables wasn't working. Now fixed.
 * Bugfix: Dragging the height bar of plots now works again.

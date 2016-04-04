@@ -133,16 +133,16 @@ class MultiqcModule(BaseMultiqcModule):
         
         pconfig = {
             'id': 'cutadapt_plot',
-            'title': 'Lengths Trimmed',
-            'ylab': 'Observed / Expected',
+            'title': 'Lengths of Trimmed Sequences',
+            'ylab': 'Counts',
             'xlab': 'Length Trimmed (bp)',
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            'data_labels': [{'name': 'Obs/Exp', 'ylab': 'Observed / Expected'},
-                            {'name': 'Counts', 'ylab': 'Count'}]
+            'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
+                            {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
         }
         
-        html += self.plot_xy_data([self.cutadapt_length_obsexp, self.cutadapt_length_counts], pconfig)
+        html += self.plot_xy_data([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
         
         return html
