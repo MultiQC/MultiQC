@@ -1,8 +1,10 @@
 # MultiQC Version History
 
 #### v0.6dev
+* Rewrote bowtie2 module: Now better at parsing logs and tries to scrape input from wrapper logs.
 * Bugfix: Made SnpEff less fussy about required fields for making plots
 * Bugfix: Extending two config variables wasn't working. Now fixed.
+* Bugfix: Dragging the height bar of plots now works again.
 
 #### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl

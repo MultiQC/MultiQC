@@ -24,13 +24,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
-        for f in self.find_log_files(config.sp['bowtie2']):
-            parsed_data = self.parse_bowtie2_logs(f['f'])
-            if parsed_data is not None:
-                if f['s_name'] in self.bowtie2_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                self.add_data_source(f)
-                self.bowtie2_data[f['s_name']] = parsed_data
+        for f in self.find_log_files(config.sp['bowtie2'], filehandles=True):
+            # Check that this isn't actually Bismark using bowtie
+            if f['f'].read().find('bisulfite', 0) < 0:
+                f['f'].seek(0)
+                self.parse_bowtie2_logs(f)
 
         if len(self.bowtie2_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -50,51 +48,162 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro += self.bowtie2_alignment_plot()
 
 
-    def parse_bowtie2_logs(self, s):
-        # Check that this isn't actually Bismark using bowtie
-        if s.find('bisulfite', 0) >= 0: return None
-        parsed_data = {}
+    def parse_bowtie2_logs(self, f):
+        """
+        Warning: This function may make you want to stab yourself.
+        
+        Parse logs from bowtie2. These miss several key bits of information
+        such as input files, so we try to look for logs from other wrapper tools
+        that may have logged this info. If not found, we default to using the filename.
+        Note that concatenated logs only parse if we have the command printed in there.
+        
+        The bowtie log uses the same strings mulitple times in different contexts to mean
+        different things, making parsing very messy. Handle with care.
+        
+        Example single-end output from bowtie2:
+            Time loading reference: 00:00:08
+            Time loading forward index: 00:00:16
+            Time loading mirror index: 00:00:09
+            [samopen] SAM header is present: 25 sequences.
+            Multiseed full-index search: 00:58:04
+            38377305 reads; of these:
+              38377305 (100.00%) were unpaired; of these:
+                2525577 (6.58%) aligned 0 times
+                27593593 (71.90%) aligned exactly 1 time
+                8258135 (21.52%) aligned >1 times
+            93.42% overall alignment rate
+            Time searching: 00:58:37
+            Overall time: 00:58:37
+
+        Example paired-end output from bowtie2:
+            Time loading reference: 00:01:07
+            Time loading forward index: 00:00:26
+            Time loading mirror index: 00:00:09
+            Multiseed full-index search: 01:32:55
+            15066949 reads; of these:
+              15066949 (100.00%) were paired; of these:
+                516325 (3.43%) aligned concordantly 0 times
+                11294617 (74.96%) aligned concordantly exactly 1 time
+                3256007 (21.61%) aligned concordantly >1 times
+                ----
+                516325 pairs aligned concordantly 0 times; of these:
+                  26692 (5.17%) aligned discordantly 1 time
+                ----
+                489633 pairs aligned 0 times concordantly or discordantly; of these:
+                  979266 mates make up the pairs; of these:
+                    592900 (60.55%) aligned 0 times
+                    209206 (21.36%) aligned exactly 1 time
+                    177160 (18.09%) aligned >1 times
+            98.03% overall alignment rate
+            Time searching: 01:34:37
+            Overall time: 01:34:37
+        """
+        
+        # Regexes
         regexes = {
-            'reads_processed': r"(\d+) reads; of these:",
-            'reads_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?exactly 1 time",
-            'reads_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?exactly 1 time",
-            'not_aligned': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?0 times",
-            'not_aligned_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?0 times",
-            'multimapped': r"(\d+) \([\d\.]+%\) aligned (?:concordantly )?>1 times",
-            'multimapped_percentage': r"\(([\d\.]+)%\) aligned (?:concordantly )?>1 times",
-            'overall_aligned_rate': r"([\d\.]+)% overall alignment rate",
+            'unpaired': {
+                'unpaired_aligned_none': r"(\d+) \([\d\.]+%\) aligned 0 times",
+                'unpaired_aligned_one': r"(\d+) \([\d\.]+%\) aligned exactly 1 time",
+                'unpaired_aligned_multi': r"(\d+) \([\d\.]+%\) aligned >1 times"
+            },
+            'paired': {
+                'paired_aligned_none': r"(\d+) \([\d\.]+%\) aligned concordantly 0 times",
+                'paired_aligned_one': r"(\d+) \([\d\.]+%\) aligned concordantly exactly 1 time",
+                'paired_aligned_multi': r"(\d+) \([\d\.]+%\) aligned concordantly >1 times",
+                'paired_aligned_discord_one': r"(\d+) \([\d\.]+%\) aligned discordantly 1 time",
+                'paired_aligned_discord_multi': r"(\d+) \([\d\.]+%\) aligned discordantly >1 times",
+                'paired_aligned_mate_one': r"(\d+) \([\d\.]+%\) aligned exactly 1 time",
+                'paired_aligned_mate_multi': r"(\d+) \([\d\.]+%\) aligned >1 times",
+                'paired_aligned_mate_none': r"(\d+) \([\d\.]+%\) aligned 0 times"
+            }
         }
-
-        for k, r in regexes.items():
-            match = re.search(r, s)
-            if match:
-                parsed_data[k] = float(match.group(1).replace(',', ''))
+        
+        # Go through log file line by line
+        s_name = f['s_name']
+        parsed_data = {}
+        
+        for l in f['f']:
+            # Attempt in vain to find original bowtie2 command, logged by another program
+            btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", l)
+            if btcmd:
+                s_name = self.clean_s_name(btcmd.group(1), f['root'])
+                log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
             
-        if len(parsed_data) == 0: return None
-        parsed_data['reads_other'] = parsed_data['reads_processed'] - parsed_data.get('reads_aligned', 0) - parsed_data.get('not_aligned', 0) - parsed_data.get('multimapped', 0)
-        return parsed_data
-
-
+            # Parse bt2 logs in chunks with a nested loop
+            # Find first line of bowtie2 output
+            if 'Multiseed full-index search:' in l:
+                
+                # do a local loop through this log section
+                for l in f['f']:
+                    
+                    # Total reads
+                    total = re.search(r"(\d+) reads; of these:", l)
+                    if total:
+                        parsed_data['total_reads'] = int(total.group(1))
+                    
+                    # Overall alignment rate
+                    overall = re.search(r"([\d\.]+)% overall alignment rate", l)
+                    if overall:
+                        parsed_data['overall_alignment_rate'] = float(overall.group(1))
+                    
+                    # Single end reads
+                    unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
+                    if unpaired:
+                        parsed_data['unpaired_total'] = int(unpaired.group(1))
+                        
+                        # Do nested loop whilst we have this level of indentation
+                        l = f['f'].readline()
+                        while l.startswith('    '):
+                            for k, r in regexes['unpaired'].items():
+                                match = re.search(r, l)
+                                if match:
+                                    parsed_data[k] = int(match.group(1))
+                            l = f['f'].readline()
+                    
+                    # Paired end reads
+                    paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
+                    if paired:
+                        parsed_data['paired_total'] = int(paired.group(1))
+                        
+                        # Do nested loop whilst we have this level of indentation
+                        l = f['f'].readline()
+                        while l.startswith('    '):
+                            for k, r in regexes['paired'].items():
+                                match = re.search(r, l)
+                                if match:
+                                    parsed_data[k] = int(match.group(1))
+                            l = f['f'].readline()
+                    
+                    # End of log section - break inner loop
+                    if 'Time searching' in l:
+                        # Save half 'pairs' of mate counts
+                        m_keys = ['paired_aligned_mate_multi', 'paired_aligned_mate_none', 'paired_aligned_mate_one']
+                        for k in m_keys:
+                            if k in parsed_data:
+                                parsed_data['{}_halved'.format(k)] = float(parsed_data[k]) / 2.0
+                        # Save parsed data
+                        if s_name in self.bowtie2_data:
+                            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        self.add_data_source(f, s_name)
+                        self.bowtie2_data[s_name] = parsed_data
+                        # Reset in case we find more in this log file
+                        s_name = f['s_name']
+                        parsed_data = {}
+                        break
+    
+    
     def bowtie2_general_stats_table(self):
         """ Take the parsed stats from the Bowtie 2 report and add it to the
         basic stats table at the top of the report """
         
         headers = OrderedDict()
-        headers['overall_aligned_rate'] = {
+        headers['overall_alignment_rate'] = {
             'title': '% Aligned',
             'description': 'overall alignment rate',
             'max': 100,
             'min': 0,
             'scale': 'YlGn',
             'format': '{:.1f}%'
-        }
-        headers['reads_aligned'] = {
-            'title': 'M Aligned',
-            'description': 'reads aligned (millions)',
-            'min': 0,
-            'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.bowtie2_data, headers)
 
@@ -103,10 +212,20 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['reads_aligned'] = { 'color': '#8bbc21', 'name': '1 Alignment' }
-        keys['multimapped'] =   { 'color': '#2f7ed8', 'name': '>1 Alignments' }
-        keys['not_aligned'] =   { 'color': '#0d233a', 'name': 'Not aligned' }
-        keys['reads_other'] =   { 'color': '#fd0000', 'name': 'Other' }
+        keys['unpaired_aligned_one'] = { 'color': '#20568f', 'name': 'SE mapped uniquely' }
+        keys['paired_aligned_one'] = { 'color': '#20568f', 'name': 'PE mapped uniquely' }
+        keys['paired_aligned_discord_one'] = { 'color': '#5c94ca', 'name': 'PE mapped discordantly uniquely 1 time' }
+        keys['paired_aligned_mate_one_halved'] = { 'color': '#95ceff', 'name': 'PE one mate mapped uniquely' }
+        
+        keys['unpaired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'SE multimapped' }
+        keys['paired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'PE multimapped' }
+        keys['paired_aligned_discord_multi'] = { 'color': '#dce333', 'name': 'PE discordantly multimapped' }
+        keys['paired_aligned_mate_multi_halved'] = { 'color': '#ffeb75', 'name': 'PE one mate multimapped' }
+        
+        keys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
+        keys['paired_aligned_none'] = { 'color': '#981919', 'name': 'PE not aligned' }
+        
+        
         
         # Config for the plot
         config = {
