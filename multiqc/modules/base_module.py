@@ -393,7 +393,6 @@ class BaseMultiqcModule(object):
             
             # Dataset specific y label
             try:
-                print('{} - {}'.format(pidx, pconfig['data_labels'][pidx]['ylab']))
                 axes.set_ylabel(pconfig['data_labels'][pidx]['ylab'])
             except:
                 pass
@@ -476,6 +475,13 @@ class BaseMultiqcModule(object):
             if pidx > 0:
                 hidediv = ' style="display:none;"'
             
+            # Save the plot to the data directory
+            plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
+            if not os.path.exists(plot_dir):
+                os.makedirs(plot_dir)
+            plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
+            fig.savefig(plot_fn, format='png', bbox_inches='tight')
+            
             # Output the figure to a base64 encoded string
             if getattr(self.template_mod, 'base64_plots', True) is True:
                 img_buffer = io.BytesIO()
@@ -486,12 +492,8 @@ class BaseMultiqcModule(object):
             
             # Save to a file and link <img>
             else:
-                plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
-                if not os.path.exists(plot_dir):
-                    os.makedirs(plot_dir)
-                plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
-                fig.savefig(plot_fn, format='png', bbox_inches='tight')
-                html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_fn)
+                plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
+                html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
             
             plt.close(fig)
                 
@@ -808,6 +810,13 @@ class BaseMultiqcModule(object):
                 if pidx > 0 or hide_plot:
                     hidediv = ' style="display:none;"'
                 
+                # Save the plot to the data directory
+                plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
+                if not os.path.exists(plot_dir):
+                    os.makedirs(plot_dir)
+                plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
+                fig.savefig(plot_fn, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+                
                 # Output the figure to a base64 encoded string
                 if getattr(self.template_mod, 'base64_plots', True) is True:
                     img_buffer = io.BytesIO()
@@ -816,14 +825,10 @@ class BaseMultiqcModule(object):
                     img_buffer.close()
                     html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)
                 
-                # Save to a file and link <img>
+                # Link to the saved image
                 else:
-                    plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
-                    if not os.path.exists(plot_dir):
-                        os.makedirs(plot_dir)
-                    plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
-                    fig.savefig(plot_fn, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
-                    html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_fn)
+                    plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
+                    html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
                 
                 plt.close(fig)
                 
