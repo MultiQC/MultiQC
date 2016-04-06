@@ -64,7 +64,7 @@ with open(searchp_fn) as f:
 # eg. FastQC is usually the first step, so should be last in this list.
 module_order = [
     # Post-alignment analysis results
-    'snpeff', 'qualimap', 'featureCounts', 'methylQA',
+    'snpeff', 'qualimap', 'featureCounts', 'methylQA', 'rseqc',
     'picard', 'preseq', 'samblaster', 'samtools',
     # Alignment tool stats
     'bismark', 'hicup', 'star', 'tophat', 'bowtie2', 'bowtie1',
