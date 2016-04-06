@@ -11,7 +11,7 @@ from multiqc import config, BaseMultiqcModule
 from . import bam_stat
 from . import gene_body_coverage
 from . import inner_distance
-# from . import junction_annotation
+from . import junction_annotation
 # from . import junction_saturation
 # from . import read_GC
 # from . import read_distribution
@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         bam_stat.parse_reports(self)
         gene_body_coverage.parse_reports(self)
         inner_distance.parse_reports(self)
-        # junction_annotation.parse_reports(self)
+        junction_annotation.parse_reports(self)
         # junction_saturation.parse_reports(self)
         # read_GC.parse_reports(self)
         # read_distribution.parse_reports(self)

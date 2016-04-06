@@ -67,6 +67,8 @@ rseqc:
     fn: '*.geneBodyCoverage.txt'
   inner_distance:
     fn: '*.inner_distance_freq.txt'
+  junction_annotation:
+    contents: 'Partial Novel Splicing Junctions:'
 snpeff:
     fn: '*snpEff.summary.csv'
 star:
