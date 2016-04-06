@@ -9,7 +9,7 @@ from multiqc import config, BaseMultiqcModule
 
 # Import the RSeQC submodules
 from . import bam_stat
-# from . import geneBody_coverage
+from . import gene_body_coverage
 # from . import inner_distance
 # from . import junction_annotation
 # from . import junction_saturation
@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Call submodule functions
         bam_stat.parse_reports(self)
-        # geneBody_coverage.parse_reports(self)
+        gene_body_coverage.parse_reports(self)
         # inner_distance.parse_reports(self)
         # junction_annotation.parse_reports(self)
         # junction_saturation.parse_reports(self)

@@ -63,6 +63,8 @@ qualimap:
 rseqc:
   bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
+  gene_body_coverage:
+    fn: '*.geneBodyCoverage.txt'
 snpeff:
     fn: '*snpEff.summary.csv'
 star:
