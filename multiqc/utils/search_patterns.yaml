@@ -65,6 +65,8 @@ rseqc:
     contents: 'Proper-paired reads map to different chrom:'
   gene_body_coverage:
     fn: '*.geneBodyCoverage.txt'
+  inner_distance:
+    fn: '*.inner_distance_freq.txt'
 snpeff:
     fn: '*snpEff.summary.csv'
 star:

@@ -10,7 +10,7 @@ from multiqc import config, BaseMultiqcModule
 # Import the RSeQC submodules
 from . import bam_stat
 from . import gene_body_coverage
-# from . import inner_distance
+from . import inner_distance
 # from . import junction_annotation
 # from . import junction_saturation
 # from . import read_GC
@@ -32,8 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(name='RSeQC', anchor='rseqc',
         href="http://rseqc.sourceforge.net/", 
         info="package provides a number of useful modules that can"\
-        " comprehensively evaluate high throughput sequence data"\
-        " especially RNA-seq data.")
+        " comprehensively evaluate high throughput RNA-seq data.")
         
         # Set up class objects to hold parsed data
         self.sample_count = 0
@@ -44,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Call submodule functions
         bam_stat.parse_reports(self)
         gene_body_coverage.parse_reports(self)
-        # inner_distance.parse_reports(self)
+        inner_distance.parse_reports(self)
         # junction_annotation.parse_reports(self)
         # junction_saturation.parse_reports(self)
         # read_GC.parse_reports(self)
