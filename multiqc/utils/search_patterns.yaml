@@ -73,6 +73,8 @@ rseqc:
     fn: '*.junctionSaturation_plot.r'
   read_gc:
     fn: '*.GC.xls'
+  read_distribution:
+    contents: 'Group               Total_bases         Tag_count           Tags/Kb'
   read_duplication_pos:
     fn: '*.pos.DupRate.xls'
 snpeff:

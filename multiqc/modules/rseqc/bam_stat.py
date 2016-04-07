@@ -55,10 +55,6 @@ def parse_reports(self):
             self.bam_stat_data[f['s_name']] = d
     
     if len(self.bam_stat_data) > 0:
-        
-        # Log output
-        self.sample_count += len(self.bam_stat_data)
-        log.info("Found {} bam_stat reports".format(len(self.bam_stat_data)))
     
         # Write to file
         self.write_data_file(self.bam_stat_data, 'multiqc_rseqc_bam_stat')
@@ -80,5 +76,6 @@ def parse_reports(self):
         # Make dot plot of counts
         # TODO - write dot plot function
     
+    # Return number of samples found
+    return len(self.bam_stat_data)
     
-        

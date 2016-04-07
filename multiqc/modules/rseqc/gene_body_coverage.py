@@ -51,10 +51,6 @@ def parse_reports(self):
     
     if len(self.gene_body_cov_hist_counts) > 0:
         
-        # Log output
-        self.sample_count += len(self.gene_body_cov_hist_counts)
-        log.info("Found {} geneBody_coverage reports".format(len(self.gene_body_cov_hist_counts)))
-        
         # Make a normalised percentage version of the data
         for s_name in self.gene_body_cov_hist_counts:
             self.gene_body_cov_hist_percent[s_name] = OrderedDict()
@@ -86,5 +82,6 @@ def parse_reports(self):
                 self.plot_xy_data([self.gene_body_cov_hist_counts, self.gene_body_cov_hist_percent], pconfig)
         })
     
+    # Return number of samples found
+    return len(self.gene_body_cov_hist_counts)
     
-        

@@ -46,10 +46,6 @@ def parse_reports(self):
     
     if len(self.junction_saturation_all) > 0:
         
-        # Log output
-        self.sample_count += len(self.junction_saturation_all)
-        log.info("Found {} junction_saturation scripts".format(len(self.junction_saturation_all)))
-        
         # Make a normalised percentage version of the data
         empty_datasets = 0
         for s_name in self.junction_saturation_all:
@@ -105,6 +101,9 @@ def parse_reports(self):
                     self.junction_saturation_novel_pct
                 ], pconfig)
         })
+    
+    # Return number of samples found
+    return len(self.junction_saturation_all)
     
     
 def plot_single():

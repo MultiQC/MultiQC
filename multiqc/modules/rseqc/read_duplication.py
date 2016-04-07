@@ -23,7 +23,6 @@ def parse_reports(self):
     for f in self.find_log_files(config.sp['rseqc']['read_duplication_pos']):
         if f['f'].startswith('Occurrence	UniqReadNumber'):
             s_name = f['s_name'].rstrip('.pos.DupRate.xls')
-            print('Found {} - "{}"'.format(f['s_name'], s_name))
             self.read_dups[s_name] = OrderedDict()
             for l in f['f'].splitlines():
                 s = l.split()
@@ -34,10 +33,6 @@ def parse_reports(self):
                     pass
     
     if len(self.read_dups) > 0:
-        
-        # Log output
-        self.sample_count += len(self.read_dups)
-        log.info("Found {} read_duplication reports".format(len(self.read_dups)))
         
         # Add line graph to section
         pconfig = {
@@ -56,6 +51,9 @@ def parse_reports(self):
                 " Note - plot truncated at 500 occurances.</p>" + 
                 self.plot_xy_data(self.read_dups, pconfig)
         })
+        
+    # Return number of samples found
+    return len(self.read_dups)
     
     
         

@@ -45,10 +45,6 @@ def parse_reports(self):
     
     if len(self.read_gc) > 0:
         
-        # Log output
-        self.sample_count += len(self.read_gc)
-        log.info("Found {} read_GC reports".format(len(self.read_gc)))
-        
         # Add line graph to section
         pconfig = {
             'id': 'rseqc_read_gc_plot',
@@ -70,6 +66,9 @@ def parse_reports(self):
             'content': "<p>"+p_link+" calculates a histogram of read GC content.</p>" + 
                 self.plot_xy_data([self.read_gc, self.read_gc_pct], pconfig)
         })
+    
+    # Return number of samples found
+    return len(self.read_gc)
     
     
         

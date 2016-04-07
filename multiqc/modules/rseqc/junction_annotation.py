@@ -60,10 +60,6 @@ def parse_reports(self):
     
     if len(self.junction_annotation_data) > 0:
         
-        # Log output
-        self.sample_count += len(self.junction_annotation_data)
-        log.info("Found {} junction_annotation reports".format(len(self.junction_annotation_data)))
-    
         # Write to file
         self.write_data_file(self.junction_annotation_data, 'multiqc_rseqc_junction_annotation')
         
@@ -93,5 +89,6 @@ def parse_reports(self):
                 self.plot_bargraph([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
         })
     
+    # Return number of samples found
+    return len(self.junction_annotation_data)
     
-        

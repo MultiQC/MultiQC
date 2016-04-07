@@ -34,10 +34,6 @@ def parse_reports(self):
     
     if len(self.inner_distance) > 0:
         
-        # Log output
-        self.sample_count += len(self.inner_distance)
-        log.info("Found {} inner_distance reports".format(len(self.inner_distance)))
-        
         # Make a normalised percentage version of the data
         for s_name in self.inner_distance:
             self.inner_distance_pct[s_name] = OrderedDict()
@@ -67,5 +63,6 @@ def parse_reports(self):
                 self.plot_xy_data([self.inner_distance, self.inner_distance_pct], pconfig)
         })
     
+    # Return number of samples found
+    return len(self.inner_distance)
     
-        
