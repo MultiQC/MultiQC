@@ -76,11 +76,12 @@ def parse_reports(self):
                 {'name': 'Percentages', 'ylab': 'Percentage Coverage'}
             ]
         }
+        p_link = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>'
         self.sections.append({
             'name': 'Gene Body Coverage',
             'anchor': 'rseqc-gene_body_coverage',
-            'content': "<p>Read coverage over gene body. This module" \
-                " is used to check if reads coverage is uniform and" \
+            'content': "<p>"+p_link+" calculates read coverage over gene bodies." \
+                " This is used to check if reads coverage is uniform and" \
                 " if there is any 5' or 3' bias.</p>" + 
                 self.plot_xy_data([self.gene_body_cov_hist_counts, self.gene_body_cov_hist_percent], pconfig)
         })

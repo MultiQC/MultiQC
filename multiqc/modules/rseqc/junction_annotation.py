@@ -68,41 +68,29 @@ def parse_reports(self):
         self.write_data_file(self.junction_annotation_data, 'multiqc_rseqc_junction_annotation')
         
         # Plot junction annotations
-        keys = OrderedDict()
-        keys['known_splicing_junctions'] = { 'name': 'Known Splicing Junctions' }
-        keys['partial_novel_splicing_junctions'] = { 'name': 'Partial Novel Splicing Junctions' }
-        keys['novel_splicing_junctions'] = { 'name': 'Novel Splicing Junctions' }
+        keys = [OrderedDict(), OrderedDict()]
+        keys[0]['known_splicing_junctions'] = { 'name': 'Known Splicing Junctions' }
+        keys[0]['partial_novel_splicing_junctions'] = { 'name': 'Partial Novel Splicing Junctions' }
+        keys[0]['novel_splicing_junctions'] = { 'name': 'Novel Splicing Junctions' }
+        keys[1]['known_splicing_events'] = { 'name': 'Known Splicing Events' }
+        keys[1]['partial_novel_splicing_events'] = { 'name': 'Partial Novel Splicing Events' }
+        keys[1]['novel_splicing_events'] = { 'name': 'Novel Splicing Events' }
+        
         pconfig = {
             'id': 'rseqc_junction_annotation_junctions_plot',
             'title': 'STAR: Splicing Junctions',
-            'ylab': '# Junctions',
-            'cpswitch_counts_label': 'Number of Junctions'
+            'ylab': '% Junctions',
+            'cpswitch_c_active': False,
+            'data_labels': [ 'Junctions', 'Events' ]
         }
-        junc_plot = self.plot_bargraph(self.junction_annotation_data, keys, pconfig)
-        
-        # Plot event annotations
-        keys = OrderedDict()
-        keys['known_splicing_events'] = { 'name': 'Known Splicing Events' }
-        keys['partial_novel_splicing_events'] = { 'name': 'Partial Novel Splicing Events' }
-        keys['novel_splicing_events'] = { 'name': 'Novel Splicing Events' }
-        pconfig = {
-            'id': 'rseqc_junction_annotation_events_plot',
-            'title': 'STAR: Splicing Events',
-            'ylab': '# Events',
-            'cpswitch_counts_label': 'Number of Events'
-        }
-        event_plot = self.plot_bargraph(self.junction_annotation_data, keys, pconfig)
-        
-        # Write section
+        p_link = '<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>'
         self.sections.append({
             'name': 'Junction Annotation',
             'anchor': 'rseqc_junction_annotation',
-            'content': "<p>This program compares detected splice junctions to" \
+            'content': "<p>"+p_link+" compares detected splice junctions to" \
                 " a reference gene model. An RNA read can be spliced 2" \
                 " or more times, each time is called a splicing event.</p>" +
-                event_plot + "<hr><p>Multiple splicing events spanning the same" \
-                " intron can be consolidated into one splicing junction.</p>" +
-                junc_plot
+                self.plot_bargraph([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
         })
     
     
