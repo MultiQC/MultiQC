@@ -3,7 +3,6 @@
 
 """ Submodule to handle code for Qualimap BamQC """
 
-from __future__ import print_function
 import io
 import logging
 import os

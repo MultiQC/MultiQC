@@ -1,6 +1,7 @@
 # MultiQC Version History
 
 #### v0.6dev
+* New RSeQC module: Actually a suite of 8 new modules supporting various outputs from RSeQC
 * Rewrote bowtie2 module: Now better at parsing logs and tries to scrape input from wrapper logs.
 * Made cutadapt show counts by default instead of obs/exp
 * Dynamic plots now update their labels properly when changing datasets and to percentages

@@ -540,6 +540,7 @@ config = {
     'yMinRange': None,           # Minimum range for axis
     'ymax': None,                # Max y limit
     'ymin': None,                # Min y limit
+    'yLog': False,               # Use log10 y axis?
     'yDecimals': True,           # Set to false to only show integer labels
     'yPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands

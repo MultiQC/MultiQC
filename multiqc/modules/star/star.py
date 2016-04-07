@@ -132,11 +132,11 @@ class MultiqcModule(BaseMultiqcModule):
         keys['unmapped_other'] =       { 'color': '#7f0000', 'name': 'Unmapped: other' }
         
         # Config for the plot
-        config = {
+        pconfig = {
             'id': 'star_alignment_plot',
             'title': 'STAR Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return self.plot_bargraph(self.star_data, keys, config)
+        return self.plot_bargraph(self.star_data, keys, pconfig)

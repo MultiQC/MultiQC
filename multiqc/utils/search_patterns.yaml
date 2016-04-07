@@ -60,6 +60,23 @@ qualimap:
         raw_data: raw_data
         rnaseq_results: rnaseq_qc_results.txt
         coverage: coverage_profile_along_genes_(total).txt
+rseqc:
+  bam_stat:
+    contents: 'Proper-paired reads map to different chrom:'
+  gene_body_coverage:
+    fn: '*.geneBodyCoverage.txt'
+  inner_distance:
+    fn: '*.inner_distance_freq.txt'
+  junction_annotation:
+    contents: 'Partial Novel Splicing Junctions:'
+  junction_saturation:
+    fn: '*.junctionSaturation_plot.r'
+  read_gc:
+    fn: '*.GC.xls'
+  read_distribution:
+    contents: 'Group               Total_bases         Tag_count           Tags/Kb'
+  read_duplication_pos:
+    fn: '*.pos.DupRate.xls'
 snpeff:
     fn: '*snpEff.summary.csv'
 star:
