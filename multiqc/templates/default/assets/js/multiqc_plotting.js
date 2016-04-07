@@ -12,11 +12,13 @@ window.mqc_rename_regex_mode = false;
 window.mqc_hide_mode = 'hide';
 window.mqc_hide_f_texts = [];
 window.mqc_hide_regex_mode = false;
+window.HCDefaults = undefined;
 
 // Execute when page load has finished loading
 $(function () {
   
   // HighCharts Defaults
+  window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});
   Highcharts.setOptions({
     chart: {
       backgroundColor: null,
@@ -184,7 +186,10 @@ function plot_xy_line_graph(target, ds){
   
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
-  else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
+  else {
+    config['click_func'] = eval("("+config['click_func']+")");
+    if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; }
+  }
   if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   if (config['pointFormat'] === undefined){

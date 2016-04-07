@@ -69,6 +69,8 @@ rseqc:
     fn: '*.inner_distance_freq.txt'
   junction_annotation:
     contents: 'Partial Novel Splicing Junctions:'
+  junction_saturation:
+    fn: '*.junctionSaturation_plot.r'
 snpeff:
     fn: '*snpEff.summary.csv'
 star:

@@ -78,7 +78,7 @@ def parse_reports(self):
         
         pconfig = {
             'id': 'rseqc_junction_annotation_junctions_plot',
-            'title': 'STAR: Splicing Junctions',
+            'title': 'RSeQC: Splicing Junctions',
             'ylab': '% Junctions',
             'cpswitch_c_active': False,
             'data_labels': [ 'Junctions', 'Events' ]
