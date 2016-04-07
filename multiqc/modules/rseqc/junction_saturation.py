@@ -33,13 +33,16 @@ def parse_reports(self):
             if r:
                 parsed[r.group(1)] = [float(i) for i in r.group(2).split(',')]
         if len(parsed) == 4:
-            self.junction_saturation_all[s_name] = OrderedDict()
-            self.junction_saturation_known[s_name] = OrderedDict()
-            self.junction_saturation_novel[s_name] = OrderedDict()
-            for k, v in enumerate(parsed['x']):
-                self.junction_saturation_all[s_name][v] = parsed['z'][k]
-                self.junction_saturation_known[s_name][v] = parsed['y'][k]
-                self.junction_saturation_novel[s_name][v] = parsed['w'][k]
+            if parsed['z'][-1] == 0:
+                log.warn("Junction saturation data all zeroes, skipping: '{}'".format(s_name))
+            else:
+                self.junction_saturation_all[s_name] = OrderedDict()
+                self.junction_saturation_known[s_name] = OrderedDict()
+                self.junction_saturation_novel[s_name] = OrderedDict()
+                for k, v in enumerate(parsed['x']):
+                    self.junction_saturation_all[s_name][v] = parsed['z'][k]
+                    self.junction_saturation_known[s_name][v] = parsed['y'][k]
+                    self.junction_saturation_novel[s_name][v] = parsed['w'][k]
     
     if len(self.junction_saturation_all) > 0:
         

@@ -71,6 +71,8 @@ rseqc:
     contents: 'Partial Novel Splicing Junctions:'
   junction_saturation:
     fn: '*.junctionSaturation_plot.r'
+  read_gc:
+    fn: '*.GC.xls'
 snpeff:
     fn: '*snpEff.summary.csv'
 star:
