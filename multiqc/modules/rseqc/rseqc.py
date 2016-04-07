@@ -15,7 +15,7 @@ from . import junction_annotation
 from . import junction_saturation
 from . import read_gc
 # from . import read_distribution
-# from . import read_duplication
+from . import read_duplication
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         junction_saturation.parse_reports(self)
         read_gc.parse_reports(self)
         # read_distribution.parse_reports(self)
-        # read_duplication.parse_reports(self)
+        read_duplication.parse_reports(self)
 
         # Exit if we didn't find anything
         if self.sample_count == 0:

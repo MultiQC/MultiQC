@@ -285,6 +285,7 @@ function plot_xy_line_graph(target, ds){
       title: {
         text: config['ylab']
       },
+      type: config['yLog'] ? 'logarithmic' : 'linear',
       ceiling: config['yCeiling'],
       floor: config['yFloor'],
       max: config['ymax'],
