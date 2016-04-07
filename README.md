@@ -38,13 +38,14 @@ Currently, supported tools include:
   * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
   * [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
 * Post-alignment tools
+  * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`, `inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
   * [Samtools stats](http://www.htslib.org)
-  * [Picard](http://broadinstitute.github.io/picard/) (MarkDuplicates, InsertSizeMetrics, GcBiasMetrics, HsMetrics, OxoGMetrics)
+  * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [methylQA](http://methylqa.sourceforge.net/)
-  * [Qualimap](http://qualimap.bioinfo.cipf.es/) (BamQC, RNASeq)
+  * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
   * [SnpEff](http://snpeff.sourceforge.net/)
 
 More modules are being written all of the time. Please suggest any ideas as a new
