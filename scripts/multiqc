@@ -30,6 +30,10 @@ except ImportError:
 from multiqc import logger, __version__
 from multiqc.utils import report, plugin_hooks, config, log
 
+# Use UTF-8 encoding by default
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 plugin_hooks.mqc_trigger('config_loaded') 
 
 @click.command(
