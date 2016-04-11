@@ -24,13 +24,6 @@ version = '0.6dev'
 print("""-----------------------------------
  Installing MultiQC version {}
 -----------------------------------
-Please note that MultiQC remotely checks for updates when running by default.
-The version of MultiQC that is requesting this information is logged so that
-the authors can track usage. No personally identifiable data is stored.
-See https://github.com/ewels/MultiQC_website for website code.
-This behaviour can be disabled by adding the following to your installation or
-user MultiQC configuration file:
-no_version_check: True
 
 """.format(version))
 

@@ -53,11 +53,12 @@ def parse_reports(self):
         # Calculate some percentages for parsed file
         if 'total_tags' in d:
             t = float(d['total_tags'])
-            dkeys = d.keys()
-            for k in dkeys:
+            pcts = dict()
+            for k in d:
                 if k.endswith('_tag_count'):
                     pk = '{}_tag_pct'.format(k.rstrip('_tag_count'))
-                    d[pk] = (float(d[k]) / t)*100.0
+                    pcts[pk] = (float(d[k]) / t)*100.0
+            d.update(pcts)
         
         if len(d) > 0:
             self.read_dist[f['s_name']] = d
