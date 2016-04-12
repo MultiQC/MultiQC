@@ -25,6 +25,7 @@ entry_points = {
     'multiqc.templates.v1': [
         'default = multiqc.templates.default',
         'default_dev = multiqc.templates.default_dev',
+        'simple = multiqc.templates.simple',
         'geo = multiqc.templates.geo',
     ]
 }
@@ -80,11 +81,18 @@ be prefixed if `-p`/`--prefix` is set at run time.
 Secondly, you can copy additional files with your report when it is generated.
 This is usually used to copy required images or scripts with the report. These
 should be a list of file or directory paths, relative to the `__init__.py` file.
-Directory contents will be copied recursively. 
+Directory contents will be copied recursively.
+
+You can also override config options in the template. For example, setting
+the value of `config.plots_force_flat` can force the report to only have
+static image plots.
 
 ```python
+from multiqc.utils import config
+
 output_subdir = 'multiqc_report'
 copy_files = ['assets']
+config.plots_force_flat = True
 ```
 
 ## Jinja template variables

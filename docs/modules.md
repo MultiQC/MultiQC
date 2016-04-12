@@ -42,13 +42,14 @@ In `setup.py` you will see some code that looks like this:
 ```python
 entry_points = {
     'multiqc.modules.v1': [
-        'qualimap = multiqc.modules.qualimap:MultiqcModule',
+        'bismark = multiqc.modules.bismark:MultiqcModule',
         [...]
     ]
 }
 ```
 Copy one of the existing module lines and change it to use your module name.
-Once this is done, you'll need to update your installation of MultiQC:
+The order is irrelevant, so stick to alphabetical if in doubt.
+Once this is done, you will need to update your installation of MultiQC:
 ```
 python setup.py develop
 ```
@@ -624,7 +625,8 @@ config = {
 html_content = self.plot_xy_data(data, config)
 ``` 
 
-## Appendix A - Including module-specific files
+## Appendices
+### Appendix A - Including module-specific files
 Occasionally, a module may require additional files to be copied at
 the time of report generation. To do this, use the `copy_module_files`
 function. `files` is a list of file paths, the second argument is the

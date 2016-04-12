@@ -133,7 +133,7 @@ An example of the markup expected, with the function being called:
 </script>
 ```
 
-## Switching Between Counts and Percentages
+## Switching counts and percentages
 If you're using the plotting functions above, it's easy to add a button which
 switches between percentages and counts. Just add the following HTML above
 your plot:
@@ -147,7 +147,7 @@ _NB:_ This markup is generated automatically with the Python `self.plot_bargraph
 
 
 
-## Switching Plot Datasets
+## Switching plot datasets
 Much like the counts / percentages buttons above, you can add a button which
 switches the data displayed in a single plot. Make sure that both datasets
 are stored in named javascript variables, then add the following markup:
@@ -162,7 +162,7 @@ Note the CSS class `active` which specifies which button is 'pressed' on page lo
 `data-newdata` should be the name of the javascript object with the new data
 to be plotted and `data-target` should be the CSS selector of the plot to change.
 
-## Custom Event Triggers
+## Custom event triggers
 Some of the events that take place in the general javascript
 code trigger jQuery events which you can hook into from within your
 module's code. This allows you to take advantage of events generated
