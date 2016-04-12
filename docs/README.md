@@ -5,25 +5,28 @@ Using MultiQC:
   Using Reports: reports.md
   Configuration: config.md
 MultiQC Modules:
-  SnpEff: modules/snpeff.md
-  Qualimap: modules/qualimap.md
-  featureCounts: modules/featureCounts.md
-  Methyl QA: modules/methylQA.md
-  RSeQC: modules/rseqc.md
-  Picard: modules/picard.md
-  Preseq: modules/preseq.md
-  Samblaster: modules/samblaster.md
-  Samtools: modules/samtools.md
-  Bismark: modules/bismark.md
-  HiCUP: modules/hicup.md
-  STAR: modules/star.md
-  TopHat: modules/tophat.md
-  Bowtie 2: modules/bowtie2.md
-  Bowtie 1: modules/bowtie1.md
-  Cutadapt: modules/cutadapt.md
-  Skewer: modules/skewer.md
-  FastQ Screen: modules/fastq_screen.md
-  FastQC: modules/fastqc.md
+  Post-alignment:
+    SnpEff: modules/snpeff.md
+    Qualimap: modules/qualimap.md
+    featureCounts: modules/featureCounts.md
+    Methyl QA: modules/methylQA.md
+    RSeQC: modules/rseqc.md
+    Picard: modules/picard.md
+    Preseq: modules/preseq.md
+    Samblaster: modules/samblaster.md
+    Samtools: modules/samtools.md
+  Aligners:
+    Bismark: modules/bismark.md
+    HiCUP: modules/hicup.md
+    STAR: modules/star.md
+    TopHat: modules/tophat.md
+    Bowtie 2: modules/bowtie2.md
+    Bowtie 1: modules/bowtie1.md
+  Pre-alignment:
+    Cutadapt: modules/cutadapt.md
+    Skewer: modules/skewer.md
+    FastQ Screen: modules/fastq_screen.md
+    FastQC: modules/fastqc.md
 Coding with MultiQC:
   Writing new templates: templates.md
   Writing new modules: modules.md

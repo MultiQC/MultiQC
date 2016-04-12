@@ -14,7 +14,7 @@ to use the generated report.
 
 For a description of all command line parameters, run `multiqc --help`.
 
-## Choosing where to scan
+## Choosing where to scan
 You can supply MultiQC with as many directories or files as you like. Above,
 we supply `.` - just the current directory, but all of these would work too:
 ```
