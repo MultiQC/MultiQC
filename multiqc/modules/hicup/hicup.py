@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='HiCUP', anchor='hicup',
         href='http://www.bioinformatics.babraham.ac.uk/projects/hicup/', 
-        info="(Hi-C User Pipeline) is tool for mapping and performing "\
+        info="(Hi-C User Pipeline) is a tool for mapping and performing "\
          "quality control on Hi-C data.")
         
         # Find and load any HiCUP summary reports
