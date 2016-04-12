@@ -626,7 +626,7 @@ html_content = self.plot_xy_data(data, config)
 ``` 
 
 ## Appendices
-### Appendix A - Including module-specific files
+### Including module-specific files
 Occasionally, a module may require additional files to be copied at
 the time of report generation. To do this, use the `copy_module_files`
 function. `files` is a list of file paths, the second argument is the
@@ -635,7 +635,7 @@ path that the files should be relative to (usually `__file__`). For example:
 self.copy_module_files(['includes/file1.txt', 'includes/file2.txt'], __file__)
 ```
 
-### Appendix B - Adding Custom CSS / Javascript
+### Adding Custom CSS / Javascript
 If you would like module-specific CSS and / or JavaScript added to the template,
 create lists in the module called `self.css` and `self.js` with the relative file
 paths - these will be looped over in the template file and the files included
@@ -648,7 +648,7 @@ self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
 self.copy_module_files(self.css + self.js, __file__)
 ```
 
-### Appendix C - Custom plotting functions
+### Custom plotting functions
 If you don't like the default plotting functions built into MultiQC, you
 can write your own! If you create a callable variable in a template called
 either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
