@@ -73,7 +73,7 @@ repository.
 This docs file should be placed in `docs/modules/<your_module_name>.md` and
 should have the following structure:
 
-```yaml
+```
 ---
 Name: Tool Name
 URL: http://www.amazing-bfx-tool.com
