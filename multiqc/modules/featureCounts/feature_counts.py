@@ -26,14 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any featureCounts reports
         self.featurecounts_data = dict()
+        self.featurecounts_keys = list()
         for f in self.find_log_files(config.sp['featurecounts']):
-            parsed_data = self.parse_featurecounts_report(f['f'])
-            if parsed_data is not None:
-                s_name = f['s_name']
-                if s_name in self.featurecounts_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                self.add_data_source(f)
-                self.featurecounts_data[s_name] = parsed_data
+            self.parse_featurecounts_report(f)
 
         if len(self.featurecounts_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -53,35 +48,50 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro += self.featureCounts_chart()
 
 
-    def parse_featurecounts_report (self, raw_data):
+    def parse_featurecounts_report (self, f):
         """ Parse the featureCounts log file. """
-
-        regexes = {
-            'Assigned': r"Assigned\s+(\d+)",
-            'Unassigned_Ambiguity': r"Unassigned_Ambiguity\s+(\d+)",
-            'Unassigned_MultiMapping': r"Unassigned_MultiMapping\s+(\d+)",
-            'Unassigned_NoFeatures': r"Unassigned_NoFeatures\s+(\d+)",
-            'Unassigned_Unmapped': r"Unassigned_Unmapped\s+(\d+)",
-            'Unassigned_MappingQuality': r"Unassigned_MappingQuality\s+(\d+)",
-            'Unassigned_FragmentLength': r"Unassigned_Frage?mentLength\s+(\d+)",
-            'Unassigned_Chimera': r"Unassigned_Chimera\s+(\d+)",
-            'Unassigned_Secondary': r"Unassigned_Secondary\s+(\d+)",
-            'Unassigned_Nonjunction': r"Unassigned_Nonjunction\s+(\d+)",
-            'Unassigned_Duplicate': r"Unassigned_Duplicate\s+(\d+)",
-        }
-        parsed_data = {}
-        total_count = 0
-        for k, r in regexes.items():
-            r_search = re.search(r, raw_data, re.MULTILINE)
-            if r_search:
-                parsed_data[k] = float(r_search.group(1))
-                total_count += float(r_search.group(1))
-        parsed_data['Total'] = total_count
-        if 'Assigned' in parsed_data:
-            parsed_data['percent_assigned'] = (parsed_data['Assigned']/parsed_data['Total']) * 100
-        if len(parsed_data) == 0: return None
-        return parsed_data
-
+        
+        file_names = list()
+        parsed_data = dict()
+        for l in f['f'].splitlines():
+            s = l.split()
+            if len(s) < 2:
+                continue
+            if s[0] == 'Status':
+                for f_name in s[1:]:
+                    file_names.append(f_name)
+            else:
+                k = s[0]
+                parsed_data[k] = list()
+                if k not in self.featurecounts_keys:
+                    self.featurecounts_keys.append(k)
+                for val in s[1:]:
+                    parsed_data[k].append(int(val))
+        
+        for idx, f_name in enumerate(file_names):
+            
+            # Clean up sample name
+            s_name = self.clean_s_name(f_name, f['root'])
+            
+            # Reorganised parsed data for this sample
+            # Collect total count number
+            data = dict()
+            data['Total'] = 0
+            for k in parsed_data:
+                data[k] = parsed_data[k][idx]
+                data['Total'] += parsed_data[k][idx]
+            
+            # Calculate the percent aligned if we can
+            if 'Assigned' in data:
+                data['percent_assigned'] = (float(data['Assigned'])/float(data['Total'])) * 100.0
+            
+            # Add to the main dictionary
+            if len(data) > 1:
+                if s_name in self.featurecounts_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
+                self.featurecounts_data[s_name] = data
+        
 
     def featurecounts_stats_table(self):
         """ Take the parsed stats from the featureCounts report and add them to the
@@ -101,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Assigned reads (millions)',
             'min': 0,
             'scale': 'PuBu',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.featurecounts_data, headers)
@@ -109,11 +119,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def featureCounts_chart (self):
         """ Make the featureCounts assignment rates plot """
-        
-        # Specify the order of the different possible categories
-        keys = ['Assigned', 'Unassigned_Ambiguity', 'Unassigned_MultiMapping', 'Unassigned_NoFeatures',
-        'Unassigned_Unmapped', 'Unassigned_MappingQuality', 'Unassigned_FragmentLength', 'Unassigned_Chimera',
-        'Unassigned_Secondary', 'Unassigned_Nonjunction', 'Unassigned_Duplicate']
         
         # Config for the plot
         config = {
@@ -123,4 +128,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return self.plot_bargraph(self.featurecounts_data, keys, config)
+        return self.plot_bargraph(self.featurecounts_data, self.featurecounts_keys, config)

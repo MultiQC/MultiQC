@@ -30,7 +30,7 @@ fastqc:
 featurecounts:
     fn:
         - '*counts.summary'
-        - '*_counts.txt.summary'
+        - '*counts.txt.summary'
 hicup:
     fn: 'HiCUP_summary_report*'
 methylQA:
