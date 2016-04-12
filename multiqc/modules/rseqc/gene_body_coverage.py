@@ -35,6 +35,8 @@ def parse_reports(self):
                     keys = s[1:]
                 else:
                     s_name = s[0]
+                    if s_name.endswith('.geneBodyCoverage'):
+                        s_name = s_name[:-17]
                     if s_name in self.gene_body_cov_hist_counts:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name, section='gene_body_coverage')
@@ -44,6 +46,8 @@ def parse_reports(self):
         
         # RSeQC < v2.4
         elif f['f'].startswith('Total reads'):
+            if f['s_name'].endswith('.geneBodyCoverage'):
+                f['s_name'] = f['s_name'][:-17]
             if f['s_name'] in self.gene_body_cov_hist_counts:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='gene_body_coverage')

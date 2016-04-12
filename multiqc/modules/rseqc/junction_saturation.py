@@ -26,7 +26,8 @@ def parse_reports(self):
     
     # Go through files and parse data
     for f in self.find_log_files(config.sp['rseqc']['junction_saturation']):
-        s_name = f['s_name'].rstrip('.junctionSaturation_plot.r')
+        if f['s_name'].endswith('.junctionSaturation_plot.r'):
+            f['s_name'] = f['s_name'][:-26]
         parsed = dict()
         for l in f['f'].splitlines():
             r = re.search(r"^([xyzw])=c\(([\d,]+)\)$", l)
@@ -34,18 +35,18 @@ def parse_reports(self):
                 parsed[r.group(1)] = [float(i) for i in r.group(2).split(',')]
         if len(parsed) == 4:
             if parsed['z'][-1] == 0:
-                log.warn("Junction saturation data all zeroes, skipping: '{}'".format(s_name))
+                log.warn("Junction saturation data all zeroes, skipping: '{}'".format(f['s_name']))
             else:
-                if s_name in self.junction_saturation_all:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.add_data_source(f, s_name, section='junction_saturation')
-                self.junction_saturation_all[s_name] = OrderedDict()
-                self.junction_saturation_known[s_name] = OrderedDict()
-                self.junction_saturation_novel[s_name] = OrderedDict()
+                if f['s_name'] in self.junction_saturation_all:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f, section='junction_saturation')
+                self.junction_saturation_all[f['s_name']] = OrderedDict()
+                self.junction_saturation_known[f['s_name']] = OrderedDict()
+                self.junction_saturation_novel[f['s_name']] = OrderedDict()
                 for k, v in enumerate(parsed['x']):
-                    self.junction_saturation_all[s_name][v] = parsed['z'][k]
-                    self.junction_saturation_known[s_name][v] = parsed['y'][k]
-                    self.junction_saturation_novel[s_name][v] = parsed['w'][k]
+                    self.junction_saturation_all[f['s_name']][v] = parsed['z'][k]
+                    self.junction_saturation_known[f['s_name']][v] = parsed['y'][k]
+                    self.junction_saturation_novel[f['s_name']][v] = parsed['w'][k]
     
     if len(self.junction_saturation_all) > 0:
         

@@ -56,7 +56,7 @@ def parse_reports(self):
             pcts = dict()
             for k in d:
                 if k.endswith('_tag_count'):
-                    pk = '{}_tag_pct'.format(k.rstrip('_tag_count'))
+                    pk = '{}_tag_pct'.format(k[:-10])
                     pcts[pk] = (float(d[k]) / t)*100.0
             d.update(pcts)
         

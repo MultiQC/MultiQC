@@ -35,16 +35,17 @@ def parse_reports(self):
                     pass
             if len(gc) > 0:
                 sorted_gc_keys = sorted(range(len(gc)), key=lambda k: gc[k])
-                s_name = f['s_name'].rstrip('.GC.xls')
+                if f['s_name'].endswith('.GC.xls'):
+                    f['s_name'] = f['s_name'][:-7]
                 total = sum(counts)
-                if s_name in self.read_gc:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.add_data_source(f, s_name, section='read_GC')
-                self.read_gc[s_name] = OrderedDict()
-                self.read_gc_pct[s_name] = OrderedDict()
+                if f['s_name'] in self.read_gc:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f, section='read_GC')
+                self.read_gc[f['s_name']] = OrderedDict()
+                self.read_gc_pct[f['s_name']] = OrderedDict()
                 for i in sorted_gc_keys:
-                    self.read_gc[s_name][gc[i]] = counts[i]
-                    self.read_gc_pct[s_name][gc[i]] = (counts[i]/total)*100
+                    self.read_gc[f['s_name']][gc[i]] = counts[i]
+                    self.read_gc_pct[f['s_name']][gc[i]] = (counts[i]/total)*100
     
     if len(self.read_gc) > 0:
         

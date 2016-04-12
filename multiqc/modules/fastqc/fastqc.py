@@ -45,7 +45,9 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Find and parse zipped FastQC reports
         for f in self.find_log_files(config.sp['fastqc']['zip'], filecontents=False):
-            s_name = f['fn'].rstrip('_fastqc.zip')
+            s_name = f['fn']
+            if s_name.endswith('_fastqc.zip'):
+                s_name = s_name[:-11]
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
             except zipfile.BadZipfile:

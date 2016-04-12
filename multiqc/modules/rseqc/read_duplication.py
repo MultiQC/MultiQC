@@ -22,16 +22,17 @@ def parse_reports(self):
     # Go through files and parse data
     for f in self.find_log_files(config.sp['rseqc']['read_duplication_pos']):
         if f['f'].startswith('Occurrence	UniqReadNumber'):
-            s_name = f['s_name'].rstrip('.pos.DupRate.xls')
-            if s_name in self.read_dups:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            self.add_data_source(f, s_name, section='read_duplication')
-            self.read_dups[s_name] = OrderedDict()
+            if f['s_name'].endswith('.pos.DupRate.xls'):
+                f['s_name'] = f['s_name'][:-16]
+            if f['s_name'] in self.read_dups:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+            self.add_data_source(f, section='read_duplication')
+            self.read_dups[f['s_name']] = OrderedDict()
             for l in f['f'].splitlines():
                 s = l.split()
                 try:
                     if int(s[0]) <= 500:
-                        self.read_dups[s_name][int(s[0])] = int(s[1])
+                        self.read_dups[f['s_name']][int(s[0])] = int(s[1])
                 except:
                     pass
     
