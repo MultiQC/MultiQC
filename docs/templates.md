@@ -110,3 +110,23 @@ function. For example:
 <img src="data:image/png;base64,{{ include_file('img/logo.png', b64=True) }}">
 ```
 
+
+## Appendices
+### Custom plotting functions
+If you don't like the default plotting functions built into MultiQC, you
+can write your own! If you create a callable variable in a template called
+either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
+
+```python
+def custom_linegraph(plotdata, pconfig):
+    return '<h1>Awesome line graph here</h1>'
+linegraph = custom_linegraph
+  
+def custom_bargraph(plotdata, plotseries, pconfig):
+    return '<h1>Awesome bar graph here</h1>'
+bargraph = custom_bargraph
+```
+
+These particular examples don't do very much, but hopefully you get the idea.
+Note that you have to set the variable `linegraph` or `bargraph` to your function.
+

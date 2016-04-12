@@ -640,27 +640,10 @@ If you would like module-specific CSS and / or JavaScript added to the template,
 create lists in the module called `self.css` and `self.js` with the relative file
 paths - these will be looped over in the template file and the files included
 appropriately. Make sure that the files themselves are copied using the above
-method. The FastQC module does this to generate it's custom plots:
+method. The FastQC module does this to generate its custom plots:
 
 ```python
 self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
 self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
 self.copy_module_files(self.css + self.js, __file__)
 ```
-
-### Custom plotting functions
-If you don't like the default plotting functions built into MultiQC, you
-can write your own! If you create a callable variable in a template called
-either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
-
-```python
-def custom_linegraph(plotdata, pconfig):
-    return '<h1>Awesome line graph here</h1>'
-linegraph = custom_linegraph
-  
-def custom_bargraph(plotdata, plotseries, pconfig):
-    return '<h1>Awesome bar graph here</h1>'
-bargraph = custom_bargraph
-```
-
-These plotting functions aren't very helpful, but hopefully you get the idea.
