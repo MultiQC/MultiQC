@@ -61,6 +61,9 @@ def parse_reports(self):
             d.update(pcts)
         
         if len(d) > 0:
+            if f['s_name'] in self.read_dist:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+            self.add_data_source(f, section='read_distribution')
             self.read_dist[f['s_name']] = d
     
     if len(self.read_dist) > 0:

@@ -56,6 +56,9 @@ def parse_reports(self):
                 d['novel_splicing_junctions_pct'] = (float(d['novel_splicing_junctions']) / t)*100.0
         
         if len(d) > 0:
+            if f['s_name'] in self.junction_annotation_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+            self.add_data_source(f, section='junction_annotation')
             self.junction_annotation_data[f['s_name']] = d
     
     if len(self.junction_annotation_data) > 0:

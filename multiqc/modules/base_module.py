@@ -117,8 +117,7 @@ class BaseMultiqcModule(object):
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
         :param root: The directory path that this file is within
-        :param prepend_dirs: boolean, whether to prepend dir name to s_name
-        :param trimmed: boolean, remove common trimming suffixes from name?
+        :config.prepend_dirs: boolean, whether to prepend dir name to s_name
         :return: The cleaned sample name, ready to be used
         """
         if root is None:

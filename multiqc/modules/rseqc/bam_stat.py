@@ -52,6 +52,9 @@ def parse_reports(self):
                 d['proper_pairs_percent'] = (float(d['reads_mapped_in_proper_pairs']) / t)*100.0
         
         if len(d) > 0:
+            if f['s_name'] in self.bam_stat_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+            self.add_data_source(f, section='bam_stat')
             self.bam_stat_data[f['s_name']] = d
     
     if len(self.bam_stat_data) > 0:

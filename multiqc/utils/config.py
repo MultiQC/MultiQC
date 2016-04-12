@@ -39,7 +39,7 @@ plots_flat_numseries = 100
 data_format = 'tsv'
 data_format_extensions = {'tsv': 'txt', 'json': 'json', 'yaml': 'yaml'}
 fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup', '.counts', '_counts', '.txt' ]
-fn_ignore_files = ['.DS_Store', '*.bam']
+fn_ignore_files = ['.DS_Store', '*.bam', '*.sam', '*.fq.gz', '*.fastq.gz', '*.fq', '*.fastq', '*.gtf', '*.bed', '*.vcf', '*.txt.gz']
 report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 no_version_check = False
 num_datasets_plot_limit = 50
@@ -148,7 +148,7 @@ def mqc_load_config(yaml_config):
                 if c == 'extra_fn_clean_exts':
                     # Merge filename cleaning patterns instead of replacing
                     fn_clean_exts.extend(v)
-                    logger.debug("Added to filename clean extensions: {}".format(fn_clean_exts))
+                    logger.debug("Added to filename clean extensions. Now looking for: {}".format(fn_clean_exts))
                 else:
                     logger.debug("New config '{}': {}".format(c, v))
                     globals()[c] = v

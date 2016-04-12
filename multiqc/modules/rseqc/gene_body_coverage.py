@@ -35,12 +35,18 @@ def parse_reports(self):
                     keys = s[1:]
                 else:
                     s_name = s[0]
+                    if s_name in self.gene_body_cov_hist_counts:
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    self.add_data_source(f, s_name, section='gene_body_coverage')
                     self.gene_body_cov_hist_counts[s_name] = OrderedDict()
                     for k, var in enumerate(s[1:]):
                         self.gene_body_cov_hist_counts[s_name][int(keys[k])] = float(var)
         
         # RSeQC < v2.4
         elif f['f'].startswith('Total reads'):
+            if f['s_name'] in self.gene_body_cov_hist_counts:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+            self.add_data_source(f, section='gene_body_coverage')
             self.gene_body_cov_hist_counts[f['s_name']] = OrderedDict()
             for l in f['f'].splitlines():
                 s = l.split()

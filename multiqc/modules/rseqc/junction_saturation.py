@@ -36,6 +36,9 @@ def parse_reports(self):
             if parsed['z'][-1] == 0:
                 log.warn("Junction saturation data all zeroes, skipping: '{}'".format(s_name))
             else:
+                if s_name in self.junction_saturation_all:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name, section='junction_saturation')
                 self.junction_saturation_all[s_name] = OrderedDict()
                 self.junction_saturation_known[s_name] = OrderedDict()
                 self.junction_saturation_novel[s_name] = OrderedDict()

@@ -23,6 +23,9 @@ def parse_reports(self):
     for f in self.find_log_files(config.sp['rseqc']['read_duplication_pos']):
         if f['f'].startswith('Occurrence	UniqReadNumber'):
             s_name = f['s_name'].rstrip('.pos.DupRate.xls')
+            if s_name in self.read_dups:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            self.add_data_source(f, s_name, section='read_duplication')
             self.read_dups[s_name] = OrderedDict()
             for l in f['f'].splitlines():
                 s = l.split()

@@ -88,8 +88,8 @@ class MultiqcModule(BaseMultiqcModule):
             # Add to the main dictionary
             if len(data) > 1:
                 if s_name in self.featurecounts_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                self.add_data_source(f)
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name)
                 self.featurecounts_data[s_name] = data
         
 
