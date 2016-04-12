@@ -54,12 +54,42 @@ python setup.py develop
 ```
 
 ### MultiQC config
-The final place that needs to know about your module is the MultiQC config.
-This is required as MultiQC modules need to be run in the correct order.
+So that MultiQC knows what order modules should be run in, you need to add
+your module to the core config file.
 
 In `multiqc/utils/config.py` you should see a list variable called `module_order`.
 This contains the name of modules in order of precedence. Add your module here
 in an appropriate position.
+
+### Documentation
+Next up, you need to create a documentation file for your module. The reason
+for this is twofold: firstly, docs are important to help people to use, debug
+and extend MultiQC (you're reading this, aren't you?). Secondly,
+having the file there with the appropriate YAML front matter will make the
+module show up on the [MultiQC homepage](http://multiqc.info) so that everyone
+knows it exists. This process is automated once the file is added to the core
+repository.
+
+This docs file should be placed in `docs/modules/<your_module_name>.md` and
+should have the following structure:
+
+```yaml
+---
+Name: Tool Name
+URL: http://www.amazing-bfx-tool.com
+Description: >
+    This amazing tool does some really cool stuff. You can describe it
+    here and split onto multiple lines if you want. Not too long though!
+---
+
+Your documentation goes here. Feel free to use markdown and write whatever
+you think would be helpful. Please avoid using heading levels 1 to 3.
+```
+
+### Readme and Changelog
+Last but not least, remember to add your new module to the main `README.md`
+file and `CHANGELOG.md`, so that people know that it's there. Feel free to
+add your name to the list of credits at the bottom of the readme.
 
 ### MultiqcModule Class
 If you've copied one of the other entry point statements, it will have
