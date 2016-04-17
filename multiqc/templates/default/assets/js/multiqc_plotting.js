@@ -170,6 +170,15 @@ function plot_graph(target, ds, max_num){
         $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
+    // Beeswarm graphs
+    else if(mqc_plots[target]['plot_type'] == 'beeswarm'){
+      if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
+        plot_beeswarm_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+      }
+    }
     // Not recognised
     else { console.log('Did not recognise plot type: '+mqc_plots[target]['plot_type']); }
   }
@@ -486,6 +495,102 @@ function plot_stacked_bar_graph(target, ds){
     },
     series: data
   });
+}
+
+
+// Beeswarm plot
+// function plot_beeswarm_graph(data, s_names, label, label_long, ttSuffix, minx, maxx){
+function plot_beeswarm_graph(target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'beeswarm'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  if(ds === undefined){ ds = 0; }
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var datasets = JSON.parse(JSON.stringify(mqc_plots[target]['datasets']));
+  var samples = JSON.parse(JSON.stringify(mqc_plots[target]['samples']));
+  var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
+  
+  // Clear the loading text and resize
+  $('#'+target).html('').css('height', 100*categories.length+'px');
+  
+  for (var i = 0; i < categories.length; i++) {
+    var data = datasets[i];
+    var s_names = samples[i];
+    var label = categories[i]['title'];
+    var label_long = categories[i]['description'];
+    var ttSuffix = ''; //categories[i][''];
+    var minx = categories[i]['min'];
+    var maxx = categories[i]['max'];
+    
+  	var yspace = 70;
+    var ysep = 5;
+    if (maxx == undefined){
+    	maxx = Math.max.apply(null, data);
+    }
+    if (minx == undefined){
+    	minx = Math.max.apply(null, data);
+    }
+    var range = maxx-minx;
+    var sep = range/yspace;
+    data = data.sort();
+    var xydata = [];
+    var last = undefined;
+    var side = 1;
+    for (var row = 0; row < data.length; row++) {
+      s_name = s_names[row];
+      d = data[row];
+      if (Math.floor(d/sep) !== last){
+        last = Math.floor(d/sep);
+        side = 1;
+      } else {
+        side += 1;
+      }
+      multiplier = (side % 2 == 0) ? 1 : -1;
+      var y = (Math.floor(side/2) * multiplier)/ysep;
+      // Don't let jitter get too big
+      while(y > 1 || y < -1){
+        var n = Math.floor(Math.abs(y)) + 1;
+        y = (Math.floor(side/2) * multiplier)/(ysep*n);
+      }
+      xydata.push({'x':d, 'y':y, 'name':s_name});
+    }
+
+    $('<div class="beeswarm" />').appendTo('#'+target).highcharts({
+  			chart: {
+            height: 100,
+            type: 'scatter'
+        },
+        title: {text: null },
+        yAxis: {
+            title: {text: null},
+            max: 1,
+            min: -1,
+            gridLineWidth: 0,
+            title: {text: label},
+            labels: {enabled: false},
+            lineWidth: 1
+        },
+        xAxis: {
+        	lineWidth: 0,
+          tickWidth: 0,
+          labels: {format: '{value} '+ttSuffix},
+          min: minx,
+          max: maxx
+        },
+        tooltip: {
+        	headerFormat: '<span style="font-size: 10px">'+label_long+'</span><br>',
+        	pointFormat: '{point.name}: <b>{point.x} '+ttSuffix+'</b>'
+        },
+        legend: { enabled: false },
+        credits: { enabled: false },
+        exporting: { enabled: false },
+        series: [{ data: xydata }]
+
+    });
+  }
 }
 
 

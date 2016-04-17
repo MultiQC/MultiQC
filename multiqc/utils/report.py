@@ -27,6 +27,7 @@ except NameError:
 
 # Set up global variables shared across modules
 general_stats = OrderedDict()
+general_stats_beeswarm_html = None
 general_stats_html = {
     'headers': OrderedDict(),
     'rows': defaultdict(lambda:dict())
@@ -81,6 +82,93 @@ def get_filelist():
                     add_file(fn, root)
         elif os.path.isfile(directory):
             add_file(os.path.basename(directory), os.path.dirname(directory))
+
+
+def general_stats_build_html():
+    """ Build the general stats HTML, be that a beeswarm plot or a table. """
+    general_stats_build_beeswarm()
+
+
+
+def general_stats_build_beeswarm():
+    """ Helper function to build a beeswarm plot of General Statistics values.
+    Parses report.general_stats and returns HTML for the plot.
+    Also creates report.general_stats_raw for multiqc_general_stats.txt
+    :param data: A dict with the data. First key should be sample name,
+                 then the data key, then the data.
+    :param headers: Dict / OrderedDict with information for the series, 
+                    such as colour scales, min and max values etc.
+                    See docs/writing_python.md for more information.
+    :return: None
+    """
+    
+    # First - collect settings for shared keys
+    shared_keys = defaultdict(lambda: dict())
+    for mod in general_stats.keys():
+        headers = general_stats[mod]['headers']
+        for k in headers.keys():
+            sk = headers[k].get('shared_key', None)
+            if sk is not None:
+                shared_keys[sk]['scale'] = headers[k]['scale']
+                shared_keys[sk]['dmax']  = max(headers[k]['dmax'], shared_keys[sk].get('dmax', headers[k]['dmax']))
+                shared_keys[sk]['dmin']  = max(headers[k]['dmin'], shared_keys[sk].get('dmin', headers[k]['dmin']))
+    
+    categories = []
+    s_names = []
+    data = []
+    for mod in general_stats.keys():
+        headers = general_stats[mod]['headers']
+        for k in headers.keys():
+            
+            rid = headers[k]['rid']
+            
+            # Overwrite config with shared key settings
+            sk = headers[k].get('shared_key', None)
+            if sk is not None:
+                headers[k]['scale'] = shared_keys[sk]['scale']
+                headers[k]['dmax'] = shared_keys[sk]['dmax']
+                headers[k]['dmin'] = shared_keys[sk]['dmin']
+                sk = ' data-shared-key={}'.format(sk)
+            else:
+                sk = ''
+            
+            categories.append({
+                'title': headers[k]['title'],
+                'description': headers[k]['description'],
+                'max': headers[k]['dmax'],
+                'min': headers[k]['dmin']
+            });
+            
+            # Add the data
+            thisdata = []
+            these_snames = []
+            for (sname, samp) in general_stats[mod]['data'].items():
+                if k in samp:
+                    
+                    val = samp[k]
+                    general_stats_raw[sname][rid] = val
+                    
+                    if 'modify' in headers[k] and callable(headers[k]['modify']):
+                        val = headers[k]['modify'](val)
+                    
+                    thisdata.append(val)
+                    these_snames.append(sname)
+            data.append(thisdata)
+            s_names.append(these_snames)
+    
+    # Plot and javascript function
+    global general_stats_beeswarm_html
+    general_stats_beeswarm_html = '<div class="hc-plot-wrapper"><div id="general_stats_beeswarm" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div> \n\
+    <script type="text/javascript"> \n\
+        mqc_plots["general_stats_beeswarm"] = {{ \n\
+            "plot_type": "beeswarm", \n\
+            "samples": {s}, \n\
+            "datasets": {d}, \n\
+            "categories": {c} \n\
+        }} \n\
+    </script>'.format(s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories));
+    
+            
 
 
 def general_stats_build_table():
