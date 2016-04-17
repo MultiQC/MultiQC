@@ -708,3 +708,7 @@ tbody .sorthandle {
 .hc-plot-handle:hover span {
     background-color: #999;
 }
+
+.beeswarm:first-child {
+  margin-top: 15px;
+}

@@ -513,8 +513,10 @@ function plot_beeswarm_graph(target, ds){
   var samples = JSON.parse(JSON.stringify(mqc_plots[target]['samples']));
   var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
   
-  // Clear the loading text and resize
-  $('#'+target).html('').css('height', 100*categories.length+'px');
+  // Clear the loading text
+  $('#'+target).html('');
+  // Resize the parent draggable div
+  $('#'+target).parent().css('height', ((105*categories.length)+15)+'px');
   
   for (var i = 0; i < categories.length; i++) {
     var data = datasets[i];
@@ -561,7 +563,10 @@ function plot_beeswarm_graph(target, ds){
     $('<div class="beeswarm" />').appendTo('#'+target).highcharts({
   			chart: {
             height: 100,
-            type: 'scatter'
+            type: 'scatter',
+            spacingTop: 0,
+            spacingBottom: 5,
+            marginRight: 20
         },
         title: {text: null },
         yAxis: {
@@ -583,6 +588,13 @@ function plot_beeswarm_graph(target, ds){
         tooltip: {
         	headerFormat: '<span style="font-size: 10px">'+label_long+'</span><br>',
         	pointFormat: '{point.name}: <b>{point.x} '+ttSuffix+'</b>'
+        },
+        plotOptions: {
+          series: {
+            marker: {
+              radius: 2.5
+            }
+          }
         },
         legend: { enabled: false },
         credits: { enabled: false },
