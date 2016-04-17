@@ -51,7 +51,11 @@ def parse_reports(self):
                         if 'aligned to genes' in l:
                             self.general_stats[s_name]['reads_aligned_genes'] = float( num )
                         if "5'-3' bias" in l:
-                            self.general_stats[s_name]['5_3_bias'] = float( num )
+                            try:
+                                self.general_stats[s_name]['5_3_bias'] = float( num )
+                            # Qualimap reports infinity (\u221e) when 3' bias denominator is zero
+                            except UnicodeEncodeError:
+                                pass
                         
                         # Reads genomic origin section
                         if 'exonic' in l:
