@@ -133,6 +133,9 @@ def mqc_load_userconfig():
 
     # Load and parse a user config file if we find it
     mqc_load_config(os.path.expanduser('~/.multiqc_config.yaml'))
+    
+    # Load and parse a config file in this working directory if we find it
+    mqc_load_config('.multiqc_config.yaml')
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
