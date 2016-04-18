@@ -66,9 +66,9 @@ no_version_check: True
 # or flat plots (images, using MatPlotLib). With interactive plots, the report
 # can prevent automatically rendering all graphs if there are lots of samples
 # to prevent the browser being locked up when the report opens.
-plots_force_flat = False          # Try to use only flat image graphs
-plots_force_interactive = False   # Try to use only interactive javascript graphs
-plots_flat_numseries = 100        # If neither of the above, use flat if > this number of datasets
+plots_force_flat: False          # Try to use only flat image graphs
+plots_force_interactive: False   # Try to use only interactive javascript graphs
+plots_flat_numseries: 100        # If neither of the above, use flat if > this number of datasets
 num_datasets_plot_limit: 50       # If interactive, don't plot on load if > this number of datasets
 
 # Overwrite module filename search patterns. See multiqc/utils/search_patterns.yaml

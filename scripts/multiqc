@@ -44,9 +44,17 @@ plugin_hooks.mqc_trigger('config_loaded')
                     required = True,
                     metavar = "<analysis directory>"
 )
+@click.option('-f', '--force',
+                    is_flag = True,
+                    help = "Overwrite any existing reports"
+)
 @click.option('-d', '--dirs',
                     is_flag = True,
                     help = "Prepend directory to sample names"
+)
+@click.option('-s', '--fullnames', 'no_clean_sname',
+                    is_flag = True,
+                    help = "Do not clean the sample names (leave as full file name)"
 )
 @click.option('-i', '--title',
                     type = str,
@@ -56,24 +64,30 @@ plugin_hooks.mqc_trigger('config_loaded')
                     type = str,
                     help = "Report filename. Use 'stdout' to print to standard out."
 )
-@click.option('-t', '--template',
-                    default = config.template,
-                    type = click.Choice(config.avail_templates),
-                    help = "Report template to use."
-)
-@click.option('-f', '--force',
-                    is_flag = True,
-                    help = "Overwrite any existing reports"
-)
 @click.option('-o', '--outdir',
                     type = str,
                     default = config.output_dir,
                     help = "Create report in the specified output directory."
 )
+@click.option('-t', '--template',
+                    default = config.template,
+                    type = click.Choice(config.avail_templates),
+                    help = "Report template to use."
+)
 @click.option('-x', '--ignore',
                     type = str,
                     multiple = True,
                     help = "Ignore analysis files (glob expression)"
+)
+@click.option('-e', '--exclude', metavar='[module name]',
+                    type = click.Choice(config.avail_modules),
+                    multiple = True,
+                    help = "Do not use this module. Can specify multiple times."
+)
+@click.option('-m', '--module', metavar='[module name]',
+                    type = click.Choice(config.avail_modules),
+                    multiple = True,
+                    help = "Use only this module. Can specify multiple times."
 )
 @click.option('--data-dir/--no-data-dir', 'make_data_dir',
                     default=config.make_data_dir,
@@ -87,16 +101,6 @@ plugin_hooks.mqc_trigger('config_loaded')
 @click.option('-z', '--zip-data-dir', 'zip_data_dir',
                     is_flag = True,
                     help = "Compress the data directory."
-)
-@click.option('-m', '--module', metavar='[module name]',
-                    type = click.Choice(config.avail_modules),
-                    multiple = True,
-                    help = "Use only this module. Can specify multiple times."
-)
-@click.option('-e', '--exclude', metavar='[module name]',
-                    type = click.Choice(config.avail_modules),
-                    multiple = True,
-                    help = "Do not use this module. Can specify multiple times."
 )
 @click.option('--flat', 'plots_flat',
                     is_flag = True,
@@ -117,7 +121,7 @@ plugin_hooks.mqc_trigger('config_loaded')
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, title, template, module, exclude, outdir, ignore, filename, 
+def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, filename, 
 make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, verbose, quiet, **kwargs):
     """MultiQC is a tool generate qc reports.
     
@@ -167,6 +171,9 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     config.plots_force_flat = plots_flat
     config.plots_force_interactive = plots_interactive
     config.kwargs = kwargs # Plugin command line options
+    if no_clean_sname:
+        config.fn_clean_exts = []
+        logger.info("Not cleaning sample names")
     if len(ignore) > 0:
         logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))
         config.fn_ignore_files.extend(ignore)
