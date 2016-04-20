@@ -100,6 +100,7 @@ def general_stats_build_html():
     
     modcols = ['55,126,184', '77,175,74', '152,78,163', '255,127,0', '228,26,28', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
     midx = 0
+    sample_names = set()
     for mod in general_stats.keys():
         
         headers = general_stats[mod]['headers']
@@ -111,20 +112,26 @@ def general_stats_build_html():
                 headers[k]['scale'] = shared_keys[sk]['scale']
                 headers[k]['dmax'] = shared_keys[sk]['dmax']
                 headers[k]['dmin'] = shared_keys[sk]['dmin']
-                sk = ' data-shared-key={}'.format(sk)
-            else:
-                sk = ''
             
             # Module colour
             headers[k]['modcol'] = modcols[midx]
+        
+        # Count data points
+        for (sname, samp) in general_stats[mod]['data'].items():
+            sample_names.add(sname)
         
         # Increment module colour
         midx += 1
         if midx > (len(modcols) - 1):
             midx = 0
         
-        
-    general_stats_build_beeswarm()
+    # Make a beeswarm plot if we have lots of samples
+    if len(sample_names) >= config.genstats_beeswarm_numseries:
+        logger.debug('Plotting general statistics beeswarm - {} samples'.format(len(sample_names)))
+        general_stats_build_beeswarm()
+    else:
+        logger.debug('Making general statistics table - {} samples'.format(len(sample_names)))
+        general_stats_build_table()
 
 
 
@@ -211,6 +218,11 @@ def general_stats_build_table():
         for k in headers.keys():
             
             rid = headers[k]['rid']
+            
+            if headers[k].get('shared_key', None) is not None:
+                sk = ' data-shared-key={}'.format(sk)
+            else:
+                sk = ''
             
             general_stats_html['headers'][rid] = '<th \
                     id="header_{rid}" \
