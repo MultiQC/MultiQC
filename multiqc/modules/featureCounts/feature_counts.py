@@ -103,6 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% Assigned reads',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'RdYlGn',
             'format': '{:.1f}%'
         }

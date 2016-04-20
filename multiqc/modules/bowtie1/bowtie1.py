@@ -81,6 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% reads with at least one reported alignment',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%'
         }

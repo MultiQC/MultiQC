@@ -108,6 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['coverage'] = {
             'title': 'Fold Coverage',
             'min': 0,
+            'suffix': 'X',
             'scale': 'YlGn',
             'format': '{:.1f}X'
         }

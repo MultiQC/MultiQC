@@ -202,6 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'overall alignment rate',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%'
         }

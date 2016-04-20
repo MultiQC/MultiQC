@@ -35,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percent Duplication',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'OrRd',
             'format': '{:.1f}%'
         }

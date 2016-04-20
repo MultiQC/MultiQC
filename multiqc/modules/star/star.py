@@ -106,6 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% Uniquely mapped reads',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%'
         }

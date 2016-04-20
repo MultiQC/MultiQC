@@ -237,6 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% Cytosines methylated in CpG context',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'Greens',
             'format': '{:.1f}%'
         }
@@ -245,6 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% Cytosines methylated in CHG context',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'Oranges',
             'format': '{:.1f}%'
         }
@@ -253,6 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% Cytosines methylated in CHH context',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'Oranges',
             'format': '{:.1f}%'
         }
@@ -268,6 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percent Duplicated Alignments',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'RdYlGn-rev',
             'format': '{:.1f}%'
         }
@@ -292,6 +296,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percent Aligned Sequences',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%',
         }

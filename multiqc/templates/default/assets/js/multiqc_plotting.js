@@ -592,6 +592,7 @@ function plot_beeswarm_graph(target, ds){
           align: 'left',
           verticalAlign: 'middle',
           y: 10,
+          useHTML: true,
           style: {
               fontSize: '10px'
           }

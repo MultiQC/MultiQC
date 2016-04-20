@@ -106,6 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percentage Di-Tags Passed Through HiCUP',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%',
         }
@@ -122,6 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percent Duplicate Di-Tags',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn-rev',
             'modify': lambda x: 100 - x,
             'format': '{:.1f}%',
@@ -139,6 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percent Valid Pairs',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%',
         }
@@ -155,6 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percentage of Paired Alignments',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%',
         }

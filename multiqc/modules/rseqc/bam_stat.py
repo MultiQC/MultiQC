@@ -68,6 +68,7 @@ def parse_reports(self):
             'description': '% Reads mapped in proper pairs',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'RdYlGn',
             'format': '{:.1f}%'
         }
