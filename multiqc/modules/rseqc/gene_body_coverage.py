@@ -5,9 +5,8 @@ http://rseqc.sourceforge.net/#genebody-coverage-py """
 
 from collections import OrderedDict
 import logging
-import re
 
-from multiqc import config
+from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ def parse_reports(self):
             'content': "<p>"+p_link+" calculates read coverage over gene bodies." \
                 " This is used to check if reads coverage is uniform and" \
                 " if there is any 5' or 3' bias.</p>" + 
-                self.plot_xy_data([self.gene_body_cov_hist_counts, self.gene_body_cov_hist_percent], pconfig)
+                plots.linegraph.plot([self.gene_body_cov_hist_counts, self.gene_body_cov_hist_percent], pconfig)
         })
     
     # Return number of samples found

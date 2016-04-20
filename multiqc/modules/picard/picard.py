@@ -8,7 +8,7 @@ import logging
 import os
 import re
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -477,7 +477,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_c_active': False
         }
         
-        return self.plot_bargraph(self.picard_dupMetrics_data, keys, config)
+        return plots.bargraph.plot(self.picard_dupMetrics_data, keys, config)
     
     
     def insert_size_plot(self):
@@ -493,7 +493,7 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
         }
         
-        return self.plot_xy_data(self.picard_insertSize_histogram, pconfig)
+        return plots.linegraph.plot(self.picard_insertSize_histogram, pconfig)
 
     def GCbias_plot(self):
         """ Plot the Picard GC Bias plot """
@@ -514,5 +514,5 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
         
-        return self.plot_xy_data(self.picard_GCbias_data, pconfig)
+        return plots.linegraph.plot(self.picard_GCbias_data, pconfig)
     

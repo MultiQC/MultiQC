@@ -5,7 +5,7 @@
 from __future__ import print_function
 import logging
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -85,4 +85,4 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return "<p>A shallow curve indicates complexity saturation. The dashed line \
                 shows a perfectly complex library where total reads = unique reads.</o>" \
-                 + self.plot_xy_data(self.preseq_data, pconfig)
+                 + plots.linegraph.plot(self.preseq_data, pconfig)

@@ -5,9 +5,8 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import re
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -80,19 +79,19 @@ class MultiqcModule(BaseMultiqcModule):
             self.sections.append({
                 'name': 'Reads Mapping',
                 'anchor': 'samtools-mapping',
-                'content': self.plot_bargraph(self.samtools_data, reads_cats, reads_pconfig)
+                'content': plots.bargraph.plot(self.samtools_data, reads_cats, reads_pconfig)
             })
             self.sections.append({
                 'name': 'Bases Mapping',
                 'anchor': 'samtools-bases',
-                'content': self.plot_bargraph(self.samtools_data, bases_cats, bases_pconfig)
+                'content': plots.bargraph.plot(self.samtools_data, bases_cats, bases_pconfig)
             })
             # only if data
             if any([any([self.samtools_data[k][v] > 0 for v in pairs_cats]) for k in self.samtools_data]):
                 self.sections.append({
                     'name': 'Read Pairs',
                     'anchor': 'samtools-pairs',
-                    'content': self.plot_bargraph(self.samtools_data, pairs_cats, pairs_pconfig)
+                    'content': plots.bargraph.plot(self.samtools_data, pairs_cats, pairs_pconfig)
                 })
 
 

@@ -7,7 +7,7 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
+from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ def parse_reports(self):
                 "<div class='alert alert-info' id='rseqc-junction_sat_single_hint'>" \
                 "<span class='glyphicon glyphicon-hand-up'></span> Click a line" \
                 " to see the data side by side (as in the original RSeQC plot).</div>" + 
-                self.plot_xy_data([
+                plots.linegraph.plot([
                     self.junction_saturation_all_pct,
                     self.junction_saturation_known_pct,
                     self.junction_saturation_novel_pct

@@ -7,7 +7,7 @@ import os
 from collections import OrderedDict
 import logging
 import re
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Number of duplicate reads',
         }
         # Only one section, so add to the intro
-        self.intro += self.plot_bargraph(self.samblaster_data, cats, pconfig)
+        self.intro += plots.bargraph.plot(self.samblaster_data, cats, pconfig)
 
     def parse_samblaster(self, f):
         """ Go through log file looking for samblaster output.

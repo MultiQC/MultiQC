@@ -9,9 +9,7 @@ import io
 import logging
 import os
 
-from collections import defaultdict
-
-from multiqc import config
+from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -99,14 +97,14 @@ def report_sections(self):
         self.sections.append({
             'name': 'Reads genomic origin',
             'anchor': 'qualimap-reads-genomic-origin',
-            'content': self.plot_bargraph(self.qualimap_rnaseq_gorigin, gorigin_cats, gorigin_pconfig)
+            'content': plots.bargraph.plot(self.qualimap_rnaseq_gorigin, gorigin_cats, gorigin_pconfig)
         })
     
     if len(self.qualimap_rnaseq_cov_hist) > 0:
         self.sections.append({
             'name': 'Coverage Profile Along Genes (total)',
             'anchor': 'qualimap-genome-fraction-coverage',
-            'content': self.plot_xy_data(self.qualimap_rnaseq_cov_hist, {
+            'content': plots.linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'title': 'Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
                 'xlab': 'Transcript Position (bp)',

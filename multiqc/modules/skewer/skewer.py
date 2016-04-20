@@ -8,7 +8,7 @@ import os
 from collections import OrderedDict
 import logging
 import re
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
 
-        html_content = self.plot_xy_data(self.skewer_readlen_dist, pconfig)
+        html_content = plots.linegraph.plot(self.skewer_readlen_dist, pconfig)
         
         # Only one section, so add to the intro
         self.intro += html_content

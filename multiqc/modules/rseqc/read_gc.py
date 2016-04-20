@@ -5,9 +5,8 @@ http://rseqc.sourceforge.net/#read-gc-py """
 
 from collections import OrderedDict
 import logging
-import re
 
-from multiqc import config
+from multiqc import config, plots, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ def parse_reports(self):
             'name': 'Read GC Content',
             'anchor': 'rseqc-read_gc',
             'content': "<p>"+p_link+" calculates a histogram of read GC content.</p>" + 
-                self.plot_xy_data([self.read_gc, self.read_gc_pct], pconfig)
+                plots.linegraph.plot([self.read_gc, self.read_gc_pct], pconfig)
         })
     
     # Return number of samples found

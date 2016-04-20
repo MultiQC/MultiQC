@@ -7,7 +7,7 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
+from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ def parse_reports(self):
             'content': "<p>"+p_link+" compares detected splice junctions to" \
                 " a reference gene model. An RNA read can be spliced 2" \
                 " or more times, each time is called a splicing event.</p>" +
-                self.plot_bargraph([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
+                plots.bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
         })
     
     # Return number of samples found

@@ -6,7 +6,7 @@ from __future__ import print_function
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -144,6 +144,6 @@ class MultiqcModule(BaseMultiqcModule):
                             {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
         }
         
-        html += self.plot_xy_data([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+        html += plots.linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
         
         return html

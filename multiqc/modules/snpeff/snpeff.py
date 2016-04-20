@@ -4,11 +4,9 @@
 
 from __future__ import print_function
 
-import os
 from collections import OrderedDict
 import logging
-import re
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -174,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
             'logswitch': True
         }
         
-        return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
         
     def effects_function_plot(self):
         """ Generate the SnpEff Counts by Functional Class plot """
@@ -194,7 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
             'logswitch': True
         }
         
-        return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
         
     
     
@@ -219,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
             'logswitch': True
         }
         
-        return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
     
     def count_genomic_region_plot(self):
         """ Generate the SnpEff Counts by Genomic Region plot """
@@ -242,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
             'logswitch': True
         }
         
-        return self.plot_bargraph(self.snpeff_data, pkeys, pconfig)
+        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
     
     
     def qualities_plot(self):
@@ -257,5 +255,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0
         }
         
-        return self.plot_xy_data(self.snpeff_qualities, pconfig)
+        return plots.linegraph.plot(self.snpeff_qualities, pconfig)
     

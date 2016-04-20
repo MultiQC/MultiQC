@@ -19,7 +19,7 @@ import os
 import re
 import zipfile
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -342,7 +342,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_sequence_quality',
             'content': '<p>The mean quality value across each base position in the read. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.</p>' + 
-                        self.plot_xy_data(self.fastqc_data['sequence_quality']['mean'], pconfig)
+                        plots.linegraph.plot(self.fastqc_data['sequence_quality']['mean'], pconfig)
         })
 
 
@@ -373,7 +373,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_per_seq_quality',
             'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data(self.fastqc_data['per_seq_quality'], pconfig)
+                        plots.linegraph.plot(self.fastqc_data['per_seq_quality'], pconfig)
         })
 
     
@@ -452,7 +452,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data([self.fastqc_data['gc_content'], data_norm], pconfig)
+                        plots.linegraph.plot([self.fastqc_data['gc_content'], data_norm], pconfig)
         })
     
     
@@ -486,7 +486,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_n_content',
             'content': '<p>The percentage of base calls at each position for which an N was called. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data(self.fastqc_data['n_content'], pconfig)
+                        plots.linegraph.plot(self.fastqc_data['n_content'], pconfig)
         })
     
     
@@ -512,7 +512,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
             html =  '<p>The distribution of fragment sizes (read lengths) found. \
                 See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.</p>'
-            html += self.plot_xy_data(self.fastqc_data['seq_length_dist'], pconfig)
+            html += plots.linegraph.plot(self.fastqc_data['seq_length_dist'], pconfig)
     
         self.sections.append({
             'name': 'Sequence Length Distribution',
@@ -545,7 +545,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_seq_dup_levels',
             'content': '<p>The relative level of duplication found for every sequence. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.</p>' +
-                        self.plot_xy_data(self.fastqc_data['seq_dup_levels'], pconfig)
+                        plots.linegraph.plot(self.fastqc_data['seq_dup_levels'], pconfig)
         })
         
         
@@ -582,7 +582,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plotdata[ds] = self.fastqc_data['adapter_content'][ds]
         
         if len(plotdata) > 0:
-            plot_html = self.plot_xy_data(plotdata, pconfig)
+            plot_html = plots.linegraph.plot(plotdata, pconfig)
         else:
             plot_html = '<div class="alert alert-warning">No samples found with any adapter contamination > 0.1%</div>'
         

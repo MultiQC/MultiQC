@@ -5,9 +5,8 @@ http://rseqc.sourceforge.net/#read-duplication-py """
 
 from collections import OrderedDict
 import logging
-import re
 
-from multiqc import config
+from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -53,7 +52,7 @@ def parse_reports(self):
             'anchor': 'rseqc-read_dups',
             'content': "<p>"+p_link+" calculates how many alignment positions have a certain number of exact duplicates."\
                 " Note - plot truncated at 500 occurances.</p>" + 
-                self.plot_xy_data(self.read_dups, pconfig)
+                plots.linegraph.plot(self.read_dups, pconfig)
         })
         
     # Return number of samples found

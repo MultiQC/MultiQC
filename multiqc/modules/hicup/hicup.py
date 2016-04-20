@@ -6,7 +6,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config, BaseMultiqcModule, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return self.plot_bargraph(data, keys, config)
+        return plots.bargraph.plot(data, keys, config)
     
     def hicup_alignment_chart (self):
         """ Generate the HiCUP Aligned reads plot """    
@@ -222,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return self.plot_bargraph(data, keys, config)
+        return plots.bargraph.plot(data, keys, config)
     
     def hicup_filtering_chart(self):
         """ Generate the HiCUP filtering plot """    
@@ -245,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_c_active': False
         }
         
-        return self.plot_bargraph(self.hicup_data, keys, config)
+        return plots.bargraph.plot(self.hicup_data, keys, config)
     
     def hicup_dedup_chart(self):
         """ Generate the HiCUP Deduplication plot """    
@@ -265,4 +265,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_c_active': False
         }
         
-        return self.plot_bargraph(self.hicup_data, keys, config)
+        return plots.bargraph.plot(self.hicup_data, keys, config)
