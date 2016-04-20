@@ -27,6 +27,7 @@ except NameError:
 
 # Set up global variables shared across modules
 general_stats = OrderedDict()
+general_stats_beeswarm_html = None
 general_stats_html = {
     'headers': OrderedDict(),
     'rows': defaultdict(lambda:dict())
@@ -83,17 +84,8 @@ def get_filelist():
             add_file(os.path.basename(directory), os.path.dirname(directory))
 
 
-def general_stats_build_table():
-    """ Helper function to add to the General Statistics table.
-    Parses report.general_stats and returns HTML for general stats table.
-    Also creates report.general_stats_raw for multiqc_general_stats.txt
-    :param data: A dict with the data. First key should be sample name,
-                 then the data key, then the data.
-    :param headers: Dict / OrderedDict with information for the headers, 
-                    such as colour scales, min and max values etc.
-                    See docs/writing_python.md for more information.
-    :return: None
-    """
+def general_stats_build_html():
+    """ Build the general stats HTML, be that a beeswarm plot or a table. """
     
     # First - collect settings for shared keys
     shared_keys = defaultdict(lambda: dict())
@@ -106,16 +98,13 @@ def general_stats_build_table():
                 shared_keys[sk]['dmax']  = max(headers[k]['dmax'], shared_keys[sk].get('dmax', headers[k]['dmax']))
                 shared_keys[sk]['dmin']  = max(headers[k]['dmin'], shared_keys[sk].get('dmin', headers[k]['dmin']))
     
-    # Now build required HTML
-    modcols = ['228,26,28', '55,126,184', '77,175,74', '152,78,163', '255,127,0', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
+    modcols = ['55,126,184', '77,175,74', '152,78,163', '255,127,0', '228,26,28', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
     midx = 0
+    sample_names = set()
     for mod in general_stats.keys():
+        
         headers = general_stats[mod]['headers']
         for k in headers.keys():
-            
-            rid = headers[k]['rid']
-            
-            headers[k]['modcol'] = modcols[midx]
             
             # Overwrite config with shared key settings
             sk = headers[k].get('shared_key', None)
@@ -123,6 +112,114 @@ def general_stats_build_table():
                 headers[k]['scale'] = shared_keys[sk]['scale']
                 headers[k]['dmax'] = shared_keys[sk]['dmax']
                 headers[k]['dmin'] = shared_keys[sk]['dmin']
+            
+            # Module colour
+            headers[k]['modcol'] = modcols[midx]
+        
+        # Count data points
+        for (sname, samp) in general_stats[mod]['data'].items():
+            sample_names.add(sname)
+        
+        # Increment module colour
+        midx += 1
+        if midx > (len(modcols) - 1):
+            midx = 0
+        
+    # Make a beeswarm plot if we have lots of samples
+    if len(sample_names) >= config.genstats_beeswarm_numseries:
+        logger.debug('Plotting general statistics beeswarm - {} samples'.format(len(sample_names)))
+        general_stats_build_beeswarm()
+    else:
+        logger.debug('Making general statistics table - {} samples'.format(len(sample_names)))
+        general_stats_build_table()
+
+
+
+def general_stats_build_beeswarm():
+    """ Helper function to build a beeswarm plot of General Statistics values.
+    Parses report.general_stats and returns HTML for the plot.
+    Also creates report.general_stats_raw for multiqc_general_stats.txt
+    :param data: A dict with the data. First key should be sample name,
+                 then the data key, then the data.
+    :param headers: Dict / OrderedDict with information for the series, 
+                    such as colour scales, min and max values etc.
+                    See docs/writing_python.md for more information.
+    :return: None
+    """
+    
+    
+    
+    categories = []
+    s_names = []
+    data = []
+    for mod in general_stats.keys():
+        headers = general_stats[mod]['headers']
+        for k in headers.keys():
+            
+            rid = headers[k]['rid']
+            modcol = 'rgb({})'.format(headers[k].get('modcol', '204,204,204'))
+
+            categories.append({
+                'title': headers[k]['title'],
+                'description': '<em>{}</em>: {}'.format(mod, headers[k]['description']),
+                'max': headers[k]['dmax'],
+                'min': headers[k]['dmin'],
+                'suffix': headers[k].get('suffix', ''),
+                'decimalPlaces': headers[k].get('decimalPlaces', '2'),
+                'bordercol': modcol
+            });
+            
+            # Add the data
+            thisdata = []
+            these_snames = []
+            for (sname, samp) in general_stats[mod]['data'].items():
+                if k in samp:
+                    
+                    val = samp[k]
+                    general_stats_raw[sname][rid] = val
+                    
+                    if 'modify' in headers[k] and callable(headers[k]['modify']):
+                        val = headers[k]['modify'](val)
+                    
+                    thisdata.append(val)
+                    these_snames.append(sname)
+            data.append(thisdata)
+            s_names.append(these_snames)
+    
+    # Plot and javascript function
+    global general_stats_beeswarm_html
+    general_stats_beeswarm_html = '<div class="hc-plot-wrapper"><div id="general_stats_beeswarm" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div> \n\
+    <script type="text/javascript"> \n\
+        mqc_plots["general_stats_beeswarm"] = {{ \n\
+            "plot_type": "beeswarm", \n\
+            "samples": {s}, \n\
+            "datasets": {d}, \n\
+            "categories": {c} \n\
+        }} \n\
+    </script>'.format(s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories));
+    
+            
+
+
+def general_stats_build_table():
+    """ Helper function to add to the General Statistics table.
+    Parses report.general_stats and returns HTML for general stats table.
+    Also creates report.general_stats_raw for multiqc_general_stats.txt
+    :param data: A dict with the data. First key should be sample name,
+                 then the data key, then the data.
+    :param headers: Dict / OrderedDict with information for the headers, 
+                    such as colour scales, min and max values etc.
+                    See docs/writing_python.md for more information.
+    :return: None
+    """
+    
+    for mod in general_stats.keys():
+        headers = general_stats[mod]['headers']
+        for k in headers.keys():
+            
+            rid = headers[k]['rid']
+            
+            if headers[k].get('shared_key', None) is not None:
                 sk = ' data-shared-key={}'.format(sk)
             else:
                 sk = ''
@@ -181,10 +278,6 @@ def general_stats_build_table():
                 general_stats_html['headers'].pop(rid, None)
                 logger.debug('Removing header {} from general stats table, as no data'.format(k))
         
-        # Index for colouring by module
-        midx += 1
-        if midx > (len(modcols) - 1):
-            midx = 0
     
     return None
     

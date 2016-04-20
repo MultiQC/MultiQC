@@ -139,6 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Error rate using CIGAR',
             'min': 0,
             'max': 100,
+            'suffix': '%',
             'scale': 'OrRd',
             'format': '{:.2f}%',
             'modify': lambda x: x * 100.0

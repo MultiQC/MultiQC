@@ -39,7 +39,8 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% of reads trimmed',
             'scale': 'RdYlGn-rev',
             'max': 100,
-            'min': 0
+            'min': 0,
+            'suffix': '%',
         }
 
         self.general_stats_addcols(self.skewer_data, headers)

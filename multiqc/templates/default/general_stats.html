@@ -7,6 +7,14 @@ This block generates the General Statistics table at the top of the report.
 #}
 
 
+{% if report.general_stats_beeswarm_html %}
+<div id="general_stats">
+  <h2>General Statistics</h2>
+  {{ report.general_stats_beeswarm_html }}
+</div>
+{% endif %}
+
+
 {% if report.general_stats_html['headers']|length > 0 %}
 <div id="general_stats">
 <h2>

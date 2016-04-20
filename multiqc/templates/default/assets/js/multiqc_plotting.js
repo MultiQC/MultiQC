@@ -133,14 +133,14 @@ $(function () {
       $(document).off('mouseup');
       // Fire off a custom jQuery event for other javascript chunks to tie into
       // Bind to the plot div, which should have a custom ID
-      $(wrapper.parent().find('.hc-plot')).trigger('mqc_plotresize');
+      $(wrapper.parent().find('.hc-plot, .beeswarm-plot')).trigger('mqc_plotresize');
     });
     $(document).on('mousemove', function(me){
       wrapper.css('height', startHeight + (me.pageY - pY));
     });
   });
   // Trigger HighCharts reflow when a plot is resized
-  $('.hc-plot').on('mqc_plotresize', function(e){
+  $('.hc-plot, .beeswarm-plot').on('mqc_plotresize', function(e){
     if($(this).highcharts()) {
       $(this).highcharts().reflow();
     }
@@ -165,6 +165,15 @@ function plot_graph(target, ds, max_num){
     else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
       if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
         plot_stacked_bar_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+      }
+    }
+    // Beeswarm graphs
+    else if(mqc_plots[target]['plot_type'] == 'beeswarm'){
+      if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
+        plot_beeswarm_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
         $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
@@ -486,6 +495,193 @@ function plot_stacked_bar_graph(target, ds){
     },
     series: data
   });
+}
+
+
+// Beeswarm plot
+function plot_beeswarm_graph(target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'beeswarm'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  if(ds === undefined){ ds = 0; }
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var datasets = JSON.parse(JSON.stringify(mqc_plots[target]['datasets']));
+  var samples = JSON.parse(JSON.stringify(mqc_plots[target]['samples']));
+  var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
+  
+  // Figure out how tall to make each plot
+  var ph_min = 40;
+  var ph_max = 100;
+  var pheight = 600 / categories.length;
+  pheight = Math.min(ph_max, Math.max(ph_min, pheight));
+  
+  // Clear the loading text and add hover text placeholder
+  $('#'+target).html('<div class="beeswarm-hovertext"><span class="placeholder">Hover for more information</span></div><div class="beeswarm-plots"></div>');
+  // Resize the parent draggable div
+  $('#'+target).parent().css('height', ((pheight*categories.length)+40)+'px');
+  
+  for (var i = 0; i < categories.length; i++) {
+    
+    var borderCol = categories[i]['bordercol'];
+    if (borderCol == undefined){
+      borderCol = '#cccccc';
+    }
+    
+    var data = datasets[i];
+    var s_names = samples[i];
+    var label = categories[i]['title'];
+    var label_long = categories[i]['description'];
+    var ttSuffix = categories[i]['suffix'];
+    var decimalPlaces = categories[i]['decimalPlaces'];
+    var minx = categories[i]['min'];
+    var maxx = categories[i]['max'];
+    
+  	var yspace = 70;
+    var ysep = 5;
+    if (maxx == undefined){
+    	maxx = Math.max.apply(null, data);
+    }
+    if (minx == undefined){
+    	minx = Math.max.apply(null, data);
+    }
+    var range = maxx-minx;
+    var sep = range/yspace;
+    data = data.sort();
+    var xydata = [];
+    var last = undefined;
+    var side = 1;
+    for (var row = 0; row < data.length; row++) {
+      s_name = s_names[row];
+      d = data[row];
+      if (Math.floor(d/sep) !== last){
+        last = Math.floor(d/sep);
+        side = 1;
+      } else {
+        side += 1;
+      }
+      multiplier = (side % 2 == 0) ? 1 : -1;
+      var y = (Math.floor(side/2) * multiplier)/ysep;
+      // Don't let jitter get too big
+      while(y > 1 || y < -1){
+        var n = Math.floor(Math.abs(y)) + 1;
+        y = (Math.floor(side/2) * multiplier)/(ysep*n);
+      }
+      xydata.push({'x':d, 'y':y, 'name':s_name});
+    }
+
+    $('<div class="beeswarm-plot" />')
+      .appendTo('#'+target+' .beeswarm-plots')
+      .css({
+        'border-left': '2px solid '+borderCol,
+        'height': (100/categories.length)+'%'
+      })
+      .highcharts({
+  			chart: {
+            type: 'scatter',
+            spacingTop: 0,
+            marginBottom: 0,
+            marginRight: 20,
+            marginLeft: 100,
+            backgroundColor: 'transparent'
+        },
+        title: {
+          text: label,
+          align: 'left',
+          verticalAlign: 'middle',
+          y: 10,
+          useHTML: true,
+          style: {
+              fontSize: '10px'
+          }
+        },
+        yAxis: {
+            title: {text: null},
+            max: 1,
+            min: -1,
+            gridLineWidth: 0,
+            title: {text: null},
+            labels: {enabled: false},
+            lineWidth: 0
+        },
+        xAxis: {
+        	lineWidth: 0,
+          tickWidth: 0,
+          tickPixelInterval: 200,
+          labels: {
+            format: '{value}'+ttSuffix,
+            reserveSpace: false,
+            y: (-1*(pheight/2))+5,
+            zIndex: 1,
+            style: {
+                color: '#999999'
+            }
+          },
+          min: minx,
+          max: maxx,
+        },
+        tooltip: {
+          valueSuffix: ttSuffix,
+          valueDecimals: decimalPlaces,
+          formatter: function(){
+            var value = this.point.x.toFixed(this.series.tooltipOptions.valueDecimals);
+            var suff = this.series.tooltipOptions.valueSuffix;
+            var ttstring = '<span class="hoverLongName" style="float:right;">'+this.series.name+'</span><samp>'+this.point.name+'</samp>: &nbsp; <b style="font-size:14px;">'+value+' '+suff+'</b>';
+            $('#'+target+' .beeswarm-hovertext').html(ttstring);
+            return false;
+          }
+        },
+        plotOptions: {
+          series: {
+            name: label_long,
+            marker: {
+              radius: 2.5,
+              states: {
+                hover: {
+                  radiusPlus: 4,
+                  lineWidthPlus: 2,
+                  lineColor: '#333333'
+                }
+              }
+            },
+            stickyTracking: false,
+            point: {
+              events: {
+                mouseOver: function (e) {
+                  var hovName = this.name;
+                  $('#'+target+' .beeswarm-plot').each(function(){
+                    var plot = $(this).highcharts();
+                    for (i = 0; i < plot.series[0].data.length; ++i) {
+                      if(plot.series[0].data[i].name == hovName){
+                        plot.series[0].data[i].setState('hover');
+                      }
+                    }
+                  });
+                  
+                },
+                mouseOut: function () {
+                  $('#'+target+' .beeswarm-plot').each(function(){
+                    var plot = $(this).highcharts();
+                    for (i = 0; i < plot.series[0].data.length; ++i) {
+                      plot.series[0].data[i].setState();
+                    }
+                  });
+                  $('#'+target+' .beeswarm-hovertext').html('<span class="placeholder">Hover for more information</span>');
+                }
+              }
+            }
+          }
+        },
+        legend: { enabled: false },
+        credits: { enabled: false },
+        exporting: { enabled: false },
+        series: [{ data: xydata, color: borderCol }]
+
+    });
+
+  }
 }
 
 

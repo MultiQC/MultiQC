@@ -410,6 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'MarkDuplicates - Percent Duplication',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'OrRd',
             'format': '{:.1f}%',
             'modify': lambda x: multiply_hundred(x)
@@ -418,6 +419,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Insert Size',
             'description': 'Median Insert Size, all read orientations (bp)',
             'min': 0,
+            'suffix': 'bp',
             'format': '{:.0f}',
             'scale': 'GnBu',
         }
@@ -432,6 +434,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Percent of target bases with coverage &ge; 30X',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'format': '{:.0f}%',
             'scale': 'RdYlGn',
             'modify': lambda x: multiply_hundred(x)
@@ -441,6 +444,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'CCG-CAG Oxidation Error Rate',
             'max': 1,
             'min': 0,
+            'suffix': '%',
             'format': '{:.0f}%',
             'scale': 'RdYlGn-rev',
             'modify': lambda x: multiply_hundred(x)

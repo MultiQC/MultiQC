@@ -92,6 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'overall read mapping rate',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%'
         }

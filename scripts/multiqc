@@ -299,8 +299,8 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     
     plugin_hooks.mqc_trigger('after_modules')
     
-    # Generate the General Statistics table
-    report.general_stats_build_table()
+    # Generate the General Statistics HTML
+    report.general_stats_build_html()
     
     # Write the general stats and report sources to disk
     if config.data_dir is not None:

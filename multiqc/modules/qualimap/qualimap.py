@@ -53,14 +53,16 @@ class MultiqcModule(BaseMultiqcModule):
         headers['avg_gc'] = {
             'title': 'Avg. GC',
             'description': 'Average GC content',
-            'max': 80,
-            'min': 20,
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
             'format': '{:.0f}%'
         }
         headers['median_insert_size'] = {
             'title': 'Insert Size',
             'description': 'Median Insert Size',
             'min': 0,
+            'suffix': 'bp',
             'scale': 'PuOr',
             'format': '{:.0f}'
         }
@@ -69,6 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Fraction of genome with at least 30X coverage',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'RdYlGn',
             'format': '{:.1f}%'
         }
@@ -76,6 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Coverage',
             'description': 'Median coverage',
             'min': 0,
+            'suffix': 'X',
             'scale': 'RdBu'
         }
         headers['mapped_reads'] = {
