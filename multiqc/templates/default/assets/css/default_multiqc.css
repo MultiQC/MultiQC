@@ -709,6 +709,15 @@ tbody .sorthandle {
     background-color: #999;
 }
 
-.beeswarm:first-child {
-  margin-top: 15px;
+.beeswarm:nth-child(odd) {
+  background-color: #ededed;
+}
+.beeswarm-hovertext {
+  height: 25px;
+  padding: 3px 5px;
+  font-size: 12px;
+}
+.beeswarm-hovertext .placeholder {
+  color: #999;
+  font-style: italic;
 }

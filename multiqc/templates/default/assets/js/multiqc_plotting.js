@@ -513,17 +513,30 @@ function plot_beeswarm_graph(target, ds){
   var samples = JSON.parse(JSON.stringify(mqc_plots[target]['samples']));
   var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
   
-  // Clear the loading text
-  $('#'+target).html('');
+  // Figure out how tall to make each plot
+  var ph_min = 1; //20;
+  var ph_max = 100;
+  var pheight = 600 / categories.length;
+  pheight = Math.min(ph_max, Math.max(ph_min, pheight));
+  
+  // Clear the loading text and add hover text placeholder
+  $('#'+target).html('<div class="beeswarm-hovertext"><span class="placeholder">Hover for more information</span></div>');
   // Resize the parent draggable div
-  $('#'+target).parent().css('height', ((105*categories.length)+15)+'px');
+  $('#'+target).parent().css('height', ((pheight*categories.length)+40)+'px');
   
   for (var i = 0; i < categories.length; i++) {
+    
+    var borderCol = categories[i]['bordercol'];
+    if (borderCol == undefined){
+      borderCol = '#cccccc';
+    }
+    
     var data = datasets[i];
     var s_names = samples[i];
     var label = categories[i]['title'];
     var label_long = categories[i]['description'];
-    var ttSuffix = ''; //categories[i][''];
+    var ttSuffix = categories[i]['ttSuffix'];
+    var decimalPlaces = categories[i]['decimalPlaces'];
     var minx = categories[i]['min'];
     var maxx = categories[i]['max'];
     
@@ -562,35 +575,61 @@ function plot_beeswarm_graph(target, ds){
 
     $('<div class="beeswarm" />').appendTo('#'+target).highcharts({
   			chart: {
-            height: 100,
             type: 'scatter',
+            height: pheight,
             spacingTop: 0,
-            spacingBottom: 5,
-            marginRight: 20
+            marginBottom: 0,
+            marginRight: 20,
+            marginLeft: 100,
+            backgroundColor: 'transparent'
         },
-        title: {text: null },
+        title: {
+          text: label,
+          align: 'left',
+          verticalAlign: 'middle',
+          y: 10,
+          style: {
+              fontSize: '10px'
+          }
+        },
         yAxis: {
             title: {text: null},
             max: 1,
             min: -1,
             gridLineWidth: 0,
-            title: {text: label},
+            title: {text: null},
             labels: {enabled: false},
-            lineWidth: 1
+            lineWidth: 0
         },
         xAxis: {
         	lineWidth: 0,
           tickWidth: 0,
-          labels: {format: '{value} '+ttSuffix},
+          tickAmount: 4,
+          labels: {
+            format: '{value} '+ttSuffix,
+            reserveSpace: false,
+            y: (-1*(pheight/2))+5,
+            style: {
+                color: '#999999'
+            }
+          },
           min: minx,
           max: maxx
         },
         tooltip: {
-        	headerFormat: '<span style="font-size: 10px">'+label_long+'</span><br>',
-        	pointFormat: '{point.name}: <b>{point.x} '+ttSuffix+'</b>'
+          valueSuffix: ttSuffix,
+          valueDecimals: decimalPlaces,
+          formatter: function(){
+            var value = this.point.x.toFixed(this.series.tooltipOptions.valueDecimals);
+            var suff = this.series.tooltipOptions.valueSuffix;
+            var ttstring = '<em>'+this.series.name+'</em>: <code>'+this.point.name+'</code>: <b>'+value+' '+suff+'</b>';
+            $('#'+target+' .beeswarm-hovertext').html(ttstring);
+            return false;
+          }
         },
         plotOptions: {
           series: {
+            name: label_long,
             marker: {
               radius: 2.5
             }
@@ -601,7 +640,8 @@ function plot_beeswarm_graph(target, ds){
         exporting: { enabled: false },
         series: [{ data: xydata }]
 
-    });
+    }).css('border-left', '2px solid '+borderCol);
+
   }
 }
 

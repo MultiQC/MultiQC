@@ -136,7 +136,10 @@ def general_stats_build_beeswarm():
                 'title': headers[k]['title'],
                 'description': headers[k]['description'],
                 'max': headers[k]['dmax'],
-                'min': headers[k]['dmin']
+                'min': headers[k]['dmin'],
+                'ttSuffix': headers[k].get('ttSuffix', ''),
+                'decimalPlaces': headers[k].get('decimalPlaces', '2'),
+                'bordercol': headers[k].get('bordercol', None)
             });
             
             # Add the data
