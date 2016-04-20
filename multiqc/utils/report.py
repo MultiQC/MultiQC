@@ -86,6 +86,44 @@ def get_filelist():
 
 def general_stats_build_html():
     """ Build the general stats HTML, be that a beeswarm plot or a table. """
+    
+    # First - collect settings for shared keys
+    shared_keys = defaultdict(lambda: dict())
+    for mod in general_stats.keys():
+        headers = general_stats[mod]['headers']
+        for k in headers.keys():
+            sk = headers[k].get('shared_key', None)
+            if sk is not None:
+                shared_keys[sk]['scale'] = headers[k]['scale']
+                shared_keys[sk]['dmax']  = max(headers[k]['dmax'], shared_keys[sk].get('dmax', headers[k]['dmax']))
+                shared_keys[sk]['dmin']  = max(headers[k]['dmin'], shared_keys[sk].get('dmin', headers[k]['dmin']))
+    
+    modcols = ['55,126,184', '77,175,74', '152,78,163', '255,127,0', '228,26,28', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
+    midx = 0
+    for mod in general_stats.keys():
+        
+        headers = general_stats[mod]['headers']
+        for k in headers.keys():
+            
+            # Overwrite config with shared key settings
+            sk = headers[k].get('shared_key', None)
+            if sk is not None:
+                headers[k]['scale'] = shared_keys[sk]['scale']
+                headers[k]['dmax'] = shared_keys[sk]['dmax']
+                headers[k]['dmin'] = shared_keys[sk]['dmin']
+                sk = ' data-shared-key={}'.format(sk)
+            else:
+                sk = ''
+            
+            # Module colour
+            headers[k]['modcol'] = modcols[midx]
+        
+        # Increment module colour
+        midx += 1
+        if midx > (len(modcols) - 1):
+            midx = 0
+        
+        
     general_stats_build_beeswarm()
 
 
@@ -102,16 +140,7 @@ def general_stats_build_beeswarm():
     :return: None
     """
     
-    # First - collect settings for shared keys
-    shared_keys = defaultdict(lambda: dict())
-    for mod in general_stats.keys():
-        headers = general_stats[mod]['headers']
-        for k in headers.keys():
-            sk = headers[k].get('shared_key', None)
-            if sk is not None:
-                shared_keys[sk]['scale'] = headers[k]['scale']
-                shared_keys[sk]['dmax']  = max(headers[k]['dmax'], shared_keys[sk].get('dmax', headers[k]['dmax']))
-                shared_keys[sk]['dmin']  = max(headers[k]['dmin'], shared_keys[sk].get('dmin', headers[k]['dmin']))
+    
     
     categories = []
     s_names = []
@@ -121,25 +150,16 @@ def general_stats_build_beeswarm():
         for k in headers.keys():
             
             rid = headers[k]['rid']
-            
-            # Overwrite config with shared key settings
-            sk = headers[k].get('shared_key', None)
-            if sk is not None:
-                headers[k]['scale'] = shared_keys[sk]['scale']
-                headers[k]['dmax'] = shared_keys[sk]['dmax']
-                headers[k]['dmin'] = shared_keys[sk]['dmin']
-                sk = ' data-shared-key={}'.format(sk)
-            else:
-                sk = ''
-            
+            modcol = 'rgb({})'.format(headers[k].get('modcol', '204,204,204'))
+
             categories.append({
                 'title': headers[k]['title'],
-                'description': headers[k]['description'],
+                'description': '<em>{}</em>: {}'.format(mod, headers[k]['description']),
                 'max': headers[k]['dmax'],
                 'min': headers[k]['dmin'],
-                'ttSuffix': headers[k].get('ttSuffix', ''),
+                'suffix': headers[k].get('suffix', ''),
                 'decimalPlaces': headers[k].get('decimalPlaces', '2'),
-                'bordercol': headers[k].get('bordercol', None)
+                'bordercol': modcol
             });
             
             # Add the data
@@ -186,37 +206,11 @@ def general_stats_build_table():
     :return: None
     """
     
-    # First - collect settings for shared keys
-    shared_keys = defaultdict(lambda: dict())
-    for mod in general_stats.keys():
-        headers = general_stats[mod]['headers']
-        for k in headers.keys():
-            sk = headers[k].get('shared_key', None)
-            if sk is not None:
-                shared_keys[sk]['scale'] = headers[k]['scale']
-                shared_keys[sk]['dmax']  = max(headers[k]['dmax'], shared_keys[sk].get('dmax', headers[k]['dmax']))
-                shared_keys[sk]['dmin']  = max(headers[k]['dmin'], shared_keys[sk].get('dmin', headers[k]['dmin']))
-    
-    # Now build required HTML
-    modcols = ['228,26,28', '55,126,184', '77,175,74', '152,78,163', '255,127,0', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
-    midx = 0
     for mod in general_stats.keys():
         headers = general_stats[mod]['headers']
         for k in headers.keys():
             
             rid = headers[k]['rid']
-            
-            headers[k]['modcol'] = modcols[midx]
-            
-            # Overwrite config with shared key settings
-            sk = headers[k].get('shared_key', None)
-            if sk is not None:
-                headers[k]['scale'] = shared_keys[sk]['scale']
-                headers[k]['dmax'] = shared_keys[sk]['dmax']
-                headers[k]['dmin'] = shared_keys[sk]['dmin']
-                sk = ' data-shared-key={}'.format(sk)
-            else:
-                sk = ''
             
             general_stats_html['headers'][rid] = '<th \
                     id="header_{rid}" \
@@ -272,10 +266,6 @@ def general_stats_build_table():
                 general_stats_html['headers'].pop(rid, None)
                 logger.debug('Removing header {} from general stats table, as no data'.format(k))
         
-        # Index for colouring by module
-        midx += 1
-        if midx > (len(modcols) - 1):
-            midx = 0
     
     return None
     

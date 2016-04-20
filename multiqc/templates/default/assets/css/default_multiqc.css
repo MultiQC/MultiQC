@@ -709,15 +709,22 @@ tbody .sorthandle {
     background-color: #999;
 }
 
-.beeswarm:nth-child(odd) {
-  background-color: #ededed;
-}
 .beeswarm-hovertext {
   height: 25px;
   padding: 3px 5px;
   font-size: 12px;
+  border-left: 2px solid #46b8da;
+  border-bottom: 1px solid #dedede;
+  background-color: #d9edf7;
+  color: #31708f;
 }
 .beeswarm-hovertext .placeholder {
   color: #999;
   font-style: italic;
+}
+.beeswarm-plots {
+  height: calc(100% - 25px);
+}
+.beeswarm-plot:nth-child(odd) {
+  background-color: #ededed;
 }

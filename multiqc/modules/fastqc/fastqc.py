@@ -284,14 +284,16 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '% Duplicate Reads',
             'max': 100,
             'min': 0,
+            'suffix': '%',
             'scale': 'RdYlGn-rev',
             'format': '{:.1f}%'
         }
         headers['percent_gc'] = {
             'title': '% GC',
             'description': 'Average % GC Content',
-            'max': 80,
-            'min': 20,
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
             'scale': 'PRGn',
             'format': '{:.0f}%'
         }
@@ -299,6 +301,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Length',
             'description': 'Average Sequence Length (bp)',
             'min': 0,
+            'suffix': 'bp',
             'scale': 'RdYlGn',
             'format': '{:.0f}'
         }

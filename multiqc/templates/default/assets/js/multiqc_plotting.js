@@ -133,14 +133,14 @@ $(function () {
       $(document).off('mouseup');
       // Fire off a custom jQuery event for other javascript chunks to tie into
       // Bind to the plot div, which should have a custom ID
-      $(wrapper.parent().find('.hc-plot')).trigger('mqc_plotresize');
+      $(wrapper.parent().find('.hc-plot, .beeswarm-plot')).trigger('mqc_plotresize');
     });
     $(document).on('mousemove', function(me){
       wrapper.css('height', startHeight + (me.pageY - pY));
     });
   });
   // Trigger HighCharts reflow when a plot is resized
-  $('.hc-plot').on('mqc_plotresize', function(e){
+  $('.hc-plot, .beeswarm-plot').on('mqc_plotresize', function(e){
     if($(this).highcharts()) {
       $(this).highcharts().reflow();
     }
@@ -499,7 +499,6 @@ function plot_stacked_bar_graph(target, ds){
 
 
 // Beeswarm plot
-// function plot_beeswarm_graph(data, s_names, label, label_long, ttSuffix, minx, maxx){
 function plot_beeswarm_graph(target, ds){
   if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'beeswarm'){
     return false;
@@ -514,13 +513,13 @@ function plot_beeswarm_graph(target, ds){
   var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
   
   // Figure out how tall to make each plot
-  var ph_min = 1; //20;
+  var ph_min = 40;
   var ph_max = 100;
   var pheight = 600 / categories.length;
   pheight = Math.min(ph_max, Math.max(ph_min, pheight));
   
   // Clear the loading text and add hover text placeholder
-  $('#'+target).html('<div class="beeswarm-hovertext"><span class="placeholder">Hover for more information</span></div>');
+  $('#'+target).html('<div class="beeswarm-hovertext"><span class="placeholder">Hover for more information</span></div><div class="beeswarm-plots"></div>');
   // Resize the parent draggable div
   $('#'+target).parent().css('height', ((pheight*categories.length)+40)+'px');
   
@@ -535,7 +534,7 @@ function plot_beeswarm_graph(target, ds){
     var s_names = samples[i];
     var label = categories[i]['title'];
     var label_long = categories[i]['description'];
-    var ttSuffix = categories[i]['ttSuffix'];
+    var ttSuffix = categories[i]['suffix'];
     var decimalPlaces = categories[i]['decimalPlaces'];
     var minx = categories[i]['min'];
     var maxx = categories[i]['max'];
@@ -573,10 +572,15 @@ function plot_beeswarm_graph(target, ds){
       xydata.push({'x':d, 'y':y, 'name':s_name});
     }
 
-    $('<div class="beeswarm" />').appendTo('#'+target).highcharts({
+    $('<div class="beeswarm-plot" />')
+      .appendTo('#'+target+' .beeswarm-plots')
+      .css({
+        'border-left': '2px solid '+borderCol,
+        'height': (100/categories.length)+'%'
+      })
+      .highcharts({
   			chart: {
             type: 'scatter',
-            height: pheight,
             spacingTop: 0,
             marginBottom: 0,
             marginRight: 20,
@@ -604,17 +608,18 @@ function plot_beeswarm_graph(target, ds){
         xAxis: {
         	lineWidth: 0,
           tickWidth: 0,
-          tickAmount: 4,
+          tickPixelInterval: 200,
           labels: {
-            format: '{value} '+ttSuffix,
+            format: '{value}'+ttSuffix,
             reserveSpace: false,
             y: (-1*(pheight/2))+5,
+            zIndex: 1,
             style: {
                 color: '#999999'
             }
           },
           min: minx,
-          max: maxx
+          max: maxx,
         },
         tooltip: {
           valueSuffix: ttSuffix,
@@ -622,7 +627,7 @@ function plot_beeswarm_graph(target, ds){
           formatter: function(){
             var value = this.point.x.toFixed(this.series.tooltipOptions.valueDecimals);
             var suff = this.series.tooltipOptions.valueSuffix;
-            var ttstring = '<em>'+this.series.name+'</em>: <code>'+this.point.name+'</code>: <b>'+value+' '+suff+'</b>';
+            var ttstring = '<span class="hoverLongName" style="float:right;">'+this.series.name+'</span><samp>'+this.point.name+'</samp>: &nbsp; <b style="font-size:14px;">'+value+' '+suff+'</b>';
             $('#'+target+' .beeswarm-hovertext').html(ttstring);
             return false;
           }
@@ -631,16 +636,49 @@ function plot_beeswarm_graph(target, ds){
           series: {
             name: label_long,
             marker: {
-              radius: 2.5
+              radius: 2.5,
+              states: {
+                hover: {
+                  radiusPlus: 4,
+                  lineWidthPlus: 2,
+                  lineColor: '#333333'
+                }
+              }
+            },
+            stickyTracking: false,
+            point: {
+              events: {
+                mouseOver: function (e) {
+                  var hovName = this.name;
+                  $('#'+target+' .beeswarm-plot').each(function(){
+                    var plot = $(this).highcharts();
+                    for (i = 0; i < plot.series[0].data.length; ++i) {
+                      if(plot.series[0].data[i].name == hovName){
+                        plot.series[0].data[i].setState('hover');
+                      }
+                    }
+                  });
+                  
+                },
+                mouseOut: function () {
+                  $('#'+target+' .beeswarm-plot').each(function(){
+                    var plot = $(this).highcharts();
+                    for (i = 0; i < plot.series[0].data.length; ++i) {
+                      plot.series[0].data[i].setState();
+                    }
+                  });
+                  $('#'+target+' .beeswarm-hovertext').html('<span class="placeholder">Hover for more information</span>');
+                }
+              }
             }
           }
         },
         legend: { enabled: false },
         credits: { enabled: false },
         exporting: { enabled: false },
-        series: [{ data: xydata }]
+        series: [{ data: xydata, color: borderCol }]
 
-    }).css('border-left', '2px solid '+borderCol);
+    });
 
   }
 }
