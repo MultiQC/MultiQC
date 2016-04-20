@@ -4,6 +4,7 @@
 
 import base64
 from collections import OrderedDict
+import io
 import json
 import logging
 import math

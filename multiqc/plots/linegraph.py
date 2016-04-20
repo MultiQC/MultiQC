@@ -3,6 +3,7 @@
 """ MultiQC functions to plot a report linegraph """
 
 import base64
+import io
 import json
 import logging
 import os
