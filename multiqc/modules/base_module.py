@@ -98,26 +98,29 @@ class BaseMultiqcModule(object):
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     if config.report_readerrors:
                         logger.debug("Couldn't read file when looking for output: {}".format(fn))
-    
-    
-    def clean_s_name(self, s_name, root):
+
+    def clean_s_name(self, s_name, root, pattern=None):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
         :param root: The directory path that this file is within
+        :param pattern: Remove specific patterns from file name
         :config.prepend_dirs: boolean, whether to prepend dir name to s_name
         :return: The cleaned sample name, ready to be used
         """
         if root is None:
             root = ''
+        if pattern is not None:
+            s_name = s_name.replace(pattern, "")
+
         # Split then take first section to remove everything after these matches
         for ext in config.fn_clean_exts:
             s_name = os.path.basename(s_name.split(ext ,1)[0])
         if config.prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
-    
-    
+
+
     def general_stats_addcols(self, data, headers={}, namespace=None):
         """ Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
@@ -190,7 +193,7 @@ class BaseMultiqcModule(object):
             }
         
         return None
-    
+
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         try:
             if module is None:
@@ -204,8 +207,7 @@ class BaseMultiqcModule(object):
             report.data_sources[module][section][s_name] = source
         except AttributeError:
             logger.warning('Tried to add data source for {}, but was missing fields data'.format(self.name))
-        
-    
+
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Redirects to report.write_data_file() """
         report.write_data_file(data, fn, sort_cols, data_format)
