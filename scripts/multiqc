@@ -110,6 +110,10 @@ plugin_hooks.mqc_trigger('config_loaded')
                     is_flag = True,
                     help = "Use only interactive plots (HighCharts Javascript)"
 )
+@click.option('-c', '--config', 'config_file',
+                    type = click.Path(exists=True, readable=True),
+                    help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
+)
 @click.option('-v', '--verbose', 
                     count = True,
                     default = 0,
@@ -122,7 +126,7 @@ plugin_hooks.mqc_trigger('config_loaded')
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, filename, 
-make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, verbose, quiet, **kwargs):
+make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     """MultiQC is a tool generate qc reports.
     
         It can be used to create an aggregate report summarising the results
@@ -146,6 +150,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     logger.debug("Template    : {}".format(template))
     
     # Overwrite config defaults with user yaml files
+    config.config_file = config_file
     config.mqc_load_userconfig()
     
     # Check that we're running the latest version of MultiQC

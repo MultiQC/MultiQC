@@ -46,6 +46,7 @@ no_version_check = False
 num_datasets_plot_limit = 50
 log_filesize_limit = 5000000
 report_readerrors = False
+config_file = None
 
 #######################
 # Module fn search patterns
@@ -136,29 +137,36 @@ def mqc_load_userconfig():
     mqc_load_config(os.path.expanduser('~/.multiqc_config.yaml'))
     
     # Load and parse a config file in this working directory if we find it
-    mqc_load_config('.multiqc_config.yaml')
+    mqc_load_config('multiqc_config.yaml')
+    
+    # User specified config file?
+    if config_file is not None:
+        logger.info("Loading config settings from: {}".format(config_file))
+        mqc_load_config(config_file)
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
-    try:
-        with open(yaml_config) as f:
-            new_config = yaml.load(f)
-            logger.debug("Loading config settings from: {}".format(yaml_config))
-            for c, v in new_config.items():
-                if c == 'sp':
-                    # Merge filename patterns instead of replacing
-                    sp.extend(v)
-                    logger.debug("Added to filename patterns: {}".format(sp))
-                if c == 'extra_fn_clean_exts':
-                    # Merge filename cleaning patterns instead of replacing
-                    fn_clean_exts.extend(v)
-                    logger.debug("Added to filename clean extensions. Now looking for: {}".format(fn_clean_exts))
-                else:
-                    logger.debug("New config '{}': {}".format(c, v))
-                    globals()[c] = v
-    except (IOError, AttributeError) as e:
-        logger.debug("No MultiQC user config found: {}".format(yaml_config))
-        logger.debug("Config error: {}".format(e))
+    if os.path.isfile(yaml_config):
+        try:
+            with open(yaml_config) as f:
+                new_config = yaml.load(f)
+                logger.debug("Loading config settings from: {}".format(yaml_config))
+                for c, v in new_config.items():
+                    if c == 'sp':
+                        # Merge filename patterns instead of replacing
+                        sp.extend(v)
+                        logger.debug("Added to filename patterns: {}".format(sp))
+                    if c == 'extra_fn_clean_exts':
+                        # Merge filename cleaning patterns instead of replacing
+                        fn_clean_exts.extend(v)
+                        logger.debug("Added to filename clean extensions. Now looking for: {}".format(fn_clean_exts))
+                    else:
+                        logger.debug("New config '{}': {}".format(c, v))
+                        globals()[c] = v
+        except (IOError, AttributeError) as e:
+            logger.debug("Config error: {}".format(e))
+    else:
+        logger.debug("No MultiQC config found: {}".format(yaml_config))
 
 # These config vars are imported by all modules and can be updated by anything.
 # The main launcher (scripts/multiqc) overwrites some of these variables

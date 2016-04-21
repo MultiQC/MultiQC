@@ -9,6 +9,9 @@
 * Config files now loaded from working directory if present
 * Started new docs describing how each module works
 * Refactored featureCounts module. Now handles summaries describing multiple samples.
+* Stopped using so many hidden files. `.multiqc.log` now called `multiqc.log`
+* New `-c`/`--config` command line option to specify a MultiQC configuration file
+* Can now load run-specific config files called `multiqc_config.yaml` in working directory
 * Bugfix: Qualimap handles infinity symbol (thanks @chapmanb )
 * Bugfix: Made SnpEff less fussy about required fields for making plots
 * Bufgix: UTF-8 file paths handled properly in Py2.7+

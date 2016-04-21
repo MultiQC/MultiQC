@@ -13,7 +13,7 @@ from multiqc.utils import config
 
 LEVELS = {0: 'INFO', 1: 'DEBUG'}
 log_tmp_dir = tempfile.mkdtemp()
-log_tmp_fn = os.path.join(log_tmp_dir, '.multiqc.log')
+log_tmp_fn = os.path.join(log_tmp_dir, 'multiqc.log')
 
 def init_log(logger, loglevel=0):
     """
