@@ -6,6 +6,10 @@ This block generates the General Statistics table at the top of the report.
 
 #}
 
+<div id="general_stats">
+  <h2>General Statistics</h2>
+  {{ report.general_stats_html }}
+</div>
 
 {% if report.general_stats_beeswarm_html %}
 <div id="general_stats">

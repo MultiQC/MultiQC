@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 
-""" MultiQC functions to plot a report beeswarm group """
+""" MultiQC functions to plot a table """
 
+from collections import defaultdict
 import json
 import logging
 import os
 import random
 
-from multiqc.utils import report, config
+from multiqc.utils import config
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
 def plot (data, headers=[], pconfig={}):
-    """ Return HTML for a MultiQC table. See CONTRIBUTING.md for
-    further instructions on use.
+    """ Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
-    :param headers: optional dict with column config in key:value pairs.
+    :param headers: list of optional dicts with column config in key:value pairs.
     :return: HTML ready to be inserted into the page
     """
     
@@ -39,7 +39,7 @@ class datatable (object):
         shared_keys = defaultdict(lambda: dict())
         
         # Go through each table section
-        for idx, d in data.items():
+        for idx, d in enumerate(data):
             
             # Get the header keys
             try:
@@ -80,7 +80,7 @@ class datatable (object):
                 
                 # Figure out the min / max if not supplied
                 if setdmax or setdmin:
-                    for (sname, samp) in data.items():
+                    for (sname, samp) in enumerate(data):
                         try:
                             val = float(samp[k])
                             if 'modify' in headers[idx][k] and callable(headers[idx][k]['modify']):
@@ -117,7 +117,7 @@ class datatable (object):
         self.pconfig = pconfig
 
 
-def make_table_html (dt):
+def make_table (dt):
     """
     Build the HTML needed for a MultiQC table.
     :param data: MultiQC datatable object

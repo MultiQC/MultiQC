@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC functions to plot a report linegraph """
+""" MultiQC functions to plot a linegraph """
 
 import base64
 import io
@@ -14,7 +14,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from multiqc.utils import report, config
+from multiqc.utils import config
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -114,7 +114,6 @@ def highcharts_linegraph (plotdata, pconfig={}):
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
     
-    report.num_hc_plots += 1
     return html
 
 
@@ -303,7 +302,6 @@ def matplotlib_linegraph (plotdata, pconfig={}):
     # Close wrapping div
     html += '</div>'
     
-    report.num_mpl_plots += 1
     return html
 
 

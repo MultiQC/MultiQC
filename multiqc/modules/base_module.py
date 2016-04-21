@@ -154,10 +154,8 @@ class BaseMultiqcModule(object):
                 headers[k]['description'] = '{}: {}'.format(namespace, desc)
         
         # Append to report.general_stats for later assembly into table 
-        report.general_stats.append({
-            'data': data,
-            'headers': headers
-        })
+        report.general_stats_data.append(data)
+        report.general_stats_headers.append(headers)
     
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         try:

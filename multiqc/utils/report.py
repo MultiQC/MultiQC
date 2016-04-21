@@ -13,8 +13,7 @@ import mimetypes
 import os
 import yaml
 
-from multiqc import logger
-from multiqc.utils import config
+from multiqc import logger, config, plots
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
 from yaml.representer import Representer, SafeRepresenter
@@ -26,7 +25,8 @@ except NameError:
     pass # Python 3
 
 # Set up global variables shared across modules
-general_stats = OrderedDict()
+general_stats_data = list()
+general_stats_headers = list()
 general_stats_beeswarm_html = None
 general_stats_html = {
     'headers': OrderedDict(),
@@ -87,51 +87,15 @@ def get_filelist():
 def general_stats_build_html():
     """ Build the general stats HTML, be that a beeswarm plot or a table. """
     
-    # First - collect settings for shared keys
-    shared_keys = defaultdict(lambda: dict())
-    for mod in general_stats.keys():
-        headers = general_stats[mod]['headers']
-        for k in headers.keys():
-            sk = headers[k].get('shared_key', None)
-            if sk is not None:
-                shared_keys[sk]['scale'] = headers[k]['scale']
-                shared_keys[sk]['dmax']  = max(headers[k]['dmax'], shared_keys[sk].get('dmax', headers[k]['dmax']))
-                shared_keys[sk]['dmin']  = max(headers[k]['dmin'], shared_keys[sk].get('dmin', headers[k]['dmin']))
-    
-    modcols = ['55,126,184', '77,175,74', '152,78,163', '255,127,0', '228,26,28', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
-    midx = 0
-    sample_names = set()
-    for mod in general_stats.keys():
-        
-        headers = general_stats[mod]['headers']
-        for k in headers.keys():
-            
-            # Overwrite config with shared key settings
-            sk = headers[k].get('shared_key', None)
-            if sk is not None:
-                headers[k]['scale'] = shared_keys[sk]['scale']
-                headers[k]['dmax'] = shared_keys[sk]['dmax']
-                headers[k]['dmin'] = shared_keys[sk]['dmin']
-            
-            # Module colour
-            headers[k]['modcol'] = modcols[midx]
-        
-        # Count data points
-        for (sname, samp) in general_stats[mod]['data'].items():
-            sample_names.add(sname)
-        
-        # Increment module colour
-        midx += 1
-        if midx > (len(modcols) - 1):
-            midx = 0
+    dt = plots.table.datatable(general_stats_data, general_stats_headers)
         
     # Make a beeswarm plot if we have lots of samples
     if len(sample_names) >= config.genstats_beeswarm_numseries:
         logger.debug('Plotting general statistics beeswarm - {} samples'.format(len(sample_names)))
-        general_stats_build_beeswarm()
+        # report.general_stats_html = plots.beeswarm.make_plot(dt)
     else:
         logger.debug('Making general statistics table - {} samples'.format(len(sample_names)))
-        general_stats_build_table()
+        report.general_stats_html = plots.table.make_table(dt)
 
 
 
