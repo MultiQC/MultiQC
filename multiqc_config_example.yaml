@@ -46,6 +46,10 @@ extra_fn_clean_exts:
     - _tophat
     - _star_aligned
     - _fastqc
+    - type: replace
+      pattern: '.sorted'
+    - type: regex
+      pattern: '^Sample_\d+'
 
 # Ignore these files when searching for logs
 fn_ignore_files:
