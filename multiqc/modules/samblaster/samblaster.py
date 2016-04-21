@@ -94,5 +94,8 @@ class MultiqcModule(BaseMultiqcModule):
                 data['pct_dups'] = float(match.group(4))
 
         if s_name is not None:
+            s_name = self.clean_s_name(s_name, f['root'])
+            if s_name in self.samblaster_data:
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name)
             self.samblaster_data[s_name] = data

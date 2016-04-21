@@ -122,12 +122,18 @@ class MultiqcModule(BaseMultiqcModule):
                 readlen_dist[read_length] = pct_at_rl
 
         if data['fq1'] is not None:
-            s_name = os.path.basename(data['fq1'])
+            s_name = self.clean_s_name(data['fq1'], f['root'])
+            if s_name in self.skewer_readlen_dist:
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+            self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
 
         if data['fq2'] is not None:
-            s_name = os.path.basename(data['fq2'])
+            s_name = self.clean_s_name(data['fq1'], f['root'])
+            if s_name in self.skewer_readlen_dist:
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+            self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
 

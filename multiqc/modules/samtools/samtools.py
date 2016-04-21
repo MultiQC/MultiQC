@@ -23,13 +23,12 @@ class MultiqcModule(BaseMultiqcModule):
              " This module parses the output from <code>samtools stats</code>.")
         self.samtools_data = dict()
         for f in self.find_log_files(config.sp['samtools']):
-            s_name = f['s_name']
             parsed_data = self.parse_samtools_report(f['f'])
             if parsed_data is not None:
-                if s_name in self.samtools_data:
+                if f['s_name'] in self.samtools_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f)
-                self.samtools_data[s_name] = parsed_data
+                self.samtools_data[f['s_name']] = parsed_data
 
         if len(self.samtools_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
