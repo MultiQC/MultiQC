@@ -33,6 +33,27 @@ Note that this process of cleaning sample names can result in duplicate
 names. A duplicate sample name will overwrite previous results. This can
 be seen with verbose logging using the `-v` flag.
 
+### Adding to cleaning patterns
+Usually you don't want to overwrite this setting in your user config file
+(though you can). Instead, add to the special variable name `extra_fn_clean_exts`
+
+### Other search types
+File name cleaning can also take strings to remove _without_ truncating, or
+regex strings to match and remove. Consider the following:
+```yaml
+extra_fn_clean_exts:
+    - .fastq
+    - type: replace
+      pattern: '.sorted'
+    - type: regex
+      pattern: '^processed.'
+```
+This would make the following sample names:
+```
+mysample.fastq.gz  ->  mysample
+secondsample.sorted.deduplicated.fastq.gz_processed.txt  ->  secondsample.deduplicated
+processed.thirdsample.fastq_aligned.sam.gz  ->  thirdsample
+```
 
 ## Module search patterns
 Many bioinformatics tools have standard output formats, filenames and other
