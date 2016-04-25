@@ -21,8 +21,8 @@ for any matches. If it finds any matches, everything to the right is removed.
 For example, consider the following config:
 ```yaml
 fn_clean_exts:
-    - ".gz"
-    - ".fastq"
+    - '.gz'
+    - '.fastq'
 ```
 This would make the following sample names:
 ```
@@ -36,8 +36,8 @@ Instead, add to the special variable name `extra_fn_clean_exts`:
 
 ```yaml
 extra_fn_clean_exts:
-    - ".myformat"
-    - "_processedFile"
+    - '.myformat'
+    - '_processedFile'
 ```
 
 ### Other search types
@@ -47,10 +47,10 @@ removing with truncation). Also regex strings can be supplied to match patterns 
 Consider the following:
 ```yaml
 extra_fn_clean_exts:
-    - .fastq
-    - type: replace
+    - '.fastq'
+    - type: 'replace'
       pattern: '.sorted'
-    - type: regex
+    - type: 'regex'
       pattern: '^processed.'
 ```
 This would make the following sample names:
@@ -65,7 +65,13 @@ This process of cleaning sample names can sometimes result in exact duplicates.
 A duplicate sample name will overwrite previous results. Warnings showing these events
 can be seen with verbose logging using the `--verbose`/`-v` flag, or in `multiqc_data/multiqc.log`.
 
-Problems caused by this will typically be discovered be fewer results than expected.
+Problems caused by this will typically be discovered be fewer results than expected. If you're ever
+unsure about where the data from results within MultiQC reports come from, have a look at
+`multiqc_data/multiqc_sources.txt`, which lists the path to the file used for every section
+of the report.
+
+#### Directory names
+One scenario where clashing names can occur is when the same file is processed in different directories.
 For example, if `sample_1.fastq` is processed with four sets of parameters in four different
 directories, they will all have the same name - `sample_1`. Only the last will be shown.
 If the directories are different, this can be avoided with the `--dirs`/`-d` flag.
@@ -76,16 +82,17 @@ For example, given the following files:
 │   └── sample_1.fastq.gz.aligned.log
 ├── analysis_2
 │   └── sample_1.fastq.gz.aligned.log
-└── analysis_2
+└── analysis_3
     └── sample_1.fastq.gz.aligned.log
 ```
 Running `multiqc -d .` will give the following sample names:
 ```
 analysis_1 | sample_1
 analysis_2 | sample_1
-analysis_2 | sample_1
+analysis_3 | sample_1
 ```
 
+#### Filename truncation
 If the problem is with filename truncation, you can also use the `--fullnames`/`-s` flag,
 which disables all sample name cleaning. For example:
 ```
