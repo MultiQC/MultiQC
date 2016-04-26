@@ -27,12 +27,12 @@ except NameError:
 # Set up global variables shared across modules
 general_stats_data = list()
 general_stats_headers = list()
-general_stats_beeswarm_html = None
-general_stats_html = {
-    'headers': OrderedDict(),
-    'rows': defaultdict(lambda:dict())
-}
-general_stats_raw = defaultdict(lambda:OrderedDict())
+# general_stats_beeswarm_html = None
+# general_stats_html = {
+#     'headers': OrderedDict(),
+#     'rows': defaultdict(lambda:dict())
+# }
+# general_stats_raw = defaultdict(lambda:OrderedDict())
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
 num_hc_plots = 0
 num_mpl_plots = 0
@@ -87,163 +87,171 @@ def get_filelist():
 def general_stats_build_html():
     """ Build the general stats HTML, be that a beeswarm plot or a table. """
     
-    dt = plots.table.datatable(general_stats_data, general_stats_headers)
-        
+    # Collect unique sample names
+    s_names = set()
+    for d in general_stats_data:
+        for s_name in d.keys():
+            s_names.add(s_name)
+    
+    t_config = {
+        'id': 'general_stats_table'
+    }
+
     # Make a beeswarm plot if we have lots of samples
-    if len(sample_names) >= config.genstats_beeswarm_numseries:
-        logger.debug('Plotting general statistics beeswarm - {} samples'.format(len(sample_names)))
-        # report.general_stats_html = plots.beeswarm.make_plot(dt)
+    if len(s_names) >= config.max_table_rows:
+        logger.debug('Plotting general statistics beeswarm - {} samples'.format(len(s_names)))
+        general_stats_html = plots.beeswarm.plot(general_stats_data, general_stats_headers, t_config)
     else:
-        logger.debug('Making general statistics table - {} samples'.format(len(sample_names)))
-        report.general_stats_html = plots.table.make_table(dt)
+        logger.debug('Making general statistics table - {} samples'.format(len(s_names)))
+        general_stats_html = plots.table.plot(general_stats_data, general_stats_headers, t_config)
 
 
 
-def general_stats_build_beeswarm():
-    """ Helper function to build a beeswarm plot of General Statistics values.
-    Parses report.general_stats and returns HTML for the plot.
-    Also creates report.general_stats_raw for multiqc_general_stats.txt
-    :param data: A dict with the data. First key should be sample name,
-                 then the data key, then the data.
-    :param headers: Dict / OrderedDict with information for the series, 
-                    such as colour scales, min and max values etc.
-                    See docs/writing_python.md for more information.
-    :return: None
-    """
-    
-    
-    
-    categories = []
-    s_names = []
-    data = []
-    for mod in general_stats.keys():
-        headers = general_stats[mod]['headers']
-        for k in headers.keys():
-            
-            rid = headers[k]['rid']
-            modcol = 'rgb({})'.format(headers[k].get('modcol', '204,204,204'))
-
-            categories.append({
-                'title': headers[k]['title'],
-                'description': '<em>{}</em>: {}'.format(mod, headers[k]['description']),
-                'max': headers[k]['dmax'],
-                'min': headers[k]['dmin'],
-                'suffix': headers[k].get('suffix', ''),
-                'decimalPlaces': headers[k].get('decimalPlaces', '2'),
-                'bordercol': modcol
-            });
-            
-            # Add the data
-            thisdata = []
-            these_snames = []
-            for (sname, samp) in general_stats[mod]['data'].items():
-                if k in samp:
-                    
-                    val = samp[k]
-                    general_stats_raw[sname][rid] = val
-                    
-                    if 'modify' in headers[k] and callable(headers[k]['modify']):
-                        val = headers[k]['modify'](val)
-                    
-                    thisdata.append(val)
-                    these_snames.append(sname)
-            data.append(thisdata)
-            s_names.append(these_snames)
-    
-    # Plot and javascript function
-    global general_stats_beeswarm_html
-    general_stats_beeswarm_html = '<div class="hc-plot-wrapper"><div id="general_stats_beeswarm" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div> \n\
-    <script type="text/javascript"> \n\
-        mqc_plots["general_stats_beeswarm"] = {{ \n\
-            "plot_type": "beeswarm", \n\
-            "samples": {s}, \n\
-            "datasets": {d}, \n\
-            "categories": {c} \n\
-        }} \n\
-    </script>'.format(s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories));
-    
-            
-
-
-def general_stats_build_table():
-    """ Helper function to add to the General Statistics table.
-    Parses report.general_stats and returns HTML for general stats table.
-    Also creates report.general_stats_raw for multiqc_general_stats.txt
-    :param data: A dict with the data. First key should be sample name,
-                 then the data key, then the data.
-    :param headers: Dict / OrderedDict with information for the headers, 
-                    such as colour scales, min and max values etc.
-                    See docs/writing_python.md for more information.
-    :return: None
-    """
-    
-    for mod in general_stats.keys():
-        headers = general_stats[mod]['headers']
-        for k in headers.keys():
-            
-            rid = headers[k]['rid']
-            
-            if headers[k].get('shared_key', None) is not None:
-                sk = ' data-shared-key={}'.format(sk)
-            else:
-                sk = ''
-            
-            general_stats_html['headers'][rid] = '<th \
-                    id="header_{rid}" \
-                    class="chroma-col {rid}" \
-                    data-chroma-scale="{scale}" \
-                    data-chroma-max="{max}" \
-                    data-chroma-min="{min}" \
-                    {sk}><span data-toggle="tooltip" title="{mod}: {descrip}">{title}</span></th>' \
-                        .format(rid=rid, scale=headers[k]['scale'], max=headers[k]['dmax'],
-                            min=headers[k]['dmin'], sk=sk, mod=mod,
-                            descrip=headers[k]['description'], title=headers[k]['title'])
-            
-            # Add the data table cells
-            nrows = 0
-            for (sname, samp) in general_stats[mod]['data'].items():
-                if k in samp:
-                    val = samp[k]
-                    general_stats_raw[sname][rid] = val
-                    
-                    if 'modify' in headers[k] and callable(headers[k]['modify']):
-                        val = headers[k]['modify'](val)
-                    
-                    try:
-                        dmin = headers[k]['dmin']
-                        dmax = headers[k]['dmax']
-                        percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
-                        percentage = min(percentage, 100)
-                        percentage = max(percentage, 0)
-                    except (ZeroDivisionError,ValueError):
-                        percentage = 0
-                    
-                    try:
-                        val = headers[k]['format'].format(val)
-                    except ValueError:
-                        try:
-                            val = headers[k]['format'].format(float(samp[k]))
-                        except ValueError:
-                            val = samp[k]
-                    except:
-                        val = samp[k]
-                    
-                    general_stats_html['rows'][sname][rid] = \
-                        '<td class="data-coloured {rid}" >\
-                            <div class="wrapper">\
-                                <span class="bar" style="width:{percentage}%;"></span>\
-                                <span class="val">{val}</span>\
-                            </div>\
-                        </td>'.format(rid=rid, percentage=percentage, val=val)
-                    nrows += 1
-            
-            # Remove header if we don't have any filled cells for it
-            if nrows == 0:
-                general_stats_html['headers'].pop(rid, None)
-                logger.debug('Removing header {} from general stats table, as no data'.format(k))
-        
-    
-    return None
+# def general_stats_build_beeswarm():
+#     """ Helper function to build a beeswarm plot of General Statistics values.
+#     Parses report.general_stats and returns HTML for the plot.
+#     Also creates report.general_stats_raw for multiqc_general_stats.txt
+#     :param data: A dict with the data. First key should be sample name,
+#                  then the data key, then the data.
+#     :param headers: Dict / OrderedDict with information for the series, 
+#                     such as colour scales, min and max values etc.
+#                     See docs/writing_python.md for more information.
+#     :return: None
+#     """
+#     
+#     
+#     
+#     categories = []
+#     s_names = []
+#     data = []
+#     for mod in general_stats.keys():
+#         headers = general_stats[mod]['headers']
+#         for k in headers.keys():
+#             
+#             rid = headers[k]['rid']
+#             modcol = 'rgb({})'.format(headers[k].get('modcol', '204,204,204'))
+# 
+#             categories.append({
+#                 'title': headers[k]['title'],
+#                 'description': '<em>{}</em>: {}'.format(mod, headers[k]['description']),
+#                 'max': headers[k]['dmax'],
+#                 'min': headers[k]['dmin'],
+#                 'suffix': headers[k].get('suffix', ''),
+#                 'decimalPlaces': headers[k].get('decimalPlaces', '2'),
+#                 'bordercol': modcol
+#             });
+#             
+#             # Add the data
+#             thisdata = []
+#             these_snames = []
+#             for (sname, samp) in general_stats[mod]['data'].items():
+#                 if k in samp:
+#                     
+#                     val = samp[k]
+#                     general_stats_raw[sname][rid] = val
+#                     
+#                     if 'modify' in headers[k] and callable(headers[k]['modify']):
+#                         val = headers[k]['modify'](val)
+#                     
+#                     thisdata.append(val)
+#                     these_snames.append(sname)
+#             data.append(thisdata)
+#             s_names.append(these_snames)
+#     
+#     # Plot and javascript function
+#     global general_stats_beeswarm_html
+#     general_stats_beeswarm_html = '<div class="hc-plot-wrapper"><div id="general_stats_beeswarm" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div> \n\
+#     <script type="text/javascript"> \n\
+#         mqc_plots["general_stats_beeswarm"] = {{ \n\
+#             "plot_type": "beeswarm", \n\
+#             "samples": {s}, \n\
+#             "datasets": {d}, \n\
+#             "categories": {c} \n\
+#         }} \n\
+#     </script>'.format(s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories));
+#     
+#             
+# 
+# 
+# def general_stats_build_table():
+#     """ Helper function to add to the General Statistics table.
+#     Parses report.general_stats and returns HTML for general stats table.
+#     Also creates report.general_stats_raw for multiqc_general_stats.txt
+#     :param data: A dict with the data. First key should be sample name,
+#                  then the data key, then the data.
+#     :param headers: Dict / OrderedDict with information for the headers, 
+#                     such as colour scales, min and max values etc.
+#                     See docs/writing_python.md for more information.
+#     :return: None
+#     """
+#     
+#     for mod in general_stats.keys():
+#         headers = general_stats[mod]['headers']
+#         for k in headers.keys():
+#             
+#             rid = headers[k]['rid']
+#             
+#             if headers[k].get('shared_key', None) is not None:
+#                 sk = ' data-shared-key={}'.format(sk)
+#             else:
+#                 sk = ''
+#             
+#             general_stats_html['headers'][rid] = '<th \
+#                     id="header_{rid}" \
+#                     class="chroma-col {rid}" \
+#                     data-chroma-scale="{scale}" \
+#                     data-chroma-max="{max}" \
+#                     data-chroma-min="{min}" \
+#                     {sk}><span data-toggle="tooltip" title="{mod}: {descrip}">{title}</span></th>' \
+#                         .format(rid=rid, scale=headers[k]['scale'], max=headers[k]['dmax'],
+#                             min=headers[k]['dmin'], sk=sk, mod=mod,
+#                             descrip=headers[k]['description'], title=headers[k]['title'])
+#             
+#             # Add the data table cells
+#             nrows = 0
+#             for (sname, samp) in general_stats[mod]['data'].items():
+#                 if k in samp:
+#                     val = samp[k]
+#                     general_stats_raw[sname][rid] = val
+#                     
+#                     if 'modify' in headers[k] and callable(headers[k]['modify']):
+#                         val = headers[k]['modify'](val)
+#                     
+#                     try:
+#                         dmin = headers[k]['dmin']
+#                         dmax = headers[k]['dmax']
+#                         percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
+#                         percentage = min(percentage, 100)
+#                         percentage = max(percentage, 0)
+#                     except (ZeroDivisionError,ValueError):
+#                         percentage = 0
+#                     
+#                     try:
+#                         val = headers[k]['format'].format(val)
+#                     except ValueError:
+#                         try:
+#                             val = headers[k]['format'].format(float(samp[k]))
+#                         except ValueError:
+#                             val = samp[k]
+#                     except:
+#                         val = samp[k]
+#                     
+#                     general_stats_html['rows'][sname][rid] = \
+#                         '<td class="data-coloured {rid}" >\
+#                             <div class="wrapper">\
+#                                 <span class="bar" style="width:{percentage}%;"></span>\
+#                                 <span class="val">{val}</span>\
+#                             </div>\
+#                         </td>'.format(rid=rid, percentage=percentage, val=val)
+#                     nrows += 1
+#             
+#             # Remove header if we don't have any filled cells for it
+#             if nrows == 0:
+#                 general_stats_html['headers'].pop(rid, None)
+#                 logger.debug('Removing header {} from general stats table, as no data'.format(k))
+#         
+#     
+#     return None
     
 
 def write_data_file(data, fn, sort_cols=False, data_format=None):
@@ -287,8 +295,8 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 
                 print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
     
-def general_stats_tofile():
-    write_data_file(general_stats_raw, 'multiqc_general_stats')
+# def general_stats_tofile():
+#     write_data_file(general_stats_raw, 'multiqc_general_stats')
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])

@@ -20,7 +20,7 @@ def plot (data, headers=[], pconfig={}):
     :return: HTML ready to be inserted into the page
     """
     
-    return make_table_html( datatable(data, headers, pconfig) )
+    return make_table ( datatable(data, headers, pconfig) )
     
     
 
@@ -80,7 +80,7 @@ class datatable (object):
                 
                 # Figure out the min / max if not supplied
                 if setdmax or setdmin:
-                    for (sname, samp) in enumerate(data):
+                    for (s_name, samp) in enumerate(data):
                         try:
                             val = float(samp[k])
                             if 'modify' in headers[idx][k] and callable(headers[idx][k]['modify']):
@@ -94,8 +94,8 @@ class datatable (object):
         
         # Collect settings for shared keys
         shared_keys = defaultdict(lambda: dict())
-        for idx in headers.keys():
-            for k in headers.keys():
+        for idx, hs in enumerate(headers):
+            for k in hs.keys():
                 sk = headers[idx][k].get('shared_key', None)
                 if sk is not None:
                     shared_keys[sk]['scale'] = headers[idx][k]['scale']
@@ -103,8 +103,8 @@ class datatable (object):
                     shared_keys[sk]['dmin']  = max(headers[idx][k]['dmin'], shared_keys[sk].get('dmin', headers[idx][k]['dmin']))
         
         # Overwrite shared key settings
-        for idx in headers.keys():
-            for k in headers[idx].keys():
+        for idx, hs in enumerate(headers):
+            for k in hs.keys():
                 sk = headers[idx][k].get('shared_key', None)
                 if sk is not None:
                     headers[idx][k]['scale'] = shared_keys[sk]['scale']
@@ -123,40 +123,42 @@ def make_table (dt):
     :param data: MultiQC datatable object
     """
     
-    for idx, d in dt.data.items():
-        for k in d.keys():
+    t_headers = dict()
+    t_rows = defaultdict(lambda: dict())
+    raw_vals = defaultdict(lambda: dict())
+    
+    for idx, hs in enumerate(dt.headers):
+        for k, header in hs.items():
             
-            rid = headers[idx][k]['rid']
+            rid = header['rid']
             
-            if headers[idx][k].get('shared_key', None) is not None:
-                sk = ' data-shared-key={}'.format(sk)
+            # Build the table header cell
+            if header.get('shared_key', None) is not None:
+                shared_key = ' data-shared-key={}'.format(header['shared_key'])
             else:
-                sk = ''
+                shared_key = ''
             
-            general_stats_html['headers'][rid] = '<th \
-                    id="header_{rid}" \
-                    class="chroma-col {rid}" \
-                    data-chroma-scale="{scale}" \
-                    data-chroma-max="{max}" \
-                    data-chroma-min="{min}" \
-                    {sk}><span data-toggle="tooltip" title="{mod}: {descrip}">{title}</span></th>' \
-                        .format(rid=rid, scale=headers[idx][k]['scale'], max=headers[idx][k]['dmax'],
-                            min=headers[idx][k]['dmin'], sk=sk, mod=mod,
-                            descrip=headers[idx][k]['description'], title=headers[idx][k]['title'])
+            data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" {}' \
+                .format(header['scale'], header['dmax'], header['dmin'], shared_key)
+            
+            cell_contents = '<span data-toggle="tooltip" title="{}">{}</span>' \
+                .format(header['description'], header['title'])
+            
+            t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid}" {d}>{c}</th>' \
+                .format(rid=rid, d=data_attr, c=cell_contents)
             
             # Add the data table cells
-            nrows = 0
-            for (sname, samp) in dt.data[idx]['data'].items():
+            for (s_name, samp) in dt.data[idx].items():
                 if k in samp:
                     val = samp[k]
-                    general_stats_raw[sname][rid] = val
+                    raw_vals[s_name][rid] = val
                     
-                    if 'modify' in headers[idx][k] and callable(headers[idx][k]['modify']):
-                        val = headers[idx][k]['modify'](val)
+                    if 'modify' in header and callable(header['modify']):
+                        val = header['modify'](val)
                     
                     try:
-                        dmin = headers[idx][k]['dmin']
-                        dmax = headers[idx][k]['dmax']
+                        dmin = header['dmin']
+                        dmax = header['dmax']
                         percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
                         percentage = min(percentage, 100)
                         percentage = max(percentage, 0)
@@ -164,28 +166,48 @@ def make_table (dt):
                         percentage = 0
                     
                     try:
-                        val = headers[idx][k]['format'].format(val)
+                        val = header['format'].format(val)
                     except ValueError:
                         try:
-                            val = headers[idx][k]['format'].format(float(samp[k]))
+                            val = header['format'].format(float(samp[k]))
                         except ValueError:
                             val = samp[k]
                     except:
                         val = samp[k]
                     
-                    general_stats_html['rows'][sname][rid] = \
-                        '<td class="data-coloured {rid}" >\
-                            <div class="wrapper">\
-                                <span class="bar" style="width:{percentage}%;"></span>\
-                                <span class="val">{val}</span>\
-                            </div>\
-                        </td>'.format(rid=rid, percentage=percentage, val=val)
-                    nrows += 1
+                    # Build HTML
+                    bar_html = '<span class="bar" style="width:{}%;"></span>'.format(percentage)
+                    val_html = '<span class="val">{}</span>'.format(val)
+                    wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
+                    
+                    t_rows[s_name][rid] = \
+                        '<td class="data-coloured {rid}" >{c}</td>'.format(rid=rid, c=wrapper_html)
             
             # Remove header if we don't have any filled cells for it
-            if nrows == 0:
-                general_stats_html['headers'].pop(rid, None)
+            if sum([len(rows) for rows in t_rows.values()]) == 0:
+                t_headers.pop(rid, None)
                 logger.debug('Removing header {} from general stats table, as no data'.format(k))
+    
+    
+    # Put everything together into a table
+    html = '<div class="table-responsive">'
+    html += '<table id="{}" class="table table-condensed mqc_table">'.format(dt.pconfig.get('id', ''))
+    
+    # Build the header row
+    html += '<thead><tr><th class="rowheader">Sample Name</th>{}</tr></thead>'.format(''.join(t_headers))
+    
+    # Build the table body
+    html += '<tbody>'
+    for s_name in sorted(t_rows.keys()):
+        html += '<tr>'
+        # Sample name row header
+        html += '<th class="rowheader" data-original-sn="{sn}">{sn}</th>'.format(sn=s_name)
+        for k in t_headers:
+            html += t_rows[s_name].get(k, '<td class="{}"></td>'.format(k) )
+        html += '</tr>'
+    html += '</tbody></table></div>'
+    
+    return html
     
     
     
