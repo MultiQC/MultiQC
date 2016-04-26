@@ -157,8 +157,8 @@ def mqc_load_config(yaml_config):
                         sp.extend(v)
                         logger.debug("Added to filename patterns: {}".format(sp))
                     if c == 'extra_fn_clean_exts':
-                        # Merge filename cleaning patterns instead of replacing
-                        fn_clean_exts.extend(v)
+                        # Prepend to filename cleaning patterns instead of replacing
+                        fn_clean_exts[0:0] = v
                         logger.debug("Added to filename clean extensions. Now looking for: {}".format(fn_clean_exts))
                     else:
                         logger.debug("New config '{}': {}".format(c, v))
