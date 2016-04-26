@@ -28,7 +28,11 @@ class MultiqcModule(BaseMultiqcModule):
             'bowtie.left_kept_reads.log',
             'bowtie.left_kept_reads.m2g_um.log',
             'bowtie.left_kept_reads.m2g_um_seg1.log',
-            'bowtie.left_kept_reads.m2g_um_seg2.log'
+            'bowtie.left_kept_reads.m2g_um_seg2.log',
+            'bowtie.right_kept_reads.log',
+            'bowtie.right_kept_reads.m2g_um.log',
+            'bowtie.right_kept_reads.m2g_um_seg1.log',
+            'bowtie.right_kept_reads.m2g_um_seg2.log'
         ]
         for f in self.find_log_files(config.sp['bowtie']):
             if f['fn'] in fn_ignore:
