@@ -28,11 +28,13 @@ def parse_reports(self):
         # RSeQC >= v2.4
         if f['f'].startswith('Percentile'):
             keys = []
+            nrows = 0
             for l in f['f'].splitlines():
                 s = l.split()
                 if len(keys) == 0:
                     keys = s[1:]
                 else:
+                    nrows += 1
                     s_name = s[0]
                     if s_name.endswith('.geneBodyCoverage'):
                         s_name = s_name[:-17]
@@ -42,6 +44,9 @@ def parse_reports(self):
                     self.gene_body_cov_hist_counts[s_name] = OrderedDict()
                     for k, var in enumerate(s[1:]):
                         self.gene_body_cov_hist_counts[s_name][int(keys[k])] = float(var)
+            if nrows == 0:
+                log.warning("Empty geneBodyCoverage file found: {}".format(f['fn']))
+                
         
         # RSeQC < v2.4
         elif f['f'].startswith('Total reads'):
@@ -51,12 +56,17 @@ def parse_reports(self):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='gene_body_coverage')
             self.gene_body_cov_hist_counts[f['s_name']] = OrderedDict()
+            nrows = 0
             for l in f['f'].splitlines():
                 s = l.split()
                 try:
+                    nrows += 1
                     self.gene_body_cov_hist_counts[f['s_name']][int(s[0])] = float(s[1])
                 except:
                     pass
+            if nrows == 0:
+                del self.gene_body_cov_hist_counts[f['s_name']]
+                log.warning("Empty geneBodyCoverage file found: {}".format(f['fn']))
     
     if len(self.gene_body_cov_hist_counts) > 0:
         
