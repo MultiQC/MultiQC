@@ -39,6 +39,7 @@ class datatable (object):
                 headers[idx][k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
                 
                 # Use defaults / data keys if headers not given
+                headers[idx][k]['namespace']   = headers[idx][k].get('namespace', '')
                 headers[idx][k]['title']       = headers[idx][k].get('title', k)
                 headers[idx][k]['description'] = headers[idx][k].get('description', headers[idx][k]['title'])
                 headers[idx][k]['scale']       = headers[idx][k].get('scale', 'GnBu')

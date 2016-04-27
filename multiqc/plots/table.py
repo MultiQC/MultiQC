@@ -26,7 +26,7 @@ def plot (data, headers=[], pconfig={}):
     
     # Collect unique sample names
     s_names = set()
-    for d in data:
+    for d in dt.data:
         for s_name in d.keys():
             s_names.add(s_name)
     
