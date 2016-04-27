@@ -7,11 +7,12 @@ it collects the configuration settings from the following places in this order
 1. Hardcoded defaults in MultiQC code
 2. System-wide config in `<installation_dir>/multiqc_config.yaml`
 3. User config in `~/.multiqc_config.yaml`
-4. Command line options
+4. Config file in the current working directory: `multiqc_config.yaml`
+5. Command line options
 
-You can find an example configuration file that comes with MultiQC, called
-`multiqc_config.yaml.example` - hopefully this should be self explanatory
-by way of the comments. Common changes are discussed in more detail below.
+You can find an example configuration file bundled with MultiQC, called
+`multiqc_config.example.yaml` - hopefully this should be self explanatory
+through the included comments. Common changes are discussed in more detail below.
 
 ## Sample name cleaning
 MultiQC typically generates sample names by taking the input or log file name,
@@ -20,8 +21,8 @@ for any matches. If it finds any matches, everything to the right is removed.
 For example, consider the following config:
 ```yaml
 fn_clean_exts:
-    - .gz
-    - .fastq
+    - '.gz'
+    - '.fastq'
 ```
 This would make the following sample names:
 ```
@@ -29,23 +30,28 @@ mysample.fastq.gz  ->  mysample
 secondsample.fastq.gz_trimming_log.txt  ->  secondsample
 thirdsample.fastq_aligned.sam.gz  ->  thirdsample
 ```
-Note that this process of cleaning sample names can result in duplicate
-names. A duplicate sample name will overwrite previous results. This can
-be seen with verbose logging using the `-v` flag.
 
-### Adding to cleaning patterns
-Usually you don't want to overwrite this setting in your user config file
-(though you can). Instead, add to the special variable name `extra_fn_clean_exts`
+Usually you don't want to overwrite the defaults (though you can).
+Instead, add to the special variable name `extra_fn_clean_exts`:
 
-### Other search types
-File name cleaning can also take strings to remove _without_ truncating, or
-regex strings to match and remove. Consider the following:
 ```yaml
 extra_fn_clean_exts:
-    - .fastq
-    - type: replace
+    - '.myformat'
+    - '_processedFile'
+```
+
+### Other search types
+As of MultiQC v0.6, file name cleaning can also take strings to remove (instead of 
+removing with truncation). Also regex strings can be supplied to match patterns and remove strings.
+
+Consider the following:
+```yaml
+extra_fn_clean_exts:
+    - '.fastq'
+    - type: 'replace'
       pattern: '.sorted'
-    - type: regex
+    - type: 'regex'
+>>>>>>> master
       pattern: '^processed.'
 ```
 This would make the following sample names:
@@ -54,6 +60,52 @@ mysample.fastq.gz  ->  mysample
 secondsample.sorted.deduplicated.fastq.gz_processed.txt  ->  secondsample.deduplicated
 processed.thirdsample.fastq_aligned.sam.gz  ->  thirdsample
 ```
+
+### Clashing sample names
+This process of cleaning sample names can sometimes result in exact duplicates.
+A duplicate sample name will overwrite previous results. Warnings showing these events
+can be seen with verbose logging using the `--verbose`/`-v` flag, or in `multiqc_data/multiqc.log`.
+
+Problems caused by this will typically be discovered be fewer results than expected. If you're ever
+unsure about where the data from results within MultiQC reports come from, have a look at
+`multiqc_data/multiqc_sources.txt`, which lists the path to the file used for every section
+of the report.
+
+#### Directory names
+One scenario where clashing names can occur is when the same file is processed in different directories.
+For example, if `sample_1.fastq` is processed with four sets of parameters in four different
+directories, they will all have the same name - `sample_1`. Only the last will be shown.
+If the directories are different, this can be avoided with the `--dirs`/`-d` flag.
+
+For example, given the following files:
+```
+├── analysis_1
+│   └── sample_1.fastq.gz.aligned.log
+├── analysis_2
+│   └── sample_1.fastq.gz.aligned.log
+└── analysis_3
+    └── sample_1.fastq.gz.aligned.log
+```
+Running `multiqc -d .` will give the following sample names:
+```
+analysis_1 | sample_1
+analysis_2 | sample_1
+analysis_3 | sample_1
+```
+
+#### Filename truncation
+If the problem is with filename truncation, you can also use the `--fullnames`/`-s` flag,
+which disables all sample name cleaning. For example:
+```
+├── sample_1.fastq.gz.aligned.log
+└── sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
+```
+Running `multiqc -s .` will give the following sample names:
+```
+sample_1.fastq.gz.aligned.log
+sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
+```
+>>>>>>> master
 
 ## Module search patterns
 Many bioinformatics tools have standard output formats, filenames and other
