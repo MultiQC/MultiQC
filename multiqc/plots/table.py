@@ -148,7 +148,7 @@ def make_table (dt):
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{tid}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
-        <small id="genstat_numrows_text">Showing <span id="genstat_numrows">{nrows}</span> rows.</small>
+        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <span id="{tid}_numrows" class="mqc_table_numrows">{nrows}</span> rows.</small>
     """.format(tid=table_id, nrows = len(t_rows))
     
     # Build the table itself

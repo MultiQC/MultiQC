@@ -18,6 +18,9 @@ function notEmptyObj (obj){
 
 $(function () {
   
+  // Enable the bootstrap tooltip hovers
+  $('[data-toggle="tooltip"]').tooltip();
+  
   // Side nav expansion
   $('#side-nav-handle').click(function(e){
     $('.mainpage, .side-nav, .footer').toggleClass('hidden-nav');

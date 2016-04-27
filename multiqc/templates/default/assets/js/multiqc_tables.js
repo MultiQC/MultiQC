@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////
-// MultiQC General Statistics Table code
+// MultiQC Table code
 ////////////////////////////////////////////////
 
 var brewer_scales = ['YlOrRd', 'YlOrBr', 'YlGnBu', 'YlGn', 'Reds', 'RdPu',
@@ -10,9 +10,6 @@ var brewer_scales = ['YlOrRd', 'YlOrBr', 'YlGnBu', 'YlGn', 'Reds', 'RdPu',
 
 // Execute when page load has finished loading
 $(function () {
-    
-  // Enable the bootstrap tooltip hovers
-  $('[data-toggle="tooltip"]').tooltip();
   
   if($('.mqc_table').length > 0){
     
@@ -186,9 +183,9 @@ $(function () {
     
     // highlight samples
     $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
-      $('#mqc_genstat_sort_highlight').hide();
-      $('#general_stats_table tbody th').removeClass('highlighted').removeData('highlight');
-      $('#general_stats_table tbody th').each(function(i){
+      $('.mqc_table_sortHighlight').hide();
+      $('.mqc_table tbody th').removeClass('highlighted').removeData('highlight');
+      $('.mqc_table tbody th').each(function(i){
         var th = $(this);
         var thtext = $(this).text();
         var thiscol = '#333';
@@ -196,7 +193,7 @@ $(function () {
           if((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)){
             thiscol = f_cols[idx];
             th.addClass('highlighted').data('highlight', idx);
-            $('#mqc_genstat_sort_highlight').show();
+            $('.mqc_table_sortHighlight').show();
           }
         });
         $(this).css('color', thiscol);
@@ -204,26 +201,27 @@ $(function () {
     });
     
     // Sort general stats by highlight
-    $('#mqc_genstat_sort_highlight').click(function(e){
+    $('.mqc_table_sortHighlight').click(function(e){
       e.preventDefault();
+      var target = $(this).data('target');
       // collect highlighted rows
-      var hrows = $('#general_stats_table tbody th.highlighted').parent().detach();
+      var hrows = $(target+' tbody th.highlighted').parent().detach();
       hrows = hrows.sort(function (a, b) {
         return $(a).find('th').data('highlight') - $(b).find('th').data('highlight');
       });
       if($(this).data('direction') == 'desc'){
         hrows = hrows.get().reverse();
-        $('#general_stats_table tbody').prepend(hrows);
+        $(target+' tbody').prepend(hrows);
         $(this).data('direction', 'asc');
       } else {
-        $('#general_stats_table tbody').append(hrows);
+        $(target+' tbody').append(hrows);
         $(this).data('direction', 'desc');
       }
     });
     
     // Rename samples
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
-      $("#general_stats_table tbody th").each(function(){
+      $(".mqc_table tbody th").each(function(){
         var s_name = $(this).data('original-sn');
         $.each(f_texts, function(idx, f_text){
           if(regex_mode){
@@ -241,7 +239,7 @@ $(function () {
     $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
       
       // Hide rows in the general stats table
-      $("#general_stats_table tbody th").each(function(){
+      $(".mqc_table tbody th").each(function(){
         var match = false;
         var hfilter = $(this).text();
         $.each(f_texts, function(idx, f_text){
@@ -255,24 +253,30 @@ $(function () {
         if(match){ $(this).parent().hide(); }
         else { $(this).parent().show(); }
       });
-      $('#genstat_numrows').text( $("#general_stats_table tbody tr:visible").length );
+      $('.mqc_table_numrows').each(function(){
+        var tid = $(this).attr('id').replace('_numrows','');
+        $(this).text( $('#'+tid+' tbody tr:visible').length );
+      });
       
       // Hide empty columns
-      var gsthidx = 0;
-      $("#general_stats_table thead th, #general_stats_table tbody tr td").show();
-      $("#general_stats_table thead th").each(function(){
-        if(gsthidx == 0){ gsthidx += 1; return true; }
-        var count = 0;
-        var empties = 0;
-        $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").filter(":visible").each(function(){
-          count += 1;
-          if($(this).text() == ''){ empties += 1; }
+      $('.mqc_table').each(function(){
+        var table = $(this);
+        var gsthidx = 0;
+        table.find("thead th, tbody tr td").show();
+        table.find("thead th").each(function(){
+          if(gsthidx == 0){ gsthidx += 1; return true; }
+          var count = 0;
+          var empties = 0;
+          table.find("tbody tr td:nth-child("+(gsthidx+2)+")").filter(":visible").each(function(){
+            count += 1;
+            if($(this).text() == ''){ empties += 1; }
+          });
+          if(count > 0 && count == empties){
+            $(this).hide();
+            table.find("tbody tr td:nth-child("+(gsthidx+2)+")").hide();
+          }
+          gsthidx += 1;
         });
-        if(count > 0 && count == empties){
-          $(this).hide();
-          $("#general_stats_table tbody tr td:nth-child("+(gsthidx+2)+")").hide();
-        }
-        gsthidx += 1;
       });
     });
     
