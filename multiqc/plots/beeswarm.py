@@ -40,6 +40,7 @@ def make_plot(dt):
             bcol = 'rgb({})'.format(header.get('colour', '204,204,204'))
 
             categories.append({
+                'namespace': header['namespace'],
                 'title': header['title'],
                 'description': header['description'],
                 'max': header['dmax'],

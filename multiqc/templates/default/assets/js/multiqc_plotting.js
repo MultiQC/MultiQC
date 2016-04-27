@@ -532,8 +532,8 @@ function plot_beeswarm_graph(target, ds){
     
     var data = datasets[i];
     var s_names = samples[i];
-    var label = categories[i]['title'];
-    var label_long = categories[i]['description'];
+    var label = categories[i]['namespace'] + '<br/>' + categories[i]['title'];
+    var label_long = categories[i]['namespace'] + ': ' + categories[i]['description'];
     var ttSuffix = categories[i]['suffix'];
     var decimalPlaces = categories[i]['decimalPlaces'];
     var minx = categories[i]['min'];
@@ -677,7 +677,7 @@ function plot_beeswarm_graph(target, ds){
         legend: { enabled: false },
         credits: { enabled: false },
         exporting: { enabled: false },
-        series: [{ data: xydata, color: borderCol }]
+        series: [{ data: xydata, color: 'rgb(55,126,184)' }]
 
     });
 

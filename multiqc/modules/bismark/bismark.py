@@ -301,9 +301,9 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%',
         }
 
-        self.general_stats_addcols(self.bismark_data['methextract'], headers['methextract'], 'bismark_methextract')
-        self.general_stats_addcols(self.bismark_data['dedup'], headers['dedup'], 'bismark_dedup')
-        self.general_stats_addcols(self.bismark_data['alignment'], headers['alignment'], 'bismark_alignment')
+        self.general_stats_addcols(self.bismark_data['methextract'], headers['methextract'])
+        self.general_stats_addcols(self.bismark_data['dedup'], headers['dedup'])
+        self.general_stats_addcols(self.bismark_data['alignment'], headers['alignment'])
         
 
     def bismark_alignment_chart (self):
