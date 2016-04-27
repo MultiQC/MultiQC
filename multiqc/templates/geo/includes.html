@@ -38,7 +38,6 @@ it prints the contents of these files into the report.
 <script type="text/javascript" src="assets/js/packages/jquery-1.11.3.min.js"></script>
 <script type="text/javascript" src="assets/js/packages/jquery-ui.min.js"></script>
 <script type="text/javascript" src="assets/js/packages/bootstrap.min.js"></script>
-<script type="text/javascript" src="assets/js/packages/bootstrap-tour.min.js"></script>
 <script type="text/javascript" src="assets/js/packages/highcharts.js"></script>
 <script type="text/javascript" src="assets/js/packages/highcharts.exporting.js"></script>
 <script type="text/javascript" src="assets/js/packages/highcharts.offline-exporting.js"></script>
@@ -47,11 +46,10 @@ it prints the contents of these files into the report.
 <script type="text/javascript" src="assets/js/packages/FileSaver.min.js"></script>
 <script type="text/javascript" src="assets/js/packages/clipboard.min.js"></script>
 <script type="text/javascript" src="assets/js/multiqc.js"></script>
-<script type="text/javascript" src="assets/js/multiqc_generalstats.js"></script>
+<script type="text/javascript" src="assets/js/multiqc_tables.js"></script>
 <script type="text/javascript" src="assets/js/multiqc_toolbox.js"></script>
 <script type="text/javascript" src="assets/js/multiqc_plotting.js"></script>
 <script type="text/javascript" src="assets/js/multiqc_mpl.js"></script>
-<script type="text/javascript" src="assets/js/multiqc_tour.js"></script>
 {%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.keys() %}
 <script type="text/javascript" src="{{ js_href }}"></script>
 {%- endfor %}{% endif %}{% endfor %}

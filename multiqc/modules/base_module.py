@@ -9,7 +9,7 @@ import os
 import random
 import re
 
-from multiqc.utils import report, config
+from multiqc.utils import report, config, util_functions
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -140,67 +140,23 @@ class BaseMultiqcModule(object):
                         See docs/writing_python.md for more information.
         :return: None
         """
+        # Use the module namespace as the name if not supplied
         if namespace is None:
             namespace = self.name
         
+        # Add the module name to the description if not already done
         keys = data.keys()
         if len(headers.keys()) > 0:
             keys = headers.keys()
         for k in keys:
-            # Unique id to avoid overwriting by other modules
-            if self.name is None:
-                headers[k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
-            else:
-                safe_name = ''.join(c for c in self.name if c.isalnum()).lower()
-                headers[k]['rid'] = '{}_{}'.format(safe_name, k)
-            
-            # Use defaults / data keys if headers not given
-            if 'title' not in headers[k]:
-                headers[k]['title'] = k
-            
+            headers[k]['namespace'] = namespace
+            desc = headers[k].get('description', headers[k].get('title', k))
             if 'description' not in headers[k]:
-                headers[k]['description'] = headers[k]['title']
-
-            if 'scale' not in headers[k]:
-                headers[k]['scale'] = 'GnBu'
-            
-            if 'format' not in headers[k]:
-                headers[k]['format'] = '{:.1f}'
-            
-            setdmax = False
-            setdmin = False
-            try:
-                headers[k]['dmax'] = float(headers[k]['max'])
-            except KeyError:
-                headers[k]['dmax'] = float("-inf")
-                setdmax = True
-            
-            try:
-                headers[k]['dmin'] = float(headers[k]['min'])
-            except KeyError:
-                headers[k]['dmin'] = float("inf")
-                setdmin = True
-            
-            # Figure out the min / max if not supplied
-            if setdmax or setdmin:
-                for (sname, samp) in data.items():
-                    try:
-                        val = float(samp[k])
-                        if 'modify' in headers[k] and callable(headers[k]['modify']):
-                            val = float(headers[k]['modify'](val))
-                        if setdmax:
-                            headers[k]['dmax'] = max(headers[k]['dmax'], val)
-                        if setdmin:
-                            headers[k]['dmin'] = min(headers[k]['dmin'], val)
-                    except KeyError:
-                        pass # missing data - skip
+                headers[k]['description'] = desc
         
-            report.general_stats[namespace] = {
-                'data': data,
-                'headers': headers
-            }
-        
-        return None
+        # Append to report.general_stats for later assembly into table 
+        report.general_stats_data.append(data)
+        report.general_stats_headers.append(headers)
     
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         try:
@@ -219,4 +175,4 @@ class BaseMultiqcModule(object):
     
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Redirects to report.write_data_file() """
-        report.write_data_file(data, fn, sort_cols, data_format)
+        util_functions.write_data_file(data, fn, sort_cols, data_format)

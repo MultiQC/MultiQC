@@ -166,7 +166,24 @@ kbd {
   overflow: auto;
   margin-bottom: 15px;
 }
+#mqc_header_hr {
+    margin: 0;
+}
 
+#mqc_welcome .close {
+    top: 2px;
+}
+#mqc_hide_welcome_btn {
+    position: relative;
+    float: right;
+    top: -2px;
+    right: -21px;
+    color: inherit;
+    opacity: 0.4;
+}
+#mqc_hide_welcome_btn:hover, #mqc_hide_welcome_btn:active, #mqc_hide_welcome_btn:focus {
+    opacity: 1;
+}
 
 .footer {
     background-color: #ededed;
@@ -546,14 +563,14 @@ input.form-control[type=color]{
     font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
 }
 
-/* General stats table */
+/* MultiQC tables */
 .mqc_table thead th {
     cursor: pointer;
 }
 .mqc_table thead th, .mqc_table thead td {
     background-color: #FFFFFF;
 }
-.mqc_table thead th:after, #gsClone thead th:after {
+.mqc_table thead th:after, .mqc_table_cloneWrapper thead th:after {
     content: "";
     display: inline-block;
     width: 0;
@@ -574,28 +591,28 @@ input.form-control[type=color]{
     color: #1ca8dd;
     border-bottom: 2px solid #1ca8dd;
 }
-#general_stats_table thead td {
+.mqc_table thead td {
     border-bottom: 2px solid #ddd;
 }
-#general_stats_table th {
+.mqc_table th {
     white-space: nowrap;
 }
 /* Floating header */
-#gsCloneWrapper {
+.mqc_table_cloneWrapper {
     overflow: hidden;
     border-bottom: 2px solid #ddd;
     width: calc(100% - 340px);
 }
-/*#gsClone thead th, #gsClone thead td {
+/*.mqc_table_cloneWrapper thead th, .mqc_table_cloneWrapper thead td {
     background-color: #FFFFFF;
 }*/
 @media only screen and (max-width: 768px){
-    #gsCloneWrapper {
+    .mqc_table_cloneWrapper {
         width: calc(100% - 40px);
     }
 }
 
-#genstat_numrows_text {
+.mqc_table_numrows_text {
     padding: 5px 10px;
     font-size: 12px;
     vertical-align: middle;
@@ -616,23 +633,23 @@ tbody .sorthandle {
     cursor: pointer;
     color: #ccc;
 }
-#general_stats_colsort_modal tbody .sorthandle {
+.mqc_configModal_table tbody .sorthandle {
     color: #999;
 }
-#general_stats_table th.rowheader {
+.mqc_table th.rowheader {
     border-left: none;
 }
 
-#general_stats_table td.data-coloured {
+.mqc_table td.data-coloured {
     padding: 0;
 }
-#general_stats_table .wrapper {
+.mqc_table .wrapper {
     display: inline-block;
     position: relative;
     height:100%;
     width:100%;
 }
-#general_stats_table .bar {
+.mqc_table .bar {
     display: block;
     position: absolute;
     top: 0;
@@ -641,7 +658,7 @@ tbody .sorthandle {
     background-color: #dedede;
     z-index:-1;
 }
-#general_stats_table .val {
+.mqc_table .val {
     display: block;
     position: absolute;
     padding: 5px;

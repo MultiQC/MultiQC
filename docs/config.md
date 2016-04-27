@@ -131,4 +131,3 @@ sp:
 
 Search patterns can specify a filename match (`fn`) or a file contents
 match (`contents`).
-

@@ -309,7 +309,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     
     # Write the general stats and report sources to disk
     if config.data_dir is not None:
-        report.general_stats_tofile()
+        # report.general_stats_tofile()
         report.data_sources_tofile()
     
     # Make the final report path & data directories
