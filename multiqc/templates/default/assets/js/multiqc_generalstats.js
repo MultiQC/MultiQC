@@ -17,12 +17,23 @@ $(function () {
   
   if($('.mqc_table').length > 0){
     
-    // Enable tablesorter on the general statistics tables
+    // Enable tablesorter on MultiQC tables
     $('.mqc_table').tablesorter({sortInitialOrder: 'desc'});
     
     // Update tablesorter if samples renamed
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
       $('.mqc_table').trigger('update'); 
+    });
+    
+    // Copy table contents to clipboard
+    var clipboard = new Clipboard('.mqc_table_copy_btn');
+    clipboard.on('success', function(e) { e.clearSelection(); });
+    $('.mqc_table_copy_btn').click(function(){
+      var btn = $(this);
+      btn.addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+      setTimeout(function(){
+        btn.removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
+      }, 2000);
     });
     
     // Freeze the top header when scrolling
@@ -37,16 +48,6 @@ $(function () {
       $('#general_stats_table').trigger('sorton', [[[ c_idx, sortDir ]]]);
       $('#gsClone thead tr th').removeClass('headerSortDown headerSortUp');
       $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
-    });
-    
-    // Copy table contents to clipboard
-    var clipboard = new Clipboard('#general_stats_copy_btn');
-    clipboard.on('success', function(e) {
-      e.clearSelection();
-      $('#general_stats_copy_btn').addClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copied!');
-      setTimeout(function(){
-        $('#general_stats_copy_btn').removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
-      }, 2000);
     });
     
     $(window).scroll(function(){
@@ -91,7 +92,7 @@ $(function () {
     });
 
     // Colour code table cells using chroma.js
-    $('table').each(function(){
+    $('.mqc_table').each(function(){
       var table = $(this);
       table.find('thead th').each(function(idx){
         if($(this).hasClass('chroma-col')){
@@ -139,18 +140,20 @@ $(function () {
     
     
     /////// COLUMN CONFIG
-    $('.general_stats_col_visible').change(function(){
+    // show + hide columns
+    $('.mqc_table_col_visible').change(function(){
       var cclass = $(this).val();
+      var target = $(this).data('target');
       if($(this).is(":checked")) {
-        $('#general_stats_table .'+cclass).show();
-        $('#general_stats_colsort_table .'+cclass).removeClass('text-muted');
+        $(target+' .'+cclass).show();
+        $(target+'_configModal_table .'+cclass).removeClass('text-muted');
       } else {
-        $('#general_stats_table .'+cclass).hide();
-        $('#general_stats_colsort_table .'+cclass).addClass('text-muted');
+        $(target+' .'+cclass).hide();
+        $(target+'_configModal_table .'+cclass).addClass('text-muted');
       }
       // Hide empty rows
-      $('#general_stats_table tbody tr').show();
-      $('#general_stats_table tbody tr').each(function(){
+      $(target+' tbody tr').show();
+      $(target+' tbody tr').each(function(){
         var hasVal = false;
         $(this).find('td:visible').each(function(){
           if(!$(this).hasClass('sorthandle') && $(this).text() !== ''){
@@ -163,11 +166,21 @@ $(function () {
       });
     });
     
-    $('#general_stats_colsort_table tbody').on('sortstop', function(e, ui){
-      change_general_stats_col_order();
+    // Make rows in general stats tables sortable
+    $('.mqc_table.mqc_sortable tbody').sortable({
+      handle: '.sorthandle',
+      helper: function fixWidthHelper(e, ui) {
+        ui.children().each(function() { $(this).width($(this).width()); });
+        return ui;
+      }
     });
-    $('#general_stats_colsort_table').bind('sortEnd',function() { 
-      change_general_stats_col_order();
+    
+    // Change order of columns
+    $('.mqc_configModal_table').on('sortstop', function(e, ui){
+      change_mqc_table_col_order( $(this) );
+    });
+    $('.mqc_configModal_table').bind('sortEnd',function() { 
+      change_mqc_table_col_order( $(this) );
     });
     
     // TOOLBOX LISTENERS
@@ -189,6 +202,24 @@ $(function () {
         });
         $(this).css('color', thiscol);
       });
+    });
+    
+    // Sort general stats by highlight
+    $('#mqc_genstat_sort_highlight').click(function(e){
+      e.preventDefault();
+      // collect highlighted rows
+      var hrows = $('#general_stats_table tbody th.highlighted').parent().detach();
+      hrows = hrows.sort(function (a, b) {
+        return $(a).find('th').data('highlight') - $(b).find('th').data('highlight');
+      });
+      if($(this).data('direction') == 'desc'){
+        hrows = hrows.get().reverse();
+        $('#general_stats_table tbody').prepend(hrows);
+        $(this).data('direction', 'asc');
+      } else {
+        $('#general_stats_table tbody').append(hrows);
+        $(this).data('direction', 'desc');
+      }
     });
     
     // Rename samples
@@ -251,18 +282,22 @@ $(function () {
 });
 
 
-// Reorder columns in the general stats table.
-// Note: Don't have to worry about floating header, as 'Configure Columns'
+// Reorder columns in MultiQC tables.
+// Note: Don't have to worry about floating headers, as 'Configure Columns'
 // button is only visible when this is hidden. Ace!
-function change_general_stats_col_order(){
-  alert('called');
+function change_mqc_table_col_order(table){
+  
+  // Find the targets of this sorting
+  var tid = table.attr('id');
+  var target = tid.replace('_configModal_table','');
+    
   // Collect the desired order of columns
   var classes = [];
-  $('#general_stats_colsort_table tbody tr').each(function(){
+  $('#'+tid+' tbody tr').each(function(){
     classes.push($(this).attr('class'));
   });
   // Go through each row
-  $('#general_stats_table tr').each(function(){
+  $('#'+target+' tr').each(function(){
     var cols = {};
     var row = $(this);
     // Detach any cell that matches a known class from above

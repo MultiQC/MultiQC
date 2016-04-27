@@ -44,6 +44,7 @@ def make_table (dt):
     :param data: MultiQC datatable object
     """
     
+    table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = defaultdict(lambda: dict())
@@ -74,19 +75,20 @@ def make_table (dt):
             <tr class="{rid}" style="background-color: rgba({col}, 0.15);">
               <td class="sorthandle ui-sortable-handle">||</span></td>
               <td style="text-align:center;">
-                <input class="general_stats_col_visible" type="checkbox" checked="checked" value="{rid}">
+                <input class="mqc_table_col_visible" type="checkbox" checked="checked" value="{rid}" data-target="#{tid}">
               </td>
               <td>{name}</td>
               <td>{title}</td>
               <td>{desc}</td>
               <td>{sk}</td>
             </tr>""".format(
-                    rid=rid,
-                    col=header['colour'],
-                    name=header['namespace'],
-                    title=header['title'],
-                    desc=header['description'],
-                    sk=header.get('shared_key', '')
+                    rid = rid,
+                    tid = table_id,
+                    col = header['colour'],
+                    name = header['namespace'],
+                    title = header['title'],
+                    desc = header['description'],
+                    sk = header.get('shared_key', '')
                 )
             
             # Add the data table cells
@@ -134,7 +136,6 @@ def make_table (dt):
     #
     # Put everything together
     #
-    table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
     
     # Buttons above the table
     html = """
@@ -151,8 +152,11 @@ def make_table (dt):
     """.format(tid=table_id, nrows = len(t_rows))
     
     # Build the table itself
-    html += '<div class="table-responsive">'
-    html += '<table id="{}" class="table table-condensed mqc_table">'.format(table_id)
+    html += """
+        <div id="{tid}_container" class="mqc_table_container">
+            <div class="table-responsive">
+                <table id="{tid}" class="table table-condensed mqc_table">
+        """.format(tid=table_id)
     
     # Build the header row
     html += '<thead><tr><th class="rowheader">Sample Name</th>{}</tr></thead>'.format(''.join(t_headers.values()))
@@ -180,7 +184,7 @@ def make_table (dt):
           </div>
           <div class="modal-body">
             <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order.</p>
-            <table class="table mqc_table" id="{tid}_configModal_table">
+            <table class="table mqc_table mqc_sortable mqc_configModal_table" id="{tid}_configModal_table">
               <thead>
                 <tr>
                   <th class="sorthandle" style="text-align:center;">Sort</th>

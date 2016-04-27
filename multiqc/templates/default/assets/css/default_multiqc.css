@@ -574,10 +574,10 @@ input.form-control[type=color]{
     color: #1ca8dd;
     border-bottom: 2px solid #1ca8dd;
 }
-#general_stats_table thead td {
+.mqc_table thead td {
     border-bottom: 2px solid #ddd;
 }
-#general_stats_table th {
+.mqc_table th {
     white-space: nowrap;
 }
 /* Floating header */
@@ -619,20 +619,20 @@ tbody .sorthandle {
 #general_stats_colsort_modal tbody .sorthandle {
     color: #999;
 }
-#general_stats_table th.rowheader {
+.mqc_table th.rowheader {
     border-left: none;
 }
 
-#general_stats_table td.data-coloured {
+.mqc_table td.data-coloured {
     padding: 0;
 }
-#general_stats_table .wrapper {
+.mqc_table .wrapper {
     display: inline-block;
     position: relative;
     height:100%;
     width:100%;
 }
-#general_stats_table .bar {
+.mqc_table .bar {
     display: block;
     position: absolute;
     top: 0;
@@ -641,7 +641,7 @@ tbody .sorthandle {
     background-color: #dedede;
     z-index:-1;
 }
-#general_stats_table .val {
+.mqc_table .val {
     display: block;
     position: absolute;
     padding: 5px;
