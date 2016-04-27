@@ -539,8 +539,21 @@ function plot_beeswarm_graph(target, ds){
     var minx = categories[i]['min'];
     var maxx = categories[i]['max'];
     
+    // Size and spacing options
+    var markerRadius = 2.5
   	var yspace = 70;
-    var ysep = 5;
+    var ysep = 10;
+    if(data.length > 50){
+      markerRadius = 1.8
+      yspace = 50;
+      ysep = 20;
+    }
+    if(data.length > 200){
+      markerRadius = 1
+      yspace = 30;
+      ysep = 30;
+    }
+    
     if (maxx == undefined){
     	maxx = Math.max.apply(null, data);
     }
@@ -585,7 +598,16 @@ function plot_beeswarm_graph(target, ds){
             marginBottom: 0,
             marginRight: 20,
             marginLeft: 100,
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
+            // Horrible hacky HighCharts reflow problem.
+            // TODO: Come back and find a better solution!
+            events: {
+              load: function(chart) {
+                setTimeout(function(){
+                  chart.target.reflow();
+                }, 200);
+              }
+            }
         },
         title: {
           text: label,
@@ -628,7 +650,7 @@ function plot_beeswarm_graph(target, ds){
           formatter: function(){
             var value = this.point.x.toFixed(this.series.tooltipOptions.valueDecimals);
             var suff = this.series.tooltipOptions.valueSuffix;
-            var ttstring = '<span class="hoverLongName" style="float:right;">'+this.series.name+'</span><samp>'+this.point.name+'</samp>: &nbsp; <b style="font-size:14px;">'+value+' '+suff+'</b>';
+            var ttstring = '<span class="hoverLongName" style="float:right;"><b style="font-size:14px;">'+value+' '+suff+'</b> &nbsp; &nbsp; '+this.series.name+'</span><samp>'+this.point.name+'</samp>';
             $('#'+target+' .beeswarm-hovertext').html(ttstring);
             return false;
           }
@@ -637,7 +659,7 @@ function plot_beeswarm_graph(target, ds){
           series: {
             name: label_long,
             marker: {
-              radius: 2.5,
+              radius: markerRadius,
               states: {
                 hover: {
                   radiusPlus: 4,

@@ -386,29 +386,19 @@ class MultiqcModule(BaseMultiqcModule):
     def bismark_methlyation_chart (self):
         """ Make the methylation plot """
         
-        # Specify the order of the different possible categories
-        cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-        cats[0]['meth_cpg'] =   {'color': '#0d233a', 'name': 'Methylated CpG'}
-        cats[0]['unmeth_cpg'] = {'color': '#2f7ed8', 'name': 'Unmethylated CpG'}
-        cats[1]['meth_chg'] =   {'color': '#1aadce', 'name': 'Methylated CHG'}
-        cats[1]['unmeth_chg'] = {'color': '#8bbc21', 'name': 'Unmethylated CHG'}
-        cats[2]['meth_chh'] =   {'color': '#492970', 'name': 'Methylated CHH'}
-        cats[2]['unmeth_chh'] = {'color': '#910000', 'name': 'Unmethylated CHH'}
-        
         # Config for the plot
-        config = {
-            'id': 'bismark_percent_methylation',
-            'title': 'Cytosine Methylation',
-            'ylab': '% Calls',
-            'cpswitch_c_active': False,
-            'cpswitch_counts_label': 'Number of Calls',
-            'data_labels': ['CpG', 'CHG', 'CHH']
+        keys = OrderedDict()
+        defaults = {
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'decimalPlaces': 1
         }
+        keys['percent_cpg_meth'] = dict(defaults, **{ 'title': 'Methylated CpG' })
+        keys['percent_chg_meth'] = dict(defaults, **{ 'title': 'Methylated CHG' })
+        keys['percent_chh_meth'] = dict(defaults, **{ 'title': 'Methylated CHH' })
         
-        # Need to supply three data dicts
-        data = [self.bismark_data['methextract'], self.bismark_data['methextract'], self.bismark_data['methextract']]
-        
-        return plots.bargraph.plot(data, cats, config)
+        return plots.beeswarm.plot(self.bismark_data['methextract'], keys)
     
 
     def bismark_mbias_plot (self):

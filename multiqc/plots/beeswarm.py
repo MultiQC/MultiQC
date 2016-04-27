@@ -26,7 +26,7 @@ def plot (data, headers=[], pconfig={}):
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
     
-    return make_beeswarm_plot( dt )
+    return make_plot( dt )
     
     
 def make_plot(dt):    
