@@ -32,59 +32,73 @@ $(function () {
       }, 2000);
     });
     
-    // Freeze the top header when scrolling
-    var gsTab = $('#general_stats_table');
-    var gsTabDiv = $('#general_stats_table_container .table-responsive');
-    var gsHeight = gsTab.height();
+    ///////////////////
+    // Floating table headers
     
     // Sort table when frozen header clicked
-    $('#general_stats_table_container').on('click', '#gsClone thead tr th', function(){
+    $('.mqc_table_container').on('click', '.mqc_table_clone thead tr th', function(){
       var c_idx = $(this).index();
       var sortDir = $(this).hasClass('headerSortUp') ? 0 : 1;
-      $('#general_stats_table').trigger('sorton', [[[ c_idx, sortDir ]]]);
-      $('#gsClone thead tr th').removeClass('headerSortDown headerSortUp');
+      $(this).closest('.mqc_table_container').find('.mqc_table').trigger('sorton', [[[ c_idx, sortDir ]]]);
+      $(this).closest('thead').find('tr th').removeClass('headerSortDown headerSortUp');
       $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
     });
     
+    // Create / destroy floating header on scrolling
+    var mqc_table_HeadHeight = 30;
     $(window).scroll(function(){
       var wTop = $(window).scrollTop();
-      var gsOffset = gsTab.offset().top;
-      var gsTop = gsOffset - wTop;
-      var gsVisible = gsTop + gsHeight;
-      var gsHeadHeight = 30;
-      if(gsTop < 0 && gsVisible > 0 ){
-        ctw = $("#gsCloneWrapper");
-        if(ctw.length == 0){
-          // Make a copy of the general stats table
-          ct = gsTab.clone();
-          ct.attr('id', 'gsClone').width(gsTab.width());
-          // Hide everything except the header. Scroll it sideways if needed.
-          ct.css({visibility:'hidden', 'margin-left': -gsTabDiv.scrollLeft()});
-          ct.find('thead').css({visibility:'visible'});
-          // Wrap it and add to the container with position: fixed
-          ctw = $('<div id="gsCloneWrapper" />').append(ct);
-          ctw.css({'position':'fixed', 'top':0, 'height': gsHeadHeight, 'width': gsTabDiv.width()});
-          $("#general_stats_table_container").append(ctw);
-        }
-        // Nicely scroll out of the way instead of dissapearing
-        if(gsVisible < gsHeadHeight * 2){
-          $("#gsClone").css('top', gsVisible - (gsHeadHeight * 2) );
+      $('.mqc_table_container').each(function(){
+        
+        var container = $(this).attr('id');
+        var table = $(this).find('.mqc_table').attr('id');
+        var height = $(this).find('.mqc_table').height();
+        var offset = $(this).find('.mqc_table').offset().top;
+        
+        var clone_id = table + '_clone';
+        var top = offset - wTop;
+        var visible = top + height;
+        if(top < 0 && visible > 0 ){
+          ctw = $('#'+clone_id+'Wrapper');
+          if(ctw.length == 0){
+            // Make a copy of the table
+            var table = $('#'+table);
+            var tableDiv = table.find('.table-responsive');
+            ct = table.clone();
+            ct.attr('id', clone_id).addClass('mqc_table_clone').width(table.width());
+            // Hide everything except the header. Scroll it sideways if needed.
+            ct.css({visibility:'hidden', 'margin-left': -tableDiv.scrollLeft()});
+            ct.find('thead').css({visibility:'visible'});
+            // Wrap it and add to the container with position: fixed
+            ctw = $('<div id="'+clone_id+'Wrapper" class="mqc_table_cloneWrapper" />').append(ct);
+            ctw.css({'position':'fixed', 'top':0, 'height': mqc_table_HeadHeight, 'width': tableDiv.width()});
+            $('#'+container).append(ctw);
+          }
+          // Nicely scroll out of the way instead of dissapearing
+          if(visible < mqc_table_HeadHeight * 2){
+            $('#'+clone_id+'Wrapper').css('top', visible - (mqc_table_HeadHeight * 2) );
+          } else {
+            $('#'+clone_id+'Wrapper').css('top', 0);
+          }
         } else {
-          $("#gsCloneWrapper").css('top', 0);
+          // Not needed - remove it (avoids printing errors etc)
+          $('#'+clone_id+'Wrapper').remove();
         }
-      } else {
-        // Not needed - remove it (avoids printing errors etc)
-        $("#gsCloneWrapper").remove();
-      }
+      });
     });
     // Resize width of floating header if page changes
     $(window).on('resize', function(){
-      $("#gsCloneWrapper").width(gsTabDiv.width());
-      $("#gsClone").width(gsTab.width());
+      $('.mqc_table_container').each(function(){
+        var tabDivWidth = $(this).find('.mqc_table .table-responsive').width();
+        var tabWidth = $(this).find('.mqc_table').width();
+        $(this).find('.mqc_table_cloneWrapper').width(tabDivWidth);
+        $(this).find('.mqc_table_clone').width(tabWidth);
+      });
     });
     // Scroll left and right in the responsive container
-    gsTabDiv.scroll(function(){
-      $("#gsClone").css('margin-left', -$(this).scrollLeft());
+    $('.table-responsive').scroll(function(){
+      var clone = $(this).closest('.mqc_table_container').find('.mqc_table_clone');
+      clone.css('margin-left', -$(this).scrollLeft());
     });
 
     // Colour code table cells using chroma.js
@@ -162,7 +176,7 @@ $(function () {
       });
     });
     
-    // Make rows in general stats tables sortable
+    // Make rows in MultiQC tables sortable
     $('.mqc_table.mqc_sortable tbody').sortable({
       handle: '.sorthandle',
       helper: function fixWidthHelper(e, ui) {
@@ -200,7 +214,7 @@ $(function () {
       });
     });
     
-    // Sort general stats by highlight
+    // Sort MultiQC tables by highlight
     $('.mqc_table_sortHighlight').click(function(e){
       e.preventDefault();
       var target = $(this).data('target');
@@ -238,7 +252,7 @@ $(function () {
     // Hide samples
     $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
       
-      // Hide rows in the general stats table
+      // Hide rows in MultiQC tables
       $(".mqc_table tbody th").each(function(){
         var match = false;
         var hfilter = $(this).text();

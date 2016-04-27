@@ -170,7 +170,7 @@ def make_table (dt):
         for k in t_headers:
             html += t_rows[s_name].get(k, '<td class="{}"></td>'.format(k) )
         html += '</tr>'
-    html += '</tbody></table></div>'
+    html += '</tbody></table></div></div>'
     
     # Build the bootstrap modal to customise columns and order
     html += """

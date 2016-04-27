@@ -563,14 +563,14 @@ input.form-control[type=color]{
     font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
 }
 
-/* General stats table */
+/* MultiQC tables */
 .mqc_table thead th {
     cursor: pointer;
 }
 .mqc_table thead th, .mqc_table thead td {
     background-color: #FFFFFF;
 }
-.mqc_table thead th:after, #gsClone thead th:after {
+.mqc_table thead th:after, .mqc_table_cloneWrapper thead th:after {
     content: "";
     display: inline-block;
     width: 0;
@@ -598,21 +598,21 @@ input.form-control[type=color]{
     white-space: nowrap;
 }
 /* Floating header */
-#gsCloneWrapper {
+.mqc_table_cloneWrapper {
     overflow: hidden;
     border-bottom: 2px solid #ddd;
     width: calc(100% - 340px);
 }
-/*#gsClone thead th, #gsClone thead td {
+/*.mqc_table_cloneWrapper thead th, .mqc_table_cloneWrapper thead td {
     background-color: #FFFFFF;
 }*/
 @media only screen and (max-width: 768px){
-    #gsCloneWrapper {
+    .mqc_table_cloneWrapper {
         width: calc(100% - 40px);
     }
 }
 
-#genstat_numrows_text {
+.mqc_table_numrows_text {
     padding: 5px 10px;
     font-size: 12px;
     vertical-align: middle;
@@ -633,7 +633,7 @@ tbody .sorthandle {
     cursor: pointer;
     color: #ccc;
 }
-#general_stats_colsort_modal tbody .sorthandle {
+.mqc_configModal_table tbody .sorthandle {
     color: #999;
 }
 .mqc_table th.rowheader {
