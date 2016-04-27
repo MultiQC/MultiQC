@@ -27,6 +27,7 @@ except NameError:
 # Set up global variables shared across modules
 general_stats_data = list()
 general_stats_headers = list()
+general_stats_html = ''
 # general_stats_beeswarm_html = None
 # general_stats_html = {
 #     'headers': OrderedDict(),
@@ -86,6 +87,8 @@ def get_filelist():
 
 def general_stats_build_html():
     """ Build the general stats HTML, be that a beeswarm plot or a table. """
+    
+    global general_stats_html
     
     # Collect unique sample names
     s_names = set()

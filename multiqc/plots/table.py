@@ -2,7 +2,7 @@
 
 """ MultiQC functions to plot a table """
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import json
 import logging
 import os
@@ -80,7 +80,7 @@ class datatable (object):
                 
                 # Figure out the min / max if not supplied
                 if setdmax or setdmin:
-                    for (s_name, samp) in enumerate(data):
+                    for s_name, samp in data[idx].items():
                         try:
                             val = float(samp[k])
                             if 'modify' in headers[idx][k] and callable(headers[idx][k]['modify']):
@@ -123,7 +123,7 @@ def make_table (dt):
     :param data: MultiQC datatable object
     """
     
-    t_headers = dict()
+    t_headers = OrderedDict()
     t_rows = defaultdict(lambda: dict())
     raw_vals = defaultdict(lambda: dict())
     
@@ -194,7 +194,7 @@ def make_table (dt):
     html += '<table id="{}" class="table table-condensed mqc_table">'.format(dt.pconfig.get('id', ''))
     
     # Build the header row
-    html += '<thead><tr><th class="rowheader">Sample Name</th>{}</tr></thead>'.format(''.join(t_headers))
+    html += '<thead><tr><th class="rowheader">Sample Name</th>{}</tr></thead>'.format(''.join(t_headers.values()))
     
     # Build the table body
     html += '<tbody>'
