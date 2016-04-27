@@ -9,7 +9,7 @@ import os
 import random
 import re
 
-from multiqc.utils import report, config
+from multiqc.utils import report, config, util_functions
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -149,9 +149,10 @@ class BaseMultiqcModule(object):
         if len(headers.keys()) > 0:
             keys = headers.keys()
         for k in keys:
+            headers[k]['namespace'] = namespace
             desc = headers[k].get('description', headers[k].get('title', k))
-            if 'description' not in headers[k] or namespace not in headers[k]['description']:
-                headers[k]['description'] = '{}: {}'.format(namespace, desc)
+            if 'description' not in headers[k]:
+                headers[k]['description'] = desc
         
         # Append to report.general_stats for later assembly into table 
         report.general_stats_data.append(data)
@@ -174,4 +175,4 @@ class BaseMultiqcModule(object):
     
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Redirects to report.write_data_file() """
-        report.write_data_file(data, fn, sort_cols, data_format)
+        util_functions.write_data_file(data, fn, sort_cols, data_format)

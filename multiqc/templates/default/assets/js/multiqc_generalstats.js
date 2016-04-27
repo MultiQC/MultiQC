@@ -20,7 +20,7 @@ $(function () {
     // Enable tablesorter on the general statistics tables
     $('.mqc_table').tablesorter({sortInitialOrder: 'desc'});
     
-    // Update the table sorter if samples renamed
+    // Update tablesorter if samples renamed
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
       $('.mqc_table').trigger('update'); 
     });

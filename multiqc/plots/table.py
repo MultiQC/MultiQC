@@ -8,7 +8,8 @@ import logging
 import os
 import random
 
-from multiqc.utils import config
+from multiqc.utils import config, util_functions
+from multiqc.plots import table_object, beeswarm
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -20,101 +21,21 @@ def plot (data, headers=[], pconfig={}):
     :return: HTML ready to be inserted into the page
     """
     
-    return make_table ( datatable(data, headers, pconfig) )
+    # Make a datatable object
+    dt = table_object.datatable(data, headers, pconfig)
     
+    # Collect unique sample names
+    s_names = set()
+    for d in data:
+        for s_name in d.keys():
+            s_names.add(s_name)
     
-
-class datatable (object):
-    
-    def __init__ (self, data, headers=[], pconfig={}):
-        """ Prepare data for use in a table or plot """
-        
-        # Given one dataset - turn it into a list
-        if type(data) is not list:
-            data = [data]
-        if type(headers) is not list:
-            headers = [headers]
-        
-        sectcols = ['55,126,184', '77,175,74', '152,78,163', '255,127,0', '228,26,28', '255,255,51', '166,86,40', '247,129,191', '153,153,153']
-        shared_keys = defaultdict(lambda: dict())
-        
-        # Go through each table section
-        for idx, d in enumerate(data):
-            
-            # Get the header keys
-            try:
-                keys = headers[idx].keys()
-                assert len(keys) > 0
-            except IndexError, AssertionError:
-                keys = d.keys()
-            
-            for k in keys:
-                # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
-                
-                # Use defaults / data keys if headers not given
-                headers[idx][k]['title']       = headers[idx][k].get('title', k)
-                headers[idx][k]['description'] = headers[idx][k].get('description', headers[idx][k]['title'])
-                headers[idx][k]['scale']       = headers[idx][k].get('scale', 'GnBu')
-                headers[idx][k]['format']      = headers[idx][k].get('format', '{:.1f}')
-                if 'colour' not in headers[idx][k]:
-                    cidx = idx
-                    while cidx >= len(sectcols):
-                        cidx -= len(sectcols)
-                    headers[idx][k]['colour'] = sectcols[cidx]
-                
-                # Work out max and min value if not given
-                setdmax = False
-                setdmin = False
-                try:
-                    headers[idx][k]['dmax'] = float(headers[idx][k]['max'])
-                except KeyError:
-                    headers[idx][k]['dmax'] = float("-inf")
-                    setdmax = True
-                
-                try:
-                    headers[idx][k]['dmin'] = float(headers[idx][k]['min'])
-                except KeyError:
-                    headers[idx][k]['dmin'] = float("inf")
-                    setdmin = True
-                
-                # Figure out the min / max if not supplied
-                if setdmax or setdmin:
-                    for s_name, samp in data[idx].items():
-                        try:
-                            val = float(samp[k])
-                            if 'modify' in headers[idx][k] and callable(headers[idx][k]['modify']):
-                                val = float(headers[idx][k]['modify'](val))
-                            if setdmax:
-                                headers[idx][k]['dmax'] = max(headers[idx][k]['dmax'], val)
-                            if setdmin:
-                                headers[idx][k]['dmin'] = min(headers[idx][k]['dmin'], val)
-                        except KeyError:
-                            pass # missing data - skip
-        
-        # Collect settings for shared keys
-        shared_keys = defaultdict(lambda: dict())
-        for idx, hs in enumerate(headers):
-            for k in hs.keys():
-                sk = headers[idx][k].get('shared_key', None)
-                if sk is not None:
-                    shared_keys[sk]['scale'] = headers[idx][k]['scale']
-                    shared_keys[sk]['dmax']  = max(headers[idx][k]['dmax'], shared_keys[sk].get('dmax', headers[idx][k]['dmax']))
-                    shared_keys[sk]['dmin']  = max(headers[idx][k]['dmin'], shared_keys[sk].get('dmin', headers[idx][k]['dmin']))
-        
-        # Overwrite shared key settings
-        for idx, hs in enumerate(headers):
-            for k in hs.keys():
-                sk = headers[idx][k].get('shared_key', None)
-                if sk is not None:
-                    headers[idx][k]['scale'] = shared_keys[sk]['scale']
-                    headers[idx][k]['dmax'] = shared_keys[sk]['dmax']
-                    headers[idx][k]['dmin'] = shared_keys[sk]['dmin']
-        
-        # Assign to class
-        self.data = data
-        self.headers = headers
-        self.pconfig = pconfig
+    # Make a beeswarm plot if we have lots of samples
+    if len(s_names) >= config.max_table_rows and pconfig.get('no_beeswarm') is True:
+        logger.debug('Plotting beeswarm instead of table, {} samples'.format(len(s_names)))
+        return plots.beeswarm.make_plot( dt )
+    else:
+        return make_table ( dt )
 
 
 def make_table (dt):
@@ -124,8 +45,9 @@ def make_table (dt):
     """
     
     t_headers = OrderedDict()
+    t_modal_headers = OrderedDict()
     t_rows = defaultdict(lambda: dict())
-    raw_vals = defaultdict(lambda: dict())
+    dt.raw_vals = defaultdict(lambda: dict())
     
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
@@ -141,17 +63,37 @@ def make_table (dt):
             data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" {}' \
                 .format(header['scale'], header['dmax'], header['dmin'], shared_key)
             
-            cell_contents = '<span data-toggle="tooltip" title="{}">{}</span>' \
-                .format(header['description'], header['title'])
+            cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
+                .format(header['namespace'], header['description'], header['title'])
             
             t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid}" {d}>{c}</th>' \
                 .format(rid=rid, d=data_attr, c=cell_contents)
+            
+            # Build the modal table row
+            t_modal_headers[rid] = """
+            <tr class="{rid}" style="background-color: rgba({col}, 0.15);">
+              <td class="sorthandle ui-sortable-handle">||</span></td>
+              <td style="text-align:center;">
+                <input class="general_stats_col_visible" type="checkbox" checked="checked" value="{rid}">
+              </td>
+              <td>{name}</td>
+              <td>{title}</td>
+              <td>{desc}</td>
+              <td>{sk}</td>
+            </tr>""".format(
+                    rid=rid,
+                    col=header['colour'],
+                    name=header['namespace'],
+                    title=header['title'],
+                    desc=header['description'],
+                    sk=header.get('shared_key', '')
+                )
             
             # Add the data table cells
             for (s_name, samp) in dt.data[idx].items():
                 if k in samp:
                     val = samp[k]
-                    raw_vals[s_name][rid] = val
+                    dt.raw_vals[s_name][rid] = val
                     
                     if 'modify' in header and callable(header['modify']):
                         val = header['modify'](val)
@@ -186,12 +128,31 @@ def make_table (dt):
             # Remove header if we don't have any filled cells for it
             if sum([len(rows) for rows in t_rows.values()]) == 0:
                 t_headers.pop(rid, None)
+                t_modal_headers.pop(rid, None)
                 logger.debug('Removing header {} from general stats table, as no data'.format(k))
     
+    #
+    # Put everything together
+    #
+    table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
     
-    # Put everything together into a table
-    html = '<div class="table-responsive">'
-    html += '<table id="{}" class="table table-condensed mqc_table">'.format(dt.pconfig.get('id', ''))
+    # Buttons above the table
+    html = """
+        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
+            <span class="glyphicon glyphicon-copy"></span> Copy table
+        </button>
+        <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
+            <span class="glyphicon glyphicon-th"></span> Configure Columns
+        </button>
+        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{tid}" data-direction="desc" style="display:none;">
+            <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
+        </button>
+        <small id="genstat_numrows_text">Showing <span id="genstat_numrows">{nrows}</span> rows.</small>
+    """.format(tid=table_id, nrows = len(t_rows))
+    
+    # Build the table itself
+    html += '<div class="table-responsive">'
+    html += '<table id="{}" class="table table-condensed mqc_table">'.format(table_id)
     
     # Build the header row
     html += '<thead><tr><th class="rowheader">Sample Name</th>{}</tr></thead>'.format(''.join(t_headers.values()))
@@ -206,6 +167,42 @@ def make_table (dt):
             html += t_rows[s_name].get(k, '<td class="{}"></td>'.format(k) )
         html += '</tr>'
     html += '</tbody></table></div>'
+    
+    # Build the bootstrap modal to customise columns and order
+    html += """
+    <!-- MultiQC Table Columns Modal -->
+    <div class="modal fade" id="{tid}_configModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">{title}: Columns</h4>
+          </div>
+          <div class="modal-body">
+            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order.</p>
+            <table class="table mqc_table" id="{tid}_configModal_table">
+              <thead>
+                <tr>
+                  <th class="sorthandle" style="text-align:center;">Sort</th>
+                  <th style="text-align:center;">Visible</th>
+                  <th>Group</th>
+                  <th>Column</th>
+                  <th>Description</th>
+                  <th>Scale</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trows}
+              </tbody>
+            </table>
+        </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> </div>
+    </div> </div> </div>""".format( tid=table_id, title=dt.pconfig.get('table_title', table_id), trows=''.join(t_modal_headers.values()) )
+    
+    # Save the raw values to a file if requested
+    if dt.pconfig.get('save_file') is True:
+        fn = dt.pconfig.get('raw_data_fn', 'multiqc_{}'.format(table_id) )
+        util_functions.write_data_file(dt.raw_vals, fn )
     
     return html
     

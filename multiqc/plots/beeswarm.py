@@ -7,8 +7,9 @@ import logging
 import os
 import random
 
-from multiqc.plots import table
 from multiqc.utils import config
+from multiqc.plots import table_object
+
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -21,7 +22,11 @@ def plot (data, headers=[], pconfig={}):
                     max values etc.
     :return: HTML string
     """
-    return make_beeswarm_plot( plots.table.datatable(data, headers, pconfig) )
+    
+    # Make a datatable object
+    dt = table_object.datatable(data, headers, pconfig)
+    
+    return make_beeswarm_plot( dt )
     
     
 def make_beeswarm_plot(dt):    
