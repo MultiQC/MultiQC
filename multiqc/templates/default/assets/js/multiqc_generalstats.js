@@ -12,7 +12,6 @@ var brewer_scales = ['YlOrRd', 'YlOrBr', 'YlGnBu', 'YlGn', 'Reds', 'RdPu',
 $(function () {
     
   // Enable the bootstrap tooltip hovers
-  // http://getbootstrap.com/javascript/#tooltips
   $('[data-toggle="tooltip"]').tooltip();
   
   if($('.mqc_table').length > 0){

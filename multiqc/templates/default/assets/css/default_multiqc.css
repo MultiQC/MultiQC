@@ -166,7 +166,24 @@ kbd {
   overflow: auto;
   margin-bottom: 15px;
 }
+#mqc_header_hr {
+    margin: 0;
+}
 
+#mqc_welcome .close {
+    top: 2px;
+}
+#mqc_hide_welcome_btn {
+    position: relative;
+    float: right;
+    top: -2px;
+    right: -21px;
+    color: inherit;
+    opacity: 0.4;
+}
+#mqc_hide_welcome_btn:hover, #mqc_hide_welcome_btn:active, #mqc_hide_welcome_btn:focus {
+    opacity: 1;
+}
 
 .footer {
     background-color: #ededed;

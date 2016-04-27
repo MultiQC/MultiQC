@@ -30,11 +30,15 @@ was generated and the button that launches the welcome tour.
   {% endif %}
 </div>
 
-<div class="alert alert-info alert-dismissible hidden-print mqc-into-tour-alert">
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+<hr id="mqc_header_hr">
+
+<div class="alert alert-info alert-dismissible hidden-print" id="mqc_welcome" style="display: none;">
+  <button type="button" data-dismiss="alert" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <button type="button" data-dismiss="alert" class="btn-link btn-sm" id="mqc_hide_welcome_btn">don't show again</button>
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-  <strong>Welcome!</strong> There's a lot you can do here!
-  <button id="mqc-launch-into-tour" class="btn btn-info btn-sm">Take the tour</button>
+  <strong>Welcome!</strong> Not sure where to start? &nbsp;
+  <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0" target="_blank" class="btn btn-info btn-sm">Watch a tutorial video</a>
+  &nbsp; <small><em>(6:06)</em></small>
 </div>
 
 {% if report.num_hc_plots > 0 and report.general_stats_html['rows'] | length > config.num_datasets_plot_limit %}
