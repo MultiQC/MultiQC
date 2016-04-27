@@ -51,7 +51,6 @@ extra_fn_clean_exts:
     - type: 'replace'
       pattern: '.sorted'
     - type: 'regex'
->>>>>>> master
       pattern: '^processed.'
 ```
 This would make the following sample names:
@@ -105,7 +104,6 @@ Running `multiqc -s .` will give the following sample names:
 sample_1.fastq.gz.aligned.log
 sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 ```
->>>>>>> master
 
 ## Module search patterns
 Many bioinformatics tools have standard output formats, filenames and other
@@ -133,4 +131,3 @@ sp:
 
 Search patterns can specify a filename match (`fn`) or a file contents
 match (`contents`).
-
