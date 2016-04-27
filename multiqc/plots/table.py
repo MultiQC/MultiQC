@@ -31,9 +31,13 @@ def plot (data, headers=[], pconfig={}):
             s_names.add(s_name)
     
     # Make a beeswarm plot if we have lots of samples
-    if len(s_names) >= config.max_table_rows and pconfig.get('no_beeswarm') is True:
+    if len(s_names) >= config.max_table_rows and pconfig.get('no_beeswarm') is not True:
         logger.debug('Plotting beeswarm instead of table, {} samples'.format(len(s_names)))
-        return plots.beeswarm.make_plot( dt )
+        warning = """<p>This report is very large.
+            A beeswarm plot has been generated instead of a table to aid usability.
+            To disable this, set <code>max_table_rows</code> to a very high number
+            in your MultiQC config file.</p>"""
+        return warning + beeswarm.make_plot( dt )
     else:
         return make_table ( dt )
 

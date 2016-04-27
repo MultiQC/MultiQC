@@ -29,53 +29,54 @@ def plot (data, headers=[], pconfig={}):
     return make_beeswarm_plot( dt )
     
     
-def make_beeswarm_plot(dt):    
+def make_plot(dt):    
     categories = []
     s_names = []
     data = []
-    for idx, d in dt.data.items():
-    
-        for k in headers[idx].keys():
+    for idx, hs in enumerate(dt.headers):
+        for k, header in hs.items():
             
-            rid = headers[idx][k]['rid']
-            bcol = 'rgb({})'.format(headers[idx][k].get('colour', '204,204,204'))
+            rid = header['rid']
+            bcol = 'rgb({})'.format(header.get('colour', '204,204,204'))
 
             categories.append({
-                'title': headers[idx][k]['title'],
-                'description': headers[idx][k]['description'],
-                'max': headers[idx][k]['dmax'],
-                'min': headers[idx][k]['dmin'],
-                'suffix': headers[idx][k].get('suffix', ''),
-                'decimalPlaces': headers[idx][k].get('decimalPlaces', '2'),
+                'title': header['title'],
+                'description': header['description'],
+                'max': header['dmax'],
+                'min': header['dmin'],
+                'suffix': header.get('suffix', ''),
+                'decimalPlaces': header.get('decimalPlaces', '2'),
                 'bordercol': bcol
             });
             
             # Add the data
             thisdata = []
             these_snames = []
-            for (sname, samp) in d:
+            for (s_name, samp) in dt.data[idx].items():
                 if k in samp:
                     
                     val = samp[k]
-                    general_stats_raw[sname][rid] = val
                     
-                    if 'modify' in headers[idx][k] and callable(headers[idx][k]['modify']):
-                        val = headers[idx][k]['modify'](val)
+                    if 'modify' in header and callable(header['modify']):
+                        val = header['modify'](val)
                     
                     thisdata.append(val)
-                    these_snames.append(sname)
+                    these_snames.append(s_name)
             
             data.append(thisdata)
             s_names.append(these_snames)
     
     # Plot and javascript function
-    global general_stats_beeswarm_html
-    general_stats_beeswarm_html = '<div class="hc-plot-wrapper"><div id="general_stats_beeswarm" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div> \n\
-    <script type="text/javascript"> \n\
-        mqc_plots["general_stats_beeswarm"] = {{ \n\
-            "plot_type": "beeswarm", \n\
-            "samples": {s}, \n\
-            "datasets": {d}, \n\
-            "categories": {c} \n\
-        }} \n\
-    </script>'.format(s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories));
+    html = """<div class="hc-plot-wrapper"><div id="general_stats_beeswarm" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div>
+    <script type="text/javascript">
+        mqc_plots["general_stats_beeswarm"] = {{
+            "plot_type": "beeswarm",
+            "samples": {s},
+            "datasets": {d},
+            "categories": {c}
+        }}
+    </script>""".format(s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories))
+    
+    return html
+    
+    
