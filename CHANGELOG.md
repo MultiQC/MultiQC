@@ -12,6 +12,10 @@
 * Stopped using so many hidden files. `.multiqc.log` now called `multiqc.log`
 * New `-c`/`--config` command line option to specify a MultiQC configuration file
 * Can now load run-specific config files called `multiqc_config.yaml` in working directory
+* Large code refactoring - moved plotting code out of `BaseModule` and into new `multiqc.plots` submodules
+* Generalised code used to generate the General Stats table so that it can be used by modules
+* Removed interactive report tour, replaced with a link to a youtube tutorial
+* Made it possible to permanently hide the blue welcome message for all future reports
 * Bugfix: Qualimap handles infinity symbol (thanks @chapmanb )
 * Bugfix: Made SnpEff less fussy about required fields for making plots
 * Bufgix: UTF-8 file paths handled properly in Py2.7+

@@ -433,11 +433,44 @@ self.sections.append({
 ```
 The will automatically be labelled and linked in the navigation.
 
-## Step 7 - Plotting bar graphs
+## Step 7 - Plot some data
+MultiQC plotting functions are held within `multiqc.plots` submodules.
+To use them, simply import this:
+```python
+from multiqc import plots
+```
+
+Once you've done that, you should have access to the following plotting
+functions:
+
+```python
+plots.bargraph.plot()
+plots.beeswarm.plot() # coming soon..
+plots.linegraph.plot()
+plots.table.plot()
+```
+
+These have been designed to work in a similar manner to each other - you
+pass a data structure to them, along with optional extras such as categories
+and configuration options, and they return a string of HTML to add to the
+report. You can add this to the module introduction or sections as described
+above. For example:
+```python
+self.sections.append({
+    'name': 'Module Section',
+    'anchor': 'mymod_section',
+    'content': plots.bargraph.plot(self.parsed_data, categories, pconfig)
+})
+```
+
+Each of these plotting functions is described in more detail below.
+
+## Step 7a - Plotting bar graphs
 Simple data can be plotted in bar graphs. Many MultiQC modules make use
-of stacked bar graphs. Here, the `self.plot_bargraph()` module comes to
+of stacked bar graphs. Here, the `plots.bargraph.plot()` function comes to
 the rescue. A basic example is as follows:
 ```python
+from multiqc import plots
 data = {
     'sample 1': {
         'aligned': 23542,
@@ -448,7 +481,7 @@ data = {
         'aligned': 1275,
     }
 }
-html_content = self.plot_bargraph(data)
+html_content = plots.bargraph.plot(data)
 ```
 
 To specify the order of categories in the plot, you can supply a list of
@@ -456,7 +489,7 @@ dictionary keys. This can also be used to exclude a key from the plot.
 
 ```python
 cats = ['aligned', 'not_aligned']
-html_content = self.plot_bargraph(data, cats)
+html_content = plots.bargraph.plot(data, cats)
 ```
 
 If `cats` is given as a dict instead of a list, you can specify a nice name
@@ -522,7 +555,7 @@ supplied, these will be guessed from the data keys. See the bismark module
 plots for an example of this in action.
 
 ### Interactive / Flat image plots
-Note that the `self.plot_bargraph()` function can generate both interactive
+Note that the `plots.bargraph.plot()` function can generate both interactive
 JavaScript (HighCharts) powered report plots _and_ flat image plots made using
 MatPlotLib. This choice is made within the function based on config variables
 such as number of dataseries and command line flags.
@@ -531,10 +564,11 @@ Note that both plot types should come out looking pretty much identical. If
 you spot something that's missing in the flat image plots, let me know.
 
 
-## Step 8 - Plotting line graphs
+## Step 7b - Plotting line graphs
 This base function works much like the above, but for two-dimensional
 data, to produce line graphs. It expects a dictionary in the following format:
 ```python
+from multiqc import plots
 data = {
     'sample 1': {
         '<x val 1>': '<y val 1>',
@@ -545,11 +579,12 @@ data = {
         '<x val 2>': '<y val 2>',
     }
 }
-html_content = self.plot_xy_data(data)
+html_content = plots.linegraph.plot(data)
 ```
 
 Additionally, a config dict can be supplied. The defaults are as follows:
 ```python
+from multiqc import plots
 config = {
     # Building the plot
     'id': '<random string>',     # HTML ID used for plot    
@@ -583,7 +618,7 @@ config = {
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
     'reversedStacks': False      # Reverse the order of the category stacks. Defaults True for plots with Log10 option
 }
-html_content = self.plot_xy_data(data, config)
+html_content = plots.linegraph.plot(data, config)
 ```
 
 ### Switching datasets
@@ -608,6 +643,7 @@ Sometimes, it's good to be able to specify specific data series manually.
 To do so, set `config['extra_series']` as a `list` of `dict`s. For example,
 the Preseq module does this to create the dotted `x = y` reference line:
 ```python
+from multiqc import plots
 config = {
     'extra_series': [
         {
@@ -622,8 +658,56 @@ config = {
         }
     ]
 }
-html_content = self.plot_xy_data(data, config)
+html_content = plots.linegraph.plot(data, config)
 ``` 
+
+
+## Step 7c - Creating a table
+Tables should work just like the two functions above (most like the bar
+graph function). Supply some data and some headers and an optional config
+and everything should magically work. 
+
+Note that the headers are where most configuration options are set and are
+(unsurprisingly) the same as the General Statistics options described previously.
+
+The default header dict and table config options are:
+```python
+single_header = {
+    'namespace': '',                # Name for grouping in table
+    'title': '[ dict key ]',        # Short title, table column title
+    'description': '[ dict key ]',  # Longer description, goes in mouse hover text
+    'max': None,                    # Minimum value in range, for bar / colour coding
+    'min': None,                    # Maximum value in range, for bar / colour coding
+    'scale': 'GnBu',                # Colour scale for colour coding
+    'colour': '<auto from palette>',# Colour for column grouping
+    'format': '{:.1f}',             # Output format() string
+    'shared_key': None              # See below for description
+    'modify': None,                 # Lambda function to modify values
+}
+table_config = {
+    'id': '<random string>',                 # ID used for the table
+    'table_title': '<table id>',             # Title of the table. Used in the column config modal
+    'save_file': False,                      # Whether to save the table data to a file
+    'raw_data_fn':'multiqc_<table_id>_table' # File basename to use for raw data file
+}
+```
+
+A very basic example is shown below:
+```python
+data = {
+    'sample 1': {
+        'aligned': 23542,
+        'not_aligned': 343,
+    },
+    'sample 2': {
+        'not_aligned': 7328,
+        'aligned': 1275,
+    }
+}
+table_html = plots.table.plot(data)
+```
+
+
 
 ## Appendices
 ### Including module-specific files
