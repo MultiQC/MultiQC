@@ -75,15 +75,20 @@ rseqc:
         contents: 'Group               Total_bases         Tag_count           Tags/Kb'
     read_duplication_pos:
         fn: '*.pos.DupRate.xls'
+salmon:
+    meta:
+        fn: 'meta_info.json'
+    fld:
+        fn: 'flenDist.txt'
+samblaster:
+    contents: 'samblaster: Version'
+skewer:
+    contents: 'COMMAND LINE:	skewer'
 snpeff:
     fn: '*snpEff.summary.csv'
 star:
     fn: '*Log.final.out'
 tophat:
     fn: '*align_summary.txt'
-skewer:
-    contents: 'COMMAND LINE:	skewer'
-samblaster:
-    contents: 'samblaster: Version'
 samtools:
     contents: 'This file was produced by samtools stats'

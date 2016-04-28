@@ -1,6 +1,7 @@
 # MultiQC Version History
 
 #### v0.6dev
+* New [Salmon](http://combine-lab.github.io/salmon/) module.
 * New beeswarm plot type. General Stats table replaced with this when many samples in report.
 * New RSeQC module: Actually a suite of 8 new modules supporting various outputs from RSeQC
 * Rewrote bowtie2 module: Now better at parsing logs and tries to scrape input from wrapper logs.

@@ -64,6 +64,7 @@ setup(
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
+            'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',

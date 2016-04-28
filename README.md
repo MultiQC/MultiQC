@@ -30,7 +30,8 @@ Currently, supported tools include:
   * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
   * [Cutadapt](https://code.google.com/p/cutadapt/)
   * [Skewer](https://github.com/relipmoc/skewer)
-* Read aligners
+* Read aligners / quantifiers
+  * [Salmon](http://combine-lab.github.io/salmon/)
   * [STAR](https://github.com/alexdobin/STAR)
   * [Tophat](https://ccb.jhu.edu/software/tophat/)
   * [Bowtie](http://bowtie-bio.sourceforge.net)
