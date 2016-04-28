@@ -256,5 +256,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0
         }
         
-        return plots.linegraph.plot(data, pconfig)
+        return plots.linegraph.plot(self.snpeff_qualities, pconfig)
     
