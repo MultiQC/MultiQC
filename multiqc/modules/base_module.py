@@ -9,6 +9,7 @@ import os
 import random
 import re
 
+from multiqc import plots
 from multiqc.utils import report, config, util_functions
 logger = logging.getLogger(__name__)
 
@@ -176,3 +177,13 @@ class BaseMultiqcModule(object):
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Redirects to report.write_data_file() """
         util_functions.write_data_file(data, fn, sort_cols, data_format)
+    
+    ##################################################
+    #### DEPRECIATED FORWARDERS
+    def plot_bargraph (self, data, cats=None, pconfig={}):
+        """ Depreciated function. Forwards to new location. """
+        return plots.bargraph.plot(data, cats, pconfig)
+    
+    def plot_xy_data(self, data, pconfig={}):
+        """ Depreciated function. Forwards to new location. """
+        return plots.linegraph.plot(data, pconfig)
