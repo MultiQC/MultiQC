@@ -588,6 +588,7 @@ from multiqc import plots
 config = {
     # Building the plot
     'smooth_points': None,       # Supply a number to limit number of points / smooth data
+    'smooth_points_sumcounts': True, # Sum counts in bins, or average? Can supply list for multiple datasets
     'id': '<random string>',     # HTML ID used for plot    
     'categories': <anything>,    # Set key to use x values as categories instead of numbers.
     'colors': dict()             # Provide dict with keys = sample names and values colours

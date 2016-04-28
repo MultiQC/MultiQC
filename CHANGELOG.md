@@ -17,6 +17,7 @@
 * Removed interactive report tour, replaced with a link to a youtube tutorial
 * Made it possible to permanently hide the blue welcome message for all future reports
 * New option to smooth data for line plots. Avoids mega-huge plots. Applied to SnpEff, RSeQC, Picard.
+* Added percentage view to Picard insert size plot
 * Bugfix: Qualimap handles infinity symbol (thanks @chapmanb )
 * Bugfix: Made SnpEff less fussy about required fields for making plots
 * Bufgix: UTF-8 file paths handled properly in Py2.7+

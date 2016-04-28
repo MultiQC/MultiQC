@@ -39,7 +39,11 @@ def plot (data, pconfig={}):
     # Smooth dataset if requested in config
     if pconfig.get('smooth_points', None) is not None:
         sumcounts = pconfig.get('smooth_points_sumcounts', True)
-        data[:] = [ smooth_line_data(d, pconfig['smooth_points'], sumcounts) for d in data]
+        for i, d in enumerate(data):
+            sumc = sumcounts
+            if type(sumcounts) is list:
+                sumc = sumcounts[i]
+            data[i] = smooth_line_data(d, pconfig['smooth_points'], sumc)
     
     # Generate the data dict structure expected by HighCharts series
     plotdata = list()
@@ -323,6 +327,8 @@ def smooth_line_data(data, numpoints, sumcounts=True):
         smoothed[s_name] = OrderedDict();
         p = 0
         binsize = len(d) / numpoints
+        if binsize < 1:
+            binsize = 1
         binvals = []
         for x, y in d.items():
             if p < binsize:

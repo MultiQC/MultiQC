@@ -483,8 +483,17 @@ class MultiqcModule(BaseMultiqcModule):
     def insert_size_plot(self):
         """ Plot the Picard Insert Size histograms """
         
+        # Make a normalised percentage version of the data
+        data_percent = {}
+        for s_name, data in self.picard_insertSize_histogram.items():
+            data_percent[s_name] = OrderedDict()
+            total = float( sum( data.values() ) )
+            for k, v in data.items():
+                data_percent[s_name][k] = (v/total)*100
+        
         pconfig = {
             'smooth_points': 500,
+            'smooth_points_sumcounts': [True, False],
             'id': 'picard_insert_size',
             'title': 'Insert Size',
             'ylab': 'Count',
@@ -492,9 +501,13 @@ class MultiqcModule(BaseMultiqcModule):
             'xDecimals': False,
             'tt_label': '<b>{point.x} bp</b>: {point.y:.0f}',
             'ymin': 0,
+            'data_labels': [
+                {'name': 'Counts', 'ylab': 'Coverage'},
+                {'name': 'Percentages', 'ylab': 'Percentage of Counts'}
+            ]
         }
         
-        return plots.linegraph.plot(self.picard_insertSize_histogram, pconfig)
+        return plots.linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig)
 
     def GCbias_plot(self):
         """ Plot the Picard GC Bias plot """
