@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Get the s_name from the parent directory
             if os.path.basename(f['root']) == 'aux':
                 s_name = os.path.basename( os.path.dirname(f['root']) )
+                s_name = self.clean_s_name(s_name, f['root'])
                 self.salmon_meta[s_name] = json.loads(f['f'])
         
         # Parse Fragment Length Distribution logs
@@ -36,6 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Get the s_name from the parent directory
             if os.path.basename(f['root']) == 'libParams':
                 s_name = os.path.basename( os.path.dirname(f['root']) )
+                s_name = self.clean_s_name(s_name, f['root'])
                 parsed = OrderedDict()
                 for i, v in enumerate(f['f'].split()):
                     parsed[i] = float(v)
