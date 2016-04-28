@@ -2,6 +2,8 @@
 
 """ MultiQC functions to plot a linegraph """
 
+from __future__ import print_function
+from collections import OrderedDict
 import base64
 import io
 import json
@@ -33,6 +35,11 @@ def plot (data, pconfig={}):
     # Given one dataset - turn it into a list
     if type(data) is not list:
         data = [data]
+    
+    # Smooth dataset if requested in config
+    if pconfig.get('smooth_points', None) is not None:
+        sumcounts = pconfig.get('smooth_points_sumcounts', True)
+        data[:] = [ smooth_line_data(d, pconfig['smooth_points'], sumcounts) for d in data]
     
     # Generate the data dict structure expected by HighCharts series
     plotdata = list()
@@ -304,4 +311,30 @@ def matplotlib_linegraph (plotdata, pconfig={}):
     
     return html
 
+
+
+def smooth_line_data(data, numpoints, sumcounts=True):
+    """
+    Function to take an x-y dataset and use binning to
+    smooth to a maximum number of datapoints.
+    """
+    smoothed = {}
+    for s_name, d in data.items():
+        smoothed[s_name] = OrderedDict();
+        p = 0
+        binsize = len(d) / numpoints
+        binvals = []
+        for x, y in d.items():
+            if p < binsize:
+                binvals.append(y)
+                p += 1
+            else:
+                if sumcounts is True:
+                    v = sum(binvals)
+                else:
+                    v = sum(binvals) / binsize
+                smoothed[s_name][x] = v
+                p = 0
+                binvals = []
+    return smoothed
 

@@ -484,6 +484,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Plot the Picard Insert Size histograms """
         
         pconfig = {
+            'smooth_points': 500,
             'id': 'picard_insert_size',
             'title': 'Insert Size',
             'ylab': 'Count',

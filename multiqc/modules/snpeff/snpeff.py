@@ -7,7 +7,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 from multiqc import config, BaseMultiqcModule, plots
-from multiqc.utils import util_functions
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -248,6 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the qualities plot """
         
         pconfig = {
+            'smooth_points': 200,
             'id': 'snpeff_qualities',
             'title': 'SnpEff: Qualities',
             'ylab': 'Values',
@@ -255,9 +255,6 @@ class MultiqcModule(BaseMultiqcModule):
             'xDecimals': False,
             'ymin': 0
         }
-        
-        # Very many points - smooth data
-        data = util_functions.smooth_line_data(self.snpeff_qualities, 200)
         
         return plots.linegraph.plot(data, pconfig)
     
