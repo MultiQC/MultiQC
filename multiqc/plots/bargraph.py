@@ -261,6 +261,8 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
                 
                 # Plot percentages
                 values = d['data']
+                if len(values) < len(y_ind):
+                    values.extend([0] * (len(y_ind) - len(values)))
                 if plot_pct is True:
                     for (key,var) in enumerate(values):
                         s_total = s_totals[key]
