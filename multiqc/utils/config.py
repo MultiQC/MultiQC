@@ -71,7 +71,7 @@ module_order = [
     # Alignment tool stats
     'bismark', 'hicup', 'salmon', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
-    'cutadapt', 'skewer', 'fastq_screen', 'fastqc',
+    'cutadapt', 'trimmomatic', 'skewer', 'fastq_screen', 'fastqc',
 ]
 
 # Get all modules, including those from other extension packages

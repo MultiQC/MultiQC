@@ -29,6 +29,7 @@ Currently, supported tools include:
   * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
   * [Cutadapt](https://code.google.com/p/cutadapt/)
+  * [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
   * [Skewer](https://github.com/relipmoc/skewer)
 * Read aligners / quantifiers
   * [Salmon](http://combine-lab.github.io/salmon/)

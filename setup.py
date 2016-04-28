@@ -71,6 +71,7 @@ setup(
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
+            'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

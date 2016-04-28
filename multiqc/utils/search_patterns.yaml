@@ -90,5 +90,7 @@ star:
     fn: '*Log.final.out'
 tophat:
     fn: '*align_summary.txt'
+trimmomatic:
+    contents: 'Trimmomatic'
 samtools:
     contents: 'This file was produced by samtools stats'
