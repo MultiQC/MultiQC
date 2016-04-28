@@ -48,25 +48,34 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.tophat_data, 'multiqc_tophat.txt')
 
         # Basic Stats Table
-        # Report table is immutable, so just updating it works
         self.tophat_general_stats_table()
 
         # Alignment Rate Plot
-        # Only one section, so add to the intro
         self.intro += self.tophat_alignment_plot()
 
 
     def parse_tophat_log (self, raw_data):
         """ Parse the Tophat alignment log file. """
-
-        regexes = {
-            'overall_aligned_percent': r"([\d\.]+)% overall read mapping rate.",
-            'concordant_aligned_percent': r"([\d\.]+)% concordant pair alignment rate.",
-            'aligned_total': r"Aligned pairs:\s+(\d+)",
-            'aligned_multimap': r"Aligned pairs:\s+\d+\n\s+of these:\s+(\d+)",
-            'aligned_discordant': r"(\d+) \([\s\d\.]+%\) are discordant alignments",
-            'total_reads': r"[Rr]eads:\n\s+Input\s*:\s+(\d+)",
-        }
+        
+        if 'Aligned pairs' in raw_data:
+            # Paired end data
+            regexes = {
+                'overall_aligned_percent': r"([\d\.]+)% overall read mapping rate.",
+                'concordant_aligned_percent': r"([\d\.]+)% concordant pair alignment rate.",
+                'aligned_total': r"Aligned pairs:\s+(\d+)",
+                'aligned_multimap': r"Aligned pairs:\s+\d+\n\s+of these:\s+(\d+)",
+                'aligned_discordant': r"(\d+) \([\s\d\.]+%\) are discordant alignments",
+                'total_reads': r"[Rr]eads:\n\s+Input\s*:\s+(\d+)",
+            }
+        else:
+            # Single end data
+            regexes = {
+                'total_reads': r"[Rr]eads:\n\s+Input\s*:\s+(\d+)",
+                'aligned_total': r"Mapped\s*:\s+(\d+)",
+                'aligned_multimap': r"of these\s*:\s+(\d+)",
+                'overall_aligned_percent': r"([\d\.]+)% overall read mapping rate.",
+            }
+            
         parsed_data = {}
         for k, r in regexes.items():
             r_search = re.search(r, raw_data, re.MULTILINE)
