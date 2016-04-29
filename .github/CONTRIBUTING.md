@@ -31,7 +31,7 @@ python setup.py sdist upload
 ```
 8. Test that it pip installs:
 ```
-conda create --name testing python=2.7
+conda create --name testing python pip
 source activate testing
 pip install multiqc
 multiqc .
@@ -46,9 +46,10 @@ conda remove --name testing --all
 cd bioconda-recipes/recipes
 rm -r multiqc
 conda skeleton pypi multiqc
+# Check that only the new things have changed
 git commit
 git push
-# Submit a Pull Request
+# Submit a Pull Request and merge
 ```
 13. Tell UPPMAX about the new version and ask for the module system to be updated.
 14. Create new demo reports for the website and upload.
