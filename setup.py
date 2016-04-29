@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 
 from setuptools import setup, find_packages
 
-version = '0.6'
+version = '0.7dev'
 
 print("""-----------------------------------
  Installing MultiQC version {}
