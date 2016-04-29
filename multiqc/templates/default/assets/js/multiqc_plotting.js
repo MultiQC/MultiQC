@@ -532,7 +532,11 @@ function plot_beeswarm_graph(target, ds){
     
     var data = datasets[i];
     var s_names = samples[i];
-    var label = categories[i]['namespace'] + '<br/>' + categories[i]['title'];
+    if (categories[i]['namespace'] == ''){
+      var label = categories[i]['title'];
+    } else{
+      var label = categories[i]['namespace'] + '<br/>' + categories[i]['title'];
+    }
     var label_long = categories[i]['namespace'] + ': ' + categories[i]['description'];
     var ttSuffix = categories[i]['suffix'];
     var decimalPlaces = categories[i]['decimalPlaces'];

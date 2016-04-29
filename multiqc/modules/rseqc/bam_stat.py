@@ -3,10 +3,11 @@
 """ MultiQC submodule to parse output from RSeQC bam_stat.py
 http://rseqc.sourceforge.net/#bam-stat-py """
 
+from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
+from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -78,7 +79,35 @@ def parse_reports(self):
             self.general_stats_data[s_name].update( self.bam_stat_data[s_name] )
         
         # Make dot plot of counts
-        # TODO - write dot plot function
+        pconfig = {}
+        keys = OrderedDict()
+        defaults = {
+            'min': 0,
+            'shared_key': 'read_count',
+            'decimalPlaces': 2,
+            'modify': lambda x: float(x) / 1000000.0,
+        }
+        keys['total_records'] = dict(defaults, **{'title': 'Total records' })
+        keys['qc_failed'] = dict(defaults, **{'title': 'QC failed' })
+        keys['optical_pcr_duplicate'] = dict(defaults, **{'title': 'Duplicates', 'description': 'Optical/PCR duplicate' })
+        keys['non_primary_hits'] = dict(defaults, **{'title': 'Non primary hit' })
+        keys['unmapped_reads'] = dict(defaults, **{'title': 'Unmapped', 'description': 'Unmapped reads' })
+        keys['mapq_lt_mapq_cut_non'] = dict(defaults, **{'title': 'Non-unique', 'description': 'mapq < mapq_cut (non-unique)' })
+        keys['mapq_gte_mapq_cut_unique'] = dict(defaults, **{'title': 'Unique', 'description': 'mapq >= mapq_cut (unique)' })
+        keys['read_1'] = dict(defaults, **{'title': 'Read-1' })
+        keys['read_2'] = dict(defaults, **{'title': 'Read-2' })
+        keys['reads_map_to_sense'] = dict(defaults, **{'title': '+ve strand', 'description': "Reads map to '+'" })
+        keys['reads_map_to_antisense'] = dict(defaults, **{'title': '-ve strand', 'description': "Reads map to '-'" })
+        keys['non-splice_reads'] = dict(defaults, **{'title': 'Non-splice reads' })
+        keys['splice_reads'] = dict(defaults, **{'title': 'Splice reads' })
+        keys['reads_mapped_in_proper_pairs'] = dict(defaults, **{'title': 'Proper pairs', 'description':'Reads mapped in proper pairs' })
+        keys['proper-paired_reads_map_to_different_chrom'] = dict(defaults, **{'title': 'Different chrom', 'description': 'Proper-paired reads map to different chrom' })
+        
+        self.sections.append({
+            'name': 'Bam Stat',
+            'anchor': 'rseqc-bam_stat',
+            'content': '<p>All numbers reported in millions.</p>'+plots.beeswarm.plot(self.bam_stat_data, keys)
+        })
     
     # Return number of samples found
     return len(self.bam_stat_data)
