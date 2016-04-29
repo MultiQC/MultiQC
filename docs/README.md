@@ -4,6 +4,7 @@ Using MultiQC:
   Running MultiQC: usage.md
   Using Reports: reports.md
   Configuration: config.md
+  Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:
     FastQC: modules/fastqc.md
@@ -32,8 +33,6 @@ Coding with MultiQC:
   Writing new modules: modules.md
   MultiQC Plugins: plugins.md
   JavaScript Functions: javascript.md
-Troubleshooting:
-  Common Problems: troubleshooting.md
 ---
 
 # Welcome!
@@ -52,6 +51,7 @@ The documentation has the following pages:
    - [Running MultiQC](usage.md)
    - [Using Reports](reports.md)
    - [Configuration](config.md)
+   - [Troubleshooting](troubleshooting.md)
  - MultiQC Modules
    - [FastQC](fastqc.md)
  - Coding with MultiQC
@@ -59,7 +59,6 @@ The documentation has the following pages:
    - [Writing new modules](modules.md)
    - [Plugins](plugins.md)
    - [JavaScript](javascript.md)
- - [Troubleshooting](troubleshooting.md)
 
 These docs can be read in any of three ways:
  - On the MultiQC Website: http://multiqc.info
