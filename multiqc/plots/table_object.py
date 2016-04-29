@@ -40,7 +40,7 @@ class datatable (object):
                 num_data = 0
                 for s_name, samp in data[idx].items():
                     try:
-                        val = float(samp[k])
+                        samp[k]
                         num_data += 1
                     except KeyError:
                         pass # missing data - skip
