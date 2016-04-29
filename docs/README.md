@@ -11,14 +11,17 @@ MultiQC Modules:
     FastQ Screen: modules/fastq_screen.md
     Skewer: modules/skewer.md
     Cutadapt: modules/cutadapt.md
+    Trimmomatic: modules/trimmomatic.md
   Aligners:
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
     TopHat: modules/tophat.md
     STAR: modules/star.md
+    Salmon: modules/salmon.md
     HiCUP: modules/hicup.md
     Bismark: modules/bismark.md
   Post-alignment:
+    Bamtools: modules/bamtools.md
     Samtools: modules/samtools.md
     Samblaster: modules/samblaster.md
     Preseq: modules/preseq.md
