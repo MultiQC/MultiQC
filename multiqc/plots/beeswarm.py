@@ -29,7 +29,9 @@ def plot (data, headers=[], pconfig={}):
     return make_plot( dt )
     
     
-def make_plot(dt):    
+def make_plot(dt):
+    
+    bs_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
     categories = []
     s_names = []
     data = []
@@ -68,15 +70,15 @@ def make_plot(dt):
             s_names.append(these_snames)
     
     # Plot and javascript function
-    html = """<div class="hc-plot-wrapper"><div id="general_stats_beeswarm" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div>
+    html = """<div class="hc-plot-wrapper"><div id="{bid}" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div>
     <script type="text/javascript">
-        mqc_plots["general_stats_beeswarm"] = {{
+        mqc_plots["{bid}"] = {{
             "plot_type": "beeswarm",
             "samples": {s},
             "datasets": {d},
             "categories": {c}
         }}
-    </script>""".format(s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories))
+    </script>""".format(bid=bs_id, s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories))
     
     return html
     
