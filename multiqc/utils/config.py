@@ -67,7 +67,7 @@ with open(searchp_fn) as f:
 module_order = [
     # Post-alignment analysis results
     'snpeff', 'qualimap', 'featureCounts', 'methylQA', 'rseqc',
-    'picard', 'preseq', 'samblaster', 'samtools',
+    'picard', 'preseq', 'samblaster', 'samtools', 'bamtools',
     # Alignment tool stats
     'bismark', 'hicup', 'salmon', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC

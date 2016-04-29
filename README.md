@@ -43,6 +43,7 @@ Currently, supported tools include:
   * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`, `inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
+  * [Bamtools](https://github.com/pezmaster31/bamtools) (`stats`)
   * [Samtools stats](http://www.htslib.org)
   * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
