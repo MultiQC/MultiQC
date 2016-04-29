@@ -34,6 +34,20 @@ class datatable (object):
             except (IndexError, AssertionError):
                 keys = d.keys()
             
+            # Check that we have some data in each column
+            for i in xrange(len(keys) - 1, -1, -1):
+                k = keys[i]
+                num_data = 0
+                for s_name, samp in data[idx].items():
+                    try:
+                        val = float(samp[k])
+                        num_data += 1
+                    except KeyError:
+                        pass # missing data - skip
+                if num_data == 0:
+                    del keys[i]
+                    del headers[idx][k]
+            
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
                 headers[idx][k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
