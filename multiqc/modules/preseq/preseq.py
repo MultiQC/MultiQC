@@ -47,7 +47,11 @@ class MultiqcModule(BaseMultiqcModule):
         
         lines = f['f'].splitlines()
         header = lines.pop(0)
-        if not header.startswith('TOTAL_READS	EXPECTED_DISTINCT'):
+        if header.startswith('TOTAL_READS	EXPECTED_DISTINCT'):
+            self.axis_label = 'Molecules'
+        elif header.startswith('TOTAL_BASES	EXPECTED_DISTINCT'):
+            self.axis_label = 'Bases'
+        else:
             log.debug("First line of preseq file {} did not look right".format(f['fn']))
             return None
         
@@ -67,8 +71,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'preseq_plot',
             'title': 'Preseq complexity curve',
-            'ylab': 'Unique Molecules',
-            'xlab': 'Total Molecules (including duplicates)',
+            'ylab': 'Unique {}'.format(self.axis_label),
+            'xlab': 'Total {} (including duplicates)'.format(self.axis_label),
             'ymin': 0,
             'xmin': 0,
             'tt_label': '<b>{point.x:,.0f} total</b>: {point.y:,.0f} unique',

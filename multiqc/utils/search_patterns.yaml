@@ -45,7 +45,9 @@ picard:
     oxogmetrics:
         contents: picard.analysis.CollectOxoGMetrics
 preseq:
-    contents: 'TOTAL_READS	EXPECTED_DISTINCT'
+    contents: 'EXPECTED_DISTINCT'
+    # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
+    # contents: 'TOTAL_BASES	EXPECTED_DISTINCT'
 qualimap:
     bamqc:
         raw_data: raw_data
