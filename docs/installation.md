@@ -21,14 +21,14 @@ source activate py2.7
 You'll want to add the `source activate py2.7` line to your `.bashrc` file so
 that the environment is loaded every time you load the terminal.
 
-## Installing with `conda`
+## Installing with conda
 If you're using `conda` as described above, you can install MultiQC from the `bioconda`
 channel as follows:
 ```
 conda install -c bioconda multiqc
 ```
 
-## Installation with `pip`
+## Installation with pip
 This is the easiest way to install MultiQC. `pip` is the package manager for
 the Python Package Manager. It comes bundled with recent versions of Python,
 otherwise you can find installation instructions [here](http://pip.readthedocs.org/en/stable/installing/).

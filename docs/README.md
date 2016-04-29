@@ -32,6 +32,8 @@ Coding with MultiQC:
   Writing new modules: modules.md
   MultiQC Plugins: plugins.md
   JavaScript Functions: javascript.md
+Troubleshooting:
+  Common Problems: troubleshooting.md
 ---
 
 # Welcome!
@@ -57,6 +59,7 @@ The documentation has the following pages:
    - [Writing new modules](modules.md)
    - [Plugins](plugins.md)
    - [JavaScript](javascript.md)
+ - [Troubleshooting](troubleshooting.md)
 
 These docs can be read in any of three ways:
  - On the MultiQC Website: http://multiqc.info
