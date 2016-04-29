@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-#### v0.6dev
+#### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 * New [Salmon](http://combine-lab.github.io/salmon/) module.
 * New [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) module.
 * New [Bamtools stats](https://github.com/pezmaster31/bamtools) module.
