@@ -190,8 +190,8 @@ class MultiqcModule(BaseMultiqcModule):
                     if s_name in self.picard_insertSize_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='InsertSizeMetrics')
-                    keys = f['f'].readline().split("\t")
-                    vals = f['f'].readline().split("\t")
+                    keys = f['f'].readline().strip("\n").split("\t")
+                    vals = f['f'].readline().strip("\n").split("\t")
                     self.picard_insertSize_medians[s_name] = {'total_count': 0}
                     while len(vals) == len(keys):
                         pair_orientation = vals[7]
@@ -203,11 +203,11 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.picard_insertSize_data[rowkey][k] = float(vals[i])
                             except ValueError:
                                 self.picard_insertSize_data[rowkey][k] = vals[i]
-                        vals = f['f'].readline().split("\t")
+                        vals = f['f'].readline().strip("\n").split("\t")
                     
                     # Skip lines on to histogram
-                    l = f['f'].readline()
-                    l = f['f'].readline()
+                    l = f['f'].readline().strip("\n")
+                    l = f['f'].readline().strip("\n")
                     
                     self.picard_insertSize_histogram[s_name] = dict()
                     in_hist = True        
@@ -242,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if gc_col is not None and cov_col is not None :
                     try:
                         # Note that GC isn't always the first column.
-                        s = l.split("\t")
+                        s = l.strip("\n").split("\t")
                         self.picard_GCbias_data[s_name][ int(s[gc_col]) ] = float(s[cov_col])
                     except IndexError:
                         s_name = None
@@ -256,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.picard_GCbias_data[s_name] = dict()
                     # Get header - find columns with the data we want
                     l = f['f'].readline()
-                    s = l.split("\t")
+                    s = l.strip("\n").split("\t")
                     gc_col = s.index('GC')
                     cov_col = s.index('NORMALIZED_COVERAGE')
                     
@@ -287,9 +287,9 @@ class MultiqcModule(BaseMultiqcModule):
             
             if s_name is not None:
                 if 'picard.analysis.directed.HsMetrics' in l and '## METRICS CLASS' in l:
-                    keys = f['f'].readline().split("\t")
+                    keys = f['f'].readline().strip("\n").split("\t")
                 elif keys:
-                    vals = l.split("\t")
+                    vals = l.strip("\n").split("\t")
                     if len(vals) == len(keys):
                         j = 'NA'
                         if keys[0] == 'BAIT_SET':
@@ -350,10 +350,10 @@ class MultiqcModule(BaseMultiqcModule):
             
             if s_name is not None:
                 if 'picard.analysis.CollectOxoGMetrics$CpcgMetrics' in l and '## METRICS CLASS' in l:
-                    keys = f['f'].readline().split("\t")
+                    keys = f['f'].readline().strip("\n").split("\t")
                     context_col = keys.index('CONTEXT')
                 elif keys:
-                    vals = l.split("\t")
+                    vals = l.strip("\n").split("\t")
                     if len(vals) == len(keys) and context_col is not None:
                         context = vals[context_col]
                         parsed_data[-1][context] = dict()
