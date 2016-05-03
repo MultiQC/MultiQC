@@ -87,6 +87,9 @@ salmon:
         fn: 'flenDist.txt'
 samblaster:
     contents: 'samblaster: Version'
+samtools:
+    stats:
+        contents: 'This file was produced by samtools stats'
 skewer:
     contents: 'COMMAND LINE:	skewer'
 snpeff:
@@ -97,5 +100,3 @@ tophat:
     fn: '*align_summary.txt'
 trimmomatic:
     contents: 'Trimmomatic'
-samtools:
-    contents: 'This file was produced by samtools stats'

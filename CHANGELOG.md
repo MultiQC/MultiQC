@@ -1,7 +1,9 @@
 # MultiQC Version History
 
 #### v0.7dev
-_..nothing yet.._
+* Refactored Picard code to make maintenance and additions easier.
+* Bugfix: Removed empty columns from tables again
+* Bugfix: Newlines in picard output. Fixed by @dakl
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 * New [Salmon](http://combine-lab.github.io/salmon/) module.
