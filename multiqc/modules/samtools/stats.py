@@ -28,7 +28,7 @@ def parse_reports(self):
             
             # Work out some percentages
             if 'raw_total_sequences' in parsed_data:
-                for k in parsed_data.keys():
+                for k in list(parsed_data.keys()):
                     if k.startswith('reads_') and k != 'raw_total_sequences':
                         parsed_data['{}_percent'.format(k)] = (parsed_data[k] / parsed_data['raw_total_sequences']) * 100
             
