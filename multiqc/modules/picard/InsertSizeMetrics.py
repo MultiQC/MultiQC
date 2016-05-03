@@ -110,10 +110,10 @@ def parse_reports(self):
             'format': '{:.0f}',
             'scale': 'GnBu',
         }
-        for s_name in self.picard_insertSize_data:
+        for s_name in self.picard_insertSize_medians:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update( self.picard_insertSize_data[s_name] )
+            self.general_stats_data[s_name].update( self.picard_insertSize_medians[s_name] )
         
         
         # Make a normalised percentage version of the data

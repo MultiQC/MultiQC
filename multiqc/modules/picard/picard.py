@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
         if n['HsMetrics'] > 0:
             log.info("Found {} HsMetrics reports".format(n['HsMetrics']))
         
-        n['OxoGMetrics'] = HsMetrics.parse_reports(self)
+        n['OxoGMetrics'] = OxoGMetrics.parse_reports(self)
         if n['OxoGMetrics'] > 0:
             log.info("Found {} OxoGMetrics reports".format(n['OxoGMetrics']))
         

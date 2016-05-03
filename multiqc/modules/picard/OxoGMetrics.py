@@ -73,8 +73,6 @@ def parse_reports(self):
                 self.picard_OxoGMetrics_data[s_name] = parsed_data[idx]
     
 
-    
-    
     if len(self.picard_OxoGMetrics_data) > 0:
         
         # Write parsed data to a file
@@ -86,7 +84,15 @@ def parse_reports(self):
         }
         self.write_data_file(print_data, 'multiqc_picard_OxoGMetrics')
         
-        # Add to general stats table                
+        # Add to general stats table
+        data = dict()
+        for s_name in self.picard_OxoGMetrics_data:
+            data[s_name] = dict()
+            try:
+                data[s_name]['CCG_OXIDATION_ERROR_RATE'] = self.picard_OxoGMetrics_data[s_name]['CCG']['OXIDATION_ERROR_RATE']
+            except KeyError:
+                log.warn("Couldn't find picard CCG oxidation error rate for {}".format(s_name))
+        
         self.general_stats_headers['CCG_OXIDATION_ERROR_RATE'] = {
             'title': 'CCG Oxidation',
             'description': 'CCG-CAG Oxidation Error Rate',
@@ -97,10 +103,10 @@ def parse_reports(self):
             'scale': 'RdYlGn-rev',
             'modify': lambda x: self.multiply_hundred(x)
         }
-        for s_name in print_data:
+        for s_name in data:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update( print_data[s_name] )
+            self.general_stats_data[s_name].update( data[s_name] )
     
     # Return the number of detected samples to the parent module
     return len(self.picard_OxoGMetrics_data)
