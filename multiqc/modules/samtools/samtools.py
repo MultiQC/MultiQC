@@ -26,8 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(name='Samtools',
         anchor='Samtools', target='Samtools',
         href='http://www.htslib.org',
-        info=" is a suite of programs for interacting with high-throughput sequencing data." \
-             " This module parses the output from <code>samtools stats</code>.")
+        info=" is a suite of programs for interacting with high-throughput sequencing data.")
         
         # Set up class objects to hold parsed data
         self.sections = list()
