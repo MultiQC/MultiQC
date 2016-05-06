@@ -8,6 +8,7 @@ Module updates:
 Core updates:
 * New plot type: Heatmap
 * Added missing rename / highlight / hiding functionality to new beeswarm plot.
+* New `-l` / `--file_list` option: specify a file containing a list of files to search.
 * Updated HighCharts to v4.2.5. Added option to export to JPEG.
 
 Bugfixes:
