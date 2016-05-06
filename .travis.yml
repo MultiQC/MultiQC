@@ -17,4 +17,5 @@ script:
   - multiqc data -f --flat
   - multiqc data -o tests/multiqc_report_dev -t default_dev -k json
   - multiqc data -o tests/multiqc_report_geo -t geo -k yaml -v
+  - multiqc --is-file-list data/special_cases/file_list.txt 
   
