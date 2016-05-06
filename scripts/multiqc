@@ -198,8 +198,9 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
                 if os.path.exists(line.strip()):
                     config.analysis_dir += (os.path.abspath(line.strip()),)
         if len(config.analysis_dir) == 0:
-            logger.warning("No files were added from {} using --is-file-list option.".format(analysis_dir[0]))
-            logger.warning("Please, check that {} contains correct file paths.".format(analysis_dir[0]))
+            logger.error("No files were added from {} using --is-file-list option.".format(analysis_dir[0]))
+            logger.error("Please, check that {} contains correct file paths.".format(analysis_dir[0]))
+            raise ValueError("Any files to be searched.")
 
     if no_clean_sname:
         config.fn_clean_exts = []
