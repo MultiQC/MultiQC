@@ -20,9 +20,6 @@ $(function () {
   // HighCharts Defaults
   window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});
   Highcharts.setOptions({
-    chart: {
-      backgroundColor: null,
-    },
     credits: {
 			enabled: true,
       text: 'Created with MultiQC',
