@@ -398,7 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['percent_chg_meth'] = dict(defaults, **{ 'title': 'Methylated CHG' })
         keys['percent_chh_meth'] = dict(defaults, **{ 'title': 'Methylated CHH' })
         
-        return plots.beeswarm.plot(self.bismark_data['methextract'], keys)
+        return plots.beeswarm.plot(self.bismark_data['methextract'], keys, {'id': 'bismark-methylation-dp'})
     
 
     def bismark_mbias_plot (self):

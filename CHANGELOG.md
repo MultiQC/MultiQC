@@ -1,7 +1,10 @@
 # MultiQC Version History
 
 #### v0.7dev
-* Refactored Picard code to make maintenance and additions easier.
+* Refactored Picard and Samtools code to make maintenance and additions easier.
+* Rewrote the samtools stats code to display more stats in report with a beeswarm plot.
+* Added missing rename / highlight / hiding functionality to new beeswarm plot.
+* Updated HighCharts to v4.2.5. Added option to export to JPEG.
 * Bugfix: Removed empty columns from tables again
 * Bugfix: Newlines in picard output. Fixed by @dakl
 

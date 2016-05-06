@@ -509,6 +509,77 @@ function plot_beeswarm_graph(target, ds){
   var samples = JSON.parse(JSON.stringify(mqc_plots[target]['samples']));
   var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
   
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    for (i=0; i < samples.length; i++) {
+      for (j=0; j < samples[i].length; j++) {
+        $.each(window.mqc_rename_f_texts, function(idx, f_text){
+          if(window.mqc_rename_regex_mode){
+            var re = new RegExp(f_text,"g");
+            samples[i][j] = samples[i][j].replace(re, window.mqc_rename_t_texts[idx]);
+          } else {
+            samples[i][j] = samples[i][j].replace(f_text, window.mqc_rename_t_texts[idx]);
+          }
+        });
+      }
+    }
+  }
+  
+  // Highlight samples
+  var baseColour = 'rgb(55,126,184)'; // Blue points by default
+  var seriesColours = {};
+  if(window.mqc_highlight_f_texts.length > 0){
+    baseColour = 'rgb(80,80,80)'; // Grey points if no highlight
+    for (i=0; i < samples.length; i++) {
+      for (j=0; j < samples[i].length; j++) {
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if((window.mqc_highlight_regex_mode && samples[i][j].match(f_text)) || (!window.mqc_highlight_regex_mode && samples[i][j].indexOf(f_text) > -1)){
+            seriesColours[samples[i][j]] = window.mqc_highlight_f_cols[idx];
+          }
+        });
+      }
+    }
+  }
+  
+  // Hide samples
+  $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.hc-plot-wrapper').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var num_hidden = 0;
+    var num_total = 0;
+    for (i=0; i < samples.length; i++) {
+      num_total = Math.max(num_total, samples[i].length);
+      var j = samples[i].length;
+      var hidden_here = 0;
+      while (j--) {
+        var s_name = samples[i][j];
+        $.each(window.mqc_hide_f_texts, function(idx, f_text){
+          var match = (window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1);
+          if(window.mqc_hide_mode == 'show'){
+            match = !match;
+          }
+          if(match){
+            samples[i].splice(j, 1);
+            datasets[i].splice(j, 1);
+            hidden_here += 1;
+            return false;
+          }
+        });
+      };
+      num_hidden = Math.max(num_hidden, hidden_here);
+    };
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.hc-plot-wrapper').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.hc-plot-wrapper').hide();
+      return false;
+    }
+  }
+  
   // Figure out how tall to make each plot
   var ph_min = 40;
   var ph_max = 100;
@@ -583,7 +654,17 @@ function plot_beeswarm_graph(target, ds){
         var n = Math.floor(Math.abs(y)) + 1;
         y = (Math.floor(side/2) * multiplier)/(ysep*n);
       }
-      xydata.push({'x':d, 'y':y, 'name':s_name});
+      // Get the point colour
+      var thisCol = baseColour;
+      if(s_name in seriesColours) {
+        thisCol = seriesColours[s_name];
+      }
+      xydata.push({
+        'x':d,
+        'y':y,
+        'name':s_name,
+        'color': thisCol
+      });
     }
 
     $('<div class="beeswarm-plot" />')
@@ -700,7 +781,11 @@ function plot_beeswarm_graph(target, ds){
         legend: { enabled: false },
         credits: { enabled: false },
         exporting: { enabled: false },
-        series: [{ data: xydata, color: 'rgb(55,126,184)' }]
+        series: [{
+          data: xydata,
+          // Workaround for HighCharts bug. See https://github.com/highcharts/highcharts/issues/1440
+          marker: { states: { hover: { fillColor: {} } } }
+        }]
 
     });
 

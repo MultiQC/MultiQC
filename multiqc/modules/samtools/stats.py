@@ -123,7 +123,7 @@ def parse_reports(self):
             'name': 'Samtools Stats',
             'anchor': 'samtools-stats',
             'content': '<p>This module parses the output from <code>samtools stats</code>.</p>' + 
-                        plots.beeswarm.plot(self.samtools_stats, keys)
+                        plots.beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
         })
     
     # Return the number of logs that were found
