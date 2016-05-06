@@ -176,6 +176,15 @@ function plot_graph(target, ds, max_num){
         $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
+    // Heatmap plots
+    else if(mqc_plots[target]['plot_type'] == 'heatmap'){
+      if(max_num === undefined || mqc_plots[target]['xcats'][0].length < max_num){
+        plot_heatmap(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+      }
+    }
     // Not recognised
     else { console.log('Did not recognise plot type: '+mqc_plots[target]['plot_type']); }
   }
@@ -791,6 +800,96 @@ function plot_beeswarm_graph(target, ds){
 
   }
 }
+
+
+// Heatmap plot
+function plot_heatmap(target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'heatmap'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
+  var xcats = JSON.parse(JSON.stringify(mqc_plots[target]['xcats']));
+  var ycats = JSON.parse(JSON.stringify(mqc_plots[target]['ycats']));
+  
+  if(config['colstops'] === undefined){
+    config['colstops'] = [
+      [0, '#313695'],
+      [0.1, '#4575b4'],
+      [0.2, '#74add1'],
+      [0.3, '#abd9e9'],
+      [0.4, '#e0f3f8'],
+      [0.5, '#ffffbf'],
+      [0.6, '#fee090'],
+      [0.7, '#fdae61'],
+      [0.8, '#f46d43'],
+      [0.9, '#d73027'],
+      [1, '#a50026'],
+    ];
+  }
+  if(config['legend'] === undefined){ config['legend'] = true; }
+  if(config['borderWidth'] === undefined){ config['borderWidth'] = 0; }
+  if(config['datalabels'] === undefined){
+    if(data.length < 20){
+      config['datalabels'] = true;
+    }
+  }
+  
+  // Make the highcharts plot
+  $('#'+target).highcharts({
+    chart: {
+      type: 'heatmap',
+      marginTop: config['title'] ? 60 : 50
+    },
+    title: {
+      text: config['title'],
+    },
+    xAxis: {
+      categories: xcats,
+      opposite: true,
+      title: { enabled: true, text: config['xTitle'] }
+    },
+    yAxis: {
+      categories: ycats,
+      reversed: true,
+      title: config['yTitle']
+    },
+    colorAxis: {
+      reversed: false,
+      stops: config['colstops'],
+      min: config['min'],
+      max: config['max'],
+    },
+    legend: {
+      align: 'right',
+      layout: 'vertical',
+      margin: 0,
+      verticalAlign: 'top',
+      y: 25,
+      symbolHeight: 280,
+      enabled: config['legend']
+    },
+    tooltip: {
+      formatter: function () {
+        return this.series.xAxis.categories[this.point.x] + ' : ' +
+        this.series.yAxis.categories[this.point.y] + ' = <b>' + this.point.value + '</b>'
+      }
+    },
+    series: [{
+      borderWidth: config['borderWidth'],
+      data: data,
+      dataLabels: {
+        enabled: config['datalabels'],
+        color: config['datalabel_colour']
+      }
+    }]
+  });
+  
+}
+  
 
 
 // Highlight text with a fadeout background colour highlight

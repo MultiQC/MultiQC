@@ -445,7 +445,8 @@ functions:
 
 ```python
 plots.bargraph.plot()
-plots.beeswarm.plot() # coming soon..
+plots.beeswarm.plot()
+plots.heatmap.plot()
 plots.linegraph.plot()
 plots.table.plot()
 ```
@@ -707,6 +708,80 @@ data = {
     }
 }
 table_html = plots.table.plot(data)
+```
+
+## Step 7d - Beeswarm plots (dot plots)
+Beeswarm plots work from the exact same data structure as tables, so the
+usage is just the same. Except instead of calling `table`, call `beeswarm`:
+```python
+data = {
+    'sample 1': {
+        'aligned': 23542,
+        'not_aligned': 343,
+    },
+    'sample 2': {
+        'not_aligned': 7328,
+        'aligned': 1275,
+    }
+}
+beeswarm_html = plots.beeswarm.plot(data)
+```
+
+## Step 7e - Heatmaps
+Heatmaps expect data in the structure of a list of lists. Then, a list
+of sample names for the x-axis, and optionally for the y-axis (defaults
+to the same as the x-axis). For example:
+
+```python
+hmdata = [
+    [0.9, 0.87, 0.73, 0.6, 0.2, 0.3],
+    [0.87, 1, 0.7, 0.6, 0.9, 0.3],
+    [0.73, 0.8, 1, 0.6, 0.9, 0.3],
+    [0.6, 0.8, 0.7, 1, 0.9, 0.3],
+    [0.2, 0.8, 0.7, 0.6, 1, 0.3],
+    [0.3, 0.8, 0.7, 0.6, 0.9, 1],
+]
+names = [ 'one', 'two', 'three', 'four', 'five', 'six' ]
+hm_html = plots.heatmap.plot(hmdata, names)
+```
+
+Much like the other plots, you can change the way that the heatmap looks
+using a config dictionary:
+
+```python
+pconfig = {
+    'title': None,                    # Plot title
+    'xTitle': None,                   # X-axis title
+    'yTitle': None,                   # Y-axis title
+    'min': None,                      # Minimum value (default: auto)
+    'max': None,                      # Maximum value (default: auto)
+    'colstops': []                    # Scale colour stops. See below.
+    'legend': True,                   # Colour axis key enabled or not
+    'borderWidth': 0,                 # Border width between cells
+    'datalabels': True,               # Show values in each cell. Defaults True when less than 20 samples.
+    'datalabel_colour': '<auto>',     # Colour of text for values. Defaults to auto contrast.
+}
+```
+
+The colour stops are a bit special and can be used to define a custom colour
+scheme. These should be defined as a list of lists, with a number between 0 and 1
+and a HTML colour. The default is `RdYlBu` from [ColorBrewer](http://colorbrewer2.org/):
+```python
+pconfig = {
+    'colstops' = [
+        [0, '#313695'],
+        [0.1, '#4575b4'],
+        [0.2, '#74add1'],
+        [0.3, '#abd9e9'],
+        [0.4, '#e0f3f8'],
+        [0.5, '#ffffbf'],
+        [0.6, '#fee090'],
+        [0.7, '#fdae61'],
+        [0.8, '#f46d43'],
+        [0.9, '#d73027'],
+        [1, '#a50026'],
+    ]
+}
 ```
 
 
