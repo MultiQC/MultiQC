@@ -1,14 +1,21 @@
 # MultiQC Version History
 
 #### v0.7dev
+Module updates:
 * Refactored Picard and Samtools code to make maintenance and additions easier.
 * Rewrote the samtools stats code to display more stats in report with a beeswarm plot.
+
+Core updates:
+* New plot type: Heatmap
 * Added missing rename / highlight / hiding functionality to new beeswarm plot.
 * Updated HighCharts to v4.2.5. Added option to export to JPEG.
-* Bugfix: Removed empty columns from tables again
-* Bugfix: Newlines in picard output. Fixed by @dakl
+
+Bugfixes:
+* Removed empty columns from tables again
+* Newlines in picard output. Fixed by @dakl
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
+Module updates:
 * New [Salmon](http://combine-lab.github.io/salmon/) module.
 * New [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) module.
 * New [Bamtools stats](https://github.com/pezmaster31/bamtools) module.
@@ -16,6 +23,9 @@
 * New RSeQC module: Actually a suite of 8 new modules supporting various outputs from RSeQC
 * Rewrote bowtie2 module: Now better at parsing logs and tries to scrape input from wrapper logs.
 * Made cutadapt show counts by default instead of obs/exp
+* Added percentage view to Picard insert size plot
+
+Core updates:
 * Dynamic plots now update their labels properly when changing datasets and to percentages
 * Config files now loaded from working directory if present
 * Started new docs describing how each module works
@@ -28,22 +38,26 @@
 * Removed interactive report tour, replaced with a link to a youtube tutorial
 * Made it possible to permanently hide the blue welcome message for all future reports
 * New option to smooth data for line plots. Avoids mega-huge plots. Applied to SnpEff, RSeQC, Picard.
-* Added percentage view to Picard insert size plot
-* Bugfix: Qualimap handles infinity symbol (thanks @chapmanb )
-* Bugfix: Made SnpEff less fussy about required fields for making plots
-* Bufgix: UTF-8 file paths handled properly in Py2.7+
-* Bugfix: Extending two config variables wasn't working. Now fixed.
-* Bugfix: Dragging the height bar of plots now works again.
-* Bugfix: Plots now properly change y axis limits and labels when changing datasets
-* Bugfix: Flat plots now have correct path in `default_dev` template
+
+Bugfixes:
+* Qualimap handles infinity symbol (thanks @chapmanb )
+* Made SnpEff less fussy about required fields for making plots
+* UTF-8 file paths handled properly in Py2.7+
+* Extending two config variables wasn't working. Now fixed.
+* Dragging the height bar of plots now works again.
+* Plots now properly change y axis limits and labels when changing datasets
+* Flat plots now have correct path in `default_dev` template
 
 #### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
+Module updates:
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
 * New [Samtools stats](http://www.htslib.org/) module, written by @lpantano
 * New [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/) module
 * New [SnpEff](http://snpeff.sourceforge.net/) module
 * New [methylQA](http://methylqa.sourceforge.net/) module
+
+Core updates:
 * New "Flat" image plots, rendered at run time with MatPlotLib
   * By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)
   * Means that _very_ large numbers of samples can be viewed in reports. _eg._ single cell data.
