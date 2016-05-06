@@ -27,6 +27,7 @@ modules_dir = os.path.join(MULTIQC_DIR, 'modules')
 creation_date = datetime.now().strftime("%Y-%m-%d, %H:%m")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
+is_file_list = False
 output_dir = os.path.realpath(os.getcwd())
 output_fn_name = 'multiqc_report.html'
 data_dir_name = 'multiqc_data'

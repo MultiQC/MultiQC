@@ -44,6 +44,12 @@ plugin_hooks.mqc_trigger('config_loaded')
                     required = True,
                     metavar = "<analysis directory>"
 )
+
+@click.option('-l', '--is-file-list',
+                    is_flag = True,
+                    help = "The file given as analysis_dir has a list of file paths "
+                           "to be searched, one per row"
+)
 @click.option('-f', '--force',
                     is_flag = True,
                     help = "Overwrite any existing reports"
@@ -125,7 +131,7 @@ plugin_hooks.mqc_trigger('config_loaded')
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, filename, 
+def multiqc(analysis_dir, dirs, is_file_list, no_clean_sname, title, template, module, exclude, outdir, ignore, filename, 
 make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
     
@@ -181,6 +187,22 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     config.plots_force_flat = plots_flat
     config.plots_force_interactive = plots_interactive
     config.kwargs = kwargs # Plugin command line options
+
+    # Add files if --is-file-list option is given
+    if is_file_list:
+        if len(analysis_dir) > 1:
+            raise ValueError("If --is-file-list is giving, analysis_dir should have only one plain text file.")
+        if os.path.isdir(analysis_dir[0]):
+            raise ValueError("If --is-file-list is giving, analysis_dir should be a plain text file.")
+        config.analysis_dir = ()
+        with (open(analysis_dir[0])) as in_handle:
+            for line in in_handle:
+                if os.path.exists(line.strip()):
+                    config.analysis_dir += (os.path.abspath(line.strip()),)
+        if len(config.analysis_dir) == 0:
+            logger.warning("No files were added from %s using --is-file-list option." % analysis_dir[0])
+            logger.watning("Please, check that %s contains correct file paths." % analysis_dir[0])
+
     if no_clean_sname:
         config.fn_clean_exts = []
         logger.info("Not cleaning sample names")

@@ -31,6 +31,12 @@ multiqc data/ --ignore *_R2*
 multiqc . --ignore run_two/
 ```
 
+You can point to a file that contains a list of file paths, one per row, and MultiQC
+will search there.
+```
+multiqc --is-file-list my_file_list.txt
+```
+
 ## Renaming reports
 The report is called `multiqc_report.html` by default. Tab-delimited data files
 are created in `multiqc_data/`, containing additional information.
