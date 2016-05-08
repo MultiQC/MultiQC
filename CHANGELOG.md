@@ -14,6 +14,7 @@ Core updates:
 Bugfixes:
 * Removed empty columns from tables again
 * Newlines in picard output. Fixed by @dakl
+* Handle variable spacing in MethylQA logs
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 Module updates:

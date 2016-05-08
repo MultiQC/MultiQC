@@ -54,23 +54,23 @@ class MultiqcModule(BaseMultiqcModule):
         
         parsed_data = {}
         regexes = {
-            'mappable_reads': r"uniquely mappable reads \(pair\): (\d+)",
-            'quality_failed': r"quality failed mapped reads \(pair\) in the bismark bam: (\d+)",
-            'oversized_reads': r"oversized mapped reads \(pair\) in the bismark bam: (\d+)",
-            'mapped_bases': r"total base of uniquely mapped reads \(pair\): (\d+)",
-            'coverage': r"total base of uniquely mapped reads \(pair\) cover genome base \(\d+\): ([\d\.]+)X",
-            'CHG_count_meth': r"number of methylated C in CHG context \(was protected\): (\d+)",
-            'CHG_count_unmeth': r"number of not methylated C in CHG context \(was converted\): (\d+)",
-            'CHG_percent_meth': r"C->T convertion rate in CHG context: ([\d\.]+)%",
-            'CHH_count_meth': r"number of methylated C in CHH context \(was protected\): (\d+)",
-            'CHH_count_unmeth': r"number of not methylated C in CHH context \(was converted\): (\d+)",
-            'CHH_percent_meth': r"C->T convertion rate in CHH context: ([\d\.]+)%",
-            'CG_count_meth': r"number of methylated C in CpG context \(was protected\): (\d+)",
-            'CG_count_unmeth': r"number of not methylated C in CpG context \(was converted\): (\d+)",
-            'CG_percent_meth': r"C->T convertion rate in CpG context: ([\d\.]+)%",
-            'CN_count_meth': r"number of methylated C in Unknown context \(was protected\): (\d+)",
-            'CN_count_unmeth': r"number of not methylated C in Unknown context \(was converted\): (\d+)",
-            'CN_percent_meth': r"C->T convertion rate in Unknown context: 1([\d\.]+)%",
+            'mappable_reads': r"uniquely mappable reads \(pair\):\s*(\d+)",
+            'quality_failed': r"quality failed mapped reads \(pair\) in the bismark bam:\s*(\d+)",
+            'oversized_reads': r"oversized mapped reads \(pair\) in the bismark bam:\s*(\d+)",
+            'mapped_bases': r"total base of uniquely mapped reads \(pair\):\s*(\d+)",
+            'coverage': r"total base of uniquely mapped reads \(pair\) cover genome base \(\d+\):\s*([\d\.]+)X",
+            'CHG_count_meth': r"number of methylated C in CHG context \(was protected\):\s*(\d+)",
+            'CHG_count_unmeth': r"number of not methylated C in CHG context \(was converted\):\s*(\d+)",
+            'CHG_percent_meth': r"C->T convertion rate in CHG context:\s*([\d\.]+)%",
+            'CHH_count_meth': r"number of methylated C in CHH context \(was protected\):\s*(\d+)",
+            'CHH_count_unmeth': r"number of not methylated C in CHH context \(was converted\):\s*(\d+)",
+            'CHH_percent_meth': r"C->T convertion rate in CHH context:\s*([\d\.]+)%",
+            'CG_count_meth': r"number of methylated C in CpG context \(was protected\):\s*(\d+)",
+            'CG_count_unmeth': r"number of not methylated C in CpG context \(was converted\):\s*(\d+)",
+            'CG_percent_meth': r"C->T convertion rate in CpG context:\s*([\d\.]+)%",
+            'CN_count_meth': r"number of methylated C in Unknown context \(was protected\):\s*(\d+)",
+            'CN_count_unmeth': r"number of not methylated C in Unknown context \(was converted\):\s*(\d+)",
+            'CN_percent_meth': r"C->T convertion rate in Unknown context:\s*([\d\.]+)%",
         }
         for k, r in regexes.items():
             match = re.search(r, f['f'])
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
                     hist['percentages'][s[0]] = float(s[2])
                 except IndexError:
                     break
-            if 'Times covered           Count    Percent  |' in l:
+            if re.search(r"Times covered\s+Count\s+Percent\s+", l):
                 hist = { 'counts': OrderedDict(), 'percentages': OrderedDict() }
         if hist is not False and len(hist) > 0:
             self.methylqa_coverage_counts[s_name] = hist['counts']
@@ -117,6 +117,9 @@ class MultiqcModule(BaseMultiqcModule):
     def methylqa_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
         
+        if len(self.methylqa_coverage_counts) == 0:
+            return '<div class="alert alert-danger">No histogram data found.</div>'
+    
         pconfig = {
             'id': 'methylqa_coverage',
             'title': 'CpG Coverage',
@@ -130,3 +133,4 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }    
         return plots.linegraph.plot([self.methylqa_coverage_counts, self.methylqa_coverage_percentages], pconfig)
+        
