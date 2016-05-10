@@ -730,8 +730,12 @@ beeswarm_html = plots.beeswarm.plot(data)
 ## Step 7e - Heatmaps
 Heatmaps expect data in the structure of a list of lists. Then, a list
 of sample names for the x-axis, and optionally for the y-axis (defaults
-to the same as the x-axis). For example:
+to the same as the x-axis).
+```python
+plots.heatmap.plot(data, xcats, ycats, pconfig)
+```
 
+A simple example:
 ```python
 hmdata = [
     [0.9, 0.87, 0.73, 0.6, 0.2, 0.3],
@@ -756,6 +760,8 @@ pconfig = {
     'min': None,                      # Minimum value (default: auto)
     'max': None,                      # Maximum value (default: auto)
     'colstops': []                    # Scale colour stops. See below.
+    'reverseColors': False,           # Reverse the order of the colour axis
+    'decimalPlaces': 2,               # Number of decimal places for tooltip
     'legend': True,                   # Colour axis key enabled or not
     'borderWidth': 0,                 # Border width between cells
     'datalabels': True,               # Show values in each cell. Defaults True when less than 20 samples.

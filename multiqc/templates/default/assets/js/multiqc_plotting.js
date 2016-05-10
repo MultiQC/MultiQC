@@ -42,6 +42,12 @@ $(function () {
     }
   });
   
+  // Render plots on page load
+  $('.hc-plot').each(function(){
+    var target = $(this).attr('id');
+    plot_graph(target, undefined, num_datasets_plot_limit);
+  });
+  
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
     var target = $(this).parent().attr('id');
@@ -830,12 +836,21 @@ function plot_heatmap(target, ds){
       [1, '#a50026'],
     ];
   }
+  if(config['reverseColors'] === undefined){ config['reverseColors'] = false; }
+  if(config['decimalPlaces'] === undefined){ config['decimalPlaces'] = 2; }
   if(config['legend'] === undefined){ config['legend'] = true; }
   if(config['borderWidth'] === undefined){ config['borderWidth'] = 0; }
   if(config['datalabels'] === undefined){
     if(data.length < 20){
       config['datalabels'] = true;
     }
+  }
+  // Reverse the colour scale if the axis is reversed
+  if(config['reverseColors']){
+    for(var i = 0; i < config['colstops'].length; i++){
+      config['colstops'][i][0] = 1 - config['colstops'][i][0];
+    }
+    config['colstops'].reverse();
   }
   
   // Make the highcharts plot
@@ -849,16 +864,16 @@ function plot_heatmap(target, ds){
     },
     xAxis: {
       categories: xcats,
-      opposite: true,
       title: { enabled: true, text: config['xTitle'] }
     },
     yAxis: {
       categories: ycats,
       reversed: true,
+      opposite: true,
       title: config['yTitle']
     },
     colorAxis: {
-      reversed: false,
+      reversed: config['reverseColors'],
       stops: config['colstops'],
       min: config['min'],
       max: config['max'],
@@ -874,8 +889,9 @@ function plot_heatmap(target, ds){
     },
     tooltip: {
       formatter: function () {
-        return this.series.xAxis.categories[this.point.x] + ' : ' +
-        this.series.yAxis.categories[this.point.y] + ' = <b>' + this.point.value + '</b>'
+        return this.series.xAxis.categories[this.point.x] + '<br>' +
+        this.series.yAxis.categories[this.point.y] + '<br>' + 
+        '<span style="font-weight: bold; text-decoration:underline;">' + this.point.value.toFixed(config['decimalPlaces']) + '</span>'
       }
     },
     series: [{
@@ -886,6 +902,30 @@ function plot_heatmap(target, ds){
         color: config['datalabel_colour']
       }
     }]
+  },
+  // Maintain aspect ratio as chart size changes
+  function(this_chart){
+    var resizeCh = function(chart){
+      // Extra width for legend
+      var lWidth = chart.options.legend.enabled ? 30 : 0;
+      // Work out new chart width, assuming needs to be narrower
+      var chHeight = $(chart.renderTo).height();
+      var chWidth = $(chart.renderTo).width();
+      var nChHeight = chHeight;
+      var nChWidth = chHeight + lWidth;
+      // Chart is already too narrow, make it less tall
+      if(chWidth < nChWidth){
+        nChHeight = chWidth - lWidth;
+        nChWidth = chWidth;
+      }
+      chart.setSize(nChWidth, nChHeight);
+    }
+    // Resize on load
+    resizeCh(this_chart);
+    // Resize on graph resize
+    $(this_chart.renderTo).on('mqc_plotresize', function(e){
+      resizeCh(this_chart);
+    });
   });
   
 }

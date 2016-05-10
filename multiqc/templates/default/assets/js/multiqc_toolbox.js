@@ -10,13 +10,7 @@ var mqc_colours = chroma.brewer.Set1;
 //////////////////////////////////////////////////////
 $(function () {
   
-  // Load graphs on page load
-  $('.hc-plot').each(function(){
-    var target = $(this).attr('id');
-    plot_graph(target, undefined, num_datasets_plot_limit);
-  });
-  
-  // Listener to re-plot graphs when config loaded
+  // Listener to re-plot graphs if config loaded
   $(document).on('mqc_config_loaded', function(e){
     $('.hc-plot').each(function(){
       var target = $(this).attr('id');
