@@ -278,6 +278,10 @@ class MultiqcModule(BaseMultiqcModule):
         """ Add some single-number stats to the basic statistics
         table at the top of the report """
         
+        # Are sequence lengths interesting?
+        seq_lengths = [x['avg_sequence_length'] for x in self.fastqc_stats.values()]
+        seq_length_range = max(seq_lengths) - min(seq_lengths)
+        
         headers = OrderedDict()
         headers['percent_duplicates'] = {
             'title': '% Dups',
@@ -294,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'PRGn',
+            'scale': 'Set1',
             'format': '{:.0f}%'
         }
         headers['avg_sequence_length'] = {
@@ -303,7 +307,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
-            'format': '{:.0f}'
+            'format': '{:.0f}',
+            'hidden': False if seq_length_range > 10 else True
         }
         headers['total_sequences'] = {
             'title': 'M Seqs',

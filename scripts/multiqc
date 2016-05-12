@@ -310,6 +310,11 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
 
         except UserWarning:
             pass # No samples found
+        except KeyboardInterrupt:
+            logger.critical("User Cancelled Execution!")
+            shutil.rmtree(tmp_dir)
+            logger.critical("Exiting MultiQC..")
+            sys.exit(1)
         except:
             # Flag the error, but carry on
             logger.error("Oops! The '{}' MultiQC module broke... \n".format(this_module) + \

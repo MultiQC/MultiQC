@@ -56,6 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
+            'scale': 'Set1',
             'format': '{:.0f}%'
         }
         headers['median_insert_size'] = {
@@ -80,13 +81,13 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Median coverage',
             'min': 0,
             'suffix': 'X',
-            'scale': 'RdBu'
+            'scale': 'BuPu'
         }
         headers['mapped_reads'] = {
             'title': 'Aligned',
             'description': 'Number of mapped reads (millions)',
             'min': 0,
-            'scale': 'PuBu',
+            'scale': 'RdYlGn',
             'shared_key': 'read_count',
             'modify': lambda x: x / 1000000,
         }
@@ -94,9 +95,10 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Total Reads',
             'description': 'Number of reads (millions)',
             'min': 0,
-            'scale': 'PuBu',
+            'scale': 'Blues',
             'shared_key': 'read_count',
             'modify': lambda x: x / 1000000,
+            'hidden': True
         }
         
         

@@ -4,6 +4,7 @@
 Module updates:
 * Refactored Picard and Samtools code to make maintenance and additions easier.
 * Rewrote the samtools stats code to display more stats in report with a beeswarm plot.
+* Some tweaks to the general stats display (FastQC, Bismark, Qualimap, SnpEff)
 
 Core updates:
 * New plot type: Heatmap
@@ -11,6 +12,7 @@ Core updates:
 * Added missing rename / highlight / hiding functionality to new beeswarm plot.
 * New `-l` / `--file_list` option: specify a file containing a list of files to search.
 * Updated HighCharts to v4.2.5. Added option to export to JPEG.
+* Can now cancel execution with a single `ctrl+c` rather than having to button mash
 
 Bugfixes:
 * Removed empty columns from tables again
