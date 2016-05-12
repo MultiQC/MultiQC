@@ -53,6 +53,7 @@ def make_table (dt):
     t_modal_headers = OrderedDict()
     t_rows = defaultdict(lambda: dict())
     dt.raw_vals = defaultdict(lambda: dict())
+    empty_cells = dict()
     
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
@@ -80,6 +81,8 @@ def make_table (dt):
             
             t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid}" {d}{h}>{c}</th>' \
                 .format(rid=rid, d=data_attr, h=hide, c=cell_contents)
+            
+            empty_cells[rid] = '<td class="data-coloured {rid}"{h}></td>'.format(rid=rid, h=hide)
             
             # Build the modal table row
             t_modal_headers[rid] = """
@@ -181,7 +184,7 @@ def make_table (dt):
         # Sample name row header
         html += '<th class="rowheader" data-original-sn="{sn}">{sn}</th>'.format(sn=s_name)
         for k in t_headers:
-            html += t_rows[s_name].get(k, '<td class="{}"></td>'.format(k) )
+            html += t_rows[s_name].get(k, empty_cells[k])
         html += '</tr>'
     html += '</tbody></table></div></div>'
     
