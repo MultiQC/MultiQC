@@ -355,6 +355,7 @@ headers['name'] = {
     'format': '{:.1f}',             # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
+    'hidden': False                 # Set to True to hide the column on page load
 }
 ```
 * `scale`
@@ -371,7 +372,11 @@ headers['name'] = {
   * A python `lambda` function to change the data in some way when it is
     inserted into the table. Typically, this is used to divide numbers to
     show millions: `'modify': lambda x: x / 1000000`
-Example of supplied data and headers dicts:
+* `hidden`
+  * Setting this to `True` will hide the column when the report loads. It can
+    then be shown through the _Configure Columns_ modal in the report. This can
+    be useful when data could be sometimes useful. For example, some modules
+    show "percentage aligned" on page load but hide "number of reads aligned".
 
 ## Step 5 - Writing data to a file
 In addition to printing data to the General Stats, MultiQC modules typically
@@ -671,7 +676,7 @@ graph function). Supply some data and some headers and an optional config
 and everything should magically work. 
 
 Note that the headers are where most configuration options are set and are
-(unsurprisingly) the same as the General Statistics options described previously.
+the same as the General Statistics options described previously.
 
 The default header dict and table config options are:
 ```python
@@ -686,6 +691,7 @@ single_header = {
     'format': '{:.1f}',             # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
+    'hidden': False                 # Set to True to hide the column on page load
 }
 table_config = {
     'id': '<random string>',                 # ID used for the table

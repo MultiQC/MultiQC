@@ -281,7 +281,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'Greens',
             'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
+            'shared_key': 'read_count',
+            'hidden': True
         }
         headers['alignment']['aligned_reads'] = {
             'title': 'M Aligned',
@@ -289,7 +290,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'PuRd',
             'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
+            'shared_key': 'read_count',
+            'hidden': True
         }
         headers['alignment']['percent_aligned'] = {
             'title': '% Aligned',

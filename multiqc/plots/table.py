@@ -60,10 +60,17 @@ def make_table (dt):
             rid = header['rid']
             
             # Build the table header cell
+            shared_key = ''
             if header.get('shared_key', None) is not None:
                 shared_key = ' data-shared-key={}'.format(header['shared_key'])
-            else:
-                shared_key = ''
+                
+            hide = ''
+            muted = ''
+            checked = ' checked="checked"'
+            if header.get('hidden', False) is True:
+                hide = ' style="display:none;"'
+                muted = ' text-muted'
+                checked = ''
             
             data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" {}' \
                 .format(header['scale'], header['dmax'], header['dmin'], shared_key)
@@ -71,15 +78,15 @@ def make_table (dt):
             cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
                 .format(header['namespace'], header['description'], header['title'])
             
-            t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid}" {d}>{c}</th>' \
-                .format(rid=rid, d=data_attr, c=cell_contents)
+            t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid}" {d}{h}>{c}</th>' \
+                .format(rid=rid, d=data_attr, h=hide, c=cell_contents)
             
             # Build the modal table row
             t_modal_headers[rid] = """
-            <tr class="{rid}" style="background-color: rgba({col}, 0.15);">
+            <tr class="{rid}{muted}" style="background-color: rgba({col}, 0.15);">
               <td class="sorthandle ui-sortable-handle">||</span></td>
               <td style="text-align:center;">
-                <input class="mqc_table_col_visible" type="checkbox" checked="checked" value="{rid}" data-target="#{tid}">
+                <input class="mqc_table_col_visible" type="checkbox" {checked} value="{rid}" data-target="#{tid}">
               </td>
               <td>{name}</td>
               <td>{title}</td>
@@ -87,6 +94,8 @@ def make_table (dt):
               <td>{sk}</td>
             </tr>""".format(
                     rid = rid,
+                    muted = muted,
+                    checked = checked,
                     tid = table_id,
                     col = header['colour'],
                     name = header['namespace'],
@@ -129,7 +138,7 @@ def make_table (dt):
                     wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
                     
                     t_rows[s_name][rid] = \
-                        '<td class="data-coloured {rid}" >{c}</td>'.format(rid=rid, c=wrapper_html)
+                        '<td class="data-coloured {rid}"{h}>{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
             
             # Remove header if we don't have any filled cells for it
             if sum([len(rows) for rows in t_rows.values()]) == 0:
