@@ -43,6 +43,11 @@ def parse_reports(self):
                         if 'number of mapped reads' in l:
                             self.general_stats[s_name]['mapped_reads'] = float( num )
                 
+                # Calculate percentage aligned
+                for s_name, v in self.general_stats.items():
+                    if 'mapped_reads' in v and 'total_reads' in v:
+                        self.general_stats[s_name]['percentage_aligned'] = (v['mapped_reads'] / v['total_reads'])*100
+                
                 if s_name in self.qualimap_bamqc_coverage_hist:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(s_name=s_name, source=os.path.abspath(os.path.join(root, sp['genome_results'])), section='genome_results')

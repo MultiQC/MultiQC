@@ -83,6 +83,15 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': 'X',
             'scale': 'BuPu'
         }
+        headers['percentage_aligned'] = {
+            'title': '% Aligned',
+            'description': '% mapped reads',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'YlGn',
+            'format': '{:.1f}%'
+        }
         headers['mapped_reads'] = {
             'title': 'Aligned',
             'description': 'Number of mapped reads (millions)',
@@ -90,6 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'shared_key': 'read_count',
             'modify': lambda x: x / 1000000,
+            'hidden': True
         }
         headers['total_reads'] = {
             'title': 'Total Reads',

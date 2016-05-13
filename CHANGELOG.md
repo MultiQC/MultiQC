@@ -4,6 +4,7 @@
 Module updates:
 * Refactored Picard and Samtools code to make maintenance and additions easier.
 * Rewrote the samtools stats code to display more stats in report with a beeswarm plot.
+* Added _Percentage Aligned_ column to general stats for Qualimap BamQC module.
 * Some tweaks to the general stats display (FastQC, Bismark, Qualimap, SnpEff)
 
 Core updates:
