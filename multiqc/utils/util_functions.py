@@ -21,9 +21,13 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
     :return: None """
     
     if config.data_dir is not None:
+        
+        # Add relevant file extension to filename
         if data_format is None:
             data_format = config.data_format
         fn = '{}.{}'.format(fn, config.data_format_extensions[data_format])
+        
+        # Save file
         with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
             if data_format == 'json':
                 jsonstr = json.dumps(data, indent=4, ensure_ascii=False)

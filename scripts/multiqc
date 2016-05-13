@@ -96,7 +96,7 @@ plugin_hooks.mqc_trigger('config_loaded')
                     help = "Use only this module. Can specify multiple times."
 )
 @click.option('--data-dir/--no-data-dir', 'make_data_dir',
-                    default=config.make_data_dir,
+                    default = config.make_data_dir,
                     help = "Specify whether the parsed data directory should be created."
 )
 @click.option('-k', '--data-format', 'data_format',
