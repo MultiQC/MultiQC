@@ -73,9 +73,25 @@ def get_filelist():
     # Go through the analysis directories
     for directory in config.analysis_dir:
         if os.path.isdir(directory):
-            for root, dirnames, filenames in os.walk(directory, followlinks=True):
+            for root, dirnames, filenames in os.walk(directory, followlinks=True, topdown=True):
+                
+                # Exclude any directories that match exclusion filters
+                skip_dirs = []
+                for n in config.fn_ignore_files:
+                    for d in dirnames:
+                        if fnmatch.fnmatch(os.path.join(root, d).rstrip('/'), n.rstrip('/')):
+                            skip_dirs.append(d)
+                if len(skip_dirs) > 0:
+                    print(json.dumps(dirnames, indent=4))
+                    dirnames[:] = [d for d in dirnames if d not in skip_dirs]
+                    print(json.dumps(dirnames, indent=4))
+                    for s in skip_dirs:
+                        logger.debug("Ignoring directory as matched an ignore pattern: {}".format(s))
+                
+                # Search filenames in this directory
                 for fn in filenames:
                     add_file(fn, root)
+        
         elif os.path.isfile(directory):
             add_file(os.path.basename(directory), os.path.dirname(directory))
 
