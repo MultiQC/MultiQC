@@ -20,6 +20,7 @@ Bugfixes:
 * Newlines in picard output. Fixed by @dakl
 * Handle variable spacing in MethylQA logs
 * Fixed bug in changing module search patterns, reported by @lweasel
+* Added timeout parameter to version check to prevent hang on systems with long defaults
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 Module updates:
