@@ -82,9 +82,7 @@ def get_filelist():
                         if fnmatch.fnmatch(os.path.join(root, d).rstrip('/'), n.rstrip('/')):
                             skip_dirs.append(d)
                 if len(skip_dirs) > 0:
-                    print(json.dumps(dirnames, indent=4))
                     dirnames[:] = [d for d in dirnames if d not in skip_dirs]
-                    print(json.dumps(dirnames, indent=4))
                     for s in skip_dirs:
                         logger.debug("Ignoring directory as matched an ignore pattern: {}".format(s))
                 
