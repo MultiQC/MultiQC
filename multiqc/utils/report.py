@@ -79,7 +79,7 @@ def get_filelist():
                 skip_dirs = []
                 for n in config.fn_ignore_files:
                     for d in dirnames:
-                        if fnmatch.fnmatch(os.path.join(root, d).rstrip('/'), n.rstrip('/')):
+                        if fnmatch.fnmatch(os.path.join(root, d).rstrip(os.pathsep), n.rstrip(os.pathsep)):
                             skip_dirs.append(d)
                 if len(skip_dirs) > 0:
                     dirnames[:] = [d for d in dirnames if d not in skip_dirs]

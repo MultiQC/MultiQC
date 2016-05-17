@@ -152,15 +152,28 @@ $(function () {
     /////// COLUMN CONFIG
     // show + hide columns
     $('.mqc_table_col_visible').change(function(){
-      var cclass = $(this).val();
       var target = $(this).data('target');
-      if($(this).is(":checked")) {
-        $(target+' .'+cclass).show();
-        $(target+'_configModal_table .'+cclass).removeClass('text-muted');
-      } else {
-        $(target+' .'+cclass).hide();
-        $(target+'_configModal_table .'+cclass).addClass('text-muted');
-      }
+      mqc_table_col_updateVisible(target);
+    });
+    // Bulk set visible / hidden
+    $('.mqc_configModal_bulkVisible').click(function(e){
+      e.preventDefault();
+      var target = $(this).data('target');
+      var visible = $(this).data('action') == 'showAll';
+      $(target+'_configModal_table tbody .mqc_table_col_visible').prop('checked', visible);
+      mqc_table_col_updateVisible(target);
+    });
+    function mqc_table_col_updateVisible(target){
+      $(target+'_configModal_table .mqc_table_col_visible').each(function(){
+        var cclass = $(this).val();
+        if($(this).is(":checked")) {
+          $(target+' .'+cclass).removeClass('hidden');
+          $(target+'_configModal_table .'+cclass).removeClass('text-muted');
+        } else {
+          $(target+' .'+cclass).addClass('hidden');
+          $(target+'_configModal_table .'+cclass).addClass('text-muted');
+        }
+      });
       // Hide empty rows
       $(target+' tbody tr').show();
       $(target+' tbody tr').each(function(){
@@ -174,7 +187,10 @@ $(function () {
           $(this).hide();
         }
       });
-    });
+      // Update counts
+      $(target+'_numrows').text( $(target+' tbody tr:visible').length );
+      $(target+'_numcols').text( $(target+' thead th:visible').length - 1 );
+    }
     
     // Make rows in MultiQC tables sortable
     $('.mqc_table.mqc_sortable tbody').sortable({
@@ -264,8 +280,11 @@ $(function () {
             match = !match;
           }
         });
-        if(match){ $(this).parent().hide(); }
-        else { $(this).parent().show(); }
+        if(match){
+          $(this).parent().hide().addClass('hidden');
+        } else {
+          $(this).parent().show().removeClass('hidden');
+        }
       });
       $('.mqc_table_numrows').each(function(){
         var tid = $(this).attr('id').replace('_numrows','');
@@ -291,6 +310,10 @@ $(function () {
           }
           gsthidx += 1;
         });
+      });
+      $('.mqc_table_numcols').each(function(){
+        var tid = $(this).attr('id').replace('_numcols','');
+        $(this).text( $('#'+tid+' thead th:visible').length - 1 );
       });
     });
     

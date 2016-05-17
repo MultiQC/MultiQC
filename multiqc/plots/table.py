@@ -54,6 +54,7 @@ def make_table (dt):
     t_rows = defaultdict(lambda: dict())
     dt.raw_vals = defaultdict(lambda: dict())
     empty_cells = dict()
+    hidden_cols = 1
     
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
@@ -69,9 +70,10 @@ def make_table (dt):
             muted = ''
             checked = ' checked="checked"'
             if header.get('hidden', False) is True:
-                hide = ' style="display:none;"'
+                hide = 'hidden'
                 muted = ' text-muted'
                 checked = ''
+                hidden_cols += 1
             
             data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" {}' \
                 .format(header['scale'], header['dmax'], header['dmin'], shared_key)
@@ -79,10 +81,10 @@ def make_table (dt):
             cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
                 .format(header['namespace'], header['description'], header['title'])
             
-            t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid}" {d}{h}>{c}</th>' \
+            t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid} {h}" {d}>{c}</th>' \
                 .format(rid=rid, d=data_attr, h=hide, c=cell_contents)
             
-            empty_cells[rid] = '<td class="data-coloured {rid}"{h}></td>'.format(rid=rid, h=hide)
+            empty_cells[rid] = '<td class="data-coloured {rid} {h}"></td>'.format(rid=rid, h=hide)
             
             # Build the modal table row
             t_modal_headers[rid] = """
@@ -141,7 +143,7 @@ def make_table (dt):
                     wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
                     
                     t_rows[s_name][rid] = \
-                        '<td class="data-coloured {rid}"{h}>{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
+                        '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
             
             # Remove header if we don't have any filled cells for it
             if sum([len(rows) for rows in t_rows.values()]) == 0:
@@ -164,8 +166,8 @@ def make_table (dt):
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{tid}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
-        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <span id="{tid}_numrows" class="mqc_table_numrows">{nrows}</span> rows.</small>
-    """.format(tid=table_id, nrows = len(t_rows))
+        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nrows}</sup>/<sub>{nrows}</sub> rows and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns.</small>
+    """.format(tid=table_id, nrows=len(t_rows), ncols_vis = len(t_headers)-hidden_cols, ncols=len(t_headers))
     
     # Build the table itself
     html += """
@@ -200,6 +202,10 @@ def make_table (dt):
           </div>
           <div class="modal-body">
             <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order.</p>
+            <p>
+                <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showAll">Show All</button>
+                <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showNone">Show None</button>
+            </p>
             <table class="table mqc_table mqc_sortable mqc_configModal_table" id="{tid}_configModal_table">
               <thead>
                 <tr>
