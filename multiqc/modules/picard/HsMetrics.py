@@ -8,6 +8,7 @@ import os
 import re
 
 from multiqc import config
+from multiqc import plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -108,7 +109,31 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( data[s_name] )
-    
+
+    table_html = plots.table.plot(data, _get_headers(data))
+    if not isinstance(self.sections, list):
+        self.sections = list()
+    self.sections.append({
+            'name': 'HSMetrics',
+            'anchor': 'picard_hsmetrics',
+            'content': table_html})
     # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
-    
+
+
+def _get_headers(data):
+    header = {}
+    for s in data:
+        for h in data[s]:
+            try:
+                float(data[s][h])
+            except:
+                continue
+            if h not in header:
+                this = {
+                'title': h.replace("_", " ")
+                }
+                if h.startswith("PCT"):
+                    this.update({'max': 100, 'min': 0, 'format': '{:.0f}%', 'scale': 'RdYlGn', 'modify': lambda x: x * 100.0})
+                header.update({h : this})
+    return header
