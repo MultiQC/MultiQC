@@ -24,6 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
+        self.num_se = 0
+        self.num_pe = 0
         for f in self.find_log_files(config.sp['bowtie2'], filehandles=True):
             # Check that this isn't actually Bismark using bowtie
             if f['f'].read().find('bisulfite', 0) < 0:
@@ -145,6 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
                     unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
                     if unpaired:
                         parsed_data['unpaired_total'] = int(unpaired.group(1))
+                        self.num_se += 1
                         
                         # Do nested loop whilst we have this level of indentation
                         l = f['f'].readline()
@@ -159,6 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
                     paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
                     if paired:
                         parsed_data['paired_total'] = int(paired.group(1))
+                        self.num_pe += 1
                         
                         # Do nested loop whilst we have this level of indentation
                         l = f['f'].readline()
@@ -211,32 +215,43 @@ class MultiqcModule(BaseMultiqcModule):
     def bowtie2_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
         
-        # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys['unpaired_aligned_one'] = { 'color': '#20568f', 'name': 'SE mapped uniquely' }
-        keys['paired_aligned_one'] = { 'color': '#20568f', 'name': 'PE mapped uniquely' }
-        keys['paired_aligned_discord_one'] = { 'color': '#5c94ca', 'name': 'PE mapped discordantly uniquely 1 time' }
-        keys['paired_aligned_mate_one_halved'] = { 'color': '#95ceff', 'name': 'PE one mate mapped uniquely' }
-        
-        keys['unpaired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'SE multimapped' }
-        keys['paired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'PE multimapped' }
-        keys['paired_aligned_discord_multi'] = { 'color': '#dce333', 'name': 'PE discordantly multimapped' }
-        keys['paired_aligned_mate_multi_halved'] = { 'color': '#ffeb75', 'name': 'PE one mate multimapped' }
-        
-        keys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
-        keys['paired_aligned_none'] = { 'color': '#981919', 'name': 'PE not aligned' }
-        
         half_warning = ''
         for s_name in self.bowtie2_data:
-            if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name]:
+            if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_none_halved' in self.bowtie2_data[s_name]:
                 half_warning = '<p><em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em></p>'
         
         
         # Config for the plot
         config = {
-            'title': 'Bowtie 2 Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return half_warning + plots.bargraph.plot(self.bowtie2_data, keys, config)
+        # Two plots, don't mix SE with PE
+        se_plot = ''
+        if self.num_se > 0:
+            sekeys = OrderedDict()
+            sekeys['unpaired_aligned_one'] = { 'color': '#20568f', 'name': 'SE mapped uniquely' }
+            sekeys['unpaired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'SE multimapped' }
+            sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
+            config['id'] = 'bowtie2_se_plot'
+            config['title'] = 'Bowtie 2 SE Alignment Scores'
+            se_plot = plots.bargraph.plot(self.bowtie2_data, sekeys, config)
+        
+        pe_plot = ''
+        if self.num_pe > 0:
+            pekeys = OrderedDict()
+            pekeys['paired_aligned_one'] = { 'color': '#20568f', 'name': 'PE mapped uniquely' }
+            pekeys['paired_aligned_discord_one'] = { 'color': '#5c94ca', 'name': 'PE mapped discordantly uniquely 1 time' }
+            pekeys['paired_aligned_mate_one_halved'] = { 'color': '#95ceff', 'name': 'PE one mate mapped uniquely' }
+            pekeys['paired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'PE multimapped' }
+            pekeys['paired_aligned_discord_multi'] = { 'color': '#dce333', 'name': 'PE discordantly multimapped' }
+            pekeys['paired_aligned_mate_multi_halved'] = { 'color': '#ffeb75', 'name': 'PE one mate multimapped' }
+            pekeys['paired_aligned_mate_none_halved'] = { 'color': '#981919', 'name': 'PE neither mate aligned' }
+            config['id'] = 'bowtie2_pe_plot'
+            config['title'] = 'Bowtie 2 PE Alignment Scores'
+            if se_plot != '':
+                pe_plot = '<hr>'
+            pe_plot += plots.bargraph.plot(self.bowtie2_data, pekeys, config)
+        
+        return half_warning + se_plot + pe_plot

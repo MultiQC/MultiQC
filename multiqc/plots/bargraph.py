@@ -64,11 +64,16 @@ def plot (data, cats=None, pconfig={}):
     for idx, d in enumerate(data):
         hc_samples = sorted(list(d.keys()))
         hc_data = list()
+        sample_dcount = dict()
         for c in cats[idx].keys():
             thisdata = list()
             for s in hc_samples:
                 try:
                     thisdata.append(d[s][c])
+                    try:
+                        sample_dcount[s] += 1
+                    except KeyError:
+                        sample_dcount[s] = 1
                 except KeyError:
                     pass
             if len(thisdata) > 0 and max(thisdata) > 0:
@@ -77,7 +82,7 @@ def plot (data, cats=None, pconfig={}):
                     thisdict['color'] = cats[idx][c]['color']
                 hc_data.append(thisdict)
         if len(hc_data) > 0:
-            plotsamples.append(hc_samples)
+            plotsamples.append([s for s, c in sample_dcount.items() if c > 0])
             plotdata.append(hc_data)
     
     if len(plotdata) == 0:
