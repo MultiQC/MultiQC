@@ -141,11 +141,6 @@ class MultiqcModule(BaseMultiqcModule):
                     if total:
                         parsed_data['total_reads'] = int(total.group(1))
                     
-                    # Overall alignment rate
-                    overall = re.search(r"([\d\.]+)% overall alignment rate", l)
-                    if overall:
-                        parsed_data['overall_alignment_rate'] = float(overall.group(1))
-                    
                     # Single end reads
                     unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
                     if unpaired:
@@ -173,6 +168,11 @@ class MultiqcModule(BaseMultiqcModule):
                                 if match:
                                     parsed_data[k] = int(match.group(1))
                             l = f['f'].readline()
+                    
+                    # Overall alignment rate
+                    overall = re.search(r"([\d\.]+)% overall alignment rate", l)
+                    if overall:
+                        parsed_data['overall_alignment_rate'] = float(overall.group(1))
                     
                     # End of log section - break inner loop
                     if 'Time searching' in l:
