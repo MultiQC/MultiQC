@@ -78,6 +78,14 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
         
         headers = OrderedDict()
+        headers['fragment_length'] = {
+            'title': 'Frag Length',
+            'description': 'Estimated average fragment length',
+            'min': 0,
+            'suffix': 'bp',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}',
+        }
         headers['percent_aligned'] = {
             'title': '% Aligned',
             'description': '% processed reads that were pseudoaligned',
