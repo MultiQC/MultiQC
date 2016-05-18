@@ -2,6 +2,7 @@
 
 #### v0.7dev
 Module updates:
+* New [Kallisto](https://pachterlab.github.io/kallisto/) module.
 * Refactored Picard and Samtools code to make maintenance and additions easier.
 * Rewrote the samtools stats code to display more stats in report with a beeswarm plot.
 * Added _Percentage Aligned_ column to general stats for Qualimap BamQC module.

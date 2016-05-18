@@ -33,6 +33,7 @@ Currently, supported tools include:
   * [Skewer](https://github.com/relipmoc/skewer)
 * Read aligners / quantifiers
   * [Salmon](http://combine-lab.github.io/salmon/)
+  * [Kallisto](http://pachterlab.github.io/kallisto/)
   * [STAR](https://github.com/alexdobin/STAR)
   * [Tophat](https://ccb.jhu.edu/software/tophat/)
   * [Bowtie](http://bowtie-bio.sourceforge.net)

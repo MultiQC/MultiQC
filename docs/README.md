@@ -18,6 +18,7 @@ MultiQC Modules:
     TopHat: modules/tophat.md
     STAR: modules/star.md
     Salmon: modules/salmon.md
+    Kallisto: modules/kallisto.md
     HiCUP: modules/hicup.md
     Bismark: modules/bismark.md
   Post-alignment:

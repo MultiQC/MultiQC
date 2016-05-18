@@ -70,7 +70,7 @@ module_order = [
     'snpeff', 'qualimap', 'featureCounts', 'methylQA', 'rseqc',
     'picard', 'preseq', 'samblaster', 'samtools', 'bamtools',
     # Alignment tool stats
-    'bismark', 'hicup', 'salmon', 'star', 'tophat', 'bowtie2', 'bowtie1',
+    'bismark', 'hicup', 'salmon', 'kallisto', 'star', 'tophat', 'bowtie2', 'bowtie1',
     # Pre-alignment QC
     'cutadapt', 'trimmomatic', 'skewer', 'fastq_screen', 'fastqc',
 ]
