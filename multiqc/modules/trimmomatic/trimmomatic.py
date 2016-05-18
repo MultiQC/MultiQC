@@ -64,6 +64,16 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = self.clean_s_name(s_name, f['root'])
                     if s_name in self.trimmomatic:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                else:
+                    # Try looking on the next line instead, sometimes have a line break (see issue #212)
+                    l = next(f['f'])
+                    match = re.search('.+?(?=\.fastq|\.fq)', l)
+                    if match:
+                        # backtrack from the end to the first space
+                        s_name = match.group().split()[-1]
+                        s_name = self.clean_s_name(s_name, f['root'])
+                        if s_name in self.trimmomatic:
+                            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             
             # Get single end stats
             if 'Input Reads' in l and s_name is not None:
