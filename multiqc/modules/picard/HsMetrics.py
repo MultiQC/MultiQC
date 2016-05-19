@@ -2,7 +2,7 @@
 
 """ MultiQC submodule to parse output from Picard HsMetrics """
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import logging
 import os
 import re
@@ -109,17 +109,31 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( data[s_name] )
-
-    table_html = plots.table.plot(data, _get_headers(data))
+    data_table = _clean_table(data)
+    table_html = plots.table.plot(data_table, _get_headers(data_table))
     if not isinstance(self.sections, list):
         self.sections = list()
     self.sections.append({
             'name': 'HSMetrics',
             'anchor': 'picard_hsmetrics',
             'content': table_html})
+    self.sections.append(_add_target_bases(data))
+    self.sections.append(_add_hs_penalty(data))
     # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
 
+def _clean_table(data):
+    data_table = defaultdict(dict)
+    for s in data:
+        for h in data[s]:
+            if h.startswith("PCT"):
+                continue
+            if h.startswith("HS"):
+                continue
+            if h == "GENOME_SIZE":
+                continue
+            data_table[s][h] = data[s][h]
+    return data_table
 
 def _get_headers(data):
     header = {}
@@ -131,9 +145,44 @@ def _get_headers(data):
                 continue
             if h not in header:
                 this = {
-                'title': h.replace("_", " ")
+                'title': h.replace("_", " ").lower().capitalize(),
+                'scale': 'RdYlGn'
                 }
                 if h.startswith("PCT"):
-                    this.update({'max': 100, 'min': 0, 'format': '{:.0f}%', 'scale': 'RdYlGn', 'modify': lambda x: x * 100.0})
+                    this.update({'max': 100, 'min': 0, 'format': '{:.0f}%', 'scale': 'RdYlGn'})
+                elif h.find("READS") > -1:
+                    this.update({'shared_key': "read_count",
+                                 'modify': lambda x: x / 1000000.0})
+                    this['title'] = "M {0}".format(this['title'])
+                elif h.find("BASES") > -1:
+                    this.update({'shared_key': 'bases_count',
+                                 'modify': lambda x: x / 1000000.0})
+                    this['title'] = "Mb {0}".format(this['title'])
+                if h in ["BAIT_TERRITORY", "TOTAL_READS", "TARGET_TERRITORY", "AT_DROPOUT", "GC_DROPOUT"]:
+                    this.update({'hidden': True})
                 header.update({h : this})
-    return header
+    return OrderedDict(sorted(header.items(), key=lambda t: t[1]['title']))
+
+def _add_target_bases(data):
+    data_clean = defaultdict(dict)
+    for s in data:
+        for h in data[s]:
+            if h.startswith("PCT_TARGET"):
+                data_clean[s][h] = data[s][h] * 100.0
+    return {'name': 'Pct target bases',
+    'anchor': 'picard_hsmetrics_target_bases',
+    'content': plots.beeswarm.plot(data_clean, _get_headers(data_clean))}
+
+def _add_hs_penalty(data):
+    data_clean = defaultdict(dict)
+    any_non_zero = False
+    for s in data:
+        for h in data[s]:
+            if h.startswith("HS_PENALTY"):
+                data_clean[s][h.replace("_", " ").lower().capitalize()] = data[s][h]
+                if data[s][h] > 0:
+                    any_non_zero = True
+    section =  {'name': 'HS penalty',
+    'anchor': 'picard_hsmetrics_hs_penalty',
+    'content': plots.beeswarm.plot(data_clean, _get_headers(data_clean))}
+    return section
