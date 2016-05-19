@@ -166,6 +166,9 @@ def mqc_load_config(yaml_config):
                         globals()[c] = v
         except (IOError, AttributeError) as e:
             logger.debug("Config error: {}".format(e))
+        except yaml.scanner.ScannerError as e:
+            logger.error("Error parsing config YAML: {}".format(e))
+            sys.exit(1)
     else:
         logger.debug("No MultiQC config found: {}".format(yaml_config))
 
