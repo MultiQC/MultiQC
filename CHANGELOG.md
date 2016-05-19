@@ -30,6 +30,7 @@ Bugfixes:
 * Bowtie2 module now parses overall alignment rate as intended.
 * Fixed table display bug in Firefox
 * Made featureCounts split columns on tabs instead of whitespace, handle filenames with spaces
+* Fixed bug related to order in which config files are loaded
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 Module updates:

@@ -129,8 +129,13 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 # Load user config in a def. This is called by the main script after initialisation
 # This allows the plugin_hooks.mqc_trigger('config_loaded') hook to fire before the
 # defaults are overwritten.
-def mqc_load_userconfig():
+def mqc_load_userconfig(path=None):
     """ Overwrite config defaults with user config files """
+    
+    if path is not None:
+        logger.info("Loading config settings from: {}".format(config_file))
+        mqc_load_config(config_file)
+    
     # Load and parse installation config file if we find it
     mqc_load_config(os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml'))
 
@@ -139,11 +144,6 @@ def mqc_load_userconfig():
     
     # Load and parse a config file in this working directory if we find it
     mqc_load_config('multiqc_config.yaml')
-    
-    # User specified config file?
-    if config_file is not None:
-        logger.info("Loading config settings from: {}".format(config_file))
-        mqc_load_config(config_file)
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
