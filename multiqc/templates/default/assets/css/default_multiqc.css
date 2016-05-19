@@ -640,6 +640,9 @@ tbody .sorthandle {
     border-left: none;
 }
 
+.mqc_table tr, .mqc_table td {
+    height: 100%;
+}
 .mqc_table td.data-coloured {
     padding: 0;
 }
