@@ -24,7 +24,7 @@ def parse_reports(self):
         s_name = None
         for l in f['f']:
             # New log starting
-            if 'picard.sam.MarkDuplicates' in l and 'INPUT' in l:
+            if 'picard.sam.markduplicates' in l.lower() and 'input' in l.lower():
                 s_name = None
                 
                 # Pull sample name from input
@@ -39,8 +39,8 @@ def parse_reports(self):
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='DuplicationMetrics')
                     self.picard_dupMetrics_data[s_name] = dict()
-                    keys = f['f'].readline().split("\t")
-                    vals = f['f'].readline().split("\t")
+                    keys = f['f'].readline().rstrip("\n").split("\t")
+                    vals = f['f'].readline().rstrip("\n").split("\t")
                     for i, k in enumerate(keys):
                         try:
                             self.picard_dupMetrics_data[s_name][k] = float(vals[i])
