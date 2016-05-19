@@ -53,17 +53,35 @@ class MultiqcModule(BaseMultiqcModule):
         """ Go through log file looking for cutadapt output """
         fh = f['f']
         regexes = {
-            'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",
-            'bp_written': "Total written \(filtered\):\s*([\d,]+) bp",
-            'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
-            'r_processed': "Total reads processed:\s*([\d,]+)",
-            'r_with_adapters': "Reads with adapters:\s*([\d,]+)"
+            '1.7': {
+                'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",
+                'bp_written': "Total written \(filtered\):\s*([\d,]+) bp",
+                'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
+                'r_processed': "Total reads processed:\s*([\d,]+)",
+                'r_with_adapters': "Reads with adapters:\s*([\d,]+)"
+            },
+            '1.6': {
+                'r_processed': "Processed reads:\s*([\d,]+)",
+                'bp_processed': "Processed bases:\s*([\d,]+) bp",
+                'r_trimmed': "Trimmed reads:\s*([\d,]+)",
+                'bp_trimmed': "Trimmed bases:\s*([\d,]+) bp",
+                'too_short': "Too short reads:\s*([\d,]+)",
+                'too_long': "Too long reads:\s*([\d,]+)",
+            }
         }
         s_name = None
+        cutadapt_version = '1.7'
         for l in fh:
             # New log starting
             if l.startswith('This is cutadapt'):
                 s_name = None
+                c_version = re.match(r'This is cutadapt ([\d\.]+)', l)
+                if c_version:
+                    try:
+                        assert(float(c_version.group(1)) <= 1.6)
+                        cutadapt_version = '1.6'
+                    except:
+                        cutadapt_version = '1.7'
             
             # Get sample name from end of command line params
             if l.startswith('Command line parameters'):
@@ -78,12 +96,14 @@ class MultiqcModule(BaseMultiqcModule):
             
             if s_name is not None:
                 self.add_data_source(f, s_name)
+                
                 # Search regexes for overview stats
-                for k, r in regexes.items():
+                for k, r in regexes[cutadapt_version].items():
                     match = re.search(r, l)
                     if match:
                         self.cutadapt_data[s_name][k] = int(match.group(1).replace(',', ''))
-
+                
+                # Histogram showing lengths trimmed
                 if 'length' in l and 'count' in l and 'expect' in l:
                     # Nested loop to read this section while the regex matches
                     for l in fh:
@@ -101,9 +121,11 @@ class MultiqcModule(BaseMultiqcModule):
                             break
         
         # Calculate a few extra numbers of our own
-        for s_name in self.cutadapt_data.keys():
-            if 'bp_processed' in self.cutadapt_data[s_name] and 'bp_written' in self.cutadapt_data[s_name]:
-                self.cutadapt_data[s_name]['percent_trimmed'] = (float(self.cutadapt_data[s_name]['bp_processed'] - self.cutadapt_data[s_name]['bp_written']) / self.cutadapt_data[s_name]['bp_processed']) * 100
+        for s_name, d in self.cutadapt_data.items():
+            if 'bp_processed' in d and 'bp_written' in d:
+                self.cutadapt_data[s_name]['percent_trimmed'] = (float(d['bp_processed'] - d['bp_written']) / d['bp_processed']) * 100
+            elif 'bp_processed' in d and 'bp_trimmed' in d:
+                self.cutadapt_data[s_name]['percent_trimmed'] = (float(d['bp_trimmed']) / d['bp_processed']) * 100
 
 
 
