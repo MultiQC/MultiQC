@@ -26,6 +26,8 @@ Bugfixes:
 * Fixed `--exclude` so that it works with directories as well as files
 * Got Trimmomatic module to handle line breaks in log files (see issue #212)
 * Bowtie2 module now parses overall alignment rate as intended.
+* Fixed table display bug in Firefox
+* Made featureCounts split columns on tabs instead of whitespace, handle filenames with spaces
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 Module updates:

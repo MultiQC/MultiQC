@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         file_names = list()
         parsed_data = dict()
         for l in f['f'].splitlines():
-            s = l.split()
+            s = l.split("\t")
             if len(s) < 2:
                 continue
             if s[0] == 'Status':
