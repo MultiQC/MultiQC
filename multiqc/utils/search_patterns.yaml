@@ -40,11 +40,11 @@ methylQA:
     fn: '*.report'
 picard:
     markdups:
-        contents: picard.sam.MarkDuplicates
+        contents: picard.sam.DuplicationMetrics
     insertsize:
-        contents: picard.analysis.CollectInsertSizeMetrics
+        contents: picard.analysis.InsertSizeMetrics
     gcbias:
-        contents: picard.analysis.CollectGcBiasMetrics
+        contents: picard.analysis.GcBiasDetailMetrics
     hsmetrics:
         contents: picard.analysis.directed.HsMetrics
     oxogmetrics:
