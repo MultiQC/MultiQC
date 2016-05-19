@@ -88,10 +88,10 @@ def parse_reports(self):
         for key in self.picard_insertSize_data.keys():
             if len(self.picard_insertSize_data[key]) == 0:
                 self.picard_insertSize_data.pop(key, None)
-        for s_name in self.picard_insertSize_histogram.keys():
+        for s_name in list(self.picard_insertSize_histogram.keys()):
             if len(self.picard_insertSize_histogram[s_name]) == 0:
                 self.picard_insertSize_histogram.pop(s_name, None)
-                log.debug("Removing {} as no data parsed".format(s_name))
+                log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
     
     # Calculate summed mean values for all read orientations
     for s_name, v in self.picard_insertSize_samplestats.items():
