@@ -77,30 +77,30 @@ class MultiqcModule(BaseMultiqcModule):
             
             # Get single end stats
             if 'Input Reads' in l and s_name is not None:
-                match = re.search('Input Reads: (\d+) Surviving: (\d+) \(([\d\.]+)%\) Dropped: (\d+) \(([\d\.]+)%\)', l)
+                match = re.search('Input Reads: (\d+) Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)', l)
                 if match:
                     self.trimmomatic[s_name] = dict()
                     self.trimmomatic[s_name]['input_reads'] = float( match.group(1) )
                     self.trimmomatic[s_name]['surviving'] = float( match.group(2) )
-                    self.trimmomatic[s_name]['surviving_pct'] = float( match.group(3) )
+                    self.trimmomatic[s_name]['surviving_pct'] = float( match.group(3).replace(',','.') )
                     self.trimmomatic[s_name]['dropped'] = float( match.group(4) )
-                    self.trimmomatic[s_name]['dropped_pct'] = float( match.group(5) )
+                    self.trimmomatic[s_name]['dropped_pct'] = float( match.group(5).replace(',','.') )
                     s_name = None
             
             # Get paired end stats
             if 'Input Read Pairs' in l and s_name is not None:
-                match = re.search('Input Read Pairs: (\d+) Both Surviving: (\d+) \(([\d\.]+)%\) Forward Only Surviving: (\d+) \(([\d\.]+)%\) Reverse Only Surviving: (\d+) \(([\d\.]+)%\) Dropped: (\d+) \(([\d\.]+)%\)', l)
+                match = re.search('Input Read Pairs: (\d+) Both Surviving: (\d+) \(([\d\.,]+)%\) Forward Only Surviving: (\d+) \(([\d\.,]+)%\) Reverse Only Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)', l)
                 if match:
                     self.trimmomatic[s_name] = dict()
                     self.trimmomatic[s_name]['input_read_pairs'] = float( match.group(1) )
                     self.trimmomatic[s_name]['surviving'] = float( match.group(2) )
-                    self.trimmomatic[s_name]['surviving_pct'] = float( match.group(3) )
+                    self.trimmomatic[s_name]['surviving_pct'] = float( match.group(3).replace(',','.') )
                     self.trimmomatic[s_name]['forward_only_surviving'] = float( match.group(4) )
-                    self.trimmomatic[s_name]['forward_only_surviving_pct'] = float( match.group(5) )
+                    self.trimmomatic[s_name]['forward_only_surviving_pct'] = float( match.group(5).replace(',','.') )
                     self.trimmomatic[s_name]['reverse_only_surviving'] = float( match.group(6) )
-                    self.trimmomatic[s_name]['reverse_only_surviving_pct'] = float( match.group(7) )
+                    self.trimmomatic[s_name]['reverse_only_surviving_pct'] = float( match.group(7).replace(',','.') )
                     self.trimmomatic[s_name]['dropped'] = float( match.group(8) )
-                    self.trimmomatic[s_name]['dropped_pct'] = float( match.group(9) )
+                    self.trimmomatic[s_name]['dropped_pct'] = float( match.group(9).replace(',','.') )
                     s_name = None
     
     
