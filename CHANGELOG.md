@@ -18,6 +18,7 @@ Core updates:
 * Updated HighCharts to v4.2.5. Added option to export to JPEG.
 * Can now cancel execution with a single `ctrl+c` rather than having to button mash
 * Handle YAML parsing errors for the config file more gracefully
+* Removed unused FileSaver javascript package.
 
 Bugfixes:
 * Removed empty columns from tables again
