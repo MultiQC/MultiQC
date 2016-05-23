@@ -82,7 +82,7 @@ def plot (data, cats=None, pconfig={}):
                     thisdict['color'] = cats[idx][c]['color']
                 hc_data.append(thisdict)
         if len(hc_data) > 0:
-            plotsamples.append([s for s in hc_samples if sample_dcount[s] > 0])
+            plotsamples.append([s for s in hc_samples if sample_dcount.get(s, 0) > 0])
             plotdata.append(hc_data)
     
     if len(plotdata) == 0:
