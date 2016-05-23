@@ -15,7 +15,7 @@ Core updates:
 * New plot type: Heatmap
 * Table columns may now be hidden on page load (shown through _Configure Columns_)
 * Added missing rename / highlight / hiding functionality to new beeswarm plot.
-* New `-l` / `--file_list` option: specify a file containing a list of files to search.
+* New `-l` / `--file-list` option: specify a file containing a list of files to search.
 * Updated HighCharts to v4.2.5. Added option to export to JPEG.
 * Can now cancel execution with a single `ctrl+c` rather than having to button mash
 * Handle YAML parsing errors for the config file more gracefully
