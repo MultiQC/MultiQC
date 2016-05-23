@@ -45,12 +45,6 @@ plugin_hooks.mqc_trigger('config_loaded')
                     required = True,
                     metavar = "<analysis directory>"
 )
-
-@click.option('-l', '--is-file-list',
-                    is_flag = True,
-                    help = "The file given as analysis_dir has a list of file paths "
-                           "to be searched, one per row"
-)
 @click.option('-f', '--force',
                     is_flag = True,
                     help = "Overwrite any existing reports"
@@ -85,6 +79,10 @@ plugin_hooks.mqc_trigger('config_loaded')
                     type = str,
                     multiple = True,
                     help = "Ignore analysis files (glob expression)"
+)
+@click.option('-l', '--file-list',
+                    is_flag = True,
+                    help = "Supply a file containing a list of file paths to be searched, one per row"
 )
 @click.option('-e', '--exclude', metavar='[module name]',
                     type = click.Choice(config.avail_modules),

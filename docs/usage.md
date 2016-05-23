@@ -24,17 +24,17 @@ multiqc data/*_fastqc.zip
 multiqc data/sample_1*
 ```
 
-You can also ignore files using the `--ignore` flag (can be specified multiple
+You can also ignore files using the `-x`/`--ignore` flag (can be specified multiple
 times). This takes a string which it matches using glob expansion:
 ```
 multiqc data/ --ignore *_R2*
 multiqc . --ignore run_two/
 ```
 
-You can point to a file that contains a list of file paths, one per row, and MultiQC
-will search there.
+Finally, you can supply a file containing a list of file paths, one per row.
+MultiQC only search the listed files.
 ```
-multiqc --is-file-list my_file_list.txt
+multiqc --file-list my_file_list.txt
 ```
 
 ## Renaming reports
