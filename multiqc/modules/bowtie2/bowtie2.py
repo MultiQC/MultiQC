@@ -31,6 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             if f['f'].read().find('bisulfite', 0) < 0:
                 f['f'].seek(0)
                 self.parse_bowtie2_logs(f)
+            else:
+                log.debug('Skipping "{}" as looks like a bismark log file (contains word "bisulfite")'.format(f['fn']))
 
         if len(self.bowtie2_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -130,70 +132,61 @@ class MultiqcModule(BaseMultiqcModule):
             if btcmd:
                 s_name = self.clean_s_name(btcmd.group(1), f['root'])
                 log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
+                    
+            # Total reads
+            total = re.search(r"(\d+) reads; of these:", l)
+            if total:
+                parsed_data['total_reads'] = int(total.group(1))
             
-            # Parse bt2 logs in chunks with a nested loop
-            # Find first line of bowtie2 output
-            if 'Multiseed full-index search:' in l:
+            # Single end reads
+            unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
+            if unpaired:
+                parsed_data['unpaired_total'] = int(unpaired.group(1))
+                self.num_se += 1
                 
-                # do a local loop through this log section
-                for l in f['f']:
-                    
-                    # Total reads
-                    total = re.search(r"(\d+) reads; of these:", l)
-                    if total:
-                        parsed_data['total_reads'] = int(total.group(1))
-                    
-                    # Single end reads
-                    unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
-                    if unpaired:
-                        parsed_data['unpaired_total'] = int(unpaired.group(1))
-                        self.num_se += 1
-                        
-                        # Do nested loop whilst we have this level of indentation
-                        l = f['f'].readline()
-                        while l.startswith('    '):
-                            for k, r in regexes['unpaired'].items():
-                                match = re.search(r, l)
-                                if match:
-                                    parsed_data[k] = int(match.group(1))
-                            l = f['f'].readline()
-                    
-                    # Paired end reads
-                    paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
-                    if paired:
-                        parsed_data['paired_total'] = int(paired.group(1))
-                        self.num_pe += 1
-                        
-                        # Do nested loop whilst we have this level of indentation
-                        l = f['f'].readline()
-                        while l.startswith('    '):
-                            for k, r in regexes['paired'].items():
-                                match = re.search(r, l)
-                                if match:
-                                    parsed_data[k] = int(match.group(1))
-                            l = f['f'].readline()
-                    
-                    # Overall alignment rate
-                    overall = re.search(r"([\d\.]+)% overall alignment rate", l)
-                    if overall:
-                        parsed_data['overall_alignment_rate'] = float(overall.group(1))
-                    
-                    # End of log section - break inner loop
-                    if 'Time searching' in l:
-                        # Save half 'pairs' of mate counts
-                        m_keys = ['paired_aligned_mate_multi', 'paired_aligned_mate_none', 'paired_aligned_mate_one']
-                        for k in m_keys:
-                            if k in parsed_data:
-                                parsed_data['{}_halved'.format(k)] = float(parsed_data[k]) / 2.0
-                        # Save parsed data
-                        if s_name in self.bowtie2_data:
-                            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                        self.add_data_source(f, s_name)
-                        self.bowtie2_data[s_name] = parsed_data
-                        # Reset in case we find more in this log file
-                        s_name = f['s_name']
-                        parsed_data = {}
-                        break
+                # Do nested loop whilst we have this level of indentation
+                l = f['f'].readline()
+                while l.startswith('    '):
+                    for k, r in regexes['unpaired'].items():
+                        match = re.search(r, l)
+                        if match:
+                            parsed_data[k] = int(match.group(1))
+                    l = f['f'].readline()
+            
+            # Paired end reads
+            paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
+            if paired:
+                parsed_data['paired_total'] = int(paired.group(1))
+                self.num_pe += 1
+                
+                # Do nested loop whilst we have this level of indentation
+                l = f['f'].readline()
+                while l.startswith('    '):
+                    for k, r in regexes['paired'].items():
+                        match = re.search(r, l)
+                        if match:
+                            parsed_data[k] = int(match.group(1))
+                    l = f['f'].readline()
+            
+            # Overall alignment rate
+            overall = re.search(r"([\d\.]+)% overall alignment rate", l)
+            if overall:
+                parsed_data['overall_alignment_rate'] = float(overall.group(1))
+            
+                # End of log section
+                # Save half 'pairs' of mate counts
+                m_keys = ['paired_aligned_mate_multi', 'paired_aligned_mate_none', 'paired_aligned_mate_one']
+                for k in m_keys:
+                    if k in parsed_data:
+                        parsed_data['{}_halved'.format(k)] = float(parsed_data[k]) / 2.0
+                # Save parsed data
+                if s_name in self.bowtie2_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name)
+                self.bowtie2_data[s_name] = parsed_data
+                # Reset in case we find more in this log file
+                s_name = f['s_name']
+                parsed_data = {}
     
     
     def bowtie2_general_stats_table(self):

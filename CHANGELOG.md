@@ -30,6 +30,7 @@ Bugfixes:
 * Fixed `--exclude` so that it works with directories as well as files
 * Got Trimmomatic module to handle line breaks in log files (see issue #212)
 * Bowtie2 module now parses overall alignment rate as intended.
+* Bowtie2 module depends on even less log contents to work with more inputs.
 * Fixed table display bug in Firefox
 * Made featureCounts split columns on tabs instead of whitespace, handle filenames with spaces
 * Fixed bug related to order in which config files are loaded
