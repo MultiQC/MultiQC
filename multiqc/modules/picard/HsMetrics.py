@@ -13,6 +13,45 @@ from multiqc import plots
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+DESC = {
+        'BAIT_SET': 'The name of the bait set used in the hybrid selection.',
+        'BAIT_TERRITORY': 'The number of bases which have one or more baits on top of them.',
+        'BAIT_DESIGN_EFFICIENCY': 'Target terrirtoy / bait territory. 1 == perfectly efficient, 0.5 = half of baited bases are not target.',
+        'TOTAL_READS': 'The total number of reads in the SAM or BAM file examine.',
+        'PF_READS': 'The number of reads that pass the vendor\'s filter.',
+        'PF_UNIQUE_READS': 'The number of PF reads that are not marked as duplicates.',
+        'PCT_PF_READS': 'PF reads / total reads. The percent of reads passing filter.',
+        'PCT_PF_UQ_READS': 'PF Unique Reads / Total Reads.',
+        'PF_UQ_READS_ALIGNED': 'The number of PF unique reads that are aligned with mapping score > 0 to the reference genome.',
+        'PCT_PF_UQ_READS_ALIGNED': 'PF Reads Aligned / PF Reads.',
+        'PF_BASES_ALIGNED': 'The number of PF unique bases that are aligned with mapping score > 0 to the reference genome.',
+        'PF_UQ_BASES_ALIGNED': 'The number of bases in the PF aligned reads that are mapped to a reference base. Accounts for clipping and gaps.',
+        'ON_BAIT_BASES': 'The number of PF aligned bases that mapped to a baited region of the genome.',
+        'NEAR_BAIT_BASES': 'The number of PF aligned bases that mapped to within a fixed interval of a baited region, but not on a baited region.',
+        'OFF_BAIT_BASES': 'The number of PF aligned bases that mapped to neither on or near a bait.',
+        'ON_TARGET_BASES': 'The number of PF aligned bases that mapped to a targeted region of the genome.',
+        'PCT_SELECTED_BASES': 'On+Near Bait Bases / PF Bases Aligned.',
+        'PCT_OFF_BAIT': 'The percentage of aligned PF bases that mapped neither on or near a bait.',
+        'ON_BAIT_VS_SELECTED': 'The percentage of on+near bait bases that are on as opposed to near.',
+        'MEAN_BAIT_COVERAGE': 'The mean coverage of all baits in the experiment.',
+        'MEAN_TARGET_COVERAGE': 'The mean coverage of targets.',
+        'MEDIAN_TARGET_COVERAGE': 'The median coverage of targets.',
+        'PCT_USABLE_BASES_ON_BAIT': 'The number of aligned, de-duped, on-bait bases out of the PF bases available.',
+        'PCT_USABLE_BASES_ON_TARGET': 'The number of aligned, de-duped, on-target bases out of the PF bases available.',
+        'FOLD_ENRICHMENT': 'The fold by which the baited region has been amplified above genomic background.',
+        'ZERO_CVG_TARGETS_PCT': 'The fraction of targets that did not reach coverage=1 over any base.',
+        'PCT_EXC_DUPE': 'The fraction of aligned bases that were filtered out because they were in reads marked as duplicates.',
+        'PCT_EXC_MAPQ': 'The fraction of aligned bases that were filtered out because they were in reads with low mapping quality.',
+        'PCT_EXC_BASEQ': 'The fraction of aligned bases that were filtered out because they were of low base quality.',
+        'PCT_EXC_OVERLAP': 'The fraction of aligned bases that were filtered out because they were the second observation from an insert with overlapping reads.',
+        'PCT_EXC_OFF_TARGET': 'The fraction of aligned bases that were filtered out because they did not align over a target base.',
+        'OLD_80_BASE_PENALTY': 'The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to the mean coverage level in those targets.',
+        'AT_DROPOUT': 'A measure of how undercovered <= 50% GC regions are relative to the mean.',
+        'GC_DROPOUT': 'A measure of how undercovered >= 50% GC regions are relative to the mean.',
+        'HET_SNP_SENSITIVITY': 'The theoretical HET SNP sensitivity.',
+        'HET_SNP_Q': 'The Phred Scaled Q Score of the theoretical HET SNP sensitivity.'
+        }
+
 
 def parse_reports(self):
     """ Find Picard HsMetrics reports and parse their data """
@@ -109,17 +148,17 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( data[s_name] )
-    data_table = _clean_table(data)
-    table_html = plots.table.plot(data_table, _get_headers(data_table))
-    if not isinstance(self.sections, list):
-        self.sections = list()
-    self.sections.append({
-            'name': 'HSMetrics',
-            'anchor': 'picard_hsmetrics',
-            'content': table_html})
-    self.sections.append(_add_target_bases(data))
-    self.sections.append(_add_hs_penalty(data))
-    # Return the number of detected samples to the parent module
+        data_table = _clean_table(data)
+        table_html = plots.table.plot(data_table, _get_headers(data_table))
+        if not isinstance(self.sections, list):
+            self.sections = list()
+        self.sections.append({
+                'name': 'HSMetrics',
+                'anchor': 'picard_hsmetrics',
+                'content': table_html})
+        self.sections.append(_add_target_bases(data))
+        self.sections.append(_add_hs_penalty(data))
+        # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
 
 def _clean_table(data):
@@ -146,6 +185,7 @@ def _get_headers(data):
             if h not in header:
                 this = {
                 'title': h.replace("_", " ").lower().capitalize(),
+                'description' : DESC[h] if h in DESC else "",
                 'scale': 'RdYlGn'
                 }
                 if h.startswith("PCT"):
@@ -164,25 +204,31 @@ def _get_headers(data):
     return OrderedDict(sorted(header.items(), key=lambda t: t[1]['title']))
 
 def _add_target_bases(data):
+    subtitle = "<p>The percentage of all target bases achieving `NUMBER`X or greater coverage.</p>"
     data_clean = defaultdict(dict)
     for s in data:
         for h in data[s]:
             if h.startswith("PCT_TARGET"):
-                data_clean[s][h] = data[s][h] * 100.0
-    return {'name': 'Pct target bases',
+                data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
+    pconfig = { 'xlab': 'Number of reads',
+                'ylab': 'Pct of bases'}
+    return {'name': 'Target Region Coverage',
     'anchor': 'picard_hsmetrics_target_bases',
-    'content': plots.beeswarm.plot(data_clean, _get_headers(data_clean))}
+    'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
 
 def _add_hs_penalty(data):
+    subtitle = "<p>The hybrid selection penalty incurred to get 80% of target bases to 10X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_`NUMBER`X.</p>"
     data_clean = defaultdict(dict)
     any_non_zero = False
     for s in data:
         for h in data[s]:
             if h.startswith("HS_PENALTY"):
-                data_clean[s][h.replace("_", " ").lower().capitalize()] = data[s][h]
+                data_clean[s][(h.replace("HS_PENALTY_", " ")[:-1])] = data[s][h]
                 if data[s][h] > 0:
                     any_non_zero = True
+    pconfig = { 'xlab': 'Number of reads',
+                'ylab': 'Pct of bases'}
     section =  {'name': 'HS penalty',
     'anchor': 'picard_hsmetrics_hs_penalty',
-    'content': plots.beeswarm.plot(data_clean, _get_headers(data_clean))}
+    'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
     return section
