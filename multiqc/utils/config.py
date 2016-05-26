@@ -133,8 +133,8 @@ def mqc_load_userconfig(path=None):
     """ Overwrite config defaults with user config files """
     
     if path is not None:
-        logger.info("Loading config settings from: {}".format(config_file))
-        mqc_load_config(config_file)
+        logger.info("Loading config settings from: {}".format(path))
+        mqc_load_config(path)
     
     # Load and parse installation config file if we find it
     mqc_load_config(os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml'))
