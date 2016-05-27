@@ -111,7 +111,11 @@ def parse_reports(self):
                 if os.path.exists(frac_cov):
                     self.add_data_source(s_name=s_name, source=os.path.abspath(frac_cov), section='genome_fraction')
                     self.qualimap_bamqc_genome_fraction_cov[s_name] = {}
+                    fifty_x_pc = 100
                     thirty_x_pc = 100
+                    ten_x_pc = 100
+                    five_x_pc = 100
+                    one_x_pc = 100
                     max_obs_x = 0
                     halfway_cov = None
                     with io.open(frac_cov, 'r') as fh:
@@ -121,10 +125,22 @@ def parse_reports(self):
                             coverage = int(round(float(coverage)))
                             percentage = float(percentage)
                             self.qualimap_bamqc_genome_fraction_cov[s_name][coverage] = percentage
+                            if coverage <= 50 and five_x_pc > percentage:
+                                fifty_x_pc = percentage
                             if coverage <= 30 and thirty_x_pc > percentage:
                                 thirty_x_pc = percentage
+                            if coverage <= 10 and ten_x_pc > percentage:
+                                ten_x_pc = percentage
+                            if coverage <= 5 and five_x_pc > percentage:
+                                five_x_pc = percentage
+                            if coverage <= 1 and one_x_pc > percentage:
+                                one_x_pc = percentage
                     # Add the median % genome >= 30X coverage to the general stats table
+                    self.general_stats[s_name]['fifty_x_pc'] = fifty_x_pc
                     self.general_stats[s_name]['thirty_x_pc'] = thirty_x_pc
+                    self.general_stats[s_name]['ten_x_pc'] = ten_x_pc
+                    self.general_stats[s_name]['five_x_pc'] = five_x_pc
+                    self.general_stats[s_name]['one_x_pc'] = one_x_pc
                 
                 
                 #### GC Distribution
