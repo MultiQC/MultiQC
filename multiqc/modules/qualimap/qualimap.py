@@ -67,6 +67,16 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'PuOr',
             'format': '{:.0f}'
         }
+        headers['fifty_x_pc'] = {
+            'title': '&ge; 50X',
+            'description': 'Fraction of genome with at least 50X coverage',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%',
+            'hidden': True
+        }
         headers['thirty_x_pc'] = {
             'title': '&ge; 30X',
             'description': 'Fraction of genome with at least 30X coverage',
@@ -75,6 +85,36 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%',
             'scale': 'RdYlGn',
             'format': '{:.1f}%'
+        }
+        headers['ten_x_pc'] = {
+            'title': '&ge; 10X',
+            'description': 'Fraction of genome with at least 10X coverage',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%',
+            'hidden': True
+        }
+        headers['five_x_pc'] = {
+            'title': '&ge; 05X',
+            'description': 'Fraction of genome with at least 05X coverage',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%',
+            'hidden': True
+        }
+        headers['one_x_pc'] = {
+            'title': '&ge; 01X',
+            'description': 'Fraction of genome with at least 01X coverage',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%',
+            'hidden': True
         }
         headers['median_coverage'] = {
             'title': 'Coverage',
