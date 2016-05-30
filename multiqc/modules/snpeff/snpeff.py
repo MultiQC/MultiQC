@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
                  "It annotates and predicts the effects of variants on genes (such as amino acid changes). ")
 
         self.snpeff_data = dict()
-        self.snpeff_section_keys = dict()
+        self.snpeff_section_totals = dict()
         self.snpeff_qualities = dict()
 
         for f in self.find_log_files(config.sp['snpeff'], filehandles=True):
@@ -44,6 +44,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Report sections
         self.sections = list()
         self.sections.append({
+            'name': 'Counts by Genomic Region',
+            'anchor': 'snpeff-genomic-regions',
+            'content': self.count_genomic_region_plot()
+        })
+        self.sections.append({
             'name': 'Effects by Impact',
             'anchor': 'snpeff-effects-impact',
             'content': self.effects_impact_plot()
@@ -52,16 +57,6 @@ class MultiqcModule(BaseMultiqcModule):
             'name': 'Effects by Class',
             'anchor': 'snpeff-functional-class',
             'content': self.effects_function_plot()
-        })
-        self.sections.append({
-            'name': 'Counts by Effect',
-            'anchor': 'snpeff-effects',
-            'content': self.count_effects_plot()
-        })
-        self.sections.append({
-            'name': 'Counts by Genomic Region',
-            'anchor': 'snpeff-genomic-regions',
-            'content': self.count_genomic_region_plot()
         })
         if len(self.snpeff_qualities) > 0:
             self.sections.append({
@@ -92,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
             l = l.strip()
             if l[:1] == '#':
                 section = l
-                self.snpeff_section_keys[section] = list()
+                self.snpeff_section_totals[section] = dict()
                 continue
             s = l.split(',')
             
@@ -122,7 +117,11 @@ class MultiqcModule(BaseMultiqcModule):
                     except IndexError:
                         pass
                     else:
-                        self.snpeff_section_keys[section].append(s[0].strip())
+                        # Parsing the number worked - add to totals
+                        try:
+                            self.snpeff_section_totals[section][s[0].strip()] += parsed_data[ s[0].strip() ]
+                        except KeyError:
+                            self.snpeff_section_totals[section][s[0].strip()] = parsed_data[ s[0].strip() ]
                     if len(s) > 2 and s[2][-1:] == '%':
                         parsed_data[ '{}_percent'.format(s[0].strip()) ] = float(s[2][:-1])
         
@@ -156,6 +155,29 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.2f}'
         }
         self.general_stats_addcols(self.snpeff_data, headers)
+    
+    
+    def count_genomic_region_plot(self):
+        """ Generate the SnpEff Counts by Genomic Region plot """
+        
+        # Sort the keys based on the total counts
+        keys = self.snpeff_section_totals['# Count by genomic region']
+        sorted_keys = sorted(keys, reverse=True, key=keys.get)
+        
+        # Make nicer label names
+        pkeys = OrderedDict()
+        for k in sorted_keys:
+            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
+        
+        # Config for the plot
+        pconfig = {
+            'title': 'SnpEff: Counts by Genomic Region',
+            'ylab': '# Reads',
+            'logswitch': True
+        }
+        
+        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
+    
     
     def effects_impact_plot(self):
         """ Generate the SnpEff Counts by Genomic Region plot """
@@ -197,53 +219,6 @@ class MultiqcModule(BaseMultiqcModule):
         
         return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
         
-    
-    
-    def count_effects_plot(self):
-        """ Generate the SnpEff Counts by Effect plot """
-        
-        # Sort the keys based on the first dataset
-        keys = self.snpeff_section_keys['# Count by effects']
-        for s_name in self.snpeff_data:
-            sorted_keys = sorted(keys, reverse=True, key=self.snpeff_data[s_name].__getitem__)
-            break
-        
-        # Make nicer label names
-        pkeys = OrderedDict()
-        for k in sorted_keys:
-            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
-        
-        # Config for the plot
-        pconfig = {
-            'title': 'SnpEff: Counts by Effect',
-            'ylab': '# Reads',
-            'logswitch': True
-        }
-        
-        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
-    
-    def count_genomic_region_plot(self):
-        """ Generate the SnpEff Counts by Genomic Region plot """
-        
-        # Sort the keys based on the first dataset
-        keys = self.snpeff_section_keys['# Count by genomic region']
-        for s_name in self.snpeff_data:
-            sorted_keys = sorted(keys, reverse=True, key=self.snpeff_data[s_name].__getitem__)
-            break
-        
-        # Make nicer label names
-        pkeys = OrderedDict()
-        for k in sorted_keys:
-            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
-        
-        # Config for the plot
-        pconfig = {
-            'title': 'SnpEff: Counts by Genomic Region',
-            'ylab': '# Reads',
-            'logswitch': True
-        }
-        
-        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
     
     
     def qualities_plot(self):
