@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         Grab the name from the RG tag of the preceding bwa command """
         dups_regex = "samblaster: (Removed|Marked) (\d+) of (\d+) \((\d+.\d+)%\) read ids as duplicates"
         input_file_regex = "samblaster: Opening (\S+) for read."
-        rgtag_name_regex = "\\\\tSM:(\S*?)\\\\t"
+        rgtag_name_regex = "\\\\tID:(\S*?)\\\\t"
         data = {}
         s_name = None
         fh = f['f']
