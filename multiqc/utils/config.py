@@ -47,6 +47,7 @@ no_version_check = False
 num_datasets_plot_limit = 50
 log_filesize_limit = 5000000
 report_readerrors = False
+skip_generalstats = False
 config_file = None
 
 #######################
