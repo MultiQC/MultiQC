@@ -73,8 +73,8 @@ no_version_check: True
 plots_force_flat: False          # Try to use only flat image graphs
 plots_force_interactive: False   # Try to use only interactive javascript graphs
 plots_flat_numseries: 100        # If neither of the above, use flat if > this number of datasets
-num_datasets_plot_limit: 50       # If interactive, don't plot on load if > this number of datasets
-genstats_beeswarm_numseries: 100  # Swap the General Statistics table for a beeswarm plot above this
+num_datasets_plot_limit: 50      # If interactive, don't plot on load if > this number of datasets
+max_table_rows: 100              # Swap tables for a beeswarm plot above this
 
 # Overwrite module filename search patterns. See multiqc/utils/search_patterns.yaml
 # for the defaults. Remove a default by setting it to None.
