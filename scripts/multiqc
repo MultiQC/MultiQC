@@ -85,7 +85,7 @@ plugin_hooks.mqc_trigger('config_loaded')
                     help = "Supply a file containing a list of file paths to be searched, one per row"
 )
 @click.option('-e', '--exclude', metavar='[module name]',
-                    type = click.Choice(['general_stats']+config.avail_modules.keys()),
+                    type = click.Choice(['general_stats']+list(config.avail_modules.keys())),
                     multiple = True,
                     help = "Do not use this module. Can specify multiple times."
 )
