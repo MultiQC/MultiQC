@@ -11,6 +11,9 @@ Module updates:
 * Updated Cutadapt module to recognise logs from old versions of cutadapt (<= v1.6)
 * Trimmomatic now handles `,` decimal places in percentage values.
 * FastQC skips zip files if the sample name has already been found. Speeds up MultiQC execution.
+* SnpEff search pattern now more generic, should match reports from others.
+* SnpEff _Counts by Effect_ with hundreds of categories removed.
+* Extra Qualimap table thresholds added by @avilella (hidden by default)
 
 Core updates:
 * New plot type: Heatmap
@@ -21,6 +24,8 @@ Core updates:
 * Can now cancel execution with a single `ctrl+c` rather than having to button mash
 * Handle YAML parsing errors for the config file more gracefully
 * Removed unused FileSaver javascript package.
+* Now possible to skip the General Statistics section of the report with `--exclude general_stats`
+* Samblaster now gets sample name from `ID` instead of `SM` (@dakl)
 
 Bugfixes:
 * Removed empty columns from tables again
@@ -35,6 +40,7 @@ Bugfixes:
 * Fixed table display bug in Firefox
 * Made featureCounts split columns on tabs instead of whitespace, handle filenames with spaces
 * Fixed bug related to order in which config files are loaded
+* SnpEff KeyError bug fixed.
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 Module updates:

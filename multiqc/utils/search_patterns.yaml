@@ -95,7 +95,7 @@ samtools:
 skewer:
     contents: 'COMMAND LINE:	skewer'
 snpeff:
-    fn: '*snpEff.summary.csv'
+    contents: 'SnpEff_version'
 star:
     fn: '*Log.final.out'
 tophat:
