@@ -131,3 +131,34 @@ sp:
 
 Search patterns can specify a filename match (`fn`) or a file contents
 match (`contents`).
+
+## Ignoring Files
+MultiQC begins by indexing all of the files that you specified and building a list
+of the ones it will use. You can specify files and directories to skip on the command
+line using `-x`/`--ignore`, or for more permanent memory, with the following config file
+options: `fn_ignore_files`, `fn_ignore_dirs` and `fn_ignore_paths` (the command line
+option simply adds to all of these).
+
+For example, given the following files:
+```
+├── analysis_1
+│   └── sample_1.fastq.gz.aligned.log
+├── analysis_2
+│   └── sample_1.fastq.gz.aligned.log
+└── analysis_3
+    └── sample_1.fastq.gz.aligned.log
+```
+You could specify the following relevant config options:
+```yaml
+fn_ignore_files:
+    - '*.log'
+fn_ignore_dirs:
+    - 'analysis_1'
+    - 'analysis_2'
+fn_ignore_paths:
+    - '*/analysis_*/sample_1*'
+```
+Note that the searched file paths will usually be relative to the working
+directory and can be highly variable, so you'll typically want to start patterns
+with a `*` to match any preceding directory structure.
+

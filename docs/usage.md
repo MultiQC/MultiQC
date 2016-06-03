@@ -25,10 +25,12 @@ multiqc data/sample_1*
 ```
 
 You can also ignore files using the `-x`/`--ignore` flag (can be specified multiple
-times). This takes a string which it matches using glob expansion:
+times). This takes a string which it matches using glob expansion to filenames,
+directory names and entire paths:
 ```
-multiqc data/ --ignore *_R2*
+multiqc . --ignore *_R2*
 multiqc . --ignore run_two/
+multiqc . --ignore */run_three/*/fastqc/*_R2.zip
 ```
 
 Finally, you can supply a file containing a list of file paths, one per row.

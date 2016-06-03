@@ -204,8 +204,10 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
         config.fn_clean_exts = []
         logger.info("Not cleaning sample names")
     if len(ignore) > 0:
-        logger.warn("Ignoring files that match: {}".format(", ".join(ignore)))
+        logger.warn("Ignoring files, directories and paths that match: {}".format(", ".join(ignore)))
         config.fn_ignore_files.extend(ignore)
+        config.fn_ignore_dirs.extend(ignore)
+        config.fn_ignore_paths.extend(ignore)
     if filename == 'stdout':
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")

@@ -51,7 +51,8 @@ def get_filelist():
             logger.debug("Ignoring file as is encoded: {}".format(fn))
             return None
         if ftype is not None and ftype.startswith('image'):
-            logger.debug("Ignoring file as has filetype '{}': {}".format(ftype, fn))
+            if config.report_imgskips:
+                logger.debug("Ignoring file as has filetype '{}': {}".format(ftype, fn))
             return None
         
         # Limit search to files under 5MB to avoid 30GB FastQ files etc.
@@ -71,27 +72,28 @@ def get_filelist():
         })
     
     # Go through the analysis directories
-    for directory in config.analysis_dir:
-        if os.path.isdir(directory):
-            for root, dirnames, filenames in os.walk(directory, followlinks=True, topdown=True):
+    for path in config.analysis_dir:
+        if os.path.isdir(path):            
+            for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
+                bname = os.path.basename(root)
+                # Skip if this directory name matches config.fn_ignore_dirs
+                d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
+                if len(d_matches) > 0:
+                    logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(bname))
+                    continue
                 
-                # Exclude any directories that match exclusion filters
-                skip_dirs = []
-                for n in config.fn_ignore_files:
-                    for d in dirnames:
-                        if fnmatch.fnmatch(os.path.join(root, d).rstrip(os.pathsep), n.rstrip(os.pathsep)):
-                            skip_dirs.append(d)
-                if len(skip_dirs) > 0:
-                    dirnames[:] = [d for d in dirnames if d not in skip_dirs]
-                    for s in skip_dirs:
-                        logger.debug("Ignoring directory as matched an ignore pattern: {}".format(s))
+                # Skip if this directory path matches config.fn_ignore_paths
+                p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
+                if len(p_matches) > 0:
+                    logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
+                    continue
                 
                 # Search filenames in this directory
                 for fn in filenames:
                     add_file(fn, root)
         
-        elif os.path.isfile(directory):
-            add_file(os.path.basename(directory), os.path.dirname(directory))
+        elif os.path.isfile(path):
+            add_file(os.path.basename(path), os.path.dirname(path))
 
 
 def general_stats_build_html():

@@ -51,16 +51,21 @@ extra_fn_clean_exts:
     - type: regex
       pattern: '^Sample_\d+'
 
-# Ignore these files when searching for logs
+# Ignore these files / directories / paths when searching for logs
 fn_ignore_files:
     - .DS_Store
+fn_ignore_dirs:
+    - annoying_dirname
+fn_ignore_paths:
+    - '*/path/to/*_files/'
 
 # Ignore files larger than this when searcing for logs (bytes)
 log_filesize_limit: 1000000
 
-# MultiQC can save a DEBUG log message when it can't read a file. These are disabled
-# by default as they can be very verbose. Enable by setting to True for debugging.
+# MultiQC skips a couple of debug messages when searching files as the
+# log can get very verbose otherwise. Re-enable here to help debugging.
 report_readerrors: False
+report_imgskips: False
 
 # Opt-out of remotely checking that you're running the latest version
 no_version_check: True
