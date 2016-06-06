@@ -49,7 +49,9 @@ DESC = {
         'AT_DROPOUT': 'A measure of how undercovered <= 50% GC regions are relative to the mean.',
         'GC_DROPOUT': 'A measure of how undercovered >= 50% GC regions are relative to the mean.',
         'HET_SNP_SENSITIVITY': 'The theoretical HET SNP sensitivity.',
-        'HET_SNP_Q': 'The Phred Scaled Q Score of the theoretical HET SNP sensitivity.'
+        'HET_SNP_Q': 'The Phred Scaled Q Score of the theoretical HET SNP sensitivity.',
+        'FOLD_80_BASE_PENALTY': 'The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to the mean coverage level in those targets.',
+        'TARGET_TERRITORY': 'The unique number of target bases in the experiment where target is usually exons etc.'
         }
 
 
@@ -185,12 +187,12 @@ def _get_headers(data):
             if h not in header:
                 this = {
                 'title': h.replace("_", " ").lower().capitalize(),
-                'description' : DESC[h] if h in DESC else "",
-                'scale': 'RdYlGn'
+                'description' : DESC[h] if h in DESC else None,
+                'scale': 'RdYlGn',
+                'min': 0,
+                'namespace': 'HsMetrics'
                 }
-                if h.startswith("PCT"):
-                    this.update({'max': 100, 'min': 0, 'format': '{:.0f}%', 'scale': 'RdYlGn'})
-                elif h.find("READS") > -1:
+                if h.find("READS") > -1:
                     this.update({'shared_key': "read_count",
                                  'modify': lambda x: x / 1000000.0})
                     this['title'] = "M {0}".format(this['title'])
@@ -204,20 +206,26 @@ def _get_headers(data):
     return OrderedDict(sorted(header.items(), key=lambda t: t[1]['title']))
 
 def _add_target_bases(data):
-    subtitle = "<p>The percentage of all target bases achieving `NUMBER`X or greater coverage.</p>"
+    subtitle = "<p>The percentage of all target bases with at least <code>x</code> fold coverage.</p>"
     data_clean = defaultdict(dict)
     for s in data:
         for h in data[s]:
             if h.startswith("PCT_TARGET"):
                 data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
-    pconfig = { 'xlab': 'Number of reads',
-                'ylab': 'Pct of bases'}
+
+    pconfig = { 'title': 'Percentage of target bases',
+                'xlab': 'Fold Coverage',
+                'ylab': 'Pct of bases',
+                'ymax': 100,
+                'ymin': 0,
+                'xmin': 0,
+                'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
     return {'name': 'Target Region Coverage',
     'anchor': 'picard_hsmetrics_target_bases',
     'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
 
 def _add_hs_penalty(data):
-    subtitle = "<p>The hybrid selection penalty incurred to get 80% of target bases to 10X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_`NUMBER`X.</p>"
+    subtitle = "<p>The \"hybrid selection penalty\" incurred to get 80% of target bases to a given coverage. Can be used with the formula <code>required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty</code>.</p>"
     data_clean = defaultdict(dict)
     any_non_zero = False
     for s in data:
@@ -226,9 +234,18 @@ def _add_hs_penalty(data):
                 data_clean[s][(h.replace("HS_PENALTY_", " ")[:-1])] = data[s][h]
                 if data[s][h] > 0:
                     any_non_zero = True
-    pconfig = { 'xlab': 'Number of reads',
-                'ylab': 'Pct of bases'}
+
+    pconfig = { 'title': 'Hybrid Selection Penalty',
+                'xlab': 'Fold Coverage',
+                'ylab': 'Pct of bases',
+                'ymax': 100,
+                'ymin': 0,
+                'xmin': 0,
+                'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
     section =  {'name': 'HS penalty',
     'anchor': 'picard_hsmetrics_hs_penalty',
     'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
+
+    if not any_non_zero:
+        return ""
     return section
