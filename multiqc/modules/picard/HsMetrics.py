@@ -159,7 +159,9 @@ def parse_reports(self):
                 'anchor': 'picard_hsmetrics',
                 'content': table_html})
         self.sections.append(_add_target_bases(data))
-        self.sections.append(_add_hs_penalty(data))
+        penalty_html = _add_hs_penalty(data)
+        if penalty_html:
+            self.sections.append(penalty_html)
         # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
 
@@ -247,5 +249,5 @@ def _add_hs_penalty(data):
     'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
 
     if not any_non_zero:
-        return ""
+        return None
     return section
