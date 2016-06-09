@@ -8,6 +8,9 @@
 [![Conda Version](https://anaconda.org/bioconda/multiqc/badges/version.svg)](https://anaconda.org/bioconda/multiqc)
 [![Build Status](https://img.shields.io/travis/ewels/MultiQC.svg?style=flat-square)](https://travis-ci.org/ewels/MultiQC)
 
+[![Gitter](https://badges.gitter.im/ewels/MultiQC.svg)](https://gitter.im/ewels/MultiQC?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+(live chat about MultiQC with the developer & others)
+
 -----
 
 MultiQC is a tool to create a single report with interactive plots
