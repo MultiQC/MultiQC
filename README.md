@@ -7,9 +7,8 @@
 [![PyPI Version](https://img.shields.io/pypi/v/multiqc.svg?style=flat-square)](https://pypi.python.org/pypi/multiqc/)
 [![Conda Version](https://anaconda.org/bioconda/multiqc/badges/version.svg)](https://anaconda.org/bioconda/multiqc)
 [![Build Status](https://img.shields.io/travis/ewels/MultiQC.svg?style=flat-square)](https://travis-ci.org/ewels/MultiQC)
+[![Gitter](https://img.shields.io/badge/gitter-%20join%20chat%20%E2%86%92-4fb99a.svg?style=flat-square)](https://gitter.im/ewels/MultiQC)
 
-[![Gitter](https://badges.gitter.im/ewels/MultiQC.svg)](https://gitter.im/ewels/MultiQC?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-(live chat about MultiQC with the developer & others)
 
 -----
 
@@ -107,7 +106,11 @@ of these, including example reports where possible. MultiQC has extensive
 [documentation](http://multiqc.info/docs) describing how to write new modules,
 plugins and templates.
 
-If in doubt, feel free to get in touch with the author:
+There is a chat room for the package hosted on Gitter where you can discuss
+things with the package author and other developers:
+https://gitter.im/ewels/MultiQC
+
+If in doubt, feel free to get in touch with the author directly:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ### Contributors
