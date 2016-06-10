@@ -24,6 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 
 version = '0.7dev'
+dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
  Installing MultiQC version {}
@@ -38,9 +39,9 @@ setup(
     author_email = 'phil.ewels@scilifelab.se',
     description = "Create aggregate bioinformatics analysis reports across many samples and tools",
     long_description = __doc__,
-    keywords = 'bioinformatics',
+    keywords = ['bioinformatics', 'biology', 'sequencing', 'NGS', 'next generation sequencing', 'quality control'],
     url = 'http://multiqc.info',
-    download_url = 'https://github.com/ewels/MultiQC/releases',
+    download_url = 'https://github.com/ewels/MultiQC/tarball/{}'.format(dl_version),
     license = 'GPLv3',
     packages = find_packages(),
     include_package_data = True,
