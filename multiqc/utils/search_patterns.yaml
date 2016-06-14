@@ -4,8 +4,8 @@
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
 bamtools:
-  stats:
-    contents: 'Stats for BAM file(s):'
+    stats:
+      contents: 'Stats for BAM file(s):'
 bismark:
     align:
         fn: '*_[SP]E_report.txt'
@@ -55,16 +55,21 @@ preseq:
     # contents: 'TOTAL_BASES	EXPECTED_DISTINCT'
 qualimap:
     bamqc:
-        raw_data: raw_data
-        genome_results: genome_results.txt
-        coverage: coverage_histogram.txt
-        insert_size: insert_size_histogram.txt
-        genome_fraction: genome_fraction_coverage.txt
-        gc_dist: mapped_reads_gc-content_distribution.txt
+        genome_results:
+            fn: 'genome_results.txt'
+        coverage:
+            fn: 'coverage_histogram.txt'
+        insert_size:
+            fn: 'insert_size_histogram.txt'
+        genome_fraction:
+            fn: 'genome_fraction_coverage.txt'
+        gc_dist:
+            fn: 'mapped_reads_gc-content_distribution.txt'
     rnaseq:
-        raw_data: raw_data
-        rnaseq_results: rnaseq_qc_results.txt
-        coverage: coverage_profile_along_genes_(total).txt
+        rnaseq_results:
+            fn: 'rnaseq_qc_results.txt'
+        coverage:
+            fn: 'coverage_profile_along_genes_(total).txt'
 rseqc:
     bam_stat:
         contents: 'Proper-paired reads map to different chrom:'
