@@ -2,9 +2,8 @@
 
 """ MultiQC Submodule to parse output from Qualimap BamQC """
 
-import io
+from __future__ import print_function
 import logging
-import os
 import re
 
 from multiqc import config, plots
@@ -100,7 +99,7 @@ def parse_coverage(self, f):
     """ Parse the contents of the Qualimap BamQC Coverage Histogram file """
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/coverage_histogram.txt
-    s_name = get_s_name(self, f)
+    s_name = self.get_s_name(f)
     
     d = dict()
     for l in f['f']:
@@ -136,7 +135,7 @@ def parse_insert_size(self, f):
     """ Parse the contents of the Qualimap BamQC Insert Size Histogram file """
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/insert_size_histogram.txt
-    s_name = get_s_name(self, f)
+    s_name = self.get_s_name(f)
     
     d = dict()
     zero_insertsize = 0
@@ -173,7 +172,7 @@ def parse_genome_fraction(self, f):
     """ Parse the contents of the Qualimap BamQC Genome Fraction Coverage file """
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/genome_fraction_coverage.txt
-    s_name = get_s_name(self, f)
+    s_name = self.get_s_name(f)
     
     d = dict()
     fifty_x_pc = thirty_x_pc = ten_x_pc = five_x_pc = one_x_pc = 100
@@ -215,7 +214,7 @@ def parse_gc_dist(self, f):
     """ Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file """
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt
-    s_name = get_s_name(self, f)
+    s_name = self.get_s_name(f)
     
     d = dict()
     avg_gc = 0
@@ -418,9 +417,3 @@ def general_stats_headers (self):
         'modify': lambda x: x / 1000000,
         'hidden': True
     }
-
-def get_s_name(self, f):
-    s_name = os.path.basename(os.path.dirname(f['root']))
-    s_name = self.clean_s_name(s_name, f['root'])
-    s_name = s_name.rstrip('.qc')
-    return s_name

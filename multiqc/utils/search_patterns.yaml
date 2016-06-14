@@ -66,9 +66,10 @@ qualimap:
         gc_dist:
             fn: 'mapped_reads_gc-content_distribution.txt'
     rnaseq:
-        raw_data: raw_data
-        rnaseq_results: rnaseq_qc_results.txt
-        coverage: coverage_profile_along_genes_(total).txt
+        rnaseq_results:
+            fn: 'rnaseq_qc_results.txt'
+        coverage:
+            fn: 'coverage_profile_along_genes_(total).txt'
 rseqc:
     bam_stat:
         contents: 'Proper-paired reads map to different chrom:'

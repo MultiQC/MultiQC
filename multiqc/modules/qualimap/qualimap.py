@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import logging
+import os
 
 from multiqc import config, BaseMultiqcModule
 
@@ -40,9 +41,9 @@ class MultiqcModule(BaseMultiqcModule):
         if n['BamQC'] > 0:
             log.info("Found {} BamQC reports".format(n['BamQC']))
         
-        # n['RNASeq'] = QM_RNASeq.report_sections(self)
-        # if n['RNASeq'] > 0:
-        #     log.info("Found {} RNASeq reports".format(n['RNASeq']))
+        n['RNASeq'] = QM_RNASeq.parse_reports(self)
+        if n['RNASeq'] > 0:
+            log.info("Found {} RNASeq reports".format(n['RNASeq']))
         
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
@@ -52,40 +53,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
         
-        
-        
-        
-        
-        # 
-        # # BamQC General stats
-        # headers = OrderedDict()
-        # 
-        # 
-        # 
-        # # RNASeqQC General stats
-        # headers['5_3_bias'] = {
-        #     'title': "5'-3' bias"
-        # }
-        # headers['reads_aligned_genes'] = {
-        #     'title': 'Reads in Genes',
-        #     'description': 'Reads Aligned - Genes (millions)',
-        #     'min': 0,
-        #     'scale': 'PuBu',
-        #     'shared_key': 'read_count',
-        #     'modify': lambda x: x / 1000000,
-        # }
-        # headers['reads_aligned'] = {
-        #     'title': 'Aligned',
-        #     'description': 'Reads Aligned (millions)',
-        #     'min': 0,
-        #     'scale': 'RdBu',
-        #     'shared_key': 'read_count',
-        #     'modify': lambda x: x / 1000000,
-        # }
-        # 
-        # self.general_stats_addcols(self.general_stats, headers)
-        # 
-        # # No point in writing to file, general stats is already there.
-        # # Everything else is plot data rather than singular data values.
-
-    
+    # Helper functions
+    def get_s_name(self, f):
+        s_name = os.path.basename(os.path.dirname(f['root']))
+        s_name = self.clean_s_name(s_name, f['root'])
+        s_name = s_name.rstrip('.qc')
+        return s_name
