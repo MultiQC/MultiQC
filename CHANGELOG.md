@@ -5,6 +5,7 @@ Module updates:
 * New [Kallisto](https://pachterlab.github.io/kallisto/) module.
 * Refactored Picard and Samtools code to make maintenance and additions easier.
 * Rewrote the samtools stats code to display more stats in report with a beeswarm plot.
+* Rewrote the Qualimap modules to use latest methods and fix bugs.
 * Big update to Picard `HsMetrics` parsing - more results shown in report, new plots (by @lpantano)
 * Added _Percentage Aligned_ column to general stats for Qualimap BamQC module.
 * Some tweaks to the general stats display (FastQC, Bismark, Qualimap, SnpEff)
