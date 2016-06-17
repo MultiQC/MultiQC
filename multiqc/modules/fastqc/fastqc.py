@@ -29,8 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='FastQC', anchor='fastqc', 
-        href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/", 
+        super(MultiqcModule, self).__init__(name='FastQC', anchor='fastqc',
+        href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
         info="is a quality control tool for high throughput sequence data,"\
         " written by Simon Andrews at the Babraham Institute in Cambridge.")
 
@@ -176,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
                     try:
                         s[k] = float(r_search.group(1))
                     except ValueError:
-                        s[k] = r_search.group(1)                        
+                        s[k] = r_search.group(1)
             
             # Parse modules
             if in_module is not None:
@@ -329,7 +329,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the phred quality score plot """
         if 'sequence_quality' not in self.fastqc_data or len(self.fastqc_data['sequence_quality']) == 0:
             log.debug('sequence_quality not found in FastQC reports')
-            return None    
+            return None
         
         pconfig = {
             'id': 'fastqc_sequence_quality_plot',
@@ -428,7 +428,7 @@ class MultiqcModule(BaseMultiqcModule):
     
     
     def gc_content_plot (self):
-        """ Create the HTML for the FastQC GC content plot """        
+        """ Create the HTML for the FastQC GC content plot """
         if 'gc_content' not in self.fastqc_data or len(self.fastqc_data['gc_content']) == 0:
             log.debug('gc_content not found in FastQC reports')
             return None

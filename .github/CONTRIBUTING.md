@@ -25,7 +25,7 @@ python setup.py develop
 6. Run using test data
   * Check for any command line or javascript errors
   * Check version numbers are printed correctly
-7. Release on PyPI: 
+7. Release on PyPI:
 ```
 python setup.py sdist upload
 ```
@@ -53,6 +53,8 @@ git push
 ```
 13. Tell UPPMAX about the new version and ask for the module system to be updated.
 14. Create new demo reports for the website and upload.
-15. Update version numbers to new dev version in `setup.py` and `docs/README.md`
-16. Add a new section in the changelog for the development version
-17. Commit and push. Continue making more awesome :metal:
+15. Describe new release on [SeqAnswers thread](http://seqanswers.com/forums/showthread.php?p=195831#post195831)
+16. Tweet that new version is released
+17. Update version numbers to new dev version in `setup.py` and `docs/README.md`
+18. Add a new section in the changelog for the development version
+19. Commit and push. Continue making more awesome :metal:
