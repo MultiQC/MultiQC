@@ -445,8 +445,8 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': '<b>{point.x}% GC</b>: {point.y}',
             'colors': self.get_status_cols('gc_content'),
             'data_labels': [
-                {'name': 'Counts', 'ylab': 'Count'},
-                {'name': 'Percentages', 'ylab': 'Percentage'}
+                {'name': 'Percentages', 'ylab': 'Percentage'},
+                {'name': 'Counts', 'ylab': 'Count'}
             ]
         }
         data_norm = dict()
@@ -461,7 +461,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot([self.fastqc_data['gc_content'], data_norm], pconfig)
+                        plots.linegraph.plot([data_norm, self.fastqc_data['gc_content']], pconfig)
         })
     
     
