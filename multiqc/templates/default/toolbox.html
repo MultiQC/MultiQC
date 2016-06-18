@@ -18,6 +18,7 @@ of the report.
       <li><a href="#mqc_hidesamples" title="Hide" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-eye-close"></span></a></li>
       <li><a href="#mqc_exportplots" title="Export" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-download-alt"></span></a></li>
       <li><a href="#mqc_saveconfig" title="Save" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
+      <li><a href="#mqc_about" title="About" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-question-sign"></span></a></li>
     </ul>
   </div>
   
@@ -134,9 +135,14 @@ of the report.
         
         <hr>
         <button type="submit" class="btn btn-block btn-default"><span class="glyphicon glyphicon-download-alt"></span> &nbsp; Download Plots</button>
-        <p class="text-center"><small>If you use plots from MultiQC in a publication or presentation, please cite:<br>
-          <code>MultiQC (http://multiqc.info)</code><br>
-          <em>(publication hopefully coming soon).</em></small></p>
+        <p><small>If you use plots from MultiQC in a publication or presentation, please cite:</small></p>
+        <blockquote>
+          <strong>MultiQC: Summarize analysis results for multiple tools and samples in a single report</strong><br>
+          <em>Philip Ewels, M&aring;ns Magnusson, Sverker Lundin and Max K&auml;ller</em><br>
+          Bioinformatics (2016)<br>
+          doi: <a href="http://dx.doi.org/10.1093/bioinformatics/btw354" target="_blank">10.1093/bioinformatics/btw354</a><br>
+          PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/27312411" target="_blank">27312411</a>
+        </blockquote>
       </form>
     </div>
     
@@ -164,6 +170,27 @@ of the report.
         </div>
       </form>
     </div>
+    
+    <!-- Help / About -->
+    <div id="mqc_about" class="mqc_filter_section">
+      <h4>About MultiQC</h4>
+      <p>This report was generated using MultiQC, version {{ config.version }}</p>
+      <p>You can see a YouTube video describing how to use MultiQC reports here:
+        <a href="https://youtu.be/qPbIlO_KWN0?list=PLIA2-lqNuhvFGAsB92N0v7Qi5xCxCNsYM" target="_blank">https://youtu.be/qPbIlO_KWN0</a></p>
+      <p>For more information about MultiQC, including other videos and
+        extensive documentation, please visit <a href="http://multiqc.info/?ref=mqc_report" target="_blank">http://multiqc.info</a></p>
+      <p>You can report bugs, suggest improvements and find the source code for MultiQC on GitHub:
+        <a href="https://github.com/ewels/MultiQC" target="_blank">https://github.com/ewels/MultiQC</a></p>
+      <p>MultiQC is published in Bioinformatics:</p>
+      <blockquote>
+        <strong>MultiQC: Summarize analysis results for multiple tools and samples in a single report</strong><br>
+        <em>Philip Ewels, M&aring;ns Magnusson, Sverker Lundin and Max K&auml;ller</em><br>
+        Bioinformatics (2016)<br>
+        doi: <a href="http://dx.doi.org/10.1093/bioinformatics/btw354" target="_blank">10.1093/bioinformatics/btw354</a><br>
+        PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/27312411" target="_blank">27312411</a>
+      </blockquote>
+    </div>
+    
   </div>
   <a href="#top" class="mqc-toplink hidden-xs" title="Go to top"><span class="glyphicon glyphicon-chevron-up"></span></a>
 </div>

@@ -517,6 +517,15 @@ input.form-control[type=color]{
 #mqc_exportplots .checkbox input {
   margin-top: 0;
 }
+#mqc_exportplots blockquote {
+  font-size: 0.7em;
+  padding: 0 0 0 10px;
+  border-left: 2px solid #cccccc;
+  color: #666;
+}
+#mqc_exportplots blockquote a {
+  text-decoration: underline;
+}
 
 #mqc-save-success {
     color: #3c763d;
@@ -527,29 +536,17 @@ input.form-control[type=color]{
     background-color: #f2dede;
 }
 
-#mqc-launch-into-tour {
-    margin: -10px 10px;
+#mqc_about p {
+  margin-bottom: 10px;
 }
-.tour-step-background {
-    border-radius: 0;
+#mqc_about a {
+  text-decoration: underline;
 }
-.tour-backdrop {
-    opacity: 0.6;
-    filter: alpha(opacity=60);
-}
-.popover.tour-tour {
-    z-index: 1200;
-}
-.popover.tour-tour .popover-content {
-    padding-top: 0;
-}
-.popover.tour-tour .popover-content .pbar_wrapper {
-    padding-bottom: 9px;
-    margin: -1px -14px 0;
-}
-.popover.tour-tour .popover-content .pbar {
-    border-top: 1px solid #337ab7;
-    margin:0;
+#mqc_about blockquote {
+  font-size: 0.8em;
+  padding: 0 0 0 10px;
+  border-left: 2px solid #cccccc;
+  color: #666;
 }
 
 /* Regex help modal */
