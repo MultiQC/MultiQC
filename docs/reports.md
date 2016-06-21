@@ -23,18 +23,6 @@ MultiQC reports have three main page sections:
 Note that if you're viewing the report on a mobile device / small window,
 the content will be reformatted to fit the screen.
 
-## Report tour
-The easiest way to get to grips with MultiQC reports is to use the tour,
-bundled with every report using the `default` template. You should see
-a button to launch this at the top of the report:
-
-![launch report tour](images/report_tour.png)
-
-This will walk you through the different parts of the report, demonstrating
-the available features.
-
-![launch report tour](images/report_tour_box.png)
-
 ## General Statistics table
 At the top of every MultiQC report is the 'General Statistics' table.
 This shows an overview of key values, taken from all modules. The aim
@@ -60,8 +48,8 @@ the general statistics table. These plotting use the
 [HighCharts](http://www.highcharts.com/) JavaScript library.
 
 ### Interactive plots
-All plots are interactive - hove the mouse over data to see a tooltip with
-more information about that dataset. Clicking and dragging on line graphs
+Plots are typically interactive - hove the mouse over data to see a tooltip
+with more information about that dataset. Clicking and dragging on line graphs
 will zoom into that area.
 
 ![plot zoom](images/plot_zoom.png)
@@ -75,6 +63,26 @@ resize the plot's height:
 
 ![plot zoom](images/plot_height.png)
 
+You can force reports to use interactive plots instead of flat by specifying
+the `--interactive` command line option (see below).
+
+### Flat plots
+Reports with large numbers of samples may contain flat plots. These are
+rendered when the MultiQC report is generated and are non-interactive
+images within the report. The reason for generating these is that large
+sample numbers can make MultiQC reports very data-intensive and unresponsive
+(crashing people's browsers in extreme cases). Plotting data in flat images
+is scalable to any number of samples, however.
+
+Flat plots in MultiQC have been designed to look as similar to their interactive
+versions as possible. They are also copied to `multiqc_data/multiqc_plots`
+
+You can force reports to use flat plots with the `--flat` command line option.
+
+See the [Large sample numbers](#large-sample-numbers) section of the
+_Configuring MultiQC_ docs for more on how to customise the flat / interactive
+plot behaviour.
+
 ### Exporting plots
 If you want to use the plot elsewhere (_eg._ in a presentation or paper),
 you can export it in a range of formats. Just click the menu button in
@@ -82,13 +90,13 @@ the top right of the plot:
 
 ![plot zoom](images/plot_export.png)
 
-This gives a range of options. SVG output is a vector format,
-so can be edited in tools such as
-[Adobe Illustrator](http://www.adobe.com/products/illustrator.html) or
-the free tool [Inkscape](https://inkscape.org/en/). This makes them ideal
-for use in publications.
-
-You can get more control of exported plots using the toolbox, see below.
+This opens the MultiQC Toolbox _Export Plots_ panel with the current plot
+selected. You have a range of export options here. When deciding on output
+format bear in mind that SVG is a vector format, so can be edited in tools
+such as [Adobe Illustrator](http://www.adobe.com/products/illustrator.html)
+or the free tool [Inkscape](https://inkscape.org/en/). This makes it ideal
+for use in publications and manual customisation / annotation. The
+_Plot scaling_ option changes how large the labels are relative to the plot.
 
 ### Dynamic plots
 Some plots have buttons above them which allow you to change the data
@@ -171,9 +179,10 @@ _(Note that plots will tell you how many samples have been hidden)_
 ### Export
 This tool enables you to configure the size and characteristics of exported
 plots, as well as allowing you to download some or all of the graphs with a
-single click.
-Width and Height set the output size of the images, scale sets how "zoomed-in"
-they should look (typically you want the plot to be more zoomed for printing).
+single click. Width and Height set the output size of the images, scale sets
+how "zoomed-in" they should look (typically you want the plot to be more
+zoomed for printing). See [above](#exporting-plots) for more information
+about this panel.
 
 ### Save Settings
 To avoid having to re-enter the same toolbox setup repeatedly, you can

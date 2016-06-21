@@ -162,3 +162,41 @@ Note that the searched file paths will usually be relative to the working
 directory and can be highly variable, so you'll typically want to start patterns
 with a `*` to match any preceding directory structure.
 
+## Large sample numbers
+MultiQC has been written with the intention of being used for any number of samples.
+This means that it _should_ work well with 6 samples or 6000. Very large sample numbers
+are becoming increasingly common, for example with single cell data.
+
+Producing reports with data from many hundreds or thousands of samples provides some
+challenges, both technically and also in terms of data visualisation and report usability.
+
+### Disabling on-load plotting
+One problem with large reports is that the browser can hang when the report is first loaded.
+This is because it loading and processing the data for all plots at once. To mitigate this,
+large reports may show plots as grey boxes with a _"Show Plot"_ button. Clicking this will
+render the plot as normal and prevents the browser from trying to do everything at once.
+
+By default this behaviour kicks in when a plot has 50 samples or more. This can be customised
+by changing the `num_datasets_plot_limit` config option.
+
+### Flat / interactive plots
+Reports with many samples start to need a lot of data for plots. This results in inconvenient
+report file sizes (can be 100s MB) and worse, web browser crashes. To allow MultiQC to scale
+to these sample numbers, most plot types have two plotting functions in the code base -
+interactive (using HighCharts) and flat (rendered with MatPlotLib). Flat plots take up the
+same disk space irrespective of sample number and do not consume resources to display.
+
+By default, MultiQC generates flat plots when there are 100 or more samples. This cutoff
+can be changed by changing the `plots_flat_numseries` config option. This behaviour can also
+be changed by running MultiQC with the `--flat` / `--interactive` command line options or by
+setting the `plots_force_flat` / `plots_force_interactive` config options to `True`.
+
+### Tables / Beeswarm plots
+Report tables with thousands of samples (table rows) can quickly become impossible to use.
+To avoid this, tables with large numbers of rows are instead plotted as a Beeswarm plot
+(aka. a strip chart / jitter plot). These plots have fixed dimensions with any number
+of samples. Hovering on a dot will highlight the same sample in other rows.
+
+By default, MultiQC starts using beeswarm plots when a table has 100 rows or more. This
+can be changed by setting the `max_table_rows` config option.
+
