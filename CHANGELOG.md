@@ -17,6 +17,8 @@ Module updates:
 * SnpEff _Counts by Effect_ plot removed (had hundreds of categories, was fairly unusable).
 * Extra Qualimap table thresholds added by @avilella (hidden by default)
 * Samblaster now gets sample name from `ID` instead of `SM` (@dakl)
+* MultiQC now available in Galaxy! Work by @devengineson / @yvanlebras / @cmonjeau
+  * See it in the [Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/)
 
 Core updates:
 * New plot type: Heatmap
@@ -29,6 +31,7 @@ Core updates:
 * Removed unused FileSaver javascript package.
 * Now possible to skip the General Statistics section of the report with `--exclude general_stats`
 * More granular control of skipping files during scan (filename, dirname, path matching)
+* Improved documentation about behaviour for large sample numbers.
 
 Bugfixes:
 * Removed empty columns from tables again

@@ -79,6 +79,9 @@ from the [bioconda channel](https://bioconda.github.io/):
 conda install -c bioconda multiqc
 ```
 
+MultiQC is also available in the
+[Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/).
+
 ## Usage
 Once installed, you can use MultiQC by navigating to your analysis directory
 (or a parent directory) and running the tool:
