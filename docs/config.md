@@ -181,10 +181,10 @@ by changing the `num_datasets_plot_limit` config option.
 
 ### Flat / interactive plots
 Reports with many samples start to need a lot of data for plots. This results in inconvenient
-report file sizes (can be 100s MB) and worse, web browser crashes. To allow MultiQC to scale
-to these sample numbers, most plot types have two plotting functions in the code base -
+report file sizes (can be 100s of megabytes) and worse, web browser crashes. To allow MultiQC
+to scale to these sample numbers, most plot types have two plotting functions in the code base -
 interactive (using HighCharts) and flat (rendered with MatPlotLib). Flat plots take up the
-same disk space irrespective of sample number and do not consume resources to display.
+same disk space irrespective of sample number and do not consume excessive resources to display.
 
 By default, MultiQC generates flat plots when there are 100 or more samples. This cutoff
 can be changed by changing the `plots_flat_numseries` config option. This behaviour can also

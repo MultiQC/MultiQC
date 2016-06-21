@@ -44,13 +44,14 @@ plus options to show/hide and change the order of columns.
 
 ## Plots
 MultiQC modules can take plot more extensive data in the sections below
-the general statistics table. These plotting use the
-[HighCharts](http://www.highcharts.com/) JavaScript library.
+the general statistics table.
 
 ### Interactive plots
-Plots are typically interactive - hove the mouse over data to see a tooltip
-with more information about that dataset. Clicking and dragging on line graphs
-will zoom into that area.
+Plots in MultiQC reports are usually interactive, using the
+[HighCharts](http://www.highcharts.com/) JavaScript library.
+
+You can hover the mouse over data to see a tooltip with more information
+about that dataset. Clicking and dragging on line graphs will zoom into that area.
 
 ![plot zoom](images/plot_zoom.png)
 
@@ -68,7 +69,8 @@ the `--interactive` command line option (see below).
 
 ### Flat plots
 Reports with large numbers of samples may contain flat plots. These are
-rendered when the MultiQC report is generated and are non-interactive
+rendered when the MultiQC report is generated using
+[MatPlotLib](http://matplotlib.org/) and are non-interactive (flat)
 images within the report. The reason for generating these is that large
 sample numbers can make MultiQC reports very data-intensive and unresponsive
 (crashing people's browsers in extreme cases). Plotting data in flat images
