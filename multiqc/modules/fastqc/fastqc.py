@@ -33,7 +33,8 @@ class MultiqcModule(BaseMultiqcModule):
         href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
         info="is a quality control tool for high throughput sequence data,"\
         " written by Simon Andrews at the Babraham Institute in Cambridge.")
-
+        
+        self.fastqc_newdata = dict()
         self.fastqc_data = defaultdict(lambda: defaultdict(lambda: defaultdict( lambda: defaultdict() ) ) )
         self.fastqc_stats = dict()
         self.fastqc_statuses = defaultdict(lambda: defaultdict())
@@ -54,7 +55,9 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
-            except zipfile.BadZipfile:
+            except (zipfile.BadZipfile, BadZipfile) as e:
+                log.warn("Couldn't read '{}' - Bad zip file".format(f['fn']))
+                log.debug("Bad zip file error:\n{}".format(e))
                 continue
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
@@ -65,36 +68,38 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
-        if len(self.fastqc_stats) == 0:
+        if len(self.fastqc_newdata) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.fastqc_stats)))
+        log.info("Found {} reports".format(len(self.fastqc_newdata)))
+        
+        # Write the summary stats to a file
+        data = dict()
+        for s_name in self.fastqc_newdata:
+            data[s_name] = self.fastqc_newdata[s_name]['basic_statistics']
+            data[s_name].update(self.fastqc_newdata[s_name]['statuses'])
+        self.write_data_file(data, 'multiqc_fastqc')
         
         # Add to self.css and self.js to be included in template
-        self.css = {
-            'assets/css/multiqc_fastqc.css' : os.path.realpath(os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css'))
-        }
-        self.js = {
-            'assets/js/multiqc_fastqc.js' : os.path.realpath(os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js'))
-        }
+        self.css = { 'assets/css/multiqc_fastqc.css' : os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css') }
+        self.js = { 'assets/js/multiqc_fastqc.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js') }
         
         # Colours to be used for plotting lines
-        self.status_colours = {
-            'pass': '#5cb85c',
-            'warn': '#f0ad4e',
-            'fail': '#d9534f',
-            'default': '#999'
-        }
+        self.status_colours = { 'pass': '#5cb85c', 'warn': '#f0ad4e', 'fail': '#d9534f', 'default': '#999' }
         
         # Add to the general statistics table
         self.fastqc_stats_table()
         
-        # Write the basic stats table data to a file
-        self.write_data_file(self.fastqc_stats, 'multiqc_fastqc')
-        
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
-        self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(self.fastqc_statuses))
+        statuses = dict()
+        for s_name in self.fastqc_newdata:
+            for section, status in self.fastqc_newdata[s_name]['statuses'].items():
+                try:
+                    statuses[section][s_name] = status
+                except KeyError:
+                    statuses[section] = {s_name: status}
+        self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(statuses))
         
         # Start the sections
         self.sections = list()
@@ -102,12 +107,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Now add each section in order by calling its def
         self.sequence_quality_plot()
         self.per_seq_quality_plot()
-        self.sequence_content_plot()
-        self.gc_content_plot()
-        self.n_content_plot()
-        self.seq_length_dist_plot()
-        self.seq_dup_levels_plot()
-        self.adapter_content_plot()
+        # self.sequence_content_plot()
+        # self.gc_content_plot()
+        # self.n_content_plot()
+        # self.seq_length_dist_plot()
+        # self.seq_dup_levels_plot()
+        # self.adapter_content_plot()
 
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
@@ -115,176 +120,79 @@ class MultiqcModule(BaseMultiqcModule):
         statistics and data. Returns a dict with keys 'stats' and 'data'.
         Data is for plotting graphs, stats are for top table. """
         
-        section_headings = {
-            'sequence_quality': r'>>Per base sequence quality\s+(pass|warn|fail)',
-            'per_seq_quality':  r'>>Per sequence quality scores\s+(pass|warn|fail)',
-            'sequence_content': r'>>Per base sequence content\s+(pass|warn|fail)',
-            'gc_content':       r'>>Per sequence GC content\s+(pass|warn|fail)',
-            'n_content':        r'>>Per base N content\s+(pass|warn|fail)',
-            'seq_length_dist':  r'>>Sequence Length Distribution\s+(pass|warn|fail)',
-            'seq_dup_levels':   r'>>Sequence Duplication Levels\s+(pass|warn|fail)',
-            'adapter_content':  r'>>Adapter Content\s+(pass|warn|fail)',
-        }
-        stats_regexes = {
-            'total_sequences':    r"Total Sequences\s+(\d+)",
-            'sequence_length':    r"Sequence length\s+([\d-]+)",
-            'percent_gc':         r"%GC\s+(\d+)",
-            'percent_dedup':      r"#Total Deduplicated Percentage\s+([\d\.]+)",
-            'percent_duplicates': r"#Total Duplicate Percentage\s+([\d\.]+)", # old versions of FastQC
-        }
-        
         # Make the sample name from the input filename if we find it
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
             s_name = self.clean_s_name(fn_search.group(1) , f['root'])
         
-        # Throw a warning if we already have this sample and remove prev data
-        # Unzipped reports means that this can be quite frequent
-        # This gives a good idea of how horribly messy this module has become
-        # TODO: Refactorrrr!
-        if s_name in self.fastqc_stats:
-            for k in self.fastqc_data:
-                if k == 'sequence_quality':
-                    for j in self.fastqc_data[k]:
-                        self.fastqc_data[k][j].pop(s_name, None)
-                elif k == 'adapter_content':
-                    aks = list(self.fastqc_data[k].keys())
-                    for s in aks:
-                        sn, _ = s.split(' - ')
-                        if sn == s_name:
-                            self.fastqc_data[k].pop(s, None)
-                else :
-                    self.fastqc_data[k].pop(s_name, None)
-                
-            for k in self.fastqc_statuses:
-                self.fastqc_statuses[k].pop(s_name, None)
-            self.fastqc_stats.pop(s_name, None)
+        if s_name in self.fastqc_newdata.keys():
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+        self.fastqc_newdata[s_name] = { 'statuses': dict() }
         
-        s = defaultdict(lambda: dict())
-        s['seq_len_bp'] = 0
-        s['seq_len_read_count'] = 0
-        self.seq_lengths = set()
-        adapter_types = []
-        in_module = None
+        # Parse the report
+        section = None
+        s_headers = None
         for l in file_contents.splitlines():
-            
-            # Search for general stats
-            for k, r in stats_regexes.items():
-                r_search = re.search(r, l)
-                if r_search:
-                    try:
-                        s[k] = float(r_search.group(1))
-                    except ValueError:
-                        s[k] = r_search.group(1)
-            
-            # Parse modules
-            if in_module is not None:
-                if l == ">>END_MODULE":
-                    in_module = None
-                else:
-                    
-                    if in_module == 'sequence_quality':
-                        quals = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
-                        if quals:
-                            bp = self.avg_bp_from_range(quals.group(1))
-                            groups = ['base', 'mean', 'median', 'lower_quart', 'upper_quart', '10_percentile', '90_percentile']
-                            for idx, g in enumerate(groups):
-                                try:
-                                    self.fastqc_data['sequence_quality'][g][s_name][bp] = float(quals.group( idx + 1 ))
-                                except:
-                                    self.fastqc_data['sequence_quality'][g][s_name][bp] = quals.group( idx + 1 )
-                                    
-                    
-                    if in_module == 'per_seq_quality' or in_module == 'n_content':
-                        sections  = l.split()
+            if l == '>>END_MODULE':
+                section = None
+                s_headers = None
+            elif l.startswith('>>'):
+                (section, status) = l[2:].split("\t", 1)
+                section = section.lower().replace(' ', '_')
+                self.fastqc_newdata[s_name]['statuses'][section] = status
+            elif section is not None:
+                if l.startswith('#'):
+                    s_headers = l[1:].split("\t")
+                    s_headers = [s.lower().replace(' ', '_') for s in s_headers]
+                    self.fastqc_newdata[s_name][section] = list()
+                    # Special case: Total Deduplicated Percentage
+                    if s_headers[0] == 'total_deduplicated_percentage':
+                        self.fastqc_newdata[s_name]['basic_statistics'].append({
+                            'measure': s_headers[0],
+                            'value': float(s_headers[1])
+                        })
+                elif s_headers is not None:
+                    s = l.split("\t")
+                    row = dict()
+                    for (i, v) in enumerate(s):
+                        v.replace('NaN','0')
                         try:
-                            self.fastqc_data[in_module][s_name][float(sections[0])] = float(sections[1])
+                            v = float(v)
                         except ValueError:
-                            pass # First line - headers
-                    
-                    if in_module == 'sequence_content':
-                        l.replace('NaN','0')
-                        seq_matches = re.search("([\d-]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)", l)
-                        if seq_matches:
-                            bp = self.avg_bp_from_range(seq_matches.group(1))
-                            groups = ['base', 'G', 'A', 'T', 'C']
-                            for idx, g in enumerate(groups):
-                                if idx == 0:
-                                    self.fastqc_data['sequence_content'][s_name][bp][g] = seq_matches.group( idx + 1 )
-                                else:
-                                    self.fastqc_data['sequence_content'][s_name][bp][g] = float(seq_matches.group( idx + 1 ))
-                    
-                    if in_module == 'gc_content':
-                        gc_matches = re.search("([\d]+)\s+([\d\.E]+)", l)
-                        if gc_matches:
-                            self.fastqc_data['gc_content'][s_name][int(gc_matches.group(1))] = float(gc_matches.group(2))
-                    
-                    if in_module == 'seq_length_dist':
-                        len_matches = re.search("([\d-]+)\s+([\d\.E]+)", l)
-                        if len_matches:
-                            bp = self.avg_bp_from_range(len_matches.group(1))
-                            self.fastqc_data['seq_length_dist'][s_name][bp] = float(len_matches.group(2))
-                            self.seq_lengths.add(bp)
-                            s['seq_len_bp'] += float(len_matches.group(2)) * bp
-                            s['seq_len_read_count'] += float(len_matches.group(2))
-                    
-                    if in_module == 'seq_dup_levels':
-                        if l[:1] == '#':
-                            # Start of module - replace default dict with an OrderedDict
-                            self.fastqc_data['seq_dup_levels'][s_name] = OrderedDict()
-                            continue # Skip header line
-                        sections  = l.split()
-                        try:
-                            # Version 11 of FastQC
-                            # #Duplication Level	Percentage of deduplicated	Percentage of total
-                            self.fastqc_data['seq_dup_levels_dedup'][s_name][sections[0]] = float(sections[1])
-                            self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[2])
-                        except IndexError:
-                            # Version 10 of FastQC and below just gives percentage, no % of dedup
-                            # #Duplication Level	Relative count
-                            self.fastqc_data['seq_dup_levels'][s_name][sections[0]] = float(sections[1])
+                            pass
+                        row[s_headers[i]] = v
+                    self.fastqc_newdata[s_name][section].append(row)
         
-                    if in_module == 'adapter_content':
-                        if l[:1] == '#':
-                            adapter_types = l[1:].split("\t")[1:]
-                        else:
-                            cols = l.split("\t")
-                            pos = int(cols[0].split('-', 1)[0])
-                            for idx, val in enumerate(cols[1:]):
-                                a = adapter_types[idx]
-                                k = "{} - {}".format(s_name, a)
-                                self.fastqc_data['adapter_content'][k][pos] = float(val)
-                                            
-            else:
-                # See if this is the start of a new section
-                for k, r in section_headings.items():
-                    r_search = re.search(r, l)
-                    if r_search:
-                        in_module = k
-                        # Add to the global statuses dict
-                        self.fastqc_statuses[k][s_name] = r_search.group(1)
+        # Tidy up the Basic Stats
+        self.fastqc_newdata[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_newdata[s_name]['basic_statistics']}
         
-        # Work out the average sequence length
-        if s['seq_len_read_count'] > 0:
-            s['avg_sequence_length'] = s['seq_len_bp'] / s['seq_len_read_count']
-        
-        # Get percent duplicates (percent unique given)
-        if 'percent_dedup' in s:
-            s['percent_duplicates'] = 100 - s['percent_dedup']
-        
-        # Add parsed stats to dicts
-        self.fastqc_stats[s_name] = s
-        self.add_data_source(f, s_name)
-        
-
+        # Calculate the average sequence length (Basic Statistics gives a range)
+        length_bp = 0
+        total_count = 0
+        for d in self.fastqc_newdata[s_name].get('sequence_length_distribution', {}):
+            length_bp += d['count'] * self.avg_bp_from_range(d['length'])
+            total_count += d['count']
+        if total_count > 0:
+            self.fastqc_newdata[s_name]['basic_statistics']['avg_sequence_length'] = length_bp / total_count
+    
     def fastqc_stats_table(self):
         """ Add some single-number stats to the basic statistics
         table at the top of the report """
         
+        # Prep the data
+        data = dict()
+        for s_name in self.fastqc_newdata:
+            bs = self.fastqc_newdata[s_name]['basic_statistics']
+            data[s_name] = {
+                'percent_duplicates': 100 - bs['total_deduplicated_percentage'],
+                'percent_gc': bs['%GC'],
+                'avg_sequence_length': bs['avg_sequence_length'],
+                'total_sequences': bs['Total Sequences'],
+            }
+        
         # Are sequence lengths interesting?
-        seq_lengths = [x['avg_sequence_length'] for x in self.fastqc_stats.values()]
-        seq_length_range = max(seq_lengths) - min(seq_lengths)
+        seq_lengths = [x['avg_sequence_length'] for x in data.values()]
+        show_seq_length = True if max(seq_lengths) - min(seq_lengths) > 10 else False
         
         headers = OrderedDict()
         headers['percent_duplicates'] = {
@@ -312,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': 'bp',
             'scale': 'RdYlGn',
             'format': '{:.0f}',
-            'hidden': False if seq_length_range > 10 else True
+            'hidden': show_seq_length
         }
         headers['total_sequences'] = {
             'title': 'M Seqs',
@@ -322,12 +230,19 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
         }
-        self.general_stats_addcols(self.fastqc_stats, headers)
+        self.general_stats_addcols(data, headers)
 
 
     def sequence_quality_plot (self):
         """ Create the HTML for the phred quality score plot """
-        if 'sequence_quality' not in self.fastqc_data or len(self.fastqc_data['sequence_quality']) == 0:
+        
+        data = dict()
+        for s_name in self.fastqc_newdata:
+            try:
+                data[s_name] = {self.avg_bp_from_range(d['base']): d['mean'] for d in self.fastqc_newdata[s_name]['per_base_sequence_quality']}
+            except KeyError:
+                pass
+        if len(data) == 0:
             log.debug('sequence_quality not found in FastQC reports')
             return None
         
@@ -351,13 +266,20 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_sequence_quality',
             'content': '<p>The mean quality value across each base position in the read. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.</p>' + 
-                        plots.linegraph.plot(self.fastqc_data['sequence_quality']['mean'], pconfig)
+                        plots.linegraph.plot(data, pconfig)
         })
 
 
     def per_seq_quality_plot (self):
         """ Create the HTML for the per sequence quality score plot """
-        if 'per_seq_quality' not in self.fastqc_data or len(self.fastqc_data['per_seq_quality']) == 0:
+        
+        data = dict()
+        for s_name in self.fastqc_newdata:
+            try:
+                data[s_name] = {d['quality']: d['count'] for d in self.fastqc_newdata[s_name]['per_sequence_quality_scores']}
+            except KeyError:
+                pass
+        if len(data) == 0:
             log.debug('per_seq_quality not found in FastQC reports')
             return None
         
@@ -382,7 +304,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_per_seq_quality',
             'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot(self.fastqc_data['per_seq_quality'], pconfig)
+                        plots.linegraph.plot(data, pconfig)
         })
 
     
@@ -614,10 +536,13 @@ class MultiqcModule(BaseMultiqcModule):
         which are not helpful when plotting. This returns the average from such
         ranges as an int, which is helpful. If not a range, just returns the int """
         
-        if '-' in bp:
-            maxlen = float(bp.split("-",1)[1])
-            minlen = float(bp.split("-",1)[0])
-            bp = ((maxlen - minlen)/2) + minlen
+        try:
+            if '-' in bp:
+                maxlen = float(bp.split("-",1)[1])
+                minlen = float(bp.split("-",1)[0])
+                bp = ((maxlen - minlen)/2) + minlen
+        except TypeError:
+            pass
         return(int(bp))
     
     def get_status_cols(self, key):
