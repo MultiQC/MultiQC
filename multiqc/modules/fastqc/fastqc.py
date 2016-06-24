@@ -107,12 +107,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Now add each section in order by calling its def
         self.sequence_quality_plot()
         self.per_seq_quality_plot()
-        # self.sequence_content_plot()
-        # self.gc_content_plot()
-        # self.n_content_plot()
-        # self.seq_length_dist_plot()
-        # self.seq_dup_levels_plot()
-        # self.adapter_content_plot()
+        self.sequence_content_plot()
+        self.gc_content_plot()
+        self.n_content_plot()
+        self.seq_length_dist_plot()
+        self.seq_dup_levels_plot()
+        self.adapter_content_plot()
 
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
@@ -310,16 +310,21 @@ class MultiqcModule(BaseMultiqcModule):
     
     def sequence_content_plot (self):
         """ Create the epic HTML for the FastQC sequence content heatmap """
-        if 'sequence_content' not in self.fastqc_data or len(self.fastqc_data['sequence_content']) == 0:
-            log.debug('sequence_content not found in FastQC reports')
-            return None
         
         html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
                     See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p> \
                  <p class="text-primary"><span class="glyphicon glyphicon-info-sign"></span> Click a heatmap row to see a line plot for that dataset.</p>'
         
-        # Order the data by the sample names
-        data = OrderedDict(sorted(self.fastqc_data['sequence_content'].items()))
+        # Prep the data
+        data = OrderedDict()
+        for s_name in sorted(self.fastqc_newdata.keys()):
+            try:
+                data[s_name] = {self.avg_bp_from_range(d['base']): d for d in self.fastqc_newdata[s_name]['per_base_sequence_content']}
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('sequence_content not found in FastQC reports')
+            return None
         
         html += '<div id="fastqc_sequence_content_plot"> \n\
             <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
@@ -351,8 +356,21 @@ class MultiqcModule(BaseMultiqcModule):
     
     def gc_content_plot (self):
         """ Create the HTML for the FastQC GC content plot """
-        if 'gc_content' not in self.fastqc_data or len(self.fastqc_data['gc_content']) == 0:
-            log.debug('gc_content not found in FastQC reports')
+        
+        data = dict()
+        data_norm = dict()
+        for s_name in self.fastqc_newdata:
+            try:
+                data[s_name] = {d['gc_content']: d['count'] for d in self.fastqc_newdata[s_name]['per_sequence_gc_content']}
+            except KeyError:
+                pass
+            else:
+                data_norm[s_name] = dict()
+                total = sum( [ c for c in data[s_name].values() ] )
+                for gc, count in data[s_name].items():
+                    data_norm[s_name][gc] = (count / total) * 100
+        if len(data) == 0:
+            log.debug('per_sequence_gc_content not found in FastQC reports')
             return None
         
         pconfig = {
@@ -371,26 +389,27 @@ class MultiqcModule(BaseMultiqcModule):
                 {'name': 'Counts', 'ylab': 'Count'}
             ]
         }
-        data_norm = dict()
-        for samp in self.fastqc_data['gc_content']:
-            data_norm[samp] = dict()
-            total = sum( [ c for c in self.fastqc_data['gc_content'][samp].values() ] )
-            for gc, count in self.fastqc_data['gc_content'][samp].items():
-                data_norm[samp][gc] = (count / total) * 100
         
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'anchor': 'fastqc_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot([data_norm, self.fastqc_data['gc_content']], pconfig)
+                        plots.linegraph.plot([data_norm, data], pconfig)
         })
     
     
     def n_content_plot (self):
         """ Create the HTML for the per base N content plot """
-        if 'n_content' not in self.fastqc_data or len(self.fastqc_data['n_content']) == 0:
-            log.debug('n_content not found in FastQC reports')
+        
+        data = dict()
+        for s_name in self.fastqc_newdata:
+            try:
+                data[s_name] = {self.avg_bp_from_range(d['base']): d['n-count'] for d in self.fastqc_newdata[s_name]['per_base_n_content']}
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('per_base_n_content not found in FastQC reports')
             return None
         
         pconfig = {
@@ -417,18 +436,27 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_n_content',
             'content': '<p>The percentage of base calls at each position for which an N was called. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot(self.fastqc_data['n_content'], pconfig)
+                        plots.linegraph.plot(data, pconfig)
         })
     
     
     def seq_length_dist_plot (self):
         """ Create the HTML for the Sequence Length Distribution plot """
-        if 'seq_length_dist' not in self.fastqc_data or len(self.fastqc_data['seq_length_dist']) == 0:
-            log.debug('seq_length_dist not found in FastQC reports')
+        
+        data = dict()
+        seq_lengths = set()
+        for s_name in self.fastqc_newdata:
+            try:
+                data[s_name] = {self.avg_bp_from_range(d['length']): d['count'] for d in self.fastqc_newdata[s_name]['sequence_length_distribution']}
+                seq_lengths.update(data[s_name].keys())
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('sequence_length_distribution not found in FastQC reports')
             return None
         
-        if len(self.seq_lengths) < 2:
-            html = '<p>All samples have sequences of exactly {} bp in length.</p>'.format(list(self.seq_lengths)[0])
+        if len(seq_lengths) < 2:
+            html = '<p>All samples have sequences of exactly {} bp in length.</p>'.format(list(seq_lengths)[0])
         else:
             pconfig = {
                 'id': 'fastqc_seq_length_dist_plot',
@@ -443,7 +471,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
             html =  '<p>The distribution of fragment sizes (read lengths) found. \
                 See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.</p>'
-            html += plots.linegraph.plot(self.fastqc_data['seq_length_dist'], pconfig)
+            html += plots.linegraph.plot(data, pconfig)
     
         self.sections.append({
             'name': 'Sequence Length Distribution',
@@ -454,8 +482,15 @@ class MultiqcModule(BaseMultiqcModule):
     
     def seq_dup_levels_plot (self):
         """ Create the HTML for the Sequence Duplication Levels plot """
-        if 'seq_dup_levels' not in self.fastqc_data or len(self.fastqc_data['seq_dup_levels']) == 0:
-            log.debug('seq_dup_levels not found in FastQC reports')
+        
+        data = dict()
+        for s_name in self.fastqc_newdata:
+            try:
+                data[s_name] = {d['duplication_level']: d['percentage_of_deduplicated'] for d in self.fastqc_newdata[s_name]['sequence_duplication_levels']}
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('sequence_length_distribution not found in FastQC reports')
             return None
         
         pconfig = {
@@ -476,16 +511,34 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_seq_dup_levels',
             'content': '<p>The relative level of duplication found for every sequence. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot(self.fastqc_data['seq_dup_levels'], pconfig)
+                        plots.linegraph.plot(data, pconfig)
         })
         
         
     
     def adapter_content_plot (self):
         """ Create the HTML for the FastQC adapter plot """
-        if 'adapter_content' not in self.fastqc_data or len(self.fastqc_data['adapter_content']) == 0:
+        
+        data = dict()
+        for s_name in self.fastqc_newdata:
+            for d in self.fastqc_newdata[s_name]['adapter_content']:
+                pos = self.avg_bp_from_range(d['position'])
+                for r in self.fastqc_newdata[s_name]['adapter_content']:
+                    pos = self.avg_bp_from_range(r['position'])
+                    for a in r.keys():
+                        k = "{} - {}".format(s_name, a)
+                        if a != 'position':
+                            try:
+                                data[k][pos] = r[a]
+                            except KeyError:
+                                data[k] = {pos: r[a]}
+        if len(data) == 0:
             log.debug('adapter_content not found in FastQC reports')
             return None
+        
+        # Lots of these datasets will be all zeros.
+        # Only take datasets with > 0.1% adapter contamination
+        data = {k:d for k,d in data.items() if max(data[k].values()) >= 0.1 }
         
         pconfig = {
             'id': 'fastqc_adapter_content_plot',
@@ -505,15 +558,8 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
         
-        # Lots of these datasets will be all zeros. Remove anything that doesn't have
-        # at least 0.5% so that we don't bloat the report.
-        plotdata = {}
-        for ds in self.fastqc_data['adapter_content']:
-            if max(self.fastqc_data['adapter_content'][ds].values()) >= 0.1:
-                plotdata[ds] = self.fastqc_data['adapter_content'][ds]
-        
-        if len(plotdata) > 0:
-            plot_html = plots.linegraph.plot(plotdata, pconfig)
+        if len(data) > 0:
+            plot_html = plots.linegraph.plot(data, pconfig)
         else:
             plot_html = '<div class="alert alert-warning">No samples found with any adapter contamination > 0.1%</div>'
         
