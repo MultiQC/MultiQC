@@ -3,13 +3,12 @@
 """ MultiQC module to parse output from FastQC
 """
 
-######################################################
-#### LOOKING FOR AN EXAMPLE OF HOW MULTIQC WORKS? ####
-######################################################
-#### Stop! This module is huge and complicated.   ####
-#### Have a look at Bowtie or STAR for a simpler  ####
-#### example. CONTRIBUTING.md has documentation.  ####
-######################################################
+############################################################
+######  LOOKING FOR AN EXAMPLE OF HOW MULTIQC WORKS?  ######
+############################################################
+#### Stop! This is one of the most complicated modules. ####
+#### Have a look at Kallisto for a simpler example.     ####
+############################################################
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
@@ -132,6 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse the report
         section = None
         s_headers = None
+        self.dup_keys = []
         for l in file_contents.splitlines():
             if l == '>>END_MODULE':
                 section = None
@@ -143,6 +143,9 @@ class MultiqcModule(BaseMultiqcModule):
             elif section is not None:
                 if l.startswith('#'):
                     s_headers = l[1:].split("\t")
+                    # Special case: Deduplication header in old versions of FastQC (v10)
+                    if s_headers[1] == 'Relative count':
+                        s_headers[1] = 'Percentage of total'
                     s_headers = [s.lower().replace(' ', '_') for s in s_headers]
                     self.fastqc_newdata[s_name][section] = list()
                     # Special case: Total Deduplicated Percentage
@@ -162,6 +165,12 @@ class MultiqcModule(BaseMultiqcModule):
                             pass
                         row[s_headers[i]] = v
                     self.fastqc_newdata[s_name][section].append(row)
+                    # Special case - need to remember order of duplication keys
+                    if section == 'sequence_duplication_levels':
+                        try:
+                            self.dup_keys.append(float(s[0]))
+                        except ValueError:
+                            self.dup_keys.append(s[0])
         
         # Tidy up the Basic Stats
         self.fastqc_newdata[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_newdata[s_name]['basic_statistics']}
@@ -192,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Are sequence lengths interesting?
         seq_lengths = [x['avg_sequence_length'] for x in data.values()]
-        show_seq_length = True if max(seq_lengths) - min(seq_lengths) > 10 else False
+        hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
         
         headers = OrderedDict()
         headers['percent_duplicates'] = {
@@ -220,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': 'bp',
             'scale': 'RdYlGn',
             'format': '{:.0f}',
-            'hidden': show_seq_length
+            'hidden': hide_seq_length
         }
         headers['total_sequences'] = {
             'title': 'M Seqs',
@@ -247,14 +256,14 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         pconfig = {
-            'id': 'fastqc_sequence_quality_plot',
+            'id': 'fastqc_per_base_sequence_quality_plot',
             'title': 'Mean Quality Scores',
             'ylab': 'Phred Score',
             'xlab': 'Position (bp)',
             'ymin': 0,
             'xDecimals': False,
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}',
-            'colors': self.get_status_cols('sequence_quality'),
+            'colors': self.get_status_cols('per_base_sequence_quality'),
             'yPlotBands': [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
@@ -263,7 +272,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.sections.append({
             'name': 'Sequence Quality Histograms',
-            'anchor': 'fastqc_sequence_quality',
+            'anchor': 'fastqc_per_base_sequence_quality',
             'content': '<p>The mean quality value across each base position in the read. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.</p>' + 
                         plots.linegraph.plot(data, pconfig)
@@ -284,14 +293,14 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         pconfig = {
-            'id': 'fastqc_per_seq_quality_plot',
+            'id': 'fastqc_per_sequence_quality_scores_plot',
             'title': 'Per Sequence Quality Scores',
             'ylab': 'Count',
             'xlab': 'Mean Sequence Quality (Phred Score)',
             'ymin': 0,
             'xmin': 0,
             'xDecimals': False,
-            'colors': self.get_status_cols('per_seq_quality'),
+            'colors': self.get_status_cols('per_sequence_quality_scores'),
             'tt_label': '<b>Phred {point.x}</b>: {point.y} reads',
             'xPlotBands': [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
@@ -301,7 +310,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.sections.append({
             'name': 'Per Sequence Quality Scores',
-            'anchor': 'fastqc_per_seq_quality',
+            'anchor': 'fastqc_per_sequence_quality_scores',
             'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.</p>' +
                         plots.linegraph.plot(data, pconfig)
@@ -326,7 +335,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_content not found in FastQC reports')
             return None
         
-        html += '<div id="fastqc_sequence_content_plot"> \n\
+        html += '<div id="fastqc_per_base_sequence_content_plot"> \n\
             <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
             <div class="fastqc_seq_heatmap_key">\n\
                 Position: <span id="fastqc_seq_heatmap_key_pos">-</span>\n\
@@ -349,7 +358,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         self.sections.append({
             'name': 'Per Base Sequence Content',
-            'anchor': 'fastqc_sequence_content',
+            'anchor': 'fastqc_per_base_sequence_content',
             'content': html
         })
     
@@ -374,7 +383,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         pconfig = {
-            'id': 'fastqc_gc_content_plot',
+            'id': 'fastqc_per_sequence_gc_content_plot',
             'title': 'Per Sequence GC Content',
             'ylab': 'Count',
             'xlab': '%GC',
@@ -383,7 +392,7 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'yDecimals': False,
             'tt_label': '<b>{point.x}% GC</b>: {point.y}',
-            'colors': self.get_status_cols('gc_content'),
+            'colors': self.get_status_cols('per_sequence_gc_content'),
             'data_labels': [
                 {'name': 'Percentages', 'ylab': 'Percentage'},
                 {'name': 'Counts', 'ylab': 'Count'}
@@ -392,7 +401,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         self.sections.append({
             'name': 'Per Sequence GC Content',
-            'anchor': 'fastqc_gc_content',
+            'anchor': 'fastqc_per_sequence_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
                         plots.linegraph.plot([data_norm, data], pconfig)
@@ -413,7 +422,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         pconfig = {
-            'id': 'fastqc_n_content_plot',
+            'id': 'fastqc_per_base_n_content_plot',
             'title': 'Per Base N Content',
             'ylab': 'Percentage N-Count',
             'xlab': 'Position in Read (bp)',
@@ -422,7 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
             'xmin': 0,
             'xDecimals': False,
-            'colors': self.get_status_cols('n_content'),
+            'colors': self.get_status_cols('per_base_n_content'),
             'tt_label': '<b>Base {point.x}</b>: {point.y:.2f}%',
             'yPlotBands': [
                 {'from': 20, 'to': 100, 'color': '#e6c3c3'},
@@ -433,7 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
     
         self.sections.append({
             'name': 'Per Base N Content',
-            'anchor': 'fastqc_n_content',
+            'anchor': 'fastqc_per_base_n_content',
             'content': '<p>The percentage of base calls at each position for which an N was called. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.</p>' +
                         plots.linegraph.plot(data, pconfig)
@@ -445,28 +454,34 @@ class MultiqcModule(BaseMultiqcModule):
         
         data = dict()
         seq_lengths = set()
+        multiple_lenths = False
         for s_name in self.fastqc_newdata:
             try:
                 data[s_name] = {self.avg_bp_from_range(d['length']): d['count'] for d in self.fastqc_newdata[s_name]['sequence_length_distribution']}
                 seq_lengths.update(data[s_name].keys())
+                if len(set(data[s_name].keys())) > 1:
+                    multiple_lenths = True
             except KeyError:
                 pass
         if len(data) == 0:
             log.debug('sequence_length_distribution not found in FastQC reports')
             return None
         
-        if len(seq_lengths) < 2:
-            html = '<p>All samples have sequences of exactly {} bp in length.</p>'.format(list(seq_lengths)[0])
+        if not multiple_lenths:
+            lengths = 'bp , '.join([str(l) for l in list(seq_lengths)])
+            html = '<p>All samples have sequences of a single length ({}bp).'.format(lengths)
+            if len(seq_lengths) > 1:
+                html += ' See the <a href="#general_stats">General Statistics Table</a>.</p>'
         else:
             pconfig = {
-                'id': 'fastqc_seq_length_dist_plot',
+                'id': 'fastqc_sequence_length_distribution_plot',
                 'title': 'Sequence Length Distribution',
                 'ylab': 'Read Count',
                 'xlab': 'Sequence Length (bp)',
                 'ymin': 0,
                 'yMinTickInterval': 0.1,
                 'xDecimals': False,
-                'colors': self.get_status_cols('seq_length_dist'),
+                'colors': self.get_status_cols('sequence_length_distribution'),
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
             html =  '<p>The distribution of fragment sizes (read lengths) found. \
@@ -475,7 +490,7 @@ class MultiqcModule(BaseMultiqcModule):
     
         self.sections.append({
             'name': 'Sequence Length Distribution',
-            'anchor': 'fastqc_seq_length_dist',
+            'anchor': 'fastqc_sequence_length_distribution',
             'content': html
         })
     
@@ -486,7 +501,13 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         for s_name in self.fastqc_newdata:
             try:
-                data[s_name] = {d['duplication_level']: d['percentage_of_deduplicated'] for d in self.fastqc_newdata[s_name]['sequence_duplication_levels']}
+                d = {d['duplication_level']: d['percentage_of_total'] for d in self.fastqc_newdata[s_name]['sequence_duplication_levels']}
+                data[s_name] = OrderedDict()
+                for k in self.dup_keys:
+                    try:
+                        data[s_name][k] = d[k]
+                    except KeyError:
+                        pass
             except KeyError:
                 pass
         if len(data) == 0:
@@ -494,7 +515,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         pconfig = {
-            'id': 'fastqc_seq_dup_levels_plot',
+            'id': 'fastqc_sequence_duplication_levels_plot',
             'title': 'Sequence Duplication Levels',
             'categories': True,
             'ylab': '% of Library',
@@ -502,13 +523,13 @@ class MultiqcModule(BaseMultiqcModule):
             'ymax': 100,
             'ymin': 0,
             'yMinTickInterval': 0.1,
-            'colors': self.get_status_cols('seq_dup_levels'),
+            'colors': self.get_status_cols('sequence_duplication_levels'),
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
     
         self.sections.append({
             'name': 'Sequence Duplication Levels',
-            'anchor': 'fastqc_seq_dup_levels',
+            'anchor': 'fastqc_sequence_duplication_levels',
             'content': '<p>The relative level of duplication found for every sequence. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.</p>' +
                         plots.linegraph.plot(data, pconfig)
@@ -591,11 +612,12 @@ class MultiqcModule(BaseMultiqcModule):
             pass
         return(int(bp))
     
-    def get_status_cols(self, key):
+    def get_status_cols(self, section):
         """ Helper function - returns a list of colours according to the FastQC
         status of this module for each sample. """
         colours = dict()
-        for s_name, status in self.fastqc_statuses[key].items():
-            colours[s_name] = self.status_colours.get(status, self.status_colours['default'])
+        for s_name in self.fastqc_newdata:
+            status = self.fastqc_newdata[s_name]['statuses'].get(section, 'default')
+            colours[s_name] = self.status_colours[status]
         return colours
     
