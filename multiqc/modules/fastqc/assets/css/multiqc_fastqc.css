@@ -1,5 +1,21 @@
 /* CSS for the FastQC MultiQC Module */
 
+.mqc-section-fastqc .popover .popover-content {
+  font-size: 11px;
+}
+.popover-success .popover-title {
+  background-color: #dff0d8;
+  color: #3c763d;
+}
+.popover-warning .popover-title {
+  background-color: #fcf8e3;
+  color: #8a6d3b;
+}
+.popover-danger .popover-title {
+  background-color: #f2dede;
+  color: #a94442;
+}
+
 .showhide_orig {
   padding: 15px;
   height:100%;

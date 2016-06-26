@@ -150,16 +150,47 @@ $(function () {
         var total = 0;
         var v = { 'pass': 0, 'warn': 0, 'fail': 0 }
         $.each(vals, function(s_name, status){
-          total += 1;
-          v[status] += 1;
+            total += 1;
+            v[status] += 1;
         });
         var p_bar = '<div class="progress fastqc_passfail_progress"> \
-            <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed" data-toggle="tooltip">'+v['pass']+'</div> \
-            <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings" data-toggle="tooltip">'+v['warn']+'</div> \
-            <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed" data-toggle="tooltip">'+v['fail']+'</div> \
+            <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed">'+v['pass']+'</div> \
+            <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings">'+v['warn']+'</div> \
+            <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
         </div>';
         $(pid).append(p_bar);
-        $(pid).tooltip({selector: '[data-toggle="tooltip"]' });
+        // $(pid).tooltip({selector: '[data-toggle="tooltip"]' });
+    });
+    
+    // Create popovers on click
+    $('.mqc-section-fastqc .fastqc_passfail_progress .progress-bar').mouseover(function(){
+        // Does this element already have a popover?
+        if ($(this).attr('data-original-title')) { return false; }
+        // Create it
+        var pid = $(this).closest('h3').attr('id');
+        var k = pid.substr(7);
+        var vals = fastqc_passfails[k];
+        var passes = $(this).hasClass('progress-bar-success') ? true : false;
+        var warns = $(this).hasClass('progress-bar-warning') ? true : false;
+        var fails = $(this).hasClass('progress-bar-danger') ? true : false;
+        var pclass = '';
+        if(passes) pclass = 'success';
+        if(warns) pclass = 'warning';
+        if(fails) pclass = 'danger';
+        var samples = Array();
+        $.each(vals, function(s_name, status){
+            if(status == 'pass' && passes) samples.push(s_name);
+            else if(status == 'warn' && warns) samples.push(s_name);
+            else if(status == 'fail' && fails) samples.push(s_name);
+        });
+        $($(this)).popover({
+            title: $(this).attr('title'),
+            content: samples.sort().join('<br>'),
+            html: true,
+            trigger: 'hover click focus',
+            placement: 'bottom auto',
+            template: '<div class="popover popover-'+pclass+'" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
+        }).popover('show');
     });
     
     /////////
