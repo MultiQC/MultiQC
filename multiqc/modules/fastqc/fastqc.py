@@ -33,10 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a quality control tool for high throughput sequence data,"\
         " written by Simon Andrews at the Babraham Institute in Cambridge.")
         
-        self.fastqc_newdata = dict()
-        self.fastqc_data = defaultdict(lambda: defaultdict(lambda: defaultdict( lambda: defaultdict() ) ) )
-        self.fastqc_stats = dict()
-        self.fastqc_statuses = defaultdict(lambda: defaultdict())
+        self.fastqc_data = dict()
         
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files(config.sp['fastqc']['data']):
@@ -49,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name.endswith('_fastqc.zip'):
                 s_name = s_name[:-11]
             # Skip if we already have this report - parsing zip files is slow..
-            if s_name in self.fastqc_stats.keys():
+            if s_name in self.fastqc_data.keys():
                 log.debug("Skipping '{}' as already parsed '{}'".format(f['fn'], s_name))
                 continue
             try:
@@ -67,17 +64,17 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
-        if len(self.fastqc_newdata) == 0:
+        if len(self.fastqc_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.fastqc_newdata)))
+        log.info("Found {} reports".format(len(self.fastqc_data)))
         
         # Write the summary stats to a file
         data = dict()
-        for s_name in self.fastqc_newdata:
-            data[s_name] = self.fastqc_newdata[s_name]['basic_statistics']
-            data[s_name].update(self.fastqc_newdata[s_name]['statuses'])
+        for s_name in self.fastqc_data:
+            data[s_name] = self.fastqc_data[s_name]['basic_statistics']
+            data[s_name].update(self.fastqc_data[s_name]['statuses'])
         self.write_data_file(data, 'multiqc_fastqc')
         
         # Add to self.css and self.js to be included in template
@@ -88,12 +85,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.status_colours = { 'pass': '#5cb85c', 'warn': '#f0ad4e', 'fail': '#d9534f', 'default': '#999' }
         
         # Add to the general statistics table
-        self.fastqc_stats_table()
+        self.fastqc_general_stats()
         
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
         statuses = dict()
-        for s_name in self.fastqc_newdata:
-            for section, status in self.fastqc_newdata[s_name]['statuses'].items():
+        for s_name in self.fastqc_data:
+            for section, status in self.fastqc_data[s_name]['statuses'].items():
                 try:
                     statuses[section][s_name] = status
                 except KeyError:
@@ -103,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Start the sections
         self.sections = list()
         
-        # Now add each section in order by calling its def
+        # Now add each section in order
         self.sequence_quality_plot()
         self.per_seq_quality_plot()
         self.sequence_content_plot()
@@ -124,9 +121,9 @@ class MultiqcModule(BaseMultiqcModule):
         if fn_search:
             s_name = self.clean_s_name(fn_search.group(1) , f['root'])
         
-        if s_name in self.fastqc_newdata.keys():
+        if s_name in self.fastqc_data.keys():
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-        self.fastqc_newdata[s_name] = { 'statuses': dict() }
+        self.fastqc_data[s_name] = { 'statuses': dict() }
         
         # Parse the report
         section = None
@@ -139,21 +136,23 @@ class MultiqcModule(BaseMultiqcModule):
             elif l.startswith('>>'):
                 (section, status) = l[2:].split("\t", 1)
                 section = section.lower().replace(' ', '_')
-                self.fastqc_newdata[s_name]['statuses'][section] = status
+                self.fastqc_data[s_name]['statuses'][section] = status
             elif section is not None:
                 if l.startswith('#'):
                     s_headers = l[1:].split("\t")
-                    # Special case: Deduplication header in old versions of FastQC (v10)
-                    if s_headers[1] == 'Relative count':
-                        s_headers[1] = 'Percentage of total'
-                    s_headers = [s.lower().replace(' ', '_') for s in s_headers]
-                    self.fastqc_newdata[s_name][section] = list()
-                    # Special case: Total Deduplicated Percentage
-                    if s_headers[0] == 'total_deduplicated_percentage':
-                        self.fastqc_newdata[s_name]['basic_statistics'].append({
-                            'measure': s_headers[0],
+                    # Special case: Total Deduplicated Percentage header line
+                    if s_headers[0] == 'Total Deduplicated Percentage':
+                        self.fastqc_data[s_name]['basic_statistics'].append({
+                            'measure': 'total_deduplicated_percentage',
                             'value': float(s_headers[1])
                         })
+                    else:
+                        # Special case: Rename dedup header in old versions of FastQC (v10)
+                        if s_headers[1] == 'Relative count':
+                            s_headers[1] = 'Percentage of total'
+                        s_headers = [s.lower().replace(' ', '_') for s in s_headers]
+                        self.fastqc_data[s_name][section] = list()
+                    
                 elif s_headers is not None:
                     s = l.split("\t")
                     row = dict()
@@ -164,7 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
                         except ValueError:
                             pass
                         row[s_headers[i]] = v
-                    self.fastqc_newdata[s_name][section].append(row)
+                    self.fastqc_data[s_name][section].append(row)
                     # Special case - need to remember order of duplication keys
                     if section == 'sequence_duplication_levels':
                         try:
@@ -173,31 +172,34 @@ class MultiqcModule(BaseMultiqcModule):
                             self.dup_keys.append(s[0])
         
         # Tidy up the Basic Stats
-        self.fastqc_newdata[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_newdata[s_name]['basic_statistics']}
+        self.fastqc_data[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_data[s_name]['basic_statistics']}
         
         # Calculate the average sequence length (Basic Statistics gives a range)
         length_bp = 0
         total_count = 0
-        for d in self.fastqc_newdata[s_name].get('sequence_length_distribution', {}):
+        for d in self.fastqc_data[s_name].get('sequence_length_distribution', {}):
             length_bp += d['count'] * self.avg_bp_from_range(d['length'])
             total_count += d['count']
         if total_count > 0:
-            self.fastqc_newdata[s_name]['basic_statistics']['avg_sequence_length'] = length_bp / total_count
+            self.fastqc_data[s_name]['basic_statistics']['avg_sequence_length'] = length_bp / total_count
     
-    def fastqc_stats_table(self):
+    def fastqc_general_stats(self):
         """ Add some single-number stats to the basic statistics
         table at the top of the report """
         
         # Prep the data
         data = dict()
-        for s_name in self.fastqc_newdata:
-            bs = self.fastqc_newdata[s_name]['basic_statistics']
+        for s_name in self.fastqc_data:
+            bs = self.fastqc_data[s_name]['basic_statistics']
             data[s_name] = {
-                'percent_duplicates': 100 - bs['total_deduplicated_percentage'],
                 'percent_gc': bs['%GC'],
                 'avg_sequence_length': bs['avg_sequence_length'],
                 'total_sequences': bs['Total Sequences'],
             }
+            try:
+                data[s_name]['percent_duplicates'] = 100 - bs['total_deduplicated_percentage']
+            except KeyError:
+                pass # Older versions of FastQC don't have this
         
         # Are sequence lengths interesting?
         seq_lengths = [x['avg_sequence_length'] for x in data.values()]
@@ -246,9 +248,9 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the phred quality score plot """
         
         data = dict()
-        for s_name in self.fastqc_newdata:
+        for s_name in self.fastqc_data:
             try:
-                data[s_name] = {self.avg_bp_from_range(d['base']): d['mean'] for d in self.fastqc_newdata[s_name]['per_base_sequence_quality']}
+                data[s_name] = {self.avg_bp_from_range(d['base']): d['mean'] for d in self.fastqc_data[s_name]['per_base_sequence_quality']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -283,9 +285,9 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the per sequence quality score plot """
         
         data = dict()
-        for s_name in self.fastqc_newdata:
+        for s_name in self.fastqc_data:
             try:
-                data[s_name] = {d['quality']: d['count'] for d in self.fastqc_newdata[s_name]['per_sequence_quality_scores']}
+                data[s_name] = {d['quality']: d['count'] for d in self.fastqc_data[s_name]['per_sequence_quality_scores']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -326,9 +328,9 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Prep the data
         data = OrderedDict()
-        for s_name in sorted(self.fastqc_newdata.keys()):
+        for s_name in sorted(self.fastqc_data.keys()):
             try:
-                data[s_name] = {self.avg_bp_from_range(d['base']): d for d in self.fastqc_newdata[s_name]['per_base_sequence_content']}
+                data[s_name] = {self.avg_bp_from_range(d['base']): d for d in self.fastqc_data[s_name]['per_base_sequence_content']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -368,9 +370,9 @@ class MultiqcModule(BaseMultiqcModule):
         
         data = dict()
         data_norm = dict()
-        for s_name in self.fastqc_newdata:
+        for s_name in self.fastqc_data:
             try:
-                data[s_name] = {d['gc_content']: d['count'] for d in self.fastqc_newdata[s_name]['per_sequence_gc_content']}
+                data[s_name] = {d['gc_content']: d['count'] for d in self.fastqc_data[s_name]['per_sequence_gc_content']}
             except KeyError:
                 pass
             else:
@@ -412,9 +414,9 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the per base N content plot """
         
         data = dict()
-        for s_name in self.fastqc_newdata:
+        for s_name in self.fastqc_data:
             try:
-                data[s_name] = {self.avg_bp_from_range(d['base']): d['n-count'] for d in self.fastqc_newdata[s_name]['per_base_n_content']}
+                data[s_name] = {self.avg_bp_from_range(d['base']): d['n-count'] for d in self.fastqc_data[s_name]['per_base_n_content']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -455,9 +457,9 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         seq_lengths = set()
         multiple_lenths = False
-        for s_name in self.fastqc_newdata:
+        for s_name in self.fastqc_data:
             try:
-                data[s_name] = {self.avg_bp_from_range(d['length']): d['count'] for d in self.fastqc_newdata[s_name]['sequence_length_distribution']}
+                data[s_name] = {self.avg_bp_from_range(d['length']): d['count'] for d in self.fastqc_data[s_name]['sequence_length_distribution']}
                 seq_lengths.update(data[s_name].keys())
                 if len(set(data[s_name].keys())) > 1:
                     multiple_lenths = True
@@ -499,9 +501,9 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the Sequence Duplication Levels plot """
         
         data = dict()
-        for s_name in self.fastqc_newdata:
+        for s_name in self.fastqc_data:
             try:
-                d = {d['duplication_level']: d['percentage_of_total'] for d in self.fastqc_newdata[s_name]['sequence_duplication_levels']}
+                d = {d['duplication_level']: d['percentage_of_total'] for d in self.fastqc_data[s_name]['sequence_duplication_levels']}
                 data[s_name] = OrderedDict()
                 for k in self.dup_keys:
                     try:
@@ -541,10 +543,10 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the FastQC adapter plot """
         
         data = dict()
-        for s_name in self.fastqc_newdata:
-            for d in self.fastqc_newdata[s_name]['adapter_content']:
+        for s_name in self.fastqc_data:
+            for d in self.fastqc_data[s_name]['adapter_content']:
                 pos = self.avg_bp_from_range(d['position'])
-                for r in self.fastqc_newdata[s_name]['adapter_content']:
+                for r in self.fastqc_data[s_name]['adapter_content']:
                     pos = self.avg_bp_from_range(r['position'])
                     for a in r.keys():
                         k = "{} - {}".format(s_name, a)
@@ -616,8 +618,8 @@ class MultiqcModule(BaseMultiqcModule):
         """ Helper function - returns a list of colours according to the FastQC
         status of this module for each sample. """
         colours = dict()
-        for s_name in self.fastqc_newdata:
-            status = self.fastqc_newdata[s_name]['statuses'].get(section, 'default')
+        for s_name in self.fastqc_data:
+            status = self.fastqc_data[s_name]['statuses'].get(section, 'default')
             colours[s_name] = self.status_colours[status]
         return colours
     
