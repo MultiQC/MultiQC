@@ -544,17 +544,20 @@ class MultiqcModule(BaseMultiqcModule):
         
         data = dict()
         for s_name in self.fastqc_data:
-            for d in self.fastqc_data[s_name]['adapter_content']:
-                pos = self.avg_bp_from_range(d['position'])
-                for r in self.fastqc_data[s_name]['adapter_content']:
-                    pos = self.avg_bp_from_range(r['position'])
-                    for a in r.keys():
-                        k = "{} - {}".format(s_name, a)
-                        if a != 'position':
-                            try:
-                                data[k][pos] = r[a]
-                            except KeyError:
-                                data[k] = {pos: r[a]}
+            try:
+                for d in self.fastqc_data[s_name]['adapter_content']:
+                    pos = self.avg_bp_from_range(d['position'])
+                    for r in self.fastqc_data[s_name]['adapter_content']:
+                        pos = self.avg_bp_from_range(r['position'])
+                        for a in r.keys():
+                            k = "{} - {}".format(s_name, a)
+                            if a != 'position':
+                                try:
+                                    data[k][pos] = r[a]
+                                except KeyError:
+                                    data[k] = {pos: r[a]}
+            except KeyError:
+                pass
         if len(data) == 0:
             log.debug('adapter_content not found in FastQC reports')
             return None
