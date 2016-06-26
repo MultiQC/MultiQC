@@ -13,6 +13,7 @@ Module updates:
 * Updated Cutadapt module to recognise logs from old versions of cutadapt (<= v1.6)
 * Trimmomatic now handles `,` decimal places in percentage values.
 * FastQC skips zip files if the sample name has already been found. Speeds up MultiQC execution.
+* FastQC substantially refactored to improve code. Parsing and data-structures standardised.
 * SnpEff search pattern now more generic, should match reports from others.
 * SnpEff _Counts by Effect_ plot removed (had hundreds of categories, was fairly unusable).
 * Extra Qualimap table thresholds added by @avilella (hidden by default)
