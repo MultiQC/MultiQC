@@ -26,7 +26,7 @@ function fastqc_seq_content_heatmap() {
     var hidden_samples = 0;
     $.each(fastqc_seq_content_data, function(s_name, data){
         // rename sample names
-        var t_status = fastqc_passfails['sequence_content'][s_name];
+        var t_status = fastqc_passfails['per_base_sequence_content'][s_name];
         $.each(window.mqc_rename_f_texts, function(idx, f_text){
             if(window.mqc_rename_regex_mode){
                 var re = new RegExp(f_text,'g');
@@ -118,9 +118,9 @@ function fastqc_seq_content_heatmap() {
                 bp = parseInt(bp);
                 var this_width = (bp - last_bp) * (c_width / max_bp);
                 last_bp = bp;
-                var r = (v['T'] / 100)*255;
-                var g = (v['A'] / 100)*255;
-                var b = (v['C'] / 100)*255;
+                var r = (v['t'] / 100)*255;
+                var g = (v['a'] / 100)*255;
+                var b = (v['c'] / 100)*255;
                 ctx.fillStyle = chroma(r,g,b).css();
                 // width+1 to avoid vertical white line gaps.
                 ctx.fillRect (xpos, ypos, this_width+1, s_height);
@@ -182,7 +182,7 @@ $(function () {
         if(s_status == 'pass'){ s_status_class = 'label-success'; }
         if(s_status == 'warn'){ s_status_class = 'label-warning'; }
         if(s_status == 'fail'){ s_status_class = 'label-danger'; }
-        $('#fastqc_sequence_content_plot .s_name').html(s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
+        $('#fastqc_per_base_sequence_content_plot .s_name').html(s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
         
         // Show the sequence base percentages on the bar plots below
         // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
@@ -204,7 +204,7 @@ $(function () {
     
     // Remove sample name again when mouse leaves
     $('#fastqc_seq_heatmap').mouseout(function(e) {
-      $('#fastqc_sequence_content_plot .s_name').html('<em class="text-muted">rollover for sample name</em>');
+      $('#fastqc_per_base_sequence_content_plot .s_name').html('<em class="text-muted">rollover for sample name</em>');
       $('#fastqc_seq_heatmap_key_pos').text('-');
       $('#fastqc_seq_heatmap_key_t span').text('-');
       $('#fastqc_seq_heatmap_key_c span').text('-');
@@ -239,7 +239,7 @@ $(function () {
     });
     $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_back', function(e){
         e.preventDefault();
-        $('#fastqc_sequence_content_plot').slideDown();
+        $('#fastqc_per_base_sequence_content_plot').slideDown();
         $('#fastqc_sequence_content_single_wrapper').slideUp(function(){
           $(this).remove();
         });
@@ -266,24 +266,24 @@ function plot_single_seqcontent(s_name){
     {'name': '% G', 'data':[]}
   ];
   for (var d in data){
-    var base = data[d]['base'].split('-');
+    var base = data[d]['base'].toString().split('-');
     base = parseFloat(base[0]);
-    plot_data[0]['data'].push([base, data[d]['T']]);
-    plot_data[1]['data'].push([base, data[d]['C']]);
-    plot_data[2]['data'].push([base, data[d]['A']]);
-    plot_data[3]['data'].push([base, data[d]['G']]);
+    plot_data[0]['data'].push([base, data[d]['t']]);
+    plot_data[1]['data'].push([base, data[d]['c']]);
+    plot_data[2]['data'].push([base, data[d]['a']]);
+    plot_data[3]['data'].push([base, data[d]['g']]);
   }
   
   // Create plot div if it doesn't exist, and hide overview
   if($('#fastqc_sequence_content_single_wrapper').length == 0) {
-    $('#fastqc_sequence_content_plot').slideUp();
+    $('#fastqc_per_base_sequence_content_plot').slideUp();
     var newplot = '<div id="fastqc_sequence_content_single_wrapper"> \
     <div id="fastqc_sequence_content_single_controls"><div class="btn-group"> \
       <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_prev">&laquo; Prev</button> \
       <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_next">Next &raquo;</button> \
     </div> <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button></div>\
     <div class="hc-plot-wrapper"><div id="fastqc_sequence_content_single" class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';
-    $(newplot).insertAfter('#fastqc_sequence_content_plot').hide().slideDown();      
+    $(newplot).insertAfter('#fastqc_per_base_sequence_content_plot').hide().slideDown();
   }
 
   $('#fastqc_sequence_content_single').highcharts({

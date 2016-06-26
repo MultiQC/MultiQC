@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Salmon', anchor='salmon',
-        href='http://combine-lab.github.io/salmon/', 
+        href='http://combine-lab.github.io/salmon/',
         info="is a tool for quantifying the expression of transcripts using RNA-seq data.")
         
         # Parse meta information. JSON win!
