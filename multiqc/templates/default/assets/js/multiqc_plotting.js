@@ -254,17 +254,22 @@ function plot_xy_line_graph(target, ds){
     var num_total = data.length;
     var j = data.length;
     while (j--) {
-      $.each(window.mqc_hide_f_texts, function(idx, f_text){
-        var match = (window.mqc_hide_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_hide_regex_mode && data[j]['name'].indexOf(f_text) > -1);
-        if(window.mqc_hide_mode == 'show'){
-          match = !match;
+      var match = false;
+      for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
+        var f_text = window.mqc_hide_f_texts[i];
+        if(window.mqc_hide_regex_mode){
+          if(data[j]['name'].match(f_text)){ match = true; }
+        } else {
+          if(data[j]['name'].indexOf(f_text) > -1){ match = true; }
         }
-        if(match){
-          data.splice(j,1);
-          num_hidden += 1;
-          return false;
-        }
-      });
+      }
+      if(window.mqc_hide_mode == 'show'){
+        match = !match;
+      }
+      if(match){
+        data.splice(j,1);
+        num_hidden += 1;
+      }
     };
     // Some series hidden. Show a warning text string.
     if(num_hidden > 0) {
@@ -413,20 +418,25 @@ function plot_stacked_bar_graph(target, ds){
     var j = cats.length;
     while (j--) {
       var s_name = cats[j];
-      $.each(window.mqc_hide_f_texts, function(idx, f_text){
-        var match = (window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1);
-        if(window.mqc_hide_mode == 'show'){
-          match = !match;
+      var match = false;
+      for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
+        var f_text = window.mqc_hide_f_texts[i];
+        if(window.mqc_hide_regex_mode){
+          if(s_name.match(f_text)){ match = true; }
+        } else {
+          if(s_name.indexOf(f_text) > -1){ match = true; }
         }
-        if(match){
-          cats.splice(j, 1);
-          $.each(data, function(k, d){
-            data[k]['data'].splice(j, 1);
-          });
-          num_hidden += 1;
-          return false;
-        }
-      });
+      }
+      if(window.mqc_hide_mode == 'show'){
+        match = !match;
+      }
+      if(match){
+        cats.splice(j, 1);
+        $.each(data, function(k, d){
+          data[k]['data'].splice(j, 1);
+        });
+        num_hidden += 1;
+      }
     };
     // Some series hidden. Show a warning text string.
     if(num_hidden > 0) {
@@ -566,20 +576,26 @@ function plot_beeswarm_graph(target, ds){
       num_total = Math.max(num_total, samples[i].length);
       var j = samples[i].length;
       var hidden_here = 0;
+      
       while (j--) {
         var s_name = samples[i][j];
-        $.each(window.mqc_hide_f_texts, function(idx, f_text){
-          var match = (window.mqc_hide_regex_mode && s_name.match(f_text)) || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1);
-          if(window.mqc_hide_mode == 'show'){
-            match = !match;
+        var match = false;
+        for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
+          var f_text = window.mqc_hide_f_texts[i];
+          if(window.mqc_hide_regex_mode){
+            if(s_name.match(f_text)){ match = true; }
+          } else {
+            if(s_name.indexOf(f_text) > -1){ match = true; }
           }
-          if(match){
-            samples[i].splice(j, 1);
-            datasets[i].splice(j, 1);
-            hidden_here += 1;
-            return false;
-          }
-        });
+        }
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
+        }
+        if(match){
+          samples[i].splice(j, 1);
+          datasets[i].splice(j, 1);
+          hidden_here += 1;
+        }
       };
       num_hidden = Math.max(num_hidden, hidden_here);
     };

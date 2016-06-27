@@ -18,7 +18,7 @@ $(function () {
     
     // Update tablesorter if samples renamed
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
-      $('.mqc_table').trigger('update'); 
+      $('.mqc_table').trigger('update');
     });
     
     // Copy table contents to clipboard
@@ -276,10 +276,10 @@ $(function () {
           if((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)){
             match = true;
           }
-          if(window.mqc_hide_mode == 'show'){
-            match = !match;
-          }
         });
+        if(window.mqc_hide_mode == 'show'){
+          match = !match;
+        }
         if(match){
           $(this).parent().hide().addClass('hidden');
         } else {

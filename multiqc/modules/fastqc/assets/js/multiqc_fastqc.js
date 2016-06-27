@@ -39,14 +39,17 @@ function fastqc_seq_content_heatmap() {
         p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
         
         var hide_sample = false;
-        $.each(window.mqc_hide_f_texts, function(idx, f_text){
-            if((window.mqc_hide_regex_mode && s_name.match(f_text))  || (!window.mqc_hide_regex_mode && s_name.indexOf(f_text) > -1)){
-                hide_sample = true;
+        for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
+            var f_text = window.mqc_hide_f_texts[i];
+            if(window.mqc_hide_regex_mode){
+                if(s_name.match(f_text)){ hide_sample = true; }
+            } else {
+                if(s_name.indexOf(f_text) > -1){ hide_sample = true; }
             }
-            if(window.mqc_hide_mode == 'show'){
-                hide_sample = !hide_sample;
-            }
-        });
+        }
+        if(window.mqc_hide_mode == 'show'){
+            hide_sample = !hide_sample;
+        }
         if(!hide_sample){ sample_names.push(s_name); }
         else { hidden_samples += 1; }
     });
