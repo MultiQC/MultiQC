@@ -200,6 +200,14 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]['percent_duplicates'] = 100 - bs['total_deduplicated_percentage']
             except KeyError:
                 pass # Older versions of FastQC don't have this
+            # Add count of fail statuses
+            num_statuses = 0
+            num_fails = 0
+            for s in self.fastqc_data[s_name]['statuses'].values():
+                num_statuses += 1
+                if s == 'fail':
+                    num_fails += 1
+            data[s_name]['percent_fails'] = (float(num_fails)/float(num_statuses))*100.0
         
         # Are sequence lengths interesting?
         seq_lengths = [x['avg_sequence_length'] for x in data.values()]
@@ -232,6 +240,16 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'format': '{:.0f}',
             'hidden': hide_seq_length
+        }
+        headers['percent_fails'] = {
+            'title': '% Failed',
+            'description': 'Percentage of modules failed in FastQC report (includes those not plotted here)',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'Reds',
+            'format': '{:.0f}%',
+            'hidden': True
         }
         headers['total_sequences'] = {
             'title': 'M Seqs',

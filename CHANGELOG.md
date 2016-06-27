@@ -26,6 +26,7 @@ Module updates:
   * Now skips zip files if the sample name has already been found. Speeds up MultiQC execution.
   * Code cleaned up. Parsing and data-structures standardised.
   * New popovers on Pass / Warn / Fail status bars showing sample names. Fast highlighting and hiding.
+  * New column in General Stats (hidden by default) showing percentage of FastQC modules that failed.
 * **SnpEff**
   * Search pattern now more generic, should match reports from others.
   * _Counts by Effect_ plot removed (had hundreds of categories, was fairly unusable).
