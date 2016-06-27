@@ -407,11 +407,14 @@ input.form-control[type=color]{
 .mqc_filters li:hover {
     background-color: #dedede;
 }
+.mqc_filter_section .mqc_regex_mode_p {
+    margin-top: 12px;
+    white-space: nowrap;
+}
 .mqc_filter_section .mqc_regex_mode {
     cursor:pointer;
-    margin-top: 12px;
 }
-.mqc_regex_mode span {
+.mqc_regex_mode .re_mode {
     display: inline-block;
     border: 1px solid #999;
     border-radius: 3px;
@@ -419,7 +422,7 @@ input.form-control[type=color]{
     margin-left: 5px;
     background-color:#ddd;
 }
-.mqc_regex_mode span.off::after, .mqc_regex_mode span.on::before{
+.mqc_regex_mode .off::after, .mqc_regex_mode .on::before{
     content: "";
     display: inline-block;
     height: 0;
@@ -427,13 +430,13 @@ input.form-control[type=color]{
     border-radius: 6px;
     border: 6px solid #fff;
 }
-.mqc_regex_mode span.off::after{
+.mqc_regex_mode .off::after{
     margin: 0 0 -2px 5px;
 }
-.mqc_regex_mode span.on::before{
+.mqc_regex_mode .on::before{
     margin: 0 5px -2px 0;
 }
-.mqc_regex_mode span.on {
+.mqc_regex_mode .on {
     background-color:#5bc0de;
     color: #fff;
 }

@@ -184,7 +184,7 @@ $(function () {
       load_mqc_config(name);
     }
   });
-  // Clear config
+  // Delete config
   $('.mqc_config_clear').click(function(e){
     e.preventDefault();
     var name = $('#mqc_loadconfig_form select').val().trim();
@@ -225,6 +225,15 @@ $(function () {
     if(target == 'mqc_hidesamples_filters'){ apply_mqc_hidesamples(); }
     if(target == 'mqc_renamesamples_filters'){ apply_mqc_renamesamples(); }
   });
+  // Clear all filters button
+  $('.mqc_toolbox_clear').click(function(){
+    var target = $(this).closest('.mqc_filter_section').find('.mqc_filters').attr('id');
+    $('#'+target).empty();
+    if(target == 'mqc_col_filters'){ apply_mqc_highlights(); }
+    if(target == 'mqc_hidesamples_filters'){ apply_mqc_hidesamples(); }
+    if(target == 'mqc_renamesamples_filters'){ apply_mqc_renamesamples(); }
+  });
+  
   // Use jQuery UI to make the colour filters sortable
   $("#mqc_col_filters").sortable();
   $("#mqc_col_filters").on("sortstop", function(event, ui){
@@ -232,7 +241,7 @@ $(function () {
   });
   // Regex mode text
   $('.mqc_regex_mode').click(function(){
-    var rswitch = $(this).find('span');
+    var rswitch = $(this).find('.re_mode');
     if(rswitch.text() == 'off'){
       rswitch.removeClass('off').addClass('on').text('on');
     } else {
@@ -314,7 +323,7 @@ function apply_mqc_highlights(){
   var f_texts = [];
   var f_cols = [];
   var regex_mode = false;
-  if($('#mqc_cols .mqc_regex_mode span').hasClass('on')){
+  if($('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on')){
     regex_mode = true;
   }
   $('#mqc_col_filters li .f_text').each(function(){
@@ -352,7 +361,7 @@ function apply_mqc_renamesamples(){
   var regex_mode = false;
   $('#mqc_renamesamples_filters .from_text').each(function(){ f_texts.push($(this).val()); });
   $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
-  if($('#mqc_renamesamples .mqc_regex_mode span').hasClass('on')){ regex_mode = true; }
+  if($('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on')){ regex_mode = true; }
   
   // If something was renamed, highlight the toolbox icon
   if(f_texts.length > 0){
@@ -378,7 +387,7 @@ function apply_mqc_hidesamples(){
   var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
   var f_texts = [];
   var regex_mode = false;
-  if($('#mqc_hidesamples .mqc_regex_mode span').hasClass('on')){
+  if($('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on')){
     regex_mode = true;
   }
   $('#mqc_hidesamples_filters li .f_text').each(function(){
@@ -497,7 +506,7 @@ function load_mqc_config(name){
   // Apply config - highlights
   if(notEmptyObj(config['highlight_regex'])){
     if(config['highlight_regex'] == true){
-      $('#mqc_cols .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+      $('#mqc_cols .mqc_regex_mode .re_mode').removeClass('off').addClass('on').text('on');
       window.mqc_highlight_regex_mode = true;
     }
   }
@@ -516,7 +525,7 @@ function load_mqc_config(name){
   // Rename samples
   if(notEmptyObj(config['rename_regex'])){
     if(config['rename_regex'] == true){
-      $('#mqc_renamesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+      $('#mqc_renamesamples .mqc_regex_mode .re_mode').removeClass('off').addClass('on').text('on');
       window.mqc_rename_regex_mode = true;
     }
   }
@@ -537,7 +546,7 @@ function load_mqc_config(name){
   // Hide samples
   if(notEmptyObj(config['hidesamples_regex'])){
     if(config['hidesamples_regex'] == true){
-      $('#mqc_hidesamples .mqc_regex_mode span').removeClass('off').addClass('on').text('on');
+      $('#mqc_hidesamples .mqc_regex_mode .re_mode').removeClass('off').addClass('on').text('on');
       window.mqc_hide_regex_mode = true;
     }
   }

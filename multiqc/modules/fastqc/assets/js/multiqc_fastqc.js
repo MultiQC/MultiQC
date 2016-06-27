@@ -159,7 +159,6 @@ $(function () {
             <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
         </div>';
         $(pid).append(p_bar);
-        // $(pid).tooltip({selector: '[data-toggle="tooltip"]' });
     });
     
     // Create popovers on click
@@ -189,8 +188,67 @@ $(function () {
             html: true,
             trigger: 'hover click focus',
             placement: 'bottom auto',
-            template: '<div class="popover popover-'+pclass+'" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
+            template: '<div class="popover popover-'+pclass+'" role="tooltip"> \
+                <div class="arrow"></div>\
+                <h3 class="popover-title"></h3>\
+                <div class="fastqc-popover-intro">\
+                    Click bar to fix in place <br>\
+                    <a href="#" class="fastqc-status-highlight"><span class="glyphicon glyphicon-pushpin"></span> Highlight these samples</a><br>\
+                    <a href="#" class="fastqc-status-hideothers"><span class="glyphicon glyphicon-eye-close"></span> Show only these samples</a>\
+                </div>\
+                <div class="popover-content"></div>\
+            </div>'
         }).popover('show');
+    });
+    
+    // Listener for Status higlight click
+    $('.mqc-section-fastqc .fastqc_passfail_progress').on('click', '.fastqc-status-highlight', function(e){
+        e.preventDefault();
+        // Get sample names and highlight colour
+        var samples = $(this).parent().parent().find('.popover-content').html().split('<br>');
+        var f_col = mqc_colours[mqc_colours_idx];
+        // Add sample names to the toolbox
+        for (i = 0; i < samples.length; i++) {
+            var f_text = samples[i];
+            $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'"/><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+        }
+        // Apply highlights and open toolbox
+        apply_mqc_highlights();
+        mqc_toolbox_openclose('#mqc_cols', true);
+        // Update next highlight colour
+        mqc_colours_idx += 1;
+        if(mqc_colours_idx >= mqc_colours.length){ mqc_colours_idx = 0; }
+        $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
+        // Hide the popover
+        $(this).closest('.popover').popover('hide');
+    });
+    
+    // Listener for Status hide others click
+    $('.mqc-section-fastqc .fastqc_passfail_progress').on('click', '.fastqc-status-hideothers', function(e){
+        e.preventDefault();
+        // Get sample names
+        var samples = $(this).parent().parent().find('.popover-content').html().split('<br>');
+        // Check if we're already hiding anything, remove after confirm if so
+        if($('#mqc_hidesamples_filters li').length > 0){
+            if(!confirm($('#mqc_hidesamples_filters li').length+' Hide filters already exist - discard?')){
+                return false;
+            } else {
+                $('#mqc_hidesamples_filters').empty();
+            }
+        }
+        // Set to "show only" and disable regex
+        $('.mqc_hidesamples_showhide[value="show"]').prop("checked", true);
+        $('#mqc_hidesamples .mqc_regex_mode .re_mode').removeClass('on').addClass('off').text('off');
+        // Add sample names to the toolbox
+        for (i = 0; i < samples.length; i++) {
+            var f_text = samples[i];
+            $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+        }
+        // Apply highlights and open toolbox
+        apply_mqc_hidesamples();
+        mqc_toolbox_openclose('#mqc_hidesamples', true);
+        // Hide the popover
+        $(this).closest('.popover').popover('hide');
     });
     
     /////////
