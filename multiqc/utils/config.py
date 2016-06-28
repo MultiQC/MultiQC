@@ -40,7 +40,8 @@ plots_flat_numseries = 100
 max_table_rows = 500
 data_format = 'tsv'
 data_format_extensions = {'tsv': 'txt', 'json': 'json', 'yaml': 'yaml'}
-fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', '_star_aligned', '_fastqc', '.hicup', '.counts', '_counts', '.txt', 'Aligned' ]
+fn_clean_exts = [ '.gz', '.fastq', '.fq', '.bam', '.sam', '.sra', '_tophat', 'Log.final.out',
+    '_star_aligned', '_fastqc', '.hicup', '.counts', '_counts', '.txt', 'Aligned' ]
 fn_ignore_files = ['.DS_Store', '*.bam', '*.sam', '*.fq.gz', '*.fastq.gz', '*.fq', '*.fastq', '*.gtf', '*.bed', '*.vcf', '*.txt.gz']
 fn_ignore_dirs = []
 fn_ignore_paths = []

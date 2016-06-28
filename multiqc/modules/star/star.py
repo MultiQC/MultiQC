@@ -17,8 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='STAR', anchor='star', 
-        href="https://github.com/alexdobin/STAR", 
+        super(MultiqcModule, self).__init__(name='STAR', anchor='star',
+        href="https://github.com/alexdobin/STAR",
         info="is an ultrafast universal RNA-seq aligner.")
 
         # Find and load any STAR reports
@@ -26,11 +26,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(config.sp['star']):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
-                s_name = f['s_name'].split('Log.final.out', 1)[0]
-                if s_name in self.star_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.add_data_source(f, s_name)
-                self.star_data[s_name] = parsed_data
+                if f['s_name'] in self.star_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                self.add_data_source(f)
+                self.star_data[f['s_name']] = parsed_data
 
         if len(self.star_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
