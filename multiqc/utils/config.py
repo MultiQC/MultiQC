@@ -122,12 +122,12 @@ template = 'default'
 # Note: Can't use logger here, not yet installed.
 if len(avail_modules) == 0 or len(avail_templates) == 0:
     if len(avail_modules) == 0:
-        print("Error - No MultiQC modules found.")
+        print("Error - No MultiQC modules found.", file=sys.stderr)
     if len(avail_templates) == 0:
-        print("Error - No MultiQC templates found.")
+        print("Error - No MultiQC templates found.", file=sys.stderr)
     print("Could not load MultiQC - has it been installed? \n\
         Please either install with pip (pip install multiqc) or by using \n\
-        the installation script (python setup.py install)")
+        the installation script (python setup.py install)", file=sys.stderr)
     sys.exit(1)
 
 

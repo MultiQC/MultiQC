@@ -10,14 +10,22 @@ import json
 import logging
 import os
 import random
-
-# Import matplot lib but avoid default X environment
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import sys
 
 from multiqc.utils import config
 logger = logging.getLogger(__name__)
+
+try:
+    # Import matplot lib but avoid default X environment
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+except Exception as e:
+    # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
+    # The lack of the library will be handled when plots are attempted
+    print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
+    print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
+    logger.exception(e)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -82,7 +90,11 @@ def plot (data, pconfig={}):
         return template_mod.linegraph(plotdata, pconfig)
     except (AttributeError, TypeError):
         if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
-            return matplotlib_linegraph(plotdata, pconfig)
+            try:
+                return matplotlib_linegraph(plotdata, pconfig)
+            except:
+                logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
+                return highcharts_linegraph(plotdata, pconfig)
         else:
             return highcharts_linegraph(plotdata, pconfig)
 
