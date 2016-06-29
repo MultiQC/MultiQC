@@ -837,6 +837,30 @@ function plot_heatmap(target, ds){
   var xcats = JSON.parse(JSON.stringify(mqc_plots[target]['xcats']));
   var ycats = JSON.parse(JSON.stringify(mqc_plots[target]['ycats']));
   
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    for (i=0; i < xcats.length; i++) {
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          xcats[i] = xcats[i].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          xcats[i] = xcats[i].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    }
+    for (i=0; i < ycats.length; i++) {
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          ycats[i] = ycats[i].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          ycats[i] = ycats[i].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    }
+  }
+  
   if(config['colstops'] === undefined){
     config['colstops'] = [
       [0, '#313695'],
@@ -861,18 +885,22 @@ function plot_heatmap(target, ds){
       config['datalabels'] = true;
     }
   }
+  // Clone the colstops before we mess around with them
+  var colstops = JSON.parse(JSON.stringify(config['colstops']));
   // Reverse the colour scale if the axis is reversed
   if(config['reverseColors']){
-    for(var i = 0; i < config['colstops'].length; i++){
-      config['colstops'][i][0] = 1 - config['colstops'][i][0];
+    for(var i = 0; i < colstops.length; i++){
+      colstops[i][0] = 1 - colstops[i][0];
     }
-    config['colstops'].reverse();
+    colstops.reverse();
   }
   
   // Make the highcharts plot
   $('#'+target).highcharts({
     chart: {
       type: 'heatmap',
+      height: 500,
+      width: 530,
       marginTop: config['title'] ? 60 : 50
     },
     title: {
@@ -890,7 +918,7 @@ function plot_heatmap(target, ds){
     },
     colorAxis: {
       reversed: config['reverseColors'],
-      stops: config['colstops'],
+      stops: colstops,
       min: config['min'],
       max: config['max'],
     },
@@ -906,7 +934,7 @@ function plot_heatmap(target, ds){
     tooltip: {
       formatter: function () {
         return this.series.xAxis.categories[this.point.x] + '<br>' +
-        this.series.yAxis.categories[this.point.y] + '<br>' + 
+        this.series.yAxis.categories[this.point.y] + '<br>' +
         '<span style="font-weight: bold; text-decoration:underline;">' + this.point.value.toFixed(config['decimalPlaces']) + '</span>'
       }
     },
