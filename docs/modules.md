@@ -809,6 +809,12 @@ includes the content file directly in the HTML)_. The dictionary value should be
 the path to the desired file. For example, see how it's done in the FastQC module:
 
 ```python
-self.css = { 'assets/css/multiqc_fastqc.css' : os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css') }
-self.js = { 'assets/js/multiqc_fastqc.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js') }
+self.css = {
+    'assets/css/multiqc_fastqc.css' :
+        os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css')
+}
+self.js = {
+    'assets/js/multiqc_fastqc.js' :
+        os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js')
+}
 ```
