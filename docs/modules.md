@@ -104,8 +104,8 @@ number of functions on the `self` namespace. For example:
 class MultiqcModule(multiqc.BaseMultiqcModule):
     def __init__(self, report):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='My Module', anchor='mymod', 
-        href="http://www.awesome_bioinfo.com/my_module", 
+        super(MultiqcModule, self).__init__(name='My Module', anchor='mymod',
+        href="http://www.awesome_bioinfo.com/my_module",
         info="is an example analysis module used for writing documentation.")
 ```
 
@@ -595,7 +595,7 @@ config = {
     # Building the plot
     'smooth_points': None,       # Supply a number to limit number of points / smooth data
     'smooth_points_sumcounts': True, # Sum counts in bins, or average? Can supply list for multiple datasets
-    'id': '<random string>',     # HTML ID used for plot    
+    'id': '<random string>',     # HTML ID used for plot
     'categories': <anything>,    # Set key to use x values as categories instead of numbers.
     'colors': dict()             # Provide dict with keys = sample names and values colours
     'extra_series': None,        # See section below
@@ -667,13 +667,13 @@ config = {
     ]
 }
 html_content = plots.linegraph.plot(data, config)
-``` 
+```
 
 
 ## Step 7c - Creating a table
 Tables should work just like the two functions above (most like the bar
 graph function). Supply some data and some headers and an optional config
-and everything should magically work. 
+and everything should magically work.
 
 Note that the headers are where most configuration options are set and are
 the same as the General Statistics options described previously.
@@ -799,24 +799,16 @@ pconfig = {
 
 
 ## Appendices
-### Including module-specific files
-Occasionally, a module may require additional files to be copied at
-the time of report generation. To do this, use the `copy_module_files`
-function. `files` is a list of file paths, the second argument is the
-path that the files should be relative to (usually `__file__`). For example:
-```python
-self.copy_module_files(['includes/file1.txt', 'includes/file2.txt'], __file__)
-```
 
 ### Adding Custom CSS / Javascript
 If you would like module-specific CSS and / or JavaScript added to the template,
-create lists in the module called `self.css` and `self.js` with the relative file
-paths - these will be looped over in the template file and the files included
-appropriately. Make sure that the files themselves are copied using the above
-method. The FastQC module does this to generate its custom plots:
+just add to the `self.css` and `self.js` dictionaries that come with the
+`BaseModule` class. The key should be the filename that you want your file to have
+in the generated report folder _(this is ignored in the default template, which
+includes the content file directly in the HTML)_. The dictionary value should be
+the path to the desired file. For example, see how it's done in the FastQC module:
 
 ```python
-self.css = [ os.path.join('assets', 'css', 'multiqc_fastqc.css') ]
-self.js = [ os.path.join('assets', 'js', 'multiqc_fastqc.js') ]
-self.copy_module_files(self.css + self.js, __file__)
+self.css = { 'assets/css/multiqc_fastqc.css' : os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css') }
+self.js = { 'assets/js/multiqc_fastqc.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js') }
 ```
