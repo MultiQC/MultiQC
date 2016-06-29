@@ -803,8 +803,8 @@ pconfig = {
 ### Adding Custom CSS / Javascript
 If you would like module-specific CSS and / or JavaScript added to the template,
 just add to the `self.css` and `self.js` dictionaries that come with the
-`BaseModule` class. The key should be the filename that you want your file to have
-in the generated report folder _(this is ignored in the default template, which
+`BaseMultiqcModule` class. The key should be the filename that you want your file to
+have in the generated report folder _(this is ignored in the default template, which
 includes the content file directly in the HTML)_. The dictionary value should be
 the path to the desired file. For example, see how it's done in the FastQC module:
 

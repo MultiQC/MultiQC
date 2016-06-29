@@ -6,6 +6,8 @@ from collections import defaultdict
 import logging
 import random
 
+from multiqc.utils import config
+
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -62,6 +64,13 @@ class datatable (object):
                     while cidx >= len(sectcols):
                         cidx -= len(sectcols)
                     headers[idx][k]['colour'] = sectcols[cidx]
+                
+                # Overwrite hidden if set in user config
+                try:
+                    # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
+                    headers[idx][k]['hidden'] = not config.table_columns_visible[ headers[idx][k]['namespace'] ][k]
+                except KeyError:
+                    pass
                 
                 # Work out max and min value if not given
                 setdmax = False

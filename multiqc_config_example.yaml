@@ -89,5 +89,10 @@ sp:
     trimmomatic:
         contents: 'Trimmomatic'
 
+# Overwrite the defaults of which table columns are visible by default
+table_columns_visible:
+    FastQC:
+        percent_fails: False
+        total_sequences: True
 
 

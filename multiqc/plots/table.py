@@ -96,6 +96,7 @@ def make_table (dt):
               <td>{name}</td>
               <td>{title}</td>
               <td>{desc}</td>
+              <td>{col_id}</td>
               <td>{sk}</td>
             </tr>""".format(
                     rid = rid,
@@ -106,6 +107,7 @@ def make_table (dt):
                     name = header['namespace'],
                     title = header['title'],
                     desc = header['description'],
+                    col_id = '<code>{}</code>'.format(k),
                     sk = header.get('shared_key', '')
                 )
             
@@ -214,6 +216,7 @@ def make_table (dt):
                   <th>Group</th>
                   <th>Column</th>
                   <th>Description</th>
+                  <th>ID</th>
                   <th>Scale</th>
                 </tr>
               </thead>

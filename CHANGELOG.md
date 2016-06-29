@@ -59,6 +59,7 @@ Core updates:
 * Made featureCounts split columns on tabs instead of whitespace, handle filenames with spaces
 * Fixed bug related to order in which config files are loaded
 * Fixed bug that broke the _"Show only"_ toolbox feature with multiple names.
+* Added config option `table_columns_visible` to configure defaults for visible table columns.
 
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29

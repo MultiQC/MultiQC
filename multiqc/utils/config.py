@@ -54,6 +54,7 @@ report_readerrors = False
 report_imgskips = False
 skip_generalstats = False
 config_file = None
+table_columns_visible = {}
 
 #######################
 # Module fn search patterns
