@@ -911,7 +911,7 @@ function plot_heatmap(target, ds){
         for (n=0; n < data.length; n++) {
           var y = data[n][0];
           if (y == i){ 
-            if(remove.indexOf(n) <= 0){ remove.push(n); }
+            if(remove.indexOf(n) < 0){ remove.push(n); }
           } else if(y > i){ data[n][0] -= 1; }
         }
         yhidden += 1;
@@ -935,6 +935,51 @@ function plot_heatmap(target, ds){
     if(num_hidden == num_total){
       $('#'+target).closest('.hc-plot-wrapper').hide();
       return false;
+    }
+  }
+  
+  // Highlight samples - do this last as we convert numerical arrays to associative
+  if(window.mqc_highlight_f_texts.length > 0){
+    var highlight = Array();
+    for (i=0; i < xcats.length; i++) {
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if(f_text == ''){ return true; }
+        if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
+          for (n=0; n < data.length; n++) {
+            highlight[idx] = ( typeof highlight[idx] != 'undefined' && highlight[idx] instanceof Array ) ? highlight[idx] : [];
+            if (data[n][1] == i){ highlight[idx].push(n); }
+          }
+        }
+      });
+    }
+    for (i=0; i < ycats.length; i++) {
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if(f_text == ''){ return true; }
+        if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
+          for (n=0; n < data.length; n++) {
+            if (data[n][0] == i){
+              highlight[idx] = ( typeof highlight[idx] != 'undefined' && highlight[idx] instanceof Array ) ? highlight[idx] : [];
+              if(highlight[idx].indexOf(n) < 0){ highlight[idx].push(n); }
+            }
+          }
+        }
+      });
+    }
+    // Give highlighted cells a border
+    for (var idx in highlight){
+      var hl = highlight[idx];
+      hl = hl.sort(function(a, b){return a-b}); // Sorts alphabetically by default, even with integers
+      var h = hl.length;
+      while(h--){
+        var i = hl[h];
+        data[i] = {
+          x: data[i][1] === undefined ? data[i]['x'] : data[i][1],
+          y: data[i][0] === undefined ? data[i]['y'] : data[i][0],
+          value:data[i][2] === undefined ? data[i]['value'] : data[i][2],
+          borderWidth:2,
+          borderColor: window.mqc_highlight_f_cols[idx]
+        }
+      }
     }
   }
   
