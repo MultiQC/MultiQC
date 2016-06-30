@@ -273,7 +273,7 @@ function plot_xy_line_graph(target, ds){
     };
     // Some series hidden. Show a warning text string.
     if(num_hidden > 0) {
-      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
       $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
     }
     // All series hidden. Hide the graph.
@@ -440,7 +440,7 @@ function plot_stacked_bar_graph(target, ds){
     };
     // Some series hidden. Show a warning text string.
     if(num_hidden > 0) {
-      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
       $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
     }
     // All series hidden. Hide the graph.
@@ -601,7 +601,7 @@ function plot_beeswarm_graph(target, ds){
     };
     // Some series hidden. Show a warning text string.
     if(num_hidden > 0) {
-      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden in toolbox. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
       $('#'+target).closest('.hc-plot-wrapper').before(alert);
     }
     // All series hidden. Hide the graph.
@@ -861,6 +861,94 @@ function plot_heatmap(target, ds){
     }
   }
   
+  // Hide samples
+  $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.hc-plot-wrapper').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var remove = Array();
+    var i = xcats.length;
+    var xhidden = 0;
+    while (i--) {
+      var match = false;
+      for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
+        var f_text = window.mqc_hide_f_texts[j];
+        if(window.mqc_hide_regex_mode){
+          if(xcats[i].match(f_text)){ match = true; }
+        } else {
+          if(xcats[i].indexOf(f_text) > -1){ match = true; }
+        }
+      }
+      if(window.mqc_hide_mode == 'show'){
+        match = !match;
+      }
+      if(match){
+        xcats.splice(i, 1);
+        for (n=0; n < data.length; n++) {
+          var x = data[n][1];
+          if (x == i){ remove.push(n); }
+          else if(x > i){ data[n][1] -= 1; }
+        }
+        xhidden += 1;
+      }
+    }
+    var i = ycats.length;
+    var yhidden = 0;
+    while (i--) {
+      var match = false;
+      for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
+        var f_text = window.mqc_hide_f_texts[j];
+        if(window.mqc_hide_regex_mode){
+          if(ycats[i].match(f_text)){ match = true; }
+        } else {
+          if(ycats[i].indexOf(f_text) > -1){ match = true; }
+        }
+      }
+      if(window.mqc_hide_mode == 'show'){
+        match = !match;
+      }
+      if(match){
+        ycats.splice(i, 1);
+        for (n=0; n < data.length; n++) {
+          var y = data[n][0];
+          if (y == i){ 
+            if(remove.indexOf(n) <= 0){ remove.push(n); }
+          } else if(y > i){ data[n][0] -= 1; }
+        }
+        yhidden += 1;
+      }
+    }
+    // Remove the data values that matched
+    remove = remove.sort(function(a, b){return a-b}); // Sorts alphabetically by default, even with integers
+    var r = remove.length;
+    while(r--){
+      data.splice( remove[r], 1);
+    }
+    // Report / hide the plot if we're hiding stuff
+    var num_total = Math.max(xcats.length, ycats.length);
+    var num_hidden = Math.max(xhidden, yhidden);
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.hc-plot-wrapper').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.hc-plot-wrapper').hide();
+      return false;
+    }
+  }
+  
+  // We set undefined config vars so that they stay the same when hiding samples
+  if(config['min'] === undefined || config['max'] === undefined){
+    var dmin = data[0][2];
+    var dmax = data[0][2];
+    for (n=0; n < data.length; n++) {
+      dmin = Math.min(dmin, data[n][2]);
+      dmax = Math.max(dmax, data[n][2]);
+    }
+    if(config['min'] === undefined){ config['min'] = dmin; }
+    if(config['max'] === undefined){ config['max'] = dmax; }
+  }
   if(config['colstops'] === undefined){
     config['colstops'] = [
       [0, '#313695'],
@@ -880,10 +968,10 @@ function plot_heatmap(target, ds){
   if(config['decimalPlaces'] === undefined){ config['decimalPlaces'] = 2; }
   if(config['legend'] === undefined){ config['legend'] = true; }
   if(config['borderWidth'] === undefined){ config['borderWidth'] = 0; }
-  if(config['datalabels'] === undefined){
-    if(data.length < 20){
-      config['datalabels'] = true;
-    }
+  var datalabels = config['datalabels'];
+  if(datalabels === undefined){
+    if(data.length < 20){ datalabels = true; }
+    else { datalabels = false; }
   }
   // Clone the colstops before we mess around with them
   var colstops = JSON.parse(JSON.stringify(config['colstops']));
@@ -942,7 +1030,8 @@ function plot_heatmap(target, ds){
       borderWidth: config['borderWidth'],
       data: data,
       dataLabels: {
-        enabled: config['datalabels'],
+        enabled: datalabels,
+        format: '{point.value:.'+config['decimalPlaces']+'f}',
         color: config['datalabel_colour']
       }
     }]
