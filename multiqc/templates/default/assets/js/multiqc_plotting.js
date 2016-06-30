@@ -1036,6 +1036,15 @@ function plot_heatmap(target, ds){
       width: 530,
       marginTop: config['title'] ? 60 : 50
     },
+    plotOptions: {
+        series: {
+            states: {
+                hover: {
+                    enabled: false
+                }
+            }
+        }
+    },
     title: {
       text: config['title'],
     },
@@ -1065,9 +1074,11 @@ function plot_heatmap(target, ds){
       enabled: config['legend']
     },
     tooltip: {
+      useHTML: true,
       formatter: function () {
-        return this.series.xAxis.categories[this.point.x] + '<br>' +
-        this.series.yAxis.categories[this.point.y] + '<br>' +
+        return 'X: <span style="font-weight:bold; font-family:monospace;">'+this.series.xAxis.categories[this.point.x] + '</span><br>' +
+        'Y: <span style="font-weight:bold; font-family:monospace;">' + this.series.yAxis.categories[this.point.y] + '</span><br>' +
+        '<div style="background-color:'+this.point.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> ' +
         '<span style="font-weight: bold; text-decoration:underline;">' + this.point.value.toFixed(config['decimalPlaces']) + '</span>'
       }
     },
