@@ -1037,13 +1037,22 @@ function plot_heatmap(target, ds){
       marginTop: config['title'] ? 60 : 50
     },
     plotOptions: {
-        series: {
-            states: {
-                hover: {
-                    enabled: false
-                }
+      series: {
+        point: {
+          events: {
+            mouseOver: function() {
+              // Stop highcharts making squares blue on hover
+              this.pointAttr.hover.fill = this.color;
             }
+          }
+        },
+        states: {
+          hover: {
+            borderWidth: 2,
+            borderColor: 'red'
+          }
         }
+      }
     },
     title: {
       text: config['title'],
