@@ -94,35 +94,37 @@ def parse_reports(self):
         reads = {
             'min': 0,
             'modify': lambda x: float(x) / 1000000.0,
+            'suffix': 'M reads',
             'decimalPlaces': 2,
             'shared_key': 'read_count'
         }
         bases = {
             'min': 0,
             'modify': lambda x: float(x) / 1000000.0,
+            'suffix': 'M bases',
             'decimalPlaces': 2,
             'shared_key': 'base_count'
         }
-        keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences'})
-        keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads'})
+        keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
+        keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads' })
         keys['reads_mapped_and_paired'] = dict(reads, **{'title': 'Mapped &amp; paired', 'description': 'Paired-end technology bit set + both mates mapped' })
         keys['reads_properly_paired'] = dict(reads, **{'title': 'Properly paired', 'description': 'Proper-pair bit set' })
         keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set' })
         keys['reads_unmapped'] = dict(reads, **{'title': 'Unmapped reads' })
-        keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed', 'description': '' })
+        keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed'})
         keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0' })
-        keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)'})
-        keys['bases_trimmed'] = dict(bases, **{'title': 'Bases Trimmed'})
-        keys['bases_duplicated'] = dict(bases, **{'title': 'Duplicated bases'})
-        keys['pairs_on_different_chromosomes'] = dict(reads, **{'title': 'Diff chromosomes', 'description': 'Pairs on different chromosomes'})
-        keys['pairs_with_other_orientation'] = dict(reads, **{'title': 'Other orientation', 'description': 'Pairs with other orientation'})
+        keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)' })
+        keys['bases_trimmed'] = dict(bases, **{'title': 'Bases Trimmed' })
+        keys['bases_duplicated'] = dict(bases, **{'title': 'Duplicated bases' })
+        keys['pairs_on_different_chromosomes'] = dict(reads, **{'title': 'Diff chromosomes', 'description': 'Pairs on different chromosomes' })
+        keys['pairs_with_other_orientation'] = dict(reads, **{'title': 'Other orientation', 'description': 'Pairs with other orientation' })
         keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs' })
         keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs' })
         
         self.sections.append({
             'name': 'Samtools Stats',
             'anchor': 'samtools-stats',
-            'content': '<p>This module parses the output from <code>samtools stats</code>.</p>' + 
+            'content': '<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p>' +
                         plots.beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
         })
     

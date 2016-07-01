@@ -576,12 +576,13 @@ function plot_beeswarm_graph(target, ds){
       num_total = Math.max(num_total, samples[i].length);
       var j = samples[i].length;
       var hidden_here = 0;
-      
+      console.log("Looking at i="+i+", j="+j);
       while (j--) {
+        console.log("j="+j);
         var s_name = samples[i][j];
         var match = false;
-        for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
-          var f_text = window.mqc_hide_f_texts[i];
+        for (k = 0; k < window.mqc_hide_f_texts.length; k++) {
+          var f_text = window.mqc_hide_f_texts[k];
           if(window.mqc_hide_regex_mode){
             if(s_name.match(f_text)){ match = true; }
           } else {
@@ -618,7 +619,7 @@ function plot_beeswarm_graph(target, ds){
   pheight = Math.min(ph_max, Math.max(ph_min, pheight));
   
   // Clear the loading text and add hover text placeholder
-  $('#'+target).html('<div class="beeswarm-hovertext"><span class="placeholder">Hover for more information</span></div><div class="beeswarm-plots"></div>');
+  $('#'+target).html('<div class="beeswarm-hovertext"><em class="placeholder">Hover over a data point for more information</em></div><div class="beeswarm-plots"></div>');
   // Resize the parent draggable div
   $('#'+target).parent().css('height', ((pheight*categories.length)+40)+'px');
   
@@ -633,10 +634,11 @@ function plot_beeswarm_graph(target, ds){
     var s_names = samples[i];
     if (categories[i]['namespace'] == ''){
       var label = categories[i]['title'];
+      var label_long = categories[i]['description'];
     } else{
       var label = categories[i]['namespace'] + '<br/>' + categories[i]['title'];
+      var label_long = categories[i]['namespace'] + ': ' + categories[i]['description'];
     }
-    var label_long = categories[i]['namespace'] + ': ' + categories[i]['description'];
     var ttSuffix = categories[i]['suffix'];
     var decimalPlaces = categories[i]['decimalPlaces'];
     var minx = categories[i]['min'];
@@ -710,7 +712,7 @@ function plot_beeswarm_graph(target, ds){
             spacingTop: 0,
             marginBottom: 0,
             marginRight: 20,
-            marginLeft: 100,
+            marginLeft: 180,
             backgroundColor: 'transparent',
             // Horrible hacky HighCharts reflow problem.
             // TODO: Come back and find a better solution!
@@ -729,7 +731,7 @@ function plot_beeswarm_graph(target, ds){
           y: 10,
           useHTML: true,
           style: {
-              fontSize: '10px'
+              fontSize: '12px'
           }
         },
         yAxis: {
@@ -746,7 +748,6 @@ function plot_beeswarm_graph(target, ds){
           tickWidth: 0,
           tickPixelInterval: 200,
           labels: {
-            format: '{value}'+ttSuffix,
             reserveSpace: false,
             y: (-1*(pheight/2))+5,
             zIndex: 1,
@@ -763,7 +764,7 @@ function plot_beeswarm_graph(target, ds){
           formatter: function(){
             var value = this.point.x.toFixed(this.series.tooltipOptions.valueDecimals);
             var suff = this.series.tooltipOptions.valueSuffix;
-            var ttstring = '<span class="hoverLongName" style="float:right;"><b style="font-size:14px;">'+value+' '+suff+'</b> &nbsp; &nbsp; '+this.series.name+'</span><samp>'+this.point.name+'</samp>';
+            var ttstring = '<span style="float:right;">'+this.series.name+'</span><samp>'+this.point.name+'</samp>: &nbsp; <strong>'+value+' '+suff+'</strong>';
             $('#'+target+' .beeswarm-hovertext').html(ttstring);
             return false;
           }
@@ -803,7 +804,7 @@ function plot_beeswarm_graph(target, ds){
                       plot.series[0].data[i].setState();
                     }
                   });
-                  $('#'+target+' .beeswarm-hovertext').html('<span class="placeholder">Hover for more information</span>');
+                  $('#'+target+' .beeswarm-hovertext').html('<em class="placeholder">Hover over a data point for more information</em>');
                 }
               }
             }
@@ -910,7 +911,7 @@ function plot_heatmap(target, ds){
         ycats.splice(i, 1);
         for (n=0; n < data.length; n++) {
           var y = data[n][0];
-          if (y == i){ 
+          if (y == i){
             if(remove.indexOf(n) < 0){ remove.push(n); }
           } else if(y > i){ data[n][0] -= 1; }
         }

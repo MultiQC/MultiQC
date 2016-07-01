@@ -730,9 +730,9 @@ tbody .sorthandle {
 }
 
 .beeswarm-hovertext {
-  height: 25px;
-  padding: 3px 5px;
-  font-size: 12px;
+  height: 29px;
+  padding: 5px 8px;
+  font-size: 13px;
   border-left: 2px solid #46b8da;
   border-bottom: 1px solid #dedede;
   background-color: #d9edf7;
