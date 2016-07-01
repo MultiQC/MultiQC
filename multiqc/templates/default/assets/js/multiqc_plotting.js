@@ -566,6 +566,7 @@ function plot_scatter_plot (target, ds){
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
   
+  if(config['marker_size'] === undefined){ config['marker_size'] = 5; }
   if(config['marker_line_colour'] === undefined){ config['marker_line_colour'] = '#999'; }
   if(config['marker_line_width'] === undefined){ config['marker_line_width'] = 1; }
   if(config['tt_label'] === undefined){ config['tt_label'] = 'X: <strong>{point.x:.2f}</strong><br/>Y: <strong>{point.y:.2f}</strong>'; }
@@ -583,6 +584,24 @@ function plot_scatter_plot (target, ds){
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  
+  // Highlight samples
+  if(window.mqc_highlight_f_texts.length > 0){
+    $.each(data, function(j, s){
+      data[j]['marker'] = { lineWidth: 0 }
+      var match = false;
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if(f_text == ''){ return true; }
+        if((window.mqc_highlight_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_highlight_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+          data[j]['color'] = window.mqc_highlight_f_cols[idx];
+          match = true;
+        }
+      });
+      if(!match) {
+        data[j]['color'] = 'rgba(100,100,100,0.2)';
+      }
+    });
+  }
   
   // Make the highcharts plot
   $('#'+target).highcharts({
