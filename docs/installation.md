@@ -44,6 +44,13 @@ If you would like the development version, the command is:
 pip install git+https://github.com/ewels/MultiQC.git
 ```
 
+Note that if you have problems with read-only directories, you can install to
+your home directory with the `--user` parameter (though it's probably better
+to use virtual environments, as described above).
+```
+pip install --user multiqc
+```
+
 ## Manual installation
 If you'd rather not use either of these tools, you can clone the code and install the code yourself:
 ```
@@ -80,4 +87,57 @@ python setup.py install
 ```
 
 If you downloaded the flat files, just repeat the installation procedure.
+
+## Installing as an environment module
+Many people using MultiQC will be working on a HPC environment.
+Every server / cluster is different, and you're probably best off asking
+your friendly sysadmin to install MultiQC for you. However, with that
+in mind, here are a few general tips for installing MultiQC into an
+environment module system:
+
+MultiQC comes in two parts - the `multiqc` python package and the
+`multiqc` executable script. The former must be available in `$PYTHONPATH`
+and the script must be available on the `$PATH`.
+
+A typical installation procedure with an environment module Python install
+might look like this: _(Note that `$PYTHONPATH` must be defined before `pip` installation.)_
+```
+VERSION=0.7
+INST=/path/to/software/multiqc/$VERSION
+module load python/2.7.6
+mkdir $INST
+export PYTHONPATH=$INST/lib/python2.7/site-packages
+pip install --install-option="--prefix=$INST" multiqc
+```
+
+Once installed, you'll need to create an environment module file.
+Again, these vary between systems a lot, but here's an example:
+
+```bash
+#%Module1.0#####################################################################
+##
+## MultiQC
+##
+
+set components [ file split [ module-info name ] ]
+set version [ lindex $components 1 ]
+set modroot /path/to/software/multiqc/$version
+
+proc ModulesHelp { } {
+    global version modroot
+    puts stderr "\tMultiQC - use MultiQC $version"
+    puts stderr "\n\tVersion $version\n"
+}
+module-whatis   "Loads MultiQC environment."
+
+# load required modules
+module load python/2.7.6
+
+# only one version at a time
+conflict multiqc
+
+# Make the directories available
+prepend-path    PATH        $modroot/bin
+prepend-path	PYTHONPATH	$modroot/lib/python2.7/site-packages
+```
 
