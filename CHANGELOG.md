@@ -36,30 +36,32 @@ Module updates:
   * Now parses overall alignment rate as intended.
   * Now depends on even less log contents to work with more inputs.
 * **MethylQA** now handles variable spacing in logs
+* **featureCounts** now splits columns on tabs instead of whitespace, can handle filenames with spaces
 
 Core updates:
-* MultiQC now available in **Galaxy**! Work by @devengineson / @yvanlebras / @cmonjeau
+* **Galaxy**: MultiQC now available in Galax! Work by @devengineson / @yvanlebras / @cmonjeau
   * See it in the [Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/)
-* New plot type: **Heatmap**
-* Table columns may now be hidden on page load (shown through _Configure Columns_)
-* Added missing rename / highlight / hiding functionality to new beeswarm plot.
+* **Heatmap**: New plot type!
+* **Download raw data** behind plots in reports! Available in the Export toolbox.
+  * Choose from tab-separated, comma-separated and the complete JSON.
+* **Table columns can be hidden** on page load (shown through _Configure Columns_)
+  * Defaults are configurable using the `table_columns_visible` config option.
+* **Beeswarm plot**: Added missing rename / highlight / hiding functionality.
 * New `-l` / `--file-list` option: specify a file containing a **list of files** to search.
-* Updated HighCharts to v4.2.5. Added option to export to JPEG.
+* **Updated HighCharts** to v4.2.5. Added option to export to JPEG.
 * Can now **cancel execution** with a single `ctrl+c` rather than having to button mash
-* Handle YAML parsing errors for the config file more gracefully
-* Removed unused FileSaver javascript package.
-* More granular control of skipping files during scan (filename, dirname, path matching)
+* More granular control of **skipping files** during scan (filename, dirname, path matching)
+  * Fixed `--exclude` so that it works with directories as well as files
+* **New _Clear_ button** in toolbox to bulk remove highlighting / renaming / hiding filters.
 * Improved documentation about behaviour for large sample numbers.
-* New _Clear_ button in toolbox to bulk remove highlighting / renaming / hiding filters.
+* Handle YAML parsing errors for the config file more gracefully
 * Removed empty columns from tables again
 * Fixed bug in changing module search patterns, reported by @lweasel
 * Added timeout parameter to version check to prevent hang on systems with long defaults
-* Fixed `--exclude` so that it works with directories as well as files
 * Fixed table display bug in Firefox
-* Made featureCounts split columns on tabs instead of whitespace, handle filenames with spaces
 * Fixed bug related to order in which config files are loaded
 * Fixed bug that broke the _"Show only"_ toolbox feature with multiple names.
-* Added config option `table_columns_visible` to configure defaults for visible table columns.
+* Numerous other small bugs.
 
 
 #### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
