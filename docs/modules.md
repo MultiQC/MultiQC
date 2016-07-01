@@ -450,10 +450,11 @@ functions:
 
 ```python
 plots.bargraph.plot()
+plots.linegraph.plot()
+plots.scatter.plot()
+plots.table.plot()
 plots.beeswarm.plot()
 plots.heatmap.plot()
-plots.linegraph.plot()
-plots.table.plot()
 ```
 
 These have been designed to work in a similar manner to each other - you
@@ -795,6 +796,10 @@ pconfig = {
     ]
 }
 ```
+
+
+
+## Step 7f - Scatter Plots
 
 
 

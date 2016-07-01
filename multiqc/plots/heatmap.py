@@ -2,13 +2,13 @@
 
 """ MultiQC functions to plot a heatmap """
 
+from __future__ import print_function
 import json
 import logging
 import os
 import random
 
 from multiqc.utils import config
-from multiqc.plots import table_object
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +39,6 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
     Build the HTML needed for a HighCharts line graph. Should be
     called by plot_xy_data, which properly formats input data.
     """
-    
-    # TODO: Include the required JavaScript file
     
     # Reformat the data for highcharts
     pdata = []

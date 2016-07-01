@@ -45,7 +45,9 @@ $(function () {
   // Render plots on page load
   $('.hc-plot').each(function(){
     var target = $(this).attr('id');
-    plot_graph(target, undefined, num_datasets_plot_limit);
+    // Only one point per dataset, so multiply limit by arbitrary number.
+    var max_num = num_datasets_plot_limit * 50;
+    plot_graph(target, undefined, max_num);
   });
   
   // Render a plot when clicked
@@ -185,6 +187,15 @@ function plot_graph(target, ds, max_num){
     else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
       if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
         plot_stacked_bar_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+      }
+    }
+    // XY Line charts
+    else if(mqc_plots[target]['plot_type'] == 'scatter'){
+      if(max_num === undefined || Object.keys(mqc_plots[target]['datasets'][0]).length < max_num){
+        plot_scatter_plot(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
         $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
@@ -544,6 +555,113 @@ function plot_stacked_bar_graph(target, ds){
     series: data
   });
 }
+
+
+// Scatter plot
+function plot_scatter_plot (target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'scatter'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  var data = mqc_plots[target]['datasets'];
+  if(ds === undefined){ ds = 0; }
+  
+  if(config['marker_line_colour'] === undefined){ config['marker_line_colour'] = '#999'; }
+  if(config['marker_line_width'] === undefined){ config['marker_line_width'] = 1; }
+  if(config['tt_label'] === undefined){ config['tt_label'] = 'X: <strong>{point.x:.2f}</strong><br/>Y: <strong>{point.y:.2f}</strong>'; }
+  if(config['click_func'] === undefined){ config['click_func'] = function(){ }; }
+  else {
+    config['click_func'] = eval("("+config['click_func']+")");
+    if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; }
+  }
+  if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
+  if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
+  if (config['pointFormat'] === undefined){
+    config['pointFormat'] = '<div style="background-color:{point.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{point.name}</span><br>'+config['tt_label'];
+  }
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  
+  // Make the highcharts plot
+  $('#'+target).highcharts({
+    chart: {
+      type: 'scatter',
+      zoomType: 'xy',
+      plotBorderWidth: 1
+    },
+    title: {
+      text: config['title'],
+      x: 30 // fudge to center over plot area rather than whole plot
+    },
+    xAxis: {
+      title: {
+        text: config['xlab']
+      },
+      gridLineWidth: 1,
+      categories: config['categories'],
+      ceiling: config['xCeiling'],
+      floor: config['xFloor'],
+      max: config['xmax'],
+      min: config['xmin'],
+      minRange: config['xMinRange'],
+      allowDecimals: config['xDecimals'],
+      plotBands: config['xPlotBands'],
+      plotLines: config['xPlotLines']
+    },
+    yAxis: {
+      title: {
+        text: config['ylab']
+      },
+      type: config['yLog'] ? 'logarithmic' : 'linear',
+      ceiling: config['yCeiling'],
+      floor: config['yFloor'],
+      max: config['ymax'],
+      min: config['ymin'],
+      minRange: config['yMinRange'],
+      allowDecimals: config['yDecimals'],
+      plotBands: config['yPlotBands'],
+      plotLines: config['yPlotLines']
+    },
+    plotOptions: {
+      series: {
+        marker: {
+          radius: config['marker_size'],
+          lineColor: config['marker_line_colour'],
+          lineWidth: config['marker_line_width'],
+          states: {
+            hover: {
+              enabled: true,
+              lineColor: 'rgb(100,100,100)'
+            }
+          }
+        },
+        cursor: config['cursor'],
+        point: {
+          events: {
+            click: config['click_func']
+          }
+        }
+      }
+    },
+    legend: {
+      enabled: false
+    },
+    tooltip: {
+      headerFormat: '',
+			pointFormat: config['pointFormat'],
+			useHTML: true
+    },
+    series: [{
+      color: 'rgba(124, 181, 236, .5)',
+      data: data
+    }]
+  });
+  
+}
+
+
 
 
 // Beeswarm plot
