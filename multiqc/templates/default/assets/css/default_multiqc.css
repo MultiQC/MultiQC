@@ -454,6 +454,9 @@ input.form-control[type=color]{
     margin: 5px 0;
     color: #666;
 }
+.mqc_filter_section p.text-danger {
+    color: #a94442;
+}
 .mqc_filter_section p a {
     color: #666;
 }
@@ -509,10 +512,13 @@ input.form-control[type=color]{
 #mqc_exportplots .col-sm-6 {
   padding: 0 10px 0 0;
 }
-#mqc_exportplots .checkbox {
+#mqc_exportplots .checkbox, #mqc_exportplots .data-format {
   margin: 8px 0 0;
   font-size: 12px;
   line-height: normal;
+}
+#mqc_exportplots .data-format label {
+    font-weight: 400;
 }
 #mqc_exportplots .checkbox label {
   min-height: 0;
@@ -528,6 +534,23 @@ input.form-control[type=color]{
 }
 #mqc_exportplots blockquote a {
   text-decoration: underline;
+}
+
+#mqc_exportplots .nav-tabs {
+    border-color: #cccccc;
+    margin-bottom: 15px;
+}
+#mqc_exportplots .nav-tabs li a {
+    background-color: #dddddd;
+    border-color: #cccccc;
+    padding: 8px 10px;
+    color: #999;
+    font-size: 12px;
+}
+#mqc_exportplots .nav-tabs li.active a {
+    background-color: #eeeeee;
+    border-bottom-color: transparent;
+    color: #333;
 }
 
 #mqc-save-success {

@@ -97,45 +97,70 @@ of the report.
     <!-- Export Plots -->
     <div id="mqc_exportplots" class="mqc_filter_section">
       <h4>Export Plots</h4>
-      <p>To download images of plots, use the controls below:</p>
       <form>
-        <hr>
-        <h5>Image Download Settings</h5>
-        <div class="row">
-          <div class="form-group col-sm-6">
-            <div class="input-group input-group-sm">
-              <input type="text" class="form-control input-sm" id="mqc_exp_width" placeholder="Width" value="1200">
-              <span class="input-group-addon">px</span>
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="active"><a href="#mqc_image_download" data-toggle="tab">Images</a></li>
+          <li><a href="#mqc_data_download" data-toggle="tab">Data</a></li>
+        </ul>
+        <div class="tab-content">
+          <div role="tabpanel" class="tab-pane fade in active" id="mqc_image_download">
+            <div class="row">
+              <div class="form-group col-sm-6">
+                <div class="input-group input-group-sm">
+                  <input type="text" class="form-control input-sm" id="mqc_exp_width" placeholder="Width" value="1200">
+                  <span class="input-group-addon">px</span>
+                </div>
+              </div>
+              <div class="form-group col-sm-6">
+                <div class="input-group input-group-sm">
+                  <input type="text" class="form-control input-sm" id="mqc_exp_height" placeholder="Height" value="800">
+                  <span class="input-group-addon">px</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="form-group col-sm-6 checkbox">
+                <label><input type="checkbox" id="mqc_export_aspratio" checked> Aspect ratio</label>
+              </div>
+              <div class="form-group col-sm-6">
+                <select id="mqc_export_ft" class="form-control input-sm">
+                  <option value="image/png">PNG</option>
+                  <option value="image/jpeg">JPEG</option>
+                  <option value="image/svg+xml">SVG</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6 checkbox">
+                <label for="mqc_export_scaling">Plot scaling</label>
+              </div>
+              <div class="col-sm-6">
+                <div class="input-group input-group-sm">
+                  <input type="text" class="form-control" id="mqc_export_scaling" placeholder="Scale" value="2">
+                  <span class="input-group-addon">X</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="form-group col-sm-6">
-            <div class="input-group input-group-sm">
-              <input type="text" class="form-control input-sm" id="mqc_exp_height" placeholder="Height" value="800">
-              <span class="input-group-addon">px</span>
+          
+          <div role="tabpanel" class="tab-pane fade" id="mqc_data_download">
+            <p>Download the raw data used to create the plots in this report below:</p>
+            <div class="row">
+              <div class="form-group col-sm-4 checkbox">
+                <label>Format:</label>
+              </div>
+              <div class="form-group col-sm-8">
+                <select id="mqc_export_data_ft" class="form-control input-sm">
+                  <option value="tsv">Tab-separated</option>
+                  <option value="csv">Comma-separated</option>
+                  <option value="json">JSON</option>
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="form-group col-sm-6 checkbox">
-            <label><input type="checkbox" id="mqc_export_aspratio" checked> Aspect ratio</label>
-          </div>
-          <div class="form-group col-sm-6">
-            <select id="mqc_export_ft" class="form-control input-sm">
-              <option value="image/png">PNG</option>
-              <option value="image/jpeg">JPEG</option>
-              <option value="image/svg+xml">SVG</option>
-            </select>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-6 checkbox">
-            <label for="mqc_export_scaling">Plot scaling</label>
-          </div>
-          <div class="col-sm-6">
-            <div class="input-group input-group-sm">
-              <input type="text" class="form-control" id="mqc_export_scaling" placeholder="Scale" value="2">
-              <span class="input-group-addon">X</span>
-            </div>
+            {% if config.make_data_dir %}
+            <p>Note that additional data was saved in <code>{{ config.data_dir_name }}</code> when this report was generated.</p>
+            {% endif %}
+            <div id="mqc_export_data_log"></div>
           </div>
         </div>
         
