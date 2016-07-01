@@ -576,9 +576,7 @@ function plot_beeswarm_graph(target, ds){
       num_total = Math.max(num_total, samples[i].length);
       var j = samples[i].length;
       var hidden_here = 0;
-      console.log("Looking at i="+i+", j="+j);
       while (j--) {
-        console.log("j="+j);
         var s_name = samples[i][j];
         var match = false;
         for (k = 0; k < window.mqc_hide_f_texts.length; k++) {
