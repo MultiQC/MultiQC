@@ -149,6 +149,23 @@ $(function () {
     }
   });
   
+  // Switch a y axis limit on or off
+  $('.mqc_hcplot_plotgroup').on('click', '.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper', function(){
+    var target = $( $(this).data('target') ).highcharts();
+    var ymax = $(this).data('ymax');
+    var ymin = $(this).data('ymin');
+    ymax = ymax == 'undefined' ? null : ymax;
+    ymin = ymin == 'undefined' ? null : ymin;
+    var mqc_switch = $(this).find('.mqc_switch');
+    if(mqc_switch.hasClass('on')){
+      target.yAxis[0].update({max: null, min:null});
+      mqc_switch.removeClass('on').addClass('off').text('off');
+    } else {
+      target.yAxis[0].update({max: ymax, min: ymin});
+      mqc_switch.removeClass('off').addClass('on').text('on');
+    }
+  });
+  
 });
 
 // Call to render any plot
@@ -281,6 +298,15 @@ function plot_xy_line_graph(target, ds){
       $('#'+target).closest('.mqc_hcplot_plotgroup').hide();
       return false;
     }
+  }
+  
+  // Toggle buttons for y-axis limis
+  // Handler for this is at top, so doesn't get created multiple times
+  if(config['ymax'] != undefined || config['ymin'] != undefined ){
+    var pgroup = $('#'+target).closest('.mqc_hcplot_plotgroup');
+    var wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(pgroup);
+    wrapper.append('<span class="mqc_switch_wrapper" data-ymax="'+config['ymax']+'" data-ymin="'+config['ymin']+'" data-target="#'+target+'">Y-Limits: <span class="mqc_switch on">on</span></span>');
+    wrapper.after('<div class="clearfix" />');
   }
 
   // Make the highcharts plot

@@ -17,8 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Bowtie 1', anchor='bowtie1', 
-        target='Bowtie 1', href="http://bowtie-bio.sourceforge.net/", 
+        super(MultiqcModule, self).__init__(name='Bowtie 1', anchor='bowtie1',
+        target='Bowtie 1', href="http://bowtie-bio.sourceforge.net/",
         info="is an ultrafast, memory-efficient short read aligner.")
 
         # Find and load any Bowtie reports

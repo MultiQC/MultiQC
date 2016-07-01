@@ -411,10 +411,10 @@ input.form-control[type=color]{
     margin-top: 12px;
     white-space: nowrap;
 }
-.mqc_filter_section .mqc_regex_mode {
+.mqc_switch_wrapper {
     cursor:pointer;
 }
-.mqc_regex_mode .re_mode {
+.mqc_switch_wrapper .mqc_switch {
     display: inline-block;
     border: 1px solid #999;
     border-radius: 3px;
@@ -422,7 +422,7 @@ input.form-control[type=color]{
     margin-left: 5px;
     background-color:#ddd;
 }
-.mqc_regex_mode .off::after, .mqc_regex_mode .on::before{
+.mqc_switch_wrapper .off::after, .mqc_switch_wrapper .on::before{
     content: "";
     display: inline-block;
     height: 0;
@@ -430,13 +430,13 @@ input.form-control[type=color]{
     border-radius: 6px;
     border: 6px solid #fff;
 }
-.mqc_regex_mode .off::after{
+.mqc_switch_wrapper .off::after{
     margin: 0 0 -2px 5px;
 }
-.mqc_regex_mode .on::before{
+.mqc_switch_wrapper .on::before{
     margin: 0 5px -2px 0;
 }
-.mqc_regex_mode .on {
+.mqc_switch_wrapper .on {
     background-color:#5bc0de;
     color: #fff;
 }
@@ -727,6 +727,15 @@ tbody .sorthandle {
 }
 .hc-plot-handle:hover span {
     background-color: #999;
+}
+
+.mqc_hcplot_yaxis_limit_toggle {
+    float:right;
+    font-size: 11px;
+    margin-top: -30px;
+}
+.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
+    margin-left: 20px;
 }
 
 .beeswarm-hovertext {
