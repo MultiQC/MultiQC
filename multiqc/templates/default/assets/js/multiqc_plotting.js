@@ -192,7 +192,7 @@ function plot_graph(target, ds, max_num){
         $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
-    // XY Line charts
+    // Scatter plots
     else if(mqc_plots[target]['plot_type'] == 'scatter'){
       if(max_num === undefined || Object.keys(mqc_plots[target]['datasets'][0]).length < max_num){
         plot_scatter_plot(target, ds);
@@ -566,6 +566,7 @@ function plot_scatter_plot (target, ds){
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
   
+  if(config['marker_colour'] === undefined){ config['marker_colour'] = 'rgba(124, 181, 236, .5)'; }
   if(config['marker_size'] === undefined){ config['marker_size'] = 5; }
   if(config['marker_line_colour'] === undefined){ config['marker_line_colour'] = '#999'; }
   if(config['marker_line_width'] === undefined){ config['marker_line_width'] = 1; }
@@ -696,6 +697,7 @@ function plot_scatter_plot (target, ds){
     },
     plotOptions: {
       series: {
+        animation: false,
         marker: {
           radius: config['marker_size'],
           lineColor: config['marker_line_colour'],
@@ -724,7 +726,7 @@ function plot_scatter_plot (target, ds){
 			useHTML: true
     },
     series: [{
-      color: 'rgba(124, 181, 236, .5)',
+      color: config['marker_colour'],
       data: data
     }]
   });
