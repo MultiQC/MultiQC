@@ -660,7 +660,9 @@ function plot_scatter_plot (target, ds){
     chart: {
       type: 'scatter',
       zoomType: 'xy',
-      plotBorderWidth: 1
+      plotBorderWidth: 1,
+      height: config['square'] ? 500 : undefined,
+      width: config['square'] ? 500 : undefined
     },
     title: {
       text: config['title'],
@@ -729,6 +731,32 @@ function plot_scatter_plot (target, ds){
       color: config['marker_colour'],
       data: data
     }]
+  },
+  // Maintain aspect ratio as chart size changes
+  function(this_chart){
+    if(config['square']){
+      var resizeCh = function(chart){
+        // Extra width for legend
+        var lWidth = chart.options.legend.enabled ? 30 : 0;
+        // Work out new chart width, assuming needs to be narrower
+        var chHeight = $(chart.renderTo).height();
+        var chWidth = $(chart.renderTo).width();
+        var nChHeight = chHeight;
+        var nChWidth = chHeight + lWidth;
+        // Chart is already too narrow, make it less tall
+        if(chWidth < nChWidth){
+          nChHeight = chWidth - lWidth;
+          nChWidth = chWidth;
+        }
+        chart.setSize(nChWidth, nChHeight);
+      }
+      // Resize on load
+      resizeCh(this_chart);
+      // Resize on graph resize
+      $(this_chart.renderTo).on('mqc_plotresize', function(e){
+        resizeCh(this_chart);
+      });
+    }
   });
   
 }
@@ -1046,6 +1074,8 @@ function plot_heatmap(target, ds){
   }
   var config = mqc_plots[target]['config'];
   
+  if(config['square'] === undefined){ config['square'] = true; }
+  
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
@@ -1247,8 +1277,8 @@ function plot_heatmap(target, ds){
   $('#'+target).highcharts({
     chart: {
       type: 'heatmap',
-      height: 500,
-      width: 530,
+      height: config['square'] ? 500 : undefined,
+      width: config['square'] ? 530 : undefined,
       marginTop: config['title'] ? 60 : 50
     },
     plotOptions: {
@@ -1318,27 +1348,29 @@ function plot_heatmap(target, ds){
   },
   // Maintain aspect ratio as chart size changes
   function(this_chart){
-    var resizeCh = function(chart){
-      // Extra width for legend
-      var lWidth = chart.options.legend.enabled ? 30 : 0;
-      // Work out new chart width, assuming needs to be narrower
-      var chHeight = $(chart.renderTo).height();
-      var chWidth = $(chart.renderTo).width();
-      var nChHeight = chHeight;
-      var nChWidth = chHeight + lWidth;
-      // Chart is already too narrow, make it less tall
-      if(chWidth < nChWidth){
-        nChHeight = chWidth - lWidth;
-        nChWidth = chWidth;
+    if(config['square']){
+      var resizeCh = function(chart){
+        // Extra width for legend
+        var lWidth = chart.options.legend.enabled ? 30 : 0;
+        // Work out new chart width, assuming needs to be narrower
+        var chHeight = $(chart.renderTo).height();
+        var chWidth = $(chart.renderTo).width();
+        var nChHeight = chHeight;
+        var nChWidth = chHeight + lWidth;
+        // Chart is already too narrow, make it less tall
+        if(chWidth < nChWidth){
+          nChHeight = chWidth - lWidth;
+          nChWidth = chWidth;
+        }
+        chart.setSize(nChWidth, nChHeight);
       }
-      chart.setSize(nChWidth, nChHeight);
-    }
-    // Resize on load
-    resizeCh(this_chart);
-    // Resize on graph resize
-    $(this_chart.renderTo).on('mqc_plotresize', function(e){
+      // Resize on load
       resizeCh(this_chart);
-    });
+      // Resize on graph resize
+      $(this_chart.renderTo).on('mqc_plotresize', function(e){
+        resizeCh(this_chart);
+      });
+    }
   });
   
 }
