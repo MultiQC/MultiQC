@@ -585,6 +585,20 @@ function plot_scatter_plot (target, ds){
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
   
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    $.each(data, function(j, s){
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          data[j]['name'] = data[j]['name'].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          data[j]['name'] = data[j]['name'].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    });
+  }
+  
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -601,6 +615,43 @@ function plot_scatter_plot (target, ds){
         data[j]['color'] = 'rgba(100,100,100,0.2)';
       }
     });
+  }
+  
+  // Hide samples
+  $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.mqc_hcplot_plotgroup').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var num_hidden = 0;
+    var num_total = data.length;
+    var j = data.length;
+    while (j--) {
+      var match = false;
+      for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
+        var f_text = window.mqc_hide_f_texts[i];
+        if(window.mqc_hide_regex_mode){
+          if(data[j]['name'].match(f_text)){ match = true; }
+        } else {
+          if(data[j]['name'].indexOf(f_text) > -1){ match = true; }
+        }
+      }
+      if(window.mqc_hide_mode == 'show'){
+        match = !match;
+      }
+      if(match){
+        data.splice(j,1);
+        num_hidden += 1;
+      }
+    };
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.mqc_hcplot_plotgroup').hide();
+      return false;
+    }
   }
   
   // Make the highcharts plot
@@ -1024,6 +1075,7 @@ function plot_heatmap(target, ds){
   }
   
   // Hide samples
+  var num_total = Math.max(xcats.length, ycats.length);
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.hc-plot-wrapper').show();
   if(window.mqc_hide_f_texts.length > 0){
@@ -1086,7 +1138,6 @@ function plot_heatmap(target, ds){
       data.splice( remove[r], 1);
     }
     // Report / hide the plot if we're hiding stuff
-    var num_total = Math.max(xcats.length, ycats.length);
     var num_hidden = Math.max(xhidden, yhidden);
     // Some series hidden. Show a warning text string.
     if(num_hidden > 0) {
@@ -1094,7 +1145,7 @@ function plot_heatmap(target, ds){
       $('#'+target).closest('.hc-plot-wrapper').before(alert);
     }
     // All series hidden. Hide the graph.
-    if(num_hidden == num_total){
+    if(num_hidden >= num_total){
       $('#'+target).closest('.hc-plot-wrapper').hide();
       return false;
     }
