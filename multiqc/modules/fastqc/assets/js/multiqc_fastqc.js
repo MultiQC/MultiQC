@@ -121,6 +121,14 @@ function fastqc_seq_content_heatmap() {
                 bp = parseInt(bp);
                 var this_width = (bp - last_bp) * (c_width / max_bp);
                 last_bp = bp;
+                // Very old versions of FastQC give counts instead of percentages
+                if(v['t'] > 100){
+                    var t = v['t'] + v['a'] + v['c'] + v['g'];
+                    v['t'] = (v['t']/t)*100;
+                    v['a'] = (v['a']/t)*100;
+                    v['c'] = (v['c']/t)*100;
+                    v['g'] = (v['g']/t)*100;
+                }
                 var r = (v['t'] / 100)*255;
                 var g = (v['a'] / 100)*255;
                 var b = (v['c'] / 100)*255;
