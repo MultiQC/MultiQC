@@ -1,1 +1,1 @@
-from . import bargraph, beeswarm, heatmap, linegraph, table
+from . import bargraph, beeswarm, heatmap, linegraph, scatter, table

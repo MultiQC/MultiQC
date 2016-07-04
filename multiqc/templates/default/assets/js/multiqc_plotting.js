@@ -45,7 +45,9 @@ $(function () {
   // Render plots on page load
   $('.hc-plot').each(function(){
     var target = $(this).attr('id');
-    plot_graph(target, undefined, num_datasets_plot_limit);
+    // Only one point per dataset, so multiply limit by arbitrary number.
+    var max_num = num_datasets_plot_limit * 50;
+    plot_graph(target, undefined, max_num);
   });
   
   // Render a plot when clicked
@@ -185,6 +187,15 @@ function plot_graph(target, ds, max_num){
     else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
       if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
         plot_stacked_bar_graph(target, ds);
+        $('#'+target).removeClass('not_rendered');
+      } else {
+        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+      }
+    }
+    // Scatter plots
+    else if(mqc_plots[target]['plot_type'] == 'scatter'){
+      if(max_num === undefined || Object.keys(mqc_plots[target]['datasets'][0]).length < max_num){
+        plot_scatter_plot(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
         $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
@@ -546,6 +557,213 @@ function plot_stacked_bar_graph(target, ds){
 }
 
 
+// Scatter plot
+function plot_scatter_plot (target, ds){
+  if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'scatter'){
+    return false;
+  }
+  var config = mqc_plots[target]['config'];
+  var data = mqc_plots[target]['datasets'];
+  if(ds === undefined){ ds = 0; }
+  
+  if(config['marker_colour'] === undefined){ config['marker_colour'] = 'rgba(124, 181, 236, .5)'; }
+  if(config['marker_size'] === undefined){ config['marker_size'] = 5; }
+  if(config['marker_line_colour'] === undefined){ config['marker_line_colour'] = '#999'; }
+  if(config['marker_line_width'] === undefined){ config['marker_line_width'] = 1; }
+  if(config['tt_label'] === undefined){ config['tt_label'] = 'X: <strong>{point.x:.2f}</strong><br/>Y: <strong>{point.y:.2f}</strong>'; }
+  if(config['click_func'] === undefined){ config['click_func'] = function(){ }; }
+  else {
+    config['click_func'] = eval("("+config['click_func']+")");
+    if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; }
+  }
+  if (config['xDecimals'] === undefined){ config['xDecimals'] = true; }
+  if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
+  if (config['pointFormat'] === undefined){
+    config['pointFormat'] = '<div style="background-color:{point.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{point.name}</span><br>'+config['tt_label'];
+  }
+  
+  // Make a clone of the data, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  
+  // Rename samples
+  if(window.mqc_rename_f_texts.length > 0){
+    $.each(data, function(j, s){
+      $.each(window.mqc_rename_f_texts, function(idx, f_text){
+        if(window.mqc_rename_regex_mode){
+          var re = new RegExp(f_text,"g");
+          data[j]['name'] = data[j]['name'].replace(re, window.mqc_rename_t_texts[idx]);
+        } else {
+          data[j]['name'] = data[j]['name'].replace(f_text, window.mqc_rename_t_texts[idx]);
+        }
+      });
+    });
+  }
+  
+  // Highlight samples
+  if(window.mqc_highlight_f_texts.length > 0){
+    $.each(data, function(j, s){
+      data[j]['marker'] = { lineWidth: 0 }
+      var match = false;
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if(f_text == ''){ return true; }
+        if((window.mqc_highlight_regex_mode && data[j]['name'].match(f_text)) || (!window.mqc_highlight_regex_mode && data[j]['name'].indexOf(f_text) > -1)){
+          data[j]['color'] = window.mqc_highlight_f_cols[idx];
+          match = true;
+        }
+      });
+      if(!match) {
+        data[j]['color'] = 'rgba(100,100,100,0.2)';
+      }
+    });
+  }
+  
+  // Hide samples
+  $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
+  $('#'+target).closest('.mqc_hcplot_plotgroup').show();
+  if(window.mqc_hide_f_texts.length > 0){
+    var num_hidden = 0;
+    var num_total = data.length;
+    var j = data.length;
+    while (j--) {
+      var match = false;
+      for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
+        var f_text = window.mqc_hide_f_texts[i];
+        if(window.mqc_hide_regex_mode){
+          if(data[j]['name'].match(f_text)){ match = true; }
+        } else {
+          if(data[j]['name'].indexOf(f_text) > -1){ match = true; }
+        }
+      }
+      if(window.mqc_hide_mode == 'show'){
+        match = !match;
+      }
+      if(match){
+        data.splice(j,1);
+        num_hidden += 1;
+      }
+    };
+    // Some series hidden. Show a warning text string.
+    if(num_hidden > 0) {
+      var alert = '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> '+num_hidden+' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
+      $('#'+target).closest('.mqc_hcplot_plotgroup').before(alert);
+    }
+    // All series hidden. Hide the graph.
+    if(num_hidden == num_total){
+      $('#'+target).closest('.mqc_hcplot_plotgroup').hide();
+      return false;
+    }
+  }
+  
+  // Make the highcharts plot
+  $('#'+target).highcharts({
+    chart: {
+      type: 'scatter',
+      zoomType: 'xy',
+      plotBorderWidth: 1,
+      height: config['square'] ? 500 : undefined,
+      width: config['square'] ? 500 : undefined
+    },
+    title: {
+      text: config['title'],
+      x: 30 // fudge to center over plot area rather than whole plot
+    },
+    xAxis: {
+      title: {
+        text: config['xlab']
+      },
+      gridLineWidth: 1,
+      categories: config['categories'],
+      ceiling: config['xCeiling'],
+      floor: config['xFloor'],
+      max: config['xmax'],
+      min: config['xmin'],
+      minRange: config['xMinRange'],
+      allowDecimals: config['xDecimals'],
+      plotBands: config['xPlotBands'],
+      plotLines: config['xPlotLines']
+    },
+    yAxis: {
+      title: {
+        text: config['ylab']
+      },
+      type: config['yLog'] ? 'logarithmic' : 'linear',
+      ceiling: config['yCeiling'],
+      floor: config['yFloor'],
+      max: config['ymax'],
+      min: config['ymin'],
+      minRange: config['yMinRange'],
+      allowDecimals: config['yDecimals'],
+      plotBands: config['yPlotBands'],
+      plotLines: config['yPlotLines']
+    },
+    plotOptions: {
+      series: {
+        animation: false,
+        marker: {
+          radius: config['marker_size'],
+          lineColor: config['marker_line_colour'],
+          lineWidth: config['marker_line_width'],
+          states: {
+            hover: {
+              enabled: true,
+              lineColor: 'rgb(100,100,100)'
+            }
+          }
+        },
+        cursor: config['cursor'],
+        point: {
+          events: {
+            click: config['click_func']
+          }
+        }
+      }
+    },
+    legend: {
+      enabled: false
+    },
+    tooltip: {
+      headerFormat: '',
+			pointFormat: config['pointFormat'],
+			useHTML: true
+    },
+    series: [{
+      color: config['marker_colour'],
+      data: data
+    }]
+  },
+  // Maintain aspect ratio as chart size changes
+  function(this_chart){
+    if(config['square']){
+      var resizeCh = function(chart){
+        // Extra width for legend
+        var lWidth = chart.options.legend.enabled ? 30 : 0;
+        // Work out new chart width, assuming needs to be narrower
+        var chHeight = $(chart.renderTo).height();
+        var chWidth = $(chart.renderTo).width();
+        var nChHeight = chHeight;
+        var nChWidth = chHeight + lWidth;
+        // Chart is already too narrow, make it less tall
+        if(chWidth < nChWidth){
+          nChHeight = chWidth - lWidth;
+          nChWidth = chWidth;
+        }
+        chart.setSize(nChWidth, nChHeight);
+      }
+      // Resize on load
+      resizeCh(this_chart);
+      // Resize on graph resize
+      $(this_chart.renderTo).on('mqc_plotresize', function(e){
+        resizeCh(this_chart);
+      });
+    }
+  });
+  
+}
+
+
+
+
 // Beeswarm plot
 function plot_beeswarm_graph(target, ds){
   if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'beeswarm'){
@@ -856,6 +1074,8 @@ function plot_heatmap(target, ds){
   }
   var config = mqc_plots[target]['config'];
   
+  if(config['square'] === undefined){ config['square'] = true; }
+  
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
@@ -887,6 +1107,7 @@ function plot_heatmap(target, ds){
   }
   
   // Hide samples
+  var num_total = Math.max(xcats.length, ycats.length);
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.hc-plot-wrapper').show();
   if(window.mqc_hide_f_texts.length > 0){
@@ -949,7 +1170,6 @@ function plot_heatmap(target, ds){
       data.splice( remove[r], 1);
     }
     // Report / hide the plot if we're hiding stuff
-    var num_total = Math.max(xcats.length, ycats.length);
     var num_hidden = Math.max(xhidden, yhidden);
     // Some series hidden. Show a warning text string.
     if(num_hidden > 0) {
@@ -957,7 +1177,7 @@ function plot_heatmap(target, ds){
       $('#'+target).closest('.hc-plot-wrapper').before(alert);
     }
     // All series hidden. Hide the graph.
-    if(num_hidden == num_total){
+    if(num_hidden >= num_total){
       $('#'+target).closest('.hc-plot-wrapper').hide();
       return false;
     }
@@ -1057,8 +1277,8 @@ function plot_heatmap(target, ds){
   $('#'+target).highcharts({
     chart: {
       type: 'heatmap',
-      height: 500,
-      width: 530,
+      height: config['square'] ? 500 : undefined,
+      width: config['square'] ? 530 : undefined,
       marginTop: config['title'] ? 60 : 50
     },
     plotOptions: {
@@ -1128,27 +1348,29 @@ function plot_heatmap(target, ds){
   },
   // Maintain aspect ratio as chart size changes
   function(this_chart){
-    var resizeCh = function(chart){
-      // Extra width for legend
-      var lWidth = chart.options.legend.enabled ? 30 : 0;
-      // Work out new chart width, assuming needs to be narrower
-      var chHeight = $(chart.renderTo).height();
-      var chWidth = $(chart.renderTo).width();
-      var nChHeight = chHeight;
-      var nChWidth = chHeight + lWidth;
-      // Chart is already too narrow, make it less tall
-      if(chWidth < nChWidth){
-        nChHeight = chWidth - lWidth;
-        nChWidth = chWidth;
+    if(config['square']){
+      var resizeCh = function(chart){
+        // Extra width for legend
+        var lWidth = chart.options.legend.enabled ? 30 : 0;
+        // Work out new chart width, assuming needs to be narrower
+        var chHeight = $(chart.renderTo).height();
+        var chWidth = $(chart.renderTo).width();
+        var nChHeight = chHeight;
+        var nChWidth = chHeight + lWidth;
+        // Chart is already too narrow, make it less tall
+        if(chWidth < nChWidth){
+          nChHeight = chWidth - lWidth;
+          nChWidth = chWidth;
+        }
+        chart.setSize(nChWidth, nChHeight);
       }
-      chart.setSize(nChWidth, nChHeight);
-    }
-    // Resize on load
-    resizeCh(this_chart);
-    // Resize on graph resize
-    $(this_chart.renderTo).on('mqc_plotresize', function(e){
+      // Resize on load
       resizeCh(this_chart);
-    });
+      // Resize on graph resize
+      $(this_chart.renderTo).on('mqc_plotresize', function(e){
+        resizeCh(this_chart);
+      });
+    }
   });
   
 }

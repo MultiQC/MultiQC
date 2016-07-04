@@ -450,10 +450,11 @@ functions:
 
 ```python
 plots.bargraph.plot()
+plots.linegraph.plot()
+plots.scatter.plot()
+plots.table.plot()
 plots.beeswarm.plot()
 plots.heatmap.plot()
-plots.linegraph.plot()
-plots.table.plot()
 ```
 
 These have been designed to work in a similar manner to each other - you
@@ -760,18 +761,19 @@ using a config dictionary:
 
 ```python
 pconfig = {
-    'title': None,                    # Plot title
-    'xTitle': None,                   # X-axis title
-    'yTitle': None,                   # Y-axis title
-    'min': None,                      # Minimum value (default: auto)
-    'max': None,                      # Maximum value (default: auto)
-    'colstops': []                    # Scale colour stops. See below.
-    'reverseColors': False,           # Reverse the order of the colour axis
-    'decimalPlaces': 2,               # Number of decimal places for tooltip
-    'legend': True,                   # Colour axis key enabled or not
-    'borderWidth': 0,                 # Border width between cells
-    'datalabels': True,               # Show values in each cell. Defaults True when less than 20 samples.
-    'datalabel_colour': '<auto>',     # Colour of text for values. Defaults to auto contrast.
+    'title': None,                 # Plot title
+    'xTitle': None,                # X-axis title
+    'yTitle': None,                # Y-axis title
+    'min': None,                   # Minimum value (default: auto)
+    'max': None,                   # Maximum value (default: auto)
+    'square': True,                # Force the plot to stay square? (Maintain aspect ratio)
+    'colstops': []                 # Scale colour stops. See below.
+    'reverseColors': False,        # Reverse the order of the colour axis
+    'decimalPlaces': 2,            # Number of decimal places for tooltip
+    'legend': True,                # Colour axis key enabled or not
+    'borderWidth': 0,              # Border width between cells
+    'datalabels': True,            # Show values in each cell. Defaults True when less than 20 samples.
+    'datalabel_colour': '<auto>',  # Colour of text for values. Defaults to auto contrast.
 }
 ```
 
@@ -796,6 +798,45 @@ pconfig = {
 }
 ```
 
+
+
+## Step 7f - Scatter Plots
+Scatter plots work in almost exactly the same way as line plots. Most (if not all)
+config options are shared between the two. The data structure is similar but
+not identical:
+
+```python
+from multiqc import plots
+data = {
+    'sample 1': [{
+        x: '<x val>',
+        y: '<y val>'
+    }],
+    'sample 2': [{
+        x: '<x val>',
+        y: '<y val>
+    }]
+}
+html_content = plots.scatter.plot(data)
+```
+
+See the above docs about line plots for most config options. The scatter plot
+has a handful of unique ones in addition:
+```python
+pconfig = {
+    'marker_colour': 'rgba(124, 181, 236, .5)', # string, base colour of points (recommend rgba / semi-transparent)
+    'marker_size': 5,               # int, size of points
+    'marker_line_colour': '#999',   # string, colour of point border
+    'marker_line_width': 1,         # int, width of point border
+    'square': False                 # Force the plot to stay square? (Maintain aspect ratio)
+}
+```
+
+Note that multiple dicts with `x` and `y` values can be specified - these will
+share the same sample names. Please note that MultiQC reports can contain large
+numbers of samples, so this plot type is not suitable for large quantities of data
+(20,000 genes might look good for one sample, but when someone runs MultiQC with
+500 samples, it will crash / look horrible).
 
 
 ## Appendices

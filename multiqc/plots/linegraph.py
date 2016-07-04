@@ -33,8 +33,7 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 template_mod = config.avail_templates[config.template].load()
 
 def plot (data, pconfig={}):
-    """ Plot a line graph with X,Y data. See CONTRIBUTING.md for
-    further instructions on use.
+    """ Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
@@ -103,7 +102,7 @@ def plot (data, pconfig={}):
 def highcharts_linegraph (plotdata, pconfig={}):
     """
     Build the HTML needed for a HighCharts line graph. Should be
-    called by plot_xy_data, which properly formats input data.
+    called by linegraph.plot(), which properly formats input data.
     """
     
     # Build the HTML for the page

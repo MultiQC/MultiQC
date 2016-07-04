@@ -42,6 +42,7 @@ Core updates:
 * **Galaxy**: MultiQC now available in Galax! Work by @devengineson / @yvanlebras / @cmonjeau
   * See it in the [Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/)
 * **Heatmap**: New plot type!
+* **Scatter Plot**: New plot type!
 * **Download raw data** behind plots in reports! Available in the Export toolbox.
   * Choose from tab-separated, comma-separated and the complete JSON.
 * **Table columns can be hidden** on page load (shown through _Configure Columns_)
