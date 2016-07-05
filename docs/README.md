@@ -4,6 +4,7 @@ Using MultiQC:
   Running MultiQC: usage.md
   Using Reports: reports.md
   Configuration: config.md
+  Customising Reports: customisation.md
   Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:

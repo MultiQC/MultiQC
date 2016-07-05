@@ -1,7 +1,9 @@
 # MultiQC Version History
 
 #### v0.8dev
-_.. no changes yet.._
+
+Core updates:
+* New `custom_logo` attributes to add your own logo to reports.
 
 #### [v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
 Module updates:

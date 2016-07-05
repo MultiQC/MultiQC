@@ -9,6 +9,13 @@ was generated and the button that launches the welcome tour.
 #}
 
 <h1 id="page_title">
+    {% if config.custom_logo %}
+      <div class="pull-right">
+      {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url }}
+        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title }}">
+      {{ '</a>' if config.custom_logo_url }}
+      </div>
+    {% endif %}
     <a href="http://multiqc.info" target="_blank">
         <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
     </a>
@@ -20,7 +27,7 @@ was generated and the button that launches the welcome tour.
 
 <div id="analysis_dirs_wrapper">
   <p>Report generated on {{ config.creation_date }} based on data in:
-  {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>  
+  {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>
   {% else %}
   <ul>
     {% for d in config.analysis_dir %}
