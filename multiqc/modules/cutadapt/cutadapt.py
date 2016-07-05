@@ -5,6 +5,7 @@
 from __future__ import print_function
 import logging
 import re
+from distutils.version import StrictVersion
 
 from multiqc import config, BaseMultiqcModule, plots
 
@@ -78,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
                 c_version = re.match(r'This is cutadapt ([\d\.]+)', l)
                 if c_version:
                     try:
-                        assert(float(c_version.group(1)) <= 1.6)
+                        assert(StrictVersion(c_version.group(1)) <= StrictVersion('1.6'))
                         cutadapt_version = '1.6'
                     except:
                         cutadapt_version = '1.7'
