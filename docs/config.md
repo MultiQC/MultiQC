@@ -162,27 +162,6 @@ Note that the searched file paths will usually be relative to the working
 directory and can be highly variable, so you'll typically want to start patterns
 with a `*` to match any preceding directory structure.
 
-## Customising tables
-Report tables such as the General Statistics table can get quite wide. To help with this,
-columns in the report can be hidden. Some MultiQC modules include columns which are hidden
-by default, others may be uninteresting to some users.
-
-To allow customisation of this behaviour, the defaults can be changed by adding to your
-MultiQC config file. This is done with the `table_columns_visible` value. Open a MultiQC
-report and click _Configure Columns_ above a table. Make a note of the _Group_ and _ID_
-for the column that you'd like to alter. For example, to make the `% Duplicate Reads`
-column from FastQC hidden by default, the _Group_ is `FastQC` and the _ID_ is
-`percent_duplicates`. These are then added to the config as follows:
-
-```yaml
-table_columns_visible:
-    FastQC:
-        percent_duplicates: False
-```
-
-Note that you can set these to `True` to show columns that would otherwise be hidden
-by default.
-
 ## Large sample numbers
 MultiQC has been written with the intention of being used for any number of samples.
 This means that it _should_ work well with 6 samples or 6000. Very large sample numbers

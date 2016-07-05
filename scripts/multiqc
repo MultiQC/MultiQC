@@ -119,18 +119,18 @@ plugin_hooks.mqc_trigger('config_loaded')
                     type = click.Path(exists=True, readable=True),
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
-@click.option('-v', '--verbose', 
+@click.option('-v', '--verbose',
                     count = True,
                     default = 0,
                     help = "Increase output verbosity."
 )
-@click.option('-q', '--quiet', 
+@click.option('-q', '--quiet',
                     is_flag = True,
                     help = "Only show log warnings"
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, file_list, filename, 
+def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, file_list, filename,
 make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
     

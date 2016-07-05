@@ -25,6 +25,16 @@ was generated and the button that launches the welcome tour.
 <p class="lead">A modular tool to aggregate results from bioinformatics
     analyses across many samples into a single report.</p>
 
+{% if config.report_header_info and config.report_header_info.items() | length > 0 %}
+<div class="well">
+  <dl class="dl-horizontal" style="margin-bottom:0;">
+    {% for k, v in config.report_header_info.items() %}
+      <dt>{{ k }}:</dt><dd>{{ v }}</dd>
+    {% endfor %}
+  </dl>
+</div>
+{% endif %}
+
 <div id="analysis_dirs_wrapper">
   <p>Report generated on {{ config.creation_date }} based on data in:
   {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>
