@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f['root'], f['fn']))
-            except (zipfile.BadZipfile, BadZipfile) as e:
+            except Exception as e:
                 log.warn("Couldn't read '{}' - Bad zip file".format(f['fn']))
                 log.debug("Bad zip file error:\n{}".format(e))
                 continue
