@@ -97,10 +97,10 @@ custom_logo_title: None # 'Our Institute Name'
 
 # Add generic information to the top of reports
 report_header_info:
-    'Example Config': 'This is arbitrary'
-    'Another field': 'Loaded from <code>multiqc_config_example.yaml</code>'
-    'Something different': 'You can put any key-value pairs here'
-    'Want to know more?': 'See the <a href="http://multiqc.info/docs" target="_blank">MultiQC docs</a>'
+    Example Config: 'This is arbitrary'
+    Another field: 'Loaded from <code>multiqc_config_example.yaml</code>'
+    Something different: 'You can put any key-value pairs here'
+    Want to know more?: 'See the <a href="http://multiqc.info/docs" target="_blank">MultiQC docs</a>'
 
 # Overwrite the defaults of which table columns are visible by default
 table_columns_visible:
