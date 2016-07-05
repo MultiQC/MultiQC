@@ -25,12 +25,12 @@ was generated and the button that launches the welcome tour.
 <p class="lead">A modular tool to aggregate results from bioinformatics
     analyses across many samples into a single report.</p>
 
-{% if config.report_header_info and config.report_header_info.items() | length > 0 %}
+{% if config.report_header_info and config.report_header_info | length > 0 %}
 <div class="well">
   <dl class="dl-horizontal" style="margin-bottom:0;">
-    {% for k, v in config.report_header_info.items() %}
-      <dt>{{ k }}:</dt><dd>{{ v }}</dd>
-    {% endfor %}
+    {% for d in config.report_header_info %}{% for k, v in d.items() %}
+      <dt>{{ k }}</dt><dd>{{ v }}</dd>
+    {% endfor %}{% endfor %}
   </dl>
 </div>
 {% endif %}
