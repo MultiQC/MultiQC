@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule, ParseReportMixin):
         n = dict()
         
         # Call submodule functions
-        n['stats'] = stats.parse_reports(self)
+        n['stats'] = self.parse_reports()
         if n['stats'] > 0:
             log.info("Found {} bamtools stats reports".format(n['stats']))
         
