@@ -8,12 +8,13 @@ import logging
 from multiqc import config, BaseMultiqcModule
 
 # Import the Bamtools submodules
-from . import stats
+from .stats import ParseReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
+
+class MultiqcModule(BaseMultiqcModule, ParseReportMixin):
     """ Bamtools is a collection of scripts. This MultiQC module
     supports some but not all. The code for each script is split
     into its own file and adds a section to the module ooutput if
@@ -45,5 +46,3 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
-
-    

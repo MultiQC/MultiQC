@@ -9,16 +9,18 @@ import logging
 from multiqc import config, BaseMultiqcModule
 
 # Import the Picard submodules
-from . import MarkDuplicates
-from . import InsertSizeMetrics
-from . import GcBiasMetrics
-from . import HsMetrics
-from . import OxoGMetrics
+from .gcbias import GcBiasMixin
+from .hsmetrics import HsMetricsMixin
+from .insertsize import InsertSizeMixin
+from .markduplicates import MarkDuplicatesMixin
+from .oxogmetrics import OxoGMetricsMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
+
+class MultiqcModule(BaseMultiqcModule, GcBiasMixin, HsMetricsMixin,
+                    InsertSizeMixin, MarkDuplicatesMixin, OxoGMetricsMixin):
     """ Picard is a collection of scripts. This MultiQC module
     supports some but not all. The code for each script is split
     into its own file and adds a section to the module output if
@@ -39,23 +41,23 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
         
         # Call submodule functions
-        n['MarkDuplicates'] = MarkDuplicates.parse_reports(self)
+        n['MarkDuplicates'] = self.parse_reports_markdup()
         if n['MarkDuplicates'] > 0:
             log.info("Found {} MarkDuplicates reports".format(n['MarkDuplicates']))
         
-        n['InsertSizeMetrics'] = InsertSizeMetrics.parse_reports(self)
+        n['InsertSizeMetrics'] = self.parse_reports_insertsize()
         if n['InsertSizeMetrics'] > 0:
             log.info("Found {} InsertSizeMetrics reports".format(n['InsertSizeMetrics']))
         
-        n['GcBiasMetrics'] = GcBiasMetrics.parse_reports(self)
+        n['GcBiasMetrics'] = self.parse_reports_gcbias()
         if n['GcBiasMetrics'] > 0:
             log.info("Found {} GcBiasMetrics reports".format(n['GcBiasMetrics']))
         
-        n['HsMetrics'] = HsMetrics.parse_reports(self)
+        n['HsMetrics'] = self.parse_reports_hsmetrics()
         if n['HsMetrics'] > 0:
             log.info("Found {} HsMetrics reports".format(n['HsMetrics']))
         
-        n['OxoGMetrics'] = OxoGMetrics.parse_reports(self)
+        n['OxoGMetrics'] = self.parse_reports_oxogmetrics()
         if n['OxoGMetrics'] > 0:
             log.info("Found {} OxoGMetrics reports".format(n['OxoGMetrics']))
         
