@@ -11,6 +11,7 @@ from multiqc import config, plots
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+
 def parse_reports(self):
     """ Find Qualimap BamQC reports and parse their data """
     

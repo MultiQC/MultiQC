@@ -9,12 +9,12 @@ import logging
 from multiqc import config, BaseMultiqcModule
 
 # Import the Samtools submodules
-from . import stats
+from .stats import ParseReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
+class MultiqcModule(BaseMultiqcModule, ParseReportMixin):
     """ Samtools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
         
         # Call submodule functions
-        n['stats'] = stats.parse_reports(self)
+        n['stats'] = self.parse_reports()
         if n['stats'] > 0:
             log.info("Found {} stats reports".format(n['stats']))
         
