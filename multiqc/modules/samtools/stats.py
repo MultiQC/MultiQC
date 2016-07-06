@@ -18,16 +18,16 @@ class ParseReportMixin():
         self.samtools_stats = dict()
         for f in self.find_log_files(config.sp['samtools']['stats']):
             parsed_data = dict()
-            for line in f['f'].splitlines():
-                if not line.startswith("SN"):
-                    continue
+            relevant_lines = [line for line in f['f'].splitlines()
+                              if line.startswith("SN")]
+            for line in relevant_lines:
                 sections = line.split("\t")
                 field = sections[1].strip()[:-1]
                 field = field.replace(' ','_')
                 value = float(sections[2].strip())
                 parsed_data[field] = value
+
             if len(parsed_data) > 0:
-                
                 # Work out some percentages
                 if 'raw_total_sequences' in parsed_data:
                     for k in list(parsed_data.keys()):
@@ -107,12 +107,13 @@ class ParseReportMixin():
                 'decimalPlaces': 2,
                 'shared_key': 'base_count'
             }
-            keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
-            keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads' })
+
+#            keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
+#            keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads' })
             keys['reads_mapped_and_paired'] = dict(reads, **{'title': 'Mapped &amp; paired', 'description': 'Paired-end technology bit set + both mates mapped' })
             keys['reads_properly_paired'] = dict(reads, **{'title': 'Properly paired', 'description': 'Proper-pair bit set' })
             keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set' })
-            keys['reads_unmapped'] = dict(reads, **{'title': 'Unmapped reads' })
+#            keys['reads_unmapped'] = dict(reads, **{'title': 'Unmapped reads' })
             keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed'})
             keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0' })
             keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)' })
@@ -132,3 +133,22 @@ class ParseReportMixin():
         
         # Return the number of logs that were found
         return len(self.samtools_stats)
+
+    def samtools_alignment_chart(self):
+        """ Make the HighCharts HTML to plot the alignment rates """
+        
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['mapped'] = { 'color': '#437bb1', 'name': 'Mapped' }
+        keys['unmapped'] = { 'color': '#437bb1', 'name': 'Unmapped' }
+        
+        # Config for the plot
+        plot_conf = {
+            'id': 'samtools_alignment_plot',
+            'title': 'Samtools Alignment Scores',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+        
+        return plots.bargraph.plot(self.star_data, keys, plot_conf)
+
