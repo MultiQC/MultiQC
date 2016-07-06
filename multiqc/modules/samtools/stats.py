@@ -130,7 +130,7 @@ class ParseReportMixin():
                     bedgraph_data[sample_id] = data
                 else:
                     log.warn("sum of mapped/unmapped reads not matching total, "
-                             "skipping plot for: {}".format(sample_id))
+                             "skipping samtools plot for: {}".format(sample_id))
             bargraph = self.samtools_alignment_chart(bedgraph_data)
 
             self.sections.append({
