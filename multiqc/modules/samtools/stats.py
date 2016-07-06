@@ -108,12 +108,12 @@ class ParseReportMixin():
                 'shared_key': 'base_count'
             }
 
-#            keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
-#            keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads' })
+            keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
+            keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads' })
             keys['reads_mapped_and_paired'] = dict(reads, **{'title': 'Mapped &amp; paired', 'description': 'Paired-end technology bit set + both mates mapped' })
             keys['reads_properly_paired'] = dict(reads, **{'title': 'Properly paired', 'description': 'Proper-pair bit set' })
             keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set' })
-#            keys['reads_unmapped'] = dict(reads, **{'title': 'Unmapped reads' })
+            keys['reads_unmapped'] = dict(reads, **{'title': 'Unmapped reads' })
             keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed'})
             keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0' })
             keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)' })
@@ -123,6 +123,13 @@ class ParseReportMixin():
             keys['pairs_with_other_orientation'] = dict(reads, **{'title': 'Other orientation', 'description': 'Pairs with other orientation' })
             keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs' })
             keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs' })
+
+            bargraph = self.samtools_alignment_chart(keys)
+            self.sections.append({
+                'name': 'Samtools Stats: general',
+                'anchor': 'samtools-stats-general',
+                'content': "<p>This modules parses mapping metrics from Samtools. All numbers are in millions.</p>, {}".format(bargraph)
+            })
             
             self.sections.append({
                 'name': 'Samtools Stats',
@@ -130,17 +137,19 @@ class ParseReportMixin():
                 'content': '<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p>' +
                             plots.beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
             })
+
+
         
         # Return the number of logs that were found
         return len(self.samtools_stats)
 
-    def samtools_alignment_chart(self):
+    def samtools_alignment_chart(self, data):
         """ Make the HighCharts HTML to plot the alignment rates """
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['mapped'] = { 'color': '#437bb1', 'name': 'Mapped' }
-        keys['unmapped'] = { 'color': '#437bb1', 'name': 'Unmapped' }
+        keys['reads_mapped'] = { 'color': '#437bb1', 'name': 'Mapped' }
+        keys['reads_unmapped'] = { 'color': '#437bb1', 'name': 'Unmapped' }
         
         # Config for the plot
         plot_conf = {
@@ -150,5 +159,5 @@ class ParseReportMixin():
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return plots.bargraph.plot(self.star_data, keys, plot_conf)
+        return plots.bargraph.plot(data, keys, plot_conf)
 
