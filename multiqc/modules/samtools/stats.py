@@ -124,7 +124,7 @@ class ParseReportMixin():
             keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs' })
             keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs' })
 
-            bargraph = self.samtools_alignment_chart(keys)
+            bargraph = self.samtools_alignment_chart()
             self.sections.append({
                 'name': 'Samtools Stats: general',
                 'anchor': 'samtools-stats-general',
@@ -137,17 +137,14 @@ class ParseReportMixin():
                 'content': '<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p>' +
                             plots.beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
             })
-
-
         
         # Return the number of logs that were found
         return len(self.samtools_stats)
 
-    def samtools_alignment_chart(self, data):
+    def samtools_alignment_chart(self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
-        # Specify the order of the different possible categories
-        keys = OrderedDict()
+
+        keys = {}
         keys['reads_mapped'] = { 'color': '#437bb1', 'name': 'Mapped' }
         keys['reads_unmapped'] = { 'color': '#437bb1', 'name': 'Unmapped' }
         
@@ -159,5 +156,4 @@ class ParseReportMixin():
             'cpswitch_counts_label': 'Number of Reads'
         }
         
-        return plots.bargraph.plot(data, keys, plot_conf)
-
+        return plots.bargraph.plot(self.samtools_stats, keys, plot_conf)
