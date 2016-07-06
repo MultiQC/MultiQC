@@ -9,7 +9,7 @@ import logging
 from multiqc import config, BaseMultiqcModule
 
 # Import the Samtools submodules
-from . import stats
+from . import stats, flagstat
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -38,6 +38,10 @@ class MultiqcModule(BaseMultiqcModule):
         n['stats'] = stats.parse_reports(self)
         if n['stats'] > 0:
             log.info("Found {} stats reports".format(n['stats']))
+
+        n['flagstat'] = flagstat.parse_reports(self)
+        if n['flagstat'] > 0:
+            log.info("Found {} flagstat reports".format(n['flagstat']))
         
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

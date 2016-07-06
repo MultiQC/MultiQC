@@ -97,6 +97,8 @@ samblaster:
 samtools:
     stats:
         contents: 'This file was produced by samtools stats'
+    flagstat:
+        contents: 'This file was produced by samtools flagstat'
 skewer:
     contents: 'COMMAND LINE:	skewer'
 snpeff:
