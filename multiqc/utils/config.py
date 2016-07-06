@@ -54,6 +54,12 @@ report_readerrors = False
 report_imgskips = False
 skip_generalstats = False
 config_file = None
+custom_logo = None
+custom_logo_url = None
+custom_logo_title = None
+subtitle = None
+intro_text = None
+report_header_info = None
 table_columns_visible = {}
 
 #######################

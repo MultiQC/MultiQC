@@ -59,6 +59,7 @@ plugin_hooks.mqc_trigger('config_loaded')
 )
 @click.option('-i', '--title',
                     type = str,
+                    default = config.title,
                     help = "Report title. Printed as page header, used for filename if not otherwise specified."
 )
 @click.option('-n', '--filename',

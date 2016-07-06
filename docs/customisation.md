@@ -6,6 +6,21 @@ are primarily designed for core genomics facilities.
 Note that much more extensive customisation of reports is possible using
 [custom templates](#writing-new-templates).
 
+## Titles and introductory text
+You can specify a custom title for the report using the `-t`/`--title`
+command line option. In addition to this, you can also specify the title,
+a subtitle and the introductory text in your config file:
+
+```yaml
+title: "My Title"
+subtitle: "A subtitle to go underneath in grey"
+intro_text: "This report shows a summary of..."
+```
+
+Note that if `intro_text` is `None` the template will display the default
+introduction sentence. Set this to `False` to hide this, or set it to a
+string to use your own text.
+
 ## Report Logo
 To add your own custom logo to reports, you can add the following
 three lines to your MultiQC configuration file:
@@ -63,3 +78,19 @@ table_columns_visible:
 Note that you can set these to `True` to show columns that would otherwise be hidden
 by default.
 
+## Troubleshooting
+One tricky bit that caught me out whilst writing this is the different type casting
+between Python, YAML and Jinja2 templates. This is especially true when using an
+empty variable:
+```python
+# Python
+my_var = None
+```
+```yaml
+# YAML
+my_var: null
+```
+```python
+# Jinja2
+if myvar is none # Note - Lower case!
+```

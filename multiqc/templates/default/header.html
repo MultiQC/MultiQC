@@ -9,21 +9,30 @@ was generated and the button that launches the welcome tour.
 #}
 
 <h1 id="page_title">
-    {% if config.custom_logo %}
+    {% if config.custom_logo is not none %}
       <div class="pull-right">
-      {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url }}
-        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title }}">
-      {{ '</a>' if config.custom_logo_url }}
+      {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
+        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title if config.custom_logo_title is not none }}">
+      {{ '</a>' if config.custom_logo_url is not none }}
       </div>
     {% endif %}
     <a href="http://multiqc.info" target="_blank">
         <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
     </a>
 </h1>
-{{ '<h2>'+config.title+'</h2>' if config.title != None }}
+{% if config.title is not none or config.subtitle is not none %}
+<h1>
+  {{ config.title if config.title is not none }}
+  {{ '<br>' if config.title is not none and config.subtitle is not none }}
+  {{ '<small>'+config.subtitle+'</small>' if config.subtitle is not none }}
+</h1>
+{% endif %}
 
-<p class="lead">A modular tool to aggregate results from bioinformatics
-    analyses across many samples into a single report.</p>
+{% if config.intro_text != False %}
+<p class="lead">
+  {{ config.intro_text if config.intro_text is not none else 'A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.' }}
+</p>
+{% endif %}
 
 {% if config.report_header_info and config.report_header_info | length > 0 %}
 <div class="well">

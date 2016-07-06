@@ -16,7 +16,7 @@
 
 ---
 # Title to use for the report.
-title: None
+title: null
 
 # Prepend sample names with their directory. Useful if analysing the
 # sample samples with different parameters.
@@ -82,7 +82,7 @@ num_datasets_plot_limit: 50      # If interactive, don't plot on load if > this 
 max_table_rows: 500              # Swap tables for a beeswarm plot above this
 
 # Overwrite module filename search patterns. See multiqc/utils/search_patterns.yaml
-# for the defaults. Remove a default by setting it to None.
+# for the defaults. Remove a default by setting it to null.
 sp:
     star:
         fn: '*Log.final.out'
@@ -91,9 +91,11 @@ sp:
 
 
 # Specify a custom logo to add to reports (uncomment to use)
-custom_logo: False # '/path/to/logo.png'
-custom_logo_url: False # 'https://www.example.com'
-custom_logo_title: False # 'Our Institute Name'
+custom_logo: null         # '/path/to/logo.png'
+custom_logo_url: null     # 'https://www.example.com'
+custom_logo_title: null   # 'Our Institute Name'
+subtitle: null            # Grey text below title
+intro_text: null          # Set to False to remove, or your own text
 
 # Add generic information to the top of reports
 report_header_info:

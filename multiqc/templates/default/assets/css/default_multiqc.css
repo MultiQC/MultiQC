@@ -159,7 +159,7 @@ kbd {
     margin: 0 0 20px;
 }
 #page_title img {
-    width: 260px;
+    max-width: 260px;
 }
 #analysis_dirs_wrapper {
   max-height: 80px;
