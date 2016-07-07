@@ -36,11 +36,7 @@ def parse_single_report(file_thing):
 
     re_groups = ['passed', 'failed', 'passed_pct', 'failed_pct']
     for k, r in REGEXES.items():
-        try: 
-            r_search = re.search(r, file_thing, re.MULTILINE)
-        except:
-            print r
-            raise
+        r_search = re.search(r, file_thing, re.MULTILINE)
         if r_search:
             for i,j in enumerate(re_groups):
                 try:
