@@ -1,36 +1,53 @@
+# coding: utf-8
 #!/usr/bin/env python
 
 """ MultiQC submodule to parse output from Samtools flagstat """
 
 import logging
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config, plots 
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+# flagstat has one thing per line, documented here (search for flagstat):
+# http://www.htslib.org/doc/samtools.html 
+# The numbers are line numbers for the file
+LABELS= {1: 'total', 
+        2: 'secondary',
+        3: 'supplementary', 
+        4: 'duplicates', 
+        5: 'mapped', 
+        6: 'paired in sequencing', 
+        7: 'read1', 
+        8: 'read2', 
+        9: 'properly paired', 
+        10: 'with itself and mate mapped', 
+        11: 'singletons',
+        12: 'with mate mapped to a different chr', 
+        13: 'with make mapped to a different chr (mapQ >= 5)', 
+        }
+
+""" Take a filename, parse the data assuming it's a flagstat file
+    Returns a dictionary {'lineName' : {'pass':value, 'fail':value}"""
+def parse_single_report(file_thing):
+    parsed_data = {}
+    lines = file_thing.splitlines()
+    for i, line in enumerate(lines, 1):
+        d = {} # contains {'pass' : first number, 'fail' : second number}
+        words = line.split(' ')
+        d['pass'] = int(words[0].strip())
+        d['fail'] = int(words[2].strip())
+        parsed_data[LABELS[i]] = d
+    return parsed_data
 
 def parse_reports(self):
     """ Find Samtools flagstat logs and parse their data """
 
     self.samtools_flagstat = dict()
     for f in self.find_log_files(config.sp['samtools']['flagstat']):
-        parsed_data = dict()
-        for line in f['f'].splitlines():
-            if not line.startswith("SN"):
-                continue
-            sections = line.split("\t")
-            field = sections[1].strip()[:-1]
-            field = field.replace(' ','_')
-            value = float(sections[2].strip())
-            parsed_data[field] = value
+        parsed_data = parse_single_report(f['f'])
         if len(parsed_data) > 0:
-            
-            # Work out some percentages
-            if 'raw_total_sequences' in parsed_data:
-                for k in list(parsed_data.keys()):
-                    if k.startswith('reads_') and k != 'raw_total_sequences':
-                        parsed_data['{}_percent'.format(k)] = (parsed_data[k] / parsed_data['raw_total_sequences']) * 100
-            
             if f['s_name'] in self.samtools_flagstat:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f)
@@ -39,6 +56,7 @@ def parse_reports(self):
     if len(self.samtools_flagstat) > 0:
 
         # Write parsed report data to a file
+        print "lalala"
         self.write_data_file(self.samtools_flagstat, 'multiqc_samtools_flagstat')
 
         # General Stats Table
