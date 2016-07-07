@@ -9,6 +9,7 @@ parse = partial(find_header, '#:GATKTable:TiTvVariantEvaluator')
 def values(novelties):
     """Parse data per sample for TiTvVariantEvaluator output."""
     data = {}
+    reference = 'unknown'
     for novelty in novelties:
         if novelty['Novelty'] == 'known':
             reference = novelty['CompRod']

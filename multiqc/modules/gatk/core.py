@@ -34,17 +34,19 @@ class MultiqcModule(BaseMultiqcModule):
 
             samples[log_file['s_name']] = data
 
-        self.sections = [{
-            'name': 'GATK CompOverlap',
-            'anchor': 'compoverlap',
-            'content': compoverlap.table(samples)
-        }]
-
+        self.sections = []
         self.sections.append({
-            'name': 'GATK CountVariants',
+            'name': 'Count Variants',
             'anchor': 'countvariants',
             'content': countvariants.plot(samples)
+        })
+        self.sections.append({
+            'name': 'Compare Overlap',
+            'anchor': 'compoverlap',
+            'content': compoverlap.table(samples)
         })
 
         general_headers = titv.general_headers(reference)
         self.general_stats_addcols(samples, general_headers)
+
+        self.write_data_file(samples, 'multiqc_gatk')
