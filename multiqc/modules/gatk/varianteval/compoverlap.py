@@ -16,7 +16,6 @@ def values(novelties):
         if novelty['Novelty'] == 'all':
             data['reference'] = novelty['CompRod']
             data['comp_rate'] = float(novelty['compRate'])
-            data['concordant_rate'] = float(novelty['concordantRate'])
             data['eval_variants'] = int(novelty['nEvalVariants'])
             data['novel_sites'] = int(novelty['novelSites'])
         elif novelty['Novelty'] == 'known':
@@ -29,13 +28,6 @@ def table(data):
     headers = OrderedDict()
     headers['comp_rate'] = {
         'title': 'Comp rate',
-        'min': 0,
-        'max': 1,
-        'format': '{:.2f}',
-        'scale': 'Blues',
-    }
-    headers['concordant_rate'] = {
-        'title': 'Concordant rate',
         'min': 0,
         'max': 1,
         'format': '{:.2f}',

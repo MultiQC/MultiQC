@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
-import csv
-
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config, BaseMultiqcModule
+from .varianteval import compoverlap, countvariants
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -23,12 +21,23 @@ class MultiqcModule(BaseMultiqcModule):
         samples = {}
         for log_file in self.find_log_files(config.sp['gatk']):
             lines = log_file['f'].splitlines()
-            compoverlap_output = compoverlap_parse(lines)
-            compoverlap_data = compoverlap_values(compoverlap_output)
-            samples[log_file['s_name']] = compoverlap_data
+            compoverlap_output = compoverlap.parse(lines)
+            data = compoverlap.values(compoverlap_output)
+
+            count_output = countvariants.parse(lines)
+            count_data = countvariants.values(count_output)
+            data.update(count_data)
+
+            samples[log_file['s_name']] = data
 
         self.sections = [{
             'name': 'GATK CompOverlap',
             'anchor': 'compoverlap',
-            'content': compoverlap_table(samples)
+            'content': compoverlap.table(samples)
         }]
+
+        self.sections.append({
+            'name': 'GATK CountVariants',
+            'anchor': 'countvariants',
+            'content': countvariants.plot(samples)
+        })
