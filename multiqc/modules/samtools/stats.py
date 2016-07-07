@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """ MultiQC submodule to parse output from Samtools stats """
 
@@ -149,10 +150,10 @@ def alignment_section(samples_data):
                      "skipping samtools plot for: {}".format(sample_id))
     bargraph = alignment_chart(bedgraph_data)
     section = {
-        'name': 'Samtools Stats: general',
-        'anchor': 'samtools-stats-general',
-        'content': ("<p>This modules parses mapping metrics from Samtools. "
-                    "All numbers are in millions.</p> {}".format(bargraph))
+        'name': 'Alignment',
+        'anchor': 'samtools-stats-alignment',
+        'content': ("<p>Alignment metrics from <code>samtools stats</code>;"
+                    " mapped vs. unmapped reads.</p> {}".format(bargraph))
     }
     return section
 
