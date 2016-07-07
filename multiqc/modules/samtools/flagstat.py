@@ -57,23 +57,6 @@ def parse_reports(self):
         # Write parsed report data to a file (restructure first)
         to_write = defaultdict(dict)
         self.write_data_file(self.samtools_flagstat, 'multiqc_samtools_flagstat')
-
-        """
-        LABELS= {1: 'total', 
-                2: 'secondary',
-                3: 'supplementary', 
-                4: 'duplicates', 
-                5: 'mapped', 
-                6: 'paired in sequencing', 
-                7: 'read1', 
-                8: 'read2', 
-                9: 'properly paired', 
-                10: 'with itself and mate mapped', 
-                11: 'singletons',
-                12: 'with mate mapped to a different chr', 
-                13: 'with make mapped to a different chr (mapQ >= 5)', 
-                }
-        """
         
         # Make dot plot of counts
         keys = OrderedDict()
