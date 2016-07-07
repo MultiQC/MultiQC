@@ -14,19 +14,19 @@ log = logging.getLogger(__name__)
 # flagstat has one thing per line, documented here (search for flagstat):
 # http://www.htslib.org/doc/samtools.html 
 REGEXES = {
-        'total':        r"(\d+) \+ (\d+) in total \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'secondary':    r"(\d+) \+ (\d+) secondary \(([\d\.]+|nan)%:([\d\.]+|nan)%\)",
-        'supplementary': r"(\d+) \+ (\d+) supplementary \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'duplicates':   r"(\d+) \+ (\d+) duplicates \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'mapped':       r"(\d+) \+ (\d+) mapped ( \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'read1':        r"(\d+) \+ (\d+) read1 \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'read2':        r"(\d+) \+ (\d+) read2 \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'total':        r"(\d+) \+ (\d+) in total", 
+        'secondary':    r"(\d+) \+ (\d+) secondary",
+        'supplementary': r"(\d+) \+ (\d+) supplementary", 
+        'duplicates':   r"(\d+) \+ (\d+) duplicates", 
+        'mapped':       r"(\d+) \+ (\d+) mapped \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing", 
+        'read1':        r"(\d+) \+ (\d+) read1", 
+        'read2':        r"(\d+) \+ (\d+) read2", 
         'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped", 
         'singletons':       r"(\d+) \+ (\d+) singletons \(([\d\.]+|nan)%:([\d\.]+|nan)%\)",
-        'with mate mapped to a different chr': r"(\d+) \+ (\d+) with mate mapped to a different chr \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
-        'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr (mapQ>=5) \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'with mate mapped to a different chr': r"(\d+) \+ (\d+) with mate mapped to a different chr",
+        'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr (mapQ>=5)",
         }
 
 """ Take a filename, parse the data assuming it's a flagstat file
@@ -36,7 +36,11 @@ def parse_single_report(file_thing):
 
     re_groups = ['passed', 'failed', 'passed_pct', 'failed_pct']
     for k, r in REGEXES.items():
-        r_search = re.search(r, file_thing, re.MULTILINE)
+        try: 
+            r_search = re.search(r, file_thing, re.MULTILINE)
+        except:
+            print r
+            raise
         if r_search:
             for i,j in enumerate(re_groups):
                 try:
