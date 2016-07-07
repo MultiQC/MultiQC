@@ -4,7 +4,7 @@
 """ MultiQC submodule to parse output from Samtools flagstat """
 
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from multiqc import config, plots 
 
 # Initialise the logger
@@ -25,20 +25,19 @@ LABELS= {1: 'total',
         10: 'with itself and mate mapped', 
         11: 'singletons',
         12: 'with mate mapped to a different chr', 
-        13: 'with make mapped to a different chr (mapQ >= 5)', 
+        13: 'with mate mapped to a different chr (mapQ >= 5)', 
         }
 
 """ Take a filename, parse the data assuming it's a flagstat file
-    Returns a dictionary {'lineName' : {'pass':value, 'fail':value}"""
+    Returns a dictionary {'lineName_pass' : value, 'lineName_fail' : value}"""
 def parse_single_report(file_thing):
     parsed_data = {}
     lines = file_thing.splitlines()
     for i, line in enumerate(lines, 1):
-        d = {} # contains {'pass' : first number, 'fail' : second number}
+        prefix = LABELS[i] + '_'
         words = line.split(' ')
-        d['pass'] = int(words[0].strip())
-        d['fail'] = int(words[2].strip())
-        parsed_data[LABELS[i]] = d
+        parsed_data[prefix + 'pass'] = int(words[0].strip())
+        parsed_data[prefix + 'fail'] = int(words[2].strip())
     return parsed_data
 
 def parse_reports(self):
@@ -55,13 +54,38 @@ def parse_reports(self):
 
     if len(self.samtools_flagstat) > 0:
 
-        # Write parsed report data to a file
-        print "lalala"
+        # Write parsed report data to a file (restructure first)
+        to_write = defaultdict(dict)
+        """
+        for k, v in self.samtools_flagstat.items():
+            for key, val in v.items():
+                for m, n in val.items():
+                    to_write[k][key + '_' + m] = n 
+        print to_write.keys()
+        self.write_data_file(to_write, 'multiqc_samtools_flagstat')
+        """
         self.write_data_file(self.samtools_flagstat, 'multiqc_samtools_flagstat')
 
+        """
+        LABELS= {1: 'total', 
+                2: 'secondary',
+                3: 'supplementary', 
+                4: 'duplicates', 
+                5: 'mapped', 
+                6: 'paired in sequencing', 
+                7: 'read1', 
+                8: 'read2', 
+                9: 'properly paired', 
+                10: 'with itself and mate mapped', 
+                11: 'singletons',
+                12: 'with mate mapped to a different chr', 
+                13: 'with make mapped to a different chr (mapQ >= 5)', 
+                }
+        """
+
         # General Stats Table
-        self.general_flagstat_headers['error_rate'] = {
-            'title': 'Error rate',
+        self.general_stats_headers['total'] = {
+            'title': 'Total reads',
             'description': 'Error rate using CIGAR',
             'min': 0,
             'max': 100,
@@ -70,7 +94,7 @@ def parse_reports(self):
             'format': '{:.2f}%',
             'modify': lambda x: x * 100.0
         }
-        self.general_flagstat_headers['non-primary_alignments'] = {
+        self.general_stats_headers['secondary'] = {
             'title': 'M Non-Primary',
             'description': 'Non-primary alignments (millions)',
             'min': 0,
@@ -78,14 +102,14 @@ def parse_reports(self):
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
         }
-        self.general_flagstat_headers['reads_mapped'] = {
+        self.general_stats_headers['supplementary'] = {
             'title': 'M Reads Mapped',
             'description': 'Reads Mapped in the bam file',
             'min': 0,
             'modify': lambda x: x / 1000000,
             'shared_key': 'read_count'
         }
-        self.general_flagstat_headers['reads_mapped_percent'] = {
+        self.general_stats_headers['duplicates'] = {
             'title': '% Mapped',
             'description': '% Mapped Reads',
             'max': 100,
@@ -94,7 +118,7 @@ def parse_reports(self):
             'scale': 'RdYlGn',
             'format': '{:.1f}%'
         }
-        self.general_flagstat_headers['raw_total_sequences'] = {
+        self.general_stats_headers['mapped'] = {
             'title': 'M Total seqs',
             'description': 'Total sequences in the bam file',
             'min': 0,
@@ -102,9 +126,9 @@ def parse_reports(self):
             'shared_key': 'read_count'
         }
         for s_name in self.samtools_flagstat:
-            if s_name not in self.general_flagstat_data:
-                self.general_flagstat_data[s_name] = dict()
-            self.general_flagstat_data[s_name].update( self.samtools_flagstat[s_name] )
+            if s_name not in self.general_stats_data:
+                self.general_stats_data[s_name] = dict()
+            self.general_stats_data[s_name].update( self.samtools_flagstat[s_name] )
         
         # Make dot plot of counts
         keys = OrderedDict()
