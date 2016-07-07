@@ -24,7 +24,7 @@ def read_sample_name(line_iter, clean_fn):
     """
     try:
         while True:
-            new_line = line_iter.next()
+            new_line = next(line_iter)
             new_line = new_line.strip()
             if 'BaseDistributionByCycle' in new_line and 'INPUT' in new_line:
                 # Pull sample name from input
@@ -52,32 +52,32 @@ def read_base_distrib_data(line_iter):
     were found.
     """
     try:
-        line = line_iter.next()
+        line = next(line_iter)
         while 'BaseDistributionByCycle' not in line and '## METRICS CLASS' not in line:
-            line = line_iter.next()
-        line = line_iter.next()
+            line = next(line_iter)
+        line = next(line_iter)
         headers = line.strip().split("\t")
         assert headers == ['READ_END', 'CYCLE', 'PCT_A', 'PCT_C', 'PCT_G', 'PCT_T', 'PCT_N']
 
         # read base distribution by cycle
         data = {}
 
-        row = line_iter.next().strip()
+        row = next(line_iter).strip()
         max_cycle_r1 = None
         while row:
             row_data = list(map(float, row.strip().split("\t")))
             read_end, cycle, pct_a, pct_c, pct_g, pct_t, pct_n = row_data
             cycle = int(cycle)
             if read_end == 1.0:
-                if cycle > max_cycle_r1:
+                if max_cycle_r1 is None or cycle > max_cycle_r1:
                     max_cycle_r1 = cycle
-            else:
+            elif max_cycle_r1 is not None:
                 cycle = cycle - max_cycle_r1
             data_by_cycle = data.setdefault(read_end, dict())
             data_by_cycle[cycle] = ( 
                 pct_a, pct_c, pct_g, pct_t, pct_n
             )
-            row = line_iter.next().strip()
+            row = next(line_iter).strip()
         return data
     except StopIteration:
         return None
@@ -96,14 +96,17 @@ def parse_reports(self):
     )
 
     for f in base_dist_files:
-        lines = f['f']
+        lines = iter(f['f'])
 
         # read through the header of the file to obtain the
         # sample name
         clean_fn = lambda n: self.clean_s_name(n, f['root'])
         s_name = read_sample_name(lines, clean_fn)
+        assert s_name is not None
+
         # pull out the data
         data = read_base_distrib_data(lines)
+        assert data is not None
 
         # data should be a hierarchical dict
         # data[read_end][cycle]
