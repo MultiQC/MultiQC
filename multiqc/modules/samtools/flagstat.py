@@ -4,6 +4,7 @@
 """ MultiQC submodule to parse output from Samtools flagstat """
 
 import logging
+import re
 from collections import OrderedDict, defaultdict
 from multiqc import config, plots 
 
@@ -12,32 +13,37 @@ log = logging.getLogger(__name__)
 
 # flagstat has one thing per line, documented here (search for flagstat):
 # http://www.htslib.org/doc/samtools.html 
-# The numbers are line numbers for the file
-LABELS= {1: 'total', 
-        2: 'secondary',
-        3: 'supplementary', 
-        4: 'duplicates', 
-        5: 'mapped', 
-        6: 'paired in sequencing', 
-        7: 'read1', 
-        8: 'read2', 
-        9: 'properly paired', 
-        10: 'with itself and mate mapped', 
-        11: 'singletons',
-        12: 'with mate mapped to a different chr', 
-        13: 'with mate mapped to a different chr (mapQ >= 5)', 
+REGEXES = {
+        'total':        r"(\d+) \+ (\d+) in total \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'secondary':    r"(\d+) \+ (\d+) secondary \(([\d\.]+|nan)%:([\d\.]+|nan)%\)",
+        'supplementary': r"(\d+) \+ (\d+) supplementary \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'duplicates':   r"(\d+) \+ (\d+) duplicates \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'mapped':       r"(\d+) \+ (\d+) mapped ( \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'read1':        r"(\d+) \+ (\d+) read1 \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'read2':        r"(\d+) \+ (\d+) read2 \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'singletons':       r"(\d+) \+ (\d+) singletons \(([\d\.]+|nan)%:([\d\.]+|nan)%\)",
+        'with mate mapped to a different chr': r"(\d+) \+ (\d+) with mate mapped to a different chr \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+        'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr (mapQ>=5) \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
         }
 
 """ Take a filename, parse the data assuming it's a flagstat file
     Returns a dictionary {'lineName_pass' : value, 'lineName_fail' : value}"""
 def parse_single_report(file_thing):
     parsed_data = {}
-    lines = file_thing.splitlines()
-    for i, line in enumerate(lines, 1):
-        prefix = LABELS[i] + '_'
-        words = line.split(' ')
-        parsed_data[prefix + 'pass'] = int(words[0].strip())
-        parsed_data[prefix + 'fail'] = int(words[2].strip())
+
+    re_groups = ['passed', 'failed', 'passed_pct', 'failed_pct']
+    for k, r in REGEXES.items():
+        r_search = re.search(r, file_thing, re.MULTILINE)
+        if r_search:
+            for i,j in enumerate(re_groups):
+                try:
+                    key = "{}_{}".format(k, j)
+                    parsed_data[key] = float(r_search.group(i+1))
+                except:
+                    pass
     return parsed_data
 
 def parse_reports(self):
@@ -55,7 +61,6 @@ def parse_reports(self):
     if len(self.samtools_flagstat) > 0:
 
         # Write parsed report data to a file (restructure first)
-        to_write = defaultdict(dict)
         self.write_data_file(self.samtools_flagstat, 'multiqc_samtools_flagstat')
         
         # Make dot plot of counts
