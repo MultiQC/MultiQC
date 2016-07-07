@@ -23,19 +23,20 @@ class ParseReportMixin():
                     continue
                 sections = line.split("\t")
                 field = sections[1].strip()[:-1]
-                field = field.replace(' ','_')
+                field = field.replace(' ', '_')
                 value = float(sections[2].strip())
                 parsed_data[field] = value
 
-            if len(parsed_data) > 0:                
+            if len(parsed_data) > 0:
                 # Work out some percentages
                 if 'raw_total_sequences' in parsed_data:
                     for k in list(parsed_data.keys()):
                         if k.startswith('reads_') and k != 'raw_total_sequences':
                             parsed_data['{}_percent'.format(k)] = (parsed_data[k] / parsed_data['raw_total_sequences']) * 100
-                
+
                 if f['s_name'] in self.samtools_stats:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                    log.debug("Duplicate sample name found! Overwriting: {}"
+                              .format(f['s_name']))
                 self.add_data_source(f)
                 self.samtools_stats[f['s_name']] = parsed_data
 
@@ -93,7 +94,7 @@ class ParseReportMixin():
 
             # Make bargraph plot of mapped/unmapped reads
             self.sections.append(alignment_section(self.samtools_stats))
-            
+
             # Make dot plot of counts
             keys = OrderedDict()
             reads = {
@@ -110,27 +111,28 @@ class ParseReportMixin():
                 'decimalPlaces': 2,
                 'shared_key': 'base_count'
             }
-            keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
+            keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences'})
             keys['reads_mapped_and_paired'] = dict(reads, **{'title': 'Mapped &amp; paired', 'description': 'Paired-end technology bit set + both mates mapped' })
-            keys['reads_properly_paired'] = dict(reads, **{'title': 'Properly paired', 'description': 'Proper-pair bit set' })
-            keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set' })
+            keys['reads_properly_paired'] = dict(reads, **{'title': 'Properly paired', 'description': 'Proper-pair bit set'})
+            keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set'})
             keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed'})
-            keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0' })
-            keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)' })
-            keys['bases_trimmed'] = dict(bases, **{'title': 'Bases Trimmed' })
-            keys['bases_duplicated'] = dict(bases, **{'title': 'Duplicated bases' })
-            keys['pairs_on_different_chromosomes'] = dict(reads, **{'title': 'Diff chromosomes', 'description': 'Pairs on different chromosomes' })
-            keys['pairs_with_other_orientation'] = dict(reads, **{'title': 'Other orientation', 'description': 'Pairs with other orientation' })
-            keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs' })
-            keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs' })
+            keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0'})
+            keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)'})
+            keys['bases_trimmed'] = dict(bases, **{'title': 'Bases Trimmed'})
+            keys['bases_duplicated'] = dict(bases, **{'title': 'Duplicated bases'})
+            keys['pairs_on_different_chromosomes'] = dict(reads, **{'title': 'Diff chromosomes', 'description': 'Pairs on different chromosomes'})
+            keys['pairs_with_other_orientation'] = dict(reads, **{'title': 'Other orientation', 'description': 'Pairs with other orientation'})
+            keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs'})
+            keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs'})
 
+            plot_html = plots.beeswarm.plot(self.samtools_stats, keys,
+                                            {'id': 'samtools-stats-dp'})
             self.sections.append({
                 'name': 'Samtools Stats',
                 'anchor': 'samtools-stats',
-                'content': '<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p>' +
-                            plots.beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
+                'content': "<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p> {}".format(plot_html)
             })
-        
+
         # Return the number of logs that were found
         return len(self.samtools_stats)
 
@@ -158,8 +160,8 @@ def alignment_section(samples_data):
 def alignment_chart(data):
     """Make the HighCharts HTML to plot the alignment rates """
     keys = OrderedDict()
-    keys['reads_mapped'] = { 'color': '#437bb1', 'name': 'Mapped' }
-    keys['reads_unmapped'] = { 'color': '#e63491', 'name': 'Unmapped' }
+    keys['reads_mapped'] = {'color': '#437bb1', 'name': 'Mapped'}
+    keys['reads_unmapped'] = {'color': '#e63491', 'name': 'Unmapped'}
 
     # Config for the plot
     plot_conf = {
@@ -168,5 +170,4 @@ def alignment_chart(data):
         'ylab': '# Reads',
         'cpswitch_counts_label': 'Number of Reads'
     }
-
     return plots.bargraph.plot(data, keys, plot_conf)
