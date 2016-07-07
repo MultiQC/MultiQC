@@ -56,14 +56,6 @@ def parse_reports(self):
 
         # Write parsed report data to a file (restructure first)
         to_write = defaultdict(dict)
-        """
-        for k, v in self.samtools_flagstat.items():
-            for key, val in v.items():
-                for m, n in val.items():
-                    to_write[k][key + '_' + m] = n 
-        print to_write.keys()
-        self.write_data_file(to_write, 'multiqc_samtools_flagstat')
-        """
         self.write_data_file(self.samtools_flagstat, 'multiqc_samtools_flagstat')
 
         """
@@ -82,53 +74,6 @@ def parse_reports(self):
                 13: 'with make mapped to a different chr (mapQ >= 5)', 
                 }
         """
-
-        # General Stats Table
-        self.general_stats_headers['total'] = {
-            'title': 'Total reads',
-            'description': 'Error rate using CIGAR',
-            'min': 0,
-            'max': 100,
-            'suffix': '%',
-            'scale': 'OrRd',
-            'format': '{:.2f}%',
-            'modify': lambda x: x * 100.0
-        }
-        self.general_stats_headers['secondary'] = {
-            'title': 'M Non-Primary',
-            'description': 'Non-primary alignments (millions)',
-            'min': 0,
-            'scale': 'PuBu',
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
-        }
-        self.general_stats_headers['supplementary'] = {
-            'title': 'M Reads Mapped',
-            'description': 'Reads Mapped in the bam file',
-            'min': 0,
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
-        }
-        self.general_stats_headers['duplicates'] = {
-            'title': '% Mapped',
-            'description': '% Mapped Reads',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%'
-        }
-        self.general_stats_headers['mapped'] = {
-            'title': 'M Total seqs',
-            'description': 'Total sequences in the bam file',
-            'min': 0,
-            'modify': lambda x: x / 1000000,
-            'shared_key': 'read_count'
-        }
-        for s_name in self.samtools_flagstat:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update( self.samtools_flagstat[s_name] )
         
         # Make dot plot of counts
         keys = OrderedDict()
@@ -139,28 +84,32 @@ def parse_reports(self):
             'decimalPlaces': 2,
             'shared_key': 'read_count'
         }
-        bases = {
-            'min': 0,
-            'modify': lambda x: float(x) / 1000000.0,
-            'suffix': 'M bases',
-            'decimalPlaces': 2,
-            'shared_key': 'base_count'
-        }
-        keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
-        keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads' })
-        keys['reads_mapped_and_paired'] = dict(reads, **{'title': 'Mapped &amp; paired', 'description': 'Paired-end technology bit set + both mates mapped' })
-        keys['reads_properly_paired'] = dict(reads, **{'title': 'Properly paired', 'description': 'Proper-pair bit set' })
-        keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set' })
-        keys['reads_unmapped'] = dict(reads, **{'title': 'Unmapped reads' })
-        keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed'})
-        keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0' })
-        keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)' })
-        keys['bases_trimmed'] = dict(bases, **{'title': 'Bases Trimmed' })
-        keys['bases_duplicated'] = dict(bases, **{'title': 'Duplicated bases' })
-        keys['pairs_on_different_chromosomes'] = dict(reads, **{'title': 'Diff chromosomes', 'description': 'Pairs on different chromosomes' })
-        keys['pairs_with_other_orientation'] = dict(reads, **{'title': 'Other orientation', 'description': 'Pairs with other orientation' })
-        keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs' })
-        keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs' })
+        keys['total_pass'] = dict(reads, **{'title': 'Total Passed' })
+        keys['total_fail'] = dict(reads, **{'title': 'Total Failed' })
+        keys['secondary_pass'] = dict(reads, **{'title': 'Secondary Passed' })
+        keys['secondary_fail'] = dict(reads, **{'title': 'Secondary Failed' })
+        keys['supplementary_pass'] = dict(reads, **{'title': 'Supplementary Passed' })
+        keys['supplementary_fail'] = dict(reads, **{'title': 'Supplementary Failed' })
+        keys['duplicates_pass'] = dict(reads, **{'title': 'Duplicate Passed' })
+        keys['duplicates_fail'] = dict(reads, **{'title': 'Duplicate Failed' })
+        keys['mapped_pass'] = dict(reads, **{'title': 'Mapped Passed' })
+        keys['mapped_fail'] = dict(reads, **{'title': 'Mapped Failed' })
+        keys['paired in sequencing_pass'] = dict(reads, **{'title': 'Paired in Sequencing Passed' })
+        keys['paired in sequencing_fail'] = dict(reads, **{'title': 'Paired in Sequencing Failed' })
+        keys['read1_pass'] = dict(reads, **{'title': 'Read1 Passed' })
+        keys['read1_fail'] = dict(reads, **{'title': 'Read1 Failed' })
+        keys['read2_pass'] = dict(reads, **{'title': 'Read2 Passed' })
+        keys['read2_fail'] = dict(reads, **{'title': 'Read2 Failed' })
+        keys['properly paired_pass'] = dict(reads, **{'title': 'Properly Paired Passed' })
+        keys['properly paired_fail'] = dict(reads, **{'title': 'Properly Paired Failed' })
+        keys['with itself and mate mapped_pass'] = dict(reads, **{'title': 'Self and mate Passed' })
+        keys['with itself and mate mapped_fail'] = dict(reads, **{'title': 'Self and mate Failed' })
+        keys['singletons_pass'] = dict(reads, **{'title': 'Mapped Passed' })
+        keys['singletons_fail'] = dict(reads, **{'title': 'Mapped Failed' })
+        keys['with mate mapped to a different chr_pass'] = dict(reads, **{'title': 'Mate mapped to different chr Passed' })
+        keys['with mate mapped to a different chr_fail'] = dict(reads, **{'title': 'Mate mapped to a different chr Failed' })
+        keys['with mate mapped to a different chr (mapQ >= 5)_pass'] = dict(reads, **{'title': 'Mate mapped to different chr (mapQ >= 5) Passed' })
+        keys['with mate mapped to a different chr (mapQ >= 5)_fail'] = dict(reads, **{'title': 'Mate mapped to a different chr (mapQ >= 5) Failed' })
         
         self.sections.append({
             'name': 'Samtools flagstat output',
