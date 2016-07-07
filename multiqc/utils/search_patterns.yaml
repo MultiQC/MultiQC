@@ -33,7 +33,8 @@ fastqc:
 featurecounts:
     fn: '*.summary'
 gatk:
-    contents: '#:GATKReport'
+    varianteval:
+        contents: '#:GATKReport'
 hicup:
     fn: 'HiCUP_summary_report*'
 kallisto:

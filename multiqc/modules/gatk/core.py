@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse output for all the files
         samples = {}
-        for log_file in self.find_log_files(config.sp['gatk']):
+        for log_file in self.find_log_files(config.sp['gatk']['varianteval']):
             lines = log_file['f'].splitlines()
             compoverlap_output = compoverlap.parse(lines)
             data = compoverlap.values(compoverlap_output)
