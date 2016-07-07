@@ -30,6 +30,7 @@ def table(data):
     headers['comp_rate'] = {
         'title': 'Compare rate',
         'description': 'Ratio of known variants found in the reference set.',
+        'namespace': 'GATK',
         'min': 0,
         'max': 1,
         'format': '{:.2f}%',
@@ -38,6 +39,7 @@ def table(data):
     headers['concordant_rate'] = {
         'title': 'Concordant rate',
         'description': 'Ratio of variants matching alleles in the reference set.',
+        'namespace': 'GATK',
         'min': 0,
         'max': 1,
         'format': '{:.2f}%',
@@ -46,18 +48,21 @@ def table(data):
     headers['eval_variants'] = {
         'title': 'Evaluated variants',
         'description': 'Number of called variants.',
+        'namespace': 'GATK',
         'min': 0,
         'format': '{:,}',
     }
     headers['known_sites'] = {
         'title': 'Known sites',
         'description': 'Number of known variants.',
+        'namespace': 'GATK',
         'min': 0,
         'format': '{:,}',
     }
     headers['novel_sites'] = {
         'title': 'Novel sites',
         'description': 'Number of novel variants.',
+        'namespace': 'GATK',
         'min': 0,
         'format': '{:,}',
     }
