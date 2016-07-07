@@ -49,6 +49,8 @@ picard:
         contents: picard.analysis.directed.HsMetrics
     oxogmetrics:
         contents: picard.analysis.CollectOxoGMetrics
+    basedistributionbycycle:
+        contents: picard.analysis.BaseDistributionByCycleMetrics
 preseq:
     contents: 'EXPECTED_DISTINCT'
     # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
