@@ -26,8 +26,8 @@ class ParseReportMixin():
                 field = field.replace(' ','_')
                 value = float(sections[2].strip())
                 parsed_data[field] = value
-            if len(parsed_data) > 0:
-                
+
+            if len(parsed_data) > 0:                
                 # Work out some percentages
                 if 'raw_total_sequences' in parsed_data:
                     for k in list(parsed_data.keys()):
@@ -89,7 +89,10 @@ class ParseReportMixin():
             for s_name in self.samtools_stats:
                 if s_name not in self.general_stats_data:
                     self.general_stats_data[s_name] = dict()
-                self.general_stats_data[s_name].update( self.samtools_stats[s_name] )
+                self.general_stats_data[s_name].update( self.samtools_stats[s_name])
+
+            # Make bargraph plot of mapped/unmapped reads
+            self.sections.append(alignment_section(self.samtools_stats))
             
             # Make dot plot of counts
             keys = OrderedDict()
@@ -108,11 +111,9 @@ class ParseReportMixin():
                 'shared_key': 'base_count'
             }
             keys['raw_total_sequences'] = dict(reads, **{'title': 'Total sequences' })
-            keys['reads_mapped'] = dict(reads, **{'title': 'Mapped reads' })
             keys['reads_mapped_and_paired'] = dict(reads, **{'title': 'Mapped &amp; paired', 'description': 'Paired-end technology bit set + both mates mapped' })
             keys['reads_properly_paired'] = dict(reads, **{'title': 'Properly paired', 'description': 'Proper-pair bit set' })
             keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set' })
-            keys['reads_unmapped'] = dict(reads, **{'title': 'Unmapped reads' })
             keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed'})
             keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0' })
             keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)' })
@@ -122,7 +123,7 @@ class ParseReportMixin():
             keys['pairs_with_other_orientation'] = dict(reads, **{'title': 'Other orientation', 'description': 'Pairs with other orientation' })
             keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs' })
             keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs' })
-            
+
             self.sections.append({
                 'name': 'Samtools Stats',
                 'anchor': 'samtools-stats',
@@ -132,3 +133,40 @@ class ParseReportMixin():
         
         # Return the number of logs that were found
         return len(self.samtools_stats)
+
+
+def alignment_section(samples_data):
+    bedgraph_data = {}
+    for sample_id, data in samples_data.items():
+        expected_total = data['raw_total_sequences']
+        read_sum = (data['reads_mapped'] + data['reads_unmapped'])
+        if read_sum == expected_total:
+            bedgraph_data[sample_id] = data
+        else:
+            log.warn("sum of mapped/unmapped reads not matching total, "
+                     "skipping samtools plot for: {}".format(sample_id))
+    bargraph = alignment_chart(bedgraph_data)
+    section = {
+        'name': 'Samtools Stats: general',
+        'anchor': 'samtools-stats-general',
+        'content': ("<p>This modules parses mapping metrics from Samtools. "
+                    "All numbers are in millions.</p> {}".format(bargraph))
+    }
+    return section
+
+
+def alignment_chart(data):
+    """Make the HighCharts HTML to plot the alignment rates """
+    keys = OrderedDict()
+    keys['reads_mapped'] = { 'color': '#437bb1', 'name': 'Mapped' }
+    keys['reads_unmapped'] = { 'color': '#e63491', 'name': 'Unmapped' }
+
+    # Config for the plot
+    plot_conf = {
+        'id': 'samtools_alignment_plot',
+        'title': 'Samtools Alignment Scores',
+        'ylab': '# Reads',
+        'cpswitch_counts_label': 'Number of Reads'
+    }
+
+    return plots.bargraph.plot(data, keys, plot_conf)
