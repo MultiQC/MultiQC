@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from multiqc import config, BaseMultiqcModule
-from .varianteval import compoverlap, countvariants
+from .varianteval import compoverlap, countvariants, titv
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -28,6 +28,10 @@ class MultiqcModule(BaseMultiqcModule):
             count_data = countvariants.values(count_output)
             data.update(count_data)
 
+            titv_output = titv.parse(lines)
+            titv_data, reference = titv.values(titv_output)
+            data.update(titv_data)
+
             samples[log_file['s_name']] = data
 
         self.sections = [{
@@ -41,3 +45,6 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'countvariants',
             'content': countvariants.plot(samples)
         })
+
+        general_headers = titv.general_headers(reference)
+        self.general_stats_addcols(samples, general_headers)
