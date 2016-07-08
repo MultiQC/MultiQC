@@ -6,7 +6,7 @@ The side navigation for the report.
 
 #}
 
-<div class="side-nav-wrapper">  
+<div class="side-nav-wrapper">
   <div class="side-nav">
     <h1>
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".mqc-nav, .mqc-toolbox">
@@ -22,7 +22,7 @@ The side navigation for the report.
       </a>
     </h1>
     <ul class="mqc-nav collapse navbar-collapse">
-      {% if report.general_stats_html['headers']|length > 0 %}
+      {% if not config.skip_generalstats %}
       <li>
         <a href="#general_stats" class="nav-l1">General Stats</a>
       </li>

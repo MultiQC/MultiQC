@@ -67,7 +67,7 @@ was generated and the button that launches the welcome tour.
   &nbsp; <small><em>(6:06)</em></small>
 </div>
 
-{% if report.num_hc_plots > 0 and report.general_stats_html['rows'] | length > config.num_datasets_plot_limit %}
+{% if report.num_hc_plots > 0 and report.general_stats_data | length > config.num_datasets_plot_limit %}
 <div id="mqc-warning-many-samples" class="alert alert-warning alert-dismissible hidden-print">
   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
   <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>

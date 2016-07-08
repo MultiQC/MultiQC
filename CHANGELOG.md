@@ -5,6 +5,8 @@
 Core updates:
 * New `custom_logo` attributes to add your own logo to reports.
 * New `--proj-info` flag to add arbitrary information to the top of reports.
+* General Statistics table now hidden if empty.
+* Fixed some bugs with config settings (eg. template) being overwritten.
 
 #### [v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
 Module updates:

@@ -146,7 +146,6 @@ def mqc_load_userconfig(path=None):
     """ Overwrite config defaults with user config files """
     
     if path is not None:
-        logger.info("Loading config settings from: {}".format(path))
         mqc_load_config(path)
     
     # Load and parse installation config file if we find it

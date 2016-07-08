@@ -73,7 +73,7 @@ def get_filelist():
     
     # Go through the analysis directories
     for path in config.analysis_dir:
-        if os.path.isdir(path):            
+        if os.path.isdir(path):
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
                 # Skip if this directory name matches config.fn_ignore_dirs
@@ -99,13 +99,16 @@ def get_filelist():
 def general_stats_build_html():
     """ Build the general stats HTML, be that a beeswarm plot or a table. """
     global general_stats_html
-    pconfig = {
-        'id': 'general_stats_table',
-        'table_title': 'General Statistics',
-        'save_file': True,
-        'raw_data_fn':'multiqc_general_stats'
-    }
-    general_stats_html = plots.table.plot(general_stats_data, general_stats_headers, pconfig)
+    if len(general_stats_data) > 0:
+        pconfig = {
+            'id': 'general_stats_table',
+            'table_title': 'General Statistics',
+            'save_file': True,
+            'raw_data_fn':'multiqc_general_stats'
+        }
+        general_stats_html = plots.table.plot(general_stats_data, general_stats_headers, pconfig)
+    else:
+        config.skip_generalstats = True
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])

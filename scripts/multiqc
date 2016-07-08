@@ -59,7 +59,6 @@ plugin_hooks.mqc_trigger('config_loaded')
 )
 @click.option('-i', '--title',
                     type = str,
-                    default = config.title,
                     help = "Report title. Printed as page header, used for filename if not otherwise specified."
 )
 @click.option('-n', '--filename',
@@ -68,11 +67,9 @@ plugin_hooks.mqc_trigger('config_loaded')
 )
 @click.option('-o', '--outdir',
                     type = str,
-                    default = config.output_dir,
                     help = "Create report in the specified output directory."
 )
 @click.option('-t', '--template',
-                    default = config.template,
                     type = click.Choice(config.avail_templates),
                     help = "Report template to use."
 )
@@ -96,11 +93,9 @@ plugin_hooks.mqc_trigger('config_loaded')
                     help = "Use only this module. Can specify multiple times."
 )
 @click.option('--data-dir/--no-data-dir', 'make_data_dir',
-                    default = config.make_data_dir,
                     help = "Specify whether the parsed data directory should be created."
 )
 @click.option('-k', '--data-format', 'data_format',
-                    default = config.data_format,
                     type = click.Choice(config.data_format_extensions.keys()),
                     help = "Output parsed data in a different format. Default: {}".format(config.data_format)
 )
@@ -139,7 +134,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
         It's a general use tool, perfect for summarising the output from numerous
         bioinformatics tools.
         
-        To run, supply with one or more directory to scan for analysis results. 
+        To run, supply with one or more directory to scan for analysis results.
         To run here, use 'multiqc .'
         
         See http://multiqc.info for more details.
@@ -153,15 +148,10 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
         loglevel = 'WARNING'
     log.init_log(logger, loglevel=loglevel)
     
-    plugin_hooks.mqc_trigger('execution_start')
-    
-    logger.info("This is MultiQC v{}".format(__version__))
-    logger.debug("Command     : {}".format(' '.join(sys.argv)))
-    logger.debug("Working dir : {}".format(os.getcwd()))
-    logger.debug("Template    : {}".format(template))
-    
     # Overwrite config defaults supplied files
     config.mqc_load_userconfig(config_file)
+    
+    plugin_hooks.mqc_trigger('execution_start')
     
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
@@ -174,18 +164,28 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
             logger.debug('Could not connect to multiqc.info for version check')
     
     # Set up key variables (overwrite config vars from command line)
-    config.template = template
-    config.title = title
+    if template is not None:
+        config.template = template
+    if title is not None:
+        config.title = title
     config.prepend_dirs = dirs
     config.analysis_dir = analysis_dir
-    config.output_dir = outdir
-    config.make_data_dir = make_data_dir
+    if outdir is not None:
+        config.output_dir = outdir
+    if make_data_dir is not None:
+        config.make_data_dir = make_data_dir
     config.force = force
     config.zip_data_dir = zip_data_dir
-    config.data_format = data_format
+    if data_format is not None:
+        config.data_format = data_format
     config.plots_force_flat = plots_flat
     config.plots_force_interactive = plots_interactive
     config.kwargs = kwargs # Plugin command line options
+    
+    logger.info("This is MultiQC v{}".format(__version__))
+    logger.debug("Command     : {}".format(' '.join(sys.argv)))
+    logger.debug("Working dir : {}".format(os.getcwd()))
+    logger.info("Template    : {}".format(config.template))
 
     # Add files if --file-list option is given
     if file_list:
@@ -275,7 +275,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
         config.data_dir = None
     
     # Load the template
-    template_mod = config.avail_templates[template].load()
+    template_mod = config.avail_templates[config.template].load()
     
     # Add an output subdirectory if specified by template
     try:
@@ -418,7 +418,7 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
         env.globals['include_file'] = include_file
         j_template = env.get_template(template_mod.base_fn)
     except:
-        raise IOError ("Could not load {} template file '{}'".format(template, template_mod.base_fn))
+        raise IOError ("Could not load {} template file '{}'".format(config.template, template_mod.base_fn))
 
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
