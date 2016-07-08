@@ -44,6 +44,9 @@ def plot (data, cats=None, pconfig={}):
     :return: HTML and JS, ready to be inserted into the page
     """
     
+    if not pconfig:
+        pconfig = {}
+
     # Given one dataset - turn it into a list
     if type(data) is not list:
         data = [data]
@@ -51,7 +54,7 @@ def plot (data, cats=None, pconfig={}):
     # Check we have a list of cats
     try:
         cats[0].keys()
-    except (KeyError, AttributeError):
+    except (KeyError, AttributeError, TypeError):
         cats = [cats]
     
     # Check that we have cats at all - find them from the data
