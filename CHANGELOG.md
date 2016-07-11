@@ -1,6 +1,9 @@
 # MultiQC Version History
 
 #### v0.8dev
+Module updates:
+* **Bismark** now supports reports from `bam2nuc`, giving Cytosine coverage in General Stats.
+
 
 Core updates:
 * New `custom_logo` attributes to add your own logo to reports.

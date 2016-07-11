@@ -1,4 +1,3 @@
-
 # MultiQC search patterns.
 # Default configurations for how modules can find their log files.
 # Loaded by the config module so that these patterns can be overwritten in user config files.
@@ -17,6 +16,8 @@ bismark:
         # contents: Bismark Extractor Version
     m_bias:
         fn: '*M-bias.txt'
+    bam2nuc:
+        fn: '*.nucleotide_stats.txt'
 bowtie:
     contents: '# reads processed:'
 bowtie2:
