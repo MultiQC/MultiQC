@@ -92,8 +92,13 @@ plugin_hooks.mqc_trigger('config_loaded')
                     multiple = True,
                     help = "Use only this module. Can specify multiple times."
 )
-@click.option('--data-dir/--no-data-dir', 'make_data_dir',
-                    help = "Specify whether the parsed data directory should be created."
+@click.option('--data-dir', 'make_data_dir',
+                    is_flag = True,
+                    help = "Force the parsed data directory to be created."
+)
+@click.option('--no-data-dir', 'no_data_dir',
+                    is_flag = True,
+                    help = "Prevent the parsed data directory from being created."
 )
 @click.option('-k', '--data-format', 'data_format',
                     type = click.Choice(config.data_format_extensions.keys()),
@@ -127,7 +132,7 @@ plugin_hooks.mqc_trigger('config_loaded')
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, file_list, filename,
-make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
+make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
     
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -172,8 +177,10 @@ make_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, 
     config.analysis_dir = analysis_dir
     if outdir is not None:
         config.output_dir = outdir
-    if make_data_dir is not None:
-        config.make_data_dir = make_data_dir
+    if make_data_dir:
+        config.make_data_dir = True
+    if no_data_dir:
+        config.make_data_dir = False
     config.force = force
     config.zip_data_dir = zip_data_dir
     if data_format is not None:
