@@ -79,7 +79,7 @@ def read_base_distrib_data(line_iter):
             )
             row = next(line_iter).strip()
         return data
-    except StopIteration:
+    except (StopIteration, AssertionError):
         return None
 
 def parse_reports(self):
@@ -96,65 +96,68 @@ def parse_reports(self):
     )
 
     for f in base_dist_files:
-        lines = iter(f['f'])
+        try:
+            lines = iter(f['f'])
 
-        # read through the header of the file to obtain the
-        # sample name
-        clean_fn = lambda n: self.clean_s_name(n, f['root'])
-        s_name = read_sample_name(lines, clean_fn)
-        assert s_name is not None
+            # read through the header of the file to obtain the
+            # sample name
+            clean_fn = lambda n: self.clean_s_name(n, f['root'])
+            s_name = read_sample_name(lines, clean_fn)
+            assert s_name is not None
 
-        # pull out the data
-        data = read_base_distrib_data(lines)
-        assert data is not None
+            # pull out the data
+            data = read_base_distrib_data(lines)
+            assert data is not None
 
-        # data should be a hierarchical dict
-        # data[read_end][cycle]
-        assert not (set(data) - set([1, 2]))
+            # data should be a hierarchical dict
+            # data[read_end][cycle]
+            assert not (set(data) - set([1, 2]))
 
-        # set up the set of s_names
-        if 2 in set(data):
-            s_names = {
-                1:"%s_R1" % s_name,
-                2:"%s_R2" % s_name 
-            }
-        else:
-            s_names = { 1:s_name }
+            # set up the set of s_names
+            if 2 in set(data):
+                s_names = {
+                    1:"%s_R1" % s_name,
+                    2:"%s_R2" % s_name 
+                }
+            else:
+                s_names = { 1:s_name }
 
-        previously_used = (
-            set(s_names.values())&set(self.picard_baseDistributionByCycle_data)
-        )
+            previously_used = (
+                set(s_names.values())&set(self.picard_baseDistributionByCycle_data)
+            )
 
-        if previously_used:
-            for duped_name in previously_used:
-                log.debug(
-                    "Duplicate sample name found in {}! "
-                    "Overwriting: {}".format(f['fn'], duped_name)
-                )
-        for name in s_names.values():
-            self.add_data_source(f, name, section='BaseDistributionByCycle')
+            if previously_used:
+                for duped_name in previously_used:
+                    log.debug(
+                        "Duplicate sample name found in {}! "
+                        "Overwriting: {}".format(f['fn'], duped_name)
+                    )
+            for name in s_names.values():
+                self.add_data_source(f, name, section='BaseDistributionByCycle')
 
-        for read_end in s_names: 
-            data_by_cycle = data[read_end]
-            s_name = s_names[read_end]
-            self.picard_baseDistributionByCycle_data[s_name] = data_by_cycle
-            samplestats = {
-                'sum_pct_a':0,
-                'sum_pct_c':0,
-                'sum_pct_g':0,
-                'sum_pct_t':0,
-                'sum_pct_n':0,
-                'cycle_count':0,
-            }
-            self.picard_baseDistributionByCycle_samplestats[s_name] = samplestats
-            for c, row in data_by_cycle.items():
-                pct_a, pct_c, pct_g, pct_t, pct_n = row
-                samplestats['sum_pct_a'] += pct_a
-                samplestats['sum_pct_c'] += pct_c
-                samplestats['sum_pct_g'] += pct_g
-                samplestats['sum_pct_t'] += pct_t
-                samplestats['sum_pct_n'] += pct_n
-            samplestats['cycle_count'] += len(data_by_cycle.keys())
+            for read_end in s_names: 
+                data_by_cycle = data[read_end]
+                s_name = s_names[read_end]
+                self.picard_baseDistributionByCycle_data[s_name] = data_by_cycle
+                samplestats = {
+                    'sum_pct_a':0,
+                    'sum_pct_c':0,
+                    'sum_pct_g':0,
+                    'sum_pct_t':0,
+                    'sum_pct_n':0,
+                    'cycle_count':0,
+                }
+                self.picard_baseDistributionByCycle_samplestats[s_name] = samplestats
+                for c, row in data_by_cycle.items():
+                    pct_a, pct_c, pct_g, pct_t, pct_n = row
+                    samplestats['sum_pct_a'] += pct_a
+                    samplestats['sum_pct_c'] += pct_c
+                    samplestats['sum_pct_g'] += pct_g
+                    samplestats['sum_pct_t'] += pct_t
+                    samplestats['sum_pct_n'] += pct_n
+                samplestats['cycle_count'] += len(data_by_cycle.keys())
+        except AssertionError:
+            pass
 
     # Calculate summed mean values for all read orientations
     for s_name, v in self.picard_baseDistributionByCycle_samplestats.items():
