@@ -11,6 +11,7 @@ from multiqc import config, BaseMultiqcModule
 # Import the Picard submodules
 from . import MarkDuplicates
 from . import InsertSizeMetrics
+from . import BaseDistributionByCycleMetrics
 from . import GcBiasMetrics
 from . import HsMetrics
 from . import OxoGMetrics
@@ -46,7 +47,11 @@ class MultiqcModule(BaseMultiqcModule):
         n['InsertSizeMetrics'] = InsertSizeMetrics.parse_reports(self)
         if n['InsertSizeMetrics'] > 0:
             log.info("Found {} InsertSizeMetrics reports".format(n['InsertSizeMetrics']))
-        
+
+        n['BaseDistributionByCycleMetrics'] = BaseDistributionByCycleMetrics.parse_reports(self)
+        if n['BaseDistributionByCycleMetrics'] > 0:
+            log.info("Found {} BaseDistributionByCycleMetrics reports".format(n['BaseDistributionByCycleMetrics']))
+
         n['GcBiasMetrics'] = GcBiasMetrics.parse_reports(self)
         if n['GcBiasMetrics'] > 0:
             log.info("Found {} GcBiasMetrics reports".format(n['GcBiasMetrics']))
