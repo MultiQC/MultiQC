@@ -98,6 +98,8 @@ samblaster:
 samtools:
     stats:
         contents: 'This file was produced by samtools stats'
+    flagstat:
+        contents: 'in total (QC-passed reads + QC-failed reads)'
 skewer:
     contents: 'COMMAND LINE:	skewer'
 snpeff:
