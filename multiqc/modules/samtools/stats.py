@@ -47,7 +47,8 @@ class StatsReportMixin():
             self.write_data_file(self.samtools_stats, 'multiqc_samtools_stats')
 
             # General Stats Table
-            self.general_stats_headers['error_rate'] = {
+            stats_headers = dict()
+            stats_headers['error_rate'] = {
                 'title': 'Error rate',
                 'description': 'Error rate using CIGAR',
                 'min': 0,
@@ -57,7 +58,7 @@ class StatsReportMixin():
                 'format': '{:.2f}%',
                 'modify': lambda x: x * 100.0
             }
-            self.general_stats_headers['non-primary_alignments'] = {
+            stats_headers['non-primary_alignments'] = {
                 'title': 'M Non-Primary',
                 'description': 'Non-primary alignments (millions)',
                 'min': 0,
@@ -65,14 +66,14 @@ class StatsReportMixin():
                 'modify': lambda x: x / 1000000,
                 'shared_key': 'read_count'
             }
-            self.general_stats_headers['reads_mapped'] = {
+            stats_headers['reads_mapped'] = {
                 'title': 'M Reads Mapped',
                 'description': 'Reads Mapped in the bam file',
                 'min': 0,
                 'modify': lambda x: x / 1000000,
                 'shared_key': 'read_count'
             }
-            self.general_stats_headers['reads_mapped_percent'] = {
+            stats_headers['reads_mapped_percent'] = {
                 'title': '% Mapped',
                 'description': '% Mapped Reads',
                 'max': 100,
@@ -81,17 +82,14 @@ class StatsReportMixin():
                 'scale': 'RdYlGn',
                 'format': '{:.1f}%'
             }
-            self.general_stats_headers['raw_total_sequences'] = {
+            stats_headers['raw_total_sequences'] = {
                 'title': 'M Total seqs',
                 'description': 'Total sequences in the bam file',
                 'min': 0,
                 'modify': lambda x: x / 1000000,
                 'shared_key': 'read_count'
             }
-            for s_name in self.samtools_stats:
-                if s_name not in self.general_stats_data:
-                    self.general_stats_data[s_name] = dict()
-                self.general_stats_data[s_name].update( self.samtools_stats[s_name])
+            self.general_stats_addcols(self.samtools_stats, stats_headers, 'Samtools Stats')
 
             # Make bargraph plot of mapped/unmapped reads
             self.sections.append(alignment_section(self.samtools_stats))

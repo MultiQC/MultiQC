@@ -30,6 +30,17 @@ class FlagstatReportMixin():
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_flagstat, 'multiqc_samtools_flagstat')
             
+            # General Stats Table
+            flagstats_headers = dict()
+            flagstats_headers['mapped_passed'] = {
+                'title': 'M Reads Mapped',
+                'description': 'Reads Mapped in the bam file',
+                'min': 0,
+                'modify': lambda x: x / 1000000,
+                'shared_key': 'read_count'
+            }
+            self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, 'Samtools Flagstat')
+            
             # Make dot plot of counts
             keys = OrderedDict()
             reads = {
@@ -39,12 +50,12 @@ class FlagstatReportMixin():
                 'decimalPlaces': 2,
                 'shared_key': 'read_count'
             }
-            keys['total'] = dict(reads, **{'title': 'Total Reads' })
+            keys['flagstat_total'] = dict(reads, **{'title': 'Total Reads' })
             keys['total_passed'] = dict(reads, **{'title': 'Total Passed QC' })
+            keys['mapped_passed'] = dict(reads, **{'title': 'Mapped' })
             keys['secondary_passed'] = dict(reads, **{'title': 'Secondary Alignments' })
             keys['supplementary_passed'] = dict(reads, **{'title': 'Supplementary Alignments' })
             keys['duplicates_passed'] = dict(reads, **{'title': 'Duplicates' })
-            keys['mapped_passed'] = dict(reads, **{'title': 'Mapped' })
             keys['paired in sequencing_passed'] = dict(reads, **{'title': 'Paired in Sequencing' })
             keys['properly paired_passed'] = dict(reads, **{'title': 'Properly Paired' })
             keys['with itself and mate mapped_passed'] = dict(reads, **{'title': 'Self and mate mapped', 'description': 'Reads with itself and mate mapped' })
@@ -53,7 +64,7 @@ class FlagstatReportMixin():
             keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = dict(reads, **{'title': 'Diff chr (mapQ >= 5)', 'description':'Mate mapped to different chromosome (mapQ >= 5)' })
             
             self.sections.append({
-                'name': 'Samtools flagstat output',
+                'name': 'Samtools Flagstat',
                 'anchor': 'samtools-flagstat',
                 'content': '<p>This module parses the output from <code>samtools flagstat</code>. All numbers in millions.</p>' +
                             plots.beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
@@ -100,7 +111,7 @@ def parse_single_report(file_obj):
                     pass # Not all regexes have percentages
     # Work out the total read count
     try:
-        parsed_data['total'] = parsed_data['total_passed'] + parsed_data['total_failed']
+        parsed_data['flagstat_total'] = parsed_data['total_passed'] + parsed_data['total_failed']
     except KeyError:
         pass
     return parsed_data

@@ -47,7 +47,7 @@ Currently, supported tools include:
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
   * [Bamtools](https://github.com/pezmaster31/bamtools) (`stats`)
-  * [Samtools stats](http://www.htslib.org)
+  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`)
   * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [methylQA](http://methylqa.sourceforge.net/)
@@ -117,11 +117,16 @@ If in doubt, feel free to get in touch with the author directly:
 [@ewels](https://github.com/ewels) (phil.ewels@scilifelab.se)
 
 ### Contributors
-Many thanks to those who have helped out with with project so far:
-* Project lead and main author: [@ewels](https://github.com/ewels)
-* Early code refactoring help: [@moonso](https://github.com/moonso)
-* Early version of Qualimap module: [@guillermo-carrasco](https://github.com/guillermo-carrasco)
-* Skewer and Samblaster modules: [@dakl](https://github.com/dakl)
-* Samtools stats module: [@lpantano](https://github.com/lpantano)
-* Tweaks / core help: [@robinandeer](https://github.com/robinandeer) and [@avilella](https://github.com/avilella)
+Project lead and main author: [@ewels](https://github.com/ewels)
+
+Code contributions from:
+[@moonso](https://github.com/moonso),
+[@lpantano](https://github.com/lpantano),
+[@dakl](https://github.com/dakl),
+[@robinandeer](https://github.com/robinandeer),
+[@mlusignan](https://github.com/mlusignan),
+[@HLWiencko](https://github.com/HLWiencko),
+[@guillermo-carrasco](https://github.com/guillermo-carrasco),
+[@avilella](https://github.com/avilella)
+and many others. Thanks for your support!
 
