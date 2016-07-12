@@ -39,32 +39,18 @@ class FlagstatReportMixin():
                 'decimalPlaces': 2,
                 'shared_key': 'read_count'
             }
-            keys['total_passed'] = dict(reads, **{'title': 'Total Passed' })
-            keys['total_failed'] = dict(reads, **{'title': 'Total Failed' })
-            keys['secondary_passed'] = dict(reads, **{'title': 'Secondary Passed' })
-            keys['secondary_failed'] = dict(reads, **{'title': 'Secondary Failed' })
-            keys['supplementary_passed'] = dict(reads, **{'title': 'Supplementary Passed' })
-            keys['supplementary_failed'] = dict(reads, **{'title': 'Supplementary Failed' })
-            keys['duplicates_passed'] = dict(reads, **{'title': 'Duplicate Passed' })
-            keys['duplicates_failed'] = dict(reads, **{'title': 'Duplicate Failed' })
-            keys['mapped_passed'] = dict(reads, **{'title': 'Mapped Passed' })
-            keys['mapped_failed'] = dict(reads, **{'title': 'Mapped Failed' })
-            keys['paired in sequencing_passed'] = dict(reads, **{'title': 'Paired in Sequencing Passed' })
-            keys['paired in sequencing_failed'] = dict(reads, **{'title': 'Paired in Sequencing Failed' })
-            keys['read1_passed'] = dict(reads, **{'title': 'Read1 Passed' })
-            keys['read1_failed'] = dict(reads, **{'title': 'Read1 Failed' })
-            keys['read2_passed'] = dict(reads, **{'title': 'Read2 Passed' })
-            keys['read2_failed'] = dict(reads, **{'title': 'Read2 Failed' })
-            keys['properly paired_passed'] = dict(reads, **{'title': 'Properly Paired Passed' })
-            keys['properly paired_failed'] = dict(reads, **{'title': 'Properly Paired Failed' })
-            keys['with itself and mate mapped_passed'] = dict(reads, **{'title': 'Self and mate Passed' })
-            keys['with itself and mate mapped_failed'] = dict(reads, **{'title': 'Self and mate Failed' })
-            keys['singletons_passed'] = dict(reads, **{'title': 'Mapped Passed' })
-            keys['singletons_failed'] = dict(reads, **{'title': 'Mapped Failed' })
-            keys['with mate mapped to a different chr_passed'] = dict(reads, **{'title': 'Mate mapped to different chr Passed' })
-            keys['with mate mapped to a different chr_failed'] = dict(reads, **{'title': 'Mate mapped to a different chr Failed' })
-            keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = dict(reads, **{'title': 'Mate mapped to different chr (mapQ >= 5) Passed' })
-            keys['with mate mapped to a different chr (mapQ >= 5)_failed'] = dict(reads, **{'title': 'Mate mapped to a different chr (mapQ >= 5) Failed' })
+            keys['total'] = dict(reads, **{'title': 'Total Reads' })
+            keys['total_passed'] = dict(reads, **{'title': 'Total Passed QC' })
+            keys['secondary_passed'] = dict(reads, **{'title': 'Secondary Alignments' })
+            keys['supplementary_passed'] = dict(reads, **{'title': 'Supplementary Alignments' })
+            keys['duplicates_passed'] = dict(reads, **{'title': 'Duplicates' })
+            keys['mapped_passed'] = dict(reads, **{'title': 'Mapped' })
+            keys['paired in sequencing_passed'] = dict(reads, **{'title': 'Paired in Sequencing' })
+            keys['properly paired_passed'] = dict(reads, **{'title': 'Properly Paired' })
+            keys['with itself and mate mapped_passed'] = dict(reads, **{'title': 'Self and mate mapped', 'description': 'Reads with itself and mate mapped' })
+            keys['singletons_passed'] = dict(reads, **{'title': 'Singletons' })
+            keys['with mate mapped to a different chr_passed'] = dict(reads, **{'title': 'Mate mapped to diff chr', 'description': 'Mate mapped to different chromosome' })
+            keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = dict(reads, **{'title': 'Diff chr (mapQ >= 5)', 'description':'Mate mapped to different chromosome (mapQ >= 5)' })
             
             self.sections.append({
                 'name': 'Samtools flagstat output',
@@ -79,20 +65,20 @@ class FlagstatReportMixin():
 
 # flagstat has one thing per line, documented here (search for flagstat):
 # http://www.htslib.org/doc/samtools.html 
-REGEXES = {
-    'total':        r"(\d+) \+ (\d+) in total", 
-    'secondary':    r"(\d+) \+ (\d+) secondary",
+flagstat_regexes = {
+    'total':         r"(\d+) \+ (\d+) in total \(QC-passed reads \+ QC-failed reads\)", 
+    'secondary':     r"(\d+) \+ (\d+) secondary",
     'supplementary': r"(\d+) \+ (\d+) supplementary", 
-    'duplicates':   r"(\d+) \+ (\d+) duplicates", 
-    'mapped':       r"(\d+) \+ (\d+) mapped \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+    'duplicates':    r"(\d+) \+ (\d+) duplicates", 
+    'mapped':        r"(\d+) \+ (\d+) mapped \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)", 
     'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing", 
-    'read1':        r"(\d+) \+ (\d+) read1", 
-    'read2':        r"(\d+) \+ (\d+) read2", 
-    'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+|nan)%:([\d\.]+|nan)%\)", 
+    'read1':         r"(\d+) \+ (\d+) read1", 
+    'read2':         r"(\d+) \+ (\d+) read2", 
+    'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)", 
     'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped", 
-    'singletons':       r"(\d+) \+ (\d+) singletons \(([\d\.]+|nan)%:([\d\.]+|nan)%\)",
+    'singletons':    r"(\d+) \+ (\d+) singletons \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)",
     'with mate mapped to a different chr': r"(\d+) \+ (\d+) with mate mapped to a different chr",
-    'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr (mapQ>=5)",
+    'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr \(mapQ>=5\)",
 }
 
 def parse_single_report(file_obj):
@@ -103,13 +89,18 @@ def parse_single_report(file_obj):
     parsed_data = {}
 
     re_groups = ['passed', 'failed', 'passed_pct', 'failed_pct']
-    for k, r in REGEXES.items():
+    for k, r in flagstat_regexes.items():
         r_search = re.search(r, file_obj, re.MULTILINE)
         if r_search:
             for i,j in enumerate(re_groups):
                 try:
                     key = "{}_{}".format(k, j)
                     parsed_data[key] = float(r_search.group(i+1))
-                except:
-                    pass
+                except IndexError:
+                    pass # Not all regexes have percentages
+    # Work out the total read count
+    try:
+        parsed_data['total'] = parsed_data['total_passed'] + parsed_data['total_failed']
+    except KeyError:
+        pass
     return parsed_data

@@ -162,7 +162,7 @@ def alignment_chart(data):
     """Make the HighCharts HTML to plot the alignment rates """
     keys = OrderedDict()
     keys['reads_mapped'] = {'color': '#437bb1', 'name': 'Mapped'}
-    keys['reads_unmapped'] = {'color': '#e63491', 'name': 'Unmapped'}
+    keys['reads_unmapped'] = {'color': '#b1084c', 'name': 'Unmapped'}
 
     # Config for the plot
     plot_conf = {
