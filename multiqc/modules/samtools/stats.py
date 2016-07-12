@@ -11,9 +11,9 @@ from multiqc import config, plots
 log = logging.getLogger(__name__)
 
 
-class ParseReportMixin():
+class StatsReportMixin():
 
-    def parse_reports(self):
+    def parse_samtools_stats(self):
         """ Find Samtools stats logs and parse their data """
 
         self.samtools_stats = dict()
