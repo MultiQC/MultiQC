@@ -165,6 +165,9 @@ def parse_reports(self):
 
     if len(self.picard_baseDistributionByCycle_data) > 0:
         
+        # Write parsed data to a file
+        self.write_data_file(self.picard_baseDistributionByCycle_samplestats, 'multiqc_picard_baseContent')
+        
         # Plot the data and add section
         pconfig = {
             'id': 'picard_base_distribution_by_cycle',
