@@ -165,49 +165,6 @@ def parse_reports(self):
 
     if len(self.picard_baseDistributionByCycle_data) > 0:
         
-#        # Write parsed data to a file
-#        self.write_data_file(self.picard_baseDistributionByCycle_data, 'multiqc_picard_baseDistributionByCycle')
-#        
-#        # Do we have median insert sizes?
-#        missing_medians = False
-#        for v in self.picard_baseDistributionByCycle_samplestats.values():
-#            if 'summed_median' not in v:
-#                missing_medians = True
-        
-        # Add to general stats table
-        self.general_stats_headers['mean_pct_a'] = {
-            'title': 'Mean % A',
-            'description': 'Mean % adenine, across all cycles',
-            'min': 0,
-            'suffix': '%',
-            'format': '{:.2f}',
-        }
-        self.general_stats_headers['mean_pct_g'] = {
-            'title': 'Mean % G',
-            'description': 'Mean % guanine, across all cycles',
-            'min': 0,
-            'suffix': '%',
-            'format': '{:.2f}',
-        }
-        self.general_stats_headers['mean_pct_t'] = {
-            'title': 'Mean % T',
-            'description': 'Mean % thymine, across all cycles',
-            'min': 0,
-            'suffix': '%',
-            'format': '{:.2f}',
-        }
-        self.general_stats_headers['mean_pct_c'] = {
-            'title': 'Mean % C',
-            'description': 'Mean % cytosine, across all cycles',
-            'min': 0,
-            'suffix': '%',
-            'format': '{:.2f}',
-        }
-        for s_name in self.picard_baseDistributionByCycle_samplestats:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update( self.picard_baseDistributionByCycle_samplestats[s_name] )
-        
         # Plot the data and add section
         pconfig = {
             'id': 'picard_base_distribution_by_cycle',
@@ -216,13 +173,14 @@ def parse_reports(self):
             'xlab': 'Cycle #',
             'xDecimals': False,
             'tt_label': '<b>cycle {point.x}</b>: {point.y:.2f} %',
+            'ymax': 100,
             'ymin': 0,
             'data_labels': [
-                {'name': '% adenine', 'ylab': '% adenine'},
-                {'name': '% cytosine', 'ylab': '% cytosine'},
-                {'name': '% guanine', 'ylab': '% guanine'},
-                {'name': '% thymine', 'ylab': '% thymine'},
-                {'name': '% undetermined', 'ylab': '% undetermined'},
+                {'name': '% Adenine', 'ylab': '% Adenine'},
+                {'name': '% Cytosine', 'ylab': '% Cytosine'},
+                {'name': '% Guanine', 'ylab': '% Guanine'},
+                {'name': '% Thymine', 'ylab': '% Thymine'},
+                {'name': '% Undetermined', 'ylab': '% Undetermined'},
             ]
         }
 
