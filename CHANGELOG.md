@@ -5,7 +5,9 @@ Module updates:
 * **Bismark** now supports reports from `bam2nuc`, giving Cytosine coverage in General Stats.
 * **Samtools**
   * `stats` submodule now has separate bar graph showing alignment scores
-  * `flagstat` - new submodule!
+  * `flagstat` - new submodule! Written by @HLWiencko
+* **Picard**
+  * `BaseDistributionByCycle` - new submodule! Written by @mlusignan
 
 
 Core updates:

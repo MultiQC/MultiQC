@@ -48,7 +48,7 @@ Currently, supported tools include:
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
   * [Bamtools](https://github.com/pezmaster31/bamtools) (`stats`)
   * [Samtools](http://www.htslib.org) (`stats`, `flagstats`)
-  * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`)
+  * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [methylQA](http://methylqa.sourceforge.net/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
