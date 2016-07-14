@@ -15,6 +15,7 @@ Core updates:
 * New `--proj-info` flag to add arbitrary information to the top of reports.
 * General Statistics table now hidden if empty.
 * Fixed some bugs with config settings (eg. template) being overwritten.
+* NFS file deletion bug fixed by @brainstorm (#265)
 
 Many thanks to those at the [OpenBio Codefest 2016](https://www.open-bio.org/wiki/Codefest_2016)
 who worked on MultiQC projects.
