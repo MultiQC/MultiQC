@@ -7,8 +7,31 @@ import io
 import json
 import os
 import yaml
+import time
+import shutil
 
 from multiqc import config
+
+def robust_rmtree(path, logger=None, max_retries=5):
+    """Robustly tries to delete paths.
+    Retries several times (with increasing delays) if an OSError
+    occurs.  If the final attempt fails, the Exception is propagated
+    to the caller.
+    """
+
+    for i in range(max_retries):
+        try:
+            shutil.rmtree(path)
+            return
+        except OSError:
+            if logger:
+                logger.info('Unable to remove path: %s' % path)
+                logger.info('Retrying after %d seconds' % i)
+            time.sleep(i)
+
+    # Final attempt, pass any Exceptions up to caller.
+    shutil.rmtree(path)
+
 
 def write_data_file(data, fn, sort_cols=False, data_format=None):
     """ Write a data file to the report directory. Will not do anything
