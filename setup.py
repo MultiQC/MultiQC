@@ -52,7 +52,8 @@ setup(
         'simplejson',
         'pyyaml',
         'click',
-        'matplotlib'
+        'matplotlib',
+        'retrying'
     ],
     entry_points = {
         'multiqc.modules.v1': [

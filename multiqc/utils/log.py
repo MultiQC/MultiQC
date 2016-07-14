@@ -8,6 +8,7 @@ import logging
 import os
 import shutil
 import tempfile
+from retrying import retry
 
 from multiqc.utils import config
 
@@ -47,7 +48,10 @@ def init_log(logger, loglevel=0):
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
 
-
+# Some distributed filesystems (NFS, Panasas) refuse to delete files due to locks
+# (ie: ".lock" for NFS, ".panfs" directory). Provide reasonable defaults for retrying
+# instead of having the pipeline failing too early on.
+@retry(wait_exponential_multiplier=1000, wait_exponential_max=10000)
 def copy_tmp_log():
     """ Copy the temporary log file to the MultiQC data directory
     if it exists. """
