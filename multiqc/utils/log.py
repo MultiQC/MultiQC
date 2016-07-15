@@ -47,12 +47,15 @@ def init_log(logger, loglevel=0):
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
 
-def copy_tmp_log():
+def copy_tmp_log(logger):
     """ Copy the temporary log file to the MultiQC data directory
     if it exists. """
     
     try:
         shutil.copyfile(log_tmp_fn, os.path.join(config.data_dir, '.multiqc.log'))
+        # https://stackoverflow.com/questions/15435652/python-does-not-release-filehandles-to-logfile
+        logger.handlers[0].close()
+        logger.removeHandler(logger.handlers[0])
         util_functions.robust_rmtree(log_tmp_dir)
     except (AttributeError, TypeError, IOError):
         pass

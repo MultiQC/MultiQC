@@ -461,7 +461,7 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
     logger.info("MultiQC complete")
     
     # Move the log file into the data directory
-    log.copy_tmp_log()
+    log.copy_tmp_log(logger)
     
     # Exit with an error code if a module broke
     sys.exit(sys_exit_code)
