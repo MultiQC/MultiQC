@@ -88,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     parsed_data['percent_aligned'] = (parsed_data['aligned_reads'] / parsed_data['total_reads']) * 100
                 except (KeyError, ZeroDivisionError):
-                    log.warning('Error calculating percentage for {} - ignoring sample.'.format(sn))
+                    log.warning('Error calculating percentage for {} - ignoring sample.'.format(f['fn']))
                 else:
                     if f['s_name'] in self.bismark_data['alignment']:
                         log.debug("Duplicate alignment sample log found! Overwriting: {}".format(f['s_name']))
