@@ -53,6 +53,7 @@ Currently, supported tools include:
   * [methylQA](http://methylqa.sourceforge.net/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
   * [SnpEff](http://snpeff.sourceforge.net/)
+  * [QUAST](http://quast.bioinf.spbau.ru/) 
 
 More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log

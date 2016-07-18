@@ -73,6 +73,8 @@ qualimap:
             fn: 'rnaseq_qc_results.txt'
         coverage:
             fn: 'coverage_profile_along_genes_(total).txt'
+quast:
+    fn: 'report.tsv'
 rseqc:
     bam_stat:
         contents: 'Proper-paired reads map to different chrom:'

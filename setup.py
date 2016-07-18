@@ -70,6 +70,7 @@ setup(
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
+            'quast = multiqc.modules.quast:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
             'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',

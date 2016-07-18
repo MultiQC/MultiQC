@@ -33,6 +33,7 @@ MultiQC Modules:
     featureCounts: modules/featureCounts.md
     Qualimap: modules/qualimap.md
     SnpEff: modules/snpeff.md
+    Quast: modules/quast.md
 Coding with MultiQC:
   Writing new templates: templates.md
   Writing new modules: modules.md
