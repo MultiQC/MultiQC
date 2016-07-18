@@ -9,10 +9,11 @@ import os
 import yaml
 import time
 import shutil
+import sys
 
 from multiqc import config
 
-def robust_rmtree(path, logger=None, max_retries=5):
+def robust_rmtree(path, logger=None, max_retries=10):
     """Robustly tries to delete paths.
     Retries several times (with increasing delays) if an OSError
     occurs.  If the final attempt fails, the Exception is propagated
@@ -25,9 +26,12 @@ def robust_rmtree(path, logger=None, max_retries=5):
             return
         except OSError:
             if logger:
-                logger.info('Unable to remove path: %s' % path)
-                logger.info('Retrying after %d seconds' % i)
-            time.sleep(i)
+                logger.info('Unable to remove path: {}'.format(path))
+                logger.info('Retrying after {} seconds'.format(i**2))
+            else:
+                print('Unable to remove path: {}'.format(path), file=sys.stderr)
+                print('Retrying after {} seconds'.format(i**2), file=sys.stderr)
+            time.sleep(i**2)
 
     # Final attempt, pass any Exceptions up to caller.
     shutil.rmtree(path)
