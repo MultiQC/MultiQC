@@ -33,9 +33,6 @@ except ImportError:
 from multiqc import logger, __version__
 from multiqc.utils import report, plugin_hooks, config, log
 
-config.mqc_load_userconfig()
-plugin_hooks.mqc_trigger('config_loaded')
-
 @click.command(
     context_settings = dict( help_option_names = ['-h', '--help'] )
 )
@@ -153,8 +150,10 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
         loglevel = 'WARNING'
     log.init_log(logger, loglevel=loglevel)
     
-    # Overwrite config defaults supplied files
+    # Load config files
+    config.mqc_load_userconfig()
     config.mqc_load_userconfig(config_file)
+    plugin_hooks.mqc_trigger('config_loaded')
     
     plugin_hooks.mqc_trigger('execution_start')
     
