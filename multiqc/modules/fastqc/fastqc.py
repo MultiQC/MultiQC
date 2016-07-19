@@ -123,6 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         if s_name in self.fastqc_data.keys():
             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+        self.add_data_source(f, s_name)
         self.fastqc_data[s_name] = { 'statuses': dict() }
         
         # Parse the report
