@@ -54,12 +54,19 @@ class datatable (object):
                 headers[idx][k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
                 
                 # Use defaults / data keys if headers not given
-                headers[idx][k]['namespace']   = headers[idx][k].get('namespace', '')
+                headers[idx][k]['namespace']   = headers[idx][k].get('namespace', pconfig.get('namespace', ''))
                 headers[idx][k]['title']       = headers[idx][k].get('title', k)
                 headers[idx][k]['description'] = headers[idx][k].get('description', headers[idx][k]['title'])
-                headers[idx][k]['scale']       = headers[idx][k].get('scale', 'GnBu')
-                headers[idx][k]['format']      = headers[idx][k].get('format', '{:.1f}')
-                if 'colour' not in headers[idx][k]:
+                headers[idx][k]['scale']       = headers[idx][k].get('scale', pconfig.get('scale', 'GnBu'))
+                headers[idx][k]['format']      = headers[idx][k].get('format', pconfig.get('format', '{:.1f}'))
+                headers[idx][k]['colour']      = headers[idx][k].get('colour', pconfig.get('colour', None))
+                headers[idx][k]['hidden']      = headers[idx][k].get('hidden', pconfig.get('hidden', None))
+                headers[idx][k]['max']         = headers[idx][k].get('max', pconfig.get('max', None))
+                headers[idx][k]['min']         = headers[idx][k].get('min', pconfig.get('min', None))
+                headers[idx][k]['shared_key']  = headers[idx][k].get('shared_key', pconfig.get('shared_key', None))
+                headers[idx][k]['modify']      = headers[idx][k].get('modify', pconfig.get('modify', None))
+                
+                if headers[idx][k]['colour'] is None:
                     cidx = idx
                     while cidx >= len(sectcols):
                         cidx -= len(sectcols)
@@ -77,13 +84,13 @@ class datatable (object):
                 setdmin = False
                 try:
                     headers[idx][k]['dmax'] = float(headers[idx][k]['max'])
-                except KeyError:
+                except TypeError:
                     headers[idx][k]['dmax'] = float("-inf")
                     setdmax = True
                 
                 try:
                     headers[idx][k]['dmin'] = float(headers[idx][k]['min'])
-                except KeyError:
+                except TypeError:
                     headers[idx][k]['dmin'] = float("inf")
                     setdmin = True
                 
@@ -92,7 +99,7 @@ class datatable (object):
                     for s_name, samp in data[idx].items():
                         try:
                             val = float(samp[k])
-                            if 'modify' in headers[idx][k] and callable(headers[idx][k]['modify']):
+                            if callable(headers[idx][k]['modify']):
                                 val = float(headers[idx][k]['modify'](val))
                             if setdmax:
                                 headers[idx][k]['dmax'] = max(headers[idx][k]['dmax'], val)
@@ -107,7 +114,7 @@ class datatable (object):
         shared_keys = defaultdict(lambda: dict())
         for idx, hs in enumerate(headers):
             for k in hs.keys():
-                sk = headers[idx][k].get('shared_key', None)
+                sk = headers[idx][k]['shared_key']
                 if sk is not None:
                     shared_keys[sk]['scale'] = headers[idx][k]['scale']
                     shared_keys[sk]['dmax']  = max(headers[idx][k]['dmax'], shared_keys[sk].get('dmax', headers[idx][k]['dmax']))
@@ -116,7 +123,7 @@ class datatable (object):
         # Overwrite shared key settings
         for idx, hs in enumerate(headers):
             for k in hs.keys():
-                sk = headers[idx][k].get('shared_key', None)
+                sk = headers[idx][k]['shared_key']
                 if sk is not None:
                     headers[idx][k]['scale'] = shared_keys[sk]['scale']
                     headers[idx][k]['dmax'] = shared_keys[sk]['dmax']

@@ -347,6 +347,7 @@ self.general_stats_addcols(data, headers)
 Here are all options for headers, with defaults:
 ```python
 headers['name'] = {
+    'namespace': '',                # Module name. Auto-generated for General Statistics.
     'title': '[ dict key ]',        # Short title, table column title
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
@@ -358,6 +359,9 @@ headers['name'] = {
     'hidden': False                 # Set to True to hide the column on page load
 }
 ```
+* `namespace`
+  * This prepends the column title in the mouse hover: _Namespace: Title_.
+    It's automatically generated for the General Statistics table.
 * `scale`
   * Colour scales are the names of ColorBrewer palettes. See the
     [chroma.js documentation](https://github.com/gka/chroma.js/wiki/Predefined-Colors)
@@ -377,6 +381,28 @@ headers['name'] = {
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
+
+Finally, a third parameter can be specified with table settings.
+```python
+tconfig = {
+    'id': None,             # ID for the table in the HTML
+    'table_title': None,    # Title printed above the table
+    'save_file': False,     # Save the data in the table to a file in `multiqc_data`
+    'raw_data_fn': None,    # Filename to use if saving data file
+    'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
+}
+```
+
+This config dictionary can also hold defaults for the headers, to avoid
+repeating the same value for every column. These values are overwritten
+by anything in an individual header config dict.
+```python
+tconfig = {
+    'namespace': 'MyModule',
+    'min': 0,
+}
+self.general_stats_addcols(data, headers, tconfig)
+```
 
 ## Step 5 - Writing data to a file
 In addition to printing data to the General Stats, MultiQC modules typically
