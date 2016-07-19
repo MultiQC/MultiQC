@@ -136,7 +136,7 @@ class BaseMultiqcModule(object):
         in required config variables if not supplied.
         :param data: A dict with the data. First key should be sample name,
                      then the data key, then the data.
-        :param headers: Dict / OrderedDict with information for the headers, 
+        :param headers: Dict / OrderedDict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
         :return: None
@@ -155,7 +155,7 @@ class BaseMultiqcModule(object):
             if 'description' not in headers[k]:
                 headers[k]['description'] = desc
         
-        # Append to report.general_stats for later assembly into table 
+        # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(data)
         report.general_stats_headers.append(headers)
     

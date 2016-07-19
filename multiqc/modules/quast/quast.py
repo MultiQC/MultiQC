@@ -119,29 +119,25 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['# misassemblies'] = {
             'title': 'Misassemblies',
-            'description': 'The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (<i>relocation</i>) or they overlap on more than 1 kbp (<i>relocation</i>) or flanking sequences align on different strands (<i>inversion</i>) or different chromosomes (<i>translocation</i>).</span>',
-            'min': 0,
+            'description': 'The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).',
             'scale': 'RdYlGn-rev',
             'format': '{:.0f}'
         }
         headers['# mismatches per 100 kbp'] = {
             'title': 'Mismatches/100kbp',
             'description': 'The number of mismatches per 100 kbp',
-            'min': 0,
             'scale': 'YlOrRd',
             'format': '{:.2f}',
         }
         headers['# indels per 100 kbp'] = {
             'title': 'Indels/100kbp',
             'description': 'The number of indels per 100 kbp',
-            'min': 0,
             'scale': 'YlOrRd',
             'format': '{:.2f}',
         }
         headers['# genes'] = {
             'title': 'Genes',
             'description': '# Genes',
-            'min': 0,
             'scale': 'YlGnBu',
             'format': '{:.0f}',
             'shared_key': 'gene_count'
@@ -149,7 +145,6 @@ class MultiqcModule(BaseMultiqcModule):
         headers['# genes_partial'] = {
             'title': 'Genes (Partial)',
             'description': '# Genes (Partial)',
-            'min': 0,
             'scale': 'YlGnBu',
             'format': '{:.0f}',
             'shared_key': 'gene_count'
@@ -158,13 +153,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Genome Fraction',
             'description': 'The total number of aligned bases in the reference, divided by the genome size.',
             'max': 100,
-            'min': 0,
             'suffix': '%',
             'scale': 'YlGn',
             'format': '{:.1f}%'
         }
         config = {
-            'namespace': 'QUAST'
+            'namespace': 'QUAST',
+            'min': 0,
         }
         return plots.table.plot(self.quast_data, headers, config)
 
