@@ -40,9 +40,19 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.quast_general_stats_table()
         
+        self.sections = list()
         # Quast Stats Table
-        # Only one section, so add to the intro
-        self.intro += self.quast_table()
+        self.sections.append({
+            'name': 'Assembly Statistics',
+            'anchor': 'quast-stats',
+            'content': self.quast_table()
+        })
+        # Number of contigs plot
+        self.sections.append({
+            'name': 'Number of Contigs',
+            'anchor': 'quast-contigs',
+            'content': self.quast_contigs_barplot()
+        })
     
     
     def parse_quast_log(self, f):
@@ -115,14 +125,14 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.0f}'
         }
         headers['# mismatches per 100 kbp'] = {
-            'title': 'Mismatches',
+            'title': 'Mismatches/100kbp',
             'description': 'The number of mismatches per 100 kbp',
             'min': 0,
             'scale': 'YlOrRd',
             'format': '{:.2f}',
         }
         headers['# indels per 100 kbp'] = {
-            'title': 'Indels',
+            'title': 'Indels/100kbp',
             'description': 'The number of indels per 100 kbp',
             'min': 0,
             'scale': 'YlOrRd',
@@ -153,5 +163,43 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'YlGn',
             'format': '{:.1f}%'
         }
-        return plots.table.plot(self.quast_data, headers)
+        config = {
+            'namespace': 'QUAST'
+        }
+        return plots.table.plot(self.quast_data, headers, config)
 
+    def quast_contigs_barplot(self):
+        """ Make a bar plot showing the number and length of contigs for each assembly """
+        
+        # Intro text
+        html = """<p>This plot shows the number of contigs found for each assembly, broken
+                down by length.</p> """
+        
+        # Prep the data
+        data = dict()
+        for s_name, d in self.quast_data.items():
+            try:
+                p = dict()
+                p['>= 50000 bp'] = d['# contigs (>= 50000 bp)']
+                p['25000-50000 bp'] = d['# contigs (>= 25000 bp)'] - d['# contigs (>= 50000 bp)']
+                p['10000-25000 bp'] = d['# contigs (>= 10000 bp)'] - d['# contigs (>= 25000 bp)']
+                p['5000-10000 bp'] = d['# contigs (>= 5000 bp)'] - d['# contigs (>= 10000 bp)']
+                p['1000-5000 bp'] = d['# contigs (>= 1000 bp)'] - d['# contigs (>= 5000 bp)']
+                p['0-1000 bp'] = d['# contigs (>= 0 bp)'] - d['# contigs (>= 1000 bp)']
+                assert sum(p.values()) == d['# contigs (>= 0 bp)']
+                data[s_name] = p
+            except AssertionError:
+                log.warning("Contig counts didn't add up properly for {}".format(s_name))
+        
+        # Define the order of the categories, small to big
+        cats = [
+            '0-1000 bp',
+            '1000-5000 bp',
+            '5000-10000 bp',
+            '10000-25000 bp',
+            '25000-50000 bp',
+            '>= 50000 bp',
+        ]
+        
+        return "{}{}".format(html, plots.bargraph.plot(data, cats))
+        
