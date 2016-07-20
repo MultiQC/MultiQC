@@ -68,7 +68,10 @@ def plot (data, pconfig={}):
             else:
                 for k in sorted(d[s].keys()):
                     pairs.append([k, d[s][k]])
-                    maxval = max(maxval, d[s][k])
+                    try:
+                        maxval = max(maxval, d[s][k])
+                    except TypeError:
+                        pass
             if maxval > 0 or pconfig.get('hide_empty') is not True:
                 this_series = { 'name': s, 'data': pairs }
                 try:
