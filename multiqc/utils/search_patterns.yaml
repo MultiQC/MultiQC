@@ -5,6 +5,9 @@
 bamtools:
     stats:
       contents: 'Stats for BAM file(s):'
+bcftools:
+    stats:
+        contents: 'This file was produced by bcftools stats'
 bismark:
     align:
         fn: '*_[SP]E_report.txt'

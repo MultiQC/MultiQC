@@ -6,7 +6,7 @@
 import logging
 import re
 from collections import OrderedDict, defaultdict
-from multiqc import config, plots 
+from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class FlagstatReportMixin():
             if len(parsed_data) > 0:
                 if f['s_name'] in self.samtools_flagstat:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                self.add_data_source(f)
+                self.add_data_source(f, section='flagstat')
                 self.samtools_flagstat[f['s_name']] = parsed_data
 
         if len(self.samtools_flagstat) > 0:

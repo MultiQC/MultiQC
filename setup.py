@@ -57,6 +57,7 @@ setup(
     entry_points = {
         'multiqc.modules.v1': [
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
+            'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',

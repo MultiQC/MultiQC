@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Cutadapt', anchor='cutadapt',
-        href='https://code.google.com/p/cutadapt/', 
+        href='https://code.google.com/p/cutadapt/',
         info="is a tool to find and remove adapter sequences, primers, poly-A"\
          "tails and other types of unwanted sequence from your high-throughput"\
          " sequencing reads.")
@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_obsexp = dict()
         
         for f in self.find_log_files(config.sp['cutadapt'], filehandles=True):
-            self.parse_cutadapt_logs(f)        
+            self.parse_cutadapt_logs(f)
 
         if len(self.cutadapt_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))

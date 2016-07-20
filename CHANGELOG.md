@@ -2,6 +2,7 @@
 
 #### v0.8dev
 Module updates:
+* [**Bcftools**](https://samtools.github.io/bcftools/) - new module!
 * [**QUAST**](http://quast.bioinf.spbau.ru/) - new module!
   * QUAST is a tool for assessing de novo assemblies against reference genomes.
 * **Bismark** now supports reports from `bam2nuc`, giving Cytosine coverage in General Stats.

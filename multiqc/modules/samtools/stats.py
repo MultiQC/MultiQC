@@ -38,7 +38,7 @@ class StatsReportMixin():
                 if f['s_name'] in self.samtools_stats:
                     log.debug("Duplicate sample name found! Overwriting: {}"
                               .format(f['s_name']))
-                self.add_data_source(f)
+                self.add_data_source(f, section='stats')
                 self.samtools_stats[f['s_name']] = parsed_data
 
         if len(self.samtools_stats) > 0:
@@ -47,7 +47,7 @@ class StatsReportMixin():
             self.write_data_file(self.samtools_stats, 'multiqc_samtools_stats')
 
             # General Stats Table
-            stats_headers = dict()
+            stats_headers = OrderedDict()
             stats_headers['error_rate'] = {
                 'title': 'Error rate',
                 'description': 'Error rate using CIGAR',
