@@ -77,7 +77,7 @@ class StatsReportMixin():
             self.bcftools_stats_genstats_table()
             
             # Make bargraph plot of substitution types
-            types = ['C>T', 'C>A', 'C>G', 'A>T', 'A>C', 'A>G', 'G>T', 'G>A', 'G>C', 'T>A', 'T>C', 'T>G']
+            types = ['A>C','A>G','A>T','C>A','C>G','C>T','G>A','G>C','G>T','T>A','T>C','T>G']
             keys = OrderedDict()
             for t in types:
                 keys['substitution_type_{}'.format(t)] = {'name': t}
@@ -94,7 +94,7 @@ class StatsReportMixin():
             })
             
             # Make line graph of indel lengths
-            if len(self.bcftools_stats_indels) > 0:
+            if len(self.bcftools_stats_indels) > 1:
                 pconfig = {
                     'id': 'bcftools_stats_indel-lengths',
                     'title': 'Bcftools Stats: Indel Distribution',
