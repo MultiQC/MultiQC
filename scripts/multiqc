@@ -155,8 +155,6 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
     config.mqc_load_userconfig(config_file)
     plugin_hooks.mqc_trigger('config_loaded')
     
-    plugin_hooks.mqc_trigger('execution_start')
-    
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
@@ -187,6 +185,8 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
     config.plots_force_flat = plots_flat
     config.plots_force_interactive = plots_interactive
     config.kwargs = kwargs # Plugin command line options
+    
+    plugin_hooks.mqc_trigger('execution_start')
     
     logger.info("This is MultiQC v{}".format(__version__))
     logger.debug("Command     : {}".format(' '.join(sys.argv)))

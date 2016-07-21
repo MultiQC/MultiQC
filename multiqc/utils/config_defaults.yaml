@@ -1,0 +1,123 @@
+#################################################################
+# MultiQC Defaults
+#################################################################
+# This file contains the default configuration options
+# for MultiQC. IT SHOULD NOT BE EDITED. If you want to
+# change any of these config options, create a new file
+# in any of the following locations:
+#  1. <installation_dir>/multiqc_config.yaml (not pip or conda)
+#  2. ~/.multiqc_config.yaml
+#  3. <working directory>/multiqc_config.yaml
+#################################################################
+
+title: null
+subtitle: null
+intro_text: null
+report_header_info: null
+config_file: null
+custom_logo: null
+custom_logo_url: null
+custom_logo_title: null
+template: 'default'
+output_fn_name: 'multiqc_report.html'
+data_dir_name: 'multiqc_data'
+data_format: 'tsv'
+
+force: false
+prepend_dirs: false
+file_list: false
+make_data_dir: true
+zip_data_dir: false
+plots_force_flat: false
+plots_force_interactive: false
+plots_flat_numseries: 100
+num_datasets_plot_limit: 50
+max_table_rows: 500
+table_columns_visible: {}
+
+fn_ignore_dirs: []
+fn_ignore_paths: []
+no_version_check: false
+log_filesize_limit: 5000000
+report_readerrors: false
+report_imgskips: false
+skip_generalstats: false
+data_format_extensions:
+    tsv: 'txt'
+    json: 'json'
+    yaml: 'yaml'
+
+# Used for cleaning sample names. Should be strings.
+# NB: These are removed in order!
+fn_clean_exts:
+    - '.gz'
+    - '.fastq'
+    - '.fq'
+    - '.bam'
+    - '.sam'
+    - '.sra'
+    - '_tophat'
+    - '.log'
+    - 'Log.final.out'
+    - '.flagstat'
+    - '_star_aligned'
+    - '_fastqc'
+    - '.hicup'
+    - '.counts'
+    - '_counts'
+    - '.txt'
+    - 'Aligned'
+    - '.deduplicated'
+# These are removed after the above, and only if sample
+# names end with this string. Again, removed in order.
+fn_clean_trailing:
+    - '.'
+    - '_'
+    - '-'
+
+# Files to ignore when indexing files.
+# Grep file match patterns.
+fn_ignore_files:
+    - '.DS_Store'
+    - '*.bam'
+    - '*.sam'
+    - '*.fq.gz'
+    - '*.fastq.gz'
+    - '*.fq'
+    - '*.fastq'
+    - '*.gtf'
+    - '*.bed'
+    - '*.vcf'
+    - '*.txt.gz'
+
+# Order that modules should appear in report. Try to list in order of analysis,
+# eg. FastQC is usually the first step, so should be last in this list.
+module_order:
+    # Post-alignment analysis results
+    - 'quast'
+    - 'snpeff'
+    - 'qualimap'
+    - 'bcftools'
+    - 'featureCounts'
+    - 'methylQA'
+    - 'rseqc'
+    - 'picard'
+    - 'preseq'
+    - 'samblaster'
+    - 'samtools'
+    - 'bamtools'
+    # Alignment tool stats
+    - 'bismark'
+    - 'hicup'
+    - 'salmon'
+    - 'kallisto'
+    - 'star'
+    - 'tophat'
+    - 'bowtie2'
+    - 'bowtie1'
+    # Pre-alignment QC
+    - 'cutadapt'
+    - 'trimmomatic'
+    - 'skewer'
+    - 'fastq_screen'
+    - 'fastqc'
