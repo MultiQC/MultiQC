@@ -56,9 +56,13 @@ fn_clean_exts:
     - '.bam'
     - '.sam'
     - '.sra'
+    - '.vcf'
+    - '.dat'
     - '_tophat'
     - '.log'
-    - 'Log.final.out'
+    - '.stderr'
+    - '.out'
+    - 'Log.final'
     - '.flagstat'
     - '_star_aligned'
     - '_fastqc'
@@ -66,14 +70,23 @@ fn_clean_exts:
     - '.counts'
     - '_counts'
     - '.txt'
+    - '.aligned'
     - 'Aligned'
+    - '.merge'
     - '.deduplicated'
-# These are removed after the above, and only if sample
-# names end with this string. Again, removed in order.
-fn_clean_trailing:
+    - '.dedup'
+    - '.clean'
+    - '.sorted'
+    - '.report'
+# These are removed after the above, only if sample names
+# start or end with this string. Again, removed in order.
+fn_clean_trim:
     - '.'
+    - ':'
     - '_'
     - '-'
+    - '.r'
+    - '_val'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.

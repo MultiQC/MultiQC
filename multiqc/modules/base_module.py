@@ -125,6 +125,12 @@ class BaseMultiqcModule(object):
                 s_name = re.sub(re_pattern, '', s_name)
             else:
                 logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext['type']))
+        # Trim off characters at the end of names
+        for chrs in config.fn_clean_trim:
+            if s_name.endswith(chrs):
+                s_name = s_name[:-len(chrs)]
+            if s_name.startswith(chrs):
+                s_name = s_name[len(chrs):]
         if config.prepend_dirs:
             s_name = "{} | {}".format(root.replace(os.sep, ' | '), s_name).lstrip('. | ')
         return s_name
