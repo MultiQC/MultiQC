@@ -6,6 +6,7 @@ it collects the configuration settings from the following places in this order
 
 1. Hardcoded defaults in MultiQC code
 2. System-wide config in `<installation_dir>/multiqc_config.yaml`
+  * Manual installations only, not `pip` or `conda`
 3. User config in `~/.multiqc_config.yaml`
 4. Config file in the current working directory: `multiqc_config.yaml`
 5. Command line options
