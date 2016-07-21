@@ -38,12 +38,11 @@ class MultiqcModule(BaseMultiqcModule):
             if f['fn'] in fn_ignore:
                 log.debug('Skipping file because looks like tophat log: {}/{}'.format(f['root'], f['fn']))
                 continue
-            parsed_data = self.parse_bowtie_logs(f['f'])
-            if parsed_data is not None:
-                if f['s_name'] in self.bowtie_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                self.add_data_source(f)
-                self.bowtie_data[f['s_name']] = parsed_data
+            # Check that this isn't actually Bismark using bowtie
+            if f['f'].find('bisulfite', 0) >= 0:
+                log.debug('Skipping file because looks like Bismark log: {}/{}'.format(f['root'], f['fn']))
+                continue
+            self.parse_bowtie_logs(f)
 
         if len(self.bowtie_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -63,9 +62,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro += self.bowtie_alignment_plot()
 
 
-    def parse_bowtie_logs(self, s):
-        # Check that this isn't actually Bismark using bowtie
-        if s.find('bisulfite', 0) >= 0: return None
+    def parse_bowtie_logs(self, f):
+        s_name = f['s_name']
         parsed_data = {}
         regexes = {
             'reads_processed': r"# reads processed:\s+(\d+)",
@@ -76,13 +74,34 @@ class MultiqcModule(BaseMultiqcModule):
             'multimapped': r"# reads with alignments suppressed due to -m:\s+(\d+)",
             'multimapped_percentage': r"# reads with alignments suppressed due to -m:\s+\d+\s+\(([\d\.]+)%\)"
         }
-        for k, r in regexes.items():
-            match = re.search(r, s)
-            if match:
-                parsed_data[k] = float(match.group(1).replace(',', ''))
-        if len(parsed_data) == 0:
-            return None
-        return parsed_data
+        for l in f['f'].splitlines():
+            # Attempt in vain to find original bowtie1 command, logged by another program
+            if 'bowtie' in l and 'q.gz' in l:
+                fqmatch = re.search(r"([^\s,]+\.f(ast)?q.gz)", l)
+                if fqmatch:
+                    s_name = self.clean_s_name(fqmatch.group(1), f['root'])
+                    log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
+            
+            # End of log, reset in case there is another in this file
+            if 'Overall time:' in l:
+                if len(parsed_data) > 0:
+                    if s_name in self.bowtie_data:
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    self.add_data_source(f, s_name)
+                    self.bowtie_data[s_name] = parsed_data
+                s_name = f['s_name']
+                parsed_data = {}
+            
+            for k, r in regexes.items():
+                match = re.search(r, l)
+                if match:
+                    parsed_data[k] = float(match.group(1).replace(',', ''))
+        
+        if len(parsed_data) > 0:
+            if s_name in self.bowtie_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            self.add_data_source(f, s_name)
+            self.bowtie_data[s_name] = parsed_data
 
 
     def bowtie_general_stats_table(self):

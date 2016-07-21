@@ -11,6 +11,8 @@ Module updates:
   * `flagstat` - new submodule! Written by @HLWiencko
 * **Picard**
   * `BaseDistributionByCycle` - new submodule! Written by @mlusignan
+* **Bowtie1**
+  * Updated to try to find bowtie command before log, handle multiple logs in one file. Same as bowtie2.
 
 
 Core updates:
