@@ -13,8 +13,8 @@ it collects the configuration settings from the following places in this order
 You can find an example configuration file with the MultiQC source code, called
 [`multiqc_config.example.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
 If you installed MultiQC with `pip` or `conda` you won't have this file locally,
-but you can find it onGitHub
-[https://github.com/ewels/MultiQC](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
+but you can find it on GitHub:
+[github.com/ewels/MultiQC](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
 
 ## Sample name cleaning
 MultiQC typically generates sample names by taking the input or log file name,
