@@ -10,9 +10,11 @@ it collects the configuration settings from the following places in this order
 4. Config file in the current working directory: `multiqc_config.yaml`
 5. Command line options
 
-You can find an example configuration file bundled with MultiQC, called
-`multiqc_config.example.yaml` - hopefully this should be self explanatory
-through the included comments. Common changes are discussed in more detail below.
+You can find an example configuration file with the MultiQC source code, called
+[`multiqc_config.example.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
+If you installed MultiQC with `pip` or `conda` you won't have this file locally,
+but you can find it onGitHub
+[https://github.com/ewels/MultiQC](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
 
 ## Sample name cleaning
 MultiQC typically generates sample names by taking the input or log file name,
