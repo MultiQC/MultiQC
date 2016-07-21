@@ -30,19 +30,25 @@ mysample.fastq.gz  ->  mysample
 secondsample.fastq.gz_trimming_log.txt  ->  secondsample
 thirdsample.fastq_aligned.sam.gz  ->  thirdsample
 ```
+There is also a config list called `fn_clean_trim` which just removes
+strings if they are present at the start or end of the sample name.
 
 Usually you don't want to overwrite the defaults (though you can).
-Instead, add to the special variable name `extra_fn_clean_exts`:
+Instead, add to the special variable names `extra_fn_clean_exts`
+and `extra_fn_clean_trim`:
 
 ```yaml
 extra_fn_clean_exts:
     - '.myformat'
     - '_processedFile'
+extra_fn_clean_trim:
+    - '#'
+    - '.myext'
 ```
 
 ### Other search types
-As of MultiQC v0.6, file name cleaning can also take strings to remove (instead of 
-removing with truncation). Also regex strings can be supplied to match patterns and remove strings.
+File name cleaning can also take strings to remove (instead of removing with truncation).
+Also regex strings can be supplied to match patterns and remove strings.
 
 Consider the following:
 ```yaml
@@ -104,6 +110,9 @@ Running `multiqc -s .` will give the following sample names:
 sample_1.fastq.gz.aligned.log
 sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 ```
+
+You can turn off sample name cleaning permanently by setting
+`fn_clean_sample_names` to `false` in your config file.
 
 ## Module search patterns
 Many bioinformatics tools have standard output formats, filenames and other

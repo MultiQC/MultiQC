@@ -47,6 +47,9 @@ data_format_extensions:
     json: 'json'
     yaml: 'yaml'
 
+# Option to disable sample name cleaning if desired
+fn_clean_sample_names: true
+
 # Used for cleaning sample names. Should be strings.
 # NB: These are removed in order!
 fn_clean_exts:

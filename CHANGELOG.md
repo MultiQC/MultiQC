@@ -16,8 +16,12 @@ Module updates:
 Core updates:
 * New `custom_logo` attributes to add your own logo to reports.
 * New `--proj-info` flag to add arbitrary information to the top of reports.
+* New `fn_clean_sample_names` config option to turn off sample name cleaning
+  * This will print the full filename for samples. Less pretty reports and rows
+    on the General Statistics table won't line up, but can prevent overwriting.
 * Table header defaults can now be set easily
 * General Statistics table now hidden if empty.
+* Some new defaults in the sample name cleaning
 * Fixed some bugs with config settings (eg. template) being overwritten.
 * NFS log file deletion bug fixed by @brainstorm (#265)
 * Fixed bug in `--ignore` behaviour with directory names.
