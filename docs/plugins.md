@@ -79,7 +79,7 @@ Once this is done, everything else should be the same as described in the
 As above, though no need to specify a class name at the end. See the
 [writing templates](templates.md) documentation for further instructions.
 
-## Command line options
+## Command line options
 MultiQC handles command line interaction using the [click](http://click.pocoo.org/)
 framework. You can use the `multiqc.cli_options.v1` entry point to add new
 click decorators for command line options. For example, the MultiQC_NGI

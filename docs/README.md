@@ -38,8 +38,8 @@ MultiQC Modules:
 Coding with MultiQC:
   Writing new templates: templates.md
   Writing new modules: modules.md
+  Plotting Functions: plots.md
   MultiQC Plugins: plugins.md
-  JavaScript Functions: javascript.md
 ---
 
 # Welcome!
