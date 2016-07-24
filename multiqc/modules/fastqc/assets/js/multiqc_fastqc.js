@@ -114,7 +114,7 @@ function fastqc_seq_content_heatmap() {
             ctx.fillRect (0, ypos+1, 5, s_height-2);
             
             // Plot the squares for the heatmap
-            var s = p_data[s_name]
+            var s = p_data[s_name];
             var xpos = 6;
             var last_bp = 0;
             $.each(s, function(bp, v){
@@ -159,7 +159,7 @@ $(function () {
     $.each(fastqc_passfails, function(k, vals){
         var pid = '#fastqc_'+k;
         var total = 0;
-        var v = { 'pass': 0, 'warn': 0, 'fail': 0 }
+        var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
         $.each(vals, function(s_name, status){
             total += 1;
             v[status] += 1;
@@ -184,14 +184,14 @@ $(function () {
         var warns = $(this).hasClass('progress-bar-warning') ? true : false;
         var fails = $(this).hasClass('progress-bar-danger') ? true : false;
         var pclass = '';
-        if(passes) pclass = 'success';
-        if(warns) pclass = 'warning';
-        if(fails) pclass = 'danger';
+        if(passes){ pclass = 'success'; }
+        if(warns){ pclass = 'warning'; }
+        if(fails){ pclass = 'danger'; }
         var samples = Array();
         $.each(vals, function(s_name, status){
-            if(status == 'pass' && passes) samples.push(s_name);
-            else if(status == 'warn' && warns) samples.push(s_name);
-            else if(status == 'fail' && fails) samples.push(s_name);
+            if(status == 'pass' && passes){ samples.push(s_name); }
+            else if(status == 'warn' && warns){ samples.push(s_name); }
+            else if(status == 'fail' && fails){ samples.push(s_name); }
         });
         $($(this)).popover({
             title: $(this).attr('title'),
@@ -248,7 +248,7 @@ $(function () {
             }
         }
         // Set to "show only" and disable regex
-        $('.mqc_hidesamples_showhide[value="show"]').prop("checked", true);
+        $('.mqc_hidesamples_showhide[value="show"]').prop('checked', true);
         $('#mqc_hidesamples .mqc_regex_mode .re_mode').removeClass('on').addClass('off').text('off');
         // Add sample names to the toolbox
         for (i = 0; i < samples.length; i++) {

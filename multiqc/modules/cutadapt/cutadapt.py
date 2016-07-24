@@ -13,6 +13,11 @@ from multiqc import config, BaseMultiqcModule, plots
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Cutadapt module class, parses stderr logs.
+    Also understands logs saved by Trim Galore!
+    (which contain cutadapt logs)
+    """
 
     def __init__(self):
 

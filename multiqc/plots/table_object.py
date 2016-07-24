@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class datatable (object):
+    """ Data table class. Prepares and holds data and configuration
+    for either a table or a beeswarm plot. """
     
     def __init__ (self, data, headers=[], pconfig={}):
         """ Prepare data for use in a table or plot """

@@ -70,6 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.skewer_data)))
 
     def add_readlen_dist_plot(self):
+        """ Generate plot HTML for read length distribution plot. """
         pconfig = {
             'id': 'skewer_read_length_histogram',
             'title': 'Read Length Distribution after trimming with Skewer',

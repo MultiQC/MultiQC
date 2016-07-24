@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class StatsReportMixin():
+    """ Mixin loaded by the bcftools MultiqcModule class """
 
     def parse_bcftools_stats(self):
         """

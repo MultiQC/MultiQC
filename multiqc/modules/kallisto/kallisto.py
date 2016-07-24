@@ -13,6 +13,7 @@ from multiqc import config, BaseMultiqcModule, plots
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
+    """ Kallisto module """
 
     def __init__(self):
 

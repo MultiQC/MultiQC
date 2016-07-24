@@ -13,7 +13,8 @@ from multiqc import config, BaseMultiqcModule, plots
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
-
+    """ Bowtie 2 module, parses stderr logs. """
+    
     def __init__(self):
 
         # Initialise the parent object

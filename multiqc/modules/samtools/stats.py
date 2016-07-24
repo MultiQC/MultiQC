@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class StatsReportMixin():
+    """ Mixin class, loaded by main samtools MuliqcModule class. """
 
     def parse_samtools_stats(self):
         """ Find Samtools stats logs and parse their data """

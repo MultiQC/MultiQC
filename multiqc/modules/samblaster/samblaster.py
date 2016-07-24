@@ -50,6 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_barplot()
 
     def add_barplot(self):
+        """ Generate the Samblaster bar plot. """
         cats = OrderedDict()
         cats['n_nondups'] = {'name': 'Non-duplicates'}
         cats['n_dups'] = {'name': 'Duplicates'}

@@ -12,12 +12,13 @@ from multiqc import config, BaseMultiqcModule, plots
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
+    """ HiCUP module, parses log files saved by HiCUP. """
 
     def __init__(self):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='HiCUP', anchor='hicup',
-        href='http://www.bioinformatics.babraham.ac.uk/projects/hicup/', 
+        href='http://www.bioinformatics.babraham.ac.uk/projects/hicup/',
         info="(Hi-C User Pipeline) is a tool for mapping and performing "\
          "quality control on Hi-C data.")
         
