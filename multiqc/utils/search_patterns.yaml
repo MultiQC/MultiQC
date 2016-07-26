@@ -108,7 +108,7 @@ samtools:
     flagstat:
         contents: 'in total (QC-passed reads + QC-failed reads)'
 skewer:
-    contents: 'COMMAND LINE:	skewer'
+    contents: 'maximum error ratio allowed (-r):'
 snpeff:
     contents: 'SnpEff_version'
 star:
