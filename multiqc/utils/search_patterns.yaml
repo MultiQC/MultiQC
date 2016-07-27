@@ -51,6 +51,8 @@ picard:
         contents: picard.analysis.GcBiasDetailMetrics
     hsmetrics:
         contents: picard.analysis.directed.HsMetrics
+    rnaseqmetrics:
+        contents: picard.analysis.RnaSeqMetrics
     oxogmetrics:
         contents: picard.analysis.CollectOxoGMetrics
     basedistributionbycycle:
