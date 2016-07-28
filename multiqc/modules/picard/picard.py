@@ -14,6 +14,7 @@ from . import InsertSizeMetrics
 from . import BaseDistributionByCycleMetrics
 from . import GcBiasMetrics
 from . import HsMetrics
+from . import RnaSeqMetrics
 from . import OxoGMetrics
 
 # Initialise the logger
@@ -59,7 +60,11 @@ class MultiqcModule(BaseMultiqcModule):
         n['HsMetrics'] = HsMetrics.parse_reports(self)
         if n['HsMetrics'] > 0:
             log.info("Found {} HsMetrics reports".format(n['HsMetrics']))
-        
+
+        n['RnaSeqMetrics'] = RnaSeqMetrics.parse_reports(self)
+        if n['RnaSeqMetrics'] > 0:
+            log.info("Found {} RnaSeqMetrics reports".format(n['RnaSeqMetrics']))
+
         n['OxoGMetrics'] = OxoGMetrics.parse_reports(self)
         if n['OxoGMetrics'] > 0:
             log.info("Found {} OxoGMetrics reports".format(n['OxoGMetrics']))
