@@ -92,8 +92,8 @@ class MultiqcModule(BaseMultiqcModule):
         """ Go through log file looking for skewer output """
         fh = f['f']
         regexes = {
-            'fq1': "Input file:\s+(\S+).(fastq$|fastq.gz$)",
-            'fq2': "Paired file:\s+(\S+).(fastq$|fastq.gz$)",
+            'fq1': "Input file:\s+(\S+)\.(?:fastq|fq)(?:\.gz)?",
+            'fq2': "Paired file:\s+(\S+)\.(?:fastq|fq)(?:\.gz)?",
             'r_processed': "(\d+) read|reads pairs? processed",
             'r_short_filtered': "(\d+) \(\s*\d+.\d+%\) short read",
             'r_empty_filtered': "(\d+) \(\s*\d+.\d+%\) empty read",
