@@ -55,6 +55,8 @@ picard:
         contents: picard.analysis.CollectOxoGMetrics
     basedistributionbycycle:
         contents: picard.analysis.BaseDistributionByCycleMetrics
+    rnaseqmetrics:
+        contents: picard.analysis.CollectRnaSeqMetrics
 preseq:
     contents: 'EXPECTED_DISTINCT'
     # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
