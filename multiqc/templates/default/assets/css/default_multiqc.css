@@ -32,6 +32,7 @@ kbd {
     .mainpage { margin-left: 270px; }
     .footer { margin-left: 250px; }
     .mainpage, .footer {
+        -moz-transition: margin-left 0.5s;
         -webkit-transition: margin-left 0.5s;
         transition: margin-left 0.5s;
     }
@@ -101,7 +102,7 @@ kbd {
     padding: 10px;
     border-top: 1px solid #ccc;
 }
-.side-nav .mqc-nav li:first-child a.nav-l1 {
+.side-nav .mqc-nav li:first-child .nav-l1 {
     border-top: 0;
 }
 .side-nav .mqc-nav a.nav-l2 {
@@ -215,11 +216,13 @@ kbd {
     background: #dedede;
 }
 ::-webkit-scrollbar-thumb:hover {
+    -moz-box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
     -webkit-box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
     box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
 }
 ::-webkit-scrollbar-thumb:active {
     background: #dddddd;
+    -moz-box-shadow: inset 1px 1px 10px rgba(0,0,0,0.4);
     -webkit-box-shadow: inset 1px 1px 10px rgba(0,0,0,0.4);
     box-shadow: inset 1px 1px 10px rgba(0,0,0,0.2);
 }
@@ -275,6 +278,7 @@ input.form-control[type=color]{
         height: 100% !important;
         top: 0;
         right: 0;
+        -o-transition: width 0.5s;
         -webkit-transition: width 0.5s;
         transition: width 0.5s;
     }
@@ -322,6 +326,7 @@ input.form-control[type=color]{
     margin-left: -6px;
     margin-bottom: 30px;
     -ms-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
     -webkit-transform: rotate(270deg);
     transform: rotate(270deg);
 }
@@ -360,7 +365,7 @@ input.form-control[type=color]{
     background-color: #ededed;
     border: 1px solid #ccc;
 }
-.mqc-toolbox-buttons li a.in_use {
+.mqc-toolbox-buttons li .in_use {
     color: #333;
     border: 3px solid #5bc0de;
     padding: 5px 8px 7px 6px;
@@ -454,13 +459,13 @@ input.form-control[type=color]{
     margin: 5px 0;
     color: #666;
 }
-.mqc_filter_section p.text-danger {
+.mqc_filter_section .text-danger {
     color: #a94442;
 }
 .mqc_filter_section p a {
     color: #666;
 }
-.mqc_filter_section p a.btn {
+.mqc_filter_section p .btn {
     color: #333;
 }
 .mqc_filter_section .text-success {
@@ -659,14 +664,14 @@ tbody .sorthandle {
 .mqc_configModal_table tbody .sorthandle {
     color: #999;
 }
-.mqc_table th.rowheader {
+.mqc_table .rowheader {
     border-left: none;
 }
 
 .mqc_table tr, .mqc_table td {
     height: 100%;
 }
-.mqc_table td.data-coloured {
+.mqc_table .data-coloured {
     padding: 0;
 }
 .mqc_table .wrapper {
@@ -735,6 +740,7 @@ tbody .sorthandle {
     cursor: row-resize;
     padding: 1px 0;
     border-top: 1px solid #ededed;
+    -moz-transition: background-color 0.1s;
     -webkit-transition: background-color 0.1s;
     transition: background-color 0.1s;
 }

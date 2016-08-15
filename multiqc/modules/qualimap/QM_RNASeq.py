@@ -37,11 +37,11 @@ def parse_reports(self):
             if r_search:
                 try:
                     d[k] = float(r_search.group(1).replace(',',''))
-                except ValueError:
-                    d[k] = r_search.group(1)
                 except UnicodeEncodeError:
                     # Qualimap reports infinity (\u221e) when 3' bias denominator is zero
                     pass
+                except ValueError:
+                    d[k] = r_search.group(1)
         
         # Check we have an input filename
         if 'bam_file' not in d:
