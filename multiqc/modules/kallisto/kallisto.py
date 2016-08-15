@@ -48,20 +48,23 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f['f']:
             
             # Get input filename
-            match = re.search(r'\[quant\] will process pair 1: (\S+)', l)
+            match = re.search(r'\[quant\] will process (pair|file) 1: (\S+)', l)
             if match:
-                s_name = self.clean_s_name(match.group(1), f['root'])
+                s_name = self.clean_s_name(match.group(2), f['root'])
             
             if s_name is not None:
+                # Alignment rates
                 aligned = re.search(r'\[quant\] processed ([\d,]+) reads, ([\d,]+) reads pseudoaligned', l)
                 if aligned:
                     total_reads = float(aligned.group(1).replace(',',''))
                     paligned_reads = float(aligned.group(2).replace(',',''))
+                
+                # Paired end fragment lengths
                 flength = re.search(r'\[quant\] estimated average fragment length: ([\d\.]+)', l)
                 if flength:
                     fraglength = float(flength.group(1).replace(',',''))
                 
-                if total_reads is not None and paligned_reads is not None and fraglength is not None:
+                if 'quantifying the abundances' in l:
                     if s_name in self.kallisto_data:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
@@ -69,9 +72,10 @@ class MultiqcModule(BaseMultiqcModule):
                         'total_reads': total_reads,
                         'pseudoaligned_reads': paligned_reads,
                         'not_pseudoaligned_reads': total_reads - paligned_reads,
-                        'percent_aligned': (paligned_reads / total_reads) * 100,
-                        'fragment_length': fraglength,
+                        'percent_aligned': (paligned_reads / total_reads) * 100
                     }
+                    if fraglength is not None:
+                        self.kallisto_data[s_name]['fragment_length'] = fraglength
                     s_name = total_reads = paligned_reads = fraglength = None
 
     def kallisto_general_stats_table(self):
