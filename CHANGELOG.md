@@ -6,13 +6,16 @@ Module updates:
 * [**QUAST**](http://quast.bioinf.spbau.ru/) - new module!
   * QUAST is a tool for assessing de novo assemblies against reference genomes.
 * **Bismark** now supports reports from `bam2nuc`, giving Cytosine coverage in General Stats.
+* **Bowtie1**
+  * Updated to try to find bowtie command before log, handle multiple logs in one file. Same as bowtie2.
+* **Kallisto**
+  * Now supports logs from SE data.
+* **Picard**
+  * `BaseDistributionByCycle` - new submodule! Written by @mlusignan
+  * `RnaSeqMetrics` - new submodule! This one by @ewels ;)
 * **Samtools**
   * `stats` submodule now has separate bar graph showing alignment scores
   * `flagstat` - new submodule! Written by @HLWiencko
-* **Picard**
-  * `BaseDistributionByCycle` - new submodule! Written by @mlusignan
-* **Bowtie1**
-  * Updated to try to find bowtie command before log, handle multiple logs in one file. Same as bowtie2.
 
 
 Core updates:
