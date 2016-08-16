@@ -19,6 +19,9 @@ Module updates:
 
 
 Core updates:
+* New `--export`/`-p` option to generate static images plot in `multiqc_plots` (`.png`, `.svg` and `.pdf`)
+  * Configurable with `export_plots`, `plots_dir_name` and `export_plot_formats` config options
+  * `--flat` option no longer saves plots in `multiqc_data/multiqc_plots`
 * New `custom_logo` attributes to add your own logo to reports.
 * New `--proj-info` flag to add arbitrary information to the top of reports.
 * New `fn_clean_sample_names` config option to turn off sample name cleaning

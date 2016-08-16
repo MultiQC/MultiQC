@@ -112,6 +112,10 @@ def plot (data, cats=None, pconfig={}):
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
                 return highcharts_bargraph(plotdata, plotsamples, pconfig)
         else:
+            # Use MatPlotLib to generate static plots if requested
+            if config.export_plots:
+                matplotlib_bargraph(plotdata, plotsamples, pconfig)
+            # Return HTML for HighCharts dynamic plot
             return highcharts_bargraph(plotdata, plotsamples, pconfig)
 
 
@@ -207,7 +211,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
     html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
     
     # Same defaults as HighCharts for consistency
-    default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', 
+    default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9',
                       '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
     
     # Counts / Percentages Switch
@@ -351,12 +355,16 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
             if pidx > 0 or hide_plot:
                 hidediv = ' style="display:none;"'
             
-            # Save the plot to the data directory
-            plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
-            if not os.path.exists(plot_dir):
-                os.makedirs(plot_dir)
-            plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
-            fig.savefig(plot_fn, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+            # Save the plot to the data directory if export is requested
+            if config.export_plots:
+                for fformat in config.export_plot_formats:
+                    # Make the directory if it doesn't already exist
+                    plot_dir = os.path.join(config.plots_dir, fformat)
+                    if not os.path.exists(plot_dir):
+                        os.makedirs(plot_dir)
+                    # Save the plot
+                    plot_fn = os.path.join(plot_dir, '{}.{}'.format(pid, fformat))
+                    fig.savefig(plot_fn, format=fformat, bbox_extra_artists=(lgd,), bbox_inches='tight')
             
             # Output the figure to a base64 encoded string
             if getattr(template_mod, 'base64_plots', True) is True:

@@ -105,6 +105,10 @@ from multiqc.utils import report, plugin_hooks, config, log
                     is_flag = True,
                     help = "Compress the data directory."
 )
+@click.option('-p', '--export', 'export_plots',
+                    is_flag = True,
+                    help = "Export plots as static images in addition to the report"
+)
 @click.option('--flat', 'plots_flat',
                     is_flag = True,
                     help = "Use only flat plots (static images)"
@@ -129,7 +133,7 @@ from multiqc.utils import report, plugin_hooks, config, log
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, file_list, filename,
-make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
+make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
     
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -185,8 +189,12 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
     config.zip_data_dir = zip_data_dir
     if data_format is not None:
         config.data_format = data_format
-    config.plots_force_flat = plots_flat
-    config.plots_force_interactive = plots_interactive
+    if export_plots:
+        config.export_plots = True
+    if plots_flat:
+        config.plots_force_flat = True
+    if plots_interactive:
+        config.plots_force_interactive = True
     config.kwargs = kwargs # Plugin command line options
     
     plugin_hooks.mqc_trigger('execution_start')
@@ -242,6 +250,10 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
                 logger.error("Output directory '{}' already exists.".format(os.path.relpath(config.data_dir)))
                 logger.info("Use -f or --force to overwrite existing reports")
                 sys.exit(1)
+            if config.export_plots == True and os.path.exists(config.plots_dir_name):
+                logger.error("Plots directory '{}' already exists.".format(os.path.relpath(config.plots_dir_name)))
+                logger.info("Use -f or --force to overwrite existing reports")
+                sys.exit(1)
         else:
             logger.debug('Running in --force mode, will overwrite any existing reports.')
             
@@ -279,6 +291,10 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
         os.makedirs(config.data_dir)
     else:
         config.data_dir = None
+    config.plots_tmp_dir = os.path.join(tmp_dir, 'multiqc_plots')
+    if filename != 'stdout' and config.export_plots == True:
+        config.plots_dir = config.plots_tmp_dir
+        os.makedirs(config.plots_dir)
     
     # Load the template
     template_mod = config.avail_templates[config.template].load()
@@ -396,6 +412,27 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, plots_flat, plots_
                 fn = os.path.join(config.data_tmp_dir, f)
                 logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
                 shutil.move(fn, config.data_dir)
+        
+        # Finally, copy across the plots
+        if config.export_plots:
+            config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+            if os.path.exists(config.plots_dir):
+                if config.force:
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.plots_dir)))
+                    shutil.rmtree(config.plots_dir)
+                else:
+                    logger.error("Output directory {} already exists.".format(config.plots_dir))
+                    logger.info("Use -f or --force to overwrite existing reports")
+                    shutil.rmtree(tmp_dir)
+                    sys.exit(1)
+            os.makedirs(config.plots_dir)
+            logger.info("Plots       : {}".format(os.path.relpath(config.plots_dir)))
+            
+            # Modules have run, so plots directory should be complete by now. Move its contents.
+            for f in os.listdir(config.plots_tmp_dir):
+                fn = os.path.join(config.plots_tmp_dir, f)
+                logger.debug("Moving plots directory from '{}' to '{}'".format(fn, config.plots_dir))
+                shutil.move(fn, config.plots_dir)
     
     plugin_hooks.mqc_trigger('before_template')
     

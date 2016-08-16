@@ -98,6 +98,10 @@ def plot (data, pconfig={}):
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
                 return highcharts_linegraph(plotdata, pconfig)
         else:
+            # Use MatPlotLib to generate static plots if requested
+            if config.export_plots:
+                matplotlib_linegraph(plotdata, pconfig)
+            # Return HTML for HighCharts dynamic plot
             return highcharts_linegraph(plotdata, pconfig)
 
 
@@ -172,7 +176,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
     html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
     
     # Same defaults as HighCharts for consistency
-    default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', 
+    default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9',
                       '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
     
     # Buttons to cycle through different datasets
@@ -198,7 +202,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         fig = plt.figure(figsize=(14, 6), frameon=False)
         axes = fig.add_subplot(111)
         
-        # Go through data series            
+        # Go through data series
         for idx, d in enumerate(pdata):
             
             # Default colour index
@@ -307,12 +311,16 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         if pidx > 0:
             hidediv = ' style="display:none;"'
         
-        # Save the plot to the data directory
-        plot_dir = os.path.join(config.data_dir, 'multiqc_plots')
-        if not os.path.exists(plot_dir):
-            os.makedirs(plot_dir)
-        plot_fn = os.path.join(plot_dir, '{}.png'.format(pid))
-        fig.savefig(plot_fn, format='png', bbox_inches='tight')
+        # Save the plot to the data directory if export is requests
+        if config.export_plots:
+            for fformat in config.export_plot_formats:
+                # Make the directory if it doesn't already exist
+                plot_dir = os.path.join(config.plots_dir, fformat)
+                if not os.path.exists(plot_dir):
+                    os.makedirs(plot_dir)
+                # Save the plot
+                plot_fn = os.path.join(plot_dir, '{}.{}'.format(pid, fformat))
+                fig.savefig(plot_fn, format=fformat, bbox_inches='tight')
         
         # Output the figure to a base64 encoded string
         if getattr(template_mod, 'base64_plots', True) is True:

@@ -21,6 +21,7 @@ custom_logo_title: null
 template: 'default'
 output_fn_name: 'multiqc_report.html'
 data_dir_name: 'multiqc_data'
+plots_dir_name: 'multiqc_plots'
 data_format: 'tsv'
 
 force: false
@@ -28,6 +29,7 @@ prepend_dirs: false
 file_list: false
 make_data_dir: true
 zip_data_dir: false
+export_plots: false
 plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100
@@ -46,6 +48,10 @@ data_format_extensions:
     tsv: 'txt'
     json: 'json'
     yaml: 'yaml'
+export_plot_formats:
+    - 'png'
+    - 'svg'
+    - 'pdf'
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
