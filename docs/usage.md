@@ -106,6 +106,9 @@ supported by MatPlotLib).
 Note that not all plot types are yet supported, so you may find some plots are
 missing.
 
+> Note: You can always save static image versions of plots from within
+> MultiQC reports, using the [Export toolbox](#export) in the side bar.
+
 ## Choosing which modules to run
 Sometimes, it's desirable to choose which MultiQC modules run. This could be
 because you're only interested in one type of output and want to keep the
