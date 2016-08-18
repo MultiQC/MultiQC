@@ -33,6 +33,7 @@ Core updates:
 * Fixed some bugs with config settings (eg. template) being overwritten.
 * NFS log file deletion bug fixed by @brainstorm (#265)
 * Fixed bug in `--ignore` behaviour with directory names.
+* Fixed nasty bug in beeswarm dot plots where sample names were mixed up (#278)
 
 Many thanks to those at the [OpenBio Codefest 2016](https://www.open-bio.org/wiki/Codefest_2016)
 who worked on MultiQC projects.
