@@ -75,14 +75,16 @@ def make_table (dt):
                 checked = ''
                 hidden_cols += 1
             
+            c_col = '' if header['scale'] == False else 'chroma-col'
+            
             data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" {}' \
                 .format(header['scale'], header['dmax'], header['dmin'], shared_key)
             
             cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
                 .format(header['namespace'], header['description'], header['title'])
             
-            t_headers[rid] = '<th id="header_{rid}" class="chroma-col {rid} {h}" {d}>{c}</th>' \
-                .format(rid=rid, d=data_attr, h=hide, c=cell_contents)
+            t_headers[rid] = '<th id="header_{rid}" class="{cc} {rid} {h}" {d}>{c}</th>' \
+                .format(rid=rid, d=data_attr, h=hide, c=cell_contents, cc=c_col)
             
             empty_cells[rid] = '<td class="data-coloured {rid} {h}"></td>'.format(rid=rid, h=hide)
             
@@ -140,12 +142,15 @@ def make_table (dt):
                         val = samp[k]
                     
                     # Build HTML
-                    bar_html = '<span class="bar" style="width:{}%;"></span>'.format(percentage)
-                    val_html = '<span class="val">{}</span>'.format(val)
-                    wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
-                    
-                    t_rows[s_name][rid] = \
-                        '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
+                    if not header['scale']:
+                        t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
+                    else:
+                        bar_html = '<span class="bar" style="width:{}%;"></span>'.format(percentage)
+                        val_html = '<span class="val">{}</span>'.format(val)
+                        wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
+                        
+                        t_rows[s_name][rid] = \
+                            '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
             
             # Remove header if we don't have any filled cells for it
             if sum([len(rows) for rows in t_rows.values()]) == 0:
