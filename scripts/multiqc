@@ -58,6 +58,10 @@ from multiqc.utils import report, plugin_hooks, config, log
                     type = str,
                     help = "Report title. Printed as page header, used for filename if not otherwise specified."
 )
+@click.option('-b', '--comment', 'report_comment',
+                    type = str,
+                    help = "Custom comment, will be printed at the top of the report."
+)
 @click.option('-n', '--filename',
                     type = str,
                     help = "Report filename. Use 'stdout' to print to standard out."
@@ -132,8 +136,9 @@ from multiqc.utils import report, plugin_hooks, config, log
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, no_clean_sname, title, template, module, exclude, outdir, ignore, file_list, filename,
-make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots, plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
+def multiqc(analysis_dir, dirs, no_clean_sname, title, report_comment, template, module, exclude, outdir,
+ignore, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
+plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
     
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -174,6 +179,8 @@ make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots, plot
         config.template = template
     if title is not None:
         config.title = title
+    if report_comment is not None:
+        config.report_comment = report_comment
     config.prepend_dirs = dirs
     config.analysis_dir = analysis_dir
     if outdir is not None:

@@ -162,6 +162,10 @@ kbd {
 #page_title img {
     max-width: 260px;
 }
+.report_comment {
+    border-left: 5px solid #8eb9dd;
+    background-color: #e8f1f8;
+}
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;

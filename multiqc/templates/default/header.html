@@ -34,6 +34,10 @@ was generated and the button that launches the welcome tour.
 </p>
 {% endif %}
 
+{% if config.report_comment and config.report_comment | length > 0 %}
+<blockquote class="report_comment">{{ config.report_comment }}</blockquote>
+{% endif %}
+
 {% if config.report_header_info and config.report_header_info | length > 0 %}
 <div class="well">
   <dl class="dl-horizontal" style="margin-bottom:0;">
