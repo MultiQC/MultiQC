@@ -8,13 +8,17 @@ Note that much more extensive customisation of reports is possible using
 
 ## Titles and introductory text
 You can specify a custom title for the report using the `-t`/`--title`
-command line option. In addition to this, you can also specify the title,
+command line option. The `-b`/`--comment` option can be used to add a
+longer comment to the top of the report at run time.
+
+You can also specify the title and comment, as well as
 a subtitle and the introductory text in your config file:
 
 ```yaml
 title: "My Title"
 subtitle: "A subtitle to go underneath in grey"
-intro_text: "This report shows a summary of..."
+intro_text: "MultiQC reports summarise analysis results."
+custom_message: "This is a comment about this report."
 ```
 
 Note that if `intro_text` is `None` the template will display the default

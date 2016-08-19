@@ -22,8 +22,9 @@ Core updates:
 * New `--export`/`-p` option to generate static images plot in `multiqc_plots` (`.png`, `.svg` and `.pdf`)
   * Configurable with `export_plots`, `plots_dir_name` and `export_plot_formats` config options
   * `--flat` option no longer saves plots in `multiqc_data/multiqc_plots`
+* New `--comment`/`-b` flag to add a comment to the top of reports.
 * New `custom_logo` attributes to add your own logo to reports.
-* New `--proj-info` flag to add arbitrary information to the top of reports.
+* New `report_header_info` config option to add arbitrary information to the top of reports.
 * New `fn_clean_sample_names` config option to turn off sample name cleaning
   * This will print the full filename for samples. Less pretty reports and rows
     on the General Statistics table won't line up, but can prevent overwriting.
