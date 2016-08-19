@@ -164,6 +164,10 @@ plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     config.mqc_load_userconfig(config_file)
     plugin_hooks.mqc_trigger('config_loaded')
     
+    # Log the command used to launch MultiQC
+    report.multiqc_command = " ".join(sys.argv)
+    logger.debug("Command used: {}".format(report.multiqc_command))
+    
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
