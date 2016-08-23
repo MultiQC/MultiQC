@@ -20,15 +20,16 @@ def parse_reports(self):
     regexes = {
         'bam_file': r"bam file\s*=\s*(.+)",
         'reads_aligned': r"read(?:s| pairs) aligned\s*=\s*([\d,]+)",
+        'total_alignments': r"total alignments\s*=\s*([\d,]+)",
         'non_unique_alignments': r"non-unique alignments\s*=\s*([\d,]+)",
         'reads_aligned_genes': r"aligned to genes\s*=\s*([\d,]+)",
         'ambiguous_alignments': r"ambiguous alignments\s*=\s*([\d,]+)",
         'not_aligned': r"not aligned\s*=\s*([\d,]+)",
-        '5_3_bias': r"5'-3' bias\s*=\s*([\d\.]+)",
-        'reads_aligned_exonic': r"exonic\s*=\s*([\d\.]+)",
-        'reads_aligned_intronic': r"intronic\s*=\s*([\d\.]+)",
-        'reads_aligned_intergenic': r"intergenic\s*=\s*([\d\.]+)",
-        'reads_aligned_overlapping_exon': r"overlapping exon\s*=\s*([\d\.]+)",
+        '5_3_bias': r"5'-3' bias\s*=\s*([\d,]+)",
+        'reads_aligned_exonic': r"exonic\s*=\s*([\d,]+)",
+        'reads_aligned_intronic': r"intronic\s*=\s*([\d,]+)",
+        'reads_aligned_intergenic': r"intergenic\s*=\s*([\d,]+)",
+        'reads_aligned_overlapping_exon': r"overlapping exon\s*=\s*([\d,]+)",
     }
     for f in self.find_log_files(sp['rnaseq_results']):
         d = dict()
@@ -52,7 +53,7 @@ def parse_reports(self):
         s_name = self.clean_s_name(d['bam_file'], f['root'])
         
         # Add to general stats table
-        for k in ['5_3_bias', 'reads_aligned_genes', 'reads_aligned']:
+        for k in ['5_3_bias', 'reads_aligned']:
             try:
                 self.general_stats_data[s_name][k] = d[k]
             except KeyError:
@@ -91,24 +92,25 @@ def parse_reports(self):
     #### Plots
     
     # Genomic Origin Bar Graph
+    # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
     if len(self.qualimap_rnaseq_genome_results) > 0:
         gorigin_cats = OrderedDict()
-        gorigin_cats['reads_aligned_intergenic'] = {'name': 'Intergenic'}
-        gorigin_cats['reads_aligned_intronic'] = {'name': 'Intronic'}
         gorigin_cats['reads_aligned_exonic'] = {'name': 'Exonic'}
+        gorigin_cats['reads_aligned_intronic'] = {'name': 'Intronic'}
+        gorigin_cats['reads_aligned_intergenic'] = {'name': 'Intergenic'}
         gorigin_pconfig = {
             'title': 'Genomic Origin',
             'cpswitch_c_active': False
         }
         self.sections.append({
-            'name': 'Reads genomic origin',
+            'name': 'Genomic origin of reads',
             'anchor': 'qualimap-reads-genomic-origin',
             'content': plots.bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
         })
     
     if len(self.qualimap_rnaseq_cov_hist) > 0:
         self.sections.append({
-            'name': 'Coverage Profile Along Genes (total)',
+            'name': 'Gene Coverage Profile',
             'anchor': 'qualimap-genome-fraction-coverage',
             'content': plots.linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'title': 'Coverage Profile Along Genes (total)',
@@ -126,16 +128,8 @@ def parse_reports(self):
     self.general_stats_headers['5_3_bias'] = {
         'title': "5'-3' bias"
     }
-    self.general_stats_headers['reads_aligned_genes'] = {
-        'title': 'Reads in Genes',
-        'description': 'Reads Aligned - Genes (millions)',
-        'min': 0,
-        'scale': 'PuBu',
-        'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
-    }
     self.general_stats_headers['reads_aligned'] = {
-        'title': 'Aligned',
+        'title': 'M Aligned',
         'description': 'Reads Aligned (millions)',
         'min': 0,
         'scale': 'RdBu',

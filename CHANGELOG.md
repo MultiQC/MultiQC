@@ -13,6 +13,8 @@ Module updates:
 * **Picard**
   * `BaseDistributionByCycle` - new submodule! Written by @mlusignan
   * `RnaSeqMetrics` - new submodule! This one by @ewels ;)
+* **Qualimap RNASeqQC**
+  * Fixed parsing bug affecting counts in _Genomic Origin_ plot.
 * **Samtools**
   * `stats` submodule now has separate bar graph showing alignment scores
   * `flagstat` - new submodule! Written by @HLWiencko
