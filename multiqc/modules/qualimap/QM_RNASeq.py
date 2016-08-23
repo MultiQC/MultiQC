@@ -25,10 +25,10 @@ def parse_reports(self):
         'ambiguous_alignments': r"ambiguous alignments\s*=\s*([\d,]+)",
         'not_aligned': r"not aligned\s*=\s*([\d,]+)",
         '5_3_bias': r"5'-3' bias\s*=\s*([\d\.]+)",
-        'reads_aligned_exonic': r"exonic\s*=\s*([\d\.]+)",
-        'reads_aligned_intronic': r"intronic\s*=\s*([\d\.]+)",
-        'reads_aligned_intergenic': r"intergenic\s*=\s*([\d\.]+)",
-        'reads_aligned_overlapping_exon': r"overlapping exon\s*=\s*([\d\.]+)",
+        'reads_aligned_exonic': r"exonic\s*=\s*([\d\.\,]+)",
+        'reads_aligned_intronic': r"intronic\s*=\s*([\d\.\,]+)",
+        'reads_aligned_intergenic': r"intergenic\s*=\s*([\d\.\,]+)",
+        'reads_aligned_overlapping_exon': r"overlapping exon\s*=\s*([\d\.\,]+)",
     }
     for f in self.find_log_files(sp['rnaseq_results']):
         d = dict()
