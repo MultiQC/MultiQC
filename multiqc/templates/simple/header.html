@@ -1,0 +1,60 @@
+{# #######################
+  header.html
+##########################
+
+Simplified to omit the stuff that is usually hidden.
+No offer to play a YouTube tutorial video and so on.
+
+#}
+
+<h1 id="page_title">
+    {% if config.custom_logo is not none %}
+      <div class="pull-right">
+      {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
+        <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title if config.custom_logo_title is not none }}">
+      {{ '</a>' if config.custom_logo_url is not none }}
+      </div>
+    {% endif %}
+    <a href="http://multiqc.info" target="_blank">
+        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
+    </a>
+</h1>
+{% if config.title is not none or config.subtitle is not none %}
+<h1>
+  {{ config.title if config.title is not none }}
+  {{ '<br>' if config.title is not none and config.subtitle is not none }}
+  {{ '<small>'+config.subtitle+'</small>' if config.subtitle is not none }}
+</h1>
+{% endif %}
+
+{% if config.intro_text != False %}
+<p class="lead">
+  {{ config.intro_text if config.intro_text is not none else 'A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.' }}
+</p>
+{% endif %}
+
+{% if config.report_comment and config.report_comment | length > 0 %}
+<blockquote class="report_comment">{{ config.report_comment }}</blockquote>
+{% endif %}
+
+{% if config.report_header_info and config.report_header_info | length > 0 %}
+<div class="well">
+  <dl class="dl-horizontal" style="margin-bottom:0;">
+    {% for d in config.report_header_info %}{% for k, v in d.items() %}
+      <dt>{{ k }}</dt><dd>{{ v }}</dd>
+    {% endfor %}{% endfor %}
+  </dl>
+</div>
+{% endif %}
+
+<div id="analysis_dirs_wrapper">
+  <p>Report generated on {{ config.creation_date }} based on data in:<br>
+  {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>
+  {% else %}
+  <ul>
+    {% for d in config.analysis_dir %}
+    <li><code class="mqc_analysis_path">{{ d }}</code></li>
+    {%  endfor %}
+  </ul>
+  {% endif %}
+</div>

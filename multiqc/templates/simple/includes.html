@@ -1,0 +1,39 @@
+{# #######################
+  includes.html
+##########################
+
+Deliberately omitting JavaScript from this file.
+Also Glyphicons and the favicon images.
+
+#}
+
+<!-- Include CSS -->
+<style type="text/css">{{ include_file('assets/css/bootstrap.min.css') }}</style>
+<style type="text/css">{{ include_file('assets/css/default_multiqc.css') }}</style>
+{%- for m in report.modules_output %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.values() %}
+<style type="text/css">{{ include_file(css_href, None) }}</style>
+{%- endfor %}{% endif %}{% endfor %}
+
+<!-- CSS overrides for simple template -->
+<style type="text/css">
+.mainpage {
+  padding: 20px;
+  margin: 0;
+}
+.footer {
+  margin-left: 0;
+}
+.mpl_switch_group {
+  display: none;
+}
+.mqc_mplplot {
+  display: block !important;
+}
+#general_stats_table th,
+#general_stats_table td {
+  display: table-cell !important;
+}
+.mqc_table .data-coloured {
+  padding-right: 2px;
+}
+</style>

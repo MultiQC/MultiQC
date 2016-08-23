@@ -34,6 +34,9 @@ Core updates:
 * Table header defaults can now be set easily
 * General Statistics table now hidden if empty.
 * Some new defaults in the sample name cleaning
+* Updated the `simple` template.
+  * Now has no toolbox or nav, no JavaScript and is better suited for printing / PDFs.
+  * New `config.simple_output` config flag so code knows when we're trying to avoid JS.
 * Fixed some bugs with config settings (eg. template) being overwritten.
 * NFS log file deletion bug fixed by @brainstorm (#265)
 * Fixed bug in `--ignore` behaviour with directory names.

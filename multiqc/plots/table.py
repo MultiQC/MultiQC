@@ -163,7 +163,9 @@ def make_table (dt):
     #
     
     # Buttons above the table
-    html = """
+    html = ''
+    if not config.simple_output:
+        html += """
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
@@ -198,7 +200,8 @@ def make_table (dt):
     html += '</tbody></table></div></div>'
     
     # Build the bootstrap modal to customise columns and order
-    html += """
+    if not config.simple_output:
+        html += """
     <!-- MultiQC Table Columns Modal -->
     <div class="modal fade" id="{tid}_configModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
