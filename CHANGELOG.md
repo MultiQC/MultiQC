@@ -15,6 +15,7 @@ Module updates:
   * `RnaSeqMetrics` - new submodule! This one by @ewels ;)
 * **Qualimap RNASeqQC**
   * Fixed parsing bug affecting counts in _Genomic Origin_ plot.
+  * Module now works with European style thousand separators (`1.234,56` instead of `1,234.56`)
 * **Samtools**
   * `stats` submodule now has separate bar graph showing alignment scores
   * `flagstat` - new submodule! Written by @HLWiencko

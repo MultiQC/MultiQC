@@ -18,7 +18,6 @@ def parse_reports(self):
     sp = config.sp['qualimap']['rnaseq']
     self.qualimap_rnaseq_genome_results = dict()
     regexes = {
-        'bam_file': r"bam file\s*=\s*(.+)",
         'reads_aligned': r"read(?:s| pairs) aligned\s*=\s*([\d,]+)",
         'total_alignments': r"total alignments\s*=\s*([\d,]+)",
         'non_unique_alignments': r"non-unique alignments\s*=\s*([\d,]+)",
@@ -33,6 +32,24 @@ def parse_reports(self):
     }
     for f in self.find_log_files(sp['rnaseq_results']):
         d = dict()
+        
+        # Get the sample name
+        s_name_regex = re.search(r"bam file\s*=\s*(.+)", f['f'], re.MULTILINE)
+        if s_name_regex:
+            d['bam_file'] = s_name_regex.group(1)
+            s_name = self.clean_s_name(d['bam_file'], f['root'])
+        else:
+            log.warn("Couldn't find an input filename in genome_results file {}/{}".format(f['root'], f['fn']))
+            return None
+        
+        # Check for and 'fix' European style decimal places / thousand separators
+        comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d\d%\)", f['f'], re.MULTILINE)
+        if comma_regex:
+            log.debug("Trying to fix European comma style syntax in Qualimap report {}/{}".format(f['root'], f['fn']))
+            f['f'] = f['f'].replace('.','')
+            f['f'] = f['f'].replace(',','.')
+        
+        # Go through all numeric regexes
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
@@ -43,14 +60,6 @@ def parse_reports(self):
                     pass
                 except ValueError:
                     d[k] = r_search.group(1)
-        
-        # Check we have an input filename
-        if 'bam_file' not in d:
-            log.debug("Couldn't find an input filename in genome_results file {}".format(f['fn']))
-            return None
-        
-        # Get a nice sample name
-        s_name = self.clean_s_name(d['bam_file'], f['root'])
         
         # Add to general stats table
         for k in ['5_3_bias', 'reads_aligned']:
