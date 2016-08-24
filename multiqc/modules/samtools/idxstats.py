@@ -30,9 +30,10 @@ class IdxstatsReportMixin():
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_idxstats, 'multiqc_samtools_idxstats')
             
-            # Make a bar plot
+            # Prep the data for the plots
             keys = list()
             pdata = dict()
+            xy_counts = dict()
             # Count the total count
             total_mapped = 0
             for s_name in self.samtools_idxstats:
@@ -40,6 +41,10 @@ class IdxstatsReportMixin():
                     total_mapped += self.samtools_idxstats[s_name][k]['mapped']
             for s_name in self.samtools_idxstats:
                 pdata[s_name] = OrderedDict()
+                xy_counts[s_name] = dict()
+                x_count = False
+                y_count = False
+                # Loop through each chromosome
                 for k in self.samtools_idxstats[s_name]:
                     if k not in keys:
                         keys.append(k)
@@ -47,11 +52,42 @@ class IdxstatsReportMixin():
                     mapped = self.samtools_idxstats[s_name][k]['mapped']
                     if mapped >= total_mapped*0.001:
                         pdata[s_name][k] = mapped
+                    # Save counts if chromosome x or y
+                    if k.lower() == 'x' or k.lower() == 'chrx':
+                        x_count = mapped
+                    if k.lower() == 'y' or k.lower() == 'chry':
+                        y_count = mapped
+                # Only save these counts if we have both x and y
+                if x_count and y_count:
+                    xy_counts[s_name]['x'] = x_count
+                    xy_counts[s_name]['y'] = y_count
             
+            # X/Y ratio plot
+            if len(xy_counts) > 0:
+                xy_keys = OrderedDict()
+                xy_keys['x'] = { 'name': 'Chromosome X' }
+                xy_keys['y'] = { 'name': 'Chromosome Y' }
+                pconfig = {
+                    'id': 'samtools-idxstats-xy-plot',
+                    'title': 'Samtools idxstats - chrXY mapped reads',
+                    'ylab': 'Percent of X+Y Reads',
+                    'cpswitch_counts_label': 'Number of Reads',
+                    'cpswitch_percent_label': 'Percent of X+Y Reads',
+                    'cpswitch_c_active': False
+                }
+                self.sections.append({
+                    'name': 'XY counts',
+                    'anchor': 'samtools-idxstats-xy-counts',
+                    'content': plots.bargraph.plot(xy_counts, xy_keys, pconfig)
+                })
+                
+            
+            # Mapped reads per chr line plot
             pconfig = {
-                'id': 'samtools-idxstats-mapped-reads',
-                'title': 'Samtools idxstats - Mapped Reads',
+                'id': 'samtools-idxstats-mapped-reads-plot',
+                'title': 'Samtools idxstats - Mapped reads per contig',
                 'ylab': '# Reads',
+                'xlab': 'Chromosome Name',
                 'categories': keys,
                 'tt_label': '<strong>{point.category}:</strong> {point.y}'
             }
@@ -59,7 +95,7 @@ class IdxstatsReportMixin():
             self.sections.append({
                 'name': 'Samtools idxstats',
                 'anchor': 'samtools-idxstats',
-                'content': '<p>The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome. ' +
+                'content': '<p>The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
                     'Chromosomes with &lt; 0.1% of the total aligned reads are omitted from this plot.</p>' +
                     plots.linegraph.plot(pdata, pconfig)
             })
