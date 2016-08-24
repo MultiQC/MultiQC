@@ -43,7 +43,7 @@ def parse_reports(self):
             return None
         
         # Check for and 'fix' European style decimal places / thousand separators
-        comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d\d%\)", f['f'], re.MULTILINE)
+        comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d+%\)", f['f'], re.MULTILINE)
         if comma_regex:
             log.debug("Trying to fix European comma style syntax in Qualimap report {}/{}".format(f['root'], f['fn']))
             f['f'] = f['f'].replace('.','')
