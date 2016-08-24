@@ -109,6 +109,8 @@ samtools:
         contents: 'This file was produced by samtools stats'
     flagstat:
         contents: 'in total (QC-passed reads + QC-failed reads)'
+    idxstats:
+        fn: '*idxstat*'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
 snpeff:

@@ -47,14 +47,14 @@ Currently, supported tools include:
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
   * [Bamtools](https://github.com/pezmaster31/bamtools) (`stats`)
-  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`)
+  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`)
   * [Bcftools](https://samtools.github.io/bcftools/) (`stats`)
-  * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`)
+  * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`, `RnaSeqMetrics`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [methylQA](http://methylqa.sourceforge.net/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
   * [SnpEff](http://snpeff.sourceforge.net/)
-  * [QUAST](http://quast.bioinf.spbau.ru/) 
+  * [QUAST](http://quast.bioinf.spbau.ru/)
 
 More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log

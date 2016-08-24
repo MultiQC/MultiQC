@@ -19,6 +19,7 @@ Module updates:
 * **Samtools**
   * `stats` submodule now has separate bar graph showing alignment scores
   * `flagstat` - new submodule! Written by @HLWiencko
+  * `idxstats` - new submodule! This one by @ewels again
 
 
 Core updates:

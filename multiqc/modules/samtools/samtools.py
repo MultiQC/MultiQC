@@ -10,12 +10,13 @@ from multiqc import config, BaseMultiqcModule
 from . import stats, flagstat
 from .stats import StatsReportMixin
 from .flagstat import FlagstatReportMixin
+from .idxstats import IdxstatsReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin):
+class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, IdxstatsReportMixin):
     """ Samtools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
@@ -45,6 +46,10 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin):
         n['flagstat'] = self.parse_samtools_flagstats()
         if n['flagstat'] > 0:
             log.info("Found {} flagstat reports".format(n['flagstat']))
+        
+        n['idxstats'] = self.parse_samtools_idxstats()
+        if n['idxstats'] > 0:
+            log.info("Found {} idxstats reports".format(n['idxstats']))
         
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
