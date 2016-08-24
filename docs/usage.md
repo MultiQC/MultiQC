@@ -69,6 +69,32 @@ are listed with `multiqc --help`.
 If you're interested in creating your own custom template, see the
 [writing new templates](templates.md) section.
 
+## PDF Reports
+Whilst HTML is definitely the format of choice for MultiQC reports due to
+the interactive features that it can offer, PDF files are an integral part
+of some people's workflows. To try to accommodate this, MultiQC has a
+`--pdf` command line flag which will try to create a PDF report for you.
+
+To do this, MultiQC uses the `simple` template. This uses flat plots,
+has no navigation or toolbar and strips out all JavaScript. The resulting
+HTML report is pretty basic, but this simplicity is helpful when generating
+PDFs.
+
+Once the report is generated MultiQC attempts to call [Pandoc](http://pandoc.org/),
+a command line tool able to convert documents between different file formats.
+**You must have Pandoc already installed for this to work**. If you don't have
+Pandoc installed, you will get an error message that looks like this:
+```
+Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/
+```
+
+Please note that Pandoc is a complex tool and uses LaTeX / XeLaTeX for PDF
+generation. Please make sure that you have the latest version of Pandoc and
+that it can successfully convert basic HTML files to PDF before reporting
+and errors. Also note that not all plots have flat image equivalents, so
+some will be missing (at time of writing: FastQC sequence content plot,
+beeswarm dot plots, heatmaps).
+
 ## Printing to stdout
 If you would like to generate MultiQC reports on the fly, you can print the
 output to standard out by specifying `-n stdout`. Note that the data directory
