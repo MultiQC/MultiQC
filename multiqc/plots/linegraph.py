@@ -180,7 +180,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                       '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
     
     # Buttons to cycle through different datasets
-    if len(plotdata) > 1:
+    if len(plotdata) > 1 and not config.simple_output:
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
         for k, p in enumerate(plotdata):
             pid = pids[k]

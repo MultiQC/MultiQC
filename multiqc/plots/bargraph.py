@@ -215,7 +215,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
                       '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
     
     # Counts / Percentages Switch
-    if pconfig.get('cpswitch') is not False:
+    if pconfig.get('cpswitch') is not False and not config.simple_output:
         if pconfig.get('cpswitch_c_active', True) is True:
             c_active = 'active'
             p_active = ''
@@ -233,7 +233,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
             html += ' &nbsp; &nbsp; '
     
     # Buttons to cycle through different datasets
-    if len(plotdata) > 1:
+    if len(plotdata) > 1 and not config.simple_output:
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
         for k, p in enumerate(plotdata):
             pid = pids[k]

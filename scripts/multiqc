@@ -18,6 +18,7 @@ import os
 import pkg_resources
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import traceback
@@ -121,6 +122,10 @@ from multiqc.utils import report, plugin_hooks, config, log
                     is_flag = True,
                     help = "Use only interactive plots (HighCharts Javascript)"
 )
+@click.option('--pdf', 'make_pdf',
+                    is_flag = True,
+                    help = "Creates PDF report with 'simple' template. Requires Pandoc to be installed."
+)
 @click.option('-c', '--config', 'config_file',
                     type = click.Path(exists=True, readable=True),
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
@@ -138,7 +143,7 @@ from multiqc.utils import report, plugin_hooks, config, log
 
 def multiqc(analysis_dir, dirs, no_clean_sname, title, report_comment, template, module, exclude, outdir,
 ignore, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
-plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
+plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
     
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -206,6 +211,8 @@ plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
         config.plots_force_flat = True
     if plots_interactive:
         config.plots_force_interactive = True
+    if make_pdf:
+        config.template = 'simple'
     config.kwargs = kwargs # Plugin command line options
     
     plugin_hooks.mqc_trigger('execution_start')
@@ -213,6 +220,8 @@ plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     logger.info("This is MultiQC v{}".format(__version__))
     logger.debug("Command     : {}".format(' '.join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
+    if make_pdf:
+        logger.info('--pdf specified. Using non-interactive HTML template.')
     logger.info("Template    : {}".format(config.template))
 
     # Add files if --file-list option is given
@@ -502,6 +511,35 @@ plots_flat, plots_interactive, config_file, verbose, quiet, **kwargs):
     if config.zip_data_dir and config.data_dir is not None:
         shutil.make_archive(config.data_dir, 'zip', config.data_dir)
         shutil.rmtree(config.data_dir)
+    
+    # Try to create a PDF if requestted
+    if make_pdf:
+        try:
+            pdf_fn_name = config.output_fn_name.replace('.html', '.pdf')
+            pandoc_call = [
+                'pandoc',
+                '--standalone',
+                config.output_fn,
+                '--output', pdf_fn_name,
+                '--latex-engine=xelatex',
+                '-V', 'documentclass=article',
+                '-V', 'geometry=margin=1in',
+                '-V', 'title='
+            ]
+            if config.pandoc_template is not None:
+                pandoc_call.append('--template={}'.format(config.pandoc_template))
+            logger.debug("Attempting Pandoc conversion to PDF with following command:\n{}".format(' '.join(pandoc_call)))
+            pdf_exit_code = subprocess.call(pandoc_call)
+            if pdf_exit_code != 0:
+                logger.error("Error creating PDF! Pandoc returned a non-zero exit code.")
+            else:
+                logger.info("PDF Report  : {}".format(pdf_fn_name))
+        except OSError as e:
+            if e.errno == os.errno.ENOENT:
+                logger.error('Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/')
+            else:
+                logger.error("Error creating PDF! Something went wrong when creating the PDF\n"+
+                    ('='*60)+"\n{}\n".format(traceback.format_exc()) + ('='*60))
     
     plugin_hooks.mqc_trigger('execution_finish')
 
