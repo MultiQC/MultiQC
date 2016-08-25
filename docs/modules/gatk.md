@@ -11,6 +11,6 @@ Its powerful processing engine and high-performance computing features make it c
 of taking on projects of any size.
 
 ## VariantEval
-[VariantEval][https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php]
+[VariantEval](https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php)
 is a general-purpose tool for variant evaluation. Gives information about percentage of
 variants in dbSNP, genotype concordance, Ti/Tv ratios and a lot more.
