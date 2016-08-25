@@ -52,6 +52,7 @@ Currently, supported tools include:
   * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`, `RnaSeqMetrics`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [methylQA](http://methylqa.sourceforge.net/)
+  * [GATK](https://software.broadinstitute.org/gatk/) (`VariantEval`)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
   * [SnpEff](http://snpeff.sourceforge.net/)
   * [QUAST](http://quast.bioinf.spbau.ru/)

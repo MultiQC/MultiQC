@@ -32,6 +32,7 @@ MultiQC Modules:
     Methyl QA: modules/methylQA.md
     featureCounts: modules/featureCounts.md
     Bcftools: modules/bcftools.md
+    GATK: modules/gatk.md
     Qualimap: modules/qualimap.md
     SnpEff: modules/snpeff.md
     Quast: modules/quast.md

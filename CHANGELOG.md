@@ -2,6 +2,11 @@
 
 #### v0.8dev
 Module updates:
+* [**GATK**](https://software.broadinstitute.org/gatk/) - new module!
+  * Added support for VariantEval reports, only parsing a little of the information
+    in there so far, but it's a start.
+  * Module originally written by @robinandeer at the [OBF Codefest](https://www.open-bio.org/wiki/Codefest_2016),
+    finished off by @ewels
 * [**Bcftools**](https://samtools.github.io/bcftools/) - new module!
 * [**QUAST**](http://quast.bioinf.spbau.ru/) - new module!
   * QUAST is a tool for assessing de novo assemblies against reference genomes.
