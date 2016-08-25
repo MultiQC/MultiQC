@@ -1,2 +1,4 @@
 # -*- coding: utf-8 -*-
-from .core import MultiqcModule
+from __future__ import absolute_import
+
+from .gatk import MultiqcModule
