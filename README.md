@@ -28,34 +28,34 @@ it ideal for routine fast quality control.
 Currently, supported tools include:
 
 * Quality control & pre-processing
+  * [Cutadapt](https://code.google.com/p/cutadapt/)
   * [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
   * [FastQ Screen](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
-  * [Cutadapt](https://code.google.com/p/cutadapt/)
-  * [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
   * [Skewer](https://github.com/relipmoc/skewer)
+  * [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
 * Read aligners / quantifiers
-  * [Salmon](http://combine-lab.github.io/salmon/)
-  * [Kallisto](http://pachterlab.github.io/kallisto/)
-  * [STAR](https://github.com/alexdobin/STAR)
-  * [Tophat](https://ccb.jhu.edu/software/tophat/)
+  * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
   * [Bowtie](http://bowtie-bio.sourceforge.net)
   * [Bowtie 2](http://bowtie-bio.sourceforge.net/bowtie2/)
-  * [Bismark](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
   * [HiCUP](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
+  * [Kallisto](http://pachterlab.github.io/kallisto/)
+  * [Salmon](http://combine-lab.github.io/salmon/)
+  * [STAR](https://github.com/alexdobin/STAR)
+  * [Tophat](https://ccb.jhu.edu/software/tophat/)
 * Post-alignment tools
-  * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`, `inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
-  * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
-  * [Samblaster](https://github.com/GregoryFaust/samblaster)
   * [Bamtools](https://github.com/pezmaster31/bamtools) (`stats`)
-  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`)
   * [Bcftools](https://samtools.github.io/bcftools/) (`stats`)
+  * [GATK](https://software.broadinstitute.org/gatk/) (`VariantEval`)
+  * [methylQA](http://methylqa.sourceforge.net/)
   * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`, `RnaSeqMetrics`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
-  * [methylQA](http://methylqa.sourceforge.net/)
-  * [GATK](https://software.broadinstitute.org/gatk/) (`VariantEval`)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
-  * [SnpEff](http://snpeff.sourceforge.net/)
   * [QUAST](http://quast.bioinf.spbau.ru/)
+  * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`, `inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
+  * [Samblaster](https://github.com/GregoryFaust/samblaster)
+  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`)
+  * [SnpEff](http://snpeff.sourceforge.net/)
+  * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
 
 More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log

@@ -8,34 +8,34 @@ Using MultiQC:
   Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:
+    Cutadapt: modules/cutadapt.md
     FastQC: modules/fastqc.md
     FastQ Screen: modules/fastq_screen.md
     Skewer: modules/skewer.md
-    Cutadapt: modules/cutadapt.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
+    Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
-    TopHat: modules/tophat.md
+    HiCUP: modules/hicup.md
+    Kallisto: modules/kallisto.md
     STAR: modules/star.md
     Salmon: modules/salmon.md
-    Kallisto: modules/kallisto.md
-    HiCUP: modules/hicup.md
-    Bismark: modules/bismark.md
+    TopHat: modules/tophat.md
   Post-alignment:
     Bamtools: modules/bamtools.md
-    Samtools: modules/samtools.md
-    Samblaster: modules/samblaster.md
-    Preseq: modules/preseq.md
-    Picard: modules/picard.md
-    RSeQC: modules/rseqc.md
-    Methyl QA: modules/methylQA.md
-    featureCounts: modules/featureCounts.md
     Bcftools: modules/bcftools.md
+    featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
+    Methyl QA: modules/methylQA.md
+    Picard: modules/picard.md
+    Preseq: modules/preseq.md
     Qualimap: modules/qualimap.md
-    SnpEff: modules/snpeff.md
     Quast: modules/quast.md
+    RSeQC: modules/rseqc.md
+    Samblaster: modules/samblaster.md
+    Samtools: modules/samtools.md
+    SnpEff: modules/snpeff.md
 Coding with MultiQC:
   Writing new templates: templates.md
   Writing new modules: modules.md
