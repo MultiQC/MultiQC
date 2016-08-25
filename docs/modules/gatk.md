@@ -10,6 +10,7 @@ a wide variety of tools with a primary focus on variant discovery and genotyping
 Its powerful processing engine and high-performance computing features make it capable
 of taking on projects of any size.
 
-## [VariantEval][https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php]
-General-purpose tool for variant evaluation (% in dbSNP, genotype concordance,
-Ti/Tv ratios and a lot more)
+## VariantEval
+[VariantEval][https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php]
+is a general-purpose tool for variant evaluation. Gives information about percentage of
+variants in dbSNP, genotype concordance, Ti/Tv ratios and a lot more.
