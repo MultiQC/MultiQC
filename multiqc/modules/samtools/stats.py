@@ -128,7 +128,7 @@ class StatsReportMixin():
             plot_html = plots.beeswarm.plot(self.samtools_stats, keys,
                                             {'id': 'samtools-stats-dp'})
             self.sections.append({
-                'name': 'Samtools Stats',
+                'name': 'Alignment metrics from samtools stats',
                 'anchor': 'samtools-stats',
                 'content': "<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p> {}".format(plot_html)
             })
