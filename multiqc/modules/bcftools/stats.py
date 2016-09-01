@@ -89,7 +89,7 @@ class StatsReportMixin():
                 'cpswitch_counts_label': 'Number of Substitutions'
             }
             self.sections.append({
-                'name': 'Substitution Types',
+                'name': 'Variant Substitution Types',
                 'anchor': 'bcftools-stats',
                 'content': plots.bargraph.plot(self.bcftools_stats, keys, pconfig)
             })

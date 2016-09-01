@@ -44,23 +44,23 @@ class MultiqcModule(BaseMultiqcModule):
         # Report sections
         self.sections = list()
         self.sections.append({
-            'name': 'Counts by Genomic Region',
+            'name': 'Variants by Genomic Region',
             'anchor': 'snpeff-genomic-regions',
             'content': self.count_genomic_region_plot()
         })
         self.sections.append({
-            'name': 'Effects by Impact',
+            'name': 'Variant Effects by Impact',
             'anchor': 'snpeff-effects-impact',
             'content': self.effects_impact_plot()
         })
         self.sections.append({
-            'name': 'Effects by Class',
+            'name': 'Variant Effects by Class',
             'anchor': 'snpeff-functional-class',
             'content': self.effects_function_plot()
         })
         if len(self.snpeff_qualities) > 0:
             self.sections.append({
-                'name': 'Qualities',
+                'name': 'Variant Qualities',
                 'anchor': 'snpeff-qualities',
                 'content': self.qualities_plot()
             })
