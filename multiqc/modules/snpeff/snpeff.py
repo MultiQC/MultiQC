@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Report sections
         self.sections = list()
         self.sections.append({
-            'name': 'Variant Counts by Genomic Region',
+            'name': 'Variants by Genomic Region',
             'anchor': 'snpeff-genomic-regions',
             'content': self.count_genomic_region_plot()
         })

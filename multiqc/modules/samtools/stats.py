@@ -128,7 +128,7 @@ class StatsReportMixin():
             plot_html = plots.beeswarm.plot(self.samtools_stats, keys,
                                             {'id': 'samtools-stats-dp'})
             self.sections.append({
-                'name': 'Alignment metrics from samtools stats',
+                'name': 'Alignment metrics',
                 'anchor': 'samtools-stats',
                 'content': "<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p> {}".format(plot_html)
             })
@@ -149,7 +149,7 @@ def alignment_section(samples_data):
                      "skipping samtools plot for: {}".format(sample_id))
     bargraph = alignment_chart(bedgraph_data)
     section = {
-        'name': 'Alignment',
+        'name': 'Percent Mapped',
         'anchor': 'samtools-stats-alignment',
         'content': ("<p>Alignment metrics from <code>samtools stats</code>;"
                     " mapped vs. unmapped reads.</p> {}".format(bargraph))
