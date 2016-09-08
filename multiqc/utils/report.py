@@ -13,7 +13,7 @@ import mimetypes
 import os
 import yaml
 
-from multiqc import logger, config, plots
+from multiqc import logger, config
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
 from yaml.representer import Representer, SafeRepresenter
@@ -108,20 +108,6 @@ def get_filelist():
         elif os.path.isfile(path):
             add_file(os.path.basename(path), os.path.dirname(path))
 
-
-def general_stats_build_html():
-    """ Build the general stats HTML, be that a beeswarm plot or a table. """
-    global general_stats_html
-    if len(general_stats_data) > 0:
-        pconfig = {
-            'id': 'general_stats_table',
-            'table_title': 'General Statistics',
-            'save_file': True,
-            'raw_data_fn':'multiqc_general_stats'
-        }
-        general_stats_html = plots.table.plot(general_stats_data, general_stats_headers, pconfig)
-    else:
-        config.skip_generalstats = True
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])

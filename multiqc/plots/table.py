@@ -8,7 +8,7 @@ import logging
 import os
 import random
 
-from multiqc.utils import config, util_functions
+from multiqc.utils import config, report, util_functions
 from multiqc.plots import table_object, beeswarm
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,8 @@ def make_table (dt):
             for (s_name, samp) in dt.data[idx].items():
                 if k in samp:
                     val = samp[k]
-                    dt.raw_vals[s_name][rid] = val
+                    kname = '{}_{}'.format(header['namespace'], rid[5:]) # trucate 'kxhe_' random chars from rid
+                    dt.raw_vals[s_name][kname] = val
                     
                     if 'modify' in header and callable(header['modify']):
                         val = header['modify'](val)
@@ -240,6 +241,7 @@ def make_table (dt):
     if dt.pconfig.get('save_file') is True:
         fn = dt.pconfig.get('raw_data_fn', 'multiqc_{}'.format(table_id) )
         util_functions.write_data_file(dt.raw_vals, fn )
+        report.saved_raw_data[fn] = dt.raw_vals
     
     return html
     

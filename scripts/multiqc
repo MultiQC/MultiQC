@@ -31,7 +31,7 @@ except ImportError:
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-from multiqc import logger, __version__
+from multiqc import logger, plots, __version__
 from multiqc.utils import report, plugin_hooks, config, log
 
 @click.command(
@@ -383,13 +383,23 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     
     plugin_hooks.mqc_trigger('after_modules')
     
-    # Generate the General Statistics HTML
-    report.general_stats_build_html()
+    # Generate the General Statistics HTML & write to file
+    if len(report.general_stats_data) > 0:
+        pconfig = {
+            'id': 'general_stats_table',
+            'table_title': 'General Statistics',
+            'save_file': True,
+            'raw_data_fn':'multiqc_general_stats'
+        }
+        report.general_stats_html = plots.table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+    else:
+        config.skip_generalstats = True
     
-    # Write the general stats and report sources to disk
+    # Write the report sources to disk
     if config.data_dir is not None:
-        # report.general_stats_tofile()
         report.data_sources_tofile()
+    
+    plugin_hooks.mqc_trigger('before_report_generation')
     
     # Make the final report path & data directories
     if filename != 'stdout':

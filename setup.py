@@ -97,6 +97,7 @@ setup(
             # 'config_loaded = myplugin.hooks:config_loaded',
             # 'before_modules = myplugin.hooks:before_modules',
             # 'after_modules = myplugin.hooks:after_modules',
+            # 'before_report_generation = myplugin.hooks:before_report_generation',
             # 'execution_finish = myplugin.hooks:execution_finish',
         # ]
     },
