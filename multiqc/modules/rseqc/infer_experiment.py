@@ -22,10 +22,11 @@ def parse_reports(self):
         'Paired_single': r"This is ([A-Za-z]*) Data"
     }
     second_regexes = {
-        '1++,1--,2+-,2-+': r"\"1\+\+,1--,2\+-,2-\+\":\s(\d\.\d*)"
-        '1+-,1-+,2++,2--': r"\"1\+-,1-\+,2\+\+,2--\":\s(\d\.\d*)"
-        '++,--': r"\"\+\+,--\":\s(\d\.\d*)"
-        '+-,-+': r"\+-,-\+\":\s(\d\.\d*)"
+        'pe_sense': r"\"1\+\+,1--,2\+-,2-\+\": (\d\.\d*)"
+        'pe_antisense,2++,2--': r"\"1\+-,1-\+,2\+\+,2--\": (\d\.\d*)"
+        'se_sense': r"\"\+\+,--\": (\d\.\d*)"
+        'se_antisense': r"\+-,-\+\": (\d\.\d*)"
+        'failed': r"\"Fraction of reads failed to determine: (\d\.\d*)"
     }
     
     # Go through files and parse data using regexes
@@ -34,23 +35,26 @@ def parse_reports(self):
         for k, r in first_regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
-                d[k] = int(r_search.group(1))
+                d[k] = str(r_search.group(1))
+
         for k, r in second_regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
-                d['{}_total_bases'.format(k)] = int(r_search.group(1))
-                d['{}_tag_count'.format(k)] = int(r_search.group(2))
-                d['{}_tags_kb'.format(k)] = float(r_search.group(2))
+                d[k] = float(r_search.group(1)
+                
+               # d['{}_total_bases'.format(k)] = int(r_search.group(1))
+               # d['{}_tag_count'.format(k)] = int(r_search.group(2))
+               # d['{}_tags_kb'.format(k)] = float(r_search.group(2))
         
         # Calculate some percentages for parsed file
-        if 'total_tags' in d:
-            t = float(d['total_tags'])
-            pcts = dict()
-            for k in d:
-                if k.endswith('_tag_count'):
-                    pk = '{}_tag_pct'.format(k[:-10])
-                    pcts[pk] = (float(d[k]) / t)*100.0
-            d.update(pcts)
+        #if 'total_tags' in d:
+        #    t = float(d['total_tags'])
+        #    pcts = dict()
+        #    for k in d:
+        #        if k.endswith('_tag_count'):
+        #            pk = '{}_tag_pct'.format(k[:-10])
+        #            pcts[pk] = (float(d[k]) / t)*100.0
+        #    d.update(pcts)
         
         if len(d) > 0:
             if f['s_name'] in self.read_dist:
@@ -63,18 +67,13 @@ def parse_reports(self):
         # Write to file
         self.write_data_file(self.read_dist, 'multiqc_rseqc_infer_experiment')
         
-        # Plot bar graph of groups --- remove?
+        # Plot bar graph of groups
         keys = OrderedDict()
-        keys['cds_exons_tag_count'] = {'name': "CDS_Exons"}
-        keys['5_utr_exons_tag_count'] = {'name': "5'UTR_Exons"}
-        keys['3_utr_exons_tag_count'] = {'name': "3'UTR_Exons"}
-        keys['introns_tag_count'] = {'name': "Introns"}
-        keys['tss_up_1kb_tag_count'] = {'name': "TSS_up_1kb"}
-        keys['tss_up_5kb_tag_count'] = {'name': "TSS_up_5kb"}
-        keys['tss_up_10kb_tag_count'] = {'name': "TSS_up_10kb"}
-        keys['tes_down_1kb_tag_count'] = {'name': "TES_down_1kb"}
-        keys['tes_down_5kb_tag_count'] = {'name': "TES_down_5kb"}
-        keys['tes_down_10kb_tag_count'] = {'name': "TES_down_10kb"}
+        keys['pe_sense'] = {'name': "Paired_end_Sense"}
+        keys['pe_antisense'] = {'name': "Paired_end_Antisense"}
+        keys['se_sense'] = {'name': "Single_end_Sense"}
+        keys['se_antisense'] = {'name': "Single_end_antisense"}
+        keys['failed'] = {'name': "Failed_to_determine"}
         
         # Config for the plot   ----  redo
         pconfig = {
