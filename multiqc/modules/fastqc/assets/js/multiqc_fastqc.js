@@ -73,6 +73,12 @@ function fastqc_seq_content_heatmap() {
     c_width = $('#fastqc_seq_heatmap').parent().width() - 5; // -5 for status bar
     c_height = $('#fastqc_seq_heatmap').parent().height() - 2; // -2 for bottom line padding
     s_height = c_height / num_samples;
+    // Minimum row height
+    if(s_height < 2){
+        s_height = 2;
+        c_height = num_samples * 2;
+        $('#fastqc_seq_heatmap').parent().parent().height(c_height+10);
+    }
     // Resize the canvas properties
     $('#fastqc_seq_heatmap').prop({
         'width': c_width,
@@ -137,11 +143,13 @@ function fastqc_seq_content_heatmap() {
                 ctx.fillRect (xpos, ypos, this_width+1, s_height);
                 xpos += this_width;
             });
-            // Draw a line under this row
-            ctx.beginPath();
-            ctx.moveTo(6, ypos);
-            ctx.lineTo(c_width, ypos);
-            ctx.stroke();
+            // Draw a line under this row if we don't have too many samples
+            if(num_samples <= 20){
+                ctx.beginPath();
+                ctx.moveTo(6, ypos);
+                ctx.lineTo(c_width, ypos);
+                ctx.stroke();
+            }
             ypos += s_height;
         });
         // Final line under row

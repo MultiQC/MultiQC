@@ -6,6 +6,9 @@
 }
 .mqc-section-fastqc .popover .popover-content {
   font-size: 11px;
+  max-height: 300px;
+  white-space: nowrap;
+  overflow: auto;
 }
 .popover-success .popover-title {
   background-color: #dff0d8;

@@ -13,6 +13,9 @@ Module updates:
 * **Bismark** now supports reports from `bam2nuc`, giving Cytosine coverage in General Stats.
 * **Bowtie1**
   * Updated to try to find bowtie command before log, handle multiple logs in one file. Same as bowtie2.
+* **FastQC**
+  * Sample pass/warn/fail lists now display properly even with large numbers of samples
+  * Sequence content heatmap display is better with many samples
 * **Kallisto**
   * Now supports logs from SE data.
 * **Picard**
@@ -51,6 +54,7 @@ Core updates:
 * NFS log file deletion bug fixed by @brainstorm (#265)
 * Fixed bug in `--ignore` behaviour with directory names.
 * Fixed nasty bug in beeswarm dot plots where sample names were mixed up (#278)
+* Beeswarm header text is now more informative (sample count with more info on a tooltip)
 
 Many thanks to those at the [OpenBio Codefest 2016](https://www.open-bio.org/wiki/Codefest_2016)
 who worked on MultiQC projects.
