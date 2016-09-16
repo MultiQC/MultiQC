@@ -51,7 +51,7 @@ Currently, supported tools include:
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
   * [QUAST](http://quast.bioinf.spbau.ru/)
-  * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`, `infer_experiemten`,`inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
+  * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`,  `infer_experiment`,`inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
   * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`)
   * [SnpEff](http://snpeff.sourceforge.net/)

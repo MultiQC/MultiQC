@@ -24,11 +24,12 @@ Module updates:
 * **Qualimap RNASeqQC**
   * Fixed parsing bug affecting counts in _Genomic Origin_ plot.
   * Module now works with European style thousand separators (`1.234,56` instead of `1,234.56`)
+* **RSeQC**
+  * `infer_experiment` - new submodule! Written by @Hammarn
 * **Samtools**
   * `stats` submodule now has separate bar graph showing alignment scores
   * `flagstat` - new submodule! Written by @HLWiencko
   * `idxstats` - new submodule! This one by @ewels again
-  * added a module for infer_experiments.py to RseQC
 
 Core updates:
 * New `--export`/`-p` option to generate static images plot in `multiqc_plots` (`.png`, `.svg` and `.pdf`)

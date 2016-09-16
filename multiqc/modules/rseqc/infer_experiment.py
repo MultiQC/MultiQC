@@ -68,8 +68,9 @@ def parse_reports(self):
             'ylab': '% Tags',
             'ymin': 0,
             'ymax': 100,
-            'cpswitch': False,
-            'cpswitch_counts_label': 'Number of Tags',
+            'tt_percentages': False,
+            'ylab_format': '{value}%',
+            'cpswitch': False
         }
 
         p_link = '<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
