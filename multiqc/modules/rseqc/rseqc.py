@@ -16,6 +16,7 @@ from . import junction_saturation
 from . import read_gc
 from . import read_distribution
 from . import read_duplication
+from . import infer_experiment
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -72,6 +73,10 @@ class MultiqcModule(BaseMultiqcModule):
         n['read_duplication'] = read_duplication.parse_reports(self)
         if n['read_duplication'] > 0:
             log.info("Found {} read_duplication reports".format(n['read_duplication']))
+ 
+        n['infer_experiment'] = infer_experiment.parse_reports(self)
+        if n['infer_experiment'] > 0:
+            log.info("Found {} infer_experiment reports".format(n['infer_experiment']))
         
 
         # Exit if we didn't find anything
