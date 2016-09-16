@@ -19,11 +19,11 @@ def parse_reports(self):
     # Set up vars 
     self.infer_exp = dict()
     regexes = {
-        'pe_sense': r"\"1\+\+,1--,2\+-,2-\+\": (\d\.\d*)",
-        'pe_antisense': r"\"1\+-,1-\+,2\+\+,2--\": (\d\.\d*)",
-        'se_sense': r"\"\+\+,--\": (\d\.\d*)",
-        'se_antisense': r"\+-,-\+\": (\d\.\d*)",
-        'failed': r"\"Fraction of reads failed to determine: (\d\.\d*)"
+        'pe_sense': r"\"1\+\+,1--,2\+-,2-\+\": (\d\.\d+)",
+        'pe_antisense': r"\"1\+-,1-\+,2\+\+,2--\": (\d\.\d+)",
+        'se_sense': r"\"\+\+,--\": (\d\.\d+)",
+        'se_antisense': r"\+-,-\+\": (\d\.\d+)",
+        'failed': r"Fraction of reads failed to determine: (\d\.\d+)"
     }
     
     # Go through files and parse data using regexes
@@ -45,29 +45,41 @@ def parse_reports(self):
         # Write to file
         self.write_data_file(self.infer_exp, 'multiqc_rseqc_infer_experiment')
         
+        # Merge PE and SE for plot
+        pdata = dict()
+        for s_name, vals in self.infer_exp.items():
+            pdata[s_name] = dict()
+            for k, v in vals.items():
+                v *= 100.0 # Multiply to get percentage
+                if k[:2] == 'pe' or k[:2] == 'se':
+                    k = k[3:]
+                pdata[s_name][k] = v + pdata[s_name].get(k, 0)
+
         # Plot bar graph of groups
         keys = OrderedDict()
-        keys['pe_sense'] = {'name': "Paired End Sense"}
-        keys['pe_antisense'] = {'name': "Paired End Antisense"}
-        keys['se_sense'] = {'name': "Single End Sense"}
-        keys['se_antisense'] = {'name': "Single End Antisense"}
+        keys['sense'] = {'name': "Sense"}
+        keys['antisense'] = {'name': "Antisense"}
         keys['failed'] = {'name': "Undetermined"}
+
         # Config for the plot
         pconfig = {
             'id': 'rseqc_infer_experiment_plot',
             'title': 'RSeQC: Infer experiment',
-            'ylab': '# Tags',
+            'ylab': '% Tags',
+            'ymin': 0,
+            'ymax': 100,
             'cpswitch': False,
             'cpswitch_counts_label': 'Number of Tags',
         }
-        
+
         p_link = '<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
         self.sections.append({
             'name': 'Infer experiment',
             'anchor': 'rseqc-infer_experiment',
-            'content': "<p>"+p_link+" counts how reads and read pairs match the strandedness of overlapping transcripts. It can be used to infer whether RNA-seq library preps are stranded (sense or antisense) .</p>" + 
-                plots.bargraph.plot(self.infer_exp, keys, pconfig)
+            'content': "<p>"+p_link+" counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts. It can be used to infer whether RNA-seq library preps are stranded (sense or antisense) .</p>" +
+                plots.bargraph.plot(pdata, keys, pconfig)
         })
+
     # Return number of samples found
     return len(self.infer_exp)
     
