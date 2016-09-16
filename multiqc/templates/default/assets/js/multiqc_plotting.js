@@ -1021,6 +1021,7 @@ function plot_beeswarm_graph(target, ds){
         plotOptions: {
           series: {
             name: label_long,
+            turboThreshold: 0,
             marker: {
               radius: markerRadius,
               states: {

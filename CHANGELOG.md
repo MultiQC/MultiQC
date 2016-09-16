@@ -55,6 +55,7 @@ Core updates:
 * Fixed bug in `--ignore` behaviour with directory names.
 * Fixed nasty bug in beeswarm dot plots where sample names were mixed up (#278)
 * Beeswarm header text is now more informative (sample count with more info on a tooltip)
+* Beeswarm plots now work when reports have > 1000 samples
 
 Many thanks to those at the [OpenBio Codefest 2016](https://www.open-bio.org/wiki/Codefest_2016)
 who worked on MultiQC projects.
