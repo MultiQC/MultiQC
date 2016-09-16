@@ -28,7 +28,7 @@ Module updates:
   * `stats` submodule now has separate bar graph showing alignment scores
   * `flagstat` - new submodule! Written by @HLWiencko
   * `idxstats` - new submodule! This one by @ewels again
-
+  * added a module for infer_experiments.py to RseQC
 
 Core updates:
 * New `--export`/`-p` option to generate static images plot in `multiqc_plots` (`.png`, `.svg` and `.pdf`)
