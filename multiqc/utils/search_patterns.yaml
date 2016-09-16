@@ -100,6 +100,9 @@ rseqc:
         contents: 'Group               Total_bases         Tag_count           Tags/Kb'
     read_duplication_pos:
         fn: '*.pos.DupRate.xls'
+    infer_experiment:
+        fn: '*infer_experiment.txt'
+        contents: 'Fraction of reads explained by'
 salmon:
     meta:
         fn: 'meta_info.json'
