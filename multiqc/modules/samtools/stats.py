@@ -33,7 +33,7 @@ class StatsReportMixin():
                 # Work out some percentages
                 if 'raw_total_sequences' in parsed_data:
                     for k in list(parsed_data.keys()):
-                        if k.startswith('reads_') and k != 'raw_total_sequences':
+                        if k.startswith('reads_') and k != 'raw_total_sequences' and parsed_data['raw_total_sequences'] > 0:
                             parsed_data['{}_percent'.format(k)] = (parsed_data[k] / parsed_data['raw_total_sequences']) * 100
 
                 if f['s_name'] in self.samtools_stats:
