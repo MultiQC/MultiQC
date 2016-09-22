@@ -61,6 +61,29 @@ To avoid this, run MultiQC with the `-d`/`--dirs` parameter. This will prefix ev
 sample name with the directory path that the log file was found within. As
 such, sample names will no longer be unique, and data will not be overwritten.
 
+By default, `--dirs` will prepend the entire path to each sample name. You can choose
+which directories are added with the `-dd`/`--dirs-depth` parameter. Set to a positive
+integer to use that many directories at the end of the path. A negative integer takes
+directories from the start of the path.
+
+For example:
+```
+$ multiqc -d .
+# analysis_1 | results | type | sample_1 | file.log
+# analysis_2 | results | type | sample_2 | file.log
+# analysis_3 | results | type | sample_3 | file.log
+
+$ multiqc -d -dd 1 .
+# sample_1 | file.log
+# sample_2 | file.log
+# sample_3 | file.log
+
+$ multiqc -d -dd -1 .
+# analysis_1 | file.log
+# analysis_2 | file.log
+# analysis_3 | file.log
+```
+
 ## Using different templates
 MultiQC is built around a templating system. You can produce reports with
 different styling by using the `-t`/`--template` option. The available templates

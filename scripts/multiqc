@@ -51,6 +51,10 @@ from multiqc.utils import report, plugin_hooks, config, log
                     is_flag = True,
                     help = "Prepend directory to sample names"
 )
+@click.option('-dd', '--dirs-depth', 'dirs_depth',
+                    type = int,
+                    help = "Prepend [INT] directories to sample names. Negative number to take from start of path."
+)
 @click.option('-s', '--fullnames', 'no_clean_sname',
                     is_flag = True,
                     help = "Do not clean the sample names (leave as full file name)"
@@ -114,11 +118,11 @@ from multiqc.utils import report, plugin_hooks, config, log
                     is_flag = True,
                     help = "Export plots as static images in addition to the report"
 )
-@click.option('--flat', 'plots_flat',
+@click.option('-fp', '--flat', 'plots_flat',
                     is_flag = True,
                     help = "Use only flat plots (static images)"
 )
-@click.option('--interactive', 'plots_interactive',
+@click.option('-ip', '--interactive', 'plots_interactive',
                     is_flag = True,
                     help = "Use only interactive plots (HighCharts Javascript)"
 )
@@ -141,7 +145,7 @@ from multiqc.utils import report, plugin_hooks, config, log
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, no_clean_sname, title, report_comment, template, module, exclude, outdir,
+def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module, exclude, outdir,
 ignore, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -191,6 +195,8 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if report_comment is not None:
         config.report_comment = report_comment
     config.prepend_dirs = dirs
+    if dirs_depth is not None:
+        config.prepend_dirs_depth = dirs_depth
     config.analysis_dir = analysis_dir
     if outdir is not None:
         config.output_dir = outdir

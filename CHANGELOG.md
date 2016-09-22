@@ -36,6 +36,10 @@ Core updates:
   * Configurable with `export_plots`, `plots_dir_name` and `export_plot_formats` config options
   * `--flat` option no longer saves plots in `multiqc_data/multiqc_plots`
 * New `--comment`/`-b` flag to add a comment to the top of reports.
+* New `--dirs-depth`/`-dd` flag to specify how many directories to prepend with `--dirs`/`-d`
+  * Specifying a postive number will take that many directories from the end of the path
+  * A negative number will take directories from the start of the path.
+* Directory paths now appended before cleaning, so `fn_clean_exts` will now affect these names.
 * New `custom_logo` attributes to add your own logo to reports.
 * New `report_header_info` config option to add arbitrary information to the top of reports.
 * New `--pdf` option to create a PDF report

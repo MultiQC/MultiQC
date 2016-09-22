@@ -29,6 +29,8 @@ data_format: 'tsv'
 
 force: false
 prepend_dirs: false
+prepend_dirs_depth: 0
+prepend_dirs_sep: ' | '
 file_list: false
 make_data_dir: true
 zip_data_dir: false
@@ -90,6 +92,7 @@ fn_clean_exts:
     - '.clean'
     - '.sorted'
     - '.report'
+    - '| stdin'
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
