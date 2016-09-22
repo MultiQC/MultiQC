@@ -85,7 +85,7 @@ def parse_reports(self):
                     self.picard_insertSize_histogram[s_name] = dict()
                     in_hist = True
         
-        for key in self.picard_insertSize_data.keys():
+        for key in list(self.picard_insertSize_data.keys()):
             if len(self.picard_insertSize_data[key]) == 0:
                 self.picard_insertSize_data.pop(key, None)
         for s_name in list(self.picard_insertSize_histogram.keys()):

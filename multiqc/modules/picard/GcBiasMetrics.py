@@ -58,7 +58,7 @@ def parse_reports(self):
                     cov_col = s.index('NORMALIZED_COVERAGE')
                     
         
-        for s_name in self.picard_GCbias_data.keys():
+        for s_name in list(self.picard_GCbias_data.keys()):
             if len(self.picard_GCbias_data[s_name]) == 0:
                 self.picard_GCbias_data.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))

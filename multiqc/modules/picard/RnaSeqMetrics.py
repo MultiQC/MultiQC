@@ -60,7 +60,7 @@ def parse_reports(self):
                         if k.startswith('PCT_'):
                             try:
                                 vals[i] = float(vals[i]) * 100.0
-                            except ValueError:
+                            except (ValueError, IndexError):
                                 pass
                         # Save the key:value pairs
                         try:
@@ -78,7 +78,7 @@ def parse_reports(self):
                     self.picard_RnaSeqMetrics_histogram[s_name] = dict()
                     in_hist = True
         
-        for key in self.picard_RnaSeqMetrics_data.keys():
+        for key in list(self.picard_RnaSeqMetrics_data.keys()):
             if len(self.picard_RnaSeqMetrics_data[key]) == 0:
                 self.picard_RnaSeqMetrics_data.pop(key, None)
         for s_name in list(self.picard_RnaSeqMetrics_histogram.keys()):

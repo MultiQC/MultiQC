@@ -48,7 +48,7 @@ def parse_reports(self):
                             self.picard_dupMetrics_data[s_name][k] = vals[i]
                     s_name = None
         
-        for s_name in self.picard_dupMetrics_data.keys():
+        for s_name in list(self.picard_dupMetrics_data.keys()):
             if len(self.picard_dupMetrics_data[s_name]) == 0:
                 self.picard_dupMetrics_data.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))

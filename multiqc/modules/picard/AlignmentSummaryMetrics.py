@@ -53,7 +53,7 @@ def parse_reports(self):
                         keys = None
         
         # Remove empty dictionaries
-        for s_name in parsed_data.keys():
+        for s_name in list(parsed_data.keys()):
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
         
