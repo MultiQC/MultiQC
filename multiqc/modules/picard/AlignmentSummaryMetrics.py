@@ -85,5 +85,38 @@ def parse_reports(self):
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( self.picard_alignment_metrics[s_name] )
         
+        
+        
+        # Make the bar plot of alignment read count
+        pdata = dict()
+        for s_name in self.picard_alignment_metrics.keys():
+            pdata[s_name] = dict()
+            # Picard reports both reads for PE data. Divide it by two as most people will expect # clusters
+            if self.picard_alignment_metrics[s_name]['CATEGORY'] == 'PAIR':
+                pdata[s_name]['total_reads'] = self.picard_alignment_metrics[s_name]['TOTAL_READS'] / 2
+                pdata[s_name]['aligned_reads'] = self.picard_alignment_metrics[s_name]['PF_READS_ALIGNED'] / 2
+            else:
+                pdata[s_name]['total_reads'] = self.picard_alignment_metrics[s_name]['TOTAL_READS']
+                pdata[s_name]['aligned_reads'] = self.picard_alignment_metrics[s_name]['PF_READS_ALIGNED']
+            pdata[s_name]['unaligned_reads'] = pdata[s_name]['total_reads'] - pdata[s_name]['aligned_reads']
+        
+        keys = OrderedDict()
+        keys['aligned_reads'] = {'name': 'Aligned Reads'}
+        keys['unaligned_reads'] = {'name': 'Unaligned Reads'}
+        
+        # Config for the plot
+        pconfig = {
+            'title': 'Picard: Aligned Reads',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads',
+        }
+        
+        self.sections.append({
+            'name': 'Alignment Summary',
+            'anchor': 'picard-alignmentsummary',
+            'content': "<p>Plase note that Picard's read counts are divided by two for paired-end data.</p>"+
+                plots.bargraph.plot(pdata, keys, pconfig)
+        })
+        
     # Return the number of detected samples to the parent module
     return len(self.picard_alignment_metrics)
