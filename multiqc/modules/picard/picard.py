@@ -16,6 +16,7 @@ from . import GcBiasMetrics
 from . import HsMetrics
 from . import OxoGMetrics
 from . import RnaSeqMetrics
+from . import AlignmentSummaryMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -68,6 +69,10 @@ class MultiqcModule(BaseMultiqcModule):
         n['RnaSeqMetrics'] = RnaSeqMetrics.parse_reports(self)
         if n['RnaSeqMetrics'] > 0:
             log.info("Found {} RnaSeqMetrics reports".format(n['RnaSeqMetrics']))
+        
+        n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
+        if n['AlignmentMetrics'] > 0:
+            log.info("Found {} AlignmentSummaryMetrics reports".format(n['AlignmentMetrics']))
         
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

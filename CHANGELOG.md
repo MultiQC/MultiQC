@@ -21,6 +21,7 @@ Module updates:
 * **Picard**
   * `BaseDistributionByCycle` - new submodule! Written by @mlusignan
   * `RnaSeqMetrics` - new submodule! This one by @ewels ;)
+  * `AlignmentSummaryMetrics` - another new submodule!
 * **Qualimap RNASeqQC**
   * Fixed parsing bug affecting counts in _Genomic Origin_ plot.
   * Module now works with European style thousand separators (`1.234,56` instead of `1,234.56`)

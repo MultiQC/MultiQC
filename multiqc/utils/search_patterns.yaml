@@ -46,20 +46,22 @@ kallisto:
 methylQA:
     fn: '*.report'
 picard:
-    markdups:
-        contents: picard.sam.DuplicationMetrics
-    insertsize:
-        contents: picard.analysis.InsertSizeMetrics
-    gcbias:
-        contents: picard.analysis.GcBiasDetailMetrics
-    hsmetrics:
-        contents: picard.analysis.directed.HsMetrics
-    oxogmetrics:
-        contents: picard.analysis.CollectOxoGMetrics
+    alignment_metrics:
+        contents: 'picard.analysis.AlignmentSummaryMetrics'
     basedistributionbycycle:
-        contents: picard.analysis.BaseDistributionByCycleMetrics
+        contents: 'picard.analysis.BaseDistributionByCycleMetrics'
+    gcbias:
+        contents: 'picard.analysis.GcBiasDetailMetrics'
+    hsmetrics:
+        contents: 'picard.analysis.directed.HsMetrics'
+    insertsize:
+        contents: 'picard.analysis.InsertSizeMetrics'
+    markdups:
+        contents: 'picard.sam.DuplicationMetrics'
+    oxogmetrics:
+        contents: 'picard.analysis.CollectOxoGMetrics'
     rnaseqmetrics:
-        contents: picard.analysis.CollectRnaSeqMetrics
+        contents: 'picard.analysis.CollectRnaSeqMetrics'
 preseq:
     contents: 'EXPECTED_DISTINCT'
     # contents: 'TOTAL_READS	EXPECTED_DISTINCT'

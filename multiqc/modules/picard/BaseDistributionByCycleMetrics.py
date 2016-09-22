@@ -20,7 +20,7 @@ def read_sample_name(line_iter, clean_fn):
     'BaseDistributionByCycle'.
 
     If the header parses correctly, the sample name is returned.  If
-    the header does not parse correctly, None is returned. 
+    the header does not parse correctly, None is returned.
     """
     try:
         while True:

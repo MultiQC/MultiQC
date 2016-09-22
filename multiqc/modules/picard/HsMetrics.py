@@ -162,7 +162,8 @@ def parse_reports(self):
         penalty_html = _add_hs_penalty(data)
         if penalty_html:
             self.sections.append(penalty_html)
-        # Return the number of detected samples to the parent module
+    
+    # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
 
 def _clean_table(data):

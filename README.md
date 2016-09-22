@@ -47,7 +47,7 @@ Currently, supported tools include:
   * [Bcftools](https://samtools.github.io/bcftools/) (`stats`)
   * [GATK](https://software.broadinstitute.org/gatk/) (`VariantEval`)
   * [methylQA](http://methylqa.sourceforge.net/)
-  * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`, `RnaSeqMetrics`)
+  * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`, `RnaSeqMetrics`, `AlignmentSummaryMetrics`)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
   * [QUAST](http://quast.bioinf.spbau.ru/)
