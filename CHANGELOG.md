@@ -1,5 +1,8 @@
 # MultiQC Version History
 
+#### v0.9dev
+_..nothing yet.._
+
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:
 * [**GATK**](https://software.broadinstitute.org/gatk/) - new module!
