@@ -334,6 +334,7 @@ function plot_xy_line_graph(target, ds){
       title: {
         text: config['xlab']
       },
+      type: config['xLog'] ? 'logarithmic' : 'linear',
       categories: config['categories'],
       ceiling: config['xCeiling'],
       floor: config['xFloor'],
@@ -672,6 +673,7 @@ function plot_scatter_plot (target, ds){
       title: {
         text: config['xlab']
       },
+      type: config['xLog'] ? 'logarithmic' : 'linear',
       gridLineWidth: 1,
       categories: config['categories'],
       ceiling: config['xCeiling'],
