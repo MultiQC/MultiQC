@@ -196,22 +196,19 @@ def comp_overlap_table(data):
         'title': 'Evaluated variants',
         'description': 'Number of called variants.',
         'namespace': 'GATK',
-        'min': 0,
-        'format': '{:,}',
+        'min': 0
     }
     headers['known_sites'] = {
         'title': 'Known sites',
         'description': 'Number of known variants.',
         'namespace': 'GATK',
-        'min': 0,
-        'format': '{:,}',
+        'min': 0
     }
     headers['novel_sites'] = {
         'title': 'Novel sites',
         'description': 'Number of novel variants.',
         'namespace': 'GATK',
-        'min': 0,
-        'format': '{:,}',
+        'min': 0
     }
     table_html = plots.table.plot(data, headers)
     return table_html
