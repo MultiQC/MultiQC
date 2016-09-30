@@ -167,6 +167,7 @@ config = {
     'xMinRange': None,           # Minimum range for axis
     'xmax': None,                # Max x limit
     'xmin': None,                # Min x limit
+    'xLog': False,               # Use log10 x axis?
     'xDecimals': True,           # Set to false to only show integer labels
     'yCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
     'yFloor': None,              # Minimum value for automatic axis limit
@@ -177,8 +178,8 @@ config = {
     'yDecimals': True,           # Set to false to only show integer labels
     'yPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
-    'yPlotLines': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotLines
-    'xPlotLines': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotLines
+    'yPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
+    'xPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
