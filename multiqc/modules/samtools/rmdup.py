@@ -18,6 +18,9 @@ class RmdupReportMixin():
         If the
         Grab the name from the RG tag of the preceding bwa command """
 
+        # Example below:
+        # [bam_rmdupse_core] 26602816 / 103563641 = 0.2569 in library '   '
+        
         dups_regex = "\[bam_\w+_core\] (\d+) / (\d+) = \((\d+.\d+)\) in library"
         # dups_regex = "rmdup: (Removed|Marked) (\d+) of (\d+) \((\d+.\d+)%\) read ids as duplicates"
         input_file_regex = "rmdup: Opening (\S+) for read."
