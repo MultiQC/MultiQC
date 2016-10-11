@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.snpeff_qualities[f['s_name']] = quals
             
             # Everything else
-            elif section in keys:                    
+            elif section in keys:
                 if keys[section] == 'all' or any([k in s[0].strip() for k in keys[section]]):
                     try:
                         parsed_data[ s[0].strip() ] = float(s[1].strip())
@@ -228,8 +228,8 @@ class MultiqcModule(BaseMultiqcModule):
             'smooth_points': 200,
             'id': 'snpeff_qualities',
             'title': 'SnpEff: Qualities',
-            'ylab': 'Values',
-            'xlab': 'Count',
+            'ylab': 'Count',
+            'xlab': 'Values',
             'xDecimals': False,
             'ymin': 0
         }
