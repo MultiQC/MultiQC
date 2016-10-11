@@ -119,6 +119,8 @@ samtools:
         contents: 'in total (QC-passed reads + QC-failed reads)'
     idxstats:
         fn: '*idxstat*'
+    rmdup:
+        fn: '*rmdup*'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
 snpeff:
