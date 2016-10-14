@@ -26,7 +26,8 @@ bowtie:
 bowtie2:
     contents: 'reads; of these:'
 cutadapt:
-    contents: This is cutadapt
+    contents: 'This is cutadapt'
+    # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
 fastq_screen:
     fn: '*_screen.txt'
 fastqc:

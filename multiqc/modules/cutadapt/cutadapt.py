@@ -70,6 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'r_processed': "Processed reads:\s*([\d,]+)",
                 'bp_processed': "Processed bases:\s*([\d,]+) bp",
                 'r_trimmed': "Trimmed reads:\s*([\d,]+)",
+                'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
                 'bp_trimmed': "Trimmed bases:\s*([\d,]+) bp",
                 'too_short': "Too short reads:\s*([\d,]+)",
                 'too_long': "Too long reads:\s*([\d,]+)",
@@ -79,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
         cutadapt_version = '1.7'
         for l in fh:
             # New log starting
-            if l.startswith('This is cutadapt'):
+            if 'cutadapt' in l:
                 s_name = None
                 c_version = re.match(r'This is cutadapt ([\d\.]+)', l)
                 if c_version:
@@ -88,6 +89,14 @@ class MultiqcModule(BaseMultiqcModule):
                         cutadapt_version = '1.6'
                     except:
                         cutadapt_version = '1.7'
+                c_version_old = re.match(r'cutadapt version ([\d\.]+)', l)
+                if c_version_old:
+                    try:
+                        assert(StrictVersion(c_version.group(1)) <= StrictVersion('1.6'))
+                        cutadapt_version = '1.6'
+                    except:
+                        # I think the pattern "cutadapt version XX" is only pre-1.6?
+                        cutadapt_version = '1.6'
             
             # Get sample name from end of command line params
             if l.startswith('Command line parameters'):
@@ -131,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
             if 'bp_processed' in d and 'bp_written' in d:
                 self.cutadapt_data[s_name]['percent_trimmed'] = (float(d['bp_processed'] - d['bp_written']) / d['bp_processed']) * 100
             elif 'bp_processed' in d and 'bp_trimmed' in d:
-                self.cutadapt_data[s_name]['percent_trimmed'] = (float(d['bp_trimmed']) / d['bp_processed']) * 100
+                self.cutadapt_data[s_name]['percent_trimmed'] = ((float(d.get('bp_trimmed', 0)) + float(d.get('quality_trimmed', 0))) / d['bp_processed']) * 100
 
 
 

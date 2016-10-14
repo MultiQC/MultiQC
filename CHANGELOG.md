@@ -1,7 +1,15 @@
 # MultiQC Version History
 
 #### v0.9dev
-_..nothing yet.._
+* **Cutadapt**
+  * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
+  * Added support for _really_ old cutadapt logs (eg. v.1.2)
+* **RSeQC**
+  * Made the gene body coverage plot show the percentage view by default
+* **SnpEff**
+  * Fixed swapped axis labels in the Variant Quality plot
+* **STAR**
+  * Fixed crash when there are 0 unmapped reads.
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:
