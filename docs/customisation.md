@@ -47,11 +47,11 @@ the following saved:
 
 ```yaml
 report_header_info:
-    - Contact E-mail:: 'phil.ewels@scilifelab.se'
-    - Application Type:: 'RNA-seq'
-    - Project Type:: 'Application'
-    - Sequencing Platform:: 'HiSeq 2500 High Output V4'
-    - Sequencing Setup:: '2x125'
+    - Contact E-mail: 'phil.ewels@scilifelab.se'
+    - Application Type: 'RNA-seq'
+    - Project Type: 'Application'
+    - Sequencing Platform: 'HiSeq 2500 High Output V4'
+    - Sequencing Setup: '2x125'
 ```
 
 Then this will be displayed at the top of reports:
