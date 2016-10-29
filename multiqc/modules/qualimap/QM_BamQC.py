@@ -38,6 +38,7 @@ def parse_reports(self):
     
     # GC distribution - mapped_reads_gc-content_distribution.txt
     self.qualimap_bamqc_gc_content_dist = dict()
+    self.qualimap_bamqc_human_gc_content_dist = dict()
     for f in self.find_log_files(sp['gc_dist'], filehandles=True):
         parse_gc_dist(self, f)
     
@@ -217,15 +218,19 @@ def parse_gc_dist(self, f):
     s_name = self.get_s_name(f)
     
     d = dict()
+    human_d = dict()
     avg_gc = 0
     for l in f['f']:
         if l.startswith('#'):
             continue
-        sections = l.split(None, 2)
+        sections = l.split(None, 3)
         gc = int(round(float(sections[0])))
         content = float(sections[1])
         avg_gc += gc * content
         d[gc] = content
+        if len(sections) > 2:
+            human_content = float(sections[2])
+            human_d[gc] = human_content
     
     # Add average GC to the general stats table
     self.general_stats_data[s_name]['avg_gc'] = avg_gc
@@ -234,6 +239,7 @@ def parse_gc_dist(self, f):
     if s_name in self.qualimap_bamqc_gc_content_dist:
         log.debug("Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_gc_content_dist[s_name] = d
+    self.qualimap_bamqc_human_gc_content_dist = human_d
     self.add_data_source(f, s_name=s_name, section='mapped_gc_distribution')
 
 
@@ -303,16 +309,23 @@ def report_sections(self):
     # Section 4 - GC-content distribution
     if len(self.qualimap_bamqc_gc_content_dist) > 0:
         self.sections.append({
-            'name': 'GC-content distribution',
+            'name': 'GC content distribution',
             'anchor': 'qualimap-gc-distribution',
             'content': plots.linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
-                'title': 'GC-content distribution',
+                'title': 'GC content distribution',
                 'ylab': 'Fraction of reads',
                 'xlab': 'GC content (%)',
                 'ymin': 0,
                 'xmin': 0,
                 'xmax': 100,
                 'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
+                'extra_series': [{
+                    'name': 'GC content distribution',
+                    'data': self.qualimap_bamqc_human_gc_content_dist.items(),
+                    'dashStyle': 'Dash',
+                    'lineWidth': 1,
+                    'color': '#000000',
+                }] if self.qualimap_bamqc_human_gc_content_dist else [],
             })
         })
 
