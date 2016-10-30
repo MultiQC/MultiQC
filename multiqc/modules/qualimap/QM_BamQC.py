@@ -34,7 +34,7 @@ def parse_reports(self):
     
     # GC distribution - mapped_reads_gc-content_distribution.txt
     self.qualimap_bamqc_gc_content_dist = dict()
-    self.qualimap_bamqc_human_gc_content_dist = dict()
+    self.qualimap_bamqc_gc_by_species = dict()  # {'HUMAN': data_dict, 'MOUSE': data_dict}
     for f in self.find_log_files(sp['gc_dist'], filehandles=True):
         parse_gc_dist(self, f)
     
@@ -172,20 +172,24 @@ def parse_gc_dist(self, f):
     s_name = self.get_s_name(f)
     
     d = dict()
-    human_d = dict()
+    reference_species = None
+    reference_d = dict()
     avg_gc = 0
     for l in f['f']:
         if l.startswith('#'):
+            sections = l.strip("\n").split("\t", 3)
+            if len(sections) > 2:
+                reference_species = sections[2]
             continue
-        sections = l.split(None, 3)
+        sections = l.strip("\n").split("\t", 3)
         gc = int(round(float(sections[0])))
         content = float(sections[1])
         avg_gc += gc * content
         d[gc] = content
         if len(sections) > 2:
-            human_content = float(sections[2])
-            human_d[gc] = human_content
-    
+            reference_content = float(sections[2])
+            reference_d[gc] = reference_content
+
     # Add average GC to the general stats table
     self.general_stats_data[s_name]['avg_gc'] = avg_gc
     
@@ -193,7 +197,8 @@ def parse_gc_dist(self, f):
     if s_name in self.qualimap_bamqc_gc_content_dist:
         log.debug("Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_gc_content_dist[s_name] = d
-    self.qualimap_bamqc_human_gc_content_dist = human_d
+    if reference_species and reference_species not in self.qualimap_bamqc_gc_by_species:
+        self.qualimap_bamqc_gc_by_species[reference_species] = reference_d
     self.add_data_source(f, s_name=s_name, section='mapped_gc_distribution')
 
 
@@ -270,6 +275,15 @@ def report_sections(self):
 
     # Section 4 - GC-content distribution
     if len(self.qualimap_bamqc_gc_content_dist) > 0:
+        extra_series = []
+        for i, (species_name, species_data) in enumerate(sorted(self.qualimap_bamqc_gc_by_species.items())):
+            extra_series.append({
+                'name': species_name,
+                'data': list(species_data.items()),
+                'dashStyle': 'Dash',
+                'lineWidth': 1,
+                'color': ['#000000', '#E89191'][i % 2],
+            })
         self.sections.append({
             'name': 'GC content distribution',
             'anchor': 'qualimap-gc-distribution',
@@ -281,13 +295,7 @@ def report_sections(self):
                 'xmin': 0,
                 'xmax': 100,
                 'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
-                'extra_series': [{
-                    'name': 'Reference',
-                    'data': self.qualimap_bamqc_human_gc_content_dist.items(),
-                    'dashStyle': 'Dash',
-                    'lineWidth': 1,
-                    'color': '#000000',
-                }] if self.qualimap_bamqc_human_gc_content_dist else [],
+                'extra_series': extra_series,
             })
         })
 
