@@ -41,52 +41,61 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Organism',
             'description': 'Organism',
         }
-        #headers['contigs'] = {
-        #    'title': 'Contigs',
-        #    'description': 'Number of contigs',
-        #    "min": 0,
-        #}
+        headers['contigs'] = {
+            'title': 'Contigs',
+            'description': 'Number of contigs',
+            'min': 0,
+        }
         headers['bases'] = {
             'title': 'Bases',
             'description': 'Number of bases',
-            "min": 0,
-            'format': '{:i}%'
+            'min': 0,
+            'format': '{:i}%',
+            'hidden': True
         }
         headers['CDS'] = {
             'title': 'CDS',
             'description': 'Number of CDS',
-            "min": 0,
-            'format': '{:i}%'
+            'min': 0,
+            'format': '{:i}%',
+            'shared_key': 'prokka',
         }
         headers['tRNA'] = {
             'title': 'tRNA',
             'description': 'Number of tRNA',
-            "min": 0,
-            'format': '{:i}%'
+            'min': 0,
+            'format': '{:i}%',
+            'shared_key': 'prokka',
+            'hidden': True
         }
         headers['rRNA'] = {
             'title': 'rRNA',
             'description': 'Number of rRNA',
-            "min": 0,
-            'format': '{:i}%'
+            'min': 0,
+            'format': '{:i}%',
+            'shared_key': 'prokka',
+            'hidden': True
         }
         headers['tmRNA'] = {
             'title': 'tmRNA',
             'description': 'Number of tmRNA',
-            "min": 0,
-            'format': '{:i}%'
+            'min': 0,
+            'format': '{:i}%',
+            'shared_key': 'prokka',
+            'hidden': True
         }
         headers['sig_peptide'] = {
             'title': 'sig_peptide',
             'description': 'Number of sig_peptide',
-            "min": 0,
-            'format': '{:i}%'
+            'min': 0,
+            'format': '{:i}%',
+            'shared_key': 'prokka',
+            'hidden': True
         }
         self.general_stats_addcols(self.prokka, headers)
         
-        # Make summary barplot
-        # The stacked barplot is not really useful for Prokka
-        self.intro += self.prokka_barplot()
+        # Make a summary table  
+        self.intro += self.prokka_table()
         
     def parse_prokka(self, f):
         """ Parse prokka txt summary files. 
@@ -108,14 +117,12 @@ class MultiqcModule(BaseMultiqcModule):
                    contigs_line.startswith("contigs:"),
                    bases_line.startswith("bases:"))):
             return
-        log.debug("%s appears to be a prokka summary file.", f['f'].name)
 
         # Get organism and sample name from the first line
-        organism = " ".join(first_line.strip().split(":", maxsplit=1)[1].split()[:2])
+        organism = " ".join(first_line.strip().split(":", 1)[1].split()[:2])
         s_name = " ".join(first_line.split()[3:])
         self.prokka[s_name] = dict()
         self.prokka[s_name]['organism'] = organism
-        log.debug("Found sample name '%s' for organism '%s'", s_name, organism)
         self.prokka[s_name]['contigs'] = int(contigs_line.split(":")[1])
         self.prokka[s_name]['bases'] = int(bases_line.split(":")[1])
 
@@ -125,29 +132,62 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 self.prokka[s_name][description] = int(value)
             except ValueError:
-                log.debug("Unable to parse line: '%s'", line)
+                log.warning("Unable to parse line: '%s'", line)
+
+        self.add_data_source(f, s_name)
 
     
-    def prokka_barplot (self):
+    def prokka_table(self):
         """ Make basic plot of the annotation stats """
         
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        #keys['contigs'] =       { 'color': '#437bb1', 'name': 'Contigs' }
-        #keys['bases'] =         { 'color': '#437bb1', 'name': 'Bases' }
-        keys['CDS'] =           { 'name': 'CDS' }
-        keys['rRNA'] =          { 'name': 'rRNA' }
-        keys['tRNA'] =          { 'name': 'tRNA' }
-        keys['tmRNA'] =         { 'name': 'tmRNA' }
-        keys['misc_RNA'] =      { 'name': 'misc RNA' }
-        keys['sig_peptide'] =   { 'name': 'Signaling peptides' }
-        
-        # Config for the plot
-        pconfig = {
-            'id': 'prokka_plot',
-            'title': 'Prokka',
-            'ylab': '# Counts',
-            'cpswitch_counts_label': 'Features'
+        headers = OrderedDict()
+        headers['contigs'] = { 
+                'title': '# contigs', 
+                'description': 'Number of contigs in assembly',
+                'format': '{:i}',
+                'colour': 'red',
+        }
+        headers['bases'] = { 
+                'title': '# bases', 
+                'description': 'Number of nucleotide bases in assembly',
+                'format': '{:i}',
+        }
+        headers['CDS'] = { 
+                'title': '# CDS', 
+                'description': 'Number of annotated CDS',
+                'format': '{:i}',
+        }
+        headers['rRNA'] = { 
+                'title': '# rRNA', 
+                'description': 'Number of annotated rRNA',
+                'format': '{:i}',
+        }
+        headers['tRNA'] = { 
+                'title': '# tRNA', 
+                'description': 'Number of annotated tRNA',
+                'format': '{:i}',
+        }
+        headers['tmRNA'] = { 
+                'title': '# tmRNA', 
+                'description': 'Number of annotated tmRNA',
+                'format': '{:i}',
+        }
+        headers['misc_RNA'] = { 
+                'title': '# misc RNA', 
+                'description': 'Number of annotated misc. RNA',
+                'format': '{:i}',
+        }
+        headers['sig_peptide'] = { 
+                'title': '# sig_peptide', 
+                'description': 'Number of annotated sig_peptide',
+                'format': '{:i}',
         }
         
-        return plots.bargraph.plot(self.prokka, keys, pconfig)
+        # Config for the plot
+        table_config = {
+            'namespace': 'prokka',
+            'min': 0,
+        }
+        
+        return plots.table.plot(self.prokka, headers, table_config)
