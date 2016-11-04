@@ -10,6 +10,8 @@
   * Fixed swapped axis labels in the Variant Quality plot
 * **STAR**
   * Fixed crash when there are 0 unmapped reads.
+* **Prokka**
+  * New module summarizing Prokka output.
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:

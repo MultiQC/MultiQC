@@ -67,6 +67,8 @@ preseq:
     contents: 'EXPECTED_DISTINCT'
     # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
     # contents: 'TOTAL_BASES	EXPECTED_DISTINCT'
+prokka:
+    contents: 'organism:'
 qualimap:
     bamqc:
         genome_results:
