@@ -20,21 +20,14 @@ class RmdupReportMixin():
         for f in self.find_log_files(config.sp['samtools']['rmdup'], filehandles=True):
             # Example below:
             # [bam_rmdupse_core] 26602816 / 103563641 = 0.2569 in library '   '
-            dups_regex = "\[bam_\w+_core\] (\d+) / (\d+) = (\d+\.\d+) in library"
-            input_file_regex = "rmdup: Opening (\S+) for read."
+            dups_regex = "\[bam_rmdups?e?_core\] (\d+) / (\d+) = (\d+\.\d+) in library '(.*)'"
             s_name = f['s_name']
             for l in f['f']:
-                # try to find name from the log if we can
-                match = re.search(input_file_regex, l)
-                if match:
-                    basefn = os.path.basename(match.group(1))
-                    fname, ext = os.path.splitext(basefn)
-                    # if it's stdin, then use the filename instead
-                    if fname != 'stdin':
-                        s_name = self.clean_s_name(fname, f['root'])
-
                 match = re.search(dups_regex, l)
                 if match:
+                    library_name = match.group(4).strip()
+                    if library_name != '':
+                        s_name = library_name
                     if s_name in self.samtools_rmdup:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name)

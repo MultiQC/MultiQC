@@ -121,7 +121,7 @@ samtools:
     idxstats:
         fn: '*idxstat*'
     rmdup:
-        fn: '*rmdup*'
+        contents: '[bam_rmdup'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
 snpeff:
