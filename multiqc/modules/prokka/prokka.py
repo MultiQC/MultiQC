@@ -93,8 +93,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         Prokka summary files are difficult to identify as there are practically
         no distinct prokka identifiers in the filenames or file contents. This
-        parser makes an attempt using the organism line, expected to be the
-        first line of the file. 
+        parser makes an attempt using the first three lines, expected to contain
+        organism, contigs, and bases statistics. 
         """
 
         s_name = None
