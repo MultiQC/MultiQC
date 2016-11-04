@@ -79,9 +79,11 @@ def plot (data, cats=None, pconfig={}):
         sample_dcount = dict()
         for c in cats[idx].keys():
             thisdata = list()
+            catcount = 0
             for s in hc_samples:
                 try:
                     thisdata.append(d[s][c])
+                    catcount += 1
                     try:
                         sample_dcount[s] += 1
                     except KeyError:
@@ -89,7 +91,7 @@ def plot (data, cats=None, pconfig={}):
                 except KeyError:
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float('nan'))
-            if len(thisdata) > 0 and max(x for x in thisdata if not math.isnan(x)) > 0:
+            if catcount > 0 and max(x for x in thisdata if not math.isnan(x)) > 0:
                 thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
                 if 'color' in cats[idx][c]:
                     thisdict['color'] = cats[idx][c]['color']
