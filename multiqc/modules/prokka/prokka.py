@@ -8,7 +8,6 @@ import json
 import logging
 import os
 import re
-from operator import itemgetter
 
 from multiqc import config, BaseMultiqcModule, plots
 
