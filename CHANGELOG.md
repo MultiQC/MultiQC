@@ -4,6 +4,8 @@
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
+* **featureCounts**
+  * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
 * **Picard**
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
 * **RSeQC**
