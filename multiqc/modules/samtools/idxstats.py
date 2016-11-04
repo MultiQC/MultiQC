@@ -127,7 +127,7 @@ class IdxstatsReportMixin():
                 'ylab': '# mapped reads',
                 'xlab': 'Chromosome Name',
                 'categories': True,
-                'tt_label': '<strong>{point.category}:</strong> {point.y}',
+                'tt_label': '<strong>{point.category}:</strong> {point.y:.2f}',
                 'data_labels': [
                     {'name': 'Normalised Counts', 'ylab': 'Fraction of total count'},
                     {'name': 'Counts', 'ylab': '# mapped reads'}

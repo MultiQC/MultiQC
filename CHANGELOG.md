@@ -6,6 +6,8 @@
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
 * **RSeQC**
   * Made the gene body coverage plot show the percentage view by default
+* **Samtools**
+  * Fixed a couple of niggles in the idxstats plot
 * **SnpEff**
   * Fixed swapped axis labels in the Variant Quality plot
 * **STAR**
@@ -13,6 +15,8 @@
 
 Core Updates:
 * Fixed bar plot bug where missing categories could shift data between samples
+* Missing plot IDs added for easier plot exporting
+* Stopped giving warnings about skipping directories (now a debug message)
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:

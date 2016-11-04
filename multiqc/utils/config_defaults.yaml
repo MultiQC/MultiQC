@@ -42,7 +42,8 @@ num_datasets_plot_limit: 50
 max_table_rows: 500
 table_columns_visible: {}
 
-fn_ignore_dirs: []
+fn_ignore_dirs:
+    - 'multiqc_data'
 fn_ignore_paths: []
 no_version_check: false
 log_filesize_limit: 5000000

@@ -83,22 +83,22 @@ def get_filelist():
                     dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(d, n.rstrip(os.sep))]
                     if len(orig_dirnames) != len(dirnames):
                         removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
-                        logger.warn("Ignoring directory as matched fn_ignore_dirs: {}".format(", ".join(removed_dirs)))
+                        logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(", ".join(removed_dirs)))
                         orig_dirnames = dirnames[:]
                 for n in config.fn_ignore_paths:
                     dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
                     if len(orig_dirnames) != len(dirnames):
                         removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
-                        logger.warn("Ignoring directory as matched fn_ignore_paths: {}".format(", ".join(removed_dirs)))
+                        logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(", ".join(removed_dirs)))
                 
                 # Skip *this* directory if matches ignore params
                 d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
                 if len(d_matches) > 0:
-                    logger.warn("Ignoring directory as matched fn_ignore_dirs: {}".format(bname))
+                    logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(bname))
                     continue
                 p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
                 if len(p_matches) > 0:
-                    logger.warn("Ignoring directory as matched fn_ignore_paths: {}".format(root))
+                    logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
                     continue
                 
                 # Search filenames in this directory
