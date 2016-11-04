@@ -169,6 +169,7 @@ def parse_reports(self):
                 'ymin': 0,
             }
             self.sections.append({
+                'id': 'picard_gene_coverage',
                 'name': 'Gene Coverage',
                 'anchor': 'picard-rna-coverage',
                 'content': plots.linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
