@@ -134,7 +134,7 @@ class IdxstatsReportMixin():
                 ]
             }
             self.sections.append({
-                'name': 'Mapped reads per contig from samtools idxstats',
+                'name': 'Mapped reads per contig',
                 'anchor': 'samtools-idxstats',
                 'content': '<p>The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
                     'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.</p>'.format(cutoff*100) +
