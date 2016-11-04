@@ -53,7 +53,7 @@ Currently, supported tools include:
   * [QUAST](http://quast.bioinf.spbau.ru/)
   * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`,  `infer_experiment`,`inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
-  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`)
+  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`, `rmdup`)
   * [SnpEff](http://snpeff.sourceforge.net/)
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
 

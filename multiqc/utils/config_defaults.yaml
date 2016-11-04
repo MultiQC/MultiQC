@@ -103,6 +103,7 @@ fn_clean_trim:
     - '-'
     - '.r'
     - '_val'
+    - '.idxstats'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
