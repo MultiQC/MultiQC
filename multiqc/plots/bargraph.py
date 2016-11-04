@@ -57,7 +57,7 @@ def plot (data, cats=None, pconfig={}):
     except (KeyError, AttributeError, TypeError):
         cats = [cats]
     
-    # Check that we have cats at all - find them from the data
+    # Check that we have cats at all - find them from the data if not
     for idx, cat in enumerate(cats):
         if cats[idx] is None:
             cats[idx] = list(set(k for s in data[idx].keys() for k in data[idx][s].keys() ))
@@ -87,8 +87,9 @@ def plot (data, cats=None, pconfig={}):
                     except KeyError:
                         sample_dcount[s] = 1
                 except KeyError:
-                    pass
-            if len(thisdata) > 0 and max(thisdata) > 0:
+                    # Pad with NaNs when we have missing categories in a sample
+                    thisdata.append(float('nan'))
+            if len(thisdata) > 0 and max(x for x in thisdata if not math.isnan(x)) > 0:
                 thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
                 if 'color' in cats[idx][c]:
                     thisdict['color'] = cats[idx][c]['color']
@@ -252,6 +253,10 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
         plot_pcts = [False]
         if pconfig.get('cpswitch') is not False:
             plot_pcts = [False, True]
+        
+        # Switch out NaN for 0s so that MatPlotLib doesn't ignore stuff
+        for idx, d in enumerate(pdata):
+            pdata[idx]['data'] = [x if not math.isnan(x) else 0 for x in d['data'] ]
         
         for plot_pct in plot_pcts:
             

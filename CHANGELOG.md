@@ -11,6 +11,9 @@
 * **STAR**
   * Fixed crash when there are 0 unmapped reads.
 
+Core Updates:
+* Fixed bar plot bug where missing categories could shift data between samples
+
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:
 * [**GATK**](https://software.broadinstitute.org/gatk/) - new module!
