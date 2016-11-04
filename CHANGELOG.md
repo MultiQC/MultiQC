@@ -7,6 +7,7 @@
 * **RSeQC**
   * Made the gene body coverage plot show the percentage view by default
 * **Samtools**
+  * New module to show duplicate stats from `rmdup` logs
   * Fixed a couple of niggles in the idxstats plot
 * **SnpEff**
   * Fixed swapped axis labels in the Variant Quality plot
