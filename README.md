@@ -130,6 +130,7 @@ Code contributions from:
 [@mlusignan](https://github.com/mlusignan),
 [@HLWiencko](https://github.com/HLWiencko),
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
-[@avilella](https://github.com/avilella)
+[@avilella](https://github.com/avilella),
+[@vladsaveliev](https://github.com/vladsaveliev)
 and many others. Thanks for your support!
 
