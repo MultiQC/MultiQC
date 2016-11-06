@@ -206,7 +206,6 @@ def report_sections(self):
     """ Add results from Qualimap BamQC parsing to the report """
     # Append to self.sections list
 
-    # Section 1 - BamQC Coverage Histogram
     if len(self.qualimap_bamqc_coverage_hist) > 0:
         # Chew back on histogram to prevent long flat tail
         # (find a sensible max x - lose 1% of longest tail)
@@ -229,12 +228,13 @@ def report_sections(self):
                 if thres in rates_within_threshs[s_name]:
                     self.general_stats_data[s_name][thres_name + '_x_pc'] = rates_within_threshs[s_name][thres]
 
+        # Section 1 - BamQC Coverage Histogram
         self.sections.append({
-            'name': 'Coverage Histogram',
+            'name': 'Coverage histogram',
             'anchor': 'qualimap-coverage-histogram',
             'content': plots.linegraph.plot(self.qualimap_bamqc_coverage_hist, {
-                'title': 'Coverage Histogram',
-                'ylab': 'Genome Bin Counts',
+                'title': 'Coverage histogram',
+                'ylab': 'Genome bin counts',
                 'xlab': 'Coverage (X)',
                 'ymin': 0,
                 'xmin': 0,
@@ -243,6 +243,7 @@ def report_sections(self):
                 'tt_label': '<b>{point.x}X</b>: {point.y}',
             })
         })
+        # Section 2 - BamQC cumulative coverage genome fraction
         self.sections.append({
             'name': 'Cumulative coverage genome fraction',
             'anchor': 'qualimap-cumulative-genome-fraction-coverage',
@@ -258,13 +259,13 @@ def report_sections(self):
             })
         })
 
-    # Section 2 - Insert size histogram
+    # Section 3 - Insert size histogram
     if len(self.qualimap_bamqc_insert_size_hist) > 0:
         self.sections.append({
-            'name': 'Insert size Histogram',
+            'name': 'Insert size histogram',
             'anchor': 'qualimap-insert-size-histogram',
             'content': plots.linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
-                'title': 'Insert Size Histogram',
+                'title': 'Insert size histogram',
                 'ylab': 'Fraction of reads',
                 'xlab': 'Insert Size (bp)',
                 'ymin': 0,
@@ -284,10 +285,16 @@ def report_sections(self):
                 'lineWidth': 1,
                 'color': ['#000000', '#E89191'][i % 2],
             })
+        content = ''
+        if len(extra_series) == 1:
+            content += '<p>The dotted line represents a pre-calculated GC destribution for the reference genome.</p>'
+        elif len(extra_series) > 1:
+            content += '<p>The dotted lines represent pre-calculated GC destributions for the reference genomes.</p>'
+
         self.sections.append({
             'name': 'GC content distribution',
             'anchor': 'qualimap-gc-distribution',
-            'content': plots.linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
+            'content': content + plots.linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
                 'title': 'GC content distribution',
                 'ylab': 'Fraction of reads',
                 'xlab': 'GC content (%)',
@@ -311,7 +318,7 @@ def general_stats_headers (self):
     }
     self.general_stats_headers['median_insert_size'] = {
         'title': 'Insert Size',
-        'description': 'Median Insert Size',
+        'description': 'Median insert size',
         'min': 0,
         'suffix': 'bp',
         'scale': 'PuOr',
@@ -392,7 +399,7 @@ def general_stats_headers (self):
         'hidden': True
     }
     self.general_stats_headers['total_reads'] = {
-        'title': 'Total Reads',
+        'title': 'Total reads',
         'description': 'Number of reads (millions)',
         'min': 0,
         'scale': 'Blues',
