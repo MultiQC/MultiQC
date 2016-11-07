@@ -39,6 +39,10 @@ def get_filelist():
     
     def add_file(fn, root):
         
+        # Check that this is a file and not a pipe or anything weird
+        if not os.path.isfile(os.path.join(root, fn)):
+            return None
+        
         # Check that we don't want to ignore this file
         i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
         if len(i_matches) > 0:
