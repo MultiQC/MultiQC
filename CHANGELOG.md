@@ -17,6 +17,9 @@
   * Fixed swapped axis labels in the Variant Quality plot
 * **STAR**
   * Fixed crash when there are 0 unmapped reads.
+* **Qualimap BamQC**
+  * Add a line for pre-calculated reference genome GC content
+  * Plot cumulative coverage for values above 50x, align with the coverage histogram.
 
 Core Updates:
 * Fixed bar plot bug where missing categories could shift data between samples

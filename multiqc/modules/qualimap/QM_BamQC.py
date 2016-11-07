@@ -5,6 +5,7 @@
 from __future__ import print_function
 import logging
 import re
+from collections import OrderedDict
 
 from multiqc import config, plots
 
@@ -31,13 +32,9 @@ def parse_reports(self):
     for f in self.find_log_files(sp['insert_size'], filehandles=True):
         parse_insert_size(self, f)
     
-    # Genome fraction - genome_fraction_coverage.txt
-    self.qualimap_bamqc_genome_fraction_cov = dict()
-    for f in self.find_log_files(sp['genome_fraction'], filehandles=True):
-        parse_genome_fraction(self, f)
-    
     # GC distribution - mapped_reads_gc-content_distribution.txt
     self.qualimap_bamqc_gc_content_dist = dict()
+    self.qualimap_bamqc_gc_by_species = dict()  # {'HUMAN': data_dict, 'MOUSE': data_dict}
     for f in self.find_log_files(sp['gc_dist'], filehandles=True):
         parse_gc_dist(self, f)
     
@@ -130,7 +127,7 @@ def parse_coverage(self, f):
         log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_coverage_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section='coverage_histogram')
-                
+    
 def parse_insert_size(self, f):
     """ Parse the contents of the Qualimap BamQC Insert Size Histogram file """
     # Get the sample name from the parent parent directory
@@ -167,49 +164,7 @@ def parse_insert_size(self, f):
         log.debug("Duplicate insert size histogram sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_insert_size_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section='insert_size_histogram')
-                
-def parse_genome_fraction(self, f):
-    """ Parse the contents of the Qualimap BamQC Genome Fraction Coverage file """
-    # Get the sample name from the parent parent directory
-    # Typical path: <sample name>/raw_data_qualimapReport/genome_fraction_coverage.txt
-    s_name = self.get_s_name(f)
     
-    d = dict()
-    fifty_x_pc = thirty_x_pc = ten_x_pc = five_x_pc = one_x_pc = 100
-    for l in f['f']:
-        if l.startswith('#'):
-            continue
-        try:
-            coverage, percentage = l.split(None, 1)
-        except ValueError:
-            continue
-        coverage = int(round(float(coverage)))
-        percentage = float(percentage)
-        d[coverage] = percentage
-        if coverage <= 50 and fifty_x_pc > percentage:
-            fifty_x_pc = percentage
-        if coverage <= 30 and thirty_x_pc > percentage:
-            thirty_x_pc = percentage
-        if coverage <= 10 and ten_x_pc > percentage:
-            ten_x_pc = percentage
-        if coverage <= 5 and five_x_pc > percentage:
-            five_x_pc = percentage
-        if coverage <= 1 and one_x_pc > percentage:
-            one_x_pc = percentage
-    
-    # Add the coverage cutoffs to the general stats table
-    self.general_stats_data[s_name]['fifty_x_pc'] = fifty_x_pc
-    self.general_stats_data[s_name]['thirty_x_pc'] = thirty_x_pc
-    self.general_stats_data[s_name]['ten_x_pc'] = ten_x_pc
-    self.general_stats_data[s_name]['five_x_pc'] = five_x_pc
-    self.general_stats_data[s_name]['one_x_pc'] = one_x_pc
-    
-    # Save results
-    if s_name in self.qualimap_bamqc_genome_fraction_cov:
-        log.debug("Duplicate genome fraction coverage sample name found! Overwriting: {}".format(s_name))
-    self.qualimap_bamqc_genome_fraction_cov[s_name] = d
-    self.add_data_source(f, s_name=s_name, section='genome_fraction_coverage')
-                
 def parse_gc_dist(self, f):
     """ Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file """
     # Get the sample name from the parent parent directory
@@ -217,16 +172,24 @@ def parse_gc_dist(self, f):
     s_name = self.get_s_name(f)
     
     d = dict()
+    reference_species = None
+    reference_d = dict()
     avg_gc = 0
     for l in f['f']:
         if l.startswith('#'):
+            sections = l.strip("\n").split("\t", 3)
+            if len(sections) > 2:
+                reference_species = sections[2]
             continue
-        sections = l.split(None, 2)
+        sections = l.strip("\n").split("\t", 3)
         gc = int(round(float(sections[0])))
         content = float(sections[1])
         avg_gc += gc * content
         d[gc] = content
-    
+        if len(sections) > 2:
+            reference_content = float(sections[2])
+            reference_d[gc] = reference_content
+
     # Add average GC to the general stats table
     self.general_stats_data[s_name]['avg_gc'] = avg_gc
     
@@ -234,32 +197,44 @@ def parse_gc_dist(self, f):
     if s_name in self.qualimap_bamqc_gc_content_dist:
         log.debug("Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_gc_content_dist[s_name] = d
+    if reference_species and reference_species not in self.qualimap_bamqc_gc_by_species:
+        self.qualimap_bamqc_gc_by_species[reference_species] = reference_d
     self.add_data_source(f, s_name=s_name, section='mapped_gc_distribution')
 
 
 def report_sections(self):
     """ Add results from Qualimap BamQC parsing to the report """
     # Append to self.sections list
-    
-    # Section 1 - BamQC Coverage Histogram
+
     if len(self.qualimap_bamqc_coverage_hist) > 0:
         # Chew back on histogram to prevent long flat tail
         # (find a sensible max x - lose 1% of longest tail)
         max_x = 0
-        for d in self.qualimap_bamqc_coverage_hist.values():
-            total = sum(d.values())
+        total_bases_by_sample = dict()
+        for s_name, d in self.qualimap_bamqc_coverage_hist.items():
+            total_bases_by_sample[s_name] = sum(d.values())
             cumulative = 0
             for count in sorted(d.keys(), reverse=True):
                 cumulative += d[count]
-                if cumulative / total > 0.01:
+                if cumulative / total_bases_by_sample[s_name] > 0.01:
                     max_x = max(max_x, count)
                     break                    
+
+        rates_within_threshs = dict()
+        for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
+            total = total_bases_by_sample[s_name]
+            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max_x + 1))
+            for thres_name, thres in [('fifty', 50), ('thirty', 30), ('ten', 10), ('five', 5), ('one', 1)]:
+                if thres in rates_within_threshs[s_name]:
+                    self.general_stats_data[s_name][thres_name + '_x_pc'] = rates_within_threshs[s_name][thres]
+
+        # Section 1 - BamQC Coverage Histogram
         self.sections.append({
-            'name': 'Coverage Histogram',
+            'name': 'Coverage histogram',
             'anchor': 'qualimap-coverage-histogram',
             'content': plots.linegraph.plot(self.qualimap_bamqc_coverage_hist, {
-                'title': 'Coverage Histogram',
-                'ylab': 'Genome Bin Counts',
+                'title': 'Coverage histogram',
+                'ylab': 'Genome bin counts',
                 'xlab': 'Coverage (X)',
                 'ymin': 0,
                 'xmin': 0,
@@ -268,14 +243,29 @@ def report_sections(self):
                 'tt_label': '<b>{point.x}X</b>: {point.y}',
             })
         })
+        # Section 2 - BamQC cumulative coverage genome fraction
+        self.sections.append({
+            'name': 'Cumulative coverage genome fraction',
+            'anchor': 'qualimap-cumulative-genome-fraction-coverage',
+            'content': plots.linegraph.plot(rates_within_threshs, {
+                'title': 'Genome fraction covered by at least X reads',
+                'ylab': 'Fraction of reference (%)',
+                'xlab': 'Coverage (X)',
+                'ymax': 100,
+                'ymin': 0,
+                'xmin': 0,
+                'xmax': max_x,
+                'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+            })
+        })
 
-    # Section 2 - Insert size histogram
+    # Section 3 - Insert size histogram
     if len(self.qualimap_bamqc_insert_size_hist) > 0:
         self.sections.append({
-            'name': 'Insert size Histogram',
+            'name': 'Insert size histogram',
             'anchor': 'qualimap-insert-size-histogram',
             'content': plots.linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
-                'title': 'Insert Size Histogram',
+                'title': 'Insert size histogram',
                 'ylab': 'Fraction of reads',
                 'xlab': 'Insert Size (bp)',
                 'ymin': 0,
@@ -284,35 +274,35 @@ def report_sections(self):
             })
         })
 
-    # Section 3 - Genome Fraction coverage
-    if len(self.qualimap_bamqc_genome_fraction_cov) > 0:
-        self.sections.append({
-            'name': 'Genome Fraction Coverage',
-            'anchor': 'qualimap-genome-fraction-coverage',
-            'content': plots.linegraph.plot(self.qualimap_bamqc_genome_fraction_cov, {
-                'title': 'Genome Fraction Coverage',
-                'ylab': 'Fraction of reference (%)',
-                'xlab': 'Coverage (X)',
-                'ymax': 100,
-                'ymin': 0,
-                'xmin': 0,
-                'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
-            })
-        })
-
     # Section 4 - GC-content distribution
     if len(self.qualimap_bamqc_gc_content_dist) > 0:
+        extra_series = []
+        for i, (species_name, species_data) in enumerate(sorted(self.qualimap_bamqc_gc_by_species.items())):
+            extra_series.append({
+                'name': species_name,
+                'data': list(species_data.items()),
+                'dashStyle': 'Dash',
+                'lineWidth': 1,
+                'color': ['#000000', '#E89191'][i % 2],
+            })
+        content = ''
+        if len(extra_series) == 1:
+            content += '<p>The dotted line represents a pre-calculated GC destribution for the reference genome.</p>'
+        elif len(extra_series) > 1:
+            content += '<p>The dotted lines represent pre-calculated GC destributions for the reference genomes.</p>'
+
         self.sections.append({
-            'name': 'GC-content distribution',
+            'name': 'GC content distribution',
             'anchor': 'qualimap-gc-distribution',
-            'content': plots.linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
-                'title': 'GC-content distribution',
+            'content': content + plots.linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
+                'title': 'GC content distribution',
                 'ylab': 'Fraction of reads',
                 'xlab': 'GC content (%)',
                 'ymin': 0,
                 'xmin': 0,
                 'xmax': 100,
                 'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
+                'extra_series': extra_series,
             })
         })
 
@@ -328,7 +318,7 @@ def general_stats_headers (self):
     }
     self.general_stats_headers['median_insert_size'] = {
         'title': 'Insert Size',
-        'description': 'Median Insert Size',
+        'description': 'Median insert size',
         'min': 0,
         'suffix': 'bp',
         'scale': 'PuOr',
@@ -409,7 +399,7 @@ def general_stats_headers (self):
         'hidden': True
     }
     self.general_stats_headers['total_reads'] = {
-        'title': 'Total Reads',
+        'title': 'Total reads',
         'description': 'Number of reads (millions)',
         'min': 0,
         'scale': 'Blues',
@@ -417,3 +407,20 @@ def general_stats_headers (self):
         'modify': lambda x: x / 1000000,
         'hidden': True
     }
+
+
+def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
+    bases_within_threshs = OrderedDict((depth, 0) for depth in depth_thresholds)
+    rates_within_threshs = OrderedDict((depth, None) for depth in depth_thresholds)
+
+    for depth, bases in bases_by_depth.items():
+        for t in depth_thresholds:
+            if depth >= t:
+                bases_within_threshs[t] += bases
+    for t in depth_thresholds:
+        bs = bases_within_threshs[t]
+        if total_size > 0:
+            rate = 100.0 * bases_within_threshs[t] / total_size
+            assert rate <= 100, 'Error: rate is > 1: rate = ' + str(rate) + ', bases = ' + str(bs) + ', size = ' + str(total_size)
+            rates_within_threshs[t] = rate
+    return rates_within_threshs
