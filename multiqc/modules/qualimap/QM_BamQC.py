@@ -218,7 +218,7 @@ def report_sections(self):
                 cumulative += d[count]
                 if cumulative / total_bases_by_sample[s_name] > 0.01:
                     max_x = max(max_x, count)
-                    break                    
+                    break
 
         rates_within_threshs = dict()
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
@@ -233,6 +233,7 @@ def report_sections(self):
             'name': 'Coverage histogram',
             'anchor': 'qualimap-coverage-histogram',
             'content': plots.linegraph.plot(self.qualimap_bamqc_coverage_hist, {
+                'id': 'qualimap_coverage_histogram',
                 'title': 'Coverage histogram',
                 'ylab': 'Genome bin counts',
                 'xlab': 'Coverage (X)',
@@ -248,6 +249,7 @@ def report_sections(self):
             'name': 'Cumulative coverage genome fraction',
             'anchor': 'qualimap-cumulative-genome-fraction-coverage',
             'content': plots.linegraph.plot(rates_within_threshs, {
+                'id': 'qualimap_genome_fraction',
                 'title': 'Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',
                 'xlab': 'Coverage (X)',
@@ -265,6 +267,7 @@ def report_sections(self):
             'name': 'Insert size histogram',
             'anchor': 'qualimap-insert-size-histogram',
             'content': plots.linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
+                'id': 'qualimap_insert_size',
                 'title': 'Insert size histogram',
                 'ylab': 'Fraction of reads',
                 'xlab': 'Insert Size (bp)',
@@ -295,6 +298,7 @@ def report_sections(self):
             'name': 'GC content distribution',
             'anchor': 'qualimap-gc-distribution',
             'content': content + plots.linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
+                'id': 'qualimap_gc_content',
                 'title': 'GC content distribution',
                 'ylab': 'Fraction of reads',
                 'xlab': 'GC content (%)',
