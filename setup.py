@@ -70,6 +70,7 @@ setup(
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
+            'prokka = multiqc.modules.prokka:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
