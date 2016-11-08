@@ -61,11 +61,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.prokka, headers)
         
-        # User can set a configuration attribute, 'prokka_table', to specify
-        # whether to include a table or a barplot. Default is to make a plot.
+        # User can set configuration attributes, 'prokka_table', and
+        # 'prokka_barplot', to specify whether to include a table or a barplot, or both.
+        # Default is to make a plot only.
         if getattr(config, 'prokka_table', False):
             self.intro += self.prokka_table()
-        else:
+        if getattr(config, 'prokka_barplot', True):
             self.intro += self.prokka_barplot()
 
         
