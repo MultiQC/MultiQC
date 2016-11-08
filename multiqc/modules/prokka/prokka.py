@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} logs".format(len(self.prokka)))
         self.write_data_file(self.prokka, 'multiqc_prokka')
         
-        # Add Prokka's annotation stats to the general stats table
+        # Add most important Prokka annotation stats to the general table
         headers = OrderedDict()
         headers['organism'] = {
             'title': 'Organism',
@@ -58,44 +58,16 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Number of CDS',
             'min': 0,
             'format': '{:i}%',
-            'shared_key': 'prokka',
-        }
-        headers['tRNA'] = {
-            'title': 'tRNA',
-            'description': 'Number of tRNA',
-            'min': 0,
-            'format': '{:i}%',
-            'shared_key': 'prokka',
-            'hidden': True
-        }
-        headers['rRNA'] = {
-            'title': 'rRNA',
-            'description': 'Number of rRNA',
-            'min': 0,
-            'format': '{:i}%',
-            'shared_key': 'prokka',
-            'hidden': True
-        }
-        headers['tmRNA'] = {
-            'title': 'tmRNA',
-            'description': 'Number of tmRNA',
-            'min': 0,
-            'format': '{:i}%',
-            'shared_key': 'prokka',
-            'hidden': True
-        }
-        headers['sig_peptide'] = {
-            'title': 'sig_peptide',
-            'description': 'Number of sig_peptide',
-            'min': 0,
-            'format': '{:i}%',
-            'shared_key': 'prokka',
-            'hidden': True
         }
         self.general_stats_addcols(self.prokka, headers)
         
-        # Make a summary table  
-        self.intro += self.prokka_table()
+        # User can set a configuration attribute, 'prokka_table', to specify
+        # whether to include a table or a barplot. Default is to make a plot.
+        if getattr(config, 'prokka_table', False):
+            self.intro += self.prokka_table()
+        else:
+            self.intro += self.prokka_barplot()
+
         
     def parse_prokka(self, f):
         """ Parse prokka txt summary files. 
@@ -119,6 +91,9 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Get organism and sample name from the first line
+        # Assumes organism name only consists of two words, 
+        # i.e. 'Genusname speciesname', and that the remaining
+        # text on the organism line is the sample name.
         organism = " ".join(first_line.strip().split(":", 1)[1].split()[:2])
         s_name = " ".join(first_line.split()[3:])
         self.prokka[s_name] = dict()
@@ -138,15 +113,18 @@ class MultiqcModule(BaseMultiqcModule):
 
     
     def prokka_table(self):
-        """ Make basic plot of the annotation stats """
+        """ Make basic table of the annotation stats """
         
         # Specify the order of the different possible categories
         headers = OrderedDict()
+        headers['organism'] = { 
+                'title': 'Organism', 
+                'description': 'Organism name',
+        }
         headers['contigs'] = { 
                 'title': '# contigs', 
                 'description': 'Number of contigs in assembly',
                 'format': '{:i}',
-                'colour': 'red',
         }
         headers['bases'] = { 
                 'title': '# bases', 
@@ -184,10 +162,30 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:i}',
         }
         
-        # Config for the plot
         table_config = {
             'namespace': 'prokka',
             'min': 0,
         }
         
         return plots.table.plot(self.prokka, headers, table_config)
+    
+    def prokka_barplot(self):
+        """ Make a basic plot of the annotation stats """
+
+        # Specify the order of the different categories
+        keys = OrderedDict()
+        keys['CDS'] =           { 'name': 'CDS' }
+        keys['rRNA'] =          { 'name': 'rRNA' }
+        keys['tRNA'] =          { 'name': 'tRNA' }
+        keys['tmRNA'] =         { 'name': 'tmRNA' }
+        keys['misc_RNA'] =      { 'name': 'misc RNA' }
+        keys['sig_peptide'] =   { 'name': 'Signal peptides' }
+
+        plot_config = {
+            'id': 'prokka_plot',
+            'title': 'Prokka',
+            'ylab': '# Counts',
+            'cpswitch_counts_label': 'Features'
+        }
+
+        return plots.bargraph.plot(self.prokka, keys, plot_config)
