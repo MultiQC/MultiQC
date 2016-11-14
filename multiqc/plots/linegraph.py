@@ -12,7 +12,7 @@ import os
 import random
 import sys
 
-from multiqc.utils import config
+from multiqc.utils import config, report
 logger = logging.getLogger(__name__)
 
 try:
@@ -149,6 +149,7 @@ def highcharts_linegraph (plotdata, pconfig={}):
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
     
+    report.num_hc_plots += 1
     return html
 
 
@@ -173,7 +174,10 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
         pids.append(pid)
     
-    html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
+    html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
+          'Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ' + \
+          '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
+    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
     
     # Same defaults as HighCharts for consistency
     default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9',
@@ -341,6 +345,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
     # Close wrapping div
     html += '</div>'
     
+    report.num_mpl_plots += 1
     return html
 
 

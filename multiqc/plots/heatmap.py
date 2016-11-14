@@ -65,5 +65,6 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(pdata), x=json.dumps(xcats), y=json.dumps(ycats), c=json.dumps(pconfig));
     
+    report.num_hc_plots += 1
     return html
 

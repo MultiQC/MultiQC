@@ -80,6 +80,7 @@ def make_plot(dt):
         }}
     </script>""".format(bid=bs_id, s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories))
     
+    report.num_hc_plots += 1
     return html
     
     

@@ -93,5 +93,6 @@ def highcharts_scatter_plot (plotdata, pconfig={}):
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
     
+    report.num_hc_plots += 1
     return html
     
