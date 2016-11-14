@@ -64,7 +64,9 @@ picard:
     rnaseqmetrics:
         contents: 'picard.analysis.CollectRnaSeqMetrics'
 preseq:
-    contents: 'EXPECTED_DISTINCT'
+    contents:
+        - 'EXPECTED_DISTINCT'
+        - 'distinct_reads'
     # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
     # contents: 'TOTAL_BASES	EXPECTED_DISTINCT'
 prokka:
