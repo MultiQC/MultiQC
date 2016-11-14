@@ -9,7 +9,7 @@ from collections import OrderedDict
 from multiqc import config, plots
 
 # Initialise the logger
-# log = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 class VariantEvalMixin():
 

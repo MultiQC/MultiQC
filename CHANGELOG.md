@@ -9,6 +9,8 @@ Module updates:
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
 * **featureCounts**
   * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
+* **GATK**
+  * Fixed logger error in VariantEval module.
 * **Picard**
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
 * **RSeQC**
