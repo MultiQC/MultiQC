@@ -143,6 +143,7 @@ $(function () {
         var f_scale = parseInt($('#mqc_export_scaling').val());
         var f_width = parseInt($('#mqc_exp_width').val()) / f_scale;
         var f_height = parseInt($('#mqc_exp_height').val()) / f_scale;
+        var skipped_plots = 0;
         $('#mqc_export_selectplots input:checked').each(function(){
           var fname = $(this).val();
           var hc = $('#'+fname).highcharts();
@@ -154,8 +155,13 @@ $(function () {
               sourceHeight: f_height,
               scale: f_scale
             });
+          } else {
+            skipped_plots += 1;
           }
         });
+        if(skipped_plots > 0){
+          alert("Warning: "+skipped_plots+" plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work.");
+        }
       } else if($('#mqc_data_download').is(':visible')){
         var ft = $('#mqc_export_data_ft').val();
         $('#mqc_export_data_log').html('');
