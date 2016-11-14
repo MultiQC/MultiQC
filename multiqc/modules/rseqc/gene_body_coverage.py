@@ -35,9 +35,7 @@ def parse_reports(self):
                     keys = s[1:]
                 else:
                     nrows += 1
-                    s_name = s[0]
-                    if s_name.endswith('.geneBodyCoverage'):
-                        s_name = s_name[:-17]
+                    s_name = self.clean_s_name(s[0], f['root'])
                     if s_name in self.gene_body_cov_hist_counts:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name, section='gene_body_coverage')

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from RSeQC infer_experiment.py 
+""" MultiQC submodule to parse output from RSeQC infer_experiment.py
 http://rseqc.sourceforge.net/#infer-experiment-py """
 
 from collections import OrderedDict
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def parse_reports(self):
     """ Find RSeQC infer_experiment reports and parse their data """
     
-    # Set up vars 
+    # Set up vars
     self.infer_exp = dict()
     regexes = {
         'pe_sense': r"\"1\+\+,1--,2\+-,2-\+\": (\d\.\d+)",

@@ -13,8 +13,11 @@ Module updates:
   * Fixed logger error in VariantEval module.
 * **Picard**
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
+* **Preseq**
+  * Module now recognises output from `c_curve` mode.
 * **RSeQC**
   * Made the gene body coverage plot show the percentage view by default
+  * Made gene body coverage properly handle sample names
 * **Samtools**
   * New module to show duplicate stats from `rmdup` logs
   * Fixed a couple of niggles in the idxstats plot

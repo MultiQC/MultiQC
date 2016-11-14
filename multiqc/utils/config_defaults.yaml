@@ -94,6 +94,11 @@ fn_clean_exts:
     - '.sorted'
     - '.report'
     - '| stdin'
+    - '.geneBodyCoverage'
+    - '.inner_distance_freq'
+    - '.junctionSaturation_plot.r'
+    - '.pos.DupRate.xls'
+    - '.GC.xls'
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
