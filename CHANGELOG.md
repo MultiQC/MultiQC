@@ -26,8 +26,10 @@ Module updates:
 
 Core Updates:
 * Fixed bar plot bug where missing categories could shift data between samples
+* Report title now printed in the side navigation
 * Missing plot IDs added for easier plot exporting
 * Stopped giving warnings about skipping directories (now a debug message)
+* Added warnings in report about missing functionality for flat plots (exporting and toolbox)
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:
