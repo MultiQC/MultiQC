@@ -30,6 +30,7 @@ Core Updates:
 * Missing plot IDs added for easier plot exporting
 * Stopped giving warnings about skipping directories (now a debug message)
 * Added warnings in report about missing functionality for flat plots (exporting and toolbox)
+* Export button has contextual text for images / data
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:

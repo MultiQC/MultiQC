@@ -102,6 +102,14 @@ $(function () {
   });
   
   // EXPORTING PLOTS
+  // Change text on download button
+  $('#mqc_exportplots a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    if($(e.target).attr('href') == '#mqc_data_download'){
+      $('#mqc-dl-plot-txt').text('Data');
+    } else {
+      $('#mqc-dl-plot-txt').text('Images');
+    }
+  });
   // Load the plot exporter
   if($('.hc-plot').length > 0){
     $('.hc-plot').each(function(){
