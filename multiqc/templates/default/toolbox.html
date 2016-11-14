@@ -31,7 +31,10 @@ of the report.
     
     <!-- Highlighting -->
     <div id="mqc_cols" class="mqc_filter_section">
-      <h4>Highlight Samples</h4>
+      <h4>
+        <button id="mqc_cols_apply" class="btn btn-xs btn-default pull-right" disabled>Apply</button>
+        Highlight Samples
+      </h4>
       {% if report.num_mpl_plots > 0 %}
       <p>
         <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
@@ -55,7 +58,10 @@ of the report.
     
     <!-- Renaming -->
     <div id="mqc_renamesamples" class="mqc_filter_section">
-      <h4>Rename Samples</h4>
+      <h4>
+        <button id="mqc_rename_apply" class="btn btn-xs btn-default pull-right" disabled>Apply</button>
+        Rename Samples
+      </h4>
       {% if report.num_mpl_plots > 0 %}
       <p>
         <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
@@ -88,7 +94,10 @@ of the report.
     
     <!-- Hiding -->
     <div id="mqc_hidesamples" class="mqc_filter_section">
-      <h4>Show / Hide Samples</h4>
+      <h4>
+        <button id="mqc_hide_apply" class="btn btn-xs btn-default pull-right" disabled>Apply</button>
+        Show / Hide Samples
+      </h4>
       {% if report.num_mpl_plots > 0 %}
       <p>
         <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>

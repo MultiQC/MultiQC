@@ -25,6 +25,9 @@ Module updates:
   * Plot cumulative coverage for values above 50x, align with the coverage histogram.
 
 Core Updates:
+* Added _'Apply'_ button to Highlight / Rename / Hide.
+  * These tools can become slow with large reports. This means that you can enter several
+    things without having to wait for the report to replot each change.
 * Fixed bar plot bug where missing categories could shift data between samples
 * Report title now printed in the side navigation
 * Missing plot IDs added for easier plot exporting

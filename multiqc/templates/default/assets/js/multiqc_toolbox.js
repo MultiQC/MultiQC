@@ -31,11 +31,15 @@ $(function () {
     var f_text = $('#mqc_colour_filter').val().trim();
     var f_col = $('#mqc_colour_filter_color').val().trim();
     $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
-    apply_mqc_highlights();
+    $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     $('#mqc_colour_filter').val('');
     mqc_colours_idx += 1;
     if(mqc_colours_idx >= mqc_colours.length){ mqc_colours_idx = 0; }
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
+  });
+  $('#mqc_cols_apply').click(function(e){
+    apply_mqc_highlights();
+    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
   });
   
   // Rename samples
@@ -52,11 +56,15 @@ $(function () {
     li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" tabindex="'+(mqc_renamesamples_idx+1)+'" />'
     li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
     $('#mqc_renamesamples_filters').append(li);
-    apply_mqc_renamesamples();
+    $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     $('#mqc_renamesamples_from').val('');
     $('#mqc_renamesamples_to').val('');
     mqc_renamesamples_idx += 2;
     $('#mqc_renamesamples_form input:first').focus();
+  });
+  $('#mqc_rename_apply').click(function(e){
+    apply_mqc_renamesamples();
+    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
   });
   
   // Bulk rename samples
@@ -78,7 +86,7 @@ $(function () {
       li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
       $('#mqc_renamesamples_filters').append(li);
     });
-    apply_mqc_renamesamples();
+    $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     $(this).find('textarea').val('');
     $('#mqc_renamesamples_bulk_collapse').collapse('hide');
   });
@@ -93,12 +101,16 @@ $(function () {
       return false;
     }
     $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_hidesamples_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
-    apply_mqc_hidesamples();
+    $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     $('#mqc_hidesamples_filter').val('');
     mqc_hidesamples_idx += 1;
   });
   $('.mqc_hidesamples_showhide').change(function(e){
+    $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+  });
+  $('#mqc_hide_apply').click(function(e){
     apply_mqc_hidesamples();
+    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
   });
   
   // EXPORTING PLOTS
@@ -314,13 +326,13 @@ $(function () {
   $('.mqc_filters').on('blur', 'li input', function(){
     var target = $(this).parent().parent().attr('id');
     if(target == 'mqc_col_filters'){
-      apply_mqc_highlights();
+      $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     }
     if(target == 'mqc_renamesamples_filters'){
-      apply_mqc_renamesamples();
+      $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     }
     if(target == 'mqc_hidesamples_filters'){
-      apply_mqc_hidesamples();
+      $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     }
   });
   // 'Enter' key pressed whilst editing a filter
@@ -334,23 +346,23 @@ $(function () {
   $('.mqc_filters').on('click', 'li button', function(){
     var target = $(this).parent().parent().attr('id');
     $(this).parent().remove();
-    if(target == 'mqc_col_filters'){ apply_mqc_highlights(); }
-    if(target == 'mqc_hidesamples_filters'){ apply_mqc_hidesamples(); }
-    if(target == 'mqc_renamesamples_filters'){ apply_mqc_renamesamples(); }
+    if(target == 'mqc_col_filters'){ $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if(target == 'mqc_hidesamples_filters'){ $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if(target == 'mqc_renamesamples_filters'){ $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
   });
   // Clear all filters button
   $('.mqc_toolbox_clear').click(function(){
     var target = $(this).closest('.mqc_filter_section').find('.mqc_filters').attr('id');
     $('#'+target).empty();
-    if(target == 'mqc_col_filters'){ apply_mqc_highlights(); }
-    if(target == 'mqc_hidesamples_filters'){ apply_mqc_hidesamples(); }
-    if(target == 'mqc_renamesamples_filters'){ apply_mqc_renamesamples(); }
+    if(target == 'mqc_col_filters'){ $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if(target == 'mqc_hidesamples_filters'){ $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if(target == 'mqc_renamesamples_filters'){ $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
   });
   
   // Use jQuery UI to make the colour filters sortable
   $("#mqc_col_filters").sortable();
   $("#mqc_col_filters").on("sortstop", function(event, ui){
-    apply_mqc_highlights();
+    $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
   });
   // Regex mode text
   $('.mqc_regex_mode').click(function(){
@@ -360,9 +372,9 @@ $(function () {
     } else {
       rswitch.removeClass('on').addClass('off').text('off');
     }
-    if($(this).parent().attr('id') == 'mqc_cols'){ apply_mqc_highlights(); }
-    if($(this).parent().attr('id') == 'mqc_renamesamples'){ apply_mqc_renamesamples(); }
-    if($(this).parent().attr('id') == 'mqc_hidesamples'){ apply_mqc_hidesamples(); }
+    if($(this).parent().attr('id') == 'mqc_cols'){ $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if($(this).parent().attr('id') == 'mqc_renamesamples'){ $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if($(this).parent().attr('id') == 'mqc_hidesamples'){ $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
   });
   
   
