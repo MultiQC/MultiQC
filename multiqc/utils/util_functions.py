@@ -41,7 +41,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
     """ Write a data file to the report directory. Will not do anything
     if config.data_dir is not set.
     :param: data - a 2D dict, first key sample name (row header),
-            second key field (column header). 
+            second key field (column header).
     :param: fn - Desired filename. Directory will be prepended automatically.
     :param: sort_cols - Sort columns alphabetically
     :param: data_format - Output format. Defaults to config.data_format (usually tsv)

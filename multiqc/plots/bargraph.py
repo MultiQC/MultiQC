@@ -13,7 +13,7 @@ import os
 import random
 import sys
 
-from multiqc.utils import config, report
+from multiqc.utils import config, report, util_functions
 logger = logging.getLogger(__name__)
 
 try:
@@ -254,6 +254,16 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
     
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
+        
+        # Save plot data to file
+        fdata = {}
+        for d in pdata:
+            for didx, dval in enumerate(d['data']):
+                s_name = plotsamples[pidx][didx]
+                if s_name not in fdata:
+                    fdata[s_name] = dict()
+                fdata[s_name][d['name']] = dval
+        util_functions.write_data_file(fdata, pids[pidx])
         
         # Plot percentage as well as counts
         plot_pcts = [False]
