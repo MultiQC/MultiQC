@@ -467,7 +467,7 @@ helper functions to make your life easier.
 `plot_xy_line_graph (target, ds)`
 
 Plots a line graph with multiple series of (x,y) data pairs. Used by
-the [self.plot_xy_data()](CONTRIBUTING.md#selfplot_xy_data-data-config)
+the [plots.linegraph.plot()](http://multiqc.info/docs/#line-graphs)
 python function.
 
 Data and configuration must be added to the document level
@@ -539,7 +539,7 @@ An example of the markup expected, with the function being called:
 `plot_stacked_bar_graph (target, ds)`
 
 Plots a bar graph with multiple series containing multiple categories.
-Used by the [self.plot_bargraph()](CONTRIBUTING.md#selfplot_bargraph-data-cats-config)
+Used by the [plots.bargraph.plot()](http://multiqc.info/docs/#bar-graphs)
 python function.
 
 Data and configuration must be added to the document level

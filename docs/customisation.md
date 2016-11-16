@@ -4,7 +4,7 @@ branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
 Note that much more extensive customisation of reports is possible using
-[custom templates](#writing-new-templates).
+[custom templates](http://multiqc.info/docs/#writing-new-templates).
 
 ## Titles and introductory text
 You can specify a custom title for the report using the `-t`/`--title`
