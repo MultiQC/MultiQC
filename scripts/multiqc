@@ -169,7 +169,6 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     log.init_log(logger, loglevel=loglevel)
     
     # Load config files
-    config.mqc_load_userconfig()
     config.mqc_load_userconfig(config_file)
     plugin_hooks.mqc_trigger('config_loaded')
     
@@ -292,8 +291,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     for d in config.analysis_dir:
         logger.info("Searching '{}'".format(d))
     
-    # Get the list of modules we want to run
-    run_modules = config.avail_modules.keys()
+    # Get the list of modules we want to run, in the order that we want them
+    run_modules = [ m for m in config.avail_modules.keys() if m not in config.module_order ]
+    run_modules.extend( [ m for m in config.module_order if m in config.avail_modules.keys() ] )
+    
     if module:
         run_modules = [m for m in config.avail_modules.keys() if m in module]
         logger.info('Only using modules {}'.format(', '.join(module)))

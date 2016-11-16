@@ -39,6 +39,8 @@ Core Updates:
 * Stopped giving warnings about skipping directories (now a debug message)
 * Added warnings in report about missing functionality for flat plots (exporting and toolbox)
 * Export button has contextual text for images / data
+* Fixed a bug where user config files were loaded twice
+* Refactored code so that the order of modules can be changed in the user config
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:
