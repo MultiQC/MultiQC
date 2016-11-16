@@ -14,9 +14,6 @@ logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-# Load the template so that we can access it's configuration
-template_mod = config.avail_templates[config.template].load()
-
 def plot (data, xcats, ycats=None, pconfig={}):
     """ Plot a 2D heatmap.
     :param data: List of lists, each a representing a row of values.

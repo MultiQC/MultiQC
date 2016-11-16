@@ -81,13 +81,12 @@ def plot (data, cats=None, pconfig={}):
             thisdata = list()
             catcount = 0
             for s in hc_samples:
+                if s not in sample_dcount:
+                    sample_dcount[s] = 0
                 try:
                     thisdata.append(d[s][c])
                     catcount += 1
-                    try:
-                        sample_dcount[s] += 1
-                    except KeyError:
-                        sample_dcount[s] = 1
+                    sample_dcount[s] += 1
                 except KeyError:
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float('nan'))
@@ -96,8 +95,16 @@ def plot (data, cats=None, pconfig={}):
                 if 'color' in cats[idx][c]:
                     thisdict['color'] = cats[idx][c]['color']
                 hc_data.append(thisdict)
+        
+        # Remove empty samples
+        for s, c in sample_dcount.items():
+            if c == 0:
+                idx = hc_samples.index(s)
+                del hc_samples[idx]
+                for j, d in enumerate(hc_data):
+                    del hc_data[j]['data'][idx]
         if len(hc_data) > 0:
-            plotsamples.append([s for s in hc_samples if sample_dcount.get(s, 0) > 0])
+            plotsamples.append(hc_samples)
             plotdata.append(hc_data)
     
     if len(plotdata) == 0:

@@ -12,7 +12,7 @@ import os
 import random
 import sys
 
-from multiqc.utils import config, report
+from multiqc.utils import config, report, util_functions
 logger = logging.getLogger(__name__)
 
 try:
@@ -198,9 +198,41 @@ def matplotlib_linegraph (plotdata, pconfig={}):
     
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
-            
+        
         # Plot ID
         pid = pids[pidx]
+        
+        # Save plot data to file
+        fdata = OrderedDict()
+        lastcats = None
+        sharedcats = True
+        for d in pdata:
+            fdata[d['name']] = OrderedDict()
+            for i, x in enumerate(d['data']):
+                if type(x) is list:
+                    fdata[d['name']][str(x[0])] = x[1]
+                    # Check to see if all categories are the same
+                    if lastcats is None:
+                        lastcats = [x[0] for x in d['data']]
+                    elif lastcats != [x[0] for x in d['data']]:
+                        sharedcats = False
+                else:
+                    try:
+                        fdata[d['name']][pconfig['categories'][i]] = x
+                    except (KeyError, IndexError):
+                        fdata[d['name']][str(i)] = x
+        # Custom tsv output if the x axis varies
+        if not sharedcats and config.data_format == 'tsv':
+            fout = ''
+            for d in pdata:
+                fout += "\t"+"\t".join([str(x[0]) for x in d['data']])
+                fout += "\n{}\t".format(d['name'])
+                fout += "\t".join([str(x[1]) for x in d['data']])
+                fout += "\n"
+            with io.open (os.path.join(config.data_dir, '{}.txt'.format(pid)), 'w', encoding='utf-8') as f:
+                print( fout.encode('utf-8', 'ignore').decode('utf-8'), file=f )
+        else:
+            util_functions.write_data_file(fdata, pid)
         
         # Set up figure
         fig = plt.figure(figsize=(14, 6), frameon=False)

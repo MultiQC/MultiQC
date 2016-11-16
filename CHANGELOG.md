@@ -30,6 +30,8 @@ Module updates:
   * Plot cumulative coverage for values above 50x, align with the coverage histogram.
 
 Core Updates:
+* Plot data now saved in `multiqc_data` when 'flat' image plots are created
+  * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
 * Added _'Apply'_ button to Highlight / Rename / Hide.
   * These tools can become slow with large reports. This means that you can enter several
     things without having to wait for the report to replot each change.
