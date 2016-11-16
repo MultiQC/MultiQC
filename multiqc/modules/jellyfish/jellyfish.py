@@ -41,7 +41,25 @@ class MultiqcModule(BaseMultiqcModule):
             occurence = int(line.split(" ")[0])
             count = int(line.split(" ")[1])
             histogram[occurence] = occurence*count
-         
+
+        #### this nees to go in init or in another funciotn as phil did
+        #### remove the tail by using this code (modify it)
+        #### if position 1 is 5 times higher than max of pos[2...max] then plot two plots and a warning 
+        if len(histogram) > 0:
+        # Chew back on histogram to prevent long flat tail
+        # (find a sensible max x - lose 1% of longest tail)
+            max_x = 0
+            import pdb
+            pdb.set_trace()
+            sum_of_occurces = sum(historgra.values())
+            cumulative = 0
+            for count in sorted(d.keys(), reverse=True):
+                cumulative += d[count]
+                if cumulative / total_bases_by_sample[s_name] > 0.01:
+                    max_x = max(max_x, count)
+                    break
+
+
         if len(histogram) > 0:
             if f['s_name'] in self.jellyfish_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
