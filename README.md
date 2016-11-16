@@ -57,6 +57,8 @@ Currently, supported tools include:
   * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`, `rmdup`)
   * [SnpEff](http://snpeff.sourceforge.net/)
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
+* De novo assembly tools
+  * [Jellyfish](http://www.cbcb.umd.edu/software/jellyfish/)
 
 More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log

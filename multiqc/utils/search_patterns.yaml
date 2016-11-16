@@ -42,6 +42,8 @@ gatk:
         contents: '#:GATKReport'
 hicup:
     fn: 'HiCUP_summary_report*'
+jellyfish:
+    fn: '*.hist'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
 methylQA:
