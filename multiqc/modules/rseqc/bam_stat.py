@@ -76,7 +76,9 @@ def parse_reports(self):
         for s_name in self.bam_stat_data:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update( self.bam_stat_data[s_name] )
+                #Don't write to general stat if nothing to write..
+                if self.bam_stat_data[s_name]['reads_mapped_in_proper_pairs'] != 0:
+                    self.general_stats_data[s_name].update( self.bam_stat_data[s_name] )
         
         # Make dot plot of counts
         pconfig = {}
