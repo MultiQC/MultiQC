@@ -128,6 +128,11 @@ samtools:
         contents: '[bam_rmdup'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
+slamdunk:
+    summary:
+        contents: '# slamdunk summary'
+    utrrates:
+        contents: '# slamdunk utrrates'
 snpeff:
     contents: 'SnpEff_version'
 star:

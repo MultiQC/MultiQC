@@ -57,6 +57,7 @@ Currently, supported tools include:
   * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`, `rmdup`)
   * [SnpEff](http://snpeff.sourceforge.net/)
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
+  * [Slamdunk](https://github.com/t-neumann/slamdunk)
 
 More modules are being written all of the time. Please suggest any ideas as a new
 [issue](https://github.com/ewels/MultiQC/issues) _(include an example log
@@ -133,5 +134,6 @@ Code contributions from:
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@avilella](https://github.com/avilella),
 [@vladsaveliev](https://github.com/vladsaveliev)
+[@t-neumann](https://github.com/t-neumann)
 and many others. Thanks for your support!
 

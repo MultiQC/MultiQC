@@ -1,0 +1,24 @@
+---
+Name: Slamdunk
+URL: https://github.com/t-neumann/slamdunk
+Description: >
+    Slamdunk is a tool to analyze SLAM-Seq data.
+---
+
+Blablabla
+[Cutadapt](https://code.google.com/p/cutadapt/),
+a tool to find and remove adapter sequences, primers, poly-A
+tails and other types of unwanted sequence from your high-throughput
+sequencing reads.
+
+This module should be able to parse logs from a wide range of versions of Cutadapt.
+It's been tested with log files from v1.2.1, 1.6 and 1.8. Note that you will need
+to change the search pattern for very old log files (such as v.1.2) with the following
+MultiQC config:
+```yaml
+sp:
+    cutadapt:
+        contents: 'cutadapt version'
+```
+See the [module search patterns](http://multiqc.info/docs/#module-search-patterns)
+section of the MultiQC documentation for more information.

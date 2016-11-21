@@ -28,6 +28,8 @@ Module updates:
 * **Qualimap BamQC**
   * Add a line for pre-calculated reference genome GC content
   * Plot cumulative coverage for values above 50x, align with the coverage histogram.
+* [**Slamdunk**](https://github.com/t-neumann/slamdunk) - new module!
+  * Slamdunk is a software tool to analyze SLAMSeq data.
 
 Core Updates:
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created

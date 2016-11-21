@@ -141,6 +141,7 @@ module_order:
     - 'prokka'
     - 'samblaster'
     - 'samtools'
+    - 'slamdunk'
     - 'bamtools'
     # Alignment tool stats
     - 'bismark'
