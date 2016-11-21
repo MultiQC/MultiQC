@@ -46,7 +46,7 @@ fn_ignore_dirs:
     - 'multiqc_data'
 fn_ignore_paths: []
 no_version_check: false
-log_filesize_limit: 5000000
+log_filesize_limit: 50000000
 report_readerrors: false
 report_imgskips: false
 skip_generalstats: false
@@ -99,6 +99,7 @@ fn_clean_exts:
     - '.junctionSaturation_plot.r'
     - '.pos.DupRate.xls'
     - '.GC.xls'
+    - '_slamdunk'
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:

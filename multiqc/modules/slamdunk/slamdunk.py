@@ -6,6 +6,7 @@ from __future__ import print_function
 import logging
 import re
 from distutils.version import StrictVersion
+from collections import OrderedDict
 
 from multiqc import config, BaseMultiqcModule, plots
 
@@ -26,6 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
          "blabla"\
          " blabla.")
 
+        self.slamdunk_data = dict()
+        self.rates_data = dict()
 #         # Find and load any Cutadapt reports
 #         self.cutadapt_data = dict()
 #         self.cutadapt_length_counts = dict()
@@ -33,32 +36,55 @@ class MultiqcModule(BaseMultiqcModule):
 #         self.cutadapt_length_obsexp = dict()
         
         
-        for f in self.find_log_files(config.sp['slamdunk']):
+        for f in self.find_log_files(config.sp['slamdunk']['utrrates']):
             #self.parse_cutadapt_logs(f)
-            log.info(f['f'])
+            #log.info(f['f'])
             log.info(f['s_name'])
             log.info(f['root'])
             log.info(f['fn'])
+            
+        for f in self.find_log_files(config.sp['slamdunk']['summary'], filehandles = True):
+            self.parseSummary(f)
+            
+        for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
+            self.parseSlamdunkRates(f)
 
-        #if len(self.cutadapt_data) == 0:
-        #    log.debug("Could not find any reports in {}".format(config.analysis_dir))
-        #    raise UserWarning
+        if len(self.slamdunk_data) == 0:
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
+            raise UserWarning
 
-        #log.info("Found {} reports".format(len(self.cutadapt_data)))
-
-        # Write parsed report data to a file
-#         self.write_data_file(self.cutadapt_data, 'multiqc_cutadapt')
+        log.info("Found {} reports".format(len(self.slamdunk_data)))
 
         # Basic Stats Table
         # Report table is immutable, so just updating it works
-#         self.cutadapt_general_stats_table()
+        self.SlamdunkGeneralStatsTable()
 
         # Trimming Length Profiles
         # Only one section, so add to the intro
 #         self.intro += self.cutadapt_length_trimmed_plot()
 
-    def parse_summary(self, f):
-        pass
+    def parseSlamdunkRates(self, f):
+        for line in f['f']:
+            log.info(line)
+#                 if (not line.startswith('#') and not line.startswith('FileName')):
+#                     fields = line.rstrip().split("\t")
+#                     self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
+#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['sequenced'] = fields[4]
+#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['mapped'] = fields[5]
+#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = fields[6]
+#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = fields[7]
+
+    
+    def parseSummary(self, f):
+        for line in f['f']:
+            if (not line.startswith('#') and not line.startswith('FileName')):
+                fields = line.rstrip().split("\t")
+                self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
+                self.slamdunk_data[self.clean_s_name(fields[0],"")]['sequenced'] = int(fields[4])
+                self.slamdunk_data[self.clean_s_name(fields[0],"")]['mapped'] = int(fields[5])
+                self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = int(fields[6])
+                self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = int(fields[7])
+        self.add_data_source(f)
 
 
     def parse_cutadapt_logs(self, f):
@@ -150,21 +176,41 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    def cutadapt_general_stats_table(self):
-        """ Take the parsed stats from the Cutadapt report and add it to the
+    def SlamdunkGeneralStatsTable(self):
+        """ Take the parsed summary stats from Slamdunk and add it to the
         basic stats table at the top of the report """
 
-        headers = {}
-        headers['percent_trimmed'] = {
-            'title': '% Trimmed',
-            'description': '% Total Base Pairs trimmed',
-            'max': 100,
+
+        headers = OrderedDict()
+        headers['sequenced'] = {
+            'title': 'Sequenced',
+            'description': '# sequenced reads',
+            'shared_key': 'reads',
             'min': 0,
-            'suffix': '%',
-            'scale': 'RdYlBu-rev',
-            'format': '{:.1f}%'
+            'format': '{:.f}'
         }
-        self.general_stats_addcols(self.cutadapt_data, headers)
+        headers['mapped'] = {
+            'title': 'Mapped',
+            'description': '# mapped reads',
+            'shared_key': 'reads',
+            'min': 0,
+            'format': '{:.f}'
+        }
+        headers['deduplicated'] = {
+            'title': 'Deduplicated',
+            'description': '# deduplicated reads',
+            'shared_key': 'reads',
+            'min': 0,
+            'format': '{:.f}'
+        }
+        headers['filtered'] = {
+            'title': 'Filtered',
+            'description': '# reads after filtering',
+            'shared_key': 'reads',
+            'min': 0,
+            'format': '{:.f}'
+        }
+        self.general_stats_addcols(self.slamdunk_data, headers)
     
 
     def cutadapt_length_trimmed_plot (self):

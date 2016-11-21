@@ -129,8 +129,10 @@ samtools:
 skewer:
     contents: 'maximum error ratio allowed (-r):'
 slamdunk:
-    summary:
+    summary: 
         contents: '# slamdunk summary'
+    rates: 
+        contents: '# slamdunk rates'
     utrrates:
         contents: '# slamdunk utrrates'
 snpeff:
