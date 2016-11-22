@@ -556,7 +556,14 @@ class MultiqcModule(BaseMultiqcModule):
                         plots.linegraph.plot(data, pconfig)
         })
         
-        
+    
+    def overrepresented_sequences (self):
+        """Sum the percentages of overrepresented sequences and siplay them in a bar plot"""
+
+        data = dict()
+
+
+
     
     def adapter_content_plot (self):
         """ Create the HTML for the FastQC adapter plot """
