@@ -135,6 +135,8 @@ slamdunk:
         contents: '# slamdunk rates'
     utrrates:
         contents: '# slamdunk utrrates'
+    tcperreadpos:
+        contents: '# slamdunk tcperreadpos'
 snpeff:
     contents: 'SnpEff_version'
 star:

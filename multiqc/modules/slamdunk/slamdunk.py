@@ -30,6 +30,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.slamdunk_data = dict()
         self.rates_data_plus = dict()
         self.rates_data_minus = dict()
+        self.nontc_per_readpos_plus = dict()
+        self.nontc_per_readpos_minus = dict()
+        self.tc_per_readpos_plus = dict()
+        self.tc_per_readpos_minus = dict()
 
 #         # Find and load any Cutadapt reports
 #         self.cutadapt_data = dict()
@@ -50,22 +54,31 @@ class MultiqcModule(BaseMultiqcModule):
             
         for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
             self.parseSlamdunkRates(f)
+            
+        for f in self.find_log_files(config.sp['slamdunk']['tcperreadpos'], filehandles = True):
+            self.parseSlamdunkTCPerReadpos(f)
 
         if len(self.slamdunk_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.slamdunk_data)))
+                
+        # Start the sections
+        self.sections = list()
 
         # Basic Stats Table
-        # Report table is immutable, so just updating it works
         self.SlamdunkGeneralStatsTable()
 
-        # Trimming Length Profiles
-        # Only one section, so add to the intro
-        self.intro += self.slamdunkOverallRatesPlot()
+        # Rates plot
+        self.slamdunkOverallRatesPlot()
+        
+        # TC per read position plot
+        self.slamdunkTcPerReadPosPlot()
 
     def parseSlamdunkRates(self, f):
+        
+        sample = f['s_name']
         
         # Skip comment line #
         next(f['f'])
@@ -112,25 +125,49 @@ class MultiqcModule(BaseMultiqcModule):
         
         #log.info(str(baseDict))
         
-        self.rates_data_plus[f['s_name']] = {}
-        self.rates_data_minus[f['s_name']] = {}
+        self.rates_data_plus[sample] = {}
+        self.rates_data_minus[sample] = {}
         
         for fromBase in baseDict:
             for toBase in baseDict[fromBase]:
                 if fromBase != "N" and toBase.upper() != "N" and fromBase != toBase.upper():
                     if(toBase.islower()) :
-                        self.rates_data_minus[f['s_name']][fromBase + ">" + toBase.upper()] = baseDict[fromBase][toBase]
+                        self.rates_data_minus[sample][fromBase + ">" + toBase.upper()] = baseDict[fromBase][toBase]
                     else :
-                        self.rates_data_plus[f['s_name']][fromBase + ">" + toBase] = baseDict[fromBase][toBase]
+                        self.rates_data_plus[sample][fromBase + ">" + toBase] = baseDict[fromBase][toBase]
+                        
+    def parseSlamdunkTCPerReadpos(self, f):
+        
+        sample = f['s_name']
+        
+        # Skip comment line #
+        next(f['f'])
+        
+        self.nontc_per_readpos_plus[sample] = {}
+        self.nontc_per_readpos_minus[sample] = {}
+        
+        self.tc_per_readpos_plus[sample] = {}
+        self.tc_per_readpos_minus[sample] = {}
+        
+        pos = 1
+        
+        for line in f['f']:
+            values = line.rstrip().split('\t')
+            if int(values[4]) > 0 :
+                self.nontc_per_readpos_plus[sample][pos] = float(int(values[0])) / int(values[4]) * 100
+                self.tc_per_readpos_plus[sample][pos] = float(int(values[2])) / int(values[4]) * 100
+            else :
+                self.nontc_per_readpos_plus[sample][pos] = 0
+                self.tc_per_readpos_plus[sample][pos] = 0
                 
-#                 if (not line.startswith('#') and not line.startswith('FileName')):
-#                     fields = line.rstrip().split("\t")
-#                     self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
-#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['sequenced'] = fields[4]
-#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['mapped'] = fields[5]
-#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = fields[6]
-#                     self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = fields[7]
-
+            if int(values[5]) > 0:
+                self.nontc_per_readpos_minus[sample][pos] = float(int(values[1])) / int(values[5]) * 100
+                self.tc_per_readpos_minus[sample][pos] = float(int(values[3])) / int(values[5]) * 100
+            else:
+                self.nontc_per_readpos_minus[sample][pos] = 0
+                self.tc_per_readpos_minus[sample][pos] = 0
+                
+            pos += 1
     
     def parseSummary(self, f):
         
@@ -147,96 +184,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = int(fields[6])
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = int(fields[7])
         self.add_data_source(f)
-
-
-    def parse_cutadapt_logs(self, f):
-        """ Go through log file looking for cutadapt output """
-        fh = f['f']
-        regexes = {
-            '1.7': {
-                'bp_processed': "Total basepairs processed:\s*([\d,]+) bp",
-                'bp_written': "Total written \(filtered\):\s*([\d,]+) bp",
-                'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
-                'r_processed': "Total reads processed:\s*([\d,]+)",
-                'r_with_adapters': "Reads with adapters:\s*([\d,]+)"
-            },
-            '1.6': {
-                'r_processed': "Processed reads:\s*([\d,]+)",
-                'bp_processed': "Processed bases:\s*([\d,]+) bp",
-                'r_trimmed': "Trimmed reads:\s*([\d,]+)",
-                'quality_trimmed': "Quality-trimmed:\s*([\d,]+) bp",
-                'bp_trimmed': "Trimmed bases:\s*([\d,]+) bp",
-                'too_short': "Too short reads:\s*([\d,]+)",
-                'too_long': "Too long reads:\s*([\d,]+)",
-            }
-        }
-        s_name = None
-        cutadapt_version = '1.7'
-        for l in fh:
-            # New log starting
-            if 'cutadapt' in l:
-                s_name = None
-                c_version = re.match(r'This is cutadapt ([\d\.]+)', l)
-                if c_version:
-                    try:
-                        assert(StrictVersion(c_version.group(1)) <= StrictVersion('1.6'))
-                        cutadapt_version = '1.6'
-                    except:
-                        cutadapt_version = '1.7'
-                c_version_old = re.match(r'cutadapt version ([\d\.]+)', l)
-                if c_version_old:
-                    try:
-                        assert(StrictVersion(c_version.group(1)) <= StrictVersion('1.6'))
-                        cutadapt_version = '1.6'
-                    except:
-                        # I think the pattern "cutadapt version XX" is only pre-1.6?
-                        cutadapt_version = '1.6'
-            
-            # Get sample name from end of command line params
-            if l.startswith('Command line parameters'):
-                s_name = l.split()[-1]
-                s_name = self.clean_s_name(s_name, f['root'])
-                if s_name in self.cutadapt_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.cutadapt_data[s_name] = dict()
-                self.cutadapt_length_counts[s_name] = dict()
-                self.cutadapt_length_exp[s_name] = dict()
-                self.cutadapt_length_obsexp[s_name] = dict()
-            
-            if s_name is not None:
-                self.add_data_source(f, s_name)
-                
-                # Search regexes for overview stats
-                for k, r in regexes[cutadapt_version].items():
-                    match = re.search(r, l)
-                    if match:
-                        self.cutadapt_data[s_name][k] = int(match.group(1).replace(',', ''))
-                
-                # Histogram showing lengths trimmed
-                if 'length' in l and 'count' in l and 'expect' in l:
-                    # Nested loop to read this section while the regex matches
-                    for l in fh:
-                        r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", l)
-                        if r_seqs:
-                            a_len = int(r_seqs.group(1))
-                            self.cutadapt_length_counts[s_name][a_len] = int(r_seqs.group(2))
-                            self.cutadapt_length_exp[s_name][a_len] = float(r_seqs.group(3))
-                            if float(r_seqs.group(3)) > 0:
-                                self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2)) / float(r_seqs.group(3))
-                            else:
-                                # Cheating, I know. Infinity is difficult to plot.
-                                self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2))
-                        else:
-                            break
-        
-        # Calculate a few extra numbers of our own
-        for s_name, d in self.cutadapt_data.items():
-            if 'bp_processed' in d and 'bp_written' in d:
-                self.cutadapt_data[s_name]['percent_trimmed'] = (float(d['bp_processed'] - d['bp_written']) / d['bp_processed']) * 100
-            elif 'bp_processed' in d and 'bp_trimmed' in d:
-                self.cutadapt_data[s_name]['percent_trimmed'] = ((float(d.get('bp_trimmed', 0)) + float(d.get('quality_trimmed', 0))) / d['bp_processed']) * 100
-
-
 
     def SlamdunkGeneralStatsTable(self):
         """ Take the parsed summary stats from Slamdunk and add it to the
@@ -276,20 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
     
 
     def slamdunkOverallRatesPlot (self):
-        """ Generate the trimming length plot """
-        html = '<p>This plot shows the individual conversion rates over all reads. \n\
-        It shows these conversion rates strand-specific: This means for a properly labelled \n\
-        sample you would see a T>C excess on \n\
-        the plus-strand and an A>G excess on the minus strand. \n\
-        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk documentation</a> \n\
-        for more information on how these numbers are generated.</p>'
-        
-#         pconfig = {
-#             'id': 'overallratesplot',
-#             'title': 'Overall conversion rates in reads',
-#             'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
-#                             {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
-#         }
+        """ Generate the overall rates plot """
 
         pconfig = {
             'id': 'overallratesplot',
@@ -298,19 +232,17 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_c_active': False,
             'stacking' : 'normal',
             'data_labels': [
-                {'name': 'plus'},
-                {'name': 'minus'}, 
+                "Plus Strand +",
+                "Minus Strand -", 
             ]
         }
         
-        #cats = ['plus','minus']
-        
-        #cats = [self.rates_data_plus[self.rates_data_plus.keys()[0]].keys(),self.rates_data_minus[self.rates_data_minus.keys()[0]].keys()]
-        
-        #print(self.rates_data_plus[self.rates_data_plus.keys()[0]])
-        
         cats = [OrderedDict(), OrderedDict()]
         
+        cats[0]['T>C'] = {
+            'name': 'T>C',
+            'color': '#D7301F'
+        }
         cats[0]['A>T'] = {
             'name': 'A>T',
             'color': '#C6DBEF'
@@ -330,10 +262,6 @@ class MultiqcModule(BaseMultiqcModule):
         cats[0]['T>G'] = {
             'name': 'T>G',
             'color': '#74C476'
-        }
-        cats[0]['T>C'] = {
-            'name': 'T>C',
-            'color': '#D7301F'
         }
         cats[0]['G>A'] = {
             'name': 'G>A',
@@ -360,13 +288,13 @@ class MultiqcModule(BaseMultiqcModule):
             'color': '#6A51A3'
         }
         
-        cats[1]['A>T'] = {
-            'name': 'A>T',
-            'color': '#C6DBEF'
-        }
         cats[1]['A>G'] = {
             'name': 'A>G',
             'color': '#D7301F'
+        }
+        cats[1]['A>T'] = {
+            'name': 'A>T',
+            'color': '#C6DBEF'
         }
         cats[1]['A>C'] = {
             'name': 'A>C',
@@ -419,9 +347,59 @@ class MultiqcModule(BaseMultiqcModule):
 #             cats[1][cat] = dict()
 #             cats[1][cat]['name'] = cat
         
-        #log.info(cats)
+        self.sections.append({
+            'name': 'Conversion rates',
+            'anchor': 'overall_rates',
+            'content': '<p>This plot shows the individual conversion rates over all reads. \n\
+                        It shows these conversion rates strand-specific: This means for a properly labelled \n\
+                        sample you would see a T>C excess on \n\
+                        the plus-strand and an A>G excess on the minus strand. \n\
+                        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk documentation</a> \n\
+                        for more information on how these numbers are generated.</p>' +  
+                        plots.bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
+        })
         
-        html += plots.bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
-        #html += plots.bargraph.plot(self.rates_data_plus, cats, pconfig)
+    def slamdunkTcPerReadPosPlot (self):
+        """ Generate the tc per read pos plots """
         
-        return html
+        pconfig_nontc = {
+            'id': 'nontcperreadpos_plot',
+            'title': 'Non-T>C mutations over reads',
+            'ylab': 'Percent mutated %',
+            'xlab': 'Position in read',
+            'xDecimals': False,
+            'ymin': 0,
+            'tt_label': '<b>Pos {point.x}</b>: {point.y:.2f} %',
+            'data_labels': [{'name': 'Forward reads +', 'ylab': 'Percent mutated %'},
+                            {'name': 'Reverse reads -', 'ylab': 'Percent mutated %'}]
+        }
+        
+        pconfig_tc = {
+            'id': 'tcperreadpos_plot',
+            'title': 'T>C conversions over reads',
+            'ylab': 'Percent converted %',
+            'xlab': 'Position in read',
+            'xDecimals': False,
+            'ymin': 0,
+            'tt_label': '<b>Pos {point.x}</b>: {point.y:.2f} %',
+            'data_labels': [{'name': 'Forward reads +', 'ylab': 'Percent converted %'},
+                            {'name': 'Reverse reads -', 'ylab': 'Percent converted %'}]
+        }        
+        
+        self.sections.append({
+            'name': 'Non T>C mutations over read positions',
+            'anchor': 'nontcperreadpos',
+            'content': '<p>This plot shows the distribution of non T>C mutations across read positions. \n\
+                        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk documentation</a> \n\
+                        for more information on how these numbers are generated.</p>' +  
+                        plots.linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc) 
+        })
+        
+        self.sections.append({
+            'name': 'T>C conversions over read positions',
+            'anchor': 'tcperreadpos',
+            'content': '<p>This plot shows the distribution of T>C conversions across read positions. \n\
+                        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk documentation</a> \n\
+                        for more information on how these numbers are generated.</p>' +  
+                        plots.linegraph.plot([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc) 
+        })
