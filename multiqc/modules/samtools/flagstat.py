@@ -29,18 +29,25 @@ class FlagstatReportMixin():
 
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_flagstat, 'multiqc_samtools_flagstat')
-            
+
             # General Stats Table
             flagstats_headers = dict()
             flagstats_headers['mapped_passed'] = {
-                'title': 'M Reads Mapped',
+                'title': 'Reads Mapped',
                 'description': 'Reads Mapped in the bam file',
                 'min': 0,
-                'modify': lambda x: x / 1000000,
-                'shared_key': 'read_count'
+                'shared_key': 'read_count',
+                'format': '{:d}',
+            }
+            flagstats_headers['flagstat_total'] = {
+                'title': 'Reads Total',
+                'description': 'Total reads in the bam file',
+                'min': 0,
+                'shared_key': 'read_count',
+                'format': '{:d}',
             }
             self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, 'Samtools Flagstat')
-            
+
             # Make dot plot of counts
             keys = OrderedDict()
             reads = {
@@ -62,32 +69,32 @@ class FlagstatReportMixin():
             keys['singletons_passed'] = dict(reads, **{'title': 'Singletons' })
             keys['with mate mapped to a different chr_passed'] = dict(reads, **{'title': 'Mate mapped to diff chr', 'description': 'Mate mapped to different chromosome' })
             keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = dict(reads, **{'title': 'Diff chr (mapQ >= 5)', 'description':'Mate mapped to different chromosome (mapQ >= 5)' })
-            
+
             self.sections.append({
                 'name': 'Samtools Flagstat',
                 'anchor': 'samtools-flagstat',
                 'content': '<p>This module parses the output from <code>samtools flagstat</code>. All numbers in millions.</p>' +
                             plots.beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
             })
-        
+
         # Return the number of logs that were found
         return len(self.samtools_flagstat)
 
 
 # flagstat has one thing per line, documented here (search for flagstat):
-# http://www.htslib.org/doc/samtools.html 
+# http://www.htslib.org/doc/samtools.html
 flagstat_regexes = {
-    'total':         r"(\d+) \+ (\d+) in total \(QC-passed reads \+ QC-failed reads\)", 
+    'total':         r"(\d+) \+ (\d+) in total \(QC-passed reads \+ QC-failed reads\)",
     'secondary':     r"(\d+) \+ (\d+) secondary",
-    'supplementary': r"(\d+) \+ (\d+) supplementary", 
-    'duplicates':    r"(\d+) \+ (\d+) duplicates", 
-    'mapped':        r"(\d+) \+ (\d+) mapped \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)", 
-    'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing", 
-    'read1':         r"(\d+) \+ (\d+) read1", 
-    'read2':         r"(\d+) \+ (\d+) read2", 
-    'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)", 
-    'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped", 
-    'singletons':    r"(\d+) \+ (\d+) singletons \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)",
+    'supplementary': r"(\d+) \+ (\d+) supplementary",
+    'duplicates':    r"(\d+) \+ (\d+) duplicates",
+    'mapped':        r"(\d+) \+ (\d+) mapped \(([\d\.]+%|N/A) : ([\d\.]+%|N/A)\)",
+    'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing",
+    'read1':         r"(\d+) \+ (\d+) read1",
+    'read2':         r"(\d+) \+ (\d+) read2",
+    'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+%|N/A) : ([\d\.]+%|N/A)\)",
+    'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped",
+    'singletons':    r"(\d+) \+ (\d+) singletons \(([\d\.]+%|N/A) : ([\d\.]+%|N/A)\)",
     'with mate mapped to a different chr': r"(\d+) \+ (\d+) with mate mapped to a different chr",
     'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr \(mapQ>=5\)",
 }
@@ -106,9 +113,13 @@ def parse_single_report(file_obj):
             for i,j in enumerate(re_groups):
                 try:
                     key = "{}_{}".format(k, j)
-                    parsed_data[key] = float(r_search.group(i+1))
+                    parsed_data[key] = float(r_search.group(i+1)) \
+                                       if '.' in r_search.group(i+1) else \
+                                       int(r_search.group(i+1))
                 except IndexError:
                     pass # Not all regexes have percentages
+                except ValueError:
+                    parsed_data[key] = float('nan')
     # Work out the total read count
     try:
         parsed_data['flagstat_total'] = parsed_data['total_passed'] + parsed_data['total_failed']
