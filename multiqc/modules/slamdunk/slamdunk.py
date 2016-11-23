@@ -9,6 +9,7 @@ from distutils.version import StrictVersion
 from collections import OrderedDict
 
 from multiqc import config, BaseMultiqcModule, plots
+from curses.ascii import islower
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,12 +24,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Slamdunk', anchor='slamdunk',
         href='https://github.com/t-neumann/slamdunk',
-        info="is a tool to analyze SLAMSeq data."\
-         "blabla"\
-         " blabla.")
+        info="is a tool to analyze SLAMSeq data. "\
+         "More info to come.")
 
         self.slamdunk_data = dict()
-        self.rates_data = dict()
+        self.rates_data_plus = dict()
+        self.rates_data_minus = dict()
+
 #         # Find and load any Cutadapt reports
 #         self.cutadapt_data = dict()
 #         self.cutadapt_length_counts = dict()
@@ -61,11 +63,66 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Trimming Length Profiles
         # Only one section, so add to the intro
-#         self.intro += self.cutadapt_length_trimmed_plot()
+        self.intro += self.slamdunkOverallRatesPlot()
 
     def parseSlamdunkRates(self, f):
+        
+        # Skip comment line #
+        next(f['f'])
+        
+        bases = next(f['f']).rstrip().split('\t')
+        
+        baseDict = {}
+        order = {}
+        
+        for i in range(1, len(bases)) :
+            order[i] = bases[i]
+                    
         for line in f['f']:
-            log.info(line)
+            values = line.rstrip().split('\t')
+            base = values[0]
+            baseDict[base]= {}
+            
+            for i in range(1, len(values)) :
+            
+                baseDict[base][order[i]] = int(values[i])
+                
+        divisor = {}      
+        
+        for fromBase in baseDict:
+            for toBase in baseDict[fromBase]:
+                if(toBase.islower()) :
+                    if not divisor.has_key(fromBase.lower()) :
+                        divisor[fromBase.lower()] = 0
+                    divisor[fromBase.lower()] += baseDict[fromBase][toBase]
+                else:
+                    if not divisor.has_key(fromBase) :
+                        divisor[fromBase] = 0
+                    divisor[fromBase] += baseDict[fromBase][toBase]
+             
+        #log.info(str(baseDict))
+        #log.info(str(divisor))
+        
+        for fromBase in baseDict:
+            for toBase in baseDict[fromBase]:
+                if(toBase.islower()) :
+                    baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase.lower()]) * 100
+                else:
+                    baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase]) * 100
+        
+        #log.info(str(baseDict))
+        
+        self.rates_data_plus[f['s_name']] = {}
+        self.rates_data_minus[f['s_name']] = {}
+        
+        for fromBase in baseDict:
+            for toBase in baseDict[fromBase]:
+                if fromBase != "N" and toBase.upper() != "N" and fromBase != toBase.upper():
+                    if(toBase.islower()) :
+                        self.rates_data_minus[f['s_name']][fromBase + ">" + toBase.upper()] = baseDict[fromBase][toBase]
+                    else :
+                        self.rates_data_plus[f['s_name']][fromBase + ">" + toBase] = baseDict[fromBase][toBase]
+                
 #                 if (not line.startswith('#') and not line.startswith('FileName')):
 #                     fields = line.rstrip().split("\t")
 #                     self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
@@ -76,14 +133,19 @@ class MultiqcModule(BaseMultiqcModule):
 
     
     def parseSummary(self, f):
+        
+        # Skip comment line #
+        next(f['f'])
+        # Skip header line "FileName..."
+        next(f['f'])
+            
         for line in f['f']:
-            if (not line.startswith('#') and not line.startswith('FileName')):
-                fields = line.rstrip().split("\t")
-                self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
-                self.slamdunk_data[self.clean_s_name(fields[0],"")]['sequenced'] = int(fields[4])
-                self.slamdunk_data[self.clean_s_name(fields[0],"")]['mapped'] = int(fields[5])
-                self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = int(fields[6])
-                self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = int(fields[7])
+            fields = line.rstrip().split("\t")
+            self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['sequenced'] = int(fields[4])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['mapped'] = int(fields[5])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = int(fields[6])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = int(fields[7])
         self.add_data_source(f)
 
 
@@ -213,26 +275,153 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.slamdunk_data, headers)
     
 
-    def cutadapt_length_trimmed_plot (self):
+    def slamdunkOverallRatesPlot (self):
         """ Generate the trimming length plot """
-        html = '<p>This plot shows the number of reads with certain lengths of adapter trimmed. \n\
-        Obs/Exp shows the raw counts divided by the number expected due to sequencing errors. A defined peak \n\
-        may be related to adapter length. See the \n\
-        <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
+        html = '<p>This plot shows the individual conversion rates over all reads. \n\
+        It shows these conversion rates strand-specific: This means for a properly labelled \n\
+        sample you would see a T>C excess on \n\
+        the plus-strand and an A>G excess on the minus strand. \n\
+        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk documentation</a> \n\
         for more information on how these numbers are generated.</p>'
         
+#         pconfig = {
+#             'id': 'overallratesplot',
+#             'title': 'Overall conversion rates in reads',
+#             'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
+#                             {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
+#         }
+
         pconfig = {
-            'id': 'cutadapt_plot',
-            'title': 'Lengths of Trimmed Sequences',
-            'ylab': 'Counts',
-            'xlab': 'Length Trimmed (bp)',
-            'xDecimals': False,
-            'ymin': 0,
-            'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
-                            {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
+            'id': 'overallratesplot',
+            'title': 'Overall conversion rates in reads',
+            'cpswitch' : False,
+            'cpswitch_c_active': False,
+            'stacking' : 'normal',
+            'data_labels': [
+                {'name': 'plus'},
+                {'name': 'minus'}, 
+            ]
         }
         
-        html += plots.linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+        #cats = ['plus','minus']
+        
+        #cats = [self.rates_data_plus[self.rates_data_plus.keys()[0]].keys(),self.rates_data_minus[self.rates_data_minus.keys()[0]].keys()]
+        
+        #print(self.rates_data_plus[self.rates_data_plus.keys()[0]])
+        
+        cats = [OrderedDict(), OrderedDict()]
+        
+        cats[0]['A>T'] = {
+            'name': 'A>T',
+            'color': '#C6DBEF'
+        }
+        cats[0]['A>G'] = {
+            'name': 'A>G',
+            'color': '#6BAED6'
+        }
+        cats[0]['A>C'] = {
+            'name': 'A>C',
+            'color': '#2171B5'
+        }
+        cats[0]['T>A'] = {
+            'name': 'T>A',
+            'color': '#C7E9C0'
+        }
+        cats[0]['T>G'] = {
+            'name': 'T>G',
+            'color': '#74C476'
+        }
+        cats[0]['T>C'] = {
+            'name': 'T>C',
+            'color': '#D7301F'
+        }
+        cats[0]['G>A'] = {
+            'name': 'G>A',
+            'color': '#D9D9D9'
+        }
+        cats[0]['G>T'] = {
+            'name': 'G>T',
+            'color': '#969696'
+        }
+        cats[0]['G>C'] = {
+            'name': 'G>C',
+            'color': '#525252'
+        }
+        cats[0]['C>A'] = {
+            'name': 'C>A',
+            'color': '#DADAEB'
+        }
+        cats[0]['C>T'] = {
+            'name': 'C>T',
+            'color': '#9E9AC8'
+        }
+        cats[0]['C>G'] = {
+            'name': 'C>G',
+            'color': '#6A51A3'
+        }
+        
+        cats[1]['A>T'] = {
+            'name': 'A>T',
+            'color': '#C6DBEF'
+        }
+        cats[1]['A>G'] = {
+            'name': 'A>G',
+            'color': '#D7301F'
+        }
+        cats[1]['A>C'] = {
+            'name': 'A>C',
+            'color': '#2171B5'
+        }
+        cats[1]['T>A'] = {
+            'name': 'T>A',
+            'color': '#C7E9C0'
+        }
+        cats[1]['T>G'] = {
+            'name': 'T>G',
+            'color': '#74C476'
+        }
+        cats[1]['T>C'] = {
+            'name': 'T>C',
+            'color': '#238B45'
+        }
+        cats[1]['G>A'] = {
+            'name': 'G>A',
+            'color': '#D9D9D9'
+        }
+        cats[1]['G>T'] = {
+            'name': 'G>T',
+            'color': '#969696'
+        }
+        cats[1]['G>C'] = {
+            'name': 'G>C',
+            'color': '#525252'
+        }
+        cats[1]['C>A'] = {
+            'name': 'C>A',
+            'color': '#DADAEB'
+        }
+        cats[1]['C>T'] = {
+            'name': 'C>T',
+            'color': '#9E9AC8'
+        }
+        cats[1]['C>G'] = {
+            'name': 'C>G',
+            'color': '#6A51A3'
+        }
+        
+        
+#         for cat in self.rates_data_plus[self.rates_data_plus.keys()[0]]:
+#             cats[0][cat] = dict()
+#             cats[0][cat]['name'] = cat
+#             cats[0][cat]['color'] = cat
+#             
+#         for cat in self.rates_data_plus[self.rates_data_minus.keys()[0]]:
+#             cats[1][cat] = dict()
+#             cats[1][cat]['name'] = cat
+        
+        #log.info(cats)
+        
+        html += plots.bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
+        #html += plots.bargraph.plot(self.rates_data_plus, cats, pconfig)
         
         return html
