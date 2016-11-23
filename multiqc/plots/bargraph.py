@@ -57,8 +57,12 @@ def plot (data, cats=None, pconfig={}):
     elif type(cats) is not list:
         cats = [cats]
     else:
-        if type(cats[0]) is str or type(cats[0]) is unicode:
-            cats = [cats]
+        try: # Py2
+            if type(cats[0]) is str or type(cats[0]) is unicode:
+                cats = [cats]
+        except NameError: # Py3
+            if type(cats[0]) is str:
+                cats = [cats]
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:
