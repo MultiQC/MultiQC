@@ -54,9 +54,11 @@ def plot (data, cats=None, pconfig={}):
     # Make list of cats from different inputs
     if cats is None:
         cats = list()
-    elif type(cats) is not list or (type(cats) is list and type(cats[0]) is str):
+    elif type(cats) is not list:
         cats = [cats]
-    
+    else:
+        if type(cats[0]) is str or type(cats[0]) is unicode:
+            cats = [cats]
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:
