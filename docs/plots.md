@@ -104,20 +104,44 @@ config = {
 ### Switching datasets
 It's possible to have single plot with buttons to switch between different
 datasets. To do this, give a list of data objects (same formats as described
-above). Also add the following config options to supply names to the buttons
-and graph labels:
+above). Also add the following config options to supply names to the buttons:
+```python
+config = {
+    'data_labels': ['Reads', 'Bases']
+}
+```
+You can also customise the y-axis label and min/max values for each dataset:
 ```python
 config = {
     'data_labels': [
         {'name': 'Reads', 'ylab': 'Number of Reads'},
-        {'name': 'Frags', 'ylab': 'Percentage of Fragments', 'ymax':100}
+        {'name': 'Bases', 'ylab': 'Number of Base Pairs', 'ymax':100}
     ]
 }
 ```
 If supplying multiple datasets, you can also supply a list of category
-objects. Make sure that they are in the same order as the data. If not
-supplied, these will be guessed from the data keys. See the bismark module
-plots for an example of this in action.
+objects. Make sure that they are in the same order as the data.
+
+Categories should contain data keys, so if you're supplying a list of two datasets,
+you should supply a list of two sets of keys for the categories. MultiQC will try to
+guess categories from the data keys if categories are missing.
+
+For example, with two datasets supplied as above:
+```python
+cats = [
+    ['aligned_reads','unaligned_reads'],
+    ['aligned_base_pairs','unaligned_base_pairs'],
+]
+```
+Or with additional customisation such as name and colour:
+```python
+from collections import OrderedDict
+cats = [OrderedDict(), OrderedDict()]
+cats[0]['aligned_reads'] =        {'name': 'Aligned Reads',        'color': '#8bbc21'}
+cats[0]['unaligned_reads'] =      {'name': 'Unaligned Reads',      'color': '#f7a35c'}
+cats[1]['aligned_base_pairs'] =   {'name': 'Aligned Base Pairs',   'color': '#8bbc21'}
+cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7a35c'}
+```
 
 ### Interactive / Flat image plots
 Note that the `plots.bargraph.plot()` function can generate both interactive
