@@ -15,10 +15,10 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find Picard OxoGMetrics reports and parse their data """
-    
+
     # Set up vars
     self.picard_OxoGMetrics_data = dict()
-    
+
     # Go through logs and find Metrics
     for f in self.find_log_files(config.sp['picard']['oxogmetrics'], filehandles=True):
         # We use lists to make sure that we don't overwrite when no data will be parsed
@@ -33,7 +33,7 @@ def parse_reports(self):
                 s_name = None
                 keys = None
                 context_col = None
-                
+
                 # Pull sample name from input
                 fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
                 if fn_search:
@@ -42,8 +42,8 @@ def parse_reports(self):
                     parsed_data.append(dict())
                     sample_names.append(s_name)
                     s_files.append(f)
-                    
-            
+
+
             if s_name is not None:
                 if 'picard.analysis.CollectOxoGMetrics$CpcgMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
@@ -63,7 +63,7 @@ def parse_reports(self):
                     else:
                         s_name = None
                         keys = None
-        
+
         # Remove empty dictionaries
         for idx, s_name in enumerate(sample_names):
             if len(parsed_data[idx]) > 0:
@@ -71,10 +71,10 @@ def parse_reports(self):
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(s_files[idx], s_name))
                 self.add_data_source(s_files[idx], s_name, section='OxoGMetrics')
                 self.picard_OxoGMetrics_data[s_name] = parsed_data[idx]
-    
+
 
     if len(self.picard_OxoGMetrics_data) > 0:
-        
+
         # Write parsed data to a file
         # Collapse into 2D structure with sample_context keys
         print_data = {
@@ -83,7 +83,7 @@ def parse_reports(self):
             for c,v in self.picard_OxoGMetrics_data[s].items()
         }
         self.write_data_file(print_data, 'multiqc_picard_OxoGMetrics')
-        
+
         # Add to general stats table
         data = dict()
         for s_name in self.picard_OxoGMetrics_data:
@@ -92,7 +92,7 @@ def parse_reports(self):
                 data[s_name]['CCG_OXIDATION_ERROR_RATE'] = self.picard_OxoGMetrics_data[s_name]['CCG']['OXIDATION_ERROR_RATE']
             except KeyError:
                 log.warn("Couldn't find picard CCG oxidation error rate for {}".format(s_name))
-        
+
         self.general_stats_headers['CCG_OXIDATION_ERROR_RATE'] = {
             'title': 'CCG Oxidation',
             'description': 'CCG-CAG Oxidation Error Rate',
@@ -107,7 +107,7 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( data[s_name] )
-    
+
     # Return the number of detected samples to the parent module
     return len(self.picard_OxoGMetrics_data)
-    
+
