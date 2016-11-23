@@ -36,7 +36,7 @@ def parse_reports(self):
         'proper-paired_reads_map_to_different_chrom': r"Proper-paired reads map to different chrom:\s*(\d+)",
     }
     #intiate PE check
-    PE=False
+    is_paired_end=False
     # Go through files and parse data using regexes
     for f in self.find_log_files(config.sp['rseqc']['bam_stat']):
         d = dict()
@@ -59,8 +59,8 @@ def parse_reports(self):
             self.add_data_source(f, section='bam_stat')
             #Check if SE or PE
             
-            if d['read_1'] and d['read_2'] and d['reads_mapped_in_proper_pairs'] and d['proper-paired_reads_map_to_different_chrom'] != 0:
-                PE = True
+            if d['read_2'] != 0:
+                is_paired_end = True
             self.bam_stat_data[f['s_name']] = d
     
     if len(self.bam_stat_data) > 0:
@@ -82,8 +82,8 @@ def parse_reports(self):
         for s_name in self.bam_stat_data:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
-                #Don't write to general stat if nothing to write..
-                if self.bam_stat_data[s_name]['reads_mapped_in_proper_pairs'] != 0:
+                #Only write if PE, i.e. there is something to write
+                if is_paired_end: 
                     self.general_stats_data[s_name].update( self.bam_stat_data[s_name] )
         
         # Make dot plot of counts
@@ -102,16 +102,16 @@ def parse_reports(self):
         keys['unmapped_reads'] = dict(defaults, **{'title': 'Unmapped', 'description': 'Unmapped reads' })
         keys['mapq_lt_mapq_cut_non'] = dict(defaults, **{'title': 'Non-unique', 'description': 'mapq < mapq_cut (non-unique)' })
         keys['mapq_gte_mapq_cut_unique'] = dict(defaults, **{'title': 'Unique', 'description': 'mapq >= mapq_cut (unique)' })
-        if PE is False:
-            keys['read_1'] = dict(defaults, **{'title': 'Read-1' }) #
-            keys['read_2'] = dict(defaults, **{'title': 'Read-2' }) #
+        if is_paired_end:
+            keys['read_1'] = dict(defaults, **{'title': 'Read-1' }) 
+            keys['read_2'] = dict(defaults, **{'title': 'Read-2' }) 
         keys['reads_map_to_sense'] = dict(defaults, **{'title': '+ve strand', 'description': "Reads map to '+'" })
         keys['reads_map_to_antisense'] = dict(defaults, **{'title': '-ve strand', 'description': "Reads map to '-'" })
         keys['non-splice_reads'] = dict(defaults, **{'title': 'Non-splice reads' })
         keys['splice_reads'] = dict(defaults, **{'title': 'Splice reads' })
-        if PE is False:
-            keys['reads_mapped_in_proper_pairs'] = dict(defaults, **{'title': 'Proper pairs', 'description':'Reads mapped in proper pairs' }) #
-            keys['proper-paired_reads_map_to_different_chrom'] = dict(defaults, **{'title': 'Different chrom', 'description': 'Proper-paired reads map to different chrom' }) #
+        if is_paired_end:
+            keys['reads_mapped_in_proper_pairs'] = dict(defaults, **{'title': 'Proper pairs', 'description':'Reads mapped in proper pairs' }) 
+            keys['proper-paired_reads_map_to_different_chrom'] = dict(defaults, **{'title': 'Different chrom', 'description': 'Proper-paired reads map to different chrom' }) 
         
         self.sections.append({
             'name': 'Bam Stat',
