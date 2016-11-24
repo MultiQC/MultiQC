@@ -66,7 +66,7 @@ def parse_reports(self):
 
     
     
-    if len(self.picard_GCbias_data) > 0:        
+    if len(self.picard_GCbias_data) > 0:
         
         # Plot the graph
         

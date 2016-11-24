@@ -48,12 +48,13 @@ Currently, supported tools include:
   * [GATK](https://software.broadinstitute.org/gatk/) (`VariantEval`)
   * [methylQA](http://methylqa.sourceforge.net/)
   * [Picard](http://broadinstitute.github.io/picard/) (`MarkDuplicates`, `InsertSizeMetrics`, `GcBiasMetrics`, `HsMetrics`, `OxoGMetrics`, `BaseDistributionByCycle`, `RnaSeqMetrics`, `AlignmentSummaryMetrics`)
+  * [Prokka](http://www.vicbioinformatics.com/software.prokka.shtml)
   * [Preseq](http://smithlabresearch.org/software/preseq/)
   * [Qualimap](http://qualimap.bioinfo.cipf.es/) (`BamQC`, `RNASeq`)
   * [QUAST](http://quast.bioinf.spbau.ru/)
   * [RSeQC](http://rseqc.sourceforge.net/) (`bam_stat`, `gene_body_coverage`,  `infer_experiment`,`inner_distance`, `junction_annotation`, `junction_saturation`, `read_distribution`, `read_duplication`, `read_gc`)
   * [Samblaster](https://github.com/GregoryFaust/samblaster)
-  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`)
+  * [Samtools](http://www.htslib.org) (`stats`, `flagstats`, `idxstats`, `rmdup`)
   * [SnpEff](http://snpeff.sourceforge.net/)
   * [Subread featureCounts](http://bioinf.wehi.edu.au/featureCounts/)
 
@@ -130,6 +131,7 @@ Code contributions from:
 [@mlusignan](https://github.com/mlusignan),
 [@HLWiencko](https://github.com/HLWiencko),
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
-[@avilella](https://github.com/avilella)
+[@avilella](https://github.com/avilella),
+[@vladsaveliev](https://github.com/vladsaveliev)
 and many others. Thanks for your support!
 

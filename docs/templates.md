@@ -5,12 +5,14 @@ easy to create new report templates that fit your needs.
 
 ## Core or plugin?
 If your template could be of use to others, it would be great if you
-could add it to the main MultiQC package (see the 
-[contributing instructions](../CONTRIBUTING.md) for more info).
+could add it to the main MultiQC package. You can do this by creating a
+fork of the [MultiQC GitHub repository](https://github.com/ewels/MultiQC),
+adding your template and then creating a pull request to merge your changes
+back to the main repository.
 
-If it's very specific however, you can create a new Python package which
+If it's very specific template, you can create a new Python package which
 acts as a plugin. For more information about this, see the
-[plugins documentation](plugins.md)
+[plugins documentation](http://multiqc.info/docs/#multiqc-plugins).
 
 ## Creating a template skeleton
 For a new template to be recognised by MultiQC, it must be a python submodule

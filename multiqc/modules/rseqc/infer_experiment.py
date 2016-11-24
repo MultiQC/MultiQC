@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from RSeQC infer_experiment.py 
+""" MultiQC submodule to parse output from RSeQC infer_experiment.py
 http://rseqc.sourceforge.net/#infer-experiment-py """
 
 from collections import OrderedDict
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def parse_reports(self):
     """ Find RSeQC infer_experiment reports and parse their data """
     
-    # Set up vars 
+    # Set up vars
     self.infer_exp = dict()
     regexes = {
         'pe_sense': r"\"1\+\+,1--,2\+-,2-\+\": (\d\.\d+)",
@@ -75,6 +75,7 @@ def parse_reports(self):
 
         p_link = '<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
         self.sections.append({
+            'id': 'rseqc_infer_experiment',
             'name': 'Infer experiment',
             'anchor': 'rseqc-infer_experiment',
             'content': "<p>"+p_link+" counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts. It can be used to infer whether RNA-seq library preps are stranded (sense or antisense) .</p>" +

@@ -1,7 +1,49 @@
 # MultiQC Version History
 
 #### v0.9dev
-_..nothing yet.._
+Module updates:
+* [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
+  * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
+* **Cutadapt**
+  * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
+  * Added support for _really_ old cutadapt logs (eg. v.1.2)
+* **featureCounts**
+  * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
+* **GATK**
+  * Fixed logger error in VariantEval module.
+* **Picard**
+  * Fixed missing sample overwriting bug in `RnaSeqMetrics`
+* **Preseq**
+  * Module now recognises output from `c_curve` mode.
+* **RSeQC**
+  * Made the gene body coverage plot show the percentage view by default
+  * Made gene body coverage properly handle sample names
+* **Samtools**
+  * New module to show duplicate stats from `rmdup` logs
+  * Fixed a couple of niggles in the idxstats plot
+* **SnpEff**
+  * Fixed swapped axis labels in the Variant Quality plot
+* **STAR**
+  * Fixed crash when there are 0 unmapped reads.
+* **Qualimap BamQC**
+  * Add a line for pre-calculated reference genome GC content
+  * Plot cumulative coverage for values above 50x, align with the coverage histogram.
+
+Core Updates:
+* Plot data now saved in `multiqc_data` when 'flat' image plots are created
+  * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
+* Added _'Apply'_ button to Highlight / Rename / Hide.
+  * These tools can become slow with large reports. This means that you can enter several
+    things without having to wait for the report to replot each change.
+* Fixed bar plot bug where missing categories could shift data between samples
+* Report title now printed in the side navigation
+* Missing plot IDs added for easier plot exporting
+* Stopped giving warnings about skipping directories (now a debug message)
+* Added warnings in report about missing functionality for flat plots (exporting and toolbox)
+* Export button has contextual text for images / data
+* Fixed a bug where user config files were loaded twice
+* Refactored code so that the order of modules can be changed in the user config
+* Beefed up code + docs in scatter plots back end and multiple bar plots.
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:

@@ -4,7 +4,7 @@ branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
 Note that much more extensive customisation of reports is possible using
-[custom templates](#writing-new-templates).
+[custom templates](http://multiqc.info/docs/#writing-new-templates).
 
 ## Titles and introductory text
 You can specify a custom title for the report using the `-t`/`--title`
@@ -47,11 +47,11 @@ the following saved:
 
 ```yaml
 report_header_info:
-    - Contact E-mail:: 'phil.ewels@scilifelab.se'
-    - Application Type:: 'RNA-seq'
-    - Project Type:: 'Application'
-    - Sequencing Platform:: 'HiSeq 2500 High Output V4'
-    - Sequencing Setup:: '2x125'
+    - Contact E-mail: 'phil.ewels@scilifelab.se'
+    - Application Type: 'RNA-seq'
+    - Project Type: 'Application'
+    - Sequencing Platform: 'HiSeq 2500 High Output V4'
+    - Sequencing Setup: '2x125'
 ```
 
 Then this will be displayed at the top of reports:

@@ -26,8 +26,6 @@ def parse_reports(self):
     
     # Go through files and parse data
     for f in self.find_log_files(config.sp['rseqc']['junction_saturation']):
-        if f['s_name'].endswith('.junctionSaturation_plot.r'):
-            f['s_name'] = f['s_name'][:-26]
         parsed = dict()
         for l in f['f'].splitlines():
             r = re.search(r"^([xyzw])=c\(([\d,]+)\)$", l)

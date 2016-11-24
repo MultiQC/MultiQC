@@ -127,14 +127,14 @@ class IdxstatsReportMixin():
                 'ylab': '# mapped reads',
                 'xlab': 'Chromosome Name',
                 'categories': True,
-                'tt_label': '<strong>{point.category}:</strong> {point.y}',
+                'tt_label': '<strong>{point.category}:</strong> {point.y:.2f}',
                 'data_labels': [
                     {'name': 'Normalised Counts', 'ylab': 'Fraction of total count'},
                     {'name': 'Counts', 'ylab': '# mapped reads'}
                 ]
             }
             self.sections.append({
-                'name': 'Mapped reads per contig from samtools idxstats',
+                'name': 'Mapped reads per contig',
                 'anchor': 'samtools-idxstats',
                 'content': '<p>The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
                     'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.</p>'.format(cutoff*100) +

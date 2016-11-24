@@ -9,7 +9,7 @@ multiqc .
 That's it! MultiQC will scan the specified directories and produce a report
 based on details found in any log files that it recognises.
 
-See [Using MultiQC Reports](reports.md) for more information about how
+See [Using MultiQC Reports](http://multiqc.info/docs/#using-multiqc-reports) for more information about how
 to use the generated report.
 
 For a description of all command line parameters, run `multiqc --help`.
@@ -90,7 +90,7 @@ different styling by using the `-t`/`--template` option. The available templates
 are listed with `multiqc --help`.
 
 If you're interested in creating your own custom template, see the
-[writing new templates](templates.md) section.
+[writing new templates](http://multiqc.info/docs/#writing-new-templates) section.
 
 ## PDF Reports
 Whilst HTML is definitely the format of choice for MultiQC reports due to
@@ -156,7 +156,7 @@ Note that not all plot types are yet supported, so you may find some plots are
 missing.
 
 > Note: You can always save static image versions of plots from within
-> MultiQC reports, using the [Export toolbox](#export) in the side bar.
+> MultiQC reports, using the [Export toolbox](http://multiqc.info/docs/#export) in the side bar.
 
 ## Choosing which modules to run
 Sometimes, it's desirable to choose which MultiQC modules run. This could be

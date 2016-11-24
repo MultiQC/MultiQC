@@ -21,21 +21,23 @@ def parse_reports(self):
     
     # Go through files and parse data
     for f in self.find_log_files(config.sp['rseqc']['inner_distance']):
-        if f['s_name'].endswith('.inner_distance_freq'):
-            f['s_name'] = f['s_name'][:-20]
         if f['s_name'] in self.inner_distance:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
         self.add_data_source(f, section='inner_distance')
-        self.inner_distance[f['s_name']] = OrderedDict()
+        #saving to temporary variable fro SE checking later
+        parsed_data = OrderedDict()
         for l in f['f'].splitlines():
             s = l.split()
             try:
                 avg_pos = (float(s[0]) +  float(s[1])) / 2.0
-                self.inner_distance[f['s_name']][avg_pos] = float(s[2])
+                parsed_data[avg_pos] = float(s[2])
             except:
                 # Don't bother running through whole file if wrong
                 break
-    
+        # Only add if we actually found something i,e it was PE data
+        if len(parsed_data) > 0:
+            self.inner_distance[f['s_name']] = parsed_data
+
     if len(self.inner_distance) > 0:
         
         # Make a normalised percentage version of the data

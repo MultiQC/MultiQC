@@ -7,14 +7,11 @@ import logging
 import os
 import random
 
-from multiqc.utils import config
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
-
-# Load the template so that we can access it's configuration
-template_mod = config.avail_templates[config.template].load()
 
 def plot (data, pconfig={}):
     """ Plot a scatter plot with X,Y data.
@@ -32,11 +29,21 @@ def plot (data, pconfig={}):
     for ds in data:
         d = list()
         for s_name in ds:
+            if type(ds[s_name]) is not list:
+                ds[s_name] = list(ds[s_name])
             for k in ds[s_name]:
-                this_series = { 'name': s_name, 'x': k['x'], 'y': k['y'] }
+                this_series = { 'x': k['x'], 'y': k['y'] }
                 try:
-                    this_series['color'] = pconfig['colors'][s_name]
-                except: pass
+                    this_series['name'] = "{}: {}".format(s_name, k['name'])
+                except KeyError:
+                    this_series['name'] = s_name
+                try:
+                    this_series['color'] = k['color']
+                except KeyError:
+                    try:
+                        this_series['color'] = pconfig['colors'][s_name]
+                    except KeyError:
+                        pass
                 d.append(this_series)
         plotdata.append(d)
     
@@ -93,5 +100,6 @@ def highcharts_scatter_plot (plotdata, pconfig={}):
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
     
+    report.num_hc_plots += 1
     return html
     

@@ -34,8 +34,6 @@ def parse_reports(self):
                     pass
             if len(gc) > 0:
                 sorted_gc_keys = sorted(range(len(gc)), key=lambda k: gc[k])
-                if f['s_name'].endswith('.GC.xls'):
-                    f['s_name'] = f['s_name'][:-7]
                 total = sum(counts)
                 if f['s_name'] in self.read_gc:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
