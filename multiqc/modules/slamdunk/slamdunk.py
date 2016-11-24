@@ -5,6 +5,7 @@
 from __future__ import print_function
 import logging
 import re
+import numpy as np
 from distutils.version import StrictVersion
 from collections import OrderedDict
 
@@ -28,6 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
          "More info to come.")
 
         self.slamdunk_data = dict()
+        self.utrates_data = dict()
         self.rates_data_plus = dict()
         self.rates_data_minus = dict()
         self.nontc_per_readpos_plus = dict()
@@ -42,12 +44,8 @@ class MultiqcModule(BaseMultiqcModule):
 #         self.cutadapt_length_obsexp = dict()
         
         
-        for f in self.find_log_files(config.sp['slamdunk']['utrrates']):
-            #self.parse_cutadapt_logs(f)
-            #log.info(f['f'])
-            log.info(f['s_name'])
-            log.info(f['root'])
-            log.info(f['fn'])
+        for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
+            self.parseUtrRates(f)
             
         for f in self.find_log_files(config.sp['slamdunk']['summary'], filehandles = True):
             self.parseSummary(f)
@@ -73,8 +71,132 @@ class MultiqcModule(BaseMultiqcModule):
         # Rates plot
         self.slamdunkOverallRatesPlot()
         
+        # Utr rates plot
+        self.slamdunkUtrRatesPlot()
+        
         # TC per read position plot
         self.slamdunkTcPerReadPosPlot()
+        
+    def parseUtrRates(self, f) :
+        
+        sample = f['s_name']
+        self.utrates_data[sample] = OrderedDict()
+        
+        # Skip comment line #
+        next(f['f'])
+        
+        # Parse header
+        conversions = next(f['f']).rstrip().split('\t')
+        
+        order = {}
+        
+        for i in range(6, len(conversions)) :
+            order[i] = conversions[i]
+            
+        utrStats = {}
+        
+        plotConversions = ['A_T', 'A_G', 'A_C',
+                           'C_A', 'C_G', 'C_T',
+                           'G_A', 'G_C', 'G_T',
+                           'T_A', 'T_G', 'T_C',
+        ]
+        
+        for conversion in plotConversions:
+            utrStats[conversion] = []
+            
+        for line in f['f']:
+            values = line.rstrip().split('\t')
+            
+            name = values[0]
+            strand = values[4]
+            
+            utrDict = {}
+            
+            for i in range(6, len(values)) :
+                
+                conversion= order[i]
+                
+                if strand == "-" :
+                    if (conversion == "A_A") :
+                        conversion = "T_T"
+                    elif (conversion == "G_G") :
+                        conversion = "C_C"
+                    elif (conversion == "C_C") :
+                        conversion = "G_G"
+                    elif (conversion == "T_T") :
+                        conversion = "A_A"
+                    elif (conversion == "A_C") :
+                        conversion = "T_G"
+                    elif (conversion == "A_G") :
+                        conversion = "T_C"
+                    elif (conversion == "A_T") :
+                        conversion = "T_A"
+                    elif (conversion == "C_A") :
+                        conversion = "G_T"
+                    elif (conversion == "C_G") :
+                        conversion = "G_C"
+                    elif (conversion == "C_T") :
+                        conversion = "G_A"
+                    elif (conversion == "G_A") :
+                        conversion = "C_T"
+                    elif (conversion == "G_C") :
+                        conversion = "C_G"
+                    elif (conversion == "G_T") :
+                        conversion = "C_A"
+                    elif (conversion == "T_A") :
+                        conversion = "A_T"
+                    elif (conversion == "T_C") :
+                        conversion = "A_G"
+                    elif (conversion == "T_G") :
+                        conversion = "A_C"
+                
+                utrDict[conversion] = int(values[i])
+            
+            if (np.sum(utrDict.values()) > 0) :
+                Asum = utrDict['A_A'] + utrDict['A_C'] + utrDict['A_G'] + utrDict['A_T']
+                Csum = utrDict['C_A'] + utrDict['C_C'] + utrDict['C_G'] + utrDict['C_T']
+                Gsum = utrDict['G_A'] + utrDict['G_C'] + utrDict['G_G'] + utrDict['G_T']
+                Tsum = utrDict['T_A'] + utrDict['T_C'] + utrDict['T_G'] + utrDict['T_T']
+                
+                if Asum > 0 :
+                    utrDict['A_T'] = utrDict['A_T'] / float(Asum) * 100
+                    utrDict['A_G'] = utrDict['A_G'] / float(Asum) * 100
+                    utrDict['A_C'] = utrDict['A_C'] / float(Asum) * 100
+                else :
+                    utrDict['A_T'] = 0
+                    utrDict['A_G'] = 0
+                    utrDict['A_C'] = 0
+                if Csum > 0:
+                    utrDict['C_A'] = utrDict['C_A'] / float(Csum) * 100
+                    utrDict['C_G'] = utrDict['C_G'] / float(Csum) * 100
+                    utrDict['C_T'] = utrDict['C_T'] / float(Csum) * 100
+                else :
+                    utrDict['C_A'] = 0
+                    utrDict['C_G'] = 0
+                    utrDict['C_T'] = 0
+                if Gsum > 0:
+                    utrDict['G_A'] = utrDict['G_A'] / float(Gsum) * 100
+                    utrDict['G_C'] = utrDict['G_C'] / float(Gsum) * 100
+                    utrDict['G_T'] = utrDict['G_T'] / float(Gsum) * 100
+                else :
+                    utrDict['G_A'] = 0
+                    utrDict['G_C'] = 0
+                    utrDict['G_T'] = 0
+                if Tsum > 0:
+                    utrDict['T_A'] = utrDict['T_A'] / float(Tsum) * 100
+                    utrDict['T_G'] = utrDict['T_G'] / float(Tsum) * 100
+                    utrDict['T_C'] = utrDict['T_C'] / float(Tsum) * 100
+                else :
+                    utrDict['T_A'] = 0
+                    utrDict['T_G'] = 0
+                    utrDict['T_C'] = 0
+                    
+                for conversion in plotConversions:
+                    utrStats[conversion].append(utrDict[conversion])
+            
+        
+        for conversion in plotConversions:
+            self.utrates_data[sample][re.sub("_",">",conversion)] = np.median(utrStats[conversion])
 
     def parseSlamdunkRates(self, f):
         
@@ -220,8 +342,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.f}'
         }
         self.general_stats_addcols(self.slamdunk_data, headers)
-    
-
+        
     def slamdunkOverallRatesPlot (self):
         """ Generate the overall rates plot """
 
@@ -348,7 +469,7 @@ class MultiqcModule(BaseMultiqcModule):
 #             cats[1][cat]['name'] = cat
         
         self.sections.append({
-            'name': 'Conversion rates',
+            'name': 'Conversion rates per read',
             'anchor': 'overall_rates',
             'content': '<p>This plot shows the individual conversion rates over all reads. \n\
                         It shows these conversion rates strand-specific: This means for a properly labelled \n\
@@ -357,6 +478,77 @@ class MultiqcModule(BaseMultiqcModule):
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
                         plots.bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
+        })
+    
+
+    def slamdunkUtrRatesPlot (self):
+        """ Generate the UTR rates plot """
+        
+        cats = OrderedDict()
+        cats['T>C'] = {
+            'name': 'T>C',
+            'color': '#D7301F'
+        }
+        cats['A>T'] = {
+            'name': 'A>T',
+            'color': '#C6DBEF'
+        }
+        cats['A>G'] = {
+            'name': 'A>G',
+            'color': '#6BAED6'
+        }
+        cats['A>C'] = {
+            'name': 'A>C',
+            'color': '#2171B5'
+        }
+        cats['T>A'] = {
+            'name': 'T>A',
+            'color': '#C7E9C0'
+        }
+        cats['T>G'] = {
+            'name': 'T>G',
+            'color': '#74C476'
+        }
+        cats['G>A'] = {
+            'name': 'G>A',
+            'color': '#D9D9D9'
+        }
+        cats['G>T'] = {
+            'name': 'G>T',
+            'color': '#969696'
+        }
+        cats['G>C'] = {
+            'name': 'G>C',
+            'color': '#525252'
+        }
+        cats['C>A'] = {
+            'name': 'C>A',
+            'color': '#DADAEB'
+        }
+        cats['C>T'] = {
+            'name': 'C>T',
+            'color': '#9E9AC8'
+        }
+        cats['C>G'] = {
+            'name': 'C>G',
+            'color': '#6A51A3'
+        }
+
+        pconfig = {
+            'id': 'utrratesplot',
+            'title': 'Overall conversion rates per UTR',
+            'cpswitch' : False,
+            'cpswitch_c_active': False,
+            'stacking' : 'normal',
+        }
+        
+        self.sections.append({
+            'name': 'Conversion rates per UTR',
+            'anchor': 'utr_rates',
+            'content': '<p>This plot shows the individual conversion rates for all UTRs. \n\
+                        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#utrrates" target="_blank">slamdunk documentation</a> \n\
+                        for more information on how these numbers are generated.</p>' +  
+                        plots.bargraph.plot(self.utrates_data, cats, pconfig)
         })
         
     def slamdunkTcPerReadPosPlot (self):
