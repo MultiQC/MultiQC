@@ -29,11 +29,21 @@ def plot (data, pconfig={}):
     for ds in data:
         d = list()
         for s_name in ds:
+            if type(ds[s_name]) is not list:
+                ds[s_name] = list(ds[s_name])
             for k in ds[s_name]:
-                this_series = { 'name': s_name, 'x': k['x'], 'y': k['y'] }
+                this_series = { 'x': k['x'], 'y': k['y'] }
                 try:
-                    this_series['color'] = pconfig['colors'][s_name]
-                except: pass
+                    this_series['name'] = "{}: {}".format(s_name, k['name'])
+                except KeyError:
+                    this_series['name'] = s_name
+                try:
+                    this_series['color'] = k['color']
+                except KeyError:
+                    try:
+                        this_series['color'] = pconfig['colors'][s_name]
+                    except KeyError:
+                        pass
                 d.append(this_series)
         plotdata.append(d)
     

@@ -262,17 +262,38 @@ not identical:
 ```python
 from multiqc import plots
 data = {
-    'sample 1': [{
+    'sample 1': {
         x: '<x val>',
         y: '<y val>'
-    }],
-    'sample 2': [{
+    },
+    'sample 2': {
         x: '<x val>',
         y: '<y val>'
-    }]
+    }
 }
 html_content = plots.scatter.plot(data)
 ```
+
+If you want more than one data point per sample, you can supply a list of
+dictionaries instead. You can also optionally specify point colours and
+sample name suffixes (these are appended to the sample name):
+```python
+data = {
+    'sample 1': [
+        { x: '<x val>', y: '<y val>', color: '#a6cee3', name: 'Type 1' },
+        { x: '<x val>', y: '<y val>', color: '#1f78b4', name: 'Type 2' }
+    ],
+    'sample 2': [
+        { x: '<x val>', y: '<y val>', color: '#b2df8a', name: 'Type 1' },
+        { x: '<x val>', y: '<y val>', color: '#33a02c', name: 'Type 2' }
+    ]
+}
+```
+
+Remember that MultiQC reports can contain large numbers of samples, so this plot type
+is **not** suitable for large quantities of data - 20,000 genes might look good
+for one sample, but when someone runs MultiQC with 500 samples, it will crash
+the browser and be impossible to interpret.
 
 See the above docs about line plots for most config options. The scatter plot
 has a handful of unique ones in addition:
@@ -285,12 +306,6 @@ pconfig = {
     'square': False                 # Force the plot to stay square? (Maintain aspect ratio)
 }
 ```
-
-Note that multiple dicts with `x` and `y` values can be specified - these will
-share the same sample names. Please note that MultiQC reports can contain large
-numbers of samples, so this plot type is not suitable for large quantities of data
-(20,000 genes might look good for one sample, but when someone runs MultiQC with
-500 samples, it will crash / look horrible).
 
 ## Creating a table
 Tables should work just like the functions above (most like the bar
