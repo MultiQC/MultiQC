@@ -53,7 +53,7 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
+                headers[idx][k]['rid'] = '{}_{}'.format(id(headers[idx]), k)
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]['namespace']   = headers[idx][k].get('namespace', pconfig.get('namespace', ''))
