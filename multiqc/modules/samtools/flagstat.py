@@ -38,6 +38,7 @@ class FlagstatReportMixin():
                 'min': 0,
                 'shared_key': 'read_count',
                 'format': '{:d}',
+                'placement': 100.1,
             }
             flagstats_headers['flagstat_total'] = {
                 'title': 'Reads Total',
@@ -45,6 +46,7 @@ class FlagstatReportMixin():
                 'min': 0,
                 'shared_key': 'read_count',
                 'format': '{:d}',
+                'placement': 100.0,
             }
             self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, 'Samtools Flagstat')
 
