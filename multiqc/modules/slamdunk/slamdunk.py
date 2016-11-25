@@ -53,37 +53,53 @@ class MultiqcModule(BaseMultiqcModule):
 #         self.cutadapt_data = dict()
 #         self.cutadapt_length_counts = dict()
 #         self.cutadapt_length_exp = dict()
-#         self.cutadapt_length_obsexp = dict()        
+#         self.cutadapt_length_obsexp = dict()
+
+        # Check whether summary also contains number of counted reads
+        extendedSummary = True
             
         for f in self.find_log_files(config.sp['slamdunk']['summary'], filehandles = True):
-            self.parseSummary(f)
+            extendedSummary = extendedSummary and self.parseSummary(f)
             
-        for f in self.find_log_files(config.sp['slamdunk']['PCA'], filehandles = True):
-            self.parsePCA(f)
-                        
-        for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
-            self.parseUtrRates(f)
-            
-        for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
-            self.parseSlamdunkRates(f)
-            
-        for f in self.find_log_files(config.sp['slamdunk']['tcperreadpos'], filehandles = True):
-            self.parseSlamdunkTCPerReadpos(f)
-
-        for f in self.find_log_files(config.sp['slamdunk']['tcperutrpos'], filehandles = True):
-            self.parseSlamdunkTCPerUtrpos(f)
-
         if len(self.slamdunk_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.slamdunk_data)))
+            
+        if extendedSummary:
+            log.info("Extended Slamdunk summary found.")
+            
+        log.info("Parsing PCA reports.")
+            
+        for f in self.find_log_files(config.sp['slamdunk']['PCA'], filehandles = True):
+            self.parsePCA(f)
+            
+        log.info("Parsing UTR rates reports. This can take a while...")
+                        
+        for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
+            self.parseUtrRates(f)
+            
+        log.info("Parsing read rates reports.")
+            
+        for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
+            self.parseSlamdunkRates(f)
+            
+        log.info("Parsing rates per read position reports.")
+            
+        for f in self.find_log_files(config.sp['slamdunk']['tcperreadpos'], filehandles = True):
+            self.parseSlamdunkTCPerReadpos(f)
+            
+        log.info("Parsing rates per UTR position reports.")
+
+        for f in self.find_log_files(config.sp['slamdunk']['tcperutrpos'], filehandles = True):
+            self.parseSlamdunkTCPerUtrpos(f)
                 
         # Start the sections
         self.sections = list()
 
         # Basic Stats Table
-        self.slamdunkGeneralStatsTable()
+        self.slamdunkGeneralStatsTable(extendedSummary)
         
         # PCA plot
         self.slamdunkPCAPlot()
@@ -368,8 +384,9 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Skip comment line #
         next(f['f'])
+        
         # Skip header line "FileName..."
-        next(f['f'])
+        columnCount = next(f['f']).count("\t") + 1
             
         for line in f['f']:
             fields = line.rstrip().split("\t")
@@ -378,9 +395,16 @@ class MultiqcModule(BaseMultiqcModule):
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['mapped'] = int(fields[5])
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = int(fields[6])
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = int(fields[7])
+            
+            # Additional Count Column found in Table
+            if columnCount == 10:
+                self.slamdunk_data[self.clean_s_name(fields[0],"")]['counted'] = int(fields[8])
+                
         self.add_data_source(f)
+        
+        return columnCount == 10
 
-    def slamdunkGeneralStatsTable(self):
+    def slamdunkGeneralStatsTable(self, extendedSummary):
         """ Take the parsed summary stats from Slamdunk and add it to the
         basic stats table at the top of the report """
 
@@ -389,31 +413,40 @@ class MultiqcModule(BaseMultiqcModule):
         headers['sequenced'] = {
             'title': 'Sequenced',
             'description': '# sequenced reads',
-            'shared_key': 'reads',
+            'shared_key': 'slamdunk_reads',
             'min': 0,
             'format': '{:.f}'
         }
         headers['mapped'] = {
             'title': 'Mapped',
             'description': '# mapped reads',
-            'shared_key': 'reads',
+            'shared_key': 'slamdunk_reads',
             'min': 0,
             'format': '{:.f}'
         }
         headers['deduplicated'] = {
             'title': 'Deduplicated',
             'description': '# deduplicated reads',
-            'shared_key': 'reads',
+            'shared_key': 'slamdunk_reads',
             'min': 0,
             'format': '{:.f}'
         }
         headers['filtered'] = {
             'title': 'Filtered',
             'description': '# reads after filtering',
-            'shared_key': 'reads',
+            'shared_key': 'slamdunk_reads',
             'min': 0,
             'format': '{:.f}'
         }
+        
+        if (extendedSummary) :
+            headers['counted'] = {
+                'title': 'Counted',
+                'description': '# reads after filtering',
+                'shared_key': 'slamdunk_reads',
+                'min': 0,
+                'format': '{:.f}'
+            }
         self.general_stats_addcols(self.slamdunk_data, headers)
         
     def slamdunkOverallRatesPlot (self):
@@ -547,7 +580,7 @@ class MultiqcModule(BaseMultiqcModule):
             'content': '<p>This plot shows the individual conversion rates over all reads. \n\
                         It shows these conversion rates strand-specific: This means for a properly labelled \n\
                         sample you would see a T>C excess on \n\
-                        the plus-strand and an A>G excess on the minus strand. \n\
+                        the plus-strand and an A>G excess on the minus strand. <br>\n\
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
                         plots.bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
@@ -618,7 +651,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Conversion rates per UTR',
             'anchor': 'slamdunk_utr_rates',
-            'content': '<p>This plot shows the individual conversion rates for all UTRs. \n\
+            'content': '<p>This plot shows the individual conversion rates for all UTRs.<br> \n\
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#utrrates" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
                         plots.bargraph.plot(self.utrates_data, cats, pconfig)
@@ -627,25 +660,22 @@ class MultiqcModule(BaseMultiqcModule):
     def slamdunkPCAPlot (self):
         """ Generate the PCA plots """
         
-        pconfig_tc = {
-            'id': 'slamdunk_tcperreadpos_plot',
-            'title': 'T>C conversions over reads',
-            'ylab': 'Percent converted %',
-            'xlab': 'Position in read',
-            'xDecimals': False,
-            'ymin': 0,
-            'tt_label': '<b>Pos {point.x}</b>: {point.y:.2f} %',
-            'data_labels': [{'name': 'Forward reads +', 'ylab': 'Percent converted %'},
-                            {'name': 'Reverse reads -', 'ylab': 'Percent converted %'}]
-        }        
+        cats = OrderedDict()
+        
+        cats['x'] = {
+            'name': 'PC1',
+        }
+        cats['y'] = {
+            'name': 'PC2',
+        }
         
         self.sections.append({
             'name': 'PCA (T>C based)',
             'anchor': 'slamdunk_PCA',
-            'content': '<p> This plot the principal components of the samples based on the distribution of reads with T>C conversions within UTRs.\n\
+            'content': '<p> This plot shows the principal components of samples based on the distribution of reads with T>C conversions within UTRs. <br>\n\
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
-                        plots.scatter.plot(self.PCA_data) 
+                        plots.scatter.plot(self.PCA_data, cats) 
         })
         
     def slamdunkTcPerReadPosPlot (self):
@@ -678,7 +708,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Non T>C mutations over read positions',
             'anchor': 'slamdunk_nontcperreadpos',
-            'content': '<p>This plot shows the distribution of non T>C mutations across read positions. \n\
+            'content': '<p>This plot shows the distribution of non T>C mutations across read positions. <br> \n\
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
                         plots.linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc) 
@@ -687,7 +717,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'T>C conversions over read positions',
             'anchor': 'slamdunk_tcperreadpos',
-            'content': '<p>This plot shows the distribution of T>C conversions across read positions. \n\
+            'content': '<p>This plot shows the distribution of T>C conversions across read positions. <br> \n\
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
                         plots.linegraph.plot([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc) 
@@ -723,7 +753,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Non T>C mutations over UTR positions',
             'anchor': 'slamdunk_nontcperutrpos',
-            'content': '<p>This plot shows the distribution of non T>C mutations across UTR positions for the last 200 bp from the 3\' UTR end. \n\
+            'content': '<p>This plot shows the distribution of non T>C mutations across UTR positions for the last 200 bp from the 3\' UTR end. <br> \n\
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
                         plots.linegraph.plot([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc) 
@@ -732,7 +762,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'T>C conversions over UTR positions',
             'anchor': 'tcperutrpos',
-            'content': '<p>This plot shows the distribution of T>C conversions across UTR positions for the last 200 bp from the 3\' UTR end \n\
+            'content': '<p>This plot shows the distribution of T>C conversions across UTR positions for the last 200 bp from the 3\' UTR end . <br> \n\
                         See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
                         plots.linegraph.plot([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc) 
