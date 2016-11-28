@@ -46,7 +46,7 @@ fn_ignore_dirs:
     - 'multiqc_data'
 fn_ignore_paths: []
 no_version_check: false
-log_filesize_limit: 5000000
+log_filesize_limit: 10000000
 report_readerrors: false
 report_imgskips: false
 skip_generalstats: false

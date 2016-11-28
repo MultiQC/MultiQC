@@ -660,22 +660,21 @@ class MultiqcModule(BaseMultiqcModule):
     def slamdunkPCAPlot (self):
         """ Generate the PCA plots """
         
-        cats = OrderedDict()
-        
-        cats['x'] = {
-            'name': 'PC1',
-        }
-        cats['y'] = {
-            'name': 'PC2',
+        pconfig = {
+            'id': 'slamdunk_pca',
+            'title': 'Slamdunk PCA',
+            'xlab' : 'PC1',
+            'ylab' : 'PC2',
+            'tt_label': 'PC1 {point.x:.2f}: PC2 {point.y:.2f}'
         }
         
         self.sections.append({
             'name': 'PCA (T>C based)',
             'anchor': 'slamdunk_PCA',
             'content': '<p> This plot shows the principal components of samples based on the distribution of reads with T>C conversions within UTRs. <br>\n\
-                        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk documentation</a> \n\
+                        See the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#summary" target="_blank">slamdunk documentation</a> \n\
                         for more information on how these numbers are generated.</p>' +  
-                        plots.scatter.plot(self.PCA_data, cats) 
+                        plots.scatter.plot(self.PCA_data, pconfig) 
         })
         
     def slamdunkTcPerReadPosPlot (self):
