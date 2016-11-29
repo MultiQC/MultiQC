@@ -597,7 +597,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Overrepresented sequences',
             'anchor': 'fastqc_overrepresented_sequences',
-            'content': '<p> The overrepresentative regions found in each library. ' +
+            'content': '<p> The total amount of overrepresented sequences found in each library. ' +
                     'See the <a href= "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html"target="_bkank">FastQC help for further information</a>.</p>' + plot_html
             })  
       
