@@ -563,10 +563,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = dict()
         for s_name in self.fastqc_data:
-            total_pcnt = sum( [ float(d['percentage']) for d in self.fastqc_data[s_name]['overrepresented_sequences'] ] )
             data[s_name]=dict()
-            data[s_name]['overrepresented']=total_pcnt
-
+            try:
+                total_pcnt = sum( [ float(d['percentage']) for d in self.fastqc_data[s_name]['overrepresented_sequences']] )
+                data[s_name]['overrepresented']=total_pcnt
+            except KeyError:
+                continue 
         # Config for the plot
         pconfig = { 
             'id': 'overrepresented_sequences',
@@ -579,11 +581,14 @@ class MultiqcModule(BaseMultiqcModule):
             'use_legend': False
         }
         make_plot=False
-        #Checko if any samples have more than 1% overrepresented sequences, else don't make plot.
+        #Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         for x in data.values():
-             i = x['overrepresented']
-             if i > 1:
-                 make_plot=True
+            try:
+                i = x['overrepresented']
+                if i > 1:
+                    make_plot=True
+            except KeyError:
+                continue 
         if make_plot:
                    plot_html=plots.bargraph.plot(data, None, pconfig)
         else:
