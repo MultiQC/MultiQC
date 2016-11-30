@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
                         
         for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
             self.parseUtrRates(f)
-            
+
         log.info("Parsing read rates reports.")
             
         for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
@@ -393,16 +393,20 @@ class MultiqcModule(BaseMultiqcModule):
             self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['sequenced'] = int(fields[4])
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['mapped'] = int(fields[5])
-            self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = int(fields[6])
-            self.slamdunk_data[self.clean_s_name(fields[0],"")]['filtered'] = int(fields[7])
+            #self.slamdunk_data[self.clean_s_name(fields[0],"")]['deduplicated'] = int(fields[6])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['mqfiltered'] = int(fields[7])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['idfiltered'] = int(fields[8])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['nmfiltered'] = int(fields[9])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['multimapper'] = int(fields[10])
+            self.slamdunk_data[self.clean_s_name(fields[0],"")]['retained'] = int(fields[11])
             
             # Additional Count Column found in Table
-            if columnCount == 10:
-                self.slamdunk_data[self.clean_s_name(fields[0],"")]['counted'] = int(fields[8])
+            if columnCount == 14:
+                self.slamdunk_data[self.clean_s_name(fields[0],"")]['counted'] = int(fields[12])
                 
         self.add_data_source(f)
         
-        return columnCount == 10
+        return columnCount == 14
 
     def slamdunkGeneralStatsTable(self, extendedSummary):
         """ Take the parsed summary stats from Slamdunk and add it to the
@@ -424,16 +428,44 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}'
         }
-        headers['deduplicated'] = {
-            'title': 'Deduplicated',
-            'description': '# deduplicated reads',
+#         headers['deduplicated'] = {
+#             'title': 'Deduplicated',
+#             'description': '# deduplicated reads',
+#             'shared_key': 'slamdunk_reads',
+#             'min': 0,
+#             'format': '{:.f}'
+#         }
+        headers['mqfiltered'] = {
+            'title': 'MQ-Filtered',
+            'description': '# MQ-filtered reads',
             'shared_key': 'slamdunk_reads',
             'min': 0,
             'format': '{:.f}'
         }
-        headers['filtered'] = {
-            'title': 'Filtered',
-            'description': '# reads after filtering',
+        headers['idfiltered'] = {
+            'title': 'Identity-Filtered',
+            'description': '# identity-filtered reads',
+            'shared_key': 'slamdunk_reads',
+            'min': 0,
+            'format': '{:.f}'
+        }
+        headers['nmfiltered'] = {
+            'title': 'NM-Filtered',
+            'description': '# NM-filtered reads',
+            'shared_key': 'slamdunk_reads',
+            'min': 0,
+            'format': '{:.f}'
+        }
+        headers['multimapper'] = {
+            'title': 'Multimap-Filtered',
+            'description': '# multimap-filtered reads',
+            'shared_key': 'slamdunk_reads',
+            'min': 0,
+            'format': '{:.f}'
+        }
+        headers['retained'] = {
+            'title': 'Retained',
+            'description': '# retained reads after filtering',
             'shared_key': 'slamdunk_reads',
             'min': 0,
             'format': '{:.f}'
@@ -442,7 +474,7 @@ class MultiqcModule(BaseMultiqcModule):
         if (extendedSummary) :
             headers['counted'] = {
                 'title': 'Counted',
-                'description': '# reads after filtering',
+                'description': '# reads counted within 3\'UTRs',
                 'shared_key': 'slamdunk_reads',
                 'min': 0,
                 'format': '{:.f}'
