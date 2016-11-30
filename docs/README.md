@@ -30,6 +30,7 @@ MultiQC Modules:
     Methyl QA: modules/methylQA.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
+    Prokka: modules/prokka.md
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
     RSeQC: modules/rseqc.md
