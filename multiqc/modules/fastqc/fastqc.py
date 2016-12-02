@@ -571,7 +571,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Couldn't add data for {}, invalid Key".format(s_name))  
         # Config for the plot
         pconfig = { 
-            'id': 'fastqc_overrepresented_sequences',
+            'id': 'fastqc_overrepresented_sequencesi_plot',
             'title': 'Overrepresented sequences',
             'ymin': 0,
             'ymax': 100,
