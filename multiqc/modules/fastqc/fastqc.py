@@ -563,12 +563,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = dict()
         for s_name in self.fastqc_data:
+            data[s_name]=dict()
             try:
                 total_pcnt = sum( [ float(d['percentage']) for d in self.fastqc_data[s_name]['overrepresented_sequences']] )
-                data[s_name]=dict()
                 data[s_name]['overrepresented']=total_pcnt
             except KeyError:
                 log.debug("Couldn't add data for {}, invalid Key".format(s_name))  
+            
+            if self.fastqc_data[s_name]['statuses']['overrepresented_sequences'] == 'pass':
+                data[s_name]['overrepresented'] = 0
+
         # Config for the plot
         pconfig = { 
             'id': 'fastqc_overrepresented_sequencesi_plot',
@@ -578,10 +582,11 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_percentages': False,
             'ylab_format': '{value}%',
             'cpswitch': False,
-            #'use_legend': False,
+            'use_legend': False,
             'xlab' : 'Percentage of all reads'
         }
         #Check if any samples have more than 1% overrepresented sequences, else don't make plot.
+        
         if max([ x['overrepresented'] for x in data.values()]) < 1:
                   plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(len(data))
         else:
