@@ -563,36 +563,29 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = dict()
         for s_name in self.fastqc_data:
-            data[s_name]=dict()
             try:
                 total_pcnt = sum( [ float(d['percentage']) for d in self.fastqc_data[s_name]['overrepresented_sequences']] )
+                data[s_name]=dict()
                 data[s_name]['overrepresented']=total_pcnt
             except KeyError:
-                continue 
+                log.debug("Couldn't add data for {}, invalid Key".format(s_name))  
         # Config for the plot
         pconfig = { 
-            'id': 'overrepresented_sequences',
+            'id': 'fastqc_overrepresented_sequences',
             'title': 'Overrepresented sequences',
             'ymin': 0,
             'ymax': 100,
             'tt_percentages': False,
             'ylab_format': '{value}%',
             'cpswitch': False,
-            'use_legend': False
+            #'use_legend': False,
+            'xlab' : 'Percentage of all reads'
         }
-        make_plot=False
         #Check if any samples have more than 1% overrepresented sequences, else don't make plot.
-        for x in data.values():
-            try:
-                i = x['overrepresented']
-                if i > 1:
-                    make_plot=True
-            except KeyError:
-                continue 
-        if make_plot:
-                   plot_html=plots.bargraph.plot(data, None, pconfig)
+        if max([ x['overrepresented'] for x in data.values()]) < 1:
+                  plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(len(data))
         else:
-            plot_html = '<div class="alert alert-warning">No samples found with overrepresented sequences > 1%</div>'
+            plot_html=plots.bargraph.plot(data, None, pconfig)
             
         self.sections.append({
             'name': 'Overrepresented sequences',
