@@ -49,11 +49,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.tc_per_utrpos_plus = dict()
         self.tc_per_utrpos_minus = dict()
 
-#         # Find and load any Cutadapt reports
-#         self.cutadapt_data = dict()
-#         self.cutadapt_length_counts = dict()
-#         self.cutadapt_length_exp = dict()
-#         self.cutadapt_length_obsexp = dict()
+        # Switch string for plots to produce
+        produce = "" 
 
         # Check whether summary also contains number of counted reads
         extendedSummary = True
@@ -63,9 +60,8 @@ class MultiqcModule(BaseMultiqcModule):
             
         if len(self.slamdunk_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
-            raise UserWarning
-
-        log.info("Found {} reports".format(len(self.slamdunk_data)))
+        else :
+            produce += "summary"
             
         if extendedSummary:
             log.info("Extended Slamdunk summary found.")
@@ -75,46 +71,82 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(config.sp['slamdunk']['PCA'], filehandles = True):
             self.parsePCA(f)
             
+        if len(self.PCA_data) == 0:
+            log.debug("Could not find PCA reports in {}".format(config.analysis_dir))
+        else :
+            produce += "PCA"
+            
         log.info("Parsing UTR rates reports. This can take a while...")
                         
         for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
             self.parseUtrRates(f)
+            
+        if len(self.utrates_data) == 0:
+            log.debug("Could not find UTR rates reports in {}".format(config.analysis_dir))
+        else :
+            produce += "utrates"
+            
 
         log.info("Parsing read rates reports.")
             
         for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
             self.parseSlamdunkRates(f)
             
+        if len(self.rates_data_plus) == 0:
+            log.debug("Could not find read rates reports in {}".format(config.analysis_dir))
+        else :
+            produce += "readrates"
+            
         log.info("Parsing rates per read position reports.")
             
         for f in self.find_log_files(config.sp['slamdunk']['tcperreadpos'], filehandles = True):
             self.parseSlamdunkTCPerReadpos(f)
             
+        if len(self.tc_per_readpos_plus) == 0:
+            log.debug("Could not find conversion per read position reports in {}".format(config.analysis_dir))
+        else :
+            produce += "readpos"
+            
         log.info("Parsing rates per UTR position reports.")
 
         for f in self.find_log_files(config.sp['slamdunk']['tcperutrpos'], filehandles = True):
             self.parseSlamdunkTCPerUtrpos(f)
-                
+            
+        if len(self.nontc_per_utrpos_plus) == 0:
+            log.debug("Could not find conversion per UTR position reports in {}".format(config.analysis_dir))
+        else :
+            produce += "utrpos"
+        
+        if (produce == "") :
+            log.info("No slamdunk reports found.")
+            raise UserWarning
+        
         # Start the sections
         self.sections = list()
-
+        
         # Basic Stats Table
-        self.slamdunkGeneralStatsTable(extendedSummary)
+        if "summary" in produce:
+            self.slamdunkGeneralStatsTable(extendedSummary)
         
         # PCA plot
-        self.slamdunkPCAPlot()
+        if "PCA" in produce:
+            self.slamdunkPCAPlot()
         
         # Utr rates plot
-        self.slamdunkUtrRatesPlot()
+        if "utrates" in produce:
+            self.slamdunkUtrRatesPlot()
 
         # Rates plot
-        self.slamdunkOverallRatesPlot()
+        if "readrates" in produce:
+            self.slamdunkOverallRatesPlot()
         
         # TC per read position plot
-        self.slamdunkTcPerReadPosPlot()
+        if "readpos" in produce:
+            self.slamdunkTcPerReadPosPlot()
         
         # TC per UTR position plot
-        self.slamdunkTcPerUTRPosPlot()
+        if "utrpos" in produce:
+            self.slamdunkTcPerUTRPosPlot()
         
     def parsePCA(self, f):
         
