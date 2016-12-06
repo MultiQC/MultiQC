@@ -6,7 +6,6 @@
 import logging
 import re
 from collections import OrderedDict, defaultdict
-from multiqc import config, plots
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,6 +14,9 @@ class FlagstatReportMixin():
 
     def parse_samtools_flagstats(self):
         """ Find Samtools flagstat logs and parse their data """
+
+        #Late importing of these modules makes unit testing easier
+        from multiqc import config, plots
 
         self.samtools_flagstat = dict()
         for f in self.find_log_files(config.sp['samtools']['flagstat']):
@@ -90,13 +92,13 @@ flagstat_regexes = {
     'secondary':     r"(\d+) \+ (\d+) secondary",
     'supplementary': r"(\d+) \+ (\d+) supplementary",
     'duplicates':    r"(\d+) \+ (\d+) duplicates",
-    'mapped':        r"(\d+) \+ (\d+) mapped \(([\d\.]+%|N/A) : ([\d\.]+%|N/A)\)",
+    'mapped':        r"(\d+) \+ (\d+) mapped \((.+):(.+)\)",
     'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing",
     'read1':         r"(\d+) \+ (\d+) read1",
     'read2':         r"(\d+) \+ (\d+) read2",
-    'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+%|N/A) : ([\d\.]+%|N/A)\)",
+    'properly paired': r"(\d+) \+ (\d+) properly paired \((.+):(.+)\)",
     'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped",
-    'singletons':    r"(\d+) \+ (\d+) singletons \(([\d\.]+%|N/A) : ([\d\.]+%|N/A)\)",
+    'singletons':    r"(\d+) \+ (\d+) singletons \((.+):(.+)\)",
     'with mate mapped to a different chr': r"(\d+) \+ (\d+) with mate mapped to a different chr",
     'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr \(mapQ>=5\)",
 }
@@ -115,9 +117,8 @@ def parse_single_report(file_obj):
             for i,j in enumerate(re_groups):
                 try:
                     key = "{}_{}".format(k, j)
-                    parsed_data[key] = float(r_search.group(i+1)) \
-                                       if '.' in r_search.group(i+1) else \
-                                       int(r_search.group(i+1))
+                    val = r_search.group(i+1).strip('% ')
+                    parsed_data[key] = float(val) if ('.' in val) else int(val)
                 except IndexError:
                     pass # Not all regexes have percentages
                 except ValueError:
