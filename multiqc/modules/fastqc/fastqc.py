@@ -86,7 +86,9 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Add to the general statistics table
         self.fastqc_general_stats()
-        
+       
+
+    
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
         statuses = dict()
         for s_name in self.fastqc_data:
@@ -108,8 +110,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.n_content_plot()
         self.seq_length_dist_plot()
         self.seq_dup_levels_plot()
+        self.overrepresented_sequences()
         self.adapter_content_plot()
-
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
         """ Takes contents from a fastq_data.txt file and parses out required
@@ -171,7 +173,6 @@ class MultiqcModule(BaseMultiqcModule):
                             self.dup_keys.append(float(s[0]))
                         except ValueError:
                             self.dup_keys.append(s[0])
-        
         # Tidy up the Basic Stats
         self.fastqc_data[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_data[s_name]['basic_statistics']}
         
@@ -556,7 +557,50 @@ class MultiqcModule(BaseMultiqcModule):
                         plots.linegraph.plot(data, pconfig)
         })
         
+    
+    def overrepresented_sequences (self):
+        """Sum the percentages of overrepresented sequences and display them in a bar plot"""
+
+        data = dict()
+        for s_name in self.fastqc_data:
+            data[s_name]=dict()
+            try:
+                total_pcnt = sum( [ float(d['percentage']) for d in self.fastqc_data[s_name]['overrepresented_sequences']] )
+                data[s_name]['overrepresented']=total_pcnt
+            except KeyError:
+                log.debug("Couldn't add data for {}, invalid Key".format(s_name))  
+            
+            if self.fastqc_data[s_name]['statuses']['overrepresented_sequences'] == 'pass':
+                data[s_name]['overrepresented'] = 0
+
+        # Config for the plot
+        pconfig = { 
+            'id': 'fastqc_overrepresented_sequencesi_plot',
+            'title': 'Overrepresented sequences',
+            'ymin': 0,
+            'ymax': 100,
+            'tt_percentages': False,
+            'ylab_format': '{value}%',
+            'cpswitch': False,
+            'use_legend': False,
+            'xlab' : 'Percentage of all reads'
+        }
+        #Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         
+        if max([ x['overrepresented'] for x in data.values()]) < 1:
+                  plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(len(data))
+        else:
+            plot_html=plots.bargraph.plot(data, None, pconfig)
+            
+        self.sections.append({
+            'name': 'Overrepresented sequences',
+            'anchor': 'fastqc_overrepresented_sequences',
+            'content': '<p> The total amount of overrepresented sequences found in each library. ' +
+                    'See the <a href= "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html"target="_bkank">FastQC help for further information</a>.</p>' + plot_html
+            })  
+      
+   
+
     
     def adapter_content_plot (self):
         """ Create the HTML for the FastQC adapter plot """
