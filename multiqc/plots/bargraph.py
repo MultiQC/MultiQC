@@ -77,6 +77,10 @@ def plot (data, cats=None, pconfig={}):
             for c in cat:
                 newcats[c] = {'name': c}
             cats[idx] = newcats
+        else:
+            for c in cat:
+                if 'name' not in cat[c]:
+                    cats[idx][c]['name'] = c
     
     # Parse the data into a chart friendly format
     plotsamples = list()
