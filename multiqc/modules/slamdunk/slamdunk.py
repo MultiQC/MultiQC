@@ -10,7 +10,6 @@ from distutils.version import StrictVersion
 from collections import OrderedDict
 
 from multiqc import config, BaseMultiqcModule, plots
-from curses.ascii import islower
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -49,24 +48,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.tc_per_utrpos_plus = dict()
         self.tc_per_utrpos_minus = dict()
 
-        # Switch string for plots to produce
-        produce = "" 
-
-        # Check whether summary also contains number of counted reads
-        extendedSummary = True
+        # List of plots to produce
+        produce = []
             
         for f in self.find_log_files(config.sp['slamdunk']['summary'], filehandles = True):
-            extendedSummary = extendedSummary and self.parseSummary(f)
+            self.parseSummary(f)
             
         if len(self.slamdunk_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
         else :
-            produce += "summary"
+            produce.append("summary")
             
-        if extendedSummary:
-            log.info("Extended Slamdunk summary found.")
-            
-        log.info("Parsing PCA reports.")
+        log.debug("Parsing PCA reports.")
             
         for f in self.find_log_files(config.sp['slamdunk']['PCA'], filehandles = True):
             self.parsePCA(f)
@@ -74,9 +67,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.PCA_data) == 0:
             log.debug("Could not find PCA reports in {}".format(config.analysis_dir))
         else :
-            produce += "PCA"
+            produce.append("PCA")
             
-        log.info("Parsing UTR rates reports. This can take a while...")
+        log.debug("Parsing UTR rates reports. This can take a while...")
                         
         for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
             self.parseUtrRates(f)
@@ -84,10 +77,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.utrates_data) == 0:
             log.debug("Could not find UTR rates reports in {}".format(config.analysis_dir))
         else :
-            produce += "utrates"
-            
+            produce.append("utrates")            
 
-        log.info("Parsing read rates reports.")
+        log.debug("Parsing read rates reports.")
             
         for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
             self.parseSlamdunkRates(f)
@@ -95,9 +87,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.rates_data_plus) == 0:
             log.debug("Could not find read rates reports in {}".format(config.analysis_dir))
         else :
-            produce += "readrates"
+            produce.append("readrates")
             
-        log.info("Parsing rates per read position reports.")
+        log.debug("Parsing rates per read position reports.")
             
         for f in self.find_log_files(config.sp['slamdunk']['tcperreadpos'], filehandles = True):
             self.parseSlamdunkTCPerReadpos(f)
@@ -105,9 +97,9 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.tc_per_readpos_plus) == 0:
             log.debug("Could not find conversion per read position reports in {}".format(config.analysis_dir))
         else :
-            produce += "readpos"
+            produce.append("readpos")
             
-        log.info("Parsing rates per UTR position reports.")
+        log.debug("Parsing rates per UTR position reports.")
 
         for f in self.find_log_files(config.sp['slamdunk']['tcperutrpos'], filehandles = True):
             self.parseSlamdunkTCPerUtrpos(f)
@@ -115,10 +107,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.nontc_per_utrpos_plus) == 0:
             log.debug("Could not find conversion per UTR position reports in {}".format(config.analysis_dir))
         else :
-            produce += "utrpos"
+            produce.append("utrpos")
         
-        if (produce == "") :
-            log.info("No slamdunk reports found.")
+        if not produce:
+            log.debug("No slamdunk reports found.")
             raise UserWarning
         
         # Start the sections
@@ -126,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Basic Stats Table
         if "summary" in produce:
-            self.slamdunkGeneralStatsTable(extendedSummary)
+            self.slamdunkGeneralStatsTable()
         
         # PCA plot
         if "PCA" in produce:
@@ -147,6 +139,8 @@ class MultiqcModule(BaseMultiqcModule):
         # TC per UTR position plot
         if "utrpos" in produce:
             self.slamdunkTcPerUTRPosPlot()
+            
+        log.info("Slamdunk results added to report.")
         
     def parsePCA(self, f):
         
@@ -421,6 +415,7 @@ class MultiqcModule(BaseMultiqcModule):
         columnCount = next(f['f']).count("\t") + 1
             
         for line in f['f']:
+
             fields = line.rstrip().split("\t")
             self.slamdunk_data[self.clean_s_name(fields[0],"")] = dict()
             self.slamdunk_data[self.clean_s_name(fields[0],"")]['sequenced'] = int(fields[4])
@@ -440,7 +435,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         return columnCount == 14
 
-    def slamdunkGeneralStatsTable(self, extendedSummary):
+    def slamdunkGeneralStatsTable(self):
         """ Take the parsed summary stats from Slamdunk and add it to the
         basic stats table at the top of the report """
 
@@ -460,13 +455,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}'
         }
-#         headers['deduplicated'] = {
-#             'title': 'Deduplicated',
-#             'description': '# deduplicated reads',
-#             'shared_key': 'slamdunk_reads',
-#             'min': 0,
-#             'format': '{:.f}'
-#         }
+
         headers['mqfiltered'] = {
             'title': 'MQ-Filtered',
             'description': '# MQ-filtered reads',
@@ -503,14 +492,13 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.f}'
         }
         
-        if (extendedSummary) :
-            headers['counted'] = {
-                'title': 'Counted',
-                'description': '# reads counted within 3\'UTRs',
-                'shared_key': 'slamdunk_reads',
-                'min': 0,
-                'format': '{:.f}'
-            }
+        headers['counted'] = {
+            'title': 'Counted',
+            'description': '# reads counted within 3\'UTRs',
+            'shared_key': 'slamdunk_reads',
+            'min': 0,
+            'format': '{:.f}'
+        }
         self.general_stats_addcols(self.slamdunk_data, headers)
         
     def slamdunkOverallRatesPlot (self):
@@ -522,6 +510,9 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch' : False,
             'cpswitch_c_active': False,
             'stacking' : 'normal',
+            'tt_decimals': 2,
+            'tt_suffix': '%',
+            'tt_percentages': False,
             'data_labels': [
                 "Plus Strand +",
                 "Minus Strand -", 
@@ -531,112 +522,78 @@ class MultiqcModule(BaseMultiqcModule):
         cats = [OrderedDict(), OrderedDict()]
         
         cats[0]['T>C'] = {
-            'name': 'T>C',
             'color': '#D7301F'
         }
         cats[0]['A>T'] = {
-            'name': 'A>T',
             'color': '#C6DBEF'
         }
         cats[0]['A>G'] = {
-            'name': 'A>G',
             'color': '#6BAED6'
         }
         cats[0]['A>C'] = {
-            'name': 'A>C',
             'color': '#2171B5'
         }
         cats[0]['T>A'] = {
-            'name': 'T>A',
             'color': '#C7E9C0'
         }
         cats[0]['T>G'] = {
-            'name': 'T>G',
             'color': '#74C476'
         }
         cats[0]['G>A'] = {
-            'name': 'G>A',
             'color': '#D9D9D9'
         }
         cats[0]['G>T'] = {
-            'name': 'G>T',
             'color': '#969696'
         }
         cats[0]['G>C'] = {
-            'name': 'G>C',
             'color': '#525252'
         }
         cats[0]['C>A'] = {
-            'name': 'C>A',
             'color': '#DADAEB'
         }
         cats[0]['C>T'] = {
-            'name': 'C>T',
             'color': '#9E9AC8'
         }
         cats[0]['C>G'] = {
-            'name': 'C>G',
             'color': '#6A51A3'
         }
         
         cats[1]['A>G'] = {
-            'name': 'A>G',
             'color': '#D7301F'
         }
         cats[1]['A>T'] = {
-            'name': 'A>T',
             'color': '#C6DBEF'
         }
         cats[1]['A>C'] = {
-            'name': 'A>C',
             'color': '#2171B5'
         }
         cats[1]['T>A'] = {
-            'name': 'T>A',
             'color': '#C7E9C0'
         }
         cats[1]['T>G'] = {
-            'name': 'T>G',
             'color': '#74C476'
         }
         cats[1]['T>C'] = {
-            'name': 'T>C',
             'color': '#238B45'
         }
         cats[1]['G>A'] = {
-            'name': 'G>A',
             'color': '#D9D9D9'
         }
         cats[1]['G>T'] = {
-            'name': 'G>T',
             'color': '#969696'
         }
         cats[1]['G>C'] = {
-            'name': 'G>C',
             'color': '#525252'
         }
         cats[1]['C>A'] = {
-            'name': 'C>A',
             'color': '#DADAEB'
         }
         cats[1]['C>T'] = {
-            'name': 'C>T',
             'color': '#9E9AC8'
         }
         cats[1]['C>G'] = {
-            'name': 'C>G',
             'color': '#6A51A3'
         }
-        
-        
-#         for cat in self.rates_data_plus[self.rates_data_plus.keys()[0]]:
-#             cats[0][cat] = dict()
-#             cats[0][cat]['name'] = cat
-#             cats[0][cat]['color'] = cat
-#             
-#         for cat in self.rates_data_plus[self.rates_data_minus.keys()[0]]:
-#             cats[1][cat] = dict()
-#             cats[1][cat]['name'] = cat
         
         self.sections.append({
             'name': 'Conversion rates per read',
@@ -656,51 +613,39 @@ class MultiqcModule(BaseMultiqcModule):
         
         cats = OrderedDict()
         cats['T>C'] = {
-            'name': 'T>C',
             'color': '#D7301F'
         }
         cats['A>T'] = {
-            'name': 'A>T',
             'color': '#C6DBEF'
         }
         cats['A>G'] = {
-            'name': 'A>G',
             'color': '#6BAED6'
         }
         cats['A>C'] = {
-            'name': 'A>C',
             'color': '#2171B5'
         }
         cats['T>A'] = {
-            'name': 'T>A',
             'color': '#C7E9C0'
         }
         cats['T>G'] = {
-            'name': 'T>G',
             'color': '#74C476'
         }
         cats['G>A'] = {
-            'name': 'G>A',
             'color': '#D9D9D9'
         }
         cats['G>T'] = {
-            'name': 'G>T',
             'color': '#969696'
         }
         cats['G>C'] = {
-            'name': 'G>C',
             'color': '#525252'
         }
         cats['C>A'] = {
-            'name': 'C>A',
             'color': '#DADAEB'
         }
         cats['C>T'] = {
-            'name': 'C>T',
             'color': '#9E9AC8'
         }
         cats['C>G'] = {
-            'name': 'C>G',
             'color': '#6A51A3'
         }
 
@@ -710,6 +655,9 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch' : False,
             'cpswitch_c_active': False,
             'stacking' : 'normal',
+            'tt_decimals': 2,
+            'tt_suffix': '%',
+            'tt_percentages': False,
         }
         
         self.sections.append({
