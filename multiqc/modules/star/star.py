@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import os
 import re
 
 from multiqc import config, BaseMultiqcModule, plots
@@ -26,10 +27,13 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(config.sp['star']):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
-                if f['s_name'] in self.star_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                s_name = f['s_name']
+                if s_name == '' or s_name == 'Log.final.out':
+                    s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
+                if s_name in self.star_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f)
-                self.star_data[f['s_name']] = parsed_data
+                self.star_data[s_name] = parsed_data
 
         if len(self.star_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
