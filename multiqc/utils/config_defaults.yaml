@@ -41,6 +41,8 @@ plots_flat_numseries: 100
 num_datasets_plot_limit: 50
 max_table_rows: 500
 table_columns_visible: {}
+decimalPoint_format: null
+thousandsSep_format: null
 
 fn_ignore_dirs:
     - 'multiqc_data'
