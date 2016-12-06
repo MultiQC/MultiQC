@@ -4,6 +4,8 @@
 Module updates:
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
+* [**Slamdunk**](https://github.com/t-neumann/slamdunk) - new module!
+  * Slamdunk is a software tool to analyze SLAMSeq data.
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
@@ -30,8 +32,6 @@ Module updates:
 * **Qualimap BamQC**
   * Add a line for pre-calculated reference genome GC content
   * Plot cumulative coverage for values above 50x, align with the coverage histogram.
-* [**Slamdunk**](https://github.com/t-neumann/slamdunk) - new module!
-  * Slamdunk is a software tool to analyze SLAMSeq data.
 
 Core Updates:
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created

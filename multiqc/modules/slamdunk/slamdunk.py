@@ -24,8 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Slamdunk', anchor='slamdunk',
         href='https://github.com/t-neumann/slamdunk',
-        info="is a tool to analyze SLAMSeq data. "\
-         "More info to come.")
+        info="is a tool to analyze SLAMSeq data.")
 
         self.slamdunk_data = dict()
         
@@ -316,9 +315,6 @@ class MultiqcModule(BaseMultiqcModule):
                     if not divisor.has_key(fromBase) :
                         divisor[fromBase] = 0
                     divisor[fromBase] += baseDict[fromBase][toBase]
-             
-        #log.info(str(baseDict))
-        #log.info(str(divisor))
         
         for fromBase in baseDict:
             for toBase in baseDict[fromBase]:
@@ -326,8 +322,6 @@ class MultiqcModule(BaseMultiqcModule):
                     baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase.lower()]) * 100
                 else:
                     baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase]) * 100
-        
-        #log.info(str(baseDict))
         
         self.rates_data_plus[sample] = {}
         self.rates_data_minus[sample] = {}
@@ -433,8 +427,6 @@ class MultiqcModule(BaseMultiqcModule):
                 
         self.add_data_source(f)
         
-        return columnCount == 14
-
     def slamdunkGeneralStatsTable(self):
         """ Take the parsed summary stats from Slamdunk and add it to the
         basic stats table at the top of the report """
