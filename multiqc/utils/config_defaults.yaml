@@ -41,6 +41,8 @@ plots_flat_numseries: 100
 num_datasets_plot_limit: 50
 max_table_rows: 500
 table_columns_visible: {}
+decimalPoint_format: null
+thousandsSep_format: null
 
 fn_ignore_dirs:
     - 'multiqc_data'
@@ -100,6 +102,8 @@ fn_clean_exts:
     - '.pos.DupRate.xls'
     - '.GC.xls'
     - '_slamdunk'
+    - '_bismark'
+
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
@@ -142,13 +146,13 @@ module_order:
     - 'prokka'
     - 'samblaster'
     - 'samtools'
-    - 'slamdunk'
     - 'bamtools'
     # Alignment tool stats
     - 'bismark'
     - 'hicup'
     - 'salmon'
     - 'kallisto'
+    - 'slamdunk'
     - 'star'
     - 'tophat'
     - 'bowtie2'

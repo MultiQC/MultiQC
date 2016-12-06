@@ -51,18 +51,26 @@ def plot (data, cats=None, pconfig={}):
     if type(data) is not list:
         data = [data]
     
-    # Check we have a list of cats
-    try:
-        cats[0].keys()
-    except (KeyError, AttributeError, TypeError):
+    # Make list of cats from different inputs
+    if cats is None:
+        cats = list()
+    elif type(cats) is not list:
         cats = [cats]
+    else:
+        try: # Py2
+            if type(cats[0]) is str or type(cats[0]) is unicode:
+                cats = [cats]
+        except NameError: # Py3
+            if type(cats[0]) is str:
+                cats = [cats]
+    # Generate default categories if not supplied
+    for idx in range(len(data)):
+        try:
+            cats[idx]
+        except (IndexError):
+            cats.append( list(set(k for s in data[idx].keys() for k in data[idx][s].keys() )) )
     
-    # Check that we have cats at all - find them from the data if not
-    for idx, cat in enumerate(cats):
-        if cats[idx] is None:
-            cats[idx] = list(set(k for s in data[idx].keys() for k in data[idx][s].keys() ))
-    
-    # Given a list of cats - turn it into a dict
+    # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
         if type(cat) is list:
             newcats = OrderedDict()
@@ -173,12 +181,21 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
         html += '<div class="btn-group hc_switch_group">\n'
         for k, p in enumerate(plotdata):
             active = 'active' if k == 0 else ''
-            try: name = pconfig['data_labels'][k]
-            except: name = k+1
-            try: ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
-            except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-            try: ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
-            except: ymax = ''
+            try:
+                name = pconfig['data_labels'][k]['name']
+            except:
+                try:
+                    name = pconfig['data_labels'][k]
+                except:
+                    name = k+1
+            try:
+                ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
+            except:
+                ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
+            try:
+                ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
+            except:
+                ymax = ''
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, k=k)
         html += '</div>\n\n'
     

@@ -91,12 +91,17 @@ config = {
     'ylab': None,                           # Y axis label
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
+    'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
+    'yFloor': None,                         # Minimum value for automatic axis limit
+    'yMinRange': None,                      # Minimum range for axis
     'yDecimals': True,                      # Set to false to only show integer labels
     'ylab_format': None,                    # Format string for x axis labels. Defaults to {value}
     'stacking': 'normal',                   # Set to None to have category bars side by side
     'use_legend': True,                     # Show / hide the legend
     'click_func': None,                     # Javascript function to be called when a point is clicked
     'cursor': None,                         # CSS mouse cursor type.
+    'tt_decimals': 0,                       # Number of decimal places to use in the tooltip number
+    'tt_suffix': '',                        # Suffix to add after tooltip number
     'tt_percentages': True,                 # Show the percentages of each count in the tooltip
 }
 ```
@@ -104,20 +109,44 @@ config = {
 ### Switching datasets
 It's possible to have single plot with buttons to switch between different
 datasets. To do this, give a list of data objects (same formats as described
-above). Also add the following config options to supply names to the buttons
-and graph labels:
+above). Also add the following config options to supply names to the buttons:
+```python
+config = {
+    'data_labels': ['Reads', 'Bases']
+}
+```
+You can also customise the y-axis label and min/max values for each dataset:
 ```python
 config = {
     'data_labels': [
         {'name': 'Reads', 'ylab': 'Number of Reads'},
-        {'name': 'Frags', 'ylab': 'Percentage of Fragments', 'ymax':100}
+        {'name': 'Bases', 'ylab': 'Number of Base Pairs', 'ymax':100}
     ]
 }
 ```
 If supplying multiple datasets, you can also supply a list of category
-objects. Make sure that they are in the same order as the data. If not
-supplied, these will be guessed from the data keys. See the bismark module
-plots for an example of this in action.
+objects. Make sure that they are in the same order as the data.
+
+Categories should contain data keys, so if you're supplying a list of two datasets,
+you should supply a list of two sets of keys for the categories. MultiQC will try to
+guess categories from the data keys if categories are missing.
+
+For example, with two datasets supplied as above:
+```python
+cats = [
+    ['aligned_reads','unaligned_reads'],
+    ['aligned_base_pairs','unaligned_base_pairs'],
+]
+```
+Or with additional customisation such as name and colour:
+```python
+from collections import OrderedDict
+cats = [OrderedDict(), OrderedDict()]
+cats[0]['aligned_reads'] =        {'name': 'Aligned Reads',        'color': '#8bbc21'}
+cats[0]['unaligned_reads'] =      {'name': 'Unaligned Reads',      'color': '#f7a35c'}
+cats[1]['aligned_base_pairs'] =   {'name': 'Aligned Base Pairs',   'color': '#8bbc21'}
+cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7a35c'}
+```
 
 ### Interactive / Flat image plots
 Note that the `plots.bargraph.plot()` function can generate both interactive
@@ -238,17 +267,38 @@ not identical:
 ```python
 from multiqc import plots
 data = {
-    'sample 1': [{
+    'sample 1': {
         x: '<x val>',
         y: '<y val>'
-    }],
-    'sample 2': [{
+    },
+    'sample 2': {
         x: '<x val>',
         y: '<y val>'
-    }]
+    }
 }
 html_content = plots.scatter.plot(data)
 ```
+
+If you want more than one data point per sample, you can supply a list of
+dictionaries instead. You can also optionally specify point colours and
+sample name suffixes (these are appended to the sample name):
+```python
+data = {
+    'sample 1': [
+        { x: '<x val>', y: '<y val>', color: '#a6cee3', name: 'Type 1' },
+        { x: '<x val>', y: '<y val>', color: '#1f78b4', name: 'Type 2' }
+    ],
+    'sample 2': [
+        { x: '<x val>', y: '<y val>', color: '#b2df8a', name: 'Type 1' },
+        { x: '<x val>', y: '<y val>', color: '#33a02c', name: 'Type 2' }
+    ]
+}
+```
+
+Remember that MultiQC reports can contain large numbers of samples, so this plot type
+is **not** suitable for large quantities of data - 20,000 genes might look good
+for one sample, but when someone runs MultiQC with 500 samples, it will crash
+the browser and be impossible to interpret.
 
 See the above docs about line plots for most config options. The scatter plot
 has a handful of unique ones in addition:
@@ -261,12 +311,6 @@ pconfig = {
     'square': False                 # Force the plot to stay square? (Maintain aspect ratio)
 }
 ```
-
-Note that multiple dicts with `x` and `y` values can be specified - these will
-share the same sample names. Please note that MultiQC reports can contain large
-numbers of samples, so this plot type is not suitable for large quantities of data
-(20,000 genes might look good for one sample, but when someone runs MultiQC with
-500 samples, it will crash / look horrible).
 
 ## Creating a table
 Tables should work just like the functions above (most like the bar

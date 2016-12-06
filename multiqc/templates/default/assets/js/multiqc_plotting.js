@@ -21,10 +21,14 @@ $(function () {
   window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});
   Highcharts.setOptions({
     credits: {
-			enabled: true,
+      enabled: true,
       text: 'Created with MultiQC',
       href: 'http://multiqc.info'
-		},
+    },
+    lang: {
+      decimalPoint: (mqc_config['decimalPoint_format'] == undefined ? '.' : mqc_config['decimalPoint_format']),
+      thousandsSep: (mqc_config['thousandsSep_format'] == undefined ? ' ' : mqc_config['thousandsSep_format']),
+    },
     exporting: {
       buttons: {
         contextButton: {
@@ -507,6 +511,9 @@ function plot_stacked_bar_graph(target, ds){
       title: {
         text: config['ylab']
       },
+      ceiling: config['yCeiling'],
+      floor: config['yFloor'],
+      minRange: config['yMinRange'],
       max: config['ymax'],
       min: config['ymin'],
       type: config['ytype'],
@@ -538,12 +545,13 @@ function plot_stacked_bar_graph(target, ds){
         var colspan = config['tt_percentages'] ? 3 : 2;
         var s = '<table><tr><th colspan="'+colspan+'" style="font-weight:bold; text-decoration:underline;">' + this.x + '</th></tr>';
         $.each(this.points, function () {
-          yval = this.y.toFixed(0)
+          yval = Highcharts.numberFormat(this.y, (config['tt_decimals'] == undefined ? 0 : config['tt_decimals'])) + ( config['tt_suffix'] || '');
+          ypct = Highcharts.numberFormat(this.percentage, 1);
           s += '<tr> \
             <td style="font-weight:bold; color:'+this.series.color+'; border-bottom:1px solid #dedede;">' + this.series.name + ':</td>\
-            <td style="text-align:right; border-bottom:1px solid #dedede; padding: 0 15px;">' + numberWithCommas(yval) + '</td>';
+            <td style="text-align:right; border-bottom:1px solid #dedede; padding: 0 15px;">' + yval + '</td>';
           if(config['tt_percentages']){
-            s += '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + this.percentage.toFixed(1) + '%)</td>';
+            s += '<td style="text-align:right; border-bottom:1px solid #dedede;">(' + ypct + '%)</td>';
           }
           s += '</tr>';
         });
@@ -1013,7 +1021,7 @@ function plot_beeswarm_graph(target, ds){
           valueSuffix: ttSuffix,
           valueDecimals: decimalPlaces,
           formatter: function(){
-            var value = this.point.x.toFixed(this.series.tooltipOptions.valueDecimals);
+            var value = Highcharts.numberFormat(this.point.x, this.series.tooltipOptions.valueDecimals);
             var suff = this.series.tooltipOptions.valueSuffix;
             var ttstring = '<span style="float:right;">'+this.series.name+'</span><samp>'+this.point.name+'</samp>: &nbsp; <strong>'+value+' '+suff+'</strong>';
             $('#'+target+' .beeswarm-hovertext').html(ttstring);
@@ -1343,7 +1351,7 @@ function plot_heatmap(target, ds){
         return 'X: <span style="font-weight:bold; font-family:monospace;">'+this.series.xAxis.categories[this.point.x] + '</span><br>' +
         'Y: <span style="font-weight:bold; font-family:monospace;">' + this.series.yAxis.categories[this.point.y] + '</span><br>' +
         '<div style="background-color:'+this.point.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> ' +
-        '<span style="font-weight: bold; text-decoration:underline;">' + this.point.value.toFixed(config['decimalPlaces']) + '</span>'
+        '<span style="font-weight: bold; text-decoration:underline;">' + Highcharts.numberFormat(this.point.value, config['decimalPlaces']) + '</span>'
       }
     },
     series: [{

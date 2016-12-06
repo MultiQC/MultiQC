@@ -257,6 +257,7 @@ def report_sections(self):
                 'ymin': 0,
                 'xmin': 0,
                 'xmax': max_x,
+                'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
             })
         })

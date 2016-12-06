@@ -82,6 +82,23 @@ table_columns_visible:
 Note that you can set these to `True` to show columns that would otherwise be hidden
 by default.
 
+## Number formatting
+By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand
+separators and points for decimal places (_e.g._ `1 234 567.89`). Different countries
+have different preferences for this, so you can customise the two using a couple of
+configuration parameters - `decimalPoint_format` and `thousandsSep_format`.
+
+For example, the following config would result in the following alternative
+number formatting: `1234567,89`.
+```yaml
+decimalPoint_format: ','
+thousandsSep_format: ''
+```
+
+This formatting currently only applies to the interactive charts. It may be extended
+to apply elsewhere in the future (submit a new issue if you spot somewhere where you'd like it).
+
+
 ## Troubleshooting
 One tricky bit that caught me out whilst writing this is the different type casting
 between Python, YAML and Jinja2 templates. This is especially true when using an
