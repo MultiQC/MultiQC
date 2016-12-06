@@ -132,6 +132,8 @@ snpeff:
     contents: 'SnpEff_version'
 star:
     fn: '*Log.final.out'
+star_genecounts:
+    fn: '*ReadsPerGene.out.tab'
 tophat:
     fn: '*align_summary.txt'
 trimmomatic:
