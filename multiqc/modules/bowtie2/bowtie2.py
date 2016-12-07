@@ -7,14 +7,16 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """ Bowtie 2 module, parses stderr logs. """
-    
+
     def __init__(self):
 
         # Initialise the parent object
@@ -56,15 +58,15 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_bowtie2_logs(self, f):
         """
         Warning: This function may make you want to stab yourself.
-        
+
         Parse logs from bowtie2. These miss several key bits of information
         such as input files, so we try to look for logs from other wrapper tools
         that may have logged this info. If not found, we default to using the filename.
         Note that concatenated logs only parse if we have the command printed in there.
-        
+
         The bowtie log uses the same strings mulitple times in different contexts to mean
         different things, making parsing very messy. Handle with care.
-        
+
         Example single-end output from bowtie2:
             Time loading reference: 00:00:08
             Time loading forward index: 00:00:16
@@ -103,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
             Time searching: 01:34:37
             Overall time: 01:34:37
         """
-        
+
         # Regexes
         regexes = {
             'unpaired': {
@@ -122,29 +124,29 @@ class MultiqcModule(BaseMultiqcModule):
                 'paired_aligned_mate_none': r"(\d+) \([\d\.]+%\) aligned 0 times"
             }
         }
-        
+
         # Go through log file line by line
         s_name = f['s_name']
         parsed_data = {}
-        
+
         for l in f['f']:
             # Attempt in vain to find original bowtie2 command, logged by another program
             btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", l)
             if btcmd:
                 s_name = self.clean_s_name(btcmd.group(1), f['root'])
                 log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
-                    
+
             # Total reads
             total = re.search(r"(\d+) reads; of these:", l)
             if total:
                 parsed_data['total_reads'] = int(total.group(1))
-            
+
             # Single end reads
             unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
             if unpaired:
                 parsed_data['unpaired_total'] = int(unpaired.group(1))
                 self.num_se += 1
-                
+
                 # Do nested loop whilst we have this level of indentation
                 l = f['f'].readline()
                 while l.startswith('    '):
@@ -153,13 +155,13 @@ class MultiqcModule(BaseMultiqcModule):
                         if match:
                             parsed_data[k] = int(match.group(1))
                     l = f['f'].readline()
-            
+
             # Paired end reads
             paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
             if paired:
                 parsed_data['paired_total'] = int(paired.group(1))
                 self.num_pe += 1
-                
+
                 # Do nested loop whilst we have this level of indentation
                 l = f['f'].readline()
                 while l.startswith('    '):
@@ -168,12 +170,12 @@ class MultiqcModule(BaseMultiqcModule):
                         if match:
                             parsed_data[k] = int(match.group(1))
                     l = f['f'].readline()
-            
+
             # Overall alignment rate
             overall = re.search(r"([\d\.]+)% overall alignment rate", l)
             if overall:
                 parsed_data['overall_alignment_rate'] = float(overall.group(1))
-            
+
                 # End of log section
                 # Save half 'pairs' of mate counts
                 m_keys = ['paired_aligned_mate_multi', 'paired_aligned_mate_none', 'paired_aligned_mate_one']
@@ -188,12 +190,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # Reset in case we find more in this log file
                 s_name = f['s_name']
                 parsed_data = {}
-    
-    
+
+
     def bowtie2_general_stats_table(self):
         """ Take the parsed stats from the Bowtie 2 report and add it to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['overall_alignment_rate'] = {
             'title': '% Aligned',
@@ -208,19 +210,19 @@ class MultiqcModule(BaseMultiqcModule):
 
     def bowtie2_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         half_warning = ''
         for s_name in self.bowtie2_data:
             if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_none_halved' in self.bowtie2_data[s_name]:
                 half_warning = '<p><em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em></p>'
-        
-        
+
+
         # Config for the plot
         config = {
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         # Two plots, don't mix SE with PE
         se_plot = ''
         if self.num_se > 0:
@@ -230,8 +232,8 @@ class MultiqcModule(BaseMultiqcModule):
             sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
             config['id'] = 'bowtie2_se_plot'
             config['title'] = 'Bowtie 2 SE Alignment Scores'
-            se_plot = plots.bargraph.plot(self.bowtie2_data, sekeys, config)
-        
+            se_plot = bargraph.plot(self.bowtie2_data, sekeys, config)
+
         pe_plot = ''
         if self.num_pe > 0:
             pekeys = OrderedDict()
@@ -246,6 +248,6 @@ class MultiqcModule(BaseMultiqcModule):
             config['title'] = 'Bowtie 2 PE Alignment Scores'
             if se_plot != '':
                 pe_plot = '<hr>'
-            pe_plot += plots.bargraph.plot(self.bowtie2_data, pekeys, config)
-        
+            pe_plot += bargraph.plot(self.bowtie2_data, pekeys, config)
+
         return half_warning + se_plot + pe_plot

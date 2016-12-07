@@ -4,7 +4,8 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Samtools submodules
 from . import stats
@@ -39,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         n['stats'] = self.parse_bcftools_stats()
         if n['stats'] > 0:
             log.info("Found {} stats reports".format(n['stats']))
-        
+
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))

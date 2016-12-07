@@ -8,7 +8,9 @@ import json
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,8 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='FastQ Screen', anchor='fastq_screen', 
-        href="http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/", 
+        super(MultiqcModule, self).__init__(name='FastQ Screen', anchor='fastq_screen',
+        href="http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/",
         info="allows you to screen a library of sequences in FastQ format against"\
         " a set of sequence databases so you can see if the composition of the"\
         " library matches with what you expect.")
@@ -48,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Use simpler plot that works with many samples
         else:
             self.intro += self.fqscreen_simple_plot()
-        
+
         # Write the total counts and percentages to files
         self.write_data_file(self.parse_csv(), 'multiqc_fastq_screen')
 
@@ -79,10 +81,10 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
         if len(parsed_data) == 0:
             return None
-        
+
         self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data
-    
+
     def parse_csv(self):
         totals = OrderedDict()
         for s in sorted(self.fq_screen_data.keys()):
@@ -107,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
     def fqscreen_plot (self):
         """ Makes a fancy custom plot which replicates the plot seen in the main
         FastQ Screen program. Not useful if lots of samples as gets too wide. """
-        
+
         categories = list()
         getCats = True
         data = list()
@@ -171,12 +173,12 @@ class MultiqcModule(BaseMultiqcModule):
         </script>'.format(json.dumps(data), json.dumps(categories))
 
         return html
-    
-    
+
+
     def fqscreen_simple_plot(self):
         """ Makes a simple bar plot with summed alignment counts for
         each species, stacked. """
-        
+
         # First, sum the different types of alignment counts
         data = OrderedDict()
         cats = list()
@@ -191,17 +193,17 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name][org] += self.fq_screen_data[s_name][org]['percentages']['multiple_hits_multiple_libraries']
                 if len(cats) < len(self.fq_screen_data[s_name]):
                     cats.append(org)
-        
+
         pconfig = {
             'title': 'FastQ Screen',
             'cpswitch': False,
             'ylab_format': '{value}%',
             'tt_percentages': False
         }
-        
+
         return ("<p>Summed alignment percentages are shown below. Note that percentages \
                 can sum to greater than 100% if reads align to multiple organisms.</p>" +
-                plots.bargraph.plot(data, cats, pconfig) )
+                bargraph.plot(data, cats, pconfig) )
 
-        
-        
+
+

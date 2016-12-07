@@ -7,7 +7,9 @@ import logging
 import re
 from distutils.version import StrictVersion
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import linegraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -33,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_counts = dict()
         self.cutadapt_length_exp = dict()
         self.cutadapt_length_obsexp = dict()
-        
+
         for f in self.find_log_files(config.sp['cutadapt'], filehandles=True):
             self.parse_cutadapt_logs(f)
 
@@ -97,7 +99,6 @@ class MultiqcModule(BaseMultiqcModule):
                     except:
                         # I think the pattern "cutadapt version XX" is only pre-1.6?
                         cutadapt_version = '1.6'
-            
             # Get sample name from end of command line params
             if l.startswith('Command line parameters'):
                 s_name = l.split()[-1]
@@ -108,16 +109,16 @@ class MultiqcModule(BaseMultiqcModule):
                 self.cutadapt_length_counts[s_name] = dict()
                 self.cutadapt_length_exp[s_name] = dict()
                 self.cutadapt_length_obsexp[s_name] = dict()
-            
+
             if s_name is not None:
                 self.add_data_source(f, s_name)
-                
+
                 # Search regexes for overview stats
                 for k, r in regexes[cutadapt_version].items():
                     match = re.search(r, l)
                     if match:
                         self.cutadapt_data[s_name][k] = int(match.group(1).replace(',', ''))
-                
+
                 # Histogram showing lengths trimmed
                 if 'length' in l and 'count' in l and 'expect' in l:
                     # Nested loop to read this section while the regex matches
@@ -134,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2))
                         else:
                             break
-        
+
         # Calculate a few extra numbers of our own
         for s_name, d in self.cutadapt_data.items():
             if 'bp_processed' in d and 'bp_written' in d:
@@ -159,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         self.general_stats_addcols(self.cutadapt_data, headers)
-    
+
 
     def cutadapt_length_trimmed_plot (self):
         """ Generate the trimming length plot """
@@ -168,7 +169,7 @@ class MultiqcModule(BaseMultiqcModule):
         may be related to adapter length. See the \n\
         <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
         for more information on how these numbers are generated.</p>'
-        
+
         pconfig = {
             'id': 'cutadapt_plot',
             'title': 'Lengths of Trimmed Sequences',
@@ -180,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
             'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
                             {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
         }
-        
-        html += plots.linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
-        
+
+        html += linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+
         return html

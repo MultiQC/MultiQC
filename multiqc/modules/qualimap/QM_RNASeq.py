@@ -7,14 +7,15 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find Qualimap RNASeq reports and parse their data """
-    
+
     sp = config.sp['qualimap']['rnaseq']
     self.qualimap_rnaseq_genome_results = dict()
     regexes = {
@@ -32,7 +33,7 @@ def parse_reports(self):
     }
     for f in self.find_log_files(sp['rnaseq_results']):
         d = dict()
-        
+
         # Get the sample name
         s_name_regex = re.search(r"bam file\s*=\s*(.+)", f['f'], re.MULTILINE)
         if s_name_regex:
@@ -41,14 +42,14 @@ def parse_reports(self):
         else:
             log.warn("Couldn't find an input filename in genome_results file {}/{}".format(f['root'], f['fn']))
             return None
-        
+
         # Check for and 'fix' European style decimal places / thousand separators
         comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d+%\)", f['f'], re.MULTILINE)
         if comma_regex:
             log.debug("Trying to fix European comma style syntax in Qualimap report {}/{}".format(f['root'], f['fn']))
             f['f'] = f['f'].replace('.','')
             f['f'] = f['f'].replace(',','.')
-        
+
         # Go through all numeric regexes
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
@@ -60,21 +61,21 @@ def parse_reports(self):
                     pass
                 except ValueError:
                     d[k] = r_search.group(1)
-        
+
         # Add to general stats table
         for k in ['5_3_bias', 'reads_aligned']:
             try:
                 self.general_stats_data[s_name][k] = d[k]
             except KeyError:
                 pass
-        
+
         # Save results
         if s_name in self.qualimap_rnaseq_genome_results:
             log.debug("Duplicate genome results sample name found! Overwriting: {}".format(s_name))
         self.qualimap_rnaseq_genome_results[s_name] = d
         self.add_data_source(f, s_name=s_name, section='rna_genome_results')
-    
-    
+
+
     #### Coverage profile
     self.qualimap_rnaseq_cov_hist = dict()
     for f in self.find_log_files(sp['coverage'], filehandles=True):
@@ -87,19 +88,19 @@ def parse_reports(self):
             coverage = int(round(float(coverage)))
             count = float(count)
             d[coverage] = count
-        
+
         if len(d) == 0:
             log.debug("Couldn't parse contents of coverage histogram file {}".format(f['fn']))
             return None
-        
+
         # Save results
         if s_name in self.qualimap_rnaseq_cov_hist:
             log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
         self.qualimap_rnaseq_cov_hist[s_name] = d
         self.add_data_source(f, s_name=s_name, section='rna_coverage_histogram')
-    
+
     #### Plots
-    
+
     # Genomic Origin Bar Graph
     # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
     if len(self.qualimap_rnaseq_genome_results) > 0:
@@ -115,14 +116,14 @@ def parse_reports(self):
         self.sections.append({
             'name': 'Genomic origin of reads',
             'anchor': 'qualimap-reads-genomic-origin',
-            'content': plots.bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
+            'content': bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
         })
-    
+
     if len(self.qualimap_rnaseq_cov_hist) > 0:
         self.sections.append({
             'name': 'Gene Coverage Profile',
             'anchor': 'qualimap-genome-fraction-coverage',
-            'content': plots.linegraph.plot(self.qualimap_rnaseq_cov_hist, {
+            'content': linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
@@ -133,8 +134,8 @@ def parse_reports(self):
                 'tt_label': '<b>{point.x} bp</b>: {point.y:.0f}%',
             })
         })
-    
-    
+
+
     #### General Stats
     self.general_stats_headers['5_3_bias'] = {
         'title': "5'-3' bias"
@@ -147,6 +148,6 @@ def parse_reports(self):
         'shared_key': 'read_count',
         'modify': lambda x: x / 1000000,
     }
-    
+
     # Return the number of reports we found
     return len(self.qualimap_rnaseq_genome_results.keys())

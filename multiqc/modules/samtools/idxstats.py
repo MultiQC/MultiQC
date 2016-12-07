@@ -6,7 +6,8 @@
 import logging
 import re
 from collections import OrderedDict, defaultdict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ class IdxstatsReportMixin():
                 self.sections.append({
                     'name': 'XY counts',
                     'anchor': 'samtools-idxstats-xy-counts',
-                    'content': plots.bargraph.plot(xy_counts, xy_keys, pconfig)
+                    'content': bargraph.plot(xy_counts, xy_keys, pconfig)
                 })
                 
             
@@ -138,7 +139,7 @@ class IdxstatsReportMixin():
                 'anchor': 'samtools-idxstats',
                 'content': '<p>The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
                     'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.</p>'.format(cutoff*100) +
-                    plots.linegraph.plot([pdata_norm, pdata], pconfig)
+                    linegraph.plot([pdata_norm, pdata], pconfig)
             })
         
         # Return the number of logs that were found
