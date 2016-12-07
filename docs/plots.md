@@ -91,12 +91,17 @@ config = {
     'ylab': None,                           # Y axis label
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
+    'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
+    'yFloor': None,                         # Minimum value for automatic axis limit
+    'yMinRange': None,                      # Minimum range for axis
     'yDecimals': True,                      # Set to false to only show integer labels
     'ylab_format': None,                    # Format string for x axis labels. Defaults to {value}
     'stacking': 'normal',                   # Set to None to have category bars side by side
     'use_legend': True,                     # Show / hide the legend
     'click_func': None,                     # Javascript function to be called when a point is clicked
     'cursor': None,                         # CSS mouse cursor type.
+    'tt_decimals': 0,                       # Number of decimal places to use in the tooltip number
+    'tt_suffix': '',                        # Suffix to add after tooltip number
     'tt_percentages': True,                 # Show the percentages of each count in the tooltip
 }
 ```

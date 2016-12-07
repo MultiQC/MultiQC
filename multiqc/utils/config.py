@@ -10,11 +10,27 @@ import inspect
 import os
 import pkg_resources
 import random
+import subprocess
 import sys
 import yaml
 
 import multiqc
 from multiqc import logger
+
+# Get the MultiQC version
+version = pkg_resources.get_distribution("multiqc").version
+cwd = os.getcwd()
+script_path = os.path.dirname(os.path.realpath(__file__))
+git_hash = None
+git_hash_short = None
+try:
+    os.chdir(script_path)
+    git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.STDOUT)
+    git_hash_short = git_hash[:7]
+    version = '{} ({})'.format(version, git_hash_short)
+except subprocess.CalledProcessError:
+    pass
+os.chdir(cwd)
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))

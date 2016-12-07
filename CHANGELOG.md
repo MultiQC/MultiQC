@@ -7,6 +7,8 @@ Module updates:
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
+* **FastQC**
+  * New plot showing total overrepresented sequence percentages.
 * **featureCounts**
   * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
 * **GATK**
@@ -25,6 +27,7 @@ Module updates:
   * Fixed swapped axis labels in the Variant Quality plot
 * **STAR**
   * Fixed crash when there are 0 unmapped reads.
+  * Sample name now taken from the directory name if no file prefix found.
 * **Qualimap BamQC**
   * Add a line for pre-calculated reference genome GC content
   * Plot cumulative coverage for values above 50x, align with the coverage histogram.
@@ -35,6 +38,8 @@ Core Updates:
 * Added _'Apply'_ button to Highlight / Rename / Hide.
   * These tools can become slow with large reports. This means that you can enter several
     things without having to wait for the report to replot each change.
+* New config options `decimalPoint_format` and `thousandsSep_format`
+  * Allows you to change the default `1 234.56` number formatting for plots.
 * Fixed bar plot bug where missing categories could shift data between samples
 * Report title now printed in the side navigation
 * Missing plot IDs added for easier plot exporting
@@ -44,6 +49,8 @@ Core Updates:
 * Fixed a bug where user config files were loaded twice
 * Refactored code so that the order of modules can be changed in the user config
 * Beefed up code + docs in scatter plots back end and multiple bar plots.
+* New `tt_decimals` and `tt_suffix` options for bar plots
+* Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:

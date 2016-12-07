@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import os
 import re
 
 from multiqc import config, BaseMultiqcModule, plots
@@ -26,25 +27,71 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(config.sp['star']):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
-                if f['s_name'] in self.star_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                self.add_data_source(f)
-                self.star_data[f['s_name']] = parsed_data
+                s_name = f['s_name']
+                if s_name == '' or s_name == 'Log.final.out':
+                    s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
+                if s_name in self.star_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, section='SummaryLog')
+                self.star_data[s_name] = parsed_data
+        
+        # Find and load any STAR gene count tables
+        self.star_genecounts_total = dict()
+        self.star_genecounts_unstranded = dict()
+        self.star_genecounts_first_strand = dict()
+        self.star_genecounts_second_strand = dict()
+        for f in self.find_log_files(config.sp['star_genecounts'], filehandles=True):
+            parsed_data = self.parse_star_genecount_report(f)
+            if parsed_data is not None:
+                s_name = f['s_name']
+                if s_name == '' or s_name == 'ReadsPerGene.out.tab':
+                    s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
+                if s_name in self.star_data:
+                    log.debug("Duplicate ReadsPerGene sample name found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, section='ReadsPerGene')
+                self.star_genecounts_total[s_name] = parsed_data['total']
+                self.star_genecounts_unstranded[s_name] = parsed_data['unstranded']
+                self.star_genecounts_first_strand[s_name] = parsed_data['first_strand']
+                self.star_genecounts_second_strand[s_name] = parsed_data['second_strand']
 
-        if len(self.star_data) == 0:
+        if len(self.star_data) == 0 and len(self.star_genecounts_total) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.star_data)))
+        if len(self.star_data) > 0:
+            if len(self.star_genecounts_total) > 0:
+                log.info("Found {} reports and {} gene count files".format(len(self.star_data), len(self.star_genecounts_total)))
+            else:
+                log.info("Found {} reports".format(len(self.star_data)))
+        else:
+            log.info("Found {} gene count files".format(len(self.star_genecounts_total)))
+        
+        self.sections = list()
+        
+        if len(self.star_data) > 0:
+            
+            # Write parsed report data to a file
+            self.write_data_file(self.star_data, 'multiqc_star')
 
-        # Write parsed report data to a file
-        self.write_data_file(self.star_data, 'multiqc_star')
-
-        # Basic Stats Table
-        self.star_stats_table()
-
-        # Alignment bar plot - only one section, so add to the module intro
-        self.intro += self.star_alignment_chart()
+            # Basic Stats Table
+            self.star_stats_table()
+        
+            if len(self.star_genecounts_total) == 0:
+                # Alignment bar plot - only one section, so add to the module intro
+                self.intro += self.star_alignment_chart()
+            else:
+                self.sections.append({
+                    'name': 'Alignment Scores',
+                    'anchor': 'star_alignments',
+                    'content': self.star_alignment_chart()
+                })
+        
+        if len(self.star_genecounts_total) > 0:
+            self.sections.append({
+                'name': 'Gene Counts',
+                'anchor': 'star_geneCounts',
+                'content': self.star_genecount_chart()
+            })
 
 
     def parse_star_report (self, raw_data):
@@ -99,7 +146,43 @@ class MultiqcModule(BaseMultiqcModule):
         if len(parsed_data) == 0: return None
         return parsed_data
 
-
+    def parse_star_genecount_report(self, f):
+        """ Parse a STAR gene counts output file """
+        # Three numeric columns: unstranded, stranded/first-strand, stranded/second-strand
+        keys = [ 'N_unmapped', 'N_multimapping', 'N_noFeature', 'N_ambiguous' ]
+        total = { 'N_genes': 0 }
+        unstranded = { 'N_genes': 0 }
+        first_strand = { 'N_genes': 0 }
+        second_strand = { 'N_genes': 0 }
+        num_errors = 0
+        num_genes = 0
+        for l in f['f']:
+            s = l.split("\t")
+            try:
+                for i in [1,2,3]:
+                    s[i] = float(s[i])
+                if s[0] in keys:
+                    total[s[0]] = s[1] + s[2] + s[3]
+                    unstranded[s[0]] = s[1]
+                    first_strand[s[0]] = s[2]
+                    second_strand[s[0]] = s[3]
+                else:
+                    total['N_genes'] += s[1] + s[2] + s[3]
+                    unstranded['N_genes'] += s[1]
+                    first_strand['N_genes'] += s[2]
+                    second_strand['N_genes'] += s[3]
+                    num_genes += 1
+            except IndexError:
+                # Tolerate a few errors in case there is something random added at the top of the file
+                num_errors += 1
+                if num_errors > 10 and num_genes == 0:
+                    log.warning("Error parsing {}".format(f['fn']))
+                    return None
+        if num_genes > 0:
+            return { 'total': total, 'unstranded': unstranded, 'first_strand': first_strand, 'second_strand': second_strand }
+        else:
+            return None
+        
     def star_stats_table(self):
         """ Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report """
@@ -125,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.star_data, headers)
 
     def star_alignment_chart (self):
-        """ Make the HighCharts HTML to plot the alignment rates """
+        """ Make the plot showing alignment rates """
         
         # Specify the order of the different possible categories
         keys = OrderedDict()
@@ -145,3 +228,30 @@ class MultiqcModule(BaseMultiqcModule):
         }
         
         return plots.bargraph.plot(self.star_data, keys, pconfig)
+    
+    def star_genecount_chart (self):
+        """ Make a plot for the ReadsPerGene output """
+        
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['N_genes'] =        { 'color': '#2f7ed8', 'name': 'Overlapping Genes' }
+        keys['N_noFeature'] =    { 'color': '#0d233a', 'name': 'No Feature' }
+        keys['N_ambiguous'] =    { 'color': '#492970', 'name': 'Ambiguous Features' }
+        keys['N_multimapping'] = { 'color': '#f28f43', 'name': 'Multimapping' }
+        keys['N_unmapped'] =     { 'color': '#7f0000', 'name': 'Unmapped' }
+        
+        # Config for the plot
+        pconfig = {
+            'id': 'star_gene_counts',
+            'title': 'STAR Gene Counts',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads',
+            'data_labels': ['Total','Unstranded','First Strand','Second Strand']
+        }
+        datasets = [
+            self.star_genecounts_total,
+            self.star_genecounts_unstranded,
+            self.star_genecounts_first_strand,
+            self.star_genecounts_second_strand
+        ]
+        return plots.bargraph.plot(datasets, [keys,keys,keys,keys], pconfig)
