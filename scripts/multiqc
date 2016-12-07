@@ -31,8 +31,9 @@ except ImportError:
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-from multiqc import logger, plots, __version__
+from multiqc import plots, __version__
 from multiqc.utils import report, plugin_hooks, config, log
+logger = config.logger
 
 @click.command(
     context_settings = dict( help_option_names = ['-h', '--help'] )
