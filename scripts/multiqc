@@ -400,7 +400,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
             'save_file': True,
             'raw_data_fn':'multiqc_general_stats'
         }
-        report.general_stats_html = plots.table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        report.general_stats_html = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
     else:
         config.skip_generalstats = True
 

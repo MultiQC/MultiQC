@@ -9,7 +9,8 @@ import logging
 import os
 import re
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph
 
 # Initialise the logger

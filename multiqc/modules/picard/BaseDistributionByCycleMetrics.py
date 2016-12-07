@@ -47,7 +47,7 @@ def read_base_distrib_data(line_iter):
 
     Returns either None or a dict mapping cycles to tuples
       (read_end pct_a pct_c pct_g pct_t pct_n)
-    where all values are numbers.  
+    where all values are numbers.
 
     A None indicates that no lines matching the expected format
     were found.
@@ -75,7 +75,7 @@ def read_base_distrib_data(line_iter):
             elif max_cycle_r1 is not None:
                 cycle = cycle - max_cycle_r1
             data_by_cycle = data.setdefault(read_end, dict())
-            data_by_cycle[cycle] = ( 
+            data_by_cycle[cycle] = (
                 pct_a, pct_c, pct_g, pct_t, pct_n
             )
             row = next(line_iter).strip()
@@ -85,11 +85,11 @@ def read_base_distrib_data(line_iter):
 
 def parse_reports(self):
     """ Find Picard BaseDistributionByCycleMetrics reports and parse their data """
-    
+
     # Set up vars
     self.picard_baseDistributionByCycle_data = dict()
     self.picard_baseDistributionByCycle_samplestats = dict()
-    
+
     # Go through logs and find Metrics
     base_dist_files = self.find_log_files(
         config.sp['picard']['basedistributionbycycle'],
@@ -118,7 +118,7 @@ def parse_reports(self):
             if 2 in set(data):
                 s_names = {
                     1:"%s_R1" % s_name,
-                    2:"%s_R2" % s_name 
+                    2:"%s_R2" % s_name
                 }
             else:
                 s_names = { 1:s_name }
@@ -136,7 +136,7 @@ def parse_reports(self):
             for name in s_names.values():
                 self.add_data_source(f, name, section='BaseDistributionByCycle')
 
-            for read_end in s_names: 
+            for read_end in s_names:
                 data_by_cycle = data[read_end]
                 s_name = s_names[read_end]
                 self.picard_baseDistributionByCycle_data[s_name] = data_by_cycle
@@ -168,10 +168,10 @@ def parse_reports(self):
         v['mean_pct_t'] = v['sum_pct_t'] / v['cycle_count']
 
     if len(self.picard_baseDistributionByCycle_data) > 0:
-        
+
         # Write parsed data to a file
         self.write_data_file(self.picard_baseDistributionByCycle_samplestats, 'multiqc_picard_baseContent')
-        
+
         # Plot the data and add section
         pconfig = {
             'id': 'picard_base_distribution_by_cycle',
@@ -197,8 +197,8 @@ def parse_reports(self):
             reformat_items = lambda n: {
                 cycle : tup[n] for cycle, tup in cycles.items()
             }
-            for linegraph, index in zip(linegraph_data, range(5)):
-                linegraph[s_name] = reformat_items(index)
+            for lg, index in zip(linegraph_data, range(5)):
+                lg[s_name] = reformat_items(index)
 
         self.sections.append({
             'name': 'Base Distribution',
@@ -206,8 +206,8 @@ def parse_reports(self):
             'content': '<p>Plot shows the distribution of bases by cycle.</p>' +
                          linegraph.plot(linegraph_data, pconfig)
         })
-    
-    
+
+
     # Return the number of detected samples to the parent module
     return len(self.picard_baseDistributionByCycle_data)
-    
+
