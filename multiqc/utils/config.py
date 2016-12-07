@@ -15,7 +15,10 @@ import sys
 import yaml
 
 import multiqc
-from multiqc import logger
+
+# Default logger will be replaced by caller
+import logging
+logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
 version = pkg_resources.get_distribution("multiqc").version
@@ -89,20 +92,20 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 # Functions to load user config files. These are called by the main MultiQC script.
 def mqc_load_userconfig(path=None):
     """ Overwrite config defaults with user config files """
-    
+
     # Load and parse installation config file if we find it
     mqc_load_config(os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml'))
 
     # Load and parse a user config file if we find it
     mqc_load_config(os.path.expanduser('~/.multiqc_config.yaml'))
-    
+
     # Load and parse a config file in this working directory if we find it
     mqc_load_config('multiqc_config.yaml')
-    
+
     # Custom command line config
     if path is not None:
         mqc_load_config(path)
-    
+
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
