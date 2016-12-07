@@ -29,8 +29,14 @@ except Exception as e:
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-# Load the template so that we can access it's configuration
-template_mod = config.avail_templates[config.template].load()
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
 
 def plot (data, pconfig={}):
     """ Plot a line graph with X,Y data.
@@ -38,11 +44,11 @@ def plot (data, pconfig={}):
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    
+
     # Given one dataset - turn it into a list
     if type(data) is not list:
         data = [data]
-    
+
     # Smooth dataset if requested in config
     if pconfig.get('smooth_points', None) is not None:
         sumcounts = pconfig.get('smooth_points_sumcounts', True)
@@ -51,7 +57,7 @@ def plot (data, pconfig={}):
             if type(sumcounts) is list:
                 sumc = sumcounts[i]
             data[i] = smooth_line_data(d, pconfig['smooth_points'], sumc)
-    
+
     # Generate the data dict structure expected by HighCharts series
     plotdata = list()
     for d in data:
@@ -79,17 +85,17 @@ def plot (data, pconfig={}):
                 except: pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
-    
+
     # Add on annotation data series
     try:
         for s in pconfig['extra_series']:
             plotdata[0].append(s)
     except KeyError:
         pass
-    
+
     # Make a plot - template custom, or interactive or flat
     try:
-        return template_mod.linegraph(plotdata, pconfig)
+        return get_template_mod().linegraph(plotdata, pconfig)
     except (AttributeError, TypeError):
         if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
             try:
@@ -111,12 +117,12 @@ def highcharts_linegraph (plotdata, pconfig={}):
     Build the HTML needed for a HighCharts line graph. Should be
     called by linegraph.plot(), which properly formats input data.
     """
-    
+
     # Build the HTML for the page
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
     html = '<div class="mqc_hcplot_plotgroup">'
-    
+
     # Buttons to cycle through different datasets
     if len(plotdata) > 1:
         html += '<div class="btn-group hc_switch_group">\n'
@@ -136,10 +142,10 @@ def highcharts_linegraph (plotdata, pconfig={}):
                 ymax = ''
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
-    
+
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
-    
+
     # Javascript with data dump
     html += '<script type="text/javascript"> \n\
         mqc_plots["{id}"] = {{ \n\
@@ -148,8 +154,9 @@ def highcharts_linegraph (plotdata, pconfig={}):
             "config": {c} \n\
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-    
+
     report.num_hc_plots += 1
+
     return html
 
 
@@ -159,7 +166,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
     encoded image within HTML or writes the plot and links to it. Should be called by
     plot_bargraph, which properly formats the input data.
     """
-    
+
     # Plot group ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
@@ -173,16 +180,16 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
         pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
         pids.append(pid)
-    
+
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
           'Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ' + \
           '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
-    
+
     # Same defaults as HighCharts for consistency
     default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9',
                       '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
-    
+
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
@@ -195,13 +202,13 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                 name = k+1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
         html += '</div>\n\n'
-    
+
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
-        
+
         # Plot ID
         pid = pids[pidx]
-        
+
         # Save plot data to file
         fdata = OrderedDict()
         lastcats = None
@@ -233,42 +240,42 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                 print( fout.encode('utf-8', 'ignore').decode('utf-8'), file=f )
         else:
             util_functions.write_data_file(fdata, pid)
-        
+
         # Set up figure
         fig = plt.figure(figsize=(14, 6), frameon=False)
         axes = fig.add_subplot(111)
-        
+
         # Go through data series
         for idx, d in enumerate(pdata):
-            
+
             # Default colour index
             cidx = idx
             while cidx >= len(default_colors):
                 cidx -= len(default_colors)
-            
+
             # Line style
             linestyle = 'solid'
             if d.get('dashStyle', None) == 'Dash':
                 linestyle = 'dashed'
-            
+
             # Reformat data (again)
             try:
                 axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), linestyle=linestyle, linewidth=1, marker=None)
             except TypeError:
                 # Categorical data on x axis
                 axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), linewidth=1, marker=None)
-        
+
         # Tidy up axes
         axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
         axes.set_xlabel(pconfig.get('xlab', ''))
         axes.set_ylabel(pconfig.get('ylab', ''))
-        
+
         # Dataset specific y label
         try:
             axes.set_ylabel(pconfig['data_labels'][pidx]['ylab'])
         except:
             pass
-        
+
         # Axis limits
         default_ylimits = axes.get_ylim()
         ymin = default_ylimits[0]
@@ -284,13 +291,13 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         if (ymax - ymin) < pconfig.get('yMinRange', 0):
             ymax = ymin + pconfig['yMinRange']
         axes.set_ylim((ymin, ymax))
-        
+
         # Dataset specific ymax
         try:
             axes.set_ylim((ymin, pconfig['data_labels'][pidx]['ymax']))
         except:
             pass
-        
+
         default_xlimits = axes.get_xlim()
         xmin = default_xlimits[0]
         if 'xmin' in pconfig:
@@ -305,17 +312,17 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         if (xmax - xmin) < pconfig.get('xMinRange', 0):
             xmax = xmin + pconfig['xMinRange']
         axes.set_xlim((xmin, xmax))
-        
+
         # Plot title
         if 'title' in pconfig:
             plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
         axes.grid(True, zorder=10, which='both', axis='y', linestyle='-', color='#dedede', linewidth=1)
-        
+
         # X axis categories, if specified
         if 'categories' in pconfig:
             axes.set_xticks([i for i,v in enumerate(pconfig['categories'])])
             axes.set_xticklabels(pconfig['categories'])
-        
+
         # Axis lines
         xlim = axes.get_xlim()
         axes.plot([xlim[0], xlim[1]], [0, 0], linestyle='-', color='#dedede', linewidth=2)
@@ -324,7 +331,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         axes.spines['top'].set_visible(False)
         axes.spines['bottom'].set_visible(False)
         axes.spines['left'].set_visible(False)
-        
+
         # Background colours, if specified
         if 'yPlotBands' in pconfig:
             xlim = axes.get_xlim()
@@ -334,19 +341,19 @@ def matplotlib_linegraph (plotdata, pconfig={}):
             ylim = axes.get_ylim()
             for pb in pconfig['xPlotBands']:
                 axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0)
-        
+
         # Tight layout - makes sure that legend fits in and stuff
         if len(pdata) <= 15:
             lgd = axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
             plt.tight_layout(rect=[0,0.08,1,0.92])
         else:
             plt.tight_layout(rect=[0,0,1,0.92])
-        
+
         # Should this plot be hidden on report load?
         hidediv = ''
         if pidx > 0:
             hidediv = ' style="display:none;"'
-        
+
         # Save the plot to the data directory if export is requests
         if config.export_plots:
             for fformat in config.export_plot_formats:
@@ -357,29 +364,29 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                 # Save the plot
                 plot_fn = os.path.join(plot_dir, '{}.{}'.format(pid, fformat))
                 fig.savefig(plot_fn, format=fformat, bbox_inches='tight')
-        
+
         # Output the figure to a base64 encoded string
-        if getattr(template_mod, 'base64_plots', True) is True:
+        if getattr(get_template_mod(), 'base64_plots', True) is True:
             img_buffer = io.BytesIO()
             fig.savefig(img_buffer, format='png', bbox_inches='tight')
             b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
             img_buffer.close()
             html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)
-        
+
         # Save to a file and link <img>
         else:
             plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
             html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
-        
+
         plt.close(fig)
-            
-    
+
+
     # Close wrapping div
     html += '</div>'
-    
-    report.num_mpl_plots += 1
-    return html
 
+    report.num_mpl_plots += 1
+
+    return html
 
 
 def smooth_line_data(data, numpoints, sumcounts=True):

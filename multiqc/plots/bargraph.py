@@ -30,8 +30,14 @@ except Exception as e:
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-# Load the template so that we can access it's configuration
-template_mod = config.avail_templates[config.template].load()
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
 
 def plot (data, cats=None, pconfig={}):
     """ Plot a horizontal bar graph. Expects a 2D dict of sample
@@ -125,7 +131,7 @@ def plot (data, cats=None, pconfig={}):
 
     # Make a plot - custom, interactive or flat
     try:
-        return template_mod.bargraph(plotdata, plotsamples, pconfig)
+        return get_template_mod().bargraph(plotdata, plotsamples, pconfig)
     except (AttributeError, TypeError):
         if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries):
             try:
@@ -417,7 +423,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
                     fig.savefig(plot_fn, format=fformat, bbox_extra_artists=(lgd,), bbox_inches='tight')
 
             # Output the figure to a base64 encoded string
-            if getattr(template_mod, 'base64_plots', True) is True:
+            if getattr(get_template_mod(), 'base64_plots', True) is True:
                 img_buffer = io.BytesIO()
                 fig.savefig(img_buffer, format='png', bbox_inches='tight')
                 b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
