@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Slamdunk', anchor='slamdunk',
-        href='https://github.com/t-neumann/slamdunk',
+        href='http://t-neumann.github.io/slamdunk/',
         info="is a tool to analyze SLAMSeq data.")
 
         self.slamdunk_data = dict()
