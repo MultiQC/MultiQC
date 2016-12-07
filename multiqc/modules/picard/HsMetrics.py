@@ -137,17 +137,26 @@ def parse_reports(self):
             'format': '{:.0f}',
             'scale': 'Blues',
         }
-        self.general_stats_headers['PCT_TARGET_BASES_30X'] = {
-            'id': 'picard_target_bases_30X',
-            'title': 'Target Bases 30X',
-            'description': 'Percent of target bases with coverage &ge; 30X',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'format': '{:.0f}%',
-            'scale': 'RdYlGn',
-            'modify': lambda x: self.multiply_hundred(x)
-        }
+        try:
+            covs = config.picard_config['general_stats_target_coverage']
+            assert type(covs) == list
+            assert len(covs) > 0
+            covs = [str(i) for i in covs]
+            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
+        except (AttributeError, TypeError, AssertionError):
+            covs = ['30']
+        for c in covs:
+            self.general_stats_headers['PCT_TARGET_BASES_{}X'.format(c)] = {
+                'id': 'picard_target_bases_{}X'.format(c),
+                'title': 'Target Bases {}X'.format(c),
+                'description': 'Percent of target bases with coverage &ge; {}X'.format(c),
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'format': '{:.0f}%',
+                'scale': 'RdYlGn',
+                'modify': lambda x: self.multiply_hundred(x)
+            }
         for s_name in data:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()

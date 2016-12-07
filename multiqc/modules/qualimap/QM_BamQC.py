@@ -18,6 +18,18 @@ def parse_reports(self):
 
     sp = config.sp['qualimap']['bamqc']
 
+    try:
+        covs = config.qualimap_config['general_stats_coverage']
+        assert type(covs) == list
+        assert len(covs) > 0
+        covs = [str(i) for i in covs]
+        log.debug("Custom Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+    except (AttributeError, TypeError, AssertionError):
+        covs = [1, 5, 10, 30, 50]
+        covs = [str(i) for i in covs]
+        log.debug("Using default Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+    self.covs = covs
+
     # General stats - genome_results.txt
     self.qualimap_bamqc_genome_results = dict()
     for f in self.find_log_files(sp['genome_results']):
@@ -225,9 +237,11 @@ def report_sections(self):
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
             total = total_bases_by_sample[s_name]
             rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max_x + 1))
-            for thres_name, thres in [('fifty', 50), ('thirty', 30), ('ten', 10), ('five', 5), ('one', 1)]:
-                if thres in rates_within_threshs[s_name]:
-                    self.general_stats_data[s_name][thres_name + '_x_pc'] = rates_within_threshs[s_name][thres]
+            for c in self.covs:
+                if int(c) in rates_within_threshs[s_name]:
+                    self.general_stats_data[s_name]['{}_x_pc'.format(c)] = rates_within_threshs[s_name][int(c)]
+                else:
+                    self.general_stats_data[s_name]['{}_x_pc'.format(c)] = 0
 
         # Section 1 - BamQC Coverage Histogram
         self.sections.append({
@@ -313,6 +327,14 @@ def report_sections(self):
         })
 
 def general_stats_headers (self):
+    try:
+        hidecovs = config.qualimap_config['general_stats_coverage_hidden']
+        assert type(hidecovs) == list
+        log.debug("Hiding Qualimap thresholds: {}".format(", ".join([i for i in hidecovs])))
+    except (AttributeError, TypeError, AssertionError):
+        hidecovs = [1, 5, 10, 50]
+    hidecovs = [str(i) for i in hidecovs]
+    
     self.general_stats_headers['avg_gc'] = {
         'title': 'Avg. GC',
         'description': 'Average GC content',
@@ -330,55 +352,17 @@ def general_stats_headers (self):
         'scale': 'PuOr',
         'format': '{:.0f}'
     }
-    self.general_stats_headers['fifty_x_pc'] = {
-        'title': '&ge; 50X',
-        'description': 'Fraction of genome with at least 50X coverage',
-        'max': 100,
-        'min': 0,
-        'suffix': '%',
-        'scale': 'RdYlGn',
-        'format': '{:.1f}%',
-        'hidden': True
-    }
-    self.general_stats_headers['thirty_x_pc'] = {
-        'title': '&ge; 30X',
-        'description': 'Fraction of genome with at least 30X coverage',
-        'max': 100,
-        'min': 0,
-        'suffix': '%',
-        'scale': 'RdYlGn',
-        'format': '{:.1f}%'
-    }
-    self.general_stats_headers['ten_x_pc'] = {
-        'title': '&ge; 10X',
-        'description': 'Fraction of genome with at least 10X coverage',
-        'max': 100,
-        'min': 0,
-        'suffix': '%',
-        'scale': 'RdYlGn',
-        'format': '{:.1f}%',
-        'hidden': True
-    }
-    self.general_stats_headers['five_x_pc'] = {
-        'title': '&ge; 05X',
-        'description': 'Fraction of genome with at least 05X coverage',
-        'max': 100,
-        'min': 0,
-        'suffix': '%',
-        'scale': 'RdYlGn',
-        'format': '{:.1f}%',
-        'hidden': True
-    }
-    self.general_stats_headers['one_x_pc'] = {
-        'title': '&ge; 01X',
-        'description': 'Fraction of genome with at least 01X coverage',
-        'max': 100,
-        'min': 0,
-        'suffix': '%',
-        'scale': 'RdYlGn',
-        'format': '{:.1f}%',
-        'hidden': True
-    }
+    for c in self.covs:
+        self.general_stats_headers['{}_x_pc'.format(c)] = {
+            'title': '&ge; {}X'.format(c),
+            'description': 'Fraction of genome with at least {}X coverage'.format(c),
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}%',
+            'hidden': c in hidecovs
+        }
     self.general_stats_headers['median_coverage'] = {
         'title': 'Coverage',
         'description': 'Median coverage',
