@@ -5,7 +5,6 @@
 from __future__ import print_function
 import logging
 import re
-import numpy as np
 from distutils.version import StrictVersion
 from collections import OrderedDict
 
@@ -159,125 +158,27 @@ class MultiqcModule(BaseMultiqcModule):
         
         
     def parseUtrRates(self, f) :
-        
-        sample = f['s_name']
-        self.utrates_data[sample] = OrderedDict()
-        
+                
         # Skip comment line #
         next(f['f'])
         
-        # Parse header
-        conversions = next(f['f']).rstrip().split('\t')
+        # Read median header
+        line = next(f['f'])
         
-        order = {}
+        if "Conversions=" in line :
+            
+            sample = f['s_name']
+            self.utrates_data[sample] = OrderedDict()
+            
+            conversions = re.sub(".*Conversions=","",line.rstrip()).split(",")
+            
+            for conversion in conversions:
+                type, value = conversion.split(":")
+                self.utrates_data[sample][type] = float(value)
         
-        for i in range(6, len(conversions)) :
-            order[i] = conversions[i]
+        else :
             
-        utrStats = {}
-        
-        plotConversions = ['A_T', 'A_G', 'A_C',
-                           'C_A', 'C_G', 'C_T',
-                           'G_A', 'G_C', 'G_T',
-                           'T_A', 'T_G', 'T_C',
-        ]
-        
-        for conversion in plotConversions:
-            utrStats[conversion] = []
-            
-        for line in f['f']:
-            values = line.rstrip().split('\t')
-            
-            name = values[0]
-            strand = values[4]
-            
-            utrDict = {}
-            
-            for i in range(6, len(values)) :
-                
-                conversion= order[i]
-                
-                if strand == "-" :
-                    if (conversion == "A_A") :
-                        conversion = "T_T"
-                    elif (conversion == "G_G") :
-                        conversion = "C_C"
-                    elif (conversion == "C_C") :
-                        conversion = "G_G"
-                    elif (conversion == "T_T") :
-                        conversion = "A_A"
-                    elif (conversion == "A_C") :
-                        conversion = "T_G"
-                    elif (conversion == "A_G") :
-                        conversion = "T_C"
-                    elif (conversion == "A_T") :
-                        conversion = "T_A"
-                    elif (conversion == "C_A") :
-                        conversion = "G_T"
-                    elif (conversion == "C_G") :
-                        conversion = "G_C"
-                    elif (conversion == "C_T") :
-                        conversion = "G_A"
-                    elif (conversion == "G_A") :
-                        conversion = "C_T"
-                    elif (conversion == "G_C") :
-                        conversion = "C_G"
-                    elif (conversion == "G_T") :
-                        conversion = "C_A"
-                    elif (conversion == "T_A") :
-                        conversion = "A_T"
-                    elif (conversion == "T_C") :
-                        conversion = "A_G"
-                    elif (conversion == "T_G") :
-                        conversion = "A_C"
-                
-                utrDict[conversion] = int(values[i])
-            
-            if (np.sum(utrDict.values()) > 0) :
-                Asum = utrDict['A_A'] + utrDict['A_C'] + utrDict['A_G'] + utrDict['A_T']
-                Csum = utrDict['C_A'] + utrDict['C_C'] + utrDict['C_G'] + utrDict['C_T']
-                Gsum = utrDict['G_A'] + utrDict['G_C'] + utrDict['G_G'] + utrDict['G_T']
-                Tsum = utrDict['T_A'] + utrDict['T_C'] + utrDict['T_G'] + utrDict['T_T']
-                
-                if Asum > 0 :
-                    utrDict['A_T'] = utrDict['A_T'] / float(Asum) * 100
-                    utrDict['A_G'] = utrDict['A_G'] / float(Asum) * 100
-                    utrDict['A_C'] = utrDict['A_C'] / float(Asum) * 100
-                else :
-                    utrDict['A_T'] = 0
-                    utrDict['A_G'] = 0
-                    utrDict['A_C'] = 0
-                if Csum > 0:
-                    utrDict['C_A'] = utrDict['C_A'] / float(Csum) * 100
-                    utrDict['C_G'] = utrDict['C_G'] / float(Csum) * 100
-                    utrDict['C_T'] = utrDict['C_T'] / float(Csum) * 100
-                else :
-                    utrDict['C_A'] = 0
-                    utrDict['C_G'] = 0
-                    utrDict['C_T'] = 0
-                if Gsum > 0:
-                    utrDict['G_A'] = utrDict['G_A'] / float(Gsum) * 100
-                    utrDict['G_C'] = utrDict['G_C'] / float(Gsum) * 100
-                    utrDict['G_T'] = utrDict['G_T'] / float(Gsum) * 100
-                else :
-                    utrDict['G_A'] = 0
-                    utrDict['G_C'] = 0
-                    utrDict['G_T'] = 0
-                if Tsum > 0:
-                    utrDict['T_A'] = utrDict['T_A'] / float(Tsum) * 100
-                    utrDict['T_G'] = utrDict['T_G'] / float(Tsum) * 100
-                    utrDict['T_C'] = utrDict['T_C'] / float(Tsum) * 100
-                else :
-                    utrDict['T_A'] = 0
-                    utrDict['T_G'] = 0
-                    utrDict['T_C'] = 0
-                    
-                for conversion in plotConversions:
-                    utrStats[conversion].append(utrDict[conversion])
-            
-        
-        for conversion in plotConversions:
-            self.utrates_data[sample][re.sub("_",">",conversion)] = np.median(utrStats[conversion])
+            log.warning("Malformed UTR rates header. Conversion rates per UTR plot will be affected.")
 
     def parseSlamdunkRates(self, f):
         
