@@ -35,9 +35,7 @@ def parse_reports(self):
                     keys = s[1:]
                 else:
                     nrows += 1
-                    s_name = s[0]
-                    if s_name.endswith('.geneBodyCoverage'):
-                        s_name = s_name[:-17]
+                    s_name = self.clean_s_name(s[0], f['root'])
                     if s_name in self.gene_body_cov_hist_counts:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name, section='gene_body_coverage')
@@ -81,14 +79,14 @@ def parse_reports(self):
         pconfig = {
             'id': 'rseqc_gene_body_coverage_plot',
             'title': 'RSeQC: Gene Body Coverage',
-            'ylab': 'Coverage',
+            'ylab': '% Coverage',
             'xlab': "Gene Body Percentile (5' -> 3')",
             'xmin': 0,
             'xmax': 100,
             'tt_label': "<strong>{point.x}% from 5'</strong>: {point.y:.2f}",
             'data_labels': [
-                {'name': 'Counts', 'ylab': 'Coverage'},
-                {'name': 'Percentages', 'ylab': 'Percentage Coverage'}
+                {'name': 'Percentages', 'ylab': 'Percentage Coverage'},
+                {'name': 'Counts', 'ylab': 'Coverage'}
             ]
         }
         p_link = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>'
@@ -97,8 +95,8 @@ def parse_reports(self):
             'anchor': 'rseqc-gene_body_coverage',
             'content': "<p>"+p_link+" calculates read coverage over gene bodies." \
                 " This is used to check if reads coverage is uniform and" \
-                " if there is any 5' or 3' bias.</p>" + 
-                plots.linegraph.plot([self.gene_body_cov_hist_counts, self.gene_body_cov_hist_percent], pconfig)
+                " if there is any 5' or 3' bias.</p>" +
+                plots.linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig)
         })
     
     # Return number of samples found

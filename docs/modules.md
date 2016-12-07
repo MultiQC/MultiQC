@@ -58,7 +58,7 @@ python setup.py develop
 So that MultiQC knows what order modules should be run in, you need to add
 your module to the core config file.
 
-In `multiqc/utils/config.py` you should see a list variable called `module_order`.
+In `multiqc/utils/config_defaults.yaml` you should see a list variable called `module_order`.
 This contains the name of modules in order of precedence. Add your module here
 in an appropriate position.
 
@@ -102,7 +102,7 @@ class from `multiqc.BaseMultiqcModule`. This will give you access to a
 number of functions on the `self` namespace. For example:
 ```python
 class MultiqcModule(multiqc.BaseMultiqcModule):
-    def __init__(self, report):
+    def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='My Module', anchor='mymod',
         href="http://www.awesome_bioinfo.com/my_module",

@@ -93,6 +93,7 @@ def parse_reports(self):
         
         # Config for the plot
         pconfig = {
+            'id': 'picard_deduplication',
             'title': 'Picard Deduplication Stats',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
@@ -100,6 +101,7 @@ def parse_reports(self):
         }
         
         self.sections.append({
+            'id': 'picard_mark_duplicates',
             'name': 'Mark Duplicates',
             'anchor': 'picard-markduplicates',
             'content': plots.bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)

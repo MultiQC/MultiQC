@@ -26,7 +26,8 @@ bowtie:
 bowtie2:
     contents: 'reads; of these:'
 cutadapt:
-    contents: This is cutadapt
+    contents: 'This is cutadapt'
+    # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
 fastq_screen:
     fn: '*_screen.txt'
 fastqc:
@@ -63,9 +64,13 @@ picard:
     rnaseqmetrics:
         contents: 'picard.analysis.CollectRnaSeqMetrics'
 preseq:
-    contents: 'EXPECTED_DISTINCT'
+    contents:
+        - 'EXPECTED_DISTINCT'
+        - 'distinct_reads'
     # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
     # contents: 'TOTAL_BASES	EXPECTED_DISTINCT'
+prokka:
+    contents: 'organism:'
 qualimap:
     bamqc:
         genome_results:
@@ -119,12 +124,16 @@ samtools:
         contents: 'in total (QC-passed reads + QC-failed reads)'
     idxstats:
         fn: '*idxstat*'
+    rmdup:
+        contents: '[bam_rmdup'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
 snpeff:
     contents: 'SnpEff_version'
 star:
     fn: '*Log.final.out'
+star_genecounts:
+    fn: '*ReadsPerGene.out.tab'
 tophat:
     fn: '*align_summary.txt'
 trimmomatic:

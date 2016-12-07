@@ -57,5 +57,6 @@ class MultiqcModule(BaseMultiqcModule):
     def get_s_name(self, f):
         s_name = os.path.basename(os.path.dirname(f['root']))
         s_name = self.clean_s_name(s_name, f['root'])
-        s_name = s_name.rstrip('.qc')
+        if s_name.endswith('.qc'):
+            s_name = s_name[:-3]
         return s_name

@@ -158,6 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         config = {
+            'id': 'quast_table',
             'namespace': 'QUAST',
             'min': 0,
         }
@@ -195,6 +196,12 @@ class MultiqcModule(BaseMultiqcModule):
             '25000-50000 bp',
             '>= 50000 bp',
         ]
+        pconfig = {
+            'id': 'quast_num_contigs',
+            'title': 'Number of Contigs',
+            'ylab': '# Contigs',
+            'yDecimals': False
+        }
         
-        return "{}{}".format(html, plots.bargraph.plot(data, cats))
+        return "{}{}".format(html, plots.bargraph.plot(data, cats, pconfig))
         

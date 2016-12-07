@@ -21,6 +21,9 @@ The side navigation for the report.
         <small class="hidden-xs">v{{ config.version }}</small>
       </a>
     </h1>
+    {% if config.title is not none %}
+      <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
+    {% endif %}
     <ul class="mqc-nav collapse navbar-collapse">
       {% if not config.skip_generalstats %}
       <li>

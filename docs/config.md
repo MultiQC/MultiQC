@@ -209,6 +209,6 @@ To avoid this, tables with large numbers of rows are instead plotted as a Beeswa
 (aka. a strip chart / jitter plot). These plots have fixed dimensions with any number
 of samples. Hovering on a dot will highlight the same sample in other rows.
 
-By default, MultiQC starts using beeswarm plots when a table has 100 rows or more. This
+By default, MultiQC starts using beeswarm plots when a table has 500 rows or more. This
 can be changed by setting the `max_table_rows` config option.
 

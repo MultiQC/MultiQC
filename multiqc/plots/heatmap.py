@@ -8,14 +8,11 @@ import logging
 import os
 import random
 
-from multiqc.utils import config
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
-
-# Load the template so that we can access it's configuration
-template_mod = config.avail_templates[config.template].load()
 
 def plot (data, xcats, ycats=None, pconfig={}):
     """ Plot a 2D heatmap.
@@ -65,5 +62,6 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(pdata), x=json.dumps(xcats), y=json.dumps(ycats), c=json.dumps(pconfig));
     
+    report.num_hc_plots += 1
     return html
 

@@ -53,6 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         file_names = list()
         parsed_data = dict()
         for l in f['f'].splitlines():
+            thisrow = list()
             s = l.split("\t")
             if len(s) < 2:
                 continue
@@ -61,12 +62,18 @@ class MultiqcModule(BaseMultiqcModule):
                     file_names.append(f_name)
             else:
                 k = s[0]
-                parsed_data[k] = list()
                 if k not in self.featurecounts_keys:
                     self.featurecounts_keys.append(k)
                 for val in s[1:]:
-                    parsed_data[k].append(int(val))
-        
+                    try:
+                        thisrow.append(int(val))
+                    except ValueError:
+                        pass
+            if len(thisrow) > 0:
+                parsed_data[k] = thisrow
+        # Check that this actually is a featureCounts file, as format and parsing is quite general
+        if 'Assigned' not in parsed_data.keys():
+            return None
         for idx, f_name in enumerate(file_names):
             
             # Clean up sample name

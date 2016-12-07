@@ -45,13 +45,13 @@ def parse_reports(self):
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
-                    self.picard_RnaSeqMetrics_data[s_name] = dict()
-                    self.picard_RnaSeqMetrics_histogram[s_name] = dict()
             
             if s_name is not None:
                 if 'RnaSeqMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_RnaSeqMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.picard_RnaSeqMetrics_data[s_name] = dict()
+                    self.picard_RnaSeqMetrics_histogram[s_name] = dict()
                     self.add_data_source(f, s_name, section='RnaSeqMetrics')
                     keys = f['f'].readline().strip("\n").split("\t")
                     vals = f['f'].readline().strip("\n").split("\t")
@@ -169,6 +169,7 @@ def parse_reports(self):
                 'ymin': 0,
             }
             self.sections.append({
+                'id': 'picard_gene_coverage',
                 'name': 'Gene Coverage',
                 'anchor': 'picard-rna-coverage',
                 'content': plots.linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)

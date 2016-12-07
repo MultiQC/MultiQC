@@ -120,6 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # Config for the plot
         config = {
+            'id': 'kallisto_alignment',
             'title': 'Kallisto Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'

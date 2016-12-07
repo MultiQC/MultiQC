@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='RSeQC', anchor='rseqc',
-        href="http://rseqc.sourceforge.net/", 
+        href="http://rseqc.sourceforge.net/",
         info="package provides a number of useful modules that can"\
         " comprehensively evaluate high throughput RNA-seq data.")
         

@@ -9,7 +9,7 @@ from collections import OrderedDict
 from multiqc import config, plots
 
 # Initialise the logger
-# log = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 class VariantEvalMixin():
 
@@ -210,5 +210,5 @@ def comp_overlap_table(data):
         'namespace': 'GATK',
         'min': 0
     }
-    table_html = plots.table.plot(data, headers)
+    table_html = plots.table.plot(data, headers, {'id': 'gatk_compare_overlap'})
     return table_html

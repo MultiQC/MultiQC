@@ -10,11 +10,27 @@ import inspect
 import os
 import pkg_resources
 import random
+import subprocess
 import sys
 import yaml
 
 import multiqc
 from multiqc import logger
+
+# Get the MultiQC version
+version = pkg_resources.get_distribution("multiqc").version
+cwd = os.getcwd()
+script_path = os.path.dirname(os.path.realpath(__file__))
+git_hash = None
+git_hash_short = None
+try:
+    os.chdir(script_path)
+    git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.STDOUT)
+    git_hash_short = git_hash[:7]
+    version = '{} ({})'.format(version, git_hash_short)
+except subprocess.CalledProcessError:
+    pass
+os.chdir(cwd)
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
@@ -42,22 +58,10 @@ report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuv
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
-all_avail_modules = {}
-avail_modules = OrderedDict()
+avail_modules = dict()
 for entry_point in pkg_resources.iter_entry_points('multiqc.modules.v1'):
     nicename = str(entry_point).split('=')[0].strip()
-    all_avail_modules[nicename] = entry_point
-
-# Start with modules not described in config - probably plugins
-for m in all_avail_modules.keys():
-    if m not in module_order:
-        avail_modules[m] = all_avail_modules[m]
-        logger.debug("Module missing from order declaration: {}".format(m))
-
-# Add known modules, in order defined in config
-for m in module_order:
-    if m in all_avail_modules.keys():
-        avail_modules[m] = all_avail_modules[m]
+    avail_modules[nicename] = entry_point
 
 ##### Available templates
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
@@ -86,9 +90,6 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 def mqc_load_userconfig(path=None):
     """ Overwrite config defaults with user config files """
     
-    if path is not None:
-        mqc_load_config(path)
-    
     # Load and parse installation config file if we find it
     mqc_load_config(os.path.join( os.path.dirname(MULTIQC_DIR), 'multiqc_config.yaml'))
 
@@ -97,6 +98,11 @@ def mqc_load_userconfig(path=None):
     
     # Load and parse a config file in this working directory if we find it
     mqc_load_config('multiqc_config.yaml')
+    
+    # Custom command line config
+    if path is not None:
+        mqc_load_config(path)
+    
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """

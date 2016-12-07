@@ -30,6 +30,7 @@ MultiQC Modules:
     Methyl QA: modules/methylQA.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
+    Prokka: modules/prokka.md
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
     RSeQC: modules/rseqc.md
@@ -59,9 +60,9 @@ The documentation has the following pages:
    - [Running MultiQC](usage.md)
    - [Using Reports](reports.md)
    - [Configuration](config.md)
-   - [Troubleshooting](troubleshooting.md)
- - MultiQC Modules
-   - [FastQC](fastqc.md)
+   - [Customising Reports](customisation.md)
+   - [Common Problems](troubleshooting.md)
+ - [MultiQC Modules](modules/)
  - Coding with MultiQC
    - [Writing new templates](templates.md)
    - [Writing new modules](modules.md)
@@ -82,4 +83,4 @@ If you write a module which could be of use to others, it would be great to
 merge those changes back into the core MultiQC project.
 
 For instructions on how best to do this, please see the
-[contributing instructions](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md).
+[contributing instructions](https://github.com/ewels/MultiQC/blob/master/.github/CONTRIBUTING.md).
