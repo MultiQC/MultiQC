@@ -68,7 +68,7 @@ def parse_reports(self):
             'content': "<p>"+p_link+" calculates the inner distance" \
                 " (or insert size) between two paired RNA reads." \
                 " Note that this can be negative if fragments overlap.</p>" +
-                plots.linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
+                linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
         })
 
     # Return number of samples found

@@ -263,7 +263,7 @@ def report_sections(self):
         self.sections.append({
             'name': 'Cumulative coverage genome fraction',
             'anchor': 'qualimap-cumulative-genome-fraction-coverage',
-            'content': plots.linegraph.plot(rates_within_threshs, {
+            'content': linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
                 'title': 'Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',

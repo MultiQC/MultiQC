@@ -5,7 +5,8 @@
 import logging
 import re
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class RmdupReportMixin():
         if len(self.samtools_rmdup) > 0:
             # Write parsed report data to a file
             self.write_data_file(self.samtools_rmdup, 'multiqc_samtools_rmdup')
-            
+
             # Make a bar plot showing duplicates
             keys = OrderedDict()
             keys['n_unique'] = {'name': 'Non-duplicated reads'}
@@ -53,9 +54,9 @@ class RmdupReportMixin():
             self.sections.append({
                 'name': 'Duplicates removed',
                 'anchor': 'samtools-rmdup',
-                'content': plots.bargraph.plot(self.samtools_rmdup, keys, pconfig)
+                'content': bargraph.plot(self.samtools_rmdup, keys, pconfig)
             })
-            
+
             # Add a column to the General Stats table
             # General Stats Table
             stats_headers = OrderedDict()

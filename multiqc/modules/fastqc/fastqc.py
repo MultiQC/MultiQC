@@ -19,7 +19,7 @@ import re
 import zipfile
 
 from multiqc import config
-from multiqc.plots import linegraph
+from multiqc.plots import linegraph, bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -601,7 +601,7 @@ class MultiqcModule(BaseMultiqcModule):
         if max([ x['total_overrepresented'] for x in data.values()]) < 1:
             plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(len(data))
         else:
-            plot_html = plots.bargraph.plot(data, cats, pconfig)
+            plot_html = bargraph.plot(data, cats, pconfig)
 
         self.sections.append({
             'name': 'Overrepresented sequences',
