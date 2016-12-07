@@ -1,20 +1,20 @@
 # Plotting Functions
 MultiQC plotting functions are held within `multiqc.plots` submodules.
-To use them, simply import this:
+To use them, simply import the modules you want, eg.:
 ```python
-from multiqc import plots
+from multiqc.plots import bargraph, linegraph
 ```
 
-Once you've done that, you should have access to the following plotting
+Once you've done that, you will have access to the corresponding plotting
 functions:
 
 ```python
-plots.bargraph.plot()
-plots.linegraph.plot()
-plots.scatter.plot()
-plots.table.plot()
-plots.beeswarm.plot()
-plots.heatmap.plot()
+bargraph.plot()
+linegraph.plot()
+scatter.plot()
+table.plot()
+beeswarm.plot()
+heatmap.plot()
 ```
 
 These have been designed to work in a similar manner to each other - you
@@ -26,13 +26,13 @@ above. For example:
 self.sections.append({
     'name': 'Module Section',
     'anchor': 'mymod_section',
-    'content': plots.bargraph.plot(self.parsed_data, categories, pconfig)
+    'content': bargraph.plot(self.parsed_data, categories, pconfig)
 })
 ```
 
 ## Bar graphs
 Simple data can be plotted in bar graphs. Many MultiQC modules make use
-of stacked bar graphs. Here, the `plots.bargraph.plot()` function comes to
+of stacked bar graphs. Here, the `bargraph.plot()` function comes to
 the rescue. A basic example is as follows:
 ```python
 from multiqc import plots
@@ -46,7 +46,7 @@ data = {
         'aligned': 1275,
     }
 }
-html_content = plots.bargraph.plot(data)
+html_content = bargraph.plot(data)
 ```
 
 To specify the order of categories in the plot, you can supply a list of
@@ -54,7 +54,7 @@ dictionary keys. This can also be used to exclude a key from the plot.
 
 ```python
 cats = ['aligned', 'not_aligned']
-html_content = plots.bargraph.plot(data, cats)
+html_content = bargraph.plot(data, cats)
 ```
 
 If `cats` is given as a dict instead of a list, you can specify a nice name
@@ -149,7 +149,7 @@ cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7
 ```
 
 ### Interactive / Flat image plots
-Note that the `plots.bargraph.plot()` function can generate both interactive
+Note that the `bargraph.plot()` function can generate both interactive
 JavaScript (HighCharts) powered report plots _and_ flat image plots made using
 MatPlotLib. This choice is made within the function based on config variables
 such as number of dataseries and command line flags.
@@ -173,7 +173,7 @@ data = {
         '<x val 2>': '<y val 2>',
     }
 }
-html_content = plots.linegraph.plot(data)
+html_content = linegraph.plot(data)
 ```
 
 Additionally, a config dict can be supplied. The defaults are as follows:
@@ -215,7 +215,7 @@ config = {
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
     'reversedStacks': False      # Reverse the order of the category stacks. Defaults True for plots with Log10 option
 }
-html_content = plots.linegraph.plot(data, config)
+html_content = linegraph.plot(data, config)
 ```
 
 ### Switching datasets
@@ -255,7 +255,7 @@ config = {
         }
     ]
 }
-html_content = plots.linegraph.plot(data, config)
+html_content = linegraph.plot(data, config)
 ```
 
 
@@ -276,7 +276,7 @@ data = {
         y: '<y val>'
     }
 }
-html_content = plots.scatter.plot(data)
+html_content = scatter.plot(data)
 ```
 
 If you want more than one data point per sample, you can supply a list of
@@ -377,7 +377,7 @@ data = {
         'not_aligned': 7328,
     }
 }
-table_html = plots.table.plot(data)
+table_html = table.plot(data)
 ```
 
 A more complicated version with ordered columns, defaults and column-specific
@@ -415,7 +415,7 @@ config = {
     'min': 0,
     'scale': 'GnBu'
 }
-table_html = plots.table.plot(data, headers, config)
+table_html = table.plot(data, headers, config)
 ```
 
 ## Beeswarm plots (dot plots)
@@ -432,7 +432,7 @@ data = {
         'aligned': 1275,
     }
 }
-beeswarm_html = plots.beeswarm.plot(data)
+beeswarm_html = beeswarm.plot(data)
 ```
 The function also accepts the same headers and config parameters.
 
@@ -441,7 +441,7 @@ Heatmaps expect data in the structure of a list of lists. Then, a list
 of sample names for the x-axis, and optionally for the y-axis (defaults
 to the same as the x-axis).
 ```python
-plots.heatmap.plot(data, xcats, ycats, pconfig)
+heatmap.plot(data, xcats, ycats, pconfig)
 ```
 
 A simple example:
@@ -455,7 +455,7 @@ hmdata = [
     [0.3, 0.8, 0.7, 0.6, 0.9, 1],
 ]
 names = [ 'one', 'two', 'three', 'four', 'five', 'six' ]
-hm_html = plots.heatmap.plot(hmdata, names)
+hm_html = heatmap.plot(hmdata, names)
 ```
 
 Much like the other plots, you can change the way that the heatmap looks
@@ -511,7 +511,7 @@ helper functions to make your life easier.
 `plot_xy_line_graph (target, ds)`
 
 Plots a line graph with multiple series of (x,y) data pairs. Used by
-the [plots.linegraph.plot()](http://multiqc.info/docs/#line-graphs)
+the [linegraph.plot()](http://multiqc.info/docs/#line-graphs)
 python function.
 
 Data and configuration must be added to the document level
@@ -583,7 +583,7 @@ An example of the markup expected, with the function being called:
 `plot_stacked_bar_graph (target, ds)`
 
 Plots a bar graph with multiple series containing multiple categories.
-Used by the [plots.bargraph.plot()](http://multiqc.info/docs/#bar-graphs)
+Used by the [bargraph.plot()](http://multiqc.info/docs/#bar-graphs)
 python function.
 
 Data and configuration must be added to the document level
