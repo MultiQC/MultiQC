@@ -90,7 +90,7 @@ def parse_reports(self):
             'content': "<p>"+p_link+" compares detected splice junctions to" \
                 " a reference gene model. An RNA read can be spliced 2" \
                 " or more times, each time is called a splicing event.</p>" +
-                plots.bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
+                bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
         })
 
     # Return number of samples found

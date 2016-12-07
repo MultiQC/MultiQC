@@ -173,6 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
+            'id': 'snpeff_variant_effects_region',
             'title': 'SnpEff: Counts by Genomic Region',
             'ylab': '# Reads',
             'logswitch': True
@@ -194,6 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
+            'id': 'snpeff_variant_effects_impact',
             'title': 'SnpEff: Counts by Genomic Region',
             'ylab': '# Reads',
             'logswitch': True
@@ -214,6 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
+            'id': 'snpeff_variant_effects_class',
             'title': 'SnpEff: Counts by Functional Class',
             'ylab': '# Reads',
             'logswitch': True
@@ -230,8 +233,8 @@ class MultiqcModule(BaseMultiqcModule):
             'smooth_points': 200,
             'id': 'snpeff_qualities',
             'title': 'SnpEff: Qualities',
-            'ylab': 'Values',
-            'xlab': 'Count',
+            'ylab': 'Count',
+            'xlab': 'Values',
             'xDecimals': False,
             'ymin': 0
         }

@@ -127,7 +127,7 @@ class datatable (object):
         # Within each section of headers, sort explicitly by 'title' if the dict
         # is not already ordered, so the final ordering is by:
         # placement > section > explicit_ordering > title
-        # Of course, the user can shuffle these manually.
+        # Of course, the user can shuffle these manually in the browser but the settings don't currently stick.
         self.headers_in_order = defaultdict(list)
 
         for idx, hs in enumerate(headers):

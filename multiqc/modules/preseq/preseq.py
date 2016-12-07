@@ -53,6 +53,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.axis_label = 'Molecules'
         elif header.startswith('TOTAL_BASES	EXPECTED_DISTINCT'):
             self.axis_label = 'Bases'
+        elif header.startswith('total_reads	distinct_reads'):
+            self.axis_label = 'Molecules'
         else:
             log.debug("First line of preseq file {} did not look right".format(f['fn']))
             return None

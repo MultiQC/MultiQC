@@ -81,7 +81,7 @@ versions as possible. They are also copied to `multiqc_data/multiqc_plots`
 
 You can force reports to use flat plots with the `--flat` command line option.
 
-See the [Large sample numbers](#large-sample-numbers) section of the
+See the [Large sample numbers](http://multiqc.info/docs/#large-sample-numbers) section of the
 _Configuring MultiQC_ docs for more on how to customise the flat / interactive
 plot behaviour.
 
@@ -183,7 +183,7 @@ This tool enables you to configure the size and characteristics of exported
 plots, as well as allowing you to download some or all of the graphs with a
 single click. Width and Height set the output size of the images, scale sets
 how "zoomed-in" they should look (typically you want the plot to be more
-zoomed for printing). See [above](#exporting-plots) for more information
+zoomed for printing). See [above](http://multiqc.info/docs/#exporting-plots) for more information
 about this panel.
 
 ### Save Settings

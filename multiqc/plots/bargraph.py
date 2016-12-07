@@ -13,7 +13,7 @@ import os
 import random
 import sys
 
-from multiqc.utils import config
+from multiqc.utils import config, report, util_functions
 logger = logging.getLogger(__name__)
 
 try:
@@ -57,24 +57,36 @@ def plot (data, cats=None, pconfig={}):
     if type(data) is not list:
         data = [data]
 
-    # Check we have a list of cats
-    try:
-        cats[0].keys()
-    except (KeyError, AttributeError, TypeError):
+    # Make list of cats from different inputs
+    if cats is None:
+        cats = list()
+    elif type(cats) is not list:
         cats = [cats]
+    else:
+        try: # Py2
+            if type(cats[0]) is str or type(cats[0]) is unicode:
+                cats = [cats]
+        except NameError: # Py3
+            if type(cats[0]) is str:
+                cats = [cats]
+    # Generate default categories if not supplied
+    for idx in range(len(data)):
+        try:
+            cats[idx]
+        except (IndexError):
+            cats.append( list(set(k for s in data[idx].keys() for k in data[idx][s].keys() )) )
 
-    # Check that we have cats at all - find them from the data
-    for idx, cat in enumerate(cats):
-        if cats[idx] is None:
-            cats[idx] = list(set(k for s in data[idx].keys() for k in data[idx][s].keys() ))
-
-    # Given a list of cats - turn it into a dict
+    # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
         if type(cat) is list:
             newcats = OrderedDict()
             for c in cat:
                 newcats[c] = {'name': c}
             cats[idx] = newcats
+        else:
+            for c in cat:
+                if 'name' not in cat[c]:
+                    cats[idx][c]['name'] = c
 
     # Parse the data into a chart friendly format
     plotsamples = list()
@@ -85,22 +97,32 @@ def plot (data, cats=None, pconfig={}):
         sample_dcount = dict()
         for c in cats[idx].keys():
             thisdata = list()
+            catcount = 0
             for s in hc_samples:
+                if s not in sample_dcount:
+                    sample_dcount[s] = 0
                 try:
                     thisdata.append(d[s][c])
-                    try:
-                        sample_dcount[s] += 1
-                    except KeyError:
-                        sample_dcount[s] = 1
+                    catcount += 1
+                    sample_dcount[s] += 1
                 except KeyError:
-                    pass
-            if len(thisdata) > 0 and max(thisdata) > 0:
+                    # Pad with NaNs when we have missing categories in a sample
+                    thisdata.append(float('nan'))
+            if catcount > 0 and max(x for x in thisdata if not math.isnan(x)) > 0:
                 thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
                 if 'color' in cats[idx][c]:
                     thisdict['color'] = cats[idx][c]['color']
                 hc_data.append(thisdict)
+
+        # Remove empty samples
+        for s, c in sample_dcount.items():
+            if c == 0:
+                idx = hc_samples.index(s)
+                del hc_samples[idx]
+                for j, d in enumerate(hc_data):
+                    del hc_data[j]['data'][idx]
         if len(hc_data) > 0:
-            plotsamples.append([s for s in hc_samples if sample_dcount.get(s, 0) > 0])
+            plotsamples.append(hc_samples)
             plotdata.append(hc_data)
 
     if len(plotdata) == 0:
@@ -169,12 +191,21 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
         html += '<div class="btn-group hc_switch_group">\n'
         for k, p in enumerate(plotdata):
             active = 'active' if k == 0 else ''
-            try: name = pconfig['data_labels'][k]
-            except: name = k+1
-            try: ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
-            except: ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
-            try: ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
-            except: ymax = ''
+            try:
+                name = pconfig['data_labels'][k]['name']
+            except:
+                try:
+                    name = pconfig['data_labels'][k]
+                except:
+                    name = k+1
+            try:
+                ylab = 'data-ylab="{}"'.format(pconfig['data_labels'][k]['ylab'])
+            except:
+                ylab = 'data-ylab="{}"'.format(name) if name != k+1 else ''
+            try:
+                ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
+            except:
+                ymax = ''
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, k=k)
         html += '</div>\n\n'
 
@@ -189,6 +220,8 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
             "config": {c} \n\
         }} \n\
     </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
+
+    report.num_hc_plots += 1
 
     return html
 
@@ -214,7 +247,10 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
         pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
         pids.append(pid)
 
-    html = '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
+    html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
+          'Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ' + \
+          '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
+    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
 
     # Same defaults as HighCharts for consistency
     default_colors = ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9',
@@ -254,10 +290,24 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
 
+        # Save plot data to file
+        fdata = {}
+        for d in pdata:
+            for didx, dval in enumerate(d['data']):
+                s_name = plotsamples[pidx][didx]
+                if s_name not in fdata:
+                    fdata[s_name] = dict()
+                fdata[s_name][d['name']] = dval
+        util_functions.write_data_file(fdata, pids[pidx])
+
         # Plot percentage as well as counts
         plot_pcts = [False]
         if pconfig.get('cpswitch') is not False:
             plot_pcts = [False, True]
+
+        # Switch out NaN for 0s so that MatPlotLib doesn't ignore stuff
+        for idx, d in enumerate(pdata):
+            pdata[idx]['data'] = [x if not math.isnan(x) else 0 for x in d['data'] ]
 
         for plot_pct in plot_pcts:
 
@@ -390,6 +440,8 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
 
     # Close wrapping div
     html += '</div>'
+
+    report.num_mpl_plots += 1
 
     return html
 

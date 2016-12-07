@@ -197,8 +197,8 @@ def parse_reports(self):
             reformat_items = lambda n: {
                 cycle : tup[n] for cycle, tup in cycles.items()
             }
-            for linegraph, index in zip(linegraph_data, range(5)):
-                linegraph[s_name] = reformat_items(index)
+            for lg, index in zip(linegraph_data, range(5)):
+                lg[s_name] = reformat_items(index)
 
         self.sections.append({
             'name': 'Base Distribution',

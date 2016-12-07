@@ -109,6 +109,7 @@ def parse_reports(self):
         gorigin_cats['reads_aligned_intronic'] = {'name': 'Intronic'}
         gorigin_cats['reads_aligned_intergenic'] = {'name': 'Intergenic'}
         gorigin_pconfig = {
+            'id': 'qualimap_genomic_origin',
             'title': 'Genomic Origin',
             'cpswitch_c_active': False
         }
@@ -123,6 +124,7 @@ def parse_reports(self):
             'name': 'Gene Coverage Profile',
             'anchor': 'qualimap-genome-fraction-coverage',
             'content': linegraph.plot(self.qualimap_rnaseq_cov_hist, {
+                'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
                 'xlab': 'Transcript Position (bp)',

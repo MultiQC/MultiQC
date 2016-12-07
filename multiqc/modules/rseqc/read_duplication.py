@@ -22,8 +22,6 @@ def parse_reports(self):
     # Go through files and parse data
     for f in self.find_log_files(config.sp['rseqc']['read_duplication_pos']):
         if f['f'].startswith('Occurrence	UniqReadNumber'):
-            if f['s_name'].endswith('.pos.DupRate.xls'):
-                f['s_name'] = f['s_name'][:-16]
             if f['s_name'] in self.read_dups:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='read_duplication')

@@ -142,6 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
+            'id': 'bowtie1_alignment',
             'title': 'Bowtie 1 Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'

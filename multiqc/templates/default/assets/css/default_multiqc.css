@@ -77,6 +77,12 @@ kbd {
 .side-nav h1 small {
     font-size: 12px;
 }
+.side-nav .side-nav-title a {
+    color: #333;
+    font-size: 16px;
+    font-weight: normal;
+    padding: 15px 0;
+}
 .side-nav p {
     font-size: 0.8em;
     color: #999;

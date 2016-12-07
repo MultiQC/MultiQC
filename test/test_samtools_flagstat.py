@@ -81,3 +81,6 @@ class T(unittest.TestCase):
             del(res2[k])
 
         self.assertEqual(res1, res2)
+
+if __name__ == '__main__':
+    unittest.main()

@@ -4,7 +4,7 @@ branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
 Note that much more extensive customisation of reports is possible using
-[custom templates](#writing-new-templates).
+[custom templates](http://multiqc.info/docs/#writing-new-templates).
 
 ## Titles and introductory text
 You can specify a custom title for the report using the `-t`/`--title`
@@ -47,11 +47,11 @@ the following saved:
 
 ```yaml
 report_header_info:
-    - Contact E-mail:: 'phil.ewels@scilifelab.se'
-    - Application Type:: 'RNA-seq'
-    - Project Type:: 'Application'
-    - Sequencing Platform:: 'HiSeq 2500 High Output V4'
-    - Sequencing Setup:: '2x125'
+    - Contact E-mail: 'phil.ewels@scilifelab.se'
+    - Application Type: 'RNA-seq'
+    - Project Type: 'Application'
+    - Sequencing Platform: 'HiSeq 2500 High Output V4'
+    - Sequencing Setup: '2x125'
 ```
 
 Then this will be displayed at the top of reports:
@@ -81,6 +81,23 @@ table_columns_visible:
 
 Note that you can set these to `True` to show columns that would otherwise be hidden
 by default.
+
+## Number formatting
+By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand
+separators and points for decimal places (_e.g._ `1 234 567.89`). Different countries
+have different preferences for this, so you can customise the two using a couple of
+configuration parameters - `decimalPoint_format` and `thousandsSep_format`.
+
+For example, the following config would result in the following alternative
+number formatting: `1234567,89`.
+```yaml
+decimalPoint_format: ','
+thousandsSep_format: ''
+```
+
+This formatting currently only applies to the interactive charts. It may be extended
+to apply elsewhere in the future (submit a new issue if you spot somewhere where you'd like it).
+
 
 ## Troubleshooting
 One tricky bit that caught me out whilst writing this is the different type casting

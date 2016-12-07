@@ -13,7 +13,8 @@ import mimetypes
 import os
 import yaml
 
-from multiqc import logger, config
+from multiqc import config
+logger = config.logger
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
 from yaml.representer import Representer, SafeRepresenter
@@ -38,6 +39,10 @@ files = list()
 def get_filelist():
 
     def add_file(fn, root):
+
+        # Check that this is a file and not a pipe or anything weird
+        if not os.path.isfile(os.path.join(root, fn)):
+            return None
 
         # Check that we don't want to ignore this file
         i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
@@ -83,22 +88,22 @@ def get_filelist():
                     dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(d, n.rstrip(os.sep))]
                     if len(orig_dirnames) != len(dirnames):
                         removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
-                        logger.warn("Ignoring directory as matched fn_ignore_dirs: {}".format(", ".join(removed_dirs)))
+                        logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(", ".join(removed_dirs)))
                         orig_dirnames = dirnames[:]
                 for n in config.fn_ignore_paths:
                     dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
                     if len(orig_dirnames) != len(dirnames):
                         removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
-                        logger.warn("Ignoring directory as matched fn_ignore_paths: {}".format(", ".join(removed_dirs)))
+                        logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(", ".join(removed_dirs)))
 
                 # Skip *this* directory if matches ignore params
                 d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
                 if len(d_matches) > 0:
-                    logger.warn("Ignoring directory as matched fn_ignore_dirs: {}".format(bname))
+                    logger.debug("Ignoring directory as matched fn_ignore_dirs: {}".format(bname))
                     continue
                 p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
                 if len(p_matches) > 0:
-                    logger.warn("Ignoring directory as matched fn_ignore_paths: {}".format(root))
+                    logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
                     continue
 
                 # Search filenames in this directory

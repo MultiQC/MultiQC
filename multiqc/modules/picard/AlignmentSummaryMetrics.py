@@ -107,12 +107,14 @@ def parse_reports(self):
 
         # Config for the plot
         pconfig = {
+            'id': 'picard_aligned_reads',
             'title': 'Picard: Aligned Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
         }
 
         self.sections.append({
+            'id': 'picard_alignment_summary',
             'name': 'Alignment Summary',
             'anchor': 'picard-alignmentsummary',
             'content': "<p>Plase note that Picard's read counts are divided by two for paired-end data.</p>"+

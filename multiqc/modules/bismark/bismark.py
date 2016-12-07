@@ -8,7 +8,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.plots import beeswarm, linegraph
+from multiqc.plots import beeswarm, linegraph, bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -371,7 +371,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return plots.bargraph.plot(self.bismark_data['alignment'], keys, config)
+        return bargraph.plot(self.bismark_data['alignment'], keys, config)
 
 
     def bismark_strand_chart (self):
@@ -406,7 +406,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return d_mode + plots.bargraph.plot(self.bismark_data['alignment'], keys, config)
+        return d_mode + bargraph.plot(self.bismark_data['alignment'], keys, config)
 
 
     def bismark_dedup_chart (self):
@@ -426,7 +426,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return plots.bargraph.plot(self.bismark_data['dedup'], keys, config)
+        return bargraph.plot(self.bismark_data['dedup'], keys, config)
 
 
 
@@ -452,7 +452,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Make the M-Bias plot """
 
         html = '<p>This plot shows the average percentage methylation and coverage across reads. See the \n\
-        <a href="http://www.bioinformatics.babraham.ac.uk/projects/bismark/Bismark_User_Guide.pdf" target="_blank">bismark user guide</a> \n\
+        <a href="https://rawgit.com/FelixKrueger/Bismark/master/Docs/Bismark_User_Guide.html#m-bias-plot" target="_blank">bismark user guide</a> \n\
         for more information on how these numbers are generated.</p>'
 
         pconfig = {

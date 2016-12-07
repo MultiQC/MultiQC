@@ -28,11 +28,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_meta = dict()
         for f in self.find_log_files(config.sp['salmon']['meta']):
             # Get the s_name from the parent directory
-            if os.path.basename(f['root']) == 'aux':
-                s_name = os.path.basename( os.path.dirname(f['root']) )
-                s_name = self.clean_s_name(s_name, f['root'])
-                self.salmon_meta[s_name] = json.loads(f['f'])
-
+            s_name = os.path.basename( os.path.dirname(f['root']) )
+            s_name = self.clean_s_name(s_name, f['root'])
+            self.salmon_meta[s_name] = json.loads(f['f'])
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
         for f in self.find_log_files(config.sp['salmon']['fld']):

@@ -41,8 +41,11 @@ plots_flat_numseries: 100
 num_datasets_plot_limit: 50
 max_table_rows: 500
 table_columns_visible: {}
+decimalPoint_format: null
+thousandsSep_format: null
 
-fn_ignore_dirs: []
+fn_ignore_dirs:
+    - 'multiqc_data'
 fn_ignore_paths: []
 no_version_check: false
 log_filesize_limit: 5000000
@@ -77,6 +80,7 @@ fn_clean_exts:
     - '.stderr'
     - '.out'
     - 'Log.final'
+    - 'ReadsPerGene'
     - '.flagstat'
     - '_star_aligned'
     - '_fastqc'
@@ -93,6 +97,12 @@ fn_clean_exts:
     - '.sorted'
     - '.report'
     - '| stdin'
+    - '.geneBodyCoverage'
+    - '.inner_distance_freq'
+    - '.junctionSaturation_plot.r'
+    - '.pos.DupRate.xls'
+    - '.GC.xls'
+    - '_bismark'
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
@@ -102,6 +112,7 @@ fn_clean_trim:
     - '-'
     - '.r'
     - '_val'
+    - '.idxstats'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -131,6 +142,7 @@ module_order:
     - 'rseqc'
     - 'picard'
     - 'preseq'
+    - 'prokka'
     - 'samblaster'
     - 'samtools'
     - 'bamtools'

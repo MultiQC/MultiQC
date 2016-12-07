@@ -58,6 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats['n_dups'] = {'name': 'Duplicates'}
 
         pconfig = {
+            'id': 'samblaster_duplicates',
             'title': 'Number of duplicate reads',
         }
         # Only one section, so add to the intro

@@ -10,7 +10,7 @@ from multiqc import config
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
-# log = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 class VariantEvalMixin():
 
@@ -211,5 +211,5 @@ def comp_overlap_table(data):
         'namespace': 'GATK',
         'min': 0
     }
-    table_html = table.plot(data, headers)
+    table_html = table.plot(data, headers, {'id': 'gatk_compare_overlap'})
     return table_html

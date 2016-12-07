@@ -8,7 +8,7 @@ import logging
 import os
 import random
 
-from multiqc.utils import config
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,8 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
             "config": {c} \n\
         }} \n\
     </script>'.format(id=pconfig['id'], d=json.dumps(pdata), x=json.dumps(xcats), y=json.dumps(ycats), c=json.dumps(pconfig));
+
+    report.num_hc_plots += 1
 
     return html
 
