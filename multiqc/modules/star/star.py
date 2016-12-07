@@ -36,7 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.star_data[s_name] = parsed_data
         
         # Find and load any STAR gene count tables
-        self.star_genecounts_total = dict()
         self.star_genecounts_unstranded = dict()
         self.star_genecounts_first_strand = dict()
         self.star_genecounts_second_strand = dict()
@@ -49,22 +48,21 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.star_data:
                     log.debug("Duplicate ReadsPerGene sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, section='ReadsPerGene')
-                self.star_genecounts_total[s_name] = parsed_data['total']
                 self.star_genecounts_unstranded[s_name] = parsed_data['unstranded']
                 self.star_genecounts_first_strand[s_name] = parsed_data['first_strand']
                 self.star_genecounts_second_strand[s_name] = parsed_data['second_strand']
 
-        if len(self.star_data) == 0 and len(self.star_genecounts_total) == 0:
+        if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         if len(self.star_data) > 0:
-            if len(self.star_genecounts_total) > 0:
-                log.info("Found {} reports and {} gene count files".format(len(self.star_data), len(self.star_genecounts_total)))
+            if len(self.star_genecounts_unstranded) > 0:
+                log.info("Found {} reports and {} gene count files".format(len(self.star_data), len(self.star_genecounts_unstranded)))
             else:
                 log.info("Found {} reports".format(len(self.star_data)))
         else:
-            log.info("Found {} gene count files".format(len(self.star_genecounts_total)))
+            log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
         
         self.sections = list()
         
@@ -76,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Basic Stats Table
             self.star_stats_table()
         
-            if len(self.star_genecounts_total) == 0:
+            if len(self.star_genecounts_unstranded) == 0:
                 # Alignment bar plot - only one section, so add to the module intro
                 self.intro += self.star_alignment_chart()
             else:
@@ -86,11 +84,14 @@ class MultiqcModule(BaseMultiqcModule):
                     'content': self.star_alignment_chart()
                 })
         
-        if len(self.star_genecounts_total) > 0:
+        if len(self.star_genecounts_unstranded) > 0:
             self.sections.append({
                 'name': 'Gene Counts',
                 'anchor': 'star_geneCounts',
-                'content': self.star_genecount_chart()
+                'content': "<p>Statistics from results generated using <code>--quantMode GeneCounts</code>. " +
+                           "The three tabs show counts for unstranded RNA-seq, counts for the 1st read strand " +
+                           "aligned with RNA and counts for the 2nd read strand aligned with RNA.</p>"
+                           + self.star_genecount_chart()
             })
 
 
@@ -150,7 +151,6 @@ class MultiqcModule(BaseMultiqcModule):
         """ Parse a STAR gene counts output file """
         # Three numeric columns: unstranded, stranded/first-strand, stranded/second-strand
         keys = [ 'N_unmapped', 'N_multimapping', 'N_noFeature', 'N_ambiguous' ]
-        total = { 'N_genes': 0 }
         unstranded = { 'N_genes': 0 }
         first_strand = { 'N_genes': 0 }
         second_strand = { 'N_genes': 0 }
@@ -162,12 +162,10 @@ class MultiqcModule(BaseMultiqcModule):
                 for i in [1,2,3]:
                     s[i] = float(s[i])
                 if s[0] in keys:
-                    total[s[0]] = s[1] + s[2] + s[3]
                     unstranded[s[0]] = s[1]
                     first_strand[s[0]] = s[2]
                     second_strand[s[0]] = s[3]
                 else:
-                    total['N_genes'] += s[1] + s[2] + s[3]
                     unstranded['N_genes'] += s[1]
                     first_strand['N_genes'] += s[2]
                     second_strand['N_genes'] += s[3]
@@ -179,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.warning("Error parsing {}".format(f['fn']))
                     return None
         if num_genes > 0:
-            return { 'total': total, 'unstranded': unstranded, 'first_strand': first_strand, 'second_strand': second_strand }
+            return { 'unstranded': unstranded, 'first_strand': first_strand, 'second_strand': second_strand }
         else:
             return None
         
@@ -246,10 +244,9 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'STAR Gene Counts',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
-            'data_labels': ['Total','Unstranded','First Strand','Second Strand']
+            'data_labels': ['Unstranded','Same Stranded','Reverse Stranded']
         }
         datasets = [
-            self.star_genecounts_total,
             self.star_genecounts_unstranded,
             self.star_genecounts_first_strand,
             self.star_genecounts_second_strand
