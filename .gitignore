@@ -16,6 +16,7 @@ eggs/
 *.egg
 build/
 dist/
+tmp/
 
 # OS generated files
 .DS_Store
