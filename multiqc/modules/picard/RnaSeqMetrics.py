@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -171,7 +172,7 @@ def parse_reports(self):
             self.sections.append({
                 'name': 'Gene Coverage',
                 'anchor': 'picard-rna-coverage',
-                'content': plots.linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
+                'content': linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
             })
 
 

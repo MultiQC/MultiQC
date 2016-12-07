@@ -5,7 +5,9 @@
 from __future__ import print_function
 import logging
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import linegraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -16,10 +18,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Preseq', anchor='preseq',
-        href='http://smithlabresearch.org/software/preseq/', 
+        href='http://smithlabresearch.org/software/preseq/',
         info="estimates the complexity of a library, showing how many additional "\
          "unique reads are sequenced for increasing total read count.")
-        
+
         # Find and load any Preseq reports
         self.preseq_data = dict()
         self.total_max = 0
@@ -44,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_preseq_logs(self, f):
         """ Go through log file looking for preseq output """
-        
+
         lines = f['f'].splitlines()
         header = lines.pop(0)
         if header.startswith('TOTAL_READS	EXPECTED_DISTINCT'):
@@ -54,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             log.debug("First line of preseq file {} did not look right".format(f['fn']))
             return None
-        
+
         data = {}
         for l in lines:
             s = l.split()
@@ -67,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def preseq_length_trimmed_plot (self):
-        """ Generate the preseq plot """    
+        """ Generate the preseq plot """
         pconfig = {
             'id': 'preseq_plot',
             'title': 'Preseq complexity curve',
@@ -89,4 +91,4 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return "<p>A shallow curve indicates complexity saturation. The dashed line \
                 shows a perfectly complex library where total reads = unique reads.</o>" \
-                 + plots.linegraph.plot(self.preseq_data, pconfig)
+                 + linegraph.plot(self.preseq_data, pconfig)

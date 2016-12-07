@@ -7,7 +7,9 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import table, bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -39,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Basic Stats Table
         self.quast_general_stats_table()
-        
+
         self.sections = list()
         # Quast Stats Table
         self.sections.append({
@@ -53,11 +55,11 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'quast-contigs',
             'content': self.quast_contigs_barplot()
         })
-    
-    
+
+
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
-        
+
         # Pull out the sample names from the first row
         s_names = lines[0].split("\t")
         for s_name in s_names[1:]:
@@ -65,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name)
             self.quast_data[s_name] = dict()
-        
+
         # Parse remaining stats for each sample
         for l in lines[1:]:
             s = l.split("\t")
@@ -87,11 +89,11 @@ class MultiqcModule(BaseMultiqcModule):
                         self.quast_data[s_name][k] = float(v)
                     except ValueError:
                         self.quast_data[s_name][k] = v
-    
+
     def quast_general_stats_table(self):
         """ Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['N50'] = {
             'title': 'N50 (Kbp)',
@@ -112,10 +114,10 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: x / 1000000
         }
         self.general_stats_addcols(self.quast_data, headers)
-    
+
     def quast_table(self):
         """ Write some more statistics about the assemblies in a table. """
-        
+
         headers = OrderedDict()
         headers['# misassemblies'] = {
             'title': 'Misassemblies',
@@ -161,15 +163,15 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'QUAST',
             'min': 0,
         }
-        return plots.table.plot(self.quast_data, headers, config)
+        return table.plot(self.quast_data, headers, config)
 
     def quast_contigs_barplot(self):
         """ Make a bar plot showing the number and length of contigs for each assembly """
-        
+
         # Intro text
         html = """<p>This plot shows the number of contigs found for each assembly, broken
                 down by length.</p> """
-        
+
         # Prep the data
         data = dict()
         for s_name, d in self.quast_data.items():
@@ -185,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = p
             except AssertionError:
                 log.warning("Contig counts didn't add up properly for {}".format(s_name))
-        
+
         # Define the order of the categories, small to big
         cats = [
             '0-1000 bp',
@@ -195,6 +197,6 @@ class MultiqcModule(BaseMultiqcModule):
             '25000-50000 bp',
             '>= 50000 bp',
         ]
-        
-        return "{}{}".format(html, plots.bargraph.plot(data, cats))
-        
+
+        return "{}{}".format(html, bargraph.plot(data, cats))
+

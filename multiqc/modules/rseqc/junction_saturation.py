@@ -7,7 +7,8 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find RSeQC junction_saturation frequency reports and parse their data """
-    
+
     # Set up vars
     self.junction_saturation_all = dict()
     self.junction_saturation_known = dict()
@@ -23,7 +24,7 @@ def parse_reports(self):
     self.junction_saturation_all_pct = dict()
     self.junction_saturation_known_pct = dict()
     self.junction_saturation_novel_pct = dict()
-    
+
     # Go through files and parse data
     for f in self.find_log_files(config.sp['rseqc']['junction_saturation']):
         if f['s_name'].endswith('.junctionSaturation_plot.r'):
@@ -47,9 +48,9 @@ def parse_reports(self):
                     self.junction_saturation_all[f['s_name']][v] = parsed['z'][k]
                     self.junction_saturation_known[f['s_name']][v] = parsed['y'][k]
                     self.junction_saturation_novel[f['s_name']][v] = parsed['w'][k]
-    
+
     if len(self.junction_saturation_all) > 0:
-        
+
         # Make a normalised percentage version of the data
         empty_datasets = 0
         for s_name in self.junction_saturation_all:
@@ -64,7 +65,7 @@ def parse_reports(self):
                 self.junction_saturation_all_pct[s_name][k] = (v/total)*100
                 self.junction_saturation_known_pct[s_name][k] = (self.junction_saturation_known[s_name][k]/total)*100
                 self.junction_saturation_novel_pct[s_name][k] = (self.junction_saturation_novel[s_name][k]/total)*100
-        
+
         # Add line graph to section
         pconfig = {
             'id': 'rseqc_junction_saturation_plot',
@@ -98,25 +99,25 @@ def parse_reports(self):
                 " observed junctions.</p>" \
                 "<div class='alert alert-info' id='rseqc-junction_sat_single_hint'>" \
                 "<span class='glyphicon glyphicon-hand-up'></span> Click a line" \
-                " to see the data side by side (as in the original RSeQC plot).</div>" + 
-                plots.linegraph.plot([
+                " to see the data side by side (as in the original RSeQC plot).</div>" +
+                linegraph.plot([
                     self.junction_saturation_all_pct,
                     self.junction_saturation_known_pct,
                     self.junction_saturation_novel_pct
                 ], pconfig)
         })
-    
+
     # Return number of samples found
     return len(self.junction_saturation_all)
-    
-    
+
+
 def plot_single():
     """ Return JS code required for plotting a single sample
     RSeQC plot. Attempt to make it look as much like the original as possible. """
-    
+
     return """
     function(e){
-    
+
         // Get the three datasets for this sample
         var data = [
             {'name': 'All Junctions'},
@@ -132,7 +133,7 @@ def plot_single():
                 }
             }
         }
-        
+
         // Create single plot div, and hide overview
         var newplot = '<div id="rseqc_junction_saturation_single">'+
             '<p><button class="btn btn-default" id="rseqc-junction_sat_single_return">'+
@@ -142,7 +143,7 @@ def plot_single():
         $(newplot).insertAfter(pwrapper).hide().slideDown();
         pwrapper.slideUp();
         $('#rseqc-junction_sat_single_hint').slideUp();
-        
+
         // Listener to return to overview
         $('#rseqc-junction_sat_single_return').click(function(e){
           e.preventDefault();
@@ -152,7 +153,7 @@ def plot_single():
           pwrapper.slideDown();
           $('#rseqc-junction_sat_single_hint').slideDown();
         });
-        
+
         // Plot the single data
         $('#rseqc_junction_saturation_single .hc-plot').highcharts({
           chart: {
@@ -207,4 +208,4 @@ def plot_single():
         });
     }
     """
-        
+

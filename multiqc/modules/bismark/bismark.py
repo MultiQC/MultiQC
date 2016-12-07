@@ -7,7 +7,9 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import beeswarm, linegraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -79,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cov': {'CpG_R1' : {}, 'CHG_R1' : {}, 'CHH_R1' : {}, 'CpG_R2' : {}, 'CHG_R2' : {}, 'CHH_R2' : {}}
         }
         sp = config.sp['bismark']
-        
+
         # Find and parse bismark alignment reports
         for f in self.find_log_files(sp['align']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['alignment'])
@@ -94,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.debug("Duplicate alignment sample log found! Overwriting: {}".format(f['s_name']))
                     self.add_data_source(f, section='alignment')
                     self.bismark_data['alignment'][f['s_name']] = parsed_data
-        
+
         # Find and parse bismark deduplication reports
         for f in self.find_log_files(sp['dedup']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['dedup'])
@@ -103,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate deduplication sample log found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f, section='deduplication')
                 self.bismark_data['dedup'][f['s_name']] = parsed_data
-        
+
         # Find and parse bismark methylation extractor reports
         for f in self.find_log_files(sp['meth_extract']):
             parsed_data = self.parse_bismark_report(f['f'], regexes['methextract'])
@@ -113,17 +115,17 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate methylation extraction sample log found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name, section='methylation_extraction')
                 self.bismark_data['methextract'][s_name] = parsed_data
-        
+
         # Find and parse M-bias plot data
         for f in self.find_log_files(sp['m_bias'], filehandles=True):
             self.parse_bismark_mbias(f)
             self.add_data_source(f, section='m_bias')
-        
+
         # Find and parse bam2nuc reports
         for f in self.find_log_files(sp['bam2nuc'], filehandles=True):
             self.parse_bismark_bam2nuc(f)
             self.add_data_source(f, section='bam2nuc')
-        
+
         num_parsed = len(self.bismark_data['alignment'])
         num_parsed += len(self.bismark_data['dedup'])
         num_parsed += len(self.bismark_data['methextract'])
@@ -132,12 +134,12 @@ class MultiqcModule(BaseMultiqcModule):
         if num_parsed == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
-        
+
         self.sections = list()
-        
+
         # Basic Stats Table
         self.bismark_stats_table()
-        
+
         # Write out to the report
         if len(self.bismark_data['alignment']) > 0:
             self.write_data_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment', sort_cols=True)
@@ -147,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'anchor': 'bismark-alignment',
                 'content': self.bismark_alignment_chart()
             })
-        
+
         if len(self.bismark_data['dedup']) > 0:
             self.write_data_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup', sort_cols=True)
             log.info("Found {} bismark dedup reports".format(len(self.bismark_data['dedup'])))
@@ -156,14 +158,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'anchor': 'bismark-deduplication',
                 'content': self.bismark_dedup_chart()
             });
-        
+
         if len(self.bismark_data['alignment']) > 0:
             self.sections.append({
                 'name': 'Strand Alignment',
                 'anchor': 'bismark-strands',
                 'content': self.bismark_strand_chart()
             })
-        
+
         if len(self.bismark_data['methextract']) > 0:
             self.write_data_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract', sort_cols=True)
             log.info("Found {} bismark methextract reports".format(len(self.bismark_data['methextract'])))
@@ -172,14 +174,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'anchor': 'bismark-methylation',
                 'content': self.bismark_methlyation_chart()
             })
-        
+
         if len(self.bismark_mbias_data['meth']['CpG_R1']) > 0:
             self.sections.append({
                 'name': 'M-Bias',
                 'anchor': 'bismark-mbias',
                 'content': self.bismark_mbias_plot()
             })
-        
+
         if len(self.bismark_data['bam2nuc']) > 0:
             self.write_data_file(self.bismark_data['bam2nuc'], 'multiqc_bismark_bam2nuc', sort_cols=True)
             log.info("Found {} bismark bam2nuc reports".format(len(self.bismark_data['bam2nuc'])))
@@ -196,7 +198,7 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[k] = r_search.group(1) # NaN
         if len(parsed_data) == 0: return None
         return parsed_data
-    
+
     def parse_bismark_mbias(self, f):
         """ Parse the Bismark M-Bias plot data """
         s = f['s_name']
@@ -235,14 +237,14 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bismark_mbias_data['cov'][key][s][pos] = int(sections[4])
                 except (IndexError, ValueError):
                     continue
-    
+
     def parse_bismark_bam2nuc(self, f):
         """ Parse reports generated by Bismark bam2nuc """
         if f['s_name'] in self.bismark_data['bam2nuc']:
             log.debug("Duplicate deduplication sample log found! Overwriting: {}".format(f['s_name']))
         self.add_data_source(f, section='bam2nuc')
         self.bismark_data['bam2nuc'][f['s_name']] = dict()
-        
+
         headers = None
         for l in f['f']:
             sections = l.rstrip().split("\t")
@@ -255,11 +257,11 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         key = "{}_{}".format(k, h.lower().replace(' ','_'))
                         self.bismark_data['bam2nuc'][f['s_name']][key] = sections[i]
-    
+
     def bismark_stats_table(self):
         """ Take the parsed stats from the Bismark reports and add them to the
         basic stats table at the top of the report """
-        
+
         headers = {
             'alignment': OrderedDict(),
             'dedup': OrderedDict(),
@@ -349,18 +351,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.bismark_data['bam2nuc'], headers['bam2nuc'])
         self.general_stats_addcols(self.bismark_data['dedup'], headers['dedup'])
         self.general_stats_addcols(self.bismark_data['alignment'], headers['alignment'])
-        
+
 
     def bismark_alignment_chart (self):
         """ Make the alignment plot """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['aligned_reads']   = { 'color': '#2f7ed8', 'name': 'Aligned Uniquely' }
         keys['ambig_reads']     = { 'color': '#492970', 'name': 'Aligned Ambiguously' }
         keys['no_alignments']   = { 'color': '#0d233a', 'name': 'Did Not Align' }
         keys['discarded_reads'] = { 'color': '#f28f43', 'name': 'No Genomic Sequence' }
-        
+
         # Config for the plot
         config = {
             'id': 'bismark_alignment',
@@ -368,20 +370,20 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return plots.bargraph.plot(self.bismark_data['alignment'], keys, config)
 
 
     def bismark_strand_chart (self):
         """ Make the strand alignment plot """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['strand_ob']   = { 'name': 'Original bottom strand' }
         keys['strand_ctob'] = { 'name': 'Complementary to original bottom strand' }
         keys['strand_ctot'] = { 'name': 'Complementary to original top strand' }
         keys['strand_ot']   = { 'name': 'Original top strand' }
-        
+
         # See if we have any directional samples
         directional = 0
         d_mode = ''
@@ -394,7 +396,7 @@ class MultiqcModule(BaseMultiqcModule):
             d_mode = '<p>All samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.</p>'
         elif directional > 0:
             d_mode = '<p>{} samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.</p>'.format(directional)
-        
+
         # Config for the plot
         config = {
             'id': 'bismark_strand_alignment',
@@ -403,18 +405,18 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_c_active': False,
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return d_mode + plots.bargraph.plot(self.bismark_data['alignment'], keys, config)
-        
-    
+
+
     def bismark_dedup_chart (self):
         """ Make the deduplication plot """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['dedup_reads'] = { 'name': 'Deduplicated reads (remaining)' }
         keys['dup_reads']   = { 'name': 'Duplicate reads (removed)' }
-        
+
         # Config for the plot
         config = {
             'id': 'bismark_deduplication',
@@ -423,14 +425,14 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_c_active': False,
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return plots.bargraph.plot(self.bismark_data['dedup'], keys, config)
-    
-    
-    
+
+
+
     def bismark_methlyation_chart (self):
         """ Make the methylation plot """
-        
+
         # Config for the plot
         keys = OrderedDict()
         defaults = {
@@ -442,17 +444,17 @@ class MultiqcModule(BaseMultiqcModule):
         keys['percent_cpg_meth'] = dict(defaults, **{ 'title': 'Methylated CpG' })
         keys['percent_chg_meth'] = dict(defaults, **{ 'title': 'Methylated CHG' })
         keys['percent_chh_meth'] = dict(defaults, **{ 'title': 'Methylated CHH' })
-        
-        return plots.beeswarm.plot(self.bismark_data['methextract'], keys, {'id': 'bismark-methylation-dp'})
-    
+
+        return beeswarm.plot(self.bismark_data['methextract'], keys, {'id': 'bismark-methylation-dp'})
+
 
     def bismark_mbias_plot (self):
         """ Make the M-Bias plot """
-        
+
         html = '<p>This plot shows the average percentage methylation and coverage across reads. See the \n\
         <a href="http://www.bioinformatics.babraham.ac.uk/projects/bismark/Bismark_User_Guide.pdf" target="_blank">bismark user guide</a> \n\
         for more information on how these numbers are generated.</p>'
-        
+
         pconfig = {
             'id': 'bismark_mbias',
             'title': 'M-Bias',
@@ -473,7 +475,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.bismark_mbias_data['meth']['CHG_R1'],
             self.bismark_mbias_data['meth']['CHH_R1']
         ]
-        
+
         if len(self.bismark_mbias_data['meth']['CpG_R2']) > 0:
             pconfig['data_labels'].append({'name': 'CpG R2', 'ylab': '% Methylation', 'ymax': 100})
             pconfig['data_labels'].append({'name': 'CHG R2', 'ylab': '% Methylation', 'ymax': 100})
@@ -481,7 +483,7 @@ class MultiqcModule(BaseMultiqcModule):
             datasets.append(self.bismark_mbias_data['meth']['CpG_R2'])
             datasets.append(self.bismark_mbias_data['meth']['CHG_R2'])
             datasets.append(self.bismark_mbias_data['meth']['CHH_R2'])
-        
-        html += plots.linegraph.plot(datasets, pconfig)
-        
+
+        html += linegraph.plot(datasets, pconfig)
+
         return html

@@ -4,7 +4,8 @@
 
 import logging
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class StatsReportMixin():
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
                     self.bcftools_stats_indels[s_name][0] = None # Avoid joining line across missing 0
-                
+
                 # Parse key stats
                 if s[0] == "SN" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
@@ -46,7 +47,7 @@ class StatsReportMixin():
                     field = field.replace(' ', '_')
                     value = float(s[3].strip())
                     self.bcftools_stats[s_name][field] = value
-                
+
                 # Parse transitions/transversions stats
                 if s[0] == "TSTV" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
@@ -54,14 +55,14 @@ class StatsReportMixin():
                     for i, f in enumerate(fields):
                         value = float(s[i+2].strip())
                         self.bcftools_stats[s_name][field] = value
-                
+
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     field = 'substitution_type_{}'.format(s[2].strip())
                     value = float(s[3].strip())
                     self.bcftools_stats[s_name][field] = value
-                
+
                 # Indel length distributions
                 if s[0] == "IDD" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
@@ -73,10 +74,10 @@ class StatsReportMixin():
 
             # Write parsed report data to a file
             self.write_data_file(self.bcftools_stats, 'multiqc_bcftools_stats')
-            
+
             # General Stats Table
             self.bcftools_stats_genstats_table()
-            
+
             # Make bargraph plot of substitution types
             types = ['A>C','A>G','A>T','C>A','C>G','C>T','G>A','G>C','G>T','T>A','T>C','T>G']
             keys = OrderedDict()
@@ -91,9 +92,9 @@ class StatsReportMixin():
             self.sections.append({
                 'name': 'Variant Substitution Types',
                 'anchor': 'bcftools-stats',
-                'content': plots.bargraph.plot(self.bcftools_stats, keys, pconfig)
+                'content': bargraph.plot(self.bcftools_stats, keys, pconfig)
             })
-            
+
             # Make line graph of indel lengths
             if len(self.bcftools_stats_indels) > 1:
                 pconfig = {
@@ -108,7 +109,7 @@ class StatsReportMixin():
                 self.sections.append({
                     'name': 'Indel Distribution',
                     'anchor': 'bcftools-stats',
-                    'content': plots.linegraph.plot(self.bcftools_stats_indels, pconfig)
+                    'content': linegraph.plot(self.bcftools_stats_indels, pconfig)
                 })
 
         # Return the number of logs that were found

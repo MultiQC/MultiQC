@@ -7,7 +7,8 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find RSeQC bam_stat reports and parse their data """
-    
+
     # Set up vars
     self.bam_stat_data = dict()
     regexes = {
@@ -35,7 +36,7 @@ def parse_reports(self):
         'reads_mapped_in_proper_pairs': r"Reads mapped in proper pairs:\s*(\d+)",
         'proper-paired_reads_map_to_different_chrom': r"Proper-paired reads map to different chrom:\s*(\d+)",
     }
-    
+
     # Go through files and parse data using regexes
     for f in self.find_log_files(config.sp['rseqc']['bam_stat']):
         d = dict()
@@ -43,7 +44,7 @@ def parse_reports(self):
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
                 d[k] = int(r_search.group(1))
-        
+
         # Calculate some percentages
         if 'total_records' in d:
             t = float(d['total_records'])
@@ -51,18 +52,18 @@ def parse_reports(self):
                 d['unique_percent'] = (float(d['mapq_gte_mapq_cut_unique']) / t)*100.0
             if 'reads_mapped_in_proper_pairs' in d:
                 d['proper_pairs_percent'] = (float(d['reads_mapped_in_proper_pairs']) / t)*100.0
-        
+
         if len(d) > 0:
             if f['s_name'] in self.bam_stat_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='bam_stat')
             self.bam_stat_data[f['s_name']] = d
-    
+
     if len(self.bam_stat_data) > 0:
-    
+
         # Write to file
         self.write_data_file(self.bam_stat_data, 'multiqc_rseqc_bam_stat')
-        
+
         # Add to general stats table
         self.general_stats_headers['proper_pairs_percent'] = {
             'title': '% Proper Pairs',
@@ -77,7 +78,7 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( self.bam_stat_data[s_name] )
-        
+
         # Make dot plot of counts
         pconfig = {}
         keys = OrderedDict()
@@ -102,13 +103,13 @@ def parse_reports(self):
         keys['splice_reads'] = dict(defaults, **{'title': 'Splice reads' })
         keys['reads_mapped_in_proper_pairs'] = dict(defaults, **{'title': 'Proper pairs', 'description':'Reads mapped in proper pairs' })
         keys['proper-paired_reads_map_to_different_chrom'] = dict(defaults, **{'title': 'Different chrom', 'description': 'Proper-paired reads map to different chrom' })
-        
+
         self.sections.append({
             'name': 'Bam Stat',
             'anchor': 'rseqc-bam_stat',
-            'content': '<p>All numbers reported in millions.</p>'+plots.beeswarm.plot(self.bam_stat_data, keys)
+            'content': '<p>All numbers reported in millions.</p>'+beeswarm.plot(self.bam_stat_data, keys)
         })
-    
+
     # Return number of samples found
     return len(self.bam_stat_data)
-    
+

@@ -4,7 +4,8 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Samtools submodules
 from .stats import StatsReportMixin

@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import table, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -151,7 +152,7 @@ def parse_reports(self):
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( data[s_name] )
         data_table = _clean_table(data)
-        table_html = plots.table.plot(data_table, _get_headers(data_table))
+        table_html = table.plot(data_table, _get_headers(data_table))
         if not isinstance(self.sections, list):
             self.sections = list()
         self.sections.append({
@@ -225,7 +226,7 @@ def _add_target_bases(data):
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
     return {'name': 'Target Region Coverage',
     'anchor': 'picard_hsmetrics_target_bases',
-    'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
+    'content': subtitle + linegraph.plot(data_clean, pconfig)}
 
 def _add_hs_penalty(data):
     subtitle = "<p>The \"hybrid selection penalty\" incurred to get 80% of target bases to a given coverage. Can be used with the formula <code>required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty</code>.</p>"
@@ -247,7 +248,7 @@ def _add_hs_penalty(data):
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
     section =  {'name': 'HS penalty',
     'anchor': 'picard_hsmetrics_hs_penalty',
-    'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
+    'content': subtitle + linegraph.plot(data_clean, pconfig)}
 
     if not any_non_zero:
         return None

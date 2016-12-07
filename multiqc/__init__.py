@@ -1,11 +1,15 @@
 import logging
-from pkg_resources import get_distribution
+import warnings
 
 logger = logging.getLogger(__name__)
 
-__version__ = get_distribution("multiqc").version
+config = version = None
 
-from multiqc.utils import config
-from multiqc.modules.base_module import BaseMultiqcModule
+try:
+    from pkg_resources import get_distribution
+    from multiqc.utils import config
+    __version__ = get_distribution("multiqc").version
+    config.version = __version__
+except:
+    warnings.warn("Cannot determine MultiQC version. Configuration problem?")
 
-config.version = __version__

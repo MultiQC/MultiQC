@@ -6,7 +6,9 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -16,9 +18,9 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='featureCounts', 
-        anchor='featurecounts', target='Subread featureCounts', 
-        href='http://bioinf.wehi.edu.au/featureCounts/', 
+        super(MultiqcModule, self).__init__(name='featureCounts',
+        anchor='featurecounts', target='Subread featureCounts',
+        href='http://bioinf.wehi.edu.au/featureCounts/',
         info="is a highly efficient general-purpose read summarization program"\
         " that counts mapped reads for genomic features such as genes, exons,"\
         " promoter, gene bodies, genomic bins and chromosomal locations.")
@@ -49,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_featurecounts_report (self, f):
         """ Parse the featureCounts log file. """
-        
+
         file_names = list()
         parsed_data = dict()
         for l in f['f'].splitlines():
@@ -66,12 +68,12 @@ class MultiqcModule(BaseMultiqcModule):
                     self.featurecounts_keys.append(k)
                 for val in s[1:]:
                     parsed_data[k].append(int(val))
-        
+
         for idx, f_name in enumerate(file_names):
-            
+
             # Clean up sample name
             s_name = self.clean_s_name(f_name, f['root'])
-            
+
             # Reorganised parsed data for this sample
             # Collect total count number
             data = dict()
@@ -79,23 +81,23 @@ class MultiqcModule(BaseMultiqcModule):
             for k in parsed_data:
                 data[k] = parsed_data[k][idx]
                 data['Total'] += parsed_data[k][idx]
-            
+
             # Calculate the percent aligned if we can
             if 'Assigned' in data:
                 data['percent_assigned'] = (float(data['Assigned'])/float(data['Total'])) * 100.0
-            
+
             # Add to the main dictionary
             if len(data) > 1:
                 if s_name in self.featurecounts_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.featurecounts_data[s_name] = data
-        
+
 
     def featurecounts_stats_table(self):
         """ Take the parsed stats from the featureCounts report and add them to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['percent_assigned'] = {
             'title': '% Assigned',
@@ -119,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def featureCounts_chart (self):
         """ Make the featureCounts assignment rates plot """
-        
+
         # Config for the plot
         config = {
             'id': 'featureCounts_assignment_plot',
@@ -127,5 +129,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
-        return plots.bargraph.plot(self.featurecounts_data, self.featurecounts_keys, config)
+
+        return bargraph.plot(self.featurecounts_data, self.featurecounts_keys, config)

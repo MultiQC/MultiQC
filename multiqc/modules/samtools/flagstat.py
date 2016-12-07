@@ -7,6 +7,9 @@ import logging
 import re
 from collections import OrderedDict, defaultdict
 
+from multiqc import config
+from multiqc.plots import beeswarm
+
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -14,9 +17,6 @@ class FlagstatReportMixin():
 
     def parse_samtools_flagstats(self):
         """ Find Samtools flagstat logs and parse their data """
-
-        #Late importing of these modules makes unit testing easier
-        from multiqc import config, plots
 
         self.samtools_flagstat = dict()
         for f in self.find_log_files(config.sp['samtools']['flagstat']):
@@ -78,7 +78,7 @@ class FlagstatReportMixin():
                 'name': 'Samtools Flagstat',
                 'anchor': 'samtools-flagstat',
                 'content': '<p>This module parses the output from <code>samtools flagstat</code>. All numbers in millions.</p>' +
-                            plots.beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
+                            beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
             })
 
         # Return the number of logs that were found

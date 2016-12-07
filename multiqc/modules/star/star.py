@@ -7,7 +7,9 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -98,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
     def star_stats_table(self):
         """ Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['uniquely_mapped_percent'] = {
             'title': '% Aligned',
@@ -121,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def star_alignment_chart (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['uniquely_mapped'] =      { 'color': '#437bb1', 'name': 'Uniquely mapped' }
@@ -130,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['unmapped_mismatches'] =  { 'color': '#e63491', 'name': 'Unmapped: too many mismatches' }
         keys['unmapped_tooshort'] =    { 'color': '#b1084c', 'name': 'Unmapped: too short' }
         keys['unmapped_other'] =       { 'color': '#7f0000', 'name': 'Unmapped: other' }
-        
+
         # Config for the plot
         pconfig = {
             'id': 'star_alignment_plot',
@@ -138,5 +140,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
-        return plots.bargraph.plot(self.star_data, keys, pconfig)
+
+        return bargraph.plot(self.star_data, keys, pconfig)
