@@ -75,6 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.utrates_data) == 0:
             log.debug("Could not find UTR rates reports in {}".format(config.analysis_dir))
         else :
+            self.write_data_file(self.utrates_data, 'multiqc_slamdunk_utrrates')
             produce.append("utrates")            
 
         log.debug("Parsing read rates reports.")
@@ -85,6 +86,8 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.rates_data_plus) == 0:
             log.debug("Could not find read rates reports in {}".format(config.analysis_dir))
         else :
+            self.write_data_file(self.rates_data_plus, 'multiqc_slamdunk_readrates_plus')
+            self.write_data_file(self.rates_data_minus, 'multiqc_slamdunk_readrates_minus')
             produce.append("readrates")
             
         log.debug("Parsing rates per read position reports.")
@@ -95,6 +98,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.tc_per_readpos_plus) == 0:
             log.debug("Could not find conversion per read position reports in {}".format(config.analysis_dir))
         else :
+            self.write_data_file(self.tc_per_readpos_plus, 'multiqc_slamdunk_tcperreadpos_plus')
+            self.write_data_file(self.nontc_per_readpos_plus, 'multiqc_slamdunk_nontcperreadpos_plus')
+            self.write_data_file(self.tc_per_readpos_minus, 'multiqc_slamdunk_tcperreadpos_minus')
+            self.write_data_file(self.nontc_per_readpos_minus, 'multiqc_slamdunk_nontcperreadpos_minus')
             produce.append("readpos")
             
         log.debug("Parsing rates per UTR position reports.")
@@ -105,6 +112,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.nontc_per_utrpos_plus) == 0:
             log.debug("Could not find conversion per UTR position reports in {}".format(config.analysis_dir))
         else :
+            self.write_data_file(self.tc_per_utrpos_plus, 'multiqc_slamdunk_tcperutrpos_plus')
+            self.write_data_file(self.nontc_per_utrpos_plus, 'multiqc_slamdunk_nontcperutrpos_plus')
+            self.write_data_file(self.tc_per_utrpos_minus, 'multiqc_slamdunk_tcperutrpos_minus')
+            self.write_data_file(self.nontc_per_utrpos_minus, 'multiqc_slamdunk_nontcperutrpos_minus')
             produce.append("utrpos")
         
         if not produce:
@@ -117,6 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         if "summary" in produce:
             self.slamdunkGeneralStatsTable()
+            self.slamdunkFilterStatsTable()
         
         # PCA plot
         if "PCA" in produce:
@@ -138,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
         if "utrpos" in produce:
             self.slamdunkTcPerUTRPosPlot()
             
-        log.info("Slamdunk results added to report.")
+        log.info("Found " + str(len(self.slamdunk_data)) + " reports")
         
     def parsePCA(self, f):
         
@@ -334,66 +346,143 @@ class MultiqcModule(BaseMultiqcModule):
 
 
         headers = OrderedDict()
-        headers['sequenced'] = {
-            'title': 'Sequenced',
-            'description': '# sequenced reads',
-            'shared_key': 'slamdunk_reads',
-            'min': 0,
-            'format': '{:.f}'
-        }
-        headers['mapped'] = {
-            'title': 'Mapped',
-            'description': '# mapped reads',
-            'shared_key': 'slamdunk_reads',
-            'min': 0,
-            'format': '{:.f}'
-        }
-
-        headers['mqfiltered'] = {
-            'title': 'MQ-Filtered',
-            'description': '# MQ-filtered reads',
-            'shared_key': 'slamdunk_reads',
-            'min': 0,
-            'format': '{:.f}'
-        }
-        headers['idfiltered'] = {
-            'title': 'Identity-Filtered',
-            'description': '# identity-filtered reads',
-            'shared_key': 'slamdunk_reads',
-            'min': 0,
-            'format': '{:.f}'
-        }
-        headers['nmfiltered'] = {
-            'title': 'NM-Filtered',
-            'description': '# NM-filtered reads',
-            'shared_key': 'slamdunk_reads',
-            'min': 0,
-            'format': '{:.f}'
-        }
-        headers['multimapper'] = {
-            'title': 'Multimap-Filtered',
-            'description': '# multimap-filtered reads',
-            'shared_key': 'slamdunk_reads',
-            'min': 0,
-            'format': '{:.f}'
-        }
-        headers['retained'] = {
-            'title': 'Retained',
-            'description': '# retained reads after filtering',
-            'shared_key': 'slamdunk_reads',
-            'min': 0,
-            'format': '{:.f}'
-        }
         
         headers['counted'] = {
             'title': 'Counted',
             'description': '# reads counted within 3\'UTRs',
-            'shared_key': 'slamdunk_reads',
+            'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}'
+            'format': '{:.f}',
+            'scale': 'YlGn',
         }
+        
+        headers['retained'] = {
+            'title': 'Retained',
+            'description': '# retained reads after filtering',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'YlGn',
+        }
+        
+#         headers['multimapper'] = {
+#             'title': 'Multimap-Filtered',
+#             'description': '# multimap-filtered reads',
+#             'shared_key': 'read_count',
+#             'min': 0,
+#             'format': '{:.f}',
+#             'scale': 'OrRd',
+#         }
+#         
+#         headers['nmfiltered'] = {
+#             'title': 'NM-Filtered',
+#             'description': '# NM-filtered reads',
+#             'shared_key': 'read_count',
+#             'min': 0,
+#             'format': '{:.f}',
+#             'scale': 'OrRd',
+#         }
+#         
+#         headers['idfiltered'] = {
+#             'title': 'Identity-Filtered',
+#             'description': '# identity-filtered reads',
+#             'shared_key': 'read_count',
+#             'min': 0,
+#             'format': '{:.f}',
+#             'scale': 'OrRd',
+#         }
+#         
+#         headers['mqfiltered'] = {
+#             'title': 'MQ-Filtered',
+#             'description': '# MQ-filtered reads',
+#             'shared_key': 'read_count',
+#             'min': 0,
+#             'format': '{:.f}',
+#             'scale': 'OrRd',
+#         }
+        
+        headers['mapped'] = {
+            'title': 'Mapped',
+            'description': '# mapped reads',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'YlGn',
+        }
+        
+        headers['sequenced'] = {
+            'title': 'Sequenced',
+            'description': '# sequenced reads',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'YlGn',
+        }
+        
         self.general_stats_addcols(self.slamdunk_data, headers)
         
+    def slamdunkFilterStatsTable(self):
+        """ Take the parsed filter stats from Slamdunk and add it to a separate table """
+
+        headers = OrderedDict()
+        
+        headers['mapped'] = {
+            'title': 'Mapped',
+            'description': '# mapped reads',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'YlGn',
+        }
+        
+        headers['multimapper'] = {
+            'title': 'Multimap-Filtered',
+            'description': '# multimap-filtered reads',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'OrRd',
+        }
+        
+        headers['nmfiltered'] = {
+            'title': 'NM-Filtered',
+            'description': '# NM-filtered reads',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'OrRd',
+        }
+        
+        headers['idfiltered'] = {
+            'title': 'Identity-Filtered',
+            'description': '# identity-filtered reads',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'OrRd',
+        }
+        
+        headers['mqfiltered'] = {
+            'title': 'MQ-Filtered',
+            'description': '# MQ-filtered reads',
+            'shared_key': 'read_count',
+            'min': 0,
+            'format': '{:.f}',
+            'scale': 'OrRd',
+        }
+        
+        config = {
+            'id': 'slamdunk_filtering_table',
+            'min': 0,
+        }
+        
+        self.sections.append({
+            'name': 'Filter statistics',
+            'anchor': 'slamdunk_filtering',
+            'content': '<p> This table shows the number of reads filtered with each filter criterion during filtering phase of slamdunk.</p>' +  
+                        plots.table.plot(self.slamdunk_data, headers, config)
+        })
+                
     def slamdunkOverallRatesPlot (self):
         """ Generate the overall rates plot """
 
@@ -415,22 +504,28 @@ class MultiqcModule(BaseMultiqcModule):
         cats = [OrderedDict(), OrderedDict()]
         
         cats[0]['T>C'] = {
-            'color': '#D7301F'
+            #'color': '#D7301F'
+            'color': '#fdbf6f'
         }
         cats[0]['A>T'] = {
-            'color': '#C6DBEF'
+            #'color': '#C6DBEF'
+            'color': '#2171B5'
         }
         cats[0]['A>G'] = {
+            #'color': '#6BAED6'
             'color': '#6BAED6'
         }
         cats[0]['A>C'] = {
-            'color': '#2171B5'
+            #'color': '#2171B5'
+            'color': '#C6DBEF'
         }
         cats[0]['T>A'] = {
-            'color': '#C7E9C0'
+            #'color': '#C7E9C0'
+            'color': '#74C476'
         }
         cats[0]['T>G'] = {
-            'color': '#74C476'
+            #'color': '#74C476'
+            'color': '#C7E9C0'
         }
         cats[0]['G>A'] = {
             'color': '#D9D9D9'
@@ -452,22 +547,28 @@ class MultiqcModule(BaseMultiqcModule):
         }
         
         cats[1]['A>G'] = {
-            'color': '#D7301F'
+            #'color': '#D7301F'
+            'color': '#fdbf6f'
         }
         cats[1]['A>T'] = {
-            'color': '#C6DBEF'
-        }
-        cats[1]['A>C'] = {
+            #'color': '#C6DBEF'
             'color': '#2171B5'
         }
+        cats[1]['A>C'] = {
+            #'color': '#2171B5'
+            'color': '#6BAED6'
+        }
         cats[1]['T>A'] = {
-            'color': '#C7E9C0'
+            #'color': '#C7E9C0'
+            'color': '#C6DBEF'
         }
         cats[1]['T>G'] = {
+            #'color': '#74C476'
             'color': '#74C476'
         }
         cats[1]['T>C'] = {
-            'color': '#238B45'
+            #'color': '#238B45'
+            'color': '#C7E9C0'
         }
         cats[1]['G>A'] = {
             'color': '#D9D9D9'
@@ -506,22 +607,28 @@ class MultiqcModule(BaseMultiqcModule):
         
         cats = OrderedDict()
         cats['T>C'] = {
-            'color': '#D7301F'
+            #'color': '#D7301F'
+            'color': '#fdbf6f'
         }
         cats['A>T'] = {
-            'color': '#C6DBEF'
+            #'color': '#C6DBEF'
+            'color': '#2171B5'
         }
         cats['A>G'] = {
+            #'color': '#6BAED6'
             'color': '#6BAED6'
         }
         cats['A>C'] = {
-            'color': '#2171B5'
+            #'color': '#2171B5'
+            'color': '#C6DBEF'
         }
         cats['T>A'] = {
-            'color': '#C7E9C0'
+            #'color': '#C7E9C0'
+            'color': '#74C476'
         }
         cats['T>G'] = {
-            'color': '#74C476'
+            #'color': '#74C476'
+            'color': '#C7E9C0'
         }
         cats['G>A'] = {
             'color': '#D9D9D9'
