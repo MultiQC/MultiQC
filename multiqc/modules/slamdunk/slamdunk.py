@@ -354,6 +354,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'YlGn',
+            'modify': lambda x: x / 1000000,
         }
         
         headers['retained'] = {
@@ -363,6 +364,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'YlGn',
+            'modify': lambda x: x / 1000000,
         }
         
 #         headers['multimapper'] = {
@@ -408,6 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'YlGn',
+            'modify': lambda x: x / 1000000,
         }
         
         headers['sequenced'] = {
@@ -417,6 +420,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'YlGn',
+            'modify': lambda x: x / 1000000,
         }
         
         self.general_stats_addcols(self.slamdunk_data, headers)
@@ -433,6 +437,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'YlGn',
+            'modify': lambda x: x / 1000000,
         }
         
         headers['multimapper'] = {
@@ -442,6 +447,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'OrRd',
+            'modify': lambda x: x / 1000000,
         }
         
         headers['nmfiltered'] = {
@@ -451,6 +457,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'OrRd',
+            'modify': lambda x: x / 1000000,
         }
         
         headers['idfiltered'] = {
@@ -460,6 +467,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'OrRd',
+            'modify': lambda x: x / 1000000,
         }
         
         headers['mqfiltered'] = {
@@ -469,6 +477,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'format': '{:.f}',
             'scale': 'OrRd',
+            'modify': lambda x: x / 1000000,
         }
         
         config = {
