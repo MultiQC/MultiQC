@@ -136,11 +136,11 @@ def make_table (dt):
                         val = header['format'].format(val)
                     except ValueError:
                         try:
-                            val = header['format'].format(float(samp[k]))
+                            val = header['format'].format(float(val))
                         except ValueError:
-                            val = samp[k]
+                            val = val
                     except:
-                        val = samp[k]
+                        val = val
                     
                     # Build HTML
                     if not header['scale']:
