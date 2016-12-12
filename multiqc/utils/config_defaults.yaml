@@ -80,6 +80,7 @@ fn_clean_exts:
     - '.stderr'
     - '.out'
     - 'Log.final'
+    - 'ReadsPerGene'
     - '.flagstat'
     - '_star_aligned'
     - '_fastqc'

@@ -21,3 +21,19 @@ Supported commands:
 * `BaseDistributionByCycl`
 * `RnaSeqMetrics`
 * `AlignmentSummaryMetrics`
+
+#### HsMetrics
+It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage that's
+shown in the general statistics table. This must correspond to field names in the
+HsMetrics report, such as `PCT_TARGET_BASES_2X`. Any numbers not found in the
+reports will be ignored. The coverage levels available are
+[typically](https://github.com/ewels/MultiQC_TestData/blob/master/data/modules/picard/HsMetrics/alignment-hs_metrics.txt)
+2, 10, 20, 30, 40, 50 and 100X.
+
+To customise this, add something like the following to your MultiQC config:
+```yaml
+picard_config:
+    general_stats_target_coverage:
+        - 2
+        - 10
+```

@@ -17,6 +17,7 @@ Module updates:
   * Fixed logger error in VariantEval module.
 * **Picard**
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
+  * New feature to customise coverage shown from `HsMetrics` in General Statistics table.
 * **Preseq**
   * Module now recognises output from `c_curve` mode.
 * **RSeQC**
@@ -29,9 +30,12 @@ Module updates:
   * Fixed swapped axis labels in the Variant Quality plot
 * **STAR**
   * Fixed crash when there are 0 unmapped reads.
+  * Sample name now taken from the directory name if no file prefix found.
 * **Qualimap BamQC**
   * Add a line for pre-calculated reference genome GC content
   * Plot cumulative coverage for values above 50x, align with the coverage histogram.
+  * New ability to customise coverage thresholds shown in General Statistics table
+    (see the [docs](http://multiqc.info/docs/#qualimap) for info).
 
 Core Updates:
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created
