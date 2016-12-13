@@ -56,12 +56,12 @@ setup(
     ],
     entry_points = {
         'multiqc.modules.v1': [
+            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
-            'custom_content = multiqc.modules.custom_content:MultiqcModule',
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',

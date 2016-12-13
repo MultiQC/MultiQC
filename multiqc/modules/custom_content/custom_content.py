@@ -3,6 +3,7 @@
 """ Core MultiQC module to parse output from custom script output """
 
 from __future__ import print_function
+from collections import defaultdict, OrderedDict
 import logging
 import json
 import os
@@ -14,123 +15,213 @@ from multiqc import config, BaseMultiqcModule, plots
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
+def custom_module_classes():
     """
     MultiQC Custom Content class. This module does a lot of different
     things depending on the input and is as flexible as possible.
+    NB: THIS IS TOTALLY DIFFERENT TO ALL OTHER MODULES
     """
-
-    def __init__(self):
         
-        # Dict to hold parsed data. Each key should contain a custom data type
-        # eg. output from a particular script. Note that this script may pick
-        # up many different types of data from many different sources.
-        # Second level keys should be 'config' and 'data'. Data key should then
-        # contain sample names, and finally data.
-        self.cust_mods = {}
-        
-        # Dictionary to hold search patterns - start with those defined in the config
-        search_patterns = [ config.sp['custom_content'] ]
-        
-        # First - find files using patterns described in the config
-        config_data = getattr(config, 'custom_data', {})
-        for k,f in config_data.items():
-            
-            # Check that we have a dictionary
-            if type(f) != dict:
-                log.debug("config.custom_data row was not a dictionary: {}".format(k))
-                continue
-            c_id = f.get('id', k)
-            
-            # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
-            if 'data' in f:
-                self.init_data_dict(c_id)
-                self.cust_mods[c_id]['data'].update( f['data'] )
-                if 'config' in f:
-                    self.cust_mods[c_id]['config'].update( f['config'] )
-                continue
-            
-            # File name patterns supplied in config
-            sp = {}
-            if 'fn' in f:
-                sp['fn'] = f['fn']
-            if 'contents' in f:
-                sp['contents'] = f['contents']
-            if len(sp) == 0:
-                log.debug("Search pattern not found for custom module: {}".format(c_id))
-            else:
-                self.init_data_dict(c_id)
-                self.cust_mods[c_id]['config'].update(f)
-                search_patterns.append(sp)
-        
-        # Now go through each of the file search patterns
-        for sp in search_patterns:
-            for f in self.find_log_files(sp):
-                
-                f_extension = os.path.splitext(f['fn'])[1]
-                
-                # YAML and JSON files are the easiest
-                parsed_data = None
-                if f_extension == '.yaml' or f_extension == '.yml':
-                    parsed_data = yaml.load(f['f'])
-                elif f_extension == '.json':
-                    parsed_data = json.loads(f['f'])
-                if parsed_data is not None:
-                    c_id = parsed_data.get('id', f['fn'])
-                    self.init_data_dict(c_id)
-                    if len(parsed_data.get('data', {})) > 0:
-                        self.cust_mods[c_id]['data'].update( parsed_data['data'] )
-                        self.cust_mods[c_id]['config'].update ( { j:k for j,k in parsed_data.items() if j != 'data' } )
-                    else:
-                        log.warning("No data found in {}".format(f['fn']))
-                
-                # txt, csv, tsv etc
-                else:
-                    # Look for configuration details in the header
-                    m_config = self.find_file_header( f['f'].splitlines() )
-                    log.warning("Parsing custom data that isn't YAML / JSON isn't written yet. Coming soon...")
-                    
-                    # Guess file format if not given
-                    
-                    # Guess plot type if not given
-                    
-                    # Parse data
-
-        
-        if len(self.cust_mods) == 0:
-            log.debug("No custom content found")
-            raise UserWarning
-        
-        # Go through each data type
-        for k, mod in self.cust_mods.items():
-            # General Stats
-            
-            # Table
-            
-            # Bar plot
-            
-            # Line plot
-            
-            # Scatter plot
-            
-            # Heatmap
-            
-            # Beeswarm plot
-            break
-        
-
-        
-        print(json.dumps(self.cust_mods, indent=4))
-
-    def init_data_dict(self, c_id):
-        if c_id not in self.cust_mods:
-            self.cust_mods[c_id] = dict()
-        if 'data' not in self.cust_mods[c_id]:
-            self.cust_mods[c_id]['data'] = dict()
-        if 'config' not in self.cust_mods[c_id]:
-            self.cust_mods[c_id]['config'] = dict()
+    # Dict to hold parsed data. Each key should contain a custom data type
+    # eg. output from a particular script. Note that this script may pick
+    # up many different types of data from many different sources.
+    # Second level keys should be 'config' and 'data'. Data key should then
+    # contain sample names, and finally data.
+    cust_mods = defaultdict(lambda: defaultdict(lambda: dict()))
     
-    def find_file_header(self, lines):
-        for l in lines:
-            break
+    # Dictionary to hold search patterns - start with those defined in the config
+    search_patterns = OrderedDict()
+    search_patterns['core_sp'] = config.sp['custom_content']
+    
+    # First - find files using patterns described in the config
+    config_data = getattr(config, 'custom_data', {})
+    for k,f in config_data.items():
+        
+        # Check that we have a dictionary
+        if type(f) != dict:
+            log.debug("config.custom_data row was not a dictionary: {}".format(k))
+            continue
+        c_id = f.get('id', k)
+        
+        # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
+        if 'data' in f:
+            cust_mods[c_id]['data'].update( f['data'] )
+            if 'config' in f:
+                cust_mods[c_id]['config'].update( f['config'] )
+            continue
+        
+        # File name patterns supplied in config
+        sp = {}
+        if 'fn' in f:
+            sp['fn'] = f['fn']
+        if 'contents' in f:
+            sp['contents'] = f['contents']
+        if len(sp) == 0:
+            log.debug("Search pattern not found for custom module: {}".format(c_id))
+        else:
+            cust_mods[c_id]['config'].update(f)
+            search_patterns[c_id] = sp
+    
+    # Now go through each of the file search patterns
+    bm = BaseMultiqcModule()
+    for k, sp in search_patterns.items():
+        for f in bm.find_log_files(sp):
+            
+            f_extension = os.path.splitext(f['fn'])[1]
+            
+            # YAML and JSON files are the easiest
+            parsed_data = None
+            if f_extension == '.yaml' or f_extension == '.yml':
+                parsed_data = yaml.load(f['f'])
+            elif f_extension == '.json':
+                parsed_data = json.loads(f['f'])
+            if parsed_data is not None:
+                c_id = parsed_data.get('id', k)
+                if len(parsed_data.get('data', {})) > 0:
+                    cust_mods[c_id]['data'].update( parsed_data['data'] )
+                    cust_mods[c_id]['config'].update ( { j:k for j,k in parsed_data.items() if j != 'data' } )
+                else:
+                    log.warning("No data found in {}".format(f['fn']))
+            
+            # txt, csv, tsv etc
+            else:
+                # Look for configuration details in the header
+                m_config = _find_file_header( f['f'] )
+                s_name = None
+                if m_config is not None:
+                    c_id = m_config.get('id', k)
+                    cust_mods[c_id]['config'].update( m_config )
+                    s_name = m_config.get('sample_name')
+                else:
+                    c_id = k
+                
+                # Add information about the file to the config dict
+                cust_mods[c_id]['config']['files'] = { s_name : { fn: f['fn'], root: f['root'] } }
+                
+                # Guess sample name if not given
+                if s_name is None:
+                    s_name = bm.clean_s_name(f['s_name'], f['root'])
+                
+                # Guess file format if not given
+                if cust_mods[c_id]['config'].get('file_format') is None:
+                    cust_mods[c_id]['config']['file_format'] = _guess_file_format( f['f'] )
+                
+                # Guess plot type if not given
+                if cust_mods[c_id]['config'].get('plot_type') is None:
+                    cust_mods[c_id]['config']['plot_type'] = _guess_plot_type( f['f'] )
+                
+                # Parse data
+                parsed_data = _parse_txt( f['f'], cust_mods[c_id]['config'] )
+                if parsed_data is None:
+                    log.warning("Not able to parse custom data in {}".format(f['fn']))
+                else:
+                    cust_mods[c_id]['data'][s_name] = parsed_data
+
+    # Remove any configs that have no data
+    remove_cids = [ k for k in cust_mods if len(cust_mods[k]['data']) == 0 ]
+    for k in remove_cids:
+        del cust_mods[k]
+    
+    if len(cust_mods) == 0:
+        log.debug("No custom content found")
+        raise UserWarning
+    
+    # Go through each data type
+    parsed_modules = list()
+    for k, mod in cust_mods.items():
+        
+        # Initialise this new module class and append to list
+        parsed_modules.append( MultiqcModule(k, mod) )
+        log.info("{}: Found {} reports".format(k, len(mod['data'])), extra={'mname': k})
+        
+    return parsed_modules
+
+
+class MultiqcModule(BaseMultiqcModule):
+    """ Module class, used for each custom content type """
+
+    def __init__(self, c_id, mod):
+        
+        modname = mod['config'].get('section_name', c_id.replace('_', ' ').title())
+        
+        # Initialise the parent object
+        super(MultiqcModule, self).__init__(
+            name = modname,
+            anchor = mod['config'].get('section_anchor', c_id),
+            href = mod['config'].get('section_href'),
+            info = mod['config'].get('description')
+        )
+
+        # General Stats
+        if mod['config'].get('plot_type') == 'generalstats':
+            self.general_stats_addcols(mod['data'], mod['config'].get('pconfig'))
+        
+        # Table
+        elif mod['config'].get('plot_type') == 'table':
+            self.intro += plots.table.plot(mod['data'], mod['config'].get('pconfig'))
+        
+        # Bar plot
+        elif mod['config'].get('plot_type') == 'bargraph':
+            self.intro += plots.bargraph.plot(mod['data'], mod['config'].get('categories'), mod['config'].get('pconfig'))
+        
+        # Line plot
+        elif mod['config'].get('plot_type') == 'linegraph':
+            self.intro += plots.linegraph.plot(mod['data'], mod['config'].get('pconfig'))
+        
+        # Scatter plot
+        elif mod['config'].get('plot_type') == 'scatter':
+            self.intro += plots.scatter.plot(mod['data'], mod['config'].get('pconfig'))
+        
+        # Heatmap
+        elif mod['config'].get('plot_type') == 'heatmap':
+            self.intro += plots.heatmap.plot(mod['data'], mod['config'].get('pconfig'))
+        
+        # Beeswarm plot
+        elif mod['config'].get('plot_type') == 'beeswarm':
+            self.intro += plots.beeswarm.plot(mod['data'], mod['config'].get('pconfig'))
+        
+        # Not recognised
+        else:
+            log.warning("Error - custom content plot type '{}' not recognised for module {}".format(mod['config'].get('plot_type'), modname ))
+
+
+def _find_file_header(f):
+    for l in f.splitlines():
+        break
+    return None
+
+def _guess_file_format(f):
+    return None
+
+def _guess_plot_type(f):
+    return None
+
+def _parse_txt(f, conf):
+    parsed_data = OrderedDict()
+    sep = None
+    if conf['file_format'] == 'csv':
+        sep = ","
+    if conf['file_format'] == 'tsv':
+        sep = "\t"
+    for l in f.splitlines():
+        if not l.startswith('#'):
+            s = l.split(sep)
+            try:
+                try:
+                    s0 = float(s[0])
+                except ValueError:
+                    s0 = s[0]
+                try:
+                    s1 = float(s[1])
+                except ValueError:
+                    s1 = s[1]
+                parsed_data[s0] = s1
+            except IndexError:
+                pass
+    if len(parsed_data) == 0:
         return None
+    else:
+        return parsed_data
+
+
+

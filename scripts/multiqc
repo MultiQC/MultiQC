@@ -344,7 +344,11 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     for this_module in run_modules:
         try:
             mod = config.avail_modules[this_module].load()
-            report.modules_output.append(mod())
+            output = mod()
+            if type(output) != list:
+                output = [output]
+            for m in output:
+                report.modules_output.append(m)
 
             # Copy over css & js files if requested by the theme
             try:

@@ -17,14 +17,16 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class BaseMultiqcModule(object):
 
-    def __init__(self, name='base', anchor='base', target='',href='', info='', extra=''):
+    def __init__(self, name='base', anchor='base', target=None, href=None, info='', extra=''):
         self.name = name
         self.anchor = anchor
-        if not target:
+        if target is None:
             target = self.name
-        self.intro = '<p><a href="{0}" target="_blank">{1}</a> {2}</p>{3}'.format(
-            href, target, info, extra
-        )
+        if href is not None:
+            mname = '<a href="{}" target="_blank">{}</a>'.format(href, target)
+        else:
+            mname = target
+        self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
 
     def find_log_files(self, patterns, filecontents=True, filehandles=False):
         """
