@@ -221,11 +221,11 @@ class MultiqcModule(BaseMultiqcModule):
         for fromBase in baseDict:
             for toBase in baseDict[fromBase]:
                 if(toBase.islower()) :
-                    if not divisor.has_key(fromBase.lower()) :
+                    if not fromBase.lower() in divisor :
                         divisor[fromBase.lower()] = 0
                     divisor[fromBase.lower()] += baseDict[fromBase][toBase]
                 else:
-                    if not divisor.has_key(fromBase) :
+                    if not fromBase in divisor :
                         divisor[fromBase] = 0
                     divisor[fromBase] += baseDict[fromBase][toBase]
         
