@@ -352,9 +352,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# reads counted within 3\'UTRs',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         headers['retained'] = {
@@ -362,9 +362,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# retained reads after filtering',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
 #         headers['multimapper'] = {
@@ -408,9 +408,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# mapped reads',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         headers['sequenced'] = {
@@ -418,9 +418,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# sequenced reads',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         self.general_stats_addcols(self.slamdunk_data, headers)
@@ -435,9 +435,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# mapped reads',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         headers['multimapper'] = {
@@ -445,9 +445,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# multimap-filtered reads',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'OrRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         headers['nmfiltered'] = {
@@ -455,9 +455,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# NM-filtered reads',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'OrRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         headers['idfiltered'] = {
@@ -465,9 +465,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# identity-filtered reads',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'OrRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         headers['mqfiltered'] = {
@@ -475,9 +475,9 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '# MQ-filtered reads',
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.f}',
+            'format': '{:.2f} M',
             'scale': 'OrRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: float(x) / 1000000.0,
         }
         
         config = {
