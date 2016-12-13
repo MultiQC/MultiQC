@@ -96,7 +96,7 @@ def custom_module_classes():
                     c_id = k
                 
                 # Add information about the file to the config dict
-                cust_mods[c_id]['config']['files'] = { s_name : { fn: f['fn'], root: f['root'] } }
+                cust_mods[c_id]['config']['files'] = { s_name : { 'fn': f['fn'], 'root': f['root'] } }
                 
                 # Guess sample name if not given
                 if s_name is None:
@@ -106,16 +106,16 @@ def custom_module_classes():
                 if cust_mods[c_id]['config'].get('file_format') is None:
                     cust_mods[c_id]['config']['file_format'] = _guess_file_format( f['f'] )
                 
-                # Guess plot type if not given
-                if cust_mods[c_id]['config'].get('plot_type') is None:
-                    cust_mods[c_id]['config']['plot_type'] = _guess_plot_type( f['f'] )
-                
                 # Parse data
                 parsed_data = _parse_txt( f['f'], cust_mods[c_id]['config'] )
                 if parsed_data is None:
                     log.warning("Not able to parse custom data in {}".format(f['fn']))
                 else:
                     cust_mods[c_id]['data'][s_name] = parsed_data
+                    
+                    # Guess plot type if not given
+                    if cust_mods[c_id]['config'].get('plot_type') is None:
+                        cust_mods[c_id]['config']['plot_type'] = _guess_plot_type( parsed_data )
 
     # Remove any configs that have no data
     remove_cids = [ k for k in cust_mods if len(cust_mods[k]['data']) == 0 ]
@@ -180,9 +180,13 @@ class MultiqcModule(BaseMultiqcModule):
         elif mod['config'].get('plot_type') == 'beeswarm':
             self.intro += plots.beeswarm.plot(mod['data'], mod['config'].get('pconfig'))
         
+        # Not supplied
+        elif mod['config'].get('plot_type') == None:
+            log.warning("Plot type not found for content ID '{}'".format(c_id))
+        
         # Not recognised
         else:
-            log.warning("Error - custom content plot type '{}' not recognised for module {}".format(mod['config'].get('plot_type'), modname ))
+            log.warning("Error - custom content plot type '{}' not recognised for content ID {}".format(mod['config'].get('plot_type'), c_id))
 
 
 def _find_file_header(f):
@@ -193,8 +197,27 @@ def _find_file_header(f):
 def _guess_file_format(f):
     return None
 
-def _guess_plot_type(f):
-    return None
+def _guess_plot_type(d):
+    col1_str = False
+    col2_str = False
+    col1_num = False
+    col2_num = False
+    for k,v in d.items():
+        try:
+            float(k)
+            col1_num = True
+        except ValueError:
+            col1_str = True
+        try:
+            float(v)
+            col2_num = True
+        except ValueError:
+            col2_str = True
+    if col1_num and col2_num:
+        return 'linegraph'
+    if col1_str and col2_num:
+        return 'bargraph'
+    #TODO: Quite a lot of other options to put here.
 
 def _parse_txt(f, conf):
     parsed_data = OrderedDict()
