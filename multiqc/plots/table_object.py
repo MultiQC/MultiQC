@@ -118,7 +118,6 @@ class datatable (object):
             for k in hs.keys():
                 sk = headers[idx][k]['shared_key']
                 if sk is not None:
-                    shared_keys[sk]['scale'] = headers[idx][k]['scale']
                     shared_keys[sk]['dmax']  = max(headers[idx][k]['dmax'], shared_keys[sk].get('dmax', headers[idx][k]['dmax']))
                     shared_keys[sk]['dmin']  = max(headers[idx][k]['dmin'], shared_keys[sk].get('dmin', headers[idx][k]['dmin']))
         
@@ -127,7 +126,6 @@ class datatable (object):
             for k in hs.keys():
                 sk = headers[idx][k]['shared_key']
                 if sk is not None:
-                    headers[idx][k]['scale'] = shared_keys[sk]['scale']
                     headers[idx][k]['dmax'] = shared_keys[sk]['dmax']
                     headers[idx][k]['dmin'] = shared_keys[sk]['dmin']
         
