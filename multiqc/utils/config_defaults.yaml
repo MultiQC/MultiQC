@@ -132,6 +132,11 @@ fn_ignore_files:
     - '*.vcf'
     - '*.txt.gz'
 
+# Favourite modules that should appear at the top in preference
+# This is in addition to those below. These appear above _all_ other
+# modules (even those not present in the below list).
+top_modules: []
+
 # Order that modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
 module_order:

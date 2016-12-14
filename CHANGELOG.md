@@ -46,6 +46,7 @@ Core Updates:
     things without having to wait for the report to replot each change.
 * New config options `decimalPoint_format` and `thousandsSep_format`
   * Allows you to change the default `1 234.56` number formatting for plots.
+* New config option `top_modules` allows you to specify modules that should come at the top of the report
 * Fixed bar plot bug where missing categories could shift data between samples
 * Report title now printed in the side navigation
 * Missing plot IDs added for easier plot exporting
@@ -53,6 +54,7 @@ Core Updates:
 * Added warnings in report about missing functionality for flat plots (exporting and toolbox)
 * Export button has contextual text for images / data
 * Fixed a bug where user config files were loaded twice
+* Fixed bug where module order was random if `--module` or `--exclude` was used.
 * Refactored code so that the order of modules can be changed in the user config
 * Beefed up code + docs in scatter plots back end and multiple bar plots.
 * Fixed a few back end nasties for Tables
