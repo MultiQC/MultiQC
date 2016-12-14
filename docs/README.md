@@ -36,8 +36,8 @@ MultiQC Modules:
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
-    SnpEff: modules/snpeff.md
     Slamdunk: modules/slamdunk.md
+    SnpEff: modules/snpeff.md
 Coding with MultiQC:
   Writing new templates: templates.md
   Writing new modules: modules.md
