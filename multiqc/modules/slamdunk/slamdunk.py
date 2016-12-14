@@ -423,6 +423,7 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_decimals': 2,
             'tt_suffix': '%',
             'tt_percentages': False,
+            'hide_zero_cats': False,
             'data_labels': [
                 "Plus Strand +",
                 "Minus Strand -",
