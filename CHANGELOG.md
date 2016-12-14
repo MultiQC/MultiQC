@@ -4,6 +4,8 @@
 Module updates:
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
+* [**Slamdunk**](http://t-neumann.github.io/slamdunk/) - new module!
+  * Slamdunk is a software tool to analyze SLAMSeq data.
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
