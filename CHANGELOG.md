@@ -1,6 +1,11 @@
 # MultiQC Version History
 
 #### v0.9dev
+A major new feature is released in v0.9 - support for _custom content_. This means
+that MultiQC can now easily include output from custom scripts within reports without
+the need for a new module or plugin. For more information, please see the
+[MultiQC documentation](http://multiqc.info/docs/#custom-content).
+
 Module updates:
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
@@ -39,6 +44,7 @@ Module updates:
     (see the [docs](http://multiqc.info/docs/#qualimap) for info).
 
 Core Updates:
+* Support for _custom content_ (see top of release notes).
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created
   * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
 * Added _'Apply'_ button to Highlight / Rename / Hide.

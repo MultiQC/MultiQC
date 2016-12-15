@@ -129,9 +129,38 @@ def custom_module_classes():
     parsed_modules = list()
     for k, mod in cust_mods.items():
 
+        # General Stats
+        if mod['config'].get('plot_type') == 'generalstats':
+            gsheaders = mod['config'].get('pconfig')
+            if gsheaders is None:
+                headers = set()
+                for d in mod['data'].values():
+                    headers.update(d.keys())
+                headers = list(headers)
+                headers.sort()
+                gsheaders = OrderedDict()
+                for k in headers:
+                    gsheaders[k] = dict()
+
+            # Headers is a list of dicts
+            if type(gsheaders) == list:
+                hs = OrderedDict()
+                for h in gsheaders:
+                    for k, v in h.items():
+                        hs[k] = v
+                gsheaders = hs
+
+            # Add namespace if not specified
+            for k in gsheaders:
+                if 'namespace' not in gsheaders[k]:
+                    gsheaders[k]['namespace'] = c_id
+
+            bm.general_stats_addcols(mod['data'], gsheaders)
+
         # Initialise this new module class and append to list
-        parsed_modules.append( MultiqcModule(k, mod) )
-        log.info("{}: Found {} reports".format(k, len(mod['data'])), extra={'mname': k})
+        else:
+            parsed_modules.append( MultiqcModule(k, mod) )
+            log.info("{}: Found {} reports".format(k, len(mod['data'])), extra={'mname': k})
 
     return parsed_modules
 
@@ -151,12 +180,8 @@ class MultiqcModule(BaseMultiqcModule):
             info = mod['config'].get('description')
         )
 
-        # General Stats
-        if mod['config'].get('plot_type') == 'generalstats':
-            self.general_stats_addcols(mod['data'], mod['config'].get('pconfig'))
-
         # Table
-        elif mod['config'].get('plot_type') == 'table':
+        if mod['config'].get('plot_type') == 'table':
             self.intro += plots.table.plot(mod['data'], mod['config'].get('pconfig'))
 
         # Bar plot

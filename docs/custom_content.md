@@ -36,9 +36,25 @@ plot_type: null         # The plot type to visualise the data with.
 pconfig: {}             # Configuration for the plot. See http://multiqc.info/docs/#plotting-functions
 ```
 
+Note that any _custom content_ data found with the same section `id` will be merged
+into the same report section / plot. The other section configuration keys are merged
+for each file, with identical keys overwriting what was previously parsed.
+
+This approach means that it's possible to have a single file containing data for multiple
+samples, but it's also possible to have one file per sample and still have all of them
+summarised.
+
+If you're using `plot_type: 'generalstats'` then a report section will not be created and
+most of the configuration keys above are ignored.
+
 ## Data formats
 MultiQC can parse custom data from a few different sources, in a number of different
 formats. Which one you use depends on how the data is being produced.
+
+For more complete examples of the data formats understood by MultiQC, please see the
+[`data/custom_content`](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
+directory in the [MultiQC_TestData](https://github.com/ewels/MultiQC_TestData)
+GitHub repository.
 
 ### Data from a released tool
 If your data comes from a released bioinformatics tool, you shouldn't be using this
@@ -93,6 +109,33 @@ custom_data:
                 first_thing: 12
                 second_thing: 9
 ```
+
+Or to add data to the General Statistics table:
+```yaml
+custom_data:
+    my_genstats:
+        plot_type: 'generalstats'
+        pconfig:
+            - col_1:
+                max: 100
+                min: 0
+                scale: 'RdYlGn'
+                format: '{:.1f}%'
+            - col_2:
+                min: 0
+        data:
+            sample_a:
+                col_1: 14.32
+                col_2: 1.2
+            sample_b:
+                col_1: 84.84
+                col_2: 1.9
+```
+> **Note:** Use a list of headers in `pconfig` (prepend with `-`) to specify the order
+> of columns in the table.
+
+See the [general statistics docs](http://multiqc.info/docs/#step-4-adding-to-the-general-statistics-table)
+for more information about configuring data for the General Statistics table.
 
 ### MultiQC-specific data file
 If you can choose exactly how your data output looks, then the easiest way to parse it
