@@ -57,7 +57,7 @@ def get_filelist():
         if ftype is not None and ftype.startswith('image'):
             if config.report_imgskips:
                 logger.debug("Ignoring file as has filetype '{}': {}".format(ftype, fn))
-            return None
+                return None
         
         # Limit search to files under 5MB to avoid 30GB FastQ files etc.
         try:
