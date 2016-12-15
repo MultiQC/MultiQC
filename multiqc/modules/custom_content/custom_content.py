@@ -45,21 +45,15 @@ def custom_module_classes():
         # Data supplied in with config (eg. from a multiqc_config.yaml file in working directory)
         if 'data' in f:
             cust_mods[c_id]['data'].update( f['data'] )
-            if 'config' in f:
-                cust_mods[c_id]['config'].update( f['config'] )
+            cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
             continue
 
         # File name patterns supplied in config
-        sp = {}
-        if 'fn' in f:
-            sp['fn'] = f['fn']
-        if 'contents' in f:
-            sp['contents'] = f['contents']
-        if len(sp) == 0:
-            log.debug("Search pattern not found for custom module: {}".format(c_id))
+        if 'sp' in f:
+            cust_mods[c_id]['config'] = f
+            search_patterns[c_id] = f['sp']
         else:
-            cust_mods[c_id]['config'].update(f)
-            search_patterns[c_id] = sp
+            log.debug("Search pattern not found for custom module: {}".format(c_id))
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
@@ -85,7 +79,7 @@ def custom_module_classes():
             # txt, csv, tsv etc
             else:
                 # Look for configuration details in the header
-                m_config = _find_file_header( f['f'] )
+                m_config = _find_file_header( f )
                 s_name = None
                 if m_config is not None:
                     c_id = m_config.get('id', k)
@@ -94,16 +88,22 @@ def custom_module_classes():
                 else:
                     c_id = k
 
-                # Add information about the file to the config dict
-                cust_mods[c_id]['config']['files'] = { s_name : { 'fn': f['fn'], 'root': f['root'] } }
-
                 # Guess sample name if not given
                 if s_name is None:
                     s_name = bm.clean_s_name(f['s_name'], f['root'])
 
+                # Guess c_id if no information known
+                if k == 'core_sp':
+                    c_id = s_name
+
+                # Add information about the file to the config dict
+                if 'files' not in cust_mods[c_id]['config']:
+                    cust_mods[c_id]['config']['files'] = dict()
+                cust_mods[c_id]['config']['files'].update( { s_name : { 'fn': f['fn'], 'root': f['root'] } } )
+
                 # Guess file format if not given
                 if cust_mods[c_id]['config'].get('file_format') is None:
-                    cust_mods[c_id]['config']['file_format'] = _guess_file_format( f['f'] )
+                    cust_mods[c_id]['config']['file_format'] = _guess_file_format( f )
 
                 # Parse data
                 parsed_data = _parse_txt( f['f'], cust_mods[c_id]['config'] )
@@ -189,12 +189,27 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def _find_file_header(f):
-    for l in f.splitlines():
-        break
-    return None
+    # Collect commented out header lines
+    hlines = []
+    for l in f['f'].splitlines():
+        if l.startswith('#'):
+            hlines.append(l[1:])
+    hconfig = None
+    try:
+        hconfig = yaml.load("\n".join(hlines))
+    except yaml.YAMLError:
+        log.debug("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
+    return hconfig
 
 def _guess_file_format(f):
-    return None
+    filename, file_extension = os.path.splitext(f['fn'])
+    if file_extension == 'csv':
+        return 'csv'
+    if file_extension == 'tsv':
+        return 'tsv'
+    else:
+        # TODO: Look at the file contents to try to guess
+        return None
 
 def _guess_plot_type(d):
     col1_str = False

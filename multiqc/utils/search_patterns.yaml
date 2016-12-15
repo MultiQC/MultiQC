@@ -29,6 +29,7 @@ custom_content:
     fn:
         - '*_mqc.yaml'
         - '*_mqc.yml'
+        - '*_mqc.json'
         - '*_mqc.txt'
         - '*_mqc.csv'
         - '*_mqc.tsv'
