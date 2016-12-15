@@ -29,7 +29,7 @@ class VariantEvalMixin():
 
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.gatk_varianteval, 'multiqc_gatk_varianteval')
-            
+
             # Get consensus TiTv references
             titv_ref = None
             for s_name in self.gatk_varianteval:
@@ -38,7 +38,7 @@ class VariantEvalMixin():
                 elif titv_ref != self.gatk_varianteval[s_name]['titv_reference']:
                     titv_ref = 'Multiple'
                     break
-            
+
             # General Stats Table
             varianteval_headers = dict()
             varianteval_headers['known_titv'] = {
@@ -56,29 +56,29 @@ class VariantEvalMixin():
                 'shared_key': 'titv_ratio'
             }
             self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, 'GATK VariantEval')
-            
+
             # Variant Counts plot
             self.sections.append({
                 'name': 'Variant Counts',
                 'anchor': 'gatk-count-variants',
                 'content': count_variants_barplot(self.gatk_varianteval)
             })
-            
+
             # Compare Overlap Table
             self.sections.append({
                 'name': 'Compare Overlap',
                 'anchor': 'gatk-compare-overlap',
                 'content': comp_overlap_table(self.gatk_varianteval)
             })
-            
-        
+
+
         # Return the number of logs that were found
         return len(self.gatk_varianteval)
 
 
 def parse_single_report(f):
     """ Parse a gatk varianteval varianteval """
-    
+
     data = dict()
     in_CompOverlap = False
     in_CountVariants = False
@@ -146,7 +146,7 @@ def parse_single_report(f):
                             data['novel_titv'] = float(d['tiTvRatio'])
                     except KeyError:
                         in_TiTv = False
-    
+
     return data
 
 
@@ -161,7 +161,7 @@ def count_variants_barplot(data):
     keys['symbolic'] = {'name': 'Symbolic'}
     keys['mixed'] = {'name': 'Mixed'}
     keys['nocalls'] = {'name': 'No-calls'}
-    
+
     plot_conf = {
         'id': 'gatk_varianteval_variant_plot',
         'title': 'GATK VariantEval Variant Counts',

@@ -38,7 +38,7 @@ class BaseMultiqcModule(object):
                  and either the file contents or file handle for the current matched file.
                  As yield is used, the results can be iterated over without loading all files at once
         """
-        
+
         # Get the search parameters
         fn_match = None
         contents_match = None
@@ -49,23 +49,23 @@ class BaseMultiqcModule(object):
         if fn_match == None and contents_match == None:
             logger.warning("No file patterns specified for find_log_files")
             yield None
-                
+
         # Loop through files, yield results if we find something
         for f in report.files:
-            
+
             # Set up vars
             root = f['root']
             fn = f['fn']
-            
+
             # Make a sample name from the filename
             s_name = self.clean_s_name(fn, root)
-            
+
             # Make search strings into lists if a string is given
             if type(fn_match) is str:
                 fn_match = [fn_match]
             if type(contents_match) is str:
                 contents_match = [contents_match]
-            
+
             # Search for file names ending in a certain string
             fn_matched = False
             if fn_match is not None:
@@ -74,11 +74,11 @@ class BaseMultiqcModule(object):
                         fn_matched = True
                         if not filehandles and not filecontents:
                             yield {'s_name': s_name, 'root': root, 'fn': fn}
-            
+
             if fn_matched or contents_match is not None:
                 try:
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-                        
+
                         # Search this file for our string of interest
                         returnfile = False
                         if contents_match is not None and fn_matched is False:
@@ -90,7 +90,7 @@ class BaseMultiqcModule(object):
                             f.seek(0)
                         else:
                             returnfile = True
-                        
+
                         if returnfile:
                             if filehandles:
                                 yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
@@ -100,8 +100,8 @@ class BaseMultiqcModule(object):
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     if config.report_readerrors:
                         logger.debug("Couldn't read file when looking for output: {}".format(fn))
-    
-    
+
+
     def clean_s_name(self, s_name, root):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
@@ -122,7 +122,7 @@ class BaseMultiqcModule(object):
                     dirs = dirs[d_idx:]
                 else:
                     dirs = dirs[:d_idx]
-            
+
             s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
@@ -145,8 +145,8 @@ class BaseMultiqcModule(object):
                 if s_name.startswith(chrs):
                     s_name = s_name[len(chrs):]
         return s_name
-    
-    
+
+
     def general_stats_addcols(self, data, headers={}, namespace=None):
         """ Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
@@ -161,7 +161,7 @@ class BaseMultiqcModule(object):
         # Use the module namespace as the name if not supplied
         if namespace is None:
             namespace = self.name
-        
+
         # Add the module name to the description if not already done
         keys = data.keys()
         if len(headers.keys()) > 0:
@@ -171,11 +171,11 @@ class BaseMultiqcModule(object):
             desc = headers[k].get('description', headers[k].get('title', k))
             if 'description' not in headers[k]:
                 headers[k]['description'] = desc
-        
+
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(data)
         report.general_stats_headers.append(headers)
-    
+
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         try:
             if module is None:
@@ -189,20 +189,20 @@ class BaseMultiqcModule(object):
             report.data_sources[module][section][s_name] = source
         except AttributeError:
             logger.warning('Tried to add data source for {}, but was missing fields data'.format(self.name))
-        
-    
+
+
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory """
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
-    
+
     ##################################################
     #### DEPRECIATED FORWARDERS
     def plot_bargraph (self, data, cats=None, pconfig={}):
         """ Depreciated function. Forwards to new location. """
         return plots.bargraph.plot(data, cats, pconfig)
-    
+
     def plot_xy_data(self, data, pconfig={}):
         """ Depreciated function. Forwards to new location. """
         return plots.linegraph.plot(data, pconfig)

@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Tophat', anchor='tophat',
-        href="https://ccb.jhu.edu/software/tophat/", 
+        href="https://ccb.jhu.edu/software/tophat/",
         info="is a fast splice junction mapper for RNA-Seq reads. "\
         "It aligns RNA-Seq reads to mammalian-sized genomes.")
 
@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_tophat_log (self, raw_data):
         """ Parse the Tophat alignment log file. """
-        
+
         if 'Aligned pairs' in raw_data:
             # Paired end data
             regexes = {
@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'aligned_multimap': r"of these\s*:\s+(\d+)",
                 'overall_aligned_percent': r"([\d\.]+)% overall read mapping rate.",
             }
-            
+
         parsed_data = {}
         for k, r in regexes.items():
             r_search = re.search(r, raw_data, re.MULTILINE)
@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
     def tophat_general_stats_table(self):
         """ Take the parsed stats from the Tophat report and add it to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['overall_aligned_percent'] = {
             'title': '% Aligned',
@@ -117,14 +117,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def tophat_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['aligned_not_multimapped_discordant'] = { 'color': '#437bb1', 'name': 'Aligned' }
         keys['aligned_multimap'] =   { 'color': '#f7a35c', 'name': 'Multimapped' }
         keys['aligned_discordant'] = { 'color': '#e63491', 'name': 'Discordant mappings' }
         keys['unaligned_total'] =    { 'color': '#7f0000', 'name': 'Not aligned' }
-        
+
         # Config for the plot
         config = {
             'id': 'tophat_alignment',
@@ -132,5 +132,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return plots.bargraph.plot(self.tophat_data, keys, config)

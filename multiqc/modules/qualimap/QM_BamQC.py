@@ -14,9 +14,9 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find Qualimap BamQC reports and parse their data """
-    
+
     sp = config.sp['qualimap']['bamqc']
-    
+
     try:
         covs = config.qualimap_config['general_stats_coverage']
         assert type(covs) == list
@@ -28,37 +28,37 @@ def parse_reports(self):
         covs = [str(i) for i in covs]
         log.debug("Using default Qualimap thresholds: {}".format(", ".join([i for i in covs])))
     self.covs = covs
-    
+
     # General stats - genome_results.txt
     self.qualimap_bamqc_genome_results = dict()
     for f in self.find_log_files(sp['genome_results']):
         parse_genome_results(self, f)
-    
+
     # Coverage - coverage_histogram.txt
     self.qualimap_bamqc_coverage_hist = dict()
     for f in self.find_log_files(sp['coverage'], filehandles=True):
         parse_coverage(self, f)
-    
+
     # Insert size - insert_size_histogram.txt
     self.qualimap_bamqc_insert_size_hist = dict()
     for f in self.find_log_files(sp['insert_size'], filehandles=True):
         parse_insert_size(self, f)
-    
+
     # GC distribution - mapped_reads_gc-content_distribution.txt
     self.qualimap_bamqc_gc_content_dist = dict()
     self.qualimap_bamqc_gc_by_species = dict()  # {'HUMAN': data_dict, 'MOUSE': data_dict}
     for f in self.find_log_files(sp['gc_dist'], filehandles=True):
         parse_gc_dist(self, f)
-    
+
     # Make the plots for the report
     report_sections(self)
-    
+
     # Set up the general stats table
     general_stats_headers(self)
-    
+
     # Return the number of reports we found
     return len(self.qualimap_bamqc_genome_results.keys())
-    
+
 def parse_genome_results(self, f):
     """ Parse the contents of the Qualimap BamQC genome_results.txt file """
     regexes = {
@@ -79,15 +79,15 @@ def parse_genome_results(self, f):
                 d[k] = float(r_search.group(1).replace(',',''))
             except ValueError:
                 d[k] = r_search.group(1)
-    
+
     # Check we have an input filename
     if 'bam_file' not in d:
         log.debug("Couldn't find an input filename in genome_results file {}".format(f['fn']))
         return None
-    
+
     # Get a nice sample name
     s_name = self.clean_s_name(d['bam_file'], f['root'])
-    
+
     # Add to general stats table & calculate a nice % aligned
     try:
         self.general_stats_data[s_name]['total_reads'] = d['total_reads']
@@ -96,20 +96,20 @@ def parse_genome_results(self, f):
         self.general_stats_data[s_name]['percentage_aligned'] = d['percentage_aligned']
     except KeyError:
         pass
-    
+
     # Save results
     if s_name in self.qualimap_bamqc_genome_results:
         log.debug("Duplicate genome results sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_genome_results[s_name] = d
     self.add_data_source(f, s_name=s_name, section='genome_results')
-    
-    
+
+
 def parse_coverage(self, f):
     """ Parse the contents of the Qualimap BamQC Coverage Histogram file """
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/coverage_histogram.txt
     s_name = self.get_s_name(f)
-    
+
     d = dict()
     for l in f['f']:
         if l.startswith('#'):
@@ -118,11 +118,11 @@ def parse_coverage(self, f):
         coverage = int(round(float(coverage)))
         count = float(count)
         d[coverage] = count
-    
+
     if len(d) == 0:
         log.debug("Couldn't parse contents of coverage histogram file {}".format(f['fn']))
         return None
-    
+
     # Find median without importing anything to do it for us
     num_counts = sum(d.values())
     cum_counts = 0
@@ -133,19 +133,19 @@ def parse_coverage(self, f):
             median_coverage = thiscov
             break
     self.general_stats_data[s_name]['median_coverage'] = median_coverage
-    
+
     # Save results
     if s_name in self.qualimap_bamqc_coverage_hist:
         log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_coverage_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section='coverage_histogram')
-    
+
 def parse_insert_size(self, f):
     """ Parse the contents of the Qualimap BamQC Insert Size Histogram file """
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/insert_size_histogram.txt
     s_name = self.get_s_name(f)
-    
+
     d = dict()
     zero_insertsize = 0
     for l in f['f']:
@@ -158,7 +158,7 @@ def parse_insert_size(self, f):
             zero_insertsize = count
         else:
             d[insertsize] = count
-    
+
     # Find median without importing anything to do it for us
     num_counts = sum(d.values())
     cum_counts = 0
@@ -170,19 +170,19 @@ def parse_insert_size(self, f):
             break
     # Add the median insert size to the general stats table
     self.general_stats_data[s_name]['median_insert_size'] = median_insert_size
-    
+
     # Save results
     if s_name in self.qualimap_bamqc_insert_size_hist:
         log.debug("Duplicate insert size histogram sample name found! Overwriting: {}".format(s_name))
     self.qualimap_bamqc_insert_size_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section='insert_size_histogram')
-    
+
 def parse_gc_dist(self, f):
     """ Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file """
     # Get the sample name from the parent parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/mapped_reads_gc-content_distribution.txt
     s_name = self.get_s_name(f)
-    
+
     d = dict()
     reference_species = None
     reference_d = dict()
@@ -204,7 +204,7 @@ def parse_gc_dist(self, f):
 
     # Add average GC to the general stats table
     self.general_stats_data[s_name]['avg_gc'] = avg_gc
-    
+
     # Save results
     if s_name in self.qualimap_bamqc_gc_content_dist:
         log.debug("Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {}".format(s_name))
@@ -333,7 +333,7 @@ def general_stats_headers (self):
     except (AttributeError, TypeError, AssertionError):
         hidecovs = [1, 5, 10, 50]
     hidecovs = [str(i) for i in hidecovs]
-    
+
     self.general_stats_headers['avg_gc'] = {
         'title': 'Avg. GC',
         'description': 'Average GC content',
