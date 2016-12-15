@@ -85,6 +85,7 @@ config = {
     'logswitch': False,                     # Show the 'Log10' switch?
     'logswitch_active': False,              # Initial display with 'Log10' active?
     'logswitch_label': 'Log10',             # Label for 'Log10' button
+    'hide_zero_cats': True,                 # Hide categories where data for all samples is 0
     # Customising the plot
     'title': None,                          # Plot title
     'xlab': None,                           # X axis label

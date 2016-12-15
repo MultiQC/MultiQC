@@ -25,7 +25,7 @@ def parse_reports(self):
         'reads_aligned_genes': r"aligned to genes\s*=\s*([\d,]+)",
         'ambiguous_alignments': r"ambiguous alignments\s*=\s*([\d,]+)",
         'not_aligned': r"not aligned\s*=\s*([\d,]+)",
-        '5_3_bias': r"5'-3' bias\s*=\s*([\d,]+)",
+        '5_3_bias': r"5'-3' bias\s*=\s*(\d+\.\d+)",
         'reads_aligned_exonic': r"exonic\s*=\s*([\d,]+)",
         'reads_aligned_intronic': r"intronic\s*=\s*([\d,]+)",
         'reads_aligned_intergenic': r"intergenic\s*=\s*([\d,]+)",
@@ -138,7 +138,8 @@ def parse_reports(self):
 
     #### General Stats
     self.general_stats_headers['5_3_bias'] = {
-        'title': "5'-3' bias"
+        'title': "5'-3' bias",
+        'format': '{:.2f}',
     }
     self.general_stats_headers['reads_aligned'] = {
         'title': 'M Aligned',

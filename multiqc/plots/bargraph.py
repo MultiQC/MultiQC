@@ -108,11 +108,12 @@ def plot (data, cats=None, pconfig={}):
                 except KeyError:
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float('nan'))
-            if catcount > 0 and max(x for x in thisdata if not math.isnan(x)) > 0:
-                thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
-                if 'color' in cats[idx][c]:
-                    thisdict['color'] = cats[idx][c]['color']
-                hc_data.append(thisdict)
+            if catcount > 0:
+                if pconfig.get('hide_zero_cats', True) is False or max(x for x in thisdata if not math.isnan(x)) > 0:
+                    thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
+                    if 'color' in cats[idx][c]:
+                        thisdict['color'] = cats[idx][c]['color']
+                    hc_data.append(thisdict)
 
         # Remove empty samples
         for s, c in sample_dcount.items():

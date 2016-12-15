@@ -36,9 +36,9 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
 [Skewer][skewer]             | [HiCUP][hicup]         | [Picard][picard]          | [QUAST][quast]
 [Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Prokka][prokka]          | [RSeQC][rseqc]
                              | [Salmon][salmon]       | [Samblaster][samblaster]  |
-                             | [STAR][star]           | [Samtools][samtools]      |
-                             | [Tophat][tophat]       | [SnpEff][snpeff]          |
-                             |                        | [Subread featureCounts][featurecounts] |
+                             | [Slamdunk][slamdunk]   | [Samtools][samtools]      |
+                             | [STAR][star]           | [SnpEff][snpeff]          |
+                             | [Tophat][tophat]       | [Subread featureCounts][featurecounts] |
 
 Please note that some modules only recognise output from certain subcommands. Please follow the
 above links to the [module documentation](http://multiqc.info/docs/#multiqc-modules) for more information.
@@ -139,6 +139,7 @@ Code contributions from:
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@avilella](https://github.com/avilella),
 [@vladsaveliev](https://github.com/vladsaveliev)
+[@t-neumann](https://github.com/t-neumann)
 and many others. Thanks for your support!
 
 [bamtools]:       http://multiqc.info/docs/#bamtools
@@ -162,6 +163,7 @@ and many others. Thanks for your support!
 [rseqc]:          http://multiqc.info/docs/#rseqc
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster
+[slamdunk]:       http://multiqc.info/docs/#slamdunk
 [skewer]:         http://multiqc.info/docs/#skewer
 [snpeff]:         http://multiqc.info/docs/#snpeff
 [star]:           http://multiqc.info/docs/#star

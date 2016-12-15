@@ -48,7 +48,7 @@ fn_ignore_dirs:
     - 'multiqc_data'
 fn_ignore_paths: []
 no_version_check: false
-log_filesize_limit: 5000000
+log_filesize_limit: 10000000
 report_readerrors: false
 report_imgskips: false
 skip_generalstats: false
@@ -102,7 +102,9 @@ fn_clean_exts:
     - '.junctionSaturation_plot.r'
     - '.pos.DupRate.xls'
     - '.GC.xls'
+    - '_slamdunk'
     - '_bismark'
+
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
@@ -113,6 +115,7 @@ fn_clean_trim:
     - '.r'
     - '_val'
     - '.idxstats'
+    - '_trimmed'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -128,6 +131,11 @@ fn_ignore_files:
     - '*.bed'
     - '*.vcf'
     - '*.txt.gz'
+
+# Favourite modules that should appear at the top in preference
+# This is in addition to those below. These appear above _all_ other
+# modules (even those not present in the below list).
+top_modules: []
 
 # Order that modules should appear in report. Try to list in order of analysis,
 # eg. FastQC is usually the first step, so should be last in this list.
@@ -151,6 +159,7 @@ module_order:
     - 'hicup'
     - 'salmon'
     - 'kallisto'
+    - 'slamdunk'
     - 'star'
     - 'tophat'
     - 'bowtie2'
