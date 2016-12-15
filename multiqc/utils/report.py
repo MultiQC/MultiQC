@@ -36,19 +36,19 @@ saved_raw_data = dict()
 # Make a list of files to search
 files = list()
 def get_filelist():
-    
+
     def add_file(fn, root):
-        
+
         # Check that this is a file and not a pipe or anything weird
         if not os.path.isfile(os.path.join(root, fn)):
             return None
-        
+
         # Check that we don't want to ignore this file
         i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
         if len(i_matches) > 0:
             logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
             return None
-    
+
         # Use mimetypes to exclude binary files where possible
         (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
         if encoding is not None:
@@ -58,7 +58,7 @@ def get_filelist():
             if config.report_imgskips:
                 logger.debug("Ignoring file as has filetype '{}': {}".format(ftype, fn))
             return None
-        
+
         # Limit search to files under 5MB to avoid 30GB FastQ files etc.
         try:
             filesize = os.path.getsize(os.path.join(root,fn))
@@ -68,19 +68,19 @@ def get_filelist():
             if filesize > config.log_filesize_limit:
                 logger.debug("Ignoring file as too large: {}".format(fn))
                 return None
-        
+
         # Looks good! Remember this file
         files.append({
             'root': root,
             'fn': fn
         })
-    
+
     # Go through the analysis directories
     for path in config.analysis_dir:
         if os.path.isdir(path):
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
-                
+
                 # Skip any sub-directories matching ignore params
                 orig_dirnames = dirnames[:]
                 for n in config.fn_ignore_dirs:
@@ -94,7 +94,7 @@ def get_filelist():
                     if len(orig_dirnames) != len(dirnames):
                         removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
                         logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(", ".join(removed_dirs)))
-                
+
                 # Skip *this* directory if matches ignore params
                 d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
                 if len(d_matches) > 0:
@@ -104,11 +104,11 @@ def get_filelist():
                 if len(p_matches) > 0:
                     logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
                     continue
-                
+
                 # Search filenames in this directory
                 for fn in filenames:
                     add_file(fn, root)
-        
+
         elif os.path.isfile(path):
             add_file(os.path.basename(path), os.path.dirname(path))
 
@@ -129,5 +129,5 @@ def data_sources_tofile ():
                         lines.append([mod, sec, s_name, source])
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
-    
-    
+
+

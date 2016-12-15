@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find RSeQC read_distribution reports and parse their data """
-    
+
     # Set up vars
     self.read_dist = dict()
     first_regexes = {
@@ -35,7 +35,7 @@ def parse_reports(self):
         'tes_down_5kb': r"TES_down_5kb\s+(\d+)\s+(\d+)\s+([\d\.]+)\s*",
         'tes_down_10kb': r"TES_down_10kb\s+(\d+)\s+(\d+)\s+([\d\.]+)\s*",
     }
-    
+
     # Go through files and parse data using regexes
     for f in self.find_log_files(config.sp['rseqc']['read_distribution']):
         d = dict()
@@ -49,7 +49,7 @@ def parse_reports(self):
                 d['{}_total_bases'.format(k)] = int(r_search.group(1))
                 d['{}_tag_count'.format(k)] = int(r_search.group(2))
                 d['{}_tags_kb'.format(k)] = float(r_search.group(2))
-        
+
         # Calculate some percentages for parsed file
         if 'total_tags' in d:
             t = float(d['total_tags'])
@@ -59,18 +59,18 @@ def parse_reports(self):
                     pk = '{}_tag_pct'.format(k[:-10])
                     pcts[pk] = (float(d[k]) / t)*100.0
             d.update(pcts)
-        
+
         if len(d) > 0:
             if f['s_name'] in self.read_dist:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='read_distribution')
             self.read_dist[f['s_name']] = d
-    
+
     if len(self.read_dist) > 0:
-        
+
         # Write to file
         self.write_data_file(self.read_dist, 'multiqc_rseqc_read_distribution')
-        
+
         # Plot bar graph of groups
         keys = OrderedDict()
         keys['cds_exons_tag_count'] = {'name': "CDS_Exons"}
@@ -83,7 +83,7 @@ def parse_reports(self):
         keys['tes_down_1kb_tag_count'] = {'name': "TES_down_1kb"}
         keys['tes_down_5kb_tag_count'] = {'name': "TES_down_5kb"}
         keys['tes_down_10kb_tag_count'] = {'name': "TES_down_10kb"}
-        
+
         # Config for the plot
         pconfig = {
             'id': 'rseqc_read_distribution_plot',
@@ -92,15 +92,15 @@ def parse_reports(self):
             'cpswitch_counts_label': 'Number of Tags',
             'cpswitch_c_active': False
         }
-        
+
         p_link = '<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
         self.sections.append({
             'name': 'Read Distribution',
             'anchor': 'rseqc-read_distribution',
-            'content': "<p>"+p_link+" calculates how mapped reads are distributed over genome features.</p>" + 
+            'content': "<p>"+p_link+" calculates how mapped reads are distributed over genome features.</p>" +
                 plots.bargraph.plot(self.read_dist, keys, pconfig)
         })
-    
+
     # Return number of samples found
     return len(self.read_dist)
-    
+

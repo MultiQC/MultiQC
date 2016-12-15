@@ -28,10 +28,10 @@ def init_log(logger, loglevel=0):
     # Logging templates
     debug_template = '[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s'
     info_template = '[%(levelname)-7s] %(module)15s : %(message)s'
-    
+
     # Base level setup
     logger.setLevel(getattr(logging, 'DEBUG'))
-    
+
     # Set up the console logging stream
     console = logging.StreamHandler()
     console.setLevel(getattr(logging, loglevel))
@@ -40,7 +40,7 @@ def init_log(logger, loglevel=0):
     else:
         console.setFormatter(logging.Formatter(info_template))
     logger.addHandler(console)
-    
+
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding='utf-8')
     file_handler.setLevel(getattr(logging, 'DEBUG')) # always DEBUG for the file
@@ -50,7 +50,7 @@ def init_log(logger, loglevel=0):
 def copy_tmp_log(logger):
     """ Copy the temporary log file to the MultiQC data directory
     if it exists. """
-    
+
     try:
         shutil.copyfile(log_tmp_fn, os.path.join(config.data_dir, '.multiqc.log'))
         # https://stackoverflow.com/questions/15435652/python-does-not-release-filehandles-to-logfile

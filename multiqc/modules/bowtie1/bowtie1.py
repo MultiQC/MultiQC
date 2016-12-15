@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """ Bowtie 1 module, parses stderr logs. """
-    
+
     def __init__(self):
 
         # Initialise the parent object
@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if fqmatch:
                     s_name = self.clean_s_name(fqmatch.group(1), f['root'])
                     log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
-            
+
             # End of log, reset in case there is another in this file
             if 'Overall time:' in l:
                 if len(parsed_data) > 0:
@@ -92,12 +92,12 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bowtie_data[s_name] = parsed_data
                 s_name = f['s_name']
                 parsed_data = {}
-            
+
             for k, r in regexes.items():
                 match = re.search(r, l)
                 if match:
                     parsed_data[k] = float(match.group(1).replace(',', ''))
-        
+
         if len(parsed_data) > 0:
             if s_name in self.bowtie_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bowtie_general_stats_table(self):
         """ Take the parsed stats from the Bowtie report and add it to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['reads_aligned_percentage'] = {
             'title': '% Aligned',
@@ -131,13 +131,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def bowtie_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['reads_aligned'] = { 'color': '#8bbc21', 'name': 'Aligned' }
         keys['multimapped'] =   { 'color': '#2f7ed8', 'name': 'Multimapped' }
         keys['not_aligned'] =   { 'color': '#0d233a', 'name': 'Not aligned' }
-        
+
         # Config for the plot
         config = {
             'id': 'bowtie1_alignment',
@@ -145,5 +145,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return plots.bargraph.plot(self.bowtie_data, keys, config)

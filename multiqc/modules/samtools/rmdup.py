@@ -40,7 +40,7 @@ class RmdupReportMixin():
         if len(self.samtools_rmdup) > 0:
             # Write parsed report data to a file
             self.write_data_file(self.samtools_rmdup, 'multiqc_samtools_rmdup')
-            
+
             # Make a bar plot showing duplicates
             keys = OrderedDict()
             keys['n_unique'] = {'name': 'Non-duplicated reads'}
@@ -55,7 +55,7 @@ class RmdupReportMixin():
                 'anchor': 'samtools-rmdup',
                 'content': plots.bargraph.plot(self.samtools_rmdup, keys, pconfig)
             })
-            
+
             # Add a column to the General Stats table
             # General Stats Table
             stats_headers = OrderedDict()

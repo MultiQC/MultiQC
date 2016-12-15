@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
         n['flagstat'] = self.parse_samtools_flagstats()
         if n['flagstat'] > 0:
             log.info("Found {} flagstat reports".format(n['flagstat']))
-        
+
         n['idxstats'] = self.parse_samtools_idxstats()
         if n['idxstats'] > 0:
             log.info("Found {} idxstats reports".format(n['idxstats']))
@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
         n['rmdup'] = self.parse_samtools_rmdup()
         if n['rmdup'] > 0:
             log.info("Found {} rmdup reports".format(n['rmdup']))
-        
+
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))

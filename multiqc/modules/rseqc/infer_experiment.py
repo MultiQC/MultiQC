@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find RSeQC infer_experiment reports and parse their data """
-    
+
     # Set up vars
     self.infer_exp = dict()
     regexes = {
@@ -25,7 +25,7 @@ def parse_reports(self):
         'se_antisense': r"\+-,-\+\": (\d\.\d+)",
         'failed': r"Fraction of reads failed to determine: (\d\.\d+)"
     }
-    
+
     # Go through files and parse data using regexes
     for f in self.find_log_files(config.sp['rseqc']['infer_experiment']):
         d = dict()
@@ -33,18 +33,18 @@ def parse_reports(self):
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
                 d[k] = float(r_search.group(1))
-                
+
         if len(d) > 0:
             if f['s_name'] in self.infer_exp:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='infer_experiment')
             self.infer_exp[f['s_name']] = d
-    
+
     if len(self.infer_exp) > 0:
-        
+
         # Write to file
         self.write_data_file(self.infer_exp, 'multiqc_rseqc_infer_experiment')
-        
+
         # Merge PE and SE for plot
         pdata = dict()
         for s_name, vals in self.infer_exp.items():
@@ -84,4 +84,4 @@ def parse_reports(self):
 
     # Return number of samples found
     return len(self.infer_exp)
-    
+

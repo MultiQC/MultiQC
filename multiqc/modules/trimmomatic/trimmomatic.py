@@ -20,9 +20,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Trimmomatic', anchor='trimmomatic',
-        href='http://www.usadellab.org/cms/?page=trimmomatic', 
+        href='http://www.usadellab.org/cms/?page=trimmomatic',
         info="is a flexible read trimming tool for Illumina NGS data.")
-        
+
         # Parse logs
         self.trimmomatic = dict()
         for f in self.find_log_files(config.sp['trimmomatic'], filehandles=True):
@@ -31,10 +31,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.trimmomatic) == 0:
             log.debug("Could not find any Trimmomatic data in {}".format(config.analysis_dir))
             raise UserWarning
-        
+
         log.info("Found {} logs".format(len(self.trimmomatic)))
         self.write_data_file(self.trimmomatic, 'multiqc_trimmomatic')
-        
+
         # Add drop rate to the general stats table
         headers = OrderedDict()
         headers['dropped_pct'] = {
@@ -47,10 +47,10 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         self.general_stats_addcols(self.trimmomatic, headers)
-        
+
         # Make barplot
         self.intro += self.trimmomatic_barplot()
-        
+
     def parse_trimmomatic(self, f):
         s_name = None
         for l in f['f']:
@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
                         s_name = self.clean_s_name(s_name, f['root'])
                         if s_name in self.trimmomatic:
                             log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            
+
             # Get single end stats
             if 'Input Reads' in l and s_name is not None:
                 match = re.search('Input Reads: (\d+) Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)', l)
@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.trimmomatic[s_name]['dropped'] = float( match.group(4) )
                     self.trimmomatic[s_name]['dropped_pct'] = float( match.group(5).replace(',','.') )
                     s_name = None
-            
+
             # Get paired end stats
             if 'Input Read Pairs' in l and s_name is not None:
                 match = re.search('Input Read Pairs: (\d+) Both Surviving: (\d+) \(([\d\.,]+)%\) Forward Only Surviving: (\d+) \(([\d\.,]+)%\) Reverse Only Surviving: (\d+) \(([\d\.,]+)%\) Dropped: (\d+) \(([\d\.,]+)%\)', l)
@@ -102,11 +102,11 @@ class MultiqcModule(BaseMultiqcModule):
                     self.trimmomatic[s_name]['dropped'] = float( match.group(8) )
                     self.trimmomatic[s_name]['dropped_pct'] = float( match.group(9).replace(',','.') )
                     s_name = None
-    
-    
+
+
     def trimmomatic_barplot (self):
         """ Make the HighCharts HTML to plot the trimmomatic rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['surviving'] =              { 'color': '#437bb1', 'name': 'Surviving Reads' }
@@ -114,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['forward_only_surviving'] = { 'color': '#e63491', 'name': 'Forward Only Surviving' }
         keys['reverse_only_surviving'] = { 'color': '#b1084c', 'name': 'Reverse Only Surviving' }
         keys['dropped'] =                { 'color': '#7f0000', 'name': 'Dropped' }
-        
+
         # Config for the plot
         pconfig = {
             'id': 'trimmomatic_plot',
@@ -122,5 +122,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return plots.bargraph.plot(self.trimmomatic, keys, pconfig)

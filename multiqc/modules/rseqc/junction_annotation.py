@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find RSeQC junction_annotation reports and parse their data """
-    
+
     # Set up vars
     self.junction_annotation_data = dict()
     regexes = {
@@ -28,7 +28,7 @@ def parse_reports(self):
         'partial_novel_splicing_junctions': r"^Partial Novel Splicing Junctions:\s*(\d+)$",
         'novel_splicing_junctions': r"^Novel Splicing Junctions:\s*(\d+)$",
     }
-    
+
     # Go through files and parse data using regexes
     for f in self.find_log_files(config.sp['rseqc']['junction_annotation']):
         d = dict()
@@ -36,7 +36,7 @@ def parse_reports(self):
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
                 d[k] = int(r_search.group(1))
-        
+
         # Calculate some percentages
         if 'total_splicing_events' in d:
             t = float(d['total_splicing_events'])
@@ -54,18 +54,18 @@ def parse_reports(self):
                 d['partial_novel_splicing_junctions_pct'] = (float(d['partial_novel_splicing_junctions']) / t)*100.0
             if 'novel_splicing_junctions' in d:
                 d['novel_splicing_junctions_pct'] = (float(d['novel_splicing_junctions']) / t)*100.0
-        
+
         if len(d) > 0:
             if f['s_name'] in self.junction_annotation_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='junction_annotation')
             self.junction_annotation_data[f['s_name']] = d
-    
+
     if len(self.junction_annotation_data) > 0:
-        
+
         # Write to file
         self.write_data_file(self.junction_annotation_data, 'multiqc_rseqc_junction_annotation')
-        
+
         # Plot junction annotations
         keys = [OrderedDict(), OrderedDict()]
         keys[0]['known_splicing_junctions'] = { 'name': 'Known Splicing Junctions' }
@@ -74,7 +74,7 @@ def parse_reports(self):
         keys[1]['known_splicing_events'] = { 'name': 'Known Splicing Events' }
         keys[1]['partial_novel_splicing_events'] = { 'name': 'Partial Novel Splicing Events' }
         keys[1]['novel_splicing_events'] = { 'name': 'Novel Splicing Events' }
-        
+
         pconfig = {
             'id': 'rseqc_junction_annotation_junctions_plot',
             'title': 'RSeQC: Splicing Junctions',
@@ -91,7 +91,7 @@ def parse_reports(self):
                 " or more times, each time is called a splicing event.</p>" +
                 plots.bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
         })
-    
+
     # Return number of samples found
     return len(self.junction_annotation_data)
-    
+

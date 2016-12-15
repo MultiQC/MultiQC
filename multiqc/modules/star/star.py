@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, section='SummaryLog')
                 self.star_data[s_name] = parsed_data
-        
+
         # Find and load any STAR gene count tables
         self.star_genecounts_unstranded = dict()
         self.star_genecounts_first_strand = dict()
@@ -63,17 +63,17 @@ class MultiqcModule(BaseMultiqcModule):
                 log.info("Found {} reports".format(len(self.star_data)))
         else:
             log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
-        
+
         self.sections = list()
-        
+
         if len(self.star_data) > 0:
-            
+
             # Write parsed report data to a file
             self.write_data_file(self.star_data, 'multiqc_star')
 
             # Basic Stats Table
             self.star_stats_table()
-        
+
             if len(self.star_genecounts_unstranded) == 0:
                 # Alignment bar plot - only one section, so add to the module intro
                 self.intro += self.star_alignment_chart()
@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'anchor': 'star_alignments',
                     'content': self.star_alignment_chart()
                 })
-        
+
         if len(self.star_genecounts_unstranded) > 0:
             self.sections.append({
                 'name': 'Gene Counts',
@@ -180,11 +180,11 @@ class MultiqcModule(BaseMultiqcModule):
             return { 'unstranded': unstranded, 'first_strand': first_strand, 'second_strand': second_strand }
         else:
             return None
-        
+
     def star_stats_table(self):
         """ Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['uniquely_mapped_percent'] = {
             'title': '% Aligned',
@@ -207,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def star_alignment_chart (self):
         """ Make the plot showing alignment rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['uniquely_mapped'] =      { 'color': '#437bb1', 'name': 'Uniquely mapped' }
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['unmapped_mismatches'] =  { 'color': '#e63491', 'name': 'Unmapped: too many mismatches' }
         keys['unmapped_tooshort'] =    { 'color': '#b1084c', 'name': 'Unmapped: too short' }
         keys['unmapped_other'] =       { 'color': '#7f0000', 'name': 'Unmapped: other' }
-        
+
         # Config for the plot
         pconfig = {
             'id': 'star_alignment_plot',
@@ -224,12 +224,12 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return plots.bargraph.plot(self.star_data, keys, pconfig)
-    
+
     def star_genecount_chart (self):
         """ Make a plot for the ReadsPerGene output """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['N_genes'] =        { 'color': '#2f7ed8', 'name': 'Overlapping Genes' }
@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['N_ambiguous'] =    { 'color': '#492970', 'name': 'Ambiguous Features' }
         keys['N_multimapping'] = { 'color': '#f28f43', 'name': 'Multimapping' }
         keys['N_unmapped'] =     { 'color': '#7f0000', 'name': 'Unmapped' }
-        
+
         # Config for the plot
         pconfig = {
             'id': 'star_gene_counts',
