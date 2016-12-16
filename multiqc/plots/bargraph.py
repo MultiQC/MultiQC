@@ -74,7 +74,11 @@ def plot (data, cats=None, pconfig={}):
         try:
             cats[idx]
         except (IndexError):
-            cats.append( list(set(k for s in data[idx].keys() for k in data[idx][s].keys() )) )
+            cats.append(list())
+            for s in data[idx].keys():
+                for k in data[idx][s].keys():
+                    if k not in cats[idx]:
+                        cats[idx].append(k)
 
     # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
@@ -207,7 +211,7 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, k=k)
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
     # Plot and javascript function

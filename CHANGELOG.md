@@ -1,11 +1,18 @@
 # MultiQC Version History
 
 #### v0.9dev
+A major new feature is released in v0.9 - support for _custom content_. This means
+that MultiQC can now easily include output from custom scripts within reports without
+the need for a new module or plugin. For more information, please see the
+[MultiQC documentation](http://multiqc.info/docs/#custom-content).
+
 Module updates:
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
 * [**Slamdunk**](http://t-neumann.github.io/slamdunk/) - new module!
   * Slamdunk is a software tool to analyze SLAMSeq data.
+* [**Peddy**](https://github.com/brentp/peddy) - new module!
+  * Peddy calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
@@ -39,6 +46,7 @@ Module updates:
     (see the [docs](http://multiqc.info/docs/#qualimap) for info).
 
 Core Updates:
+* Support for _custom content_ (see top of release notes).
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created
   * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
 * Added _'Apply'_ button to Highlight / Rename / Hide.
@@ -60,6 +68,7 @@ Core Updates:
 * Fixed a few back end nasties for Tables
   * Shared-key columns are no longer forced to share colour schemes
   * Fixed bug in lambda modified values when format string breaks
+  * Supplying just data with no header information now works as advertised
 * Improvements to back end code for bar plots
   * New `tt_decimals` and `tt_suffix` options for bar plots
   * Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.

@@ -46,14 +46,14 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
     :param: sort_cols - Sort columns alphabetically
     :param: data_format - Output format. Defaults to config.data_format (usually tsv)
     :return: None """
-    
+
     if config.data_dir is not None:
-        
+
         # Add relevant file extension to filename
         if data_format is None:
             data_format = config.data_format
         fn = '{}.{}'.format(fn, config.data_format_extensions[data_format])
-        
+
         # Save file
         with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
             if data_format == 'json':
@@ -71,14 +71,14 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                             h.append(str(k))
                 if sort_cols:
                     h = sorted(h)
-                
+
                 # Get the rows
                 rows = [ "\t".join(h) ]
                 for sn in sorted(data.keys()):
                     # Make a list starting with the sample name, then each field in order of the header cols
                     l = [sn] + [ str(data[sn].get(k, '')) for k in h[1:] ]
                     rows.append( "\t".join(l) )
-                
+
                 body = '\n'.join(rows)
-                
+
                 print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)

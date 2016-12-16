@@ -49,7 +49,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.cutadapt_data, 'multiqc_cutadapt')
 
         # Basic Stats Table
-        # Report table is immutable, so just updating it works
         self.cutadapt_general_stats_table()
 
         # Trimming Length Profiles

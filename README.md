@@ -31,21 +31,24 @@ Currently, supported tools include:
 Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC
 -----------------------------|------------------------|---------------------------|-------------------
 [Cutadapt][cutadapt]         | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa]
-[FastQC][fastqc]             | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Preseq][preseq]
-[FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Qualimap][qualimap]
-[Skewer][skewer]             | [HiCUP][hicup]         | [Picard][picard]          | [QUAST][quast]
-[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Prokka][prokka]          | [RSeQC][rseqc]
-                             | [Salmon][salmon]       | [Samblaster][samblaster]  |
+[FastQC][fastqc]             | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]
+[FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
+[Skewer][skewer]             | [HiCUP][hicup]         | [Picard][picard]          | [Qualimap][qualimap]
+[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Prokka][prokka]          | [QUAST][quast]
+                             | [Salmon][salmon]       | [Samblaster][samblaster]  | [RSeQC][rseqc]
                              | [Slamdunk][slamdunk]   | [Samtools][samtools]      |
                              | [STAR][star]           | [SnpEff][snpeff]          |
                              | [Tophat][tophat]       | [Subread featureCounts][featurecounts] |
 
-Please note that some modules only recognise output from certain subcommands. Please follow the
-above links to the [module documentation](http://multiqc.info/docs/#multiqc-modules) for more information.
+MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
+See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
+
+Please note that some modules only recognise output from certain tool subcommands. Please follow the
+links in the above table to the [module documentation](http://multiqc.info/docs/#multiqc-modules)
+for more information.
 
 More modules are being written all of the time. Please suggest any ideas as a new
-[issue](https://github.com/ewels/MultiQC/issues) _(include an example log
-file if possible)_.
+[issue](https://github.com/ewels/MultiQC/issues) _(include an example log file if possible)_.
 
 ## Installation
 
@@ -155,6 +158,7 @@ and many others. Thanks for your support!
 [hicup]:          http://multiqc.info/docs/#hicup
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [methylqa]:       http://multiqc.info/docs/#methylqa
+[peddy]:          http://multiqc.info/docs/#peddy
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq
 [prokka]:         http://multiqc.info/docs/#prokka
