@@ -1,4 +1,3 @@
-# Custom Content
 
 > **WARNING** - This feature is new and is very much in a beta status.
 > It is expected to be further developed in future releases, which may break backwards
@@ -6,7 +5,7 @@
 > Please report bugs or missing functionality as a
 > [new GitHub issue](https://github.com/ewels/MultiQC/issues/new).
 
-## Introduction
+# Introduction
 Bioinformatics projects often include non-standardised analyses, with results from custom
 scripts or in-house packages. It can be frustrating to have a MultiQC report describing
 results from 90% of your pipeline but missing the final key plot. To help with this,
@@ -17,7 +16,7 @@ Custom content parsing is a little more restricted than standard modules. Specif
 * Only one plot per section is possible
 * Plot customisation is more limited
 
-## Configuration
+# Configuration
 Data should typically be submitted alongside some configuration, to specify how
 MultiQC should parse and display the data. All of these configuration parameters
 are optional, and MultiQC will do its best to guess sensible defaults if they are
@@ -50,7 +49,7 @@ most of the configuration keys above are ignored.
 Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
 configuration keys (these can't be guessed by data format).
 
-## Data formats
+# Data formats
 MultiQC can parse custom data from a few different sources, in a number of different
 formats. Which one you use depends on how the data is being produced.
 
@@ -71,7 +70,7 @@ For more complete examples of the data formats understood by MultiQC, please see
 directory in the [MultiQC_TestData](https://github.com/ewels/MultiQC_TestData)
 GitHub repository.
 
-### Data from a released tool
+## Data from a released tool
 If your data comes from a released bioinformatics tool, you shouldn't be using this
 feature of MultiQC! Sure, you can probably get it to work, but it's better if a
 fully-fledged core MultiQC module is written instead. That way, other users of MultiQC
@@ -82,7 +81,7 @@ feature. You can also [write modules](http://multiqc.info/docs/#writing-new-modu
 in [MultiQC plugins](http://multiqc.info/docs/#multiqc-plugins) if they're not suitable for
 general release.
 
-### Data as part of MultiQC config
+## Data as part of MultiQC config
 If you are already using a MultiQC config file to add data to your report (for example,
 [titles / introductory text](http://multiqc.info/docs/#customising-reports)), you can
 give data within this file too. This can be in any MultiQC config file (for example,
@@ -152,7 +151,7 @@ custom_data:
 See the [general statistics docs](http://multiqc.info/docs/#step-4-adding-to-the-general-statistics-table)
 for more information about configuring data for the General Statistics table.
 
-### MultiQC-specific data file
+## MultiQC-specific data file
 If you can choose exactly how your data output looks, then the easiest way to parse it
 is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|json|txt|csv|out)`
 then it will be found by any standard MultiQC installation with no additional customisation
@@ -223,7 +222,7 @@ To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code. Something will be probably be shown, but it may produce unexpected results.
 
-### Separate configuration and data files
+## Separate configuration and data files
 It's not always possible or desirable to include MultiQC configuration within a data file.
 If this is the case, you can add to the MultiQC configuration to specify how input files
 should be parsed.
