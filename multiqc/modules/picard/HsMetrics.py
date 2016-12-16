@@ -57,10 +57,10 @@ DESC = {
 
 def parse_reports(self):
     """ Find Picard HsMetrics reports and parse their data """
-    
+
     # Set up vars
     self.picard_HsMetrics_data = dict()
-    
+
     # Go through logs and find Metrics
     for f in self.find_log_files(config.sp['picard']['hsmetrics'], filehandles=True):
         parsed_data = dict()
@@ -72,14 +72,14 @@ def parse_reports(self):
                'picard.analysis.directed.CollectHsMetrics' in l and 'INPUT' in l:
                 s_name = None
                 keys = None
-                
+
                 # Pull sample name from input
                 fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
                     parsed_data[s_name] = dict()
-            
+
             if s_name is not None:
                 if 'picard.analysis.directed.HsMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
@@ -98,7 +98,7 @@ def parse_reports(self):
                     else:
                         s_name = None
                         keys = None
-        
+
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             for j in parsed_data[s_name].keys():
@@ -106,7 +106,7 @@ def parse_reports(self):
                     parsed_data[s_name].pop(j, None)
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
-        
+
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             for j in parsed_data[s_name].keys():
@@ -117,20 +117,20 @@ def parse_reports(self):
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], this_s_name))
                 self.add_data_source(f, this_s_name, section='HsMetrics')
                 self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
-    
-    
+
+
     if len(self.picard_HsMetrics_data) > 0:
-        
+
         # Write parsed data to a file
         self.write_data_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics')
-        
+
         # Add to general stats table
         # Swap question marks with -1
         data = self.picard_HsMetrics_data
         for s_name in data:
             if data[s_name]['FOLD_ENRICHMENT'] == '?':
                 data[s_name]['FOLD_ENRICHMENT'] = -1
-                
+
         self.general_stats_headers['FOLD_ENRICHMENT'] = {
             'title': 'Fold Enrichment',
             'min': 0,
@@ -173,7 +173,7 @@ def parse_reports(self):
         penalty_html = _add_hs_penalty(data)
         if penalty_html:
             self.sections.append(penalty_html)
-    
+
     # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
 

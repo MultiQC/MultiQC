@@ -16,11 +16,11 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find Picard RnaSeqMetrics reports and parse their data """
-    
+
     # Set up vars
     self.picard_RnaSeqMetrics_data = dict()
     self.picard_RnaSeqMetrics_histogram = dict()
-    
+
     # Go through logs and find Metrics
     for f in self.find_log_files(config.sp['picard']['rnaseqmetrics'], filehandles=True):
         s_name = None
@@ -37,7 +37,7 @@ def parse_reports(self):
                     # Reset in case we have more in this log file
                     s_name = None
                     in_hist = False
-                    
+
             # New log starting
             if 'RnaSeqMetrics' in l and 'INPUT' in l:
                 s_name = None
@@ -46,7 +46,7 @@ def parse_reports(self):
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
-            
+
             if s_name is not None:
                 if 'RnaSeqMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_RnaSeqMetrics_data:
@@ -70,15 +70,15 @@ def parse_reports(self):
                             self.picard_RnaSeqMetrics_data[s_name][k] = vals[i]
                         except IndexError:
                             pass # missing data
-                    
+
                     # Skip lines on to histogram
                     l = f['f'].readline()
                     l = f['f'].readline()
                     l = f['f'].readline().strip("\n")
-                    
+
                     self.picard_RnaSeqMetrics_histogram[s_name] = dict()
                     in_hist = True
-        
+
         for key in list(self.picard_RnaSeqMetrics_data.keys()):
             if len(self.picard_RnaSeqMetrics_data[key]) == 0:
                 self.picard_RnaSeqMetrics_data.pop(key, None)
@@ -86,12 +86,12 @@ def parse_reports(self):
             if len(self.picard_RnaSeqMetrics_histogram[s_name]) == 0:
                 self.picard_RnaSeqMetrics_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
-    
+
     if len(self.picard_RnaSeqMetrics_data) > 0:
-        
+
         # Write parsed data to a file
         self.write_data_file(self.picard_RnaSeqMetrics_data, 'multiqc_picard_RnaSeqMetrics')
-        
+
         # Add to general stats table
         self.general_stats_headers['PCT_CODING_BASES'] = {
             'title': '% Coding',
@@ -154,7 +154,7 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( self.picard_RnaSeqMetrics_data[s_name] )
-        
+
         # Section with histogram plot
         if len(self.picard_RnaSeqMetrics_histogram) > 0:
             # Plot the data and add section
@@ -175,8 +175,8 @@ def parse_reports(self):
                 'anchor': 'picard-rna-coverage',
                 'content': linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
             })
-    
-    
+
+
     # Return the number of detected samples to the parent module
     return len(self.picard_RnaSeqMetrics_data)
-    
+

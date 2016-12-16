@@ -15,10 +15,10 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find Picard AlignmentSummaryMetrics reports and parse their data """
-    
+
     # Set up vars
     self.picard_alignment_metrics = dict()
-    
+
     # Go through logs and find Metrics
     for f in self.find_log_files(config.sp['picard']['alignment_metrics'], filehandles=True):
         parsed_data = dict()
@@ -35,7 +35,7 @@ def parse_reports(self):
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
                     parsed_data[s_name] = dict()
-            
+
             if s_name is not None:
                 if 'picard.analysis.AlignmentSummaryMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
@@ -52,24 +52,24 @@ def parse_reports(self):
                     else:
                         s_name = None
                         keys = None
-        
+
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
-        
+
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             if s_name in self.picard_alignment_metrics:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name, section='AlignmentSummaryMetrics')
             self.picard_alignment_metrics[s_name] = parsed_data[s_name]
-    
+
     if len(self.picard_alignment_metrics) > 0:
-        
+
         # Write parsed data to a file
         self.write_data_file(self.picard_alignment_metrics, 'multiqc_picard_AlignmentSummaryMetrics')
-        
+
         # Add to general stats table
         self.general_stats_headers['PCT_PF_READS_ALIGNED'] = {
             'title': '% Aligned',
@@ -85,9 +85,9 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( self.picard_alignment_metrics[s_name] )
-        
-        
-        
+
+
+
         # Make the bar plot of alignment read count
         pdata = dict()
         for s_name in self.picard_alignment_metrics.keys():
@@ -100,11 +100,11 @@ def parse_reports(self):
                 pdata[s_name]['total_reads'] = self.picard_alignment_metrics[s_name]['TOTAL_READS']
                 pdata[s_name]['aligned_reads'] = self.picard_alignment_metrics[s_name]['PF_READS_ALIGNED']
             pdata[s_name]['unaligned_reads'] = pdata[s_name]['total_reads'] - pdata[s_name]['aligned_reads']
-        
+
         keys = OrderedDict()
         keys['aligned_reads'] = {'name': 'Aligned Reads'}
         keys['unaligned_reads'] = {'name': 'Unaligned Reads'}
-        
+
         # Config for the plot
         pconfig = {
             'id': 'picard_aligned_reads',
@@ -112,7 +112,7 @@ def parse_reports(self):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
         }
-        
+
         self.sections.append({
             'id': 'picard_alignment_summary',
             'name': 'Alignment Summary',
@@ -120,6 +120,6 @@ def parse_reports(self):
             'content': "<p>Plase note that Picard's read counts are divided by two for paired-end data.</p>"+
                 bargraph.plot(pdata, keys, pconfig)
         })
-        
+
     # Return the number of detected samples to the parent module
     return len(self.picard_alignment_metrics)

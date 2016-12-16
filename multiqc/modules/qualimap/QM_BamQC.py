@@ -334,7 +334,7 @@ def general_stats_headers (self):
     except (AttributeError, TypeError, AssertionError):
         hidecovs = [1, 5, 10, 50]
     hidecovs = [str(i) for i in hidecovs]
-    
+
     self.general_stats_headers['avg_gc'] = {
         'title': 'Avg. GC',
         'description': 'Average GC content',

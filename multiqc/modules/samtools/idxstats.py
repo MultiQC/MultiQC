@@ -30,7 +30,7 @@ class IdxstatsReportMixin():
 
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_idxstats, 'multiqc_samtools_idxstats')
-            
+
             # Prep the data for the plots
             keys = list()
             pdata = dict()
@@ -100,7 +100,7 @@ class IdxstatsReportMixin():
                     except KeyError:
                         pdata[s_name][k] = 0
                         pdata_norm[s_name][k] = 0
-            
+
             # X/Y ratio plot
             if len(xy_counts) > 0:
                 xy_keys = OrderedDict()
@@ -119,8 +119,8 @@ class IdxstatsReportMixin():
                     'anchor': 'samtools-idxstats-xy-counts',
                     'content': bargraph.plot(xy_counts, xy_keys, pconfig)
                 })
-                
-            
+
+
             # Mapped reads per chr line plot
             pconfig = {
                 'id': 'samtools-idxstats-mapped-reads-plot',
@@ -141,7 +141,7 @@ class IdxstatsReportMixin():
                     'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.</p>'.format(cutoff*100) +
                     linegraph.plot([pdata_norm, pdata], pconfig)
             })
-        
+
         # Return the number of logs that were found
         return len(self.samtools_idxstats)
 
@@ -151,7 +151,7 @@ class IdxstatsReportMixin():
 
 def parse_single_report(f):
     """ Parse a samtools idxstats idxstats """
-    
+
     parsed_data = OrderedDict()
     for l in f.splitlines():
         s = l.split("\t")
@@ -160,4 +160,4 @@ def parse_single_report(f):
         except (IndexError, ValueError):
             pass
     return parsed_data
-    
+
