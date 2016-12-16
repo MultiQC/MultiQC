@@ -68,7 +68,11 @@ def plot (data, cats=None, pconfig={}):
         try:
             cats[idx]
         except (IndexError):
-            cats.append( list(set(k for s in data[idx].keys() for k in data[idx][s].keys() )) )
+            cats.append(list())
+            for s in data[idx].keys():
+                for k in data[idx][s].keys():
+                    if k not in cats[idx]:
+                        cats[idx].append(k)
 
     # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):

@@ -84,9 +84,11 @@ def custom_module_classes():
                 if m_config is not None:
                     c_id = m_config.get('id', k)
                     cust_mods[c_id]['config'].update( m_config )
+                    m_config = cust_mods[c_id]['config']
                     s_name = m_config.get('sample_name')
                 else:
                     c_id = k
+                    m_config = dict()
 
                 # Guess sample name if not given
                 if s_name is None:
@@ -97,24 +99,32 @@ def custom_module_classes():
                     c_id = s_name
 
                 # Add information about the file to the config dict
-                if 'files' not in cust_mods[c_id]['config']:
-                    cust_mods[c_id]['config']['files'] = dict()
-                cust_mods[c_id]['config']['files'].update( { s_name : { 'fn': f['fn'], 'root': f['root'] } } )
+                if 'files' not in m_config:
+                    m_config['files'] = dict()
+                m_config['files'].update( { s_name : { 'fn': f['fn'], 'root': f['root'] } } )
 
                 # Guess file format if not given
-                if cust_mods[c_id]['config'].get('file_format') is None:
-                    cust_mods[c_id]['config']['file_format'] = _guess_file_format( f )
+                if m_config.get('file_format') is None:
+                    m_config['file_format'] = _guess_file_format( f )
 
                 # Parse data
-                parsed_data = _parse_txt( f['f'], cust_mods[c_id]['config'] )
-                if parsed_data is None:
-                    log.warning("Not able to parse custom data in {}".format(f['fn']))
-                else:
-                    cust_mods[c_id]['data'][s_name] = parsed_data
-
-                    # Guess plot type if not given
-                    if cust_mods[c_id]['config'].get('plot_type') is None:
-                        cust_mods[c_id]['config']['plot_type'] = _guess_plot_type( parsed_data )
+                try:
+                    parsed_data, conf = _parse_txt( f, m_config )
+                    if parsed_data is None:
+                        log.warning("Not able to parse custom data in {}".format(f['fn']))
+                    else:
+                        # Did we get a new section id from the file?
+                        if conf.get('id') is not None:
+                            c_id = conf.get('id')
+                        # heatmap - special data type
+                        if type(parsed_data) == list:
+                            cust_mods[c_id]['data'] = parsed_data
+                        else:
+                            cust_mods[c_id]['data'].update(parsed_data)
+                        cust_mods[c_id]['config'].update(conf)
+                except (IndexError, AttributeError, TypeError):
+                    log.error("Unexpected parsing error for {}".format(f['fn']), exc_info=True)
+                    raise # testing
 
     # Remove any configs that have no data
     remove_cids = [ k for k in cust_mods if len(cust_mods[k]['data']) == 0 ]
@@ -160,7 +170,7 @@ def custom_module_classes():
         # Initialise this new module class and append to list
         else:
             parsed_modules.append( MultiqcModule(k, mod) )
-            log.info("{}: Found {} reports".format(k, len(mod['data'])), extra={'mname': k})
+            log.info("{}: Found {} samples".format(k, len(mod['data'])), extra={'mname': k})
 
     return parsed_modules
 
@@ -180,29 +190,31 @@ class MultiqcModule(BaseMultiqcModule):
             info = mod['config'].get('description')
         )
 
+        pconfig = mod['config'].get('pconfig', {})
+
         # Table
         if mod['config'].get('plot_type') == 'table':
-            self.intro += plots.table.plot(mod['data'], mod['config'].get('pconfig'))
+            self.intro += plots.table.plot(mod['data'], pconfig)
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
-            self.intro += plots.bargraph.plot(mod['data'], mod['config'].get('categories'), mod['config'].get('pconfig'))
+            self.intro += plots.bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig)
 
         # Line plot
         elif mod['config'].get('plot_type') == 'linegraph':
-            self.intro += plots.linegraph.plot(mod['data'], mod['config'].get('pconfig'))
+            self.intro += plots.linegraph.plot(mod['data'], pconfig)
 
         # Scatter plot
         elif mod['config'].get('plot_type') == 'scatter':
-            self.intro += plots.scatter.plot(mod['data'], mod['config'].get('pconfig'))
+            self.intro += plots.scatter.plot(mod['data'], pconfig)
 
         # Heatmap
         elif mod['config'].get('plot_type') == 'heatmap':
-            self.intro += plots.heatmap.plot(mod['data'], mod['config'].get('pconfig'))
+            self.intro += plots.heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig)
 
         # Beeswarm plot
         elif mod['config'].get('plot_type') == 'beeswarm':
-            self.intro += plots.beeswarm.plot(mod['data'], mod['config'].get('pconfig'))
+            self.intro += plots.beeswarm.plot(mod['data'], pconfig)
 
         # Not supplied
         elif mod['config'].get('plot_type') == None:
@@ -227,64 +239,163 @@ def _find_file_header(f):
     return hconfig
 
 def _guess_file_format(f):
+    """
+    Tries to guess file format, first based on file extension (csv / tsv),
+    then by looking for common column separators in the first 10 non-commented lines.
+    Splits by tab / comma / space and counts resulting number of columns. Finds the most
+    common column count, then comparsed how many lines had this number.
+    eg. if tab, all 10 lines should have x columns when split by tab.
+    Returns: csv | tsv | spaces   (spaces by default if all else fails)
+    """
     filename, file_extension = os.path.splitext(f['fn'])
-    if file_extension == 'csv':
+    if file_extension == '.csv':
         return 'csv'
-    if file_extension == 'tsv':
+    if file_extension == '.tsv':
         return 'tsv'
     else:
-        # TODO: Look at the file contents to try to guess
-        return None
-
-def _guess_plot_type(d):
-    col1_str = False
-    col2_str = False
-    col1_num = False
-    col2_num = False
-    for k,v in d.items():
-        try:
-            float(k)
-            col1_num = True
-        except ValueError:
-            col1_str = True
-        try:
-            float(v)
-            col2_num = True
-        except ValueError:
-            col2_str = True
-
-    if col1_num and col2_num:
-        return 'linegraph'
-    if col1_str and col2_num:
-        return 'bargraph'
-    #TODO: Quite a lot of other options to put here.
+        tabs = []
+        commas = []
+        spaces = []
+        j = 0
+        for l in f['f'].splitlines():
+            if not l.startswith('#'):
+                j += 1
+                tabs.append(len(l.split("\t")))
+                commas.append(len(l.split(",")))
+                spaces.append(len(l.split()))
+            if j == 10:
+                break
+        tab_mode = max(set(tabs), key=tabs.count)
+        commas_mode = max(set(commas), key=commas.count)
+        spaces_mode = max(set(spaces), key=spaces.count)
+        tab_lc = tabs.count(tab_mode) if tab_mode > 1 else None
+        commas_lc = commas.count(commas_mode) if commas_mode > 1 else None
+        spaces_lc = spaces.count(spaces_mode) if spaces_mode > 1 else None
+        if tab_lc == j:
+            return 'tsv'
+        elif commas_lc == j:
+            return 'csv'
+        else:
+            if tab_lc > commas_lc and tab_lc > spaces_lc:
+                return 'tsv'
+            elif commas_lc > tab_lc and commas_lc > spaces_lc:
+                return 'csv'
+            elif spaces_lc > tab_lc and spaces_lc > commas_lc:
+                return 'spaces'
+            else:
+                if tab_mode == commas_lc and tab_mode > spaces_lc:
+                    if tab_mode > commas_mode:
+                        return 'tsv'
+                    else:
+                        return 'csv'
+    return 'spaces'
 
 def _parse_txt(f, conf):
-    parsed_data = OrderedDict()
+    # Split the data into a list of lists by column
     sep = None
     if conf['file_format'] == 'csv':
         sep = ","
     if conf['file_format'] == 'tsv':
         sep = "\t"
-    for l in f.splitlines():
+    lines = f['f'].splitlines()
+    d = []
+    ncols = None
+    for l in lines:
         if not l.startswith('#'):
-            s = l.split(sep)
+            sections = l.split(sep)
+            d.append(sections)
+            if ncols is None:
+                ncols = len(sections)
+            elif ncols != len(sections):
+                log.warn("Inconsistent number of columns found in {}! Skipping..".format(f['fn']))
+                return (None, conf)
+
+    # Convert values to floats if we can
+    first_row_str = 0
+    for i,l in enumerate(d):
+        for j, v in enumerate(l):
             try:
-                try:
-                    s0 = float(s[0])
-                except ValueError:
-                    s0 = s[0]
-                try:
-                    s1 = float(s[1])
-                except ValueError:
-                    s1 = s[1]
-                parsed_data[s0] = s1
-            except IndexError:
-                pass
-    if len(parsed_data) == 0:
-        return None
-    else:
-        return parsed_data
+                d[i][j] = float(v)
+            except ValueError:
+                d[i][j] = v
+                # Count strings in first row (header?)
+                if i == 0:
+                    first_row_str += 1
+
+    # Heatmap: Number of headers == number of lines
+    if conf.get('plot_type') is None and first_row_str == len(lines):
+        conf['plot_type'] = 'heatmap'
+    if conf.get('plot_type') == 'heatmap':
+        conf['xcats'] = d[0][1:]
+        conf['ycats'] = [s[0] for s in d[1:]]
+        data = [s[1:] for s in d[1:]]
+        return (data, conf)
+
+    # Header row
+    if first_row_str == len(d[0]):
+        data = dict()
+        for s in d[1:]:
+            data[s[0]] = OrderedDict()
+            for i, v in enumerate(s[1:]):
+                cat = d[0][i+1]
+                data[s[0]][cat] = v
+        # Bar graph or table - if numeric data, go for bar graph
+        if conf.get('plot_type') is None:
+            allfloats = True
+            for v in d[1][1:]:
+                allfloats = allfloats and type(v) == float
+            if allfloats:
+                conf['plot_type'] = 'bargraph'
+            else:
+                conf['plot_type'] = 'table'
+        return (data, conf)
+
+    # Scatter plot: No header row, str : num : num
+    if (conf.get('plot_type') is None and len(d[0]) == 3 and
+        type(d[0][0]) != float and type(d[0][1]) == float and type(d[0][2]) == float):
+        conf['plot_type'] = 'scatter'
+    if conf.get('plot_type') == 'scatter':
+        data = dict()
+        for s in d:
+            data[s[0]] = {
+                'x': s[1],
+                'y': s[2]
+            }
+        return (data, conf)
+
+    # Single sample line / bar graph
+    if len(d[0]) == 2:
+        # Line graph: No header row, num : num
+        if (conf.get('plot_type') is None and type(d[0][0]) == float and type(d[0][1]) == float):
+            conf['plot_type'] = 'linegraph'
+        # Bar graph: No header row, str : num
+        if (conf.get('plot_type') is None and type(d[0][0]) != float and type(d[0][1]) == float):
+            conf['plot_type'] = 'bargraph'
+        # Data structure is the same
+        if (conf.get('plot_type') == 'linegraph' or conf.get('plot_type') == 'bargraph'):
+            # Set section id based on directory if not known
+            if conf.get('id') is None:
+                conf['id'] = os.path.basename(f['root'])
+            data = OrderedDict()
+            for s in d:
+                data[s[0]] = s[1]
+            return ( { f['s_name']: data }, conf )
+
+    # Multi-sample line graph: No header row, str : lots of num columns
+    if (conf.get('plot_type') is None and len(d[0]) > 4 and all([type(v) == float for v in d[0][1:]])):
+        conf['plot_type'] = 'linegraph'
+    if conf.get('plot_type') == 'linegraph':
+        data = dict()
+        # Use 1..n range for x values
+        for s in d:
+            data[s[0]] = dict()
+            for i,v in enumerate(s[1:]):
+                j = i+1
+                data[s[0]][i+1] = v
+        return (data, conf)
+
+    # Got to the end and haven't returned. It's a mystery, capn'!
+    return (None, conf)
 
 
 

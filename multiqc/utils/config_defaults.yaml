@@ -116,6 +116,11 @@ fn_clean_trim:
     - '_val'
     - '.idxstats'
     - '_trimmed'
+    - '.csv'
+    - '.yaml'
+    - '.yml'
+    - '.json'
+    - '_mqc'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
