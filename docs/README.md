@@ -28,6 +28,7 @@ MultiQC Modules:
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     Methyl QA: modules/methylQA.md
+    Peddy: modules/peddy.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
     Prokka: modules/prokka.md

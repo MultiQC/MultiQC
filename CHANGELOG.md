@@ -11,6 +11,8 @@ Module updates:
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
 * [**Slamdunk**](http://t-neumann.github.io/slamdunk/) - new module!
   * Slamdunk is a software tool to analyze SLAMSeq data.
+* [**Peddy**](https://github.com/brentp/peddy) - new module!
+  * Peddy calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)

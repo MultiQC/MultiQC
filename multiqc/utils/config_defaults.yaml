@@ -148,6 +148,7 @@ module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
     # Post-alignment analysis results
+    - 'peddy'
     - 'quast'
     - 'snpeff'
     - 'qualimap'

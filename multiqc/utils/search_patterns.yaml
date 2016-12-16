@@ -56,6 +56,15 @@ kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
 methylQA:
     fn: '*.report'
+peddy:
+    summary_table:
+        fn: '*.peddy.ped'
+    het_check:
+        fn: '*.het_check.csv'
+    ped_check:
+        fn: '*.ped_check.csv'
+    sex_check:
+        fn: '*.sex_check.csv'
 picard:
     alignment_metrics:
         contents: 'picard.analysis.AlignmentSummaryMetrics'

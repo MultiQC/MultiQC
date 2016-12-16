@@ -145,7 +145,7 @@ custom_data:
                 col_1: 84.84
                 col_2: 1.9
 ```
-> **Note:** Use a list of headers in `pconfig` (prepend with `-`) to specify the order
+> **Note:** Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the order
 > of columns in the table.
 
 See the [general statistics docs](http://multiqc.info/docs/#step-4-adding-to-the-general-statistics-table)
