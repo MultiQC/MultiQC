@@ -74,7 +74,11 @@ def plot (data, cats=None, pconfig={}):
         try:
             cats[idx]
         except (IndexError):
-            cats.append( list(set(k for s in data[idx].keys() for k in data[idx][s].keys() )) )
+            cats.append(list())
+            for s in data[idx].keys():
+                for k in data[idx][s].keys():
+                    if k not in cats[idx]:
+                        cats[idx].append(k)
 
     # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
@@ -108,11 +112,12 @@ def plot (data, cats=None, pconfig={}):
                 except KeyError:
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float('nan'))
-            if catcount > 0 and max(x for x in thisdata if not math.isnan(x)) > 0:
-                thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
-                if 'color' in cats[idx][c]:
-                    thisdict['color'] = cats[idx][c]['color']
-                hc_data.append(thisdict)
+            if catcount > 0:
+                if pconfig.get('hide_zero_cats', True) is False or max(x for x in thisdata if not math.isnan(x)) > 0:
+                    thisdict = { 'name': cats[idx][c]['name'], 'data': thisdata }
+                    if 'color' in cats[idx][c]:
+                        thisdict['color'] = cats[idx][c]['color']
+                    hc_data.append(thisdict)
 
         # Remove empty samples
         for s, c in sample_dcount.items():
@@ -206,7 +211,7 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, k=k)
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
     # Plot and javascript function

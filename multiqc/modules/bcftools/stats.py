@@ -54,7 +54,8 @@ class StatsReportMixin():
                     fields = ['ts', 'tv', 'tstv', 'ts_1st_ALT', 'tv_1st_ALT', 'tstv_1st_ALT']
                     for i, f in enumerate(fields):
                         value = float(s[i+2].strip())
-                        self.bcftools_stats[s_name][field] = value
+
+                        self.bcftools_stats[s_name][f] = value
 
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:

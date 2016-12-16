@@ -3,9 +3,7 @@
 """ MultiQC functions to plot a table """
 
 from collections import defaultdict, OrderedDict
-import json
 import logging
-import os
 import random
 
 from multiqc.utils import config, report, util_functions
@@ -136,9 +134,12 @@ def make_table (dt):
                     try:
                         val = header['format'].format(float(samp[k]))
                     except ValueError:
-                        val = samp[k]
+                        try:
+                            val = header['format'].format(float(val))
+                        except ValueError:
+                            val = val
                 except:
-                    val = samp[k]
+                    val = val
 
                 # Build HTML
                 if not header['scale']:

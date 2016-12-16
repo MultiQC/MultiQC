@@ -35,14 +35,25 @@ class datatable (object):
             try:
                 keys = headers[idx].keys()
                 assert len(keys) > 0
-            except (IndexError, AssertionError):
-                keys = d.keys()
+            except (IndexError, AttributeError, AssertionError):
+                keys = list()
+                for samp in d.values():
+                    for k in samp.keys():
+                        if k not in keys:
+                            keys.append(k)
+                try:
+                    headers[idx]
+                except IndexError:
+                    headers.append(list)
+                headers[idx] = OrderedDict()
+                for k in keys:
+                    headers[idx][k] = {}
 
             # Check that we have some data in each column
             empties = list()
             for k in keys:
                 n = 0
-                for samp in data[idx].values():
+                for samp in d.values():
                     if k in samp:
                         n += 1
                 if n == 0:
@@ -119,7 +130,6 @@ class datatable (object):
             for k in hs.keys():
                 sk = headers[idx][k]['shared_key']
                 if sk is not None:
-                    shared_keys[sk]['scale'] = headers[idx][k]['scale']
                     shared_keys[sk]['dmax']  = max(headers[idx][k]['dmax'], shared_keys[sk].get('dmax', headers[idx][k]['dmax']))
                     shared_keys[sk]['dmin']  = max(headers[idx][k]['dmin'], shared_keys[sk].get('dmin', headers[idx][k]['dmin']))
 
@@ -138,7 +148,6 @@ class datatable (object):
             for k in keys_in_section:
                 sk = headers[idx][k]['shared_key']
                 if sk is not None:
-                    headers[idx][k]['scale'] = shared_keys[sk]['scale']
                     headers[idx][k]['dmax'] = shared_keys[sk]['dmax']
                     headers[idx][k]['dmin'] = shared_keys[sk]['dmin']
 

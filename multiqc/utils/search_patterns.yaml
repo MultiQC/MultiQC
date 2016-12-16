@@ -25,6 +25,16 @@ bowtie:
     contents: '# reads processed:'
 bowtie2:
     contents: 'reads; of these:'
+custom_content:
+    fn:
+        - '*_mqc.yaml'
+        - '*_mqc.yml'
+        - '*_mqc.json'
+        - '*_mqc.txt'
+        - '*_mqc.csv'
+        - '*_mqc.tsv'
+        - '*_mqc.log'
+        - '*_mqc.out'
 cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
@@ -46,6 +56,15 @@ kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
 methylQA:
     fn: '*.report'
+peddy:
+    summary_table:
+        fn: '*.peddy.ped'
+    het_check:
+        fn: '*.het_check.csv'
+    ped_check:
+        fn: '*.ped_check.csv'
+    sex_check:
+        fn: '*.sex_check.csv'
 picard:
     alignment_metrics:
         contents: 'picard.analysis.AlignmentSummaryMetrics'
@@ -128,6 +147,19 @@ samtools:
         contents: '[bam_rmdup'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
+slamdunk:
+    summary: 
+        contents: '# slamdunk summary'
+    PCA: 
+        contents: '# slamdunk PCA'
+    rates: 
+        contents: '# slamdunk rates'
+    utrrates:
+        contents: '# slamdunk utrrates'
+    tcperreadpos:
+        contents: '# slamdunk tcperreadpos'
+    tcperutrpos:
+        contents: '# slamdunk tcperutr'
 snpeff:
     contents: 'SnpEff_version'
 star:

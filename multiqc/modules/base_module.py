@@ -2,28 +2,33 @@
 
 """ MultiQC modules base class, contains helper functions """
 
+from __future__ import print_function
+from collections import OrderedDict
 import fnmatch
 import io
 import logging
 import os
-import random
 import re
 
 from multiqc.utils import report, config, util_functions
 logger = logging.getLogger(__name__)
 
-letters = 'abcdefghijklmnopqrstuvwxyz'
-
 class BaseMultiqcModule(object):
 
-    def __init__(self, name='base', anchor='base', target='',href='', info='', extra=''):
+    def __init__(self, name='base', anchor='base', target=None, href=None, info=None, extra=None):
         self.name = name
         self.anchor = anchor
-        if not target:
+        if info is None:
+            info = ''
+        if extra is None:
+            extra = ''
+        if target is None:
             target = self.name
-        self.intro = '<p><a href="{0}" target="_blank">{1}</a> {2}</p>{3}'.format(
-            href, target, info, extra
-        )
+        if href is not None:
+            mname = '<a href="{}" target="_blank">{}</a>'.format(href, target)
+        else:
+            mname = target
+        self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
 
     def find_log_files(self, patterns, filecontents=True, filehandles=False):
         """
@@ -159,15 +164,24 @@ class BaseMultiqcModule(object):
         if namespace is None:
             namespace = self.name
 
+        # Guess the column headers from the data if not supplied
+        if headers is None or len(headers) == 0:
+            hs = set()
+            for d in data.values():
+                hs.update(d.keys())
+            hs = list(hs)
+            hs.sort()
+            headers = OrderedDict()
+            for k in hs:
+                headers[k] = dict()
+
         # Add the module name to the description if not already done
-        keys = data.keys()
-        if len(headers.keys()) > 0:
-            keys = headers.keys()
+        keys = headers.keys()
         for k in keys:
-            headers[k]['namespace'] = namespace
-            desc = headers[k].get('description', headers[k].get('title', k))
+            if 'namespace' not in headers[k]:
+                headers[k]['namespace'] = namespace
             if 'description' not in headers[k]:
-                headers[k]['description'] = desc
+                headers[k]['description'] = headers[k].get('title', k)
 
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(data)

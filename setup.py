@@ -56,6 +56,7 @@ setup(
     ],
     entry_points = {
         'multiqc.modules.v1': [
+            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
@@ -68,6 +69,7 @@ setup(
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
+            'peddy = multiqc.modules.peddy:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
@@ -78,6 +80,7 @@ setup(
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
+            'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
