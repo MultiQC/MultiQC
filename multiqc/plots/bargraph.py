@@ -205,7 +205,7 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, k=k)
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
     # Plot and javascript function

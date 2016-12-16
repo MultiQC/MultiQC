@@ -191,10 +191,12 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         pconfig = mod['config'].get('pconfig', {})
+        if pconfig.get('title') is None:
+            pconfig['title'] = modname
 
         # Table
         if mod['config'].get('plot_type') == 'table':
-            self.intro += plots.table.plot(mod['data'], pconfig)
+            self.intro += plots.table.plot(mod['data'], None, pconfig)
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
@@ -317,13 +319,17 @@ def _parse_txt(f, conf):
             try:
                 d[i][j] = float(v)
             except ValueError:
+                if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
+                    v = v[1:-1]
                 d[i][j] = v
                 # Count strings in first row (header?)
                 if i == 0:
                     first_row_str += 1
 
+    all_numeric = all([ type(l) == float for l in d[i][1:] for i in range(1, len(d)) ])
+
     # Heatmap: Number of headers == number of lines
-    if conf.get('plot_type') is None and first_row_str == len(lines):
+    if conf.get('plot_type') is None and first_row_str == len(lines) and all_numeric:
         conf['plot_type'] = 'heatmap'
     if conf.get('plot_type') == 'heatmap':
         conf['xcats'] = d[0][1:]
@@ -382,7 +388,7 @@ def _parse_txt(f, conf):
             return ( { f['s_name']: data }, conf )
 
     # Multi-sample line graph: No header row, str : lots of num columns
-    if (conf.get('plot_type') is None and len(d[0]) > 4 and all([type(v) == float for v in d[0][1:]])):
+    if conf.get('plot_type') is None and len(d[0]) > 4 and all_numeric:
         conf['plot_type'] = 'linegraph'
     if conf.get('plot_type') == 'linegraph':
         data = dict()

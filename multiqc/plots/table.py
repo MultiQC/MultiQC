@@ -3,9 +3,7 @@
 """ MultiQC functions to plot a table """
 
 from collections import defaultdict, OrderedDict
-import json
 import logging
-import os
 import random
 
 from multiqc.utils import config, report, util_functions

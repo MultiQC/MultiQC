@@ -2,7 +2,7 @@
 
 """ MultiQC datatable class, used by tables and beeswarm plots """
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import logging
 import random
 
@@ -35,14 +35,25 @@ class datatable (object):
             try:
                 keys = headers[idx].keys()
                 assert len(keys) > 0
-            except (IndexError, AssertionError):
-                keys = d.keys()
+            except (IndexError, AttributeError, AssertionError):
+                keys = list()
+                for samp in d.values():
+                    for k in samp.keys():
+                        if k not in keys:
+                            keys.append(k)
+                try:
+                    headers[idx]
+                except IndexError:
+                    headers.append(list)
+                headers[idx] = OrderedDict()
+                for k in keys:
+                    headers[idx][k] = {}
 
             # Check that we have some data in each column
             empties = list()
             for k in keys:
                 n = 0
-                for samp in data[idx].values():
+                for samp in d.values():
                     if k in samp:
                         n += 1
                 if n == 0:

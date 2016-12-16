@@ -16,9 +16,13 @@ logger = logging.getLogger(__name__)
 
 class BaseMultiqcModule(object):
 
-    def __init__(self, name='base', anchor='base', target=None, href=None, info='', extra=''):
+    def __init__(self, name='base', anchor='base', target=None, href=None, info=None, extra=None):
         self.name = name
         self.anchor = anchor
+        if info is None:
+            info = ''
+        if extra is None:
+            extra = ''
         if target is None:
             target = self.name
         if href is not None:

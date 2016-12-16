@@ -66,6 +66,7 @@ Core Updates:
 * Fixed a few back end nasties for Tables
   * Shared-key columns are no longer forced to share colour schemes
   * Fixed bug in lambda modified values when format string breaks
+  * Supplying just data with no header information now works as advertised
 * Improvements to back end code for bar plots
   * New `tt_decimals` and `tt_suffix` options for bar plots
   * Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.
