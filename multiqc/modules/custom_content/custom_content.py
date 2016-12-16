@@ -268,9 +268,9 @@ def _guess_file_format(f):
         tab_mode = max(set(tabs), key=tabs.count)
         commas_mode = max(set(commas), key=commas.count)
         spaces_mode = max(set(spaces), key=spaces.count)
-        tab_lc = tabs.count(tab_mode) if tab_mode > 1 else None
-        commas_lc = commas.count(commas_mode) if commas_mode > 1 else None
-        spaces_lc = spaces.count(spaces_mode) if spaces_mode > 1 else None
+        tab_lc = tabs.count(tab_mode) if tab_mode > 1 else 0
+        commas_lc = commas.count(commas_mode) if commas_mode > 1 else 0
+        spaces_lc = spaces.count(spaces_mode) if spaces_mode > 1 else 0
         if tab_lc == j:
             return 'tsv'
         elif commas_lc == j:
