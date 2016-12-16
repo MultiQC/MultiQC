@@ -25,6 +25,16 @@ bowtie:
     contents: '# reads processed:'
 bowtie2:
     contents: 'reads; of these:'
+custom_content:
+    fn:
+        - '*_mqc.yaml'
+        - '*_mqc.yml'
+        - '*_mqc.json'
+        - '*_mqc.txt'
+        - '*_mqc.csv'
+        - '*_mqc.tsv'
+        - '*_mqc.log'
+        - '*_mqc.out'
 cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)

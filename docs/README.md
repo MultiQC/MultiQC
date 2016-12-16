@@ -38,6 +38,8 @@ MultiQC Modules:
     Samtools: modules/samtools.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+Custom Content:
+  Introduction: custom_content.md
 Coding with MultiQC:
   Writing new templates: templates.md
   Writing new modules: modules.md
@@ -64,6 +66,7 @@ The documentation has the following pages:
    - [Customising Reports](customisation.md)
    - [Common Problems](troubleshooting.md)
  - [MultiQC Modules](modules/)
+ - [Custom Content](custom_content.md)
  - Coding with MultiQC
    - [Writing new templates](templates.md)
    - [Writing new modules](modules.md)

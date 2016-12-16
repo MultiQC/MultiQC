@@ -30,7 +30,7 @@ def plot (data, pconfig={}):
         d = list()
         for s_name in ds:
             if type(ds[s_name]) is not list:
-                ds[s_name] = list(ds[s_name])
+                ds[s_name] = [ ds[s_name] ]
             for k in ds[s_name]:
                 this_series = { 'x': k['x'], 'y': k['y'] }
                 try:

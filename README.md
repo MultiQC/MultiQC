@@ -40,12 +40,15 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
                              | [STAR][star]           | [SnpEff][snpeff]          |
                              | [Tophat][tophat]       | [Subread featureCounts][featurecounts] |
 
-Please note that some modules only recognise output from certain subcommands. Please follow the
-above links to the [module documentation](http://multiqc.info/docs/#multiqc-modules) for more information.
+MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
+See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
+
+Please note that some modules only recognise output from certain tool subcommands. Please follow the
+links in the above table to the [module documentation](http://multiqc.info/docs/#multiqc-modules)
+for more information.
 
 More modules are being written all of the time. Please suggest any ideas as a new
-[issue](https://github.com/ewels/MultiQC/issues) _(include an example log
-file if possible)_.
+[issue](https://github.com/ewels/MultiQC/issues) _(include an example log file if possible)_.
 
 ## Installation
 

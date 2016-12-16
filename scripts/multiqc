@@ -7,13 +7,10 @@ from __future__ import print_function
 
 import base64
 import click
-from collections import defaultdict
 from distutils import version
 from distutils.dir_util import copy_tree
-import importlib
 import io
 import jinja2
-import logging
 import os
 import pkg_resources
 import re
@@ -149,33 +146,33 @@ def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_commen
 ignore, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
-    
+
         It searches a given directory for analysis logs and compiles a HTML report.
         It's a general use tool, perfect for summarising the output from numerous
         bioinformatics tools.
-        
+
         To run, supply with one or more directory to scan for analysis results.
         To run here, use 'multiqc .'
-        
+
         See http://multiqc.info for more details.
-        
+
         Author: Phil Ewels (http://phil.ewels.co.uk)
     """
-    
+
     # Set up logging level
     loglevel = log.LEVELS.get(min(verbose,1), "INFO")
     if quiet:
         loglevel = 'WARNING'
     log.init_log(logger, loglevel=loglevel)
-    
+
     # Load config files
     config.mqc_load_userconfig(config_file)
     plugin_hooks.mqc_trigger('config_loaded')
-    
+
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)
     logger.debug("Command used: {}".format(report.multiqc_command))
-    
+
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
@@ -185,7 +182,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
                 logger.warn('MultiQC Version {} now available!'.format(remote_version))
         except:
             logger.debug('Could not connect to multiqc.info for version check')
-    
+
     # Set up key variables (overwrite config vars from command line)
     if template is not None:
         config.template = template
@@ -219,9 +216,9 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if make_pdf:
         config.template = 'simple'
     config.kwargs = kwargs # Plugin command line options
-    
+
     plugin_hooks.mqc_trigger('execution_start')
-    
+
     logger.info("This is MultiQC v{}".format(__version__))
     logger.debug("Command     : {}".format(' '.join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
@@ -262,7 +259,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
             config.data_dir_name = '{}_data'.format(filename)
         if not config.output_fn_name.endswith('.html'):
             config.output_fn_name = '{}.html'.format(config.output_fn_name)
-        
+
         # Check that we're not going to overwrite anything before we run
         config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
@@ -281,8 +278,8 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
                 sys.exit(1)
         else:
             logger.debug('Running in --force mode, will overwrite any existing reports.')
-            
-    
+
+
     # Print some status updates
     if config.title is not None:
         logger.info("Report title: {}".format(config.title))
@@ -290,12 +287,12 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         logger.info("Prepending directory to sample names")
     for d in config.analysis_dir:
         logger.info("Searching '{}'".format(d))
-    
+
     # Get the list of modules we want to run, in the order that we want them
     run_modules = [ m for m in config.top_modules if m in config.avail_modules.keys() ]
     run_modules.extend( [ m for m in config.avail_modules.keys() if m not in config.module_order and m not in run_modules ] )
     run_modules.extend( [ m for m in config.module_order if m in config.avail_modules.keys() and m not in run_modules ] )
-    
+
     if module:
         run_modules = [m for m in run_modules if m in module]
         logger.info('Only using modules {}'.format(', '.join(module)))
@@ -309,7 +306,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         logger.critical('No analysis modules specified!')
         sys.exit(1)
     logger.debug("Analysing modules: {}".format(', '.join(run_modules)))
-    
+
     # Create the temporary working directories
     tmp_dir = tempfile.mkdtemp()
     logger.debug('Using temporary directory for creating report: {}'.format(tmp_dir))
@@ -323,20 +320,20 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if filename != 'stdout' and config.export_plots == True:
         config.plots_dir = config.plots_tmp_dir
         os.makedirs(config.plots_dir)
-    
+
     # Load the template
     template_mod = config.avail_templates[config.template].load()
-    
+
     # Add an output subdirectory if specified by template
     try:
         config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
     except AttributeError:
         pass # No subdirectory variable given
-    
-    
+
+
     # Get the list of files to search
     report.get_filelist()
-    
+
     # Run the modules!
     plugin_hooks.mqc_trigger('before_modules')
     report.modules_output = list()
@@ -344,7 +341,11 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     for this_module in run_modules:
         try:
             mod = config.avail_modules[this_module].load()
-            report.modules_output.append(mod())
+            output = mod()
+            if type(output) != list:
+                output = [output]
+            for m in output:
+                report.modules_output.append(m)
 
             # Copy over css & js files if requested by the theme
             try:
@@ -388,9 +389,9 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
-    
+
     plugin_hooks.mqc_trigger('after_modules')
-    
+
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0:
         pconfig = {
@@ -402,13 +403,13 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         report.general_stats_html = plots.table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
     else:
         config.skip_generalstats = True
-    
+
     # Write the report sources to disk
     if config.data_dir is not None:
         report.data_sources_tofile()
-    
+
     plugin_hooks.mqc_trigger('before_report_generation')
-    
+
     # Make the final report path & data directories
     if filename != 'stdout':
         # Check for existing reports and remove if -f was specified
@@ -427,7 +428,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         if not os.path.exists(os.path.dirname(config.output_fn)):
             os.makedirs(os.path.dirname(config.output_fn))
         logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
-        
+
         # Now do the same for the data directory
         if config.make_data_dir == False:
             logger.info("Data        : None")
@@ -444,13 +445,13 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
                     sys.exit(1)
             os.makedirs(config.data_dir)
             logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
-            
+
             # Modules have run, so data directory should be complete by now. Move its contents.
             for f in os.listdir(config.data_tmp_dir):
                 fn = os.path.join(config.data_tmp_dir, f)
                 logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
                 shutil.move(fn, config.data_dir)
-        
+
         # Finally, copy across the plots
         if config.export_plots:
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
@@ -465,25 +466,25 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
                     sys.exit(1)
             os.makedirs(config.plots_dir)
             logger.info("Plots       : {}".format(os.path.relpath(config.plots_dir)))
-            
+
             # Modules have run, so plots directory should be complete by now. Move its contents.
             for f in os.listdir(config.plots_tmp_dir):
                 fn = os.path.join(config.plots_tmp_dir, f)
                 logger.debug("Moving plots directory from '{}' to '{}'".format(fn, config.plots_dir))
                 shutil.move(fn, config.plots_dir)
-    
+
     plugin_hooks.mqc_trigger('before_template')
-    
+
     # Load in parent template files first if a child theme
     try:
         parent_template = config.avail_templates[template_mod.template_parent].load()
         copy_tree(parent_template.template_dir, tmp_dir)
     except AttributeError:
         pass # Not a child theme
-    
+
     # Copy the template files to the tmp directory (distutils overwrites parent theme files)
     copy_tree(template_mod.template_dir, tmp_dir)
-    
+
     # Function to include file contents in Jinja template
     def include_file(name, fdir=tmp_dir, b64=False):
         if b64:
@@ -492,7 +493,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         else:
             with io.open (os.path.join(fdir, name), "r", encoding='utf-8') as f:
                 return f.read()
-    
+
     # Load the report template
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
@@ -512,7 +513,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
                 print(report_output, file=f)
         except IOError as e:
             raise IOError ("Could not print report to '{}' - {}".format(config.output_fn, IOError(e)))
-        
+
         # Copy over files if requested by the theme
         try:
             for f in template_mod.copy_files:
@@ -521,15 +522,15 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
                 copy_tree(fn, dest_dir)
         except AttributeError:
             pass # No files to copy
-    
+
     # Clean up temporary directory
     shutil.rmtree(tmp_dir)
-    
+
     # Zip the data directory if requested
     if config.zip_data_dir and config.data_dir is not None:
         shutil.make_archive(config.data_dir, 'zip', config.data_dir)
         shutil.rmtree(config.data_dir)
-    
+
     # Try to create a PDF if requestted
     if make_pdf:
         try:
@@ -558,17 +559,17 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
             else:
                 logger.error("Error creating PDF! Something went wrong when creating the PDF\n"+
                     ('='*60)+"\n{}\n".format(traceback.format_exc()) + ('='*60))
-    
+
     plugin_hooks.mqc_trigger('execution_finish')
 
     logger.info("MultiQC complete")
-    
+
     # Move the log file into the data directory
     log.copy_tmp_log(logger)
-    
+
     # Exit with an error code if a module broke
     sys.exit(sys_exit_code)
-    
+
 
 if __name__ == "__main__":
     # Add any extra plugin command line options
