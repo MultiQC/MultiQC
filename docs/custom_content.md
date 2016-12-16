@@ -47,9 +47,24 @@ summarised.
 If you're using `plot_type: 'generalstats'` then a report section will not be created and
 most of the configuration keys above are ignored.
 
+Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
+configuration keys (these can't be guessed by data format).
+
 ## Data formats
 MultiQC can parse custom data from a few different sources, in a number of different
 formats. Which one you use depends on how the data is being produced.
+
+A quick summary of which approach to use looks something like this:
+
+* Additional data when already using custom MultiQC config files
+  * _Data as part of MultiQC config_
+* Data specifically for MultiQC from a custom script
+  * _MultiQC-specific data file_
+* Data from a custom script which is also used by other processes
+  * _Separate configuration and data files_
+  * Add `_mqc.txt` to filename and hope that MultiQC guesses correctly
+* Anything more complicated, or data from a released tool
+  * Write a proper MultiQC module instead.
 
 For more complete examples of the data formats understood by MultiQC, please see the
 [`data/custom_content`](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
@@ -184,7 +199,7 @@ The file format can also be JSON:
 }
 ```
 
-If you want the data to be easy to open in Excel / other tools, you can also use
+If you want the data to be easy to use with other tools, you can also use
 comma-separated or tab-separated file. To customise plot output, include commented
 header lines with plot configuration in YAML format:
 
@@ -204,7 +219,9 @@ Category_4    253
 ```
 
 If no configuration is given, MultiQC will do its best to guess how to visualise your data appropriately.
-Something will be probably be shown, but it can produce unexpected results.
+To see examples of typical file structures which are understood, see the
+[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+used to develop this code. Something will be probably be shown, but it may produce unexpected results.
 
 ### Separate configuration and data files
 It's not always possible or desirable to include MultiQC configuration within a data file.
@@ -247,4 +264,9 @@ A data file within the MultiQC search directories could then simply look like th
 3	97.61262195
 [...]
 ```
+
+As mentioned above - if no configuration is given, MultiQC will do its best to guess how to visualise
+your data appropriately. To see examples of typical file structures which are understood, see the
+[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+used to develop this code.
 
