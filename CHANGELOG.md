@@ -7,6 +7,8 @@ the need for a new module or plugin. For more information, please see the
 [MultiQC documentation](http://multiqc.info/docs/#custom-content).
 
 Module updates:
+* [**HTSeq**](http://www-huber.embl.de/HTSeq/doc/count.html) - new module!
+  * New module for the `htseq-count` tool, often used in RNA-seq analysis.
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
 * [**Slamdunk**](http://t-neumann.github.io/slamdunk/) - new module!

@@ -27,6 +27,7 @@ MultiQC Modules:
     Bcftools: modules/bcftools.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
+    HTSeq: modules/htseq.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md

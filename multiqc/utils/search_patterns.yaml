@@ -50,6 +50,8 @@ featurecounts:
 gatk:
     varianteval:
         contents: '#:GATKReport'
+htseq:
+    contents: '__too_low_aQual'
 hicup:
     fn: 'HiCUP_summary_report*'
 kallisto:

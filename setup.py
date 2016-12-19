@@ -67,6 +67,7 @@ setup(
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
+            'htseq = multiqc.modules.htseq:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',

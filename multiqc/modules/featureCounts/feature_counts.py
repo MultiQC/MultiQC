@@ -39,7 +39,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.featurecounts_data, 'multiqc_featureCounts')
 
         # Basic Stats Table
-        # Report table is immutable, so just updating it works
         self.featurecounts_stats_table()
 
         # Assignment bar plot
