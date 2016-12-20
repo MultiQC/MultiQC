@@ -1334,7 +1334,8 @@ function plot_heatmap(target, ds){
       title: { enabled: true, text: config['xTitle'] },
       labels: {
         formatter: function(){
-          return this.value.substr(0, 20);
+          try { return this.value.substr(0, 20); }
+          catch(err) { return this.value; }
         }
       }
     },
@@ -1345,7 +1346,8 @@ function plot_heatmap(target, ds){
       title: config['yTitle'],
       labels: {
         formatter: function(){
-          return this.value.substr(0, 20);
+          try { return this.value.substr(0, 20); }
+          catch(err) { return this.value; }
         }
       }
     },

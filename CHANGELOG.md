@@ -50,6 +50,7 @@ Module updates:
 
 Core Updates:
 * Support for _custom content_ (see top of release notes).
+* New ninja report tool: make scatter plots of any two table columns!
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created
   * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
 * Added _'Apply'_ button to Highlight / Rename / Hide.
