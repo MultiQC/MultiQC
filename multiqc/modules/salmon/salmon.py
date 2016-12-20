@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(name='Salmon', anchor='salmon',
         href='http://combine-lab.github.io/salmon/',
         info="is a tool for quantifying the expression of transcripts using RNA-seq data.")
-        
+
         # Parse meta information. JSON win!
         self.salmon_meta = dict()
         for f in self.find_log_files(config.sp['salmon']['meta']):
@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = os.path.basename( os.path.dirname(f['root']) )
             s_name = self.clean_s_name(s_name, f['root'])
             self.salmon_meta[s_name] = json.loads(f['f'])
-        
+
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
         for f in self.find_log_files(config.sp['salmon']['fld']):
@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(self.salmon_meta, 'multiqc_salmon')
         if len(self.salmon_fld) > 0:
             log.info("Found {} fragment length distributions".format(len(self.salmon_fld)))
-        
+
         # Add alignment rate to the general stats table
         headers = OrderedDict()
         headers['percent_mapped'] = {
@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.salmon_meta, headers)
-        
+
         # Fragment length distribution plot
         # Only one section, so add to the intro
         pconfig = {
@@ -89,6 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
-        
+
         self.intro += plots.linegraph.plot(self.salmon_fld, pconfig)
 

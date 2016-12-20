@@ -18,8 +18,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='methylQA', anchor='methylqa', 
-        target='methylQA', href="http://methylqa.sourceforge.net/", 
+        super(MultiqcModule, self).__init__(name='methylQA', anchor='methylqa',
+        target='methylQA', href="http://methylqa.sourceforge.net/",
         info=" - a methylation sequencing data quality assessment tool.")
 
         # Find and load any methylQA reports
@@ -34,24 +34,24 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.methylqa_data)))
-        
+
         # Write parsed report data to a file
         self.write_data_file(self.methylqa_data, 'multiqc_methylQA')
-        
+
         # Basic Stats Table
         self.methylqa_general_stats_table()
-        
+
         # Alignment bar plot - only one section, so add to the module intro
         self.intro += self.methylqa_alignment_plot()
 
 
     def parse_methylqa_logs(self, f):
-        
+
         # Get s_name from first input file if possible
         s_name = f['s_name']
         if f['f'][0].startswith('files provided'):
             s_name = os.path.basename(f['f'][0])
-        
+
         parsed_data = {}
         regexes = {
             'mappable_reads': r"uniquely mappable reads \(pair\):\s*(\d+)",
@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
             match = re.search(r, f['f'])
             if match:
                 parsed_data[k] = float(match.group(1))
-        
+
         # Parse the coverage histogram
         hist = False
         for l in f['f'].split(os.linesep):
@@ -92,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
         if hist is not False and len(hist) > 0:
             self.methylqa_coverage_counts[s_name] = hist['counts']
             self.methylqa_coverage_percentages[s_name] = hist['percentages']
-        
+
         if len(parsed_data) > 0:
             if s_name in self.methylqa_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
     def methylqa_general_stats_table(self):
         """ Take the parsed stats from the methylQA report and add it to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['coverage'] = {
             'title': 'Fold Coverage',
@@ -116,10 +116,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def methylqa_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         if len(self.methylqa_coverage_counts) == 0:
             return '<div class="alert alert-danger">No histogram data found.</div>'
-    
+
         pconfig = {
             'id': 'methylqa_coverage',
             'title': 'CpG Coverage',
@@ -131,6 +131,6 @@ class MultiqcModule(BaseMultiqcModule):
                 {'name': 'Counts', 'ylab': 'CpG Counts' },
                 {'name': 'Percentages', 'ylab': '% CpGs', 'ymax': 100 }
             ]
-        }    
+        }
         return plots.linegraph.plot([self.methylqa_coverage_counts, self.methylqa_coverage_percentages], pconfig)
-        
+

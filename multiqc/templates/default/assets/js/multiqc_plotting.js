@@ -612,7 +612,11 @@ function plot_scatter_plot (target, ds){
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(data, function(j, s){
-      data[j]['marker'] = { lineWidth: 0 }
+      if ('marker' in data[j]){
+        data[j]['marker']['lineWidth'] = 0;
+      } else {
+        data[j]['marker'] = {'lineWidth': 0};
+      }
       var match = false;
       $.each(window.mqc_highlight_f_texts, function(idx, f_text){
         if(f_text == ''){ return true; }
@@ -716,11 +720,13 @@ function plot_scatter_plot (target, ds){
           lineWidth: config['marker_line_width'],
           states: {
             hover: {
-              enabled: true,
+              enabled: config['enableHover'] == undefined ? true : config['enableHover'],
               lineColor: 'rgb(100,100,100)'
             }
           }
         },
+        turboThreshold: config['turboThreshold'],
+        enableMouseTracking: config['enableMouseTracking'],
         cursor: config['cursor'],
         point: {
           events: {
@@ -735,7 +741,15 @@ function plot_scatter_plot (target, ds){
     tooltip: {
       headerFormat: '',
 			pointFormat: config['pointFormat'],
-			useHTML: true
+			useHTML: true,
+      formatter: (function() {
+        if(!this.point.noTooltip) {
+          // Formatter function doesn't do name for some reason
+          fstring = config['pointFormat'].replace('{point.name}', this.point.name);
+          return Highcharts.Point.prototype.tooltipFormatter.call(this, fstring);
+        }
+        return false;
+      })
     },
     series: [{
       color: config['marker_colour'],

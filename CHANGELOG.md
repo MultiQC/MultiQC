@@ -1,11 +1,20 @@
 # MultiQC Version History
 
 #### v0.9dev
+A major new feature is released in v0.9 - support for _custom content_. This means
+that MultiQC can now easily include output from custom scripts within reports without
+the need for a new module or plugin. For more information, please see the
+[MultiQC documentation](http://multiqc.info/docs/#custom-content).
+
 Module updates:
+* [**HTSeq**](http://www-huber.embl.de/HTSeq/doc/count.html) - new module!
+  * New module for the `htseq-count` tool, often used in RNA-seq analysis.
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
 * [**Slamdunk**](http://t-neumann.github.io/slamdunk/) - new module!
   * Slamdunk is a software tool to analyze SLAMSeq data.
+* [**Peddy**](https://github.com/brentp/peddy) - new module!
+  * Peddy calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
@@ -17,7 +26,9 @@ Module updates:
   * Fixed logger error in VariantEval module.
 * **Picard**
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
-  * New feature to customise coverage shown from `HsMetrics` in General Statistics table.
+  * New feature to customise coverage shown from `HsMetrics` in General Statistics table
+    see the [docs](http://multiqc.info/docs/#picard) for info).
+  * Fixed compatibility problem with output from `CollectMultipleMetrics` for `CollectAlignmentSummaryMetrics`
 * **Preseq**
   * Module now recognises output from `c_curve` mode.
 * **RSeQC**
@@ -38,6 +49,7 @@ Module updates:
     (see the [docs](http://multiqc.info/docs/#qualimap) for info).
 
 Core Updates:
+* Support for _custom content_ (see top of release notes).
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created
   * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
 * Added _'Apply'_ button to Highlight / Rename / Hide.
@@ -45,6 +57,7 @@ Core Updates:
     things without having to wait for the report to replot each change.
 * New config options `decimalPoint_format` and `thousandsSep_format`
   * Allows you to change the default `1 234.56` number formatting for plots.
+* New config option `top_modules` allows you to specify modules that should come at the top of the report
 * Fixed bar plot bug where missing categories could shift data between samples
 * Report title now printed in the side navigation
 * Missing plot IDs added for easier plot exporting
@@ -52,10 +65,19 @@ Core Updates:
 * Added warnings in report about missing functionality for flat plots (exporting and toolbox)
 * Export button has contextual text for images / data
 * Fixed a bug where user config files were loaded twice
+* Fixed bug where module order was random if `--module` or `--exclude` was used.
 * Refactored code so that the order of modules can be changed in the user config
 * Beefed up code + docs in scatter plots back end and multiple bar plots.
-* New `tt_decimals` and `tt_suffix` options for bar plots
-* Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.
+* Fixed a few back end nasties for Tables
+  * Shared-key columns are no longer forced to share colour schemes
+  * Fixed bug in lambda modified values when format string breaks
+  * Supplying just data with no header information now works as advertised
+* Improvements to back end code for bar plots
+  * New `tt_decimals` and `tt_suffix` options for bar plots
+  * Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.
+  * New option `hide_zero_cats:False` to force legends to be shown even when all data is 0
+* General Stats _Showing x of y_ columns count is fixed on page load.
+* Big code whitespace cleanup
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:

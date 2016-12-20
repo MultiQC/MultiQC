@@ -60,6 +60,17 @@ Then this will be displayed at the top of reports:
 
 Note that you can also specify a path to a config file using `-c`.
 
+## Order of modules
+By default, modules are included in the report as in the order specified in `config.module_order`.
+Any modules found which aren't in this list are appended at the top of the report. To specify
+certain modules that should always come at the top of the report, you can configure `config.top_modules`
+in your MultiQC configuration file. For example, to always have the FastQC module at the top
+of reports, add the following to your `~/.multiqc_config.yaml` file:
+
+```yaml
+top_modules:
+    - 'fastqc'
+```
 
 ## Customising tables
 Report tables such as the General Statistics table can get quite wide. To help with this,

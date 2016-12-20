@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files(config.sp['skewer'], filehandles=True):
             self.parse_skewer_log(f)
-        
+
         if len(self.skewer_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
@@ -84,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         html_content = plots.linegraph.plot(self.skewer_readlen_dist, pconfig)
-        
+
         # Only one section, so add to the intro
         self.intro += html_content
 

@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find bamtools stats reports and parse their data """
-    
+
     # Set up vars
     self.bamtools_stats_data = dict()
     regexes = {
@@ -41,7 +41,7 @@ def parse_reports(self):
         'singletons': r"Singletons:\s*(\d+)",
         'singletons_pct': r"Singletons:\s*\d+\s+\(([\d\.]+)%\)",
     }
-    
+
     # Go through files and parse data using regexes
     for f in self.find_log_files(config.sp['bamtools']['stats']):
         d = dict()
@@ -49,18 +49,18 @@ def parse_reports(self):
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
                 d[k] = float(r_search.group(1))
-        
+
         if len(d) > 0:
             if f['s_name'] in self.bamtools_stats_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='stats')
             self.bamtools_stats_data[f['s_name']] = d
-    
+
     if len(self.bamtools_stats_data) > 0:
-    
+
         # Write to file
         self.write_data_file(self.bamtools_stats_data, 'multiqc_bamtools_stats')
-        
+
         # Add to general stats table
         self.general_stats_headers['duplicates_pct'] = {
             'title': '% Duplicates',
@@ -84,7 +84,7 @@ def parse_reports(self):
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( self.bamtools_stats_data[s_name] )
-        
+
         # Make dot plot of counts
         pconfig = {}
         keys = OrderedDict()
@@ -99,7 +99,7 @@ def parse_reports(self):
             'modify': lambda x: float(x) / 1000000.0,
             'decimalPlaces': 2
         }
-        
+
         keys['total_reads'] = dict(num_defaults, **{'title': 'Total reads', 'description': 'Total reads (millions)' });
         keys['mapped_reads_pct'] = dict(defaults, **{'title': 'Mapped reads' })
         keys['forward_strand_pct'] = dict(defaults, **{'title': 'Forward strand' })
@@ -112,13 +112,13 @@ def parse_reports(self):
         keys['read_1'] = dict(num_defaults, **{'title': 'Read 1', 'description': 'Read 1 (millions)' });
         keys['read_2'] = dict(num_defaults, **{'title': 'Read 2', 'description': 'Read 2 (millions)' });
         keys['singletons_pct'] = dict(defaults, **{'title': 'Singletons' })
-        
+
         self.sections.append({
             'name': 'Bamtools Stats',
             'anchor': 'bamtools-stats',
             'content': plots.beeswarm.plot(self.bamtools_stats_data, keys)
         })
-    
+
     # Return number of samples found
     return len(self.bamtools_stats_data)
-    
+

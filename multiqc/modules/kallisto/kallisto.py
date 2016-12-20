@@ -46,24 +46,24 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_kallisto_log(self, f):
         s_name = total_reads = paligned_reads = fraglength = None
         for l in f['f']:
-            
+
             # Get input filename
             match = re.search(r'\[quant\] will process (pair|file) 1: (\S+)', l)
             if match:
                 s_name = self.clean_s_name(match.group(2), f['root'])
-            
+
             if s_name is not None:
                 # Alignment rates
                 aligned = re.search(r'\[quant\] processed ([\d,]+) reads, ([\d,]+) reads pseudoaligned', l)
                 if aligned:
                     total_reads = float(aligned.group(1).replace(',',''))
                     paligned_reads = float(aligned.group(2).replace(',',''))
-                
+
                 # Paired end fragment lengths
                 flength = re.search(r'\[quant\] estimated average fragment length: ([\d\.]+)', l)
                 if flength:
                     fraglength = float(flength.group(1).replace(',',''))
-                
+
                 if 'quantifying the abundances' in l:
                     if s_name in self.kallisto_data:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
     def kallisto_general_stats_table(self):
         """ Take the parsed stats from the Kallisto report and add it to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['fragment_length'] = {
             'title': 'Frag Length',
@@ -112,12 +112,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def kallisto_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['pseudoaligned_reads'] = { 'color': '#437bb1', 'name': 'Pseudoaligned' }
         keys['not_pseudoaligned_reads'] =   { 'color': '#b1084c', 'name': 'Not aligned' }
-        
+
         # Config for the plot
         config = {
             'id': 'kallisto_alignment',
@@ -125,5 +125,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
+
         return plots.bargraph.plot(self.kallisto_data, keys, config)
