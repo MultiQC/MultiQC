@@ -11,7 +11,7 @@
 ############################################################
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 import json
 import logging
 import os
@@ -421,12 +421,43 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
 
+        # Try to find and plot a theoretical GC line
+        theoretical_gc = None
+        theoretical_gc_name = None
+        for f in self.find_log_files(config.sp['fastqc']['theoretical_gc']):
+            theoretical_gc = list()
+            for l in f['f'].splitlines():
+                if '# FastQC theoretical GC content curve:' in l:
+                    theoretical_gc_name = l[39:]
+                elif not l.startswith('#'):
+                    s = l.split()
+                    try:
+                        theoretical_gc.append([float(s[0]), float(s[1])])
+                    except (TypeError, IndexError):
+                        pass
+        theoretical_gc_desc = ''
+        if theoretical_gc is not None:
+            pconfig['extra_series'] = [{
+                'name': 'Theoretical GC Content',
+                'data': theoretical_gc,
+                'dashStyle': 'Dash',
+                'lineWidth': 1,
+                'color': '#000000',
+                'marker': { 'enabled': False },
+                'enableMouseTracking': False,
+                'showInLegend': False,
+            }]
+            t_name = ''
+            if theoretical_gc_name is not None:
+                t_name = ' for this <em>{}</em>'.format(theoretical_gc_name)
+            theoretical_gc_desc = '<p>The dashed black line shows the theoretical GC content{}.</p>'.format(t_name)
+
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'anchor': 'fastqc_per_sequence_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot([data_norm, data], pconfig)
+                        theoretical_gc_desc + plots.linegraph.plot([data_norm, data], pconfig)
         })
 
 

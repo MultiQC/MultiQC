@@ -51,3 +51,17 @@ sp:
 > **Note:** Sample names are discovered by parsing the line beginning
 > `Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.
 
+#### Theoretical GC Content
+It is possible to plot a dashed line showing the theoretical GC content for
+reference genome. To do this, create a file called `fastqc_theoretical_gc.txt`
+and place it with your analysis files. It should be tab delimited with the
+following format (column 1 = %GC, column 2 = % of genome):
+```
+# FastQC theoretical GC content curve: YOUR REFERENCE NAME
+0	0.005311768
+1	0.004108502
+2	0.004060371
+3	0.005066476
+[...]
+```
+

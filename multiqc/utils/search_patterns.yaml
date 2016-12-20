@@ -45,6 +45,8 @@ fastqc:
         fn: 'fastqc_data.txt'
     zip:
         fn: '*_fastqc.zip'
+    theoretical_gc:
+        fn: 'fastqc_theoretical_gc.txt'
 featurecounts:
     fn: '*.summary'
 gatk:

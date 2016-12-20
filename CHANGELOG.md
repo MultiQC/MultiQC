@@ -20,6 +20,7 @@ Module updates:
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
 * **FastQC**
   * New plot showing total overrepresented sequence percentages.
+  * New option to parse a file containing a theoretical GC curve to display in the background.
 * **featureCounts**
   * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
 * **GATK**
