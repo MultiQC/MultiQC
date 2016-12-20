@@ -16,7 +16,7 @@ window.HCDefaults = undefined;
 
 // Execute when page load has finished loading
 $(function () {
-  
+
   // HighCharts Defaults
   window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});
   Highcharts.setOptions({
@@ -45,7 +45,7 @@ $(function () {
       }
     }
   });
-  
+
   // Render plots on page load
   $('.hc-plot').each(function(){
     var target = $(this).attr('id');
@@ -53,7 +53,7 @@ $(function () {
     var max_num = num_datasets_plot_limit * 50;
     plot_graph(target, undefined, max_num);
   });
-  
+
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
     var target = $(this).parent().attr('id');
@@ -62,7 +62,7 @@ $(function () {
       $('#mqc-warning-many-samples').hide();
     }
   });
-  
+
   // Render all plots from header
   $('#mqc-render-all-plots').click(function(){
     $('.hc-plot.not_rendered').each(function(){
@@ -71,7 +71,7 @@ $(function () {
     });
     $('#mqc-warning-many-samples').hide();
   });
-  
+
   // Replot graphs when something changed in filters
   $(document).on('mqc_highlights mqc_renamesamples mqc_hidesamples', function(){
     // Replot graphs
@@ -80,7 +80,7 @@ $(function () {
       plot_graph(target);
     });
   });
-  
+
   // Switch a HighCharts axis or data source
   $('.hc_switch_group button').click(function(e){
     e.preventDefault();
@@ -122,15 +122,15 @@ $(function () {
 
   // Make HighCharts divs height-draggable
   // http://jsfiddle.net/Lkwb86c8/
-  $('.hc-plot').each(function(){
+  $('.hc-plot:not(.no-handle)').each(function(){
     if(!$(this).parent().hasClass('hc-plot-wrapper')){
       $(this).wrap('<div class="hc-plot-wrapper"></div>');
     }
     if(!$(this).siblings().hasClass('hc-plot-handle')){
       $(this).after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
     }
+    $(this).css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
   });
-  $('.hc-plot').css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
   $('.hc-plot-handle').on('mousedown', function(e){
     var wrapper = $(this).parent();
     var handle = $(this);
@@ -154,7 +154,7 @@ $(function () {
       $(this).highcharts().reflow();
     }
   });
-  
+
   // Switch a y axis limit on or off
   $('.mqc_hcplot_plotgroup').on('click', '.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper', function(){
     var target = $( $(this).data('target') ).highcharts();
@@ -171,7 +171,7 @@ $(function () {
       mqc_switch.removeClass('off').addClass('on').text('on');
     }
   });
-  
+
 });
 
 // Call to render any plot
@@ -236,7 +236,7 @@ function plot_xy_line_graph(target, ds){
   var config = mqc_plots[target]['config'];
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
-  
+
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else {
@@ -248,11 +248,11 @@ function plot_xy_line_graph(target, ds){
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{series.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{series.name}</span><br>'+config['tt_label'];
   }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -266,7 +266,7 @@ function plot_xy_line_graph(target, ds){
       });
     });
   }
-  
+
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -277,7 +277,7 @@ function plot_xy_line_graph(target, ds){
       });
     });
   }
-  
+
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.mqc_hcplot_plotgroup').show();
@@ -314,7 +314,7 @@ function plot_xy_line_graph(target, ds){
       return false;
     }
   }
-  
+
   // Toggle buttons for y-axis limis
   // Handler for this is at top, so doesn't get created multiple times
   if(config['ymax'] != undefined || config['ymin'] != undefined ){
@@ -401,12 +401,12 @@ function plot_stacked_bar_graph(target, ds){
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['tt_percentages'] === undefined){ config['tt_percentages'] = true; }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
   var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
-  
+
   if (config['ytype'] == 'logarithmic'){
     if(config['ymin'] == 0 || config['ymin'] == undefined){
       config['ymin'] = 1;
@@ -415,7 +415,7 @@ function plot_stacked_bar_graph(target, ds){
   } else {
     var minTickInt = undefined;
   }
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     $.each(cats, function(j, s_name){
@@ -429,7 +429,7 @@ function plot_stacked_bar_graph(target, ds){
       });
     });
   }
-  
+
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(cats, function(j, s_name){
@@ -450,7 +450,7 @@ function plot_stacked_bar_graph(target, ds){
     if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
   }
   if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
-  
+
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.mqc_hcplot_plotgroup').show();
@@ -491,7 +491,7 @@ function plot_stacked_bar_graph(target, ds){
       return false;
     }
   }
-  
+
   // Make the highcharts plot
   $('#'+target).highcharts({
     chart: {
@@ -574,7 +574,7 @@ function plot_scatter_plot (target, ds){
   var config = mqc_plots[target]['config'];
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
-  
+
   if(config['marker_colour'] === undefined){ config['marker_colour'] = 'rgba(124, 181, 236, .5)'; }
   if(config['marker_size'] === undefined){ config['marker_size'] = 5; }
   if(config['marker_line_colour'] === undefined){ config['marker_line_colour'] = '#999'; }
@@ -590,11 +590,11 @@ function plot_scatter_plot (target, ds){
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{point.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{point.name}</span><br>'+config['tt_label'];
   }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -608,7 +608,7 @@ function plot_scatter_plot (target, ds){
       });
     });
   }
-  
+
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -630,7 +630,7 @@ function plot_scatter_plot (target, ds){
       }
     });
   }
-  
+
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.mqc_hcplot_plotgroup').show();
@@ -667,7 +667,7 @@ function plot_scatter_plot (target, ds){
       return false;
     }
   }
-  
+
   // Make the highcharts plot
   $('#'+target).highcharts({
     chart: {
@@ -782,11 +782,7 @@ function plot_scatter_plot (target, ds){
       });
     }
   });
-  
 }
-
-
-
 
 // Beeswarm plot
 function plot_beeswarm_graph(target, ds){
@@ -795,13 +791,13 @@ function plot_beeswarm_graph(target, ds){
   }
   var config = mqc_plots[target]['config'];
   if(ds === undefined){ ds = 0; }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var datasets = JSON.parse(JSON.stringify(mqc_plots[target]['datasets']));
   var samples = JSON.parse(JSON.stringify(mqc_plots[target]['samples']));
   var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     for (i=0; i < samples.length; i++) {
@@ -817,7 +813,7 @@ function plot_beeswarm_graph(target, ds){
       }
     }
   }
-  
+
   // Highlight samples
   var baseColour = 'rgb(55,126,184)'; // Blue points by default
   var seriesColours = {};
@@ -833,7 +829,7 @@ function plot_beeswarm_graph(target, ds){
       }
     }
   }
-  
+
   // Hide samples
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.hc-plot-wrapper').show();
@@ -877,25 +873,25 @@ function plot_beeswarm_graph(target, ds){
       return false;
     }
   }
-  
+
   // Figure out how tall to make each plot
   var ph_min = 40;
   var ph_max = 100;
   var pheight = 600 / categories.length;
   pheight = Math.min(ph_max, Math.max(ph_min, pheight));
-  
+
   // Clear the loading text and add hover text placeholder
   $('#'+target).html('<div class="beeswarm-hovertext"><em class="placeholder">Hover over a data point for more information</em></div><div class="beeswarm-plots"></div>');
   // Resize the parent draggable div
   $('#'+target).parent().css('height', ((pheight*categories.length)+40)+'px');
-  
+
   for (var i = 0; i < categories.length; i++) {
-    
+
     var borderCol = categories[i]['bordercol'];
     if (borderCol == undefined){
       borderCol = '#cccccc';
     }
-    
+
     var data = datasets[i];
     var s_names = samples[i];
     if (categories[i]['namespace'] == ''){
@@ -909,7 +905,7 @@ function plot_beeswarm_graph(target, ds){
     var decimalPlaces = categories[i]['decimalPlaces'];
     var minx = categories[i]['min'];
     var maxx = categories[i]['max'];
-    
+
     // Size and spacing options
     var markerRadius = 2.5
   	var yspace = 70;
@@ -924,7 +920,7 @@ function plot_beeswarm_graph(target, ds){
       yspace = 30;
       ysep = 30;
     }
-    
+
     if (maxx == undefined){
     	maxx = Math.max.apply(null, data);
     }
@@ -1069,7 +1065,7 @@ function plot_beeswarm_graph(target, ds){
                       }
                     }
                   });
-                  
+
                 },
                 mouseOut: function () {
                   $('#'+target+' .beeswarm-plot').each(function(){
@@ -1098,22 +1094,21 @@ function plot_beeswarm_graph(target, ds){
   }
 }
 
-
 // Heatmap plot
 function plot_heatmap(target, ds){
   if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'heatmap'){
     return false;
   }
   var config = mqc_plots[target]['config'];
-  
+
   if(config['square'] === undefined){ config['square'] = true; }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
   var xcats = JSON.parse(JSON.stringify(mqc_plots[target]['xcats']));
   var ycats = JSON.parse(JSON.stringify(mqc_plots[target]['ycats']));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     for (i=0; i < xcats.length; i++) {
@@ -1137,7 +1132,7 @@ function plot_heatmap(target, ds){
       });
     }
   }
-  
+
   // Hide samples
   var num_total = Math.max(xcats.length, ycats.length);
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
@@ -1214,7 +1209,7 @@ function plot_heatmap(target, ds){
       return false;
     }
   }
-  
+
   // Highlight samples - do this last as we convert numerical arrays to associative
   if(window.mqc_highlight_f_texts.length > 0){
     var highlight = Array();
@@ -1259,7 +1254,7 @@ function plot_heatmap(target, ds){
       }
     }
   }
-  
+
   // We set undefined config vars so that they stay the same when hiding samples
   if(config['min'] === undefined || config['max'] === undefined){
     var dmin = data[0][2];
@@ -1304,7 +1299,7 @@ function plot_heatmap(target, ds){
     }
     colstops.reverse();
   }
-  
+
   // Make the highcharts plot
   $('#'+target).highcharts({
     chart: {
@@ -1336,13 +1331,23 @@ function plot_heatmap(target, ds){
     },
     xAxis: {
       categories: xcats,
-      title: { enabled: true, text: config['xTitle'] }
+      title: { enabled: true, text: config['xTitle'] },
+      labels: {
+        formatter: function(){
+          return this.value.substr(0, 20);
+        }
+      }
     },
     yAxis: {
       categories: ycats,
       reversed: true,
       opposite: true,
-      title: config['yTitle']
+      title: config['yTitle'],
+      labels: {
+        formatter: function(){
+          return this.value.substr(0, 20);
+        }
+      }
     },
     colorAxis: {
       reversed: config['reverseColors'],
@@ -1404,10 +1409,8 @@ function plot_heatmap(target, ds){
       });
     }
   });
-  
-}
-  
 
+}
 
 // Highlight text with a fadeout background colour highlight
 function highlight_fade_text(obj){

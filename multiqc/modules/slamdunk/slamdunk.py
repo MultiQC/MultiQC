@@ -5,7 +5,6 @@
 from __future__ import print_function
 import logging
 import re
-from distutils.version import StrictVersion
 from collections import OrderedDict
 
 from multiqc import config, BaseMultiqcModule, plots

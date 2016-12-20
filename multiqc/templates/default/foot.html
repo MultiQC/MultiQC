@@ -8,6 +8,45 @@ eg. Modals / other HTML to be hidden out of the way.
 #}
 
 
+<!-- Table Scatter Plot Modal -->
+<div class="modal fade" id="tableScatterModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title">Plot Table Data</h3>
+      </div>
+      <div class="modal-body">
+        <form id="tableScatterForm">
+          <input type="hidden" id="tableScatter_tid" name="tableScatter_tid" value="" />
+          <div class="row">
+            <div class="col-sm-6">
+              <select id="tableScatter_col1" name="tableScatter_col1" class="form-control">
+                <option value="">Select Column</option>
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <select id="tableScatter_col2" name="tableScatter_col2" class="form-control">
+                <option value="">Select Column</option>
+              </select>
+            </div>
+          </div>
+          <div class="hc-plot-wrapper">
+            <div id="tableScatterPlot" class="hc-plot not_rendered hc-scatter-plot no-handle" style="width:566px; height: 510px;">
+              <small>Please select two table columns.</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <!-- Regex Help Modal -->
 <div class="modal fade" id="regex_help_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">

@@ -10,17 +10,17 @@ var brewer_scales = ['YlOrRd', 'YlOrBr', 'YlGnBu', 'YlGn', 'Reds', 'RdPu',
 
 // Execute when page load has finished loading
 $(function () {
-  
+
   if($('.mqc_table').length > 0){
-    
+
     // Enable tablesorter on MultiQC tables
     $('.mqc_table').tablesorter({sortInitialOrder: 'desc'});
-    
+
     // Update tablesorter if samples renamed
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
       $('.mqc_table').trigger('update');
     });
-    
+
     // Copy table contents to clipboard
     var clipboard = new Clipboard('.mqc_table_copy_btn');
     clipboard.on('success', function(e) { e.clearSelection(); });
@@ -31,10 +31,10 @@ $(function () {
         btn.removeClass('active').html('<span class="glyphicon glyphicon-copy"></span> Copy table');
       }, 2000);
     });
-    
+
     ///////////////////
     // Floating table headers
-    
+
     // Sort table when frozen header clicked
     $('.mqc_table_container').on('click', '.mqc_table_clone thead tr th', function(){
       var c_idx = $(this).index();
@@ -43,18 +43,18 @@ $(function () {
       $(this).closest('thead').find('tr th').removeClass('headerSortDown headerSortUp');
       $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
     });
-    
+
     // Create / destroy floating header on scrolling
     var mqc_table_HeadHeight = 30;
     $(window).scroll(function(){
       var wTop = $(window).scrollTop();
       $('.mqc_table_container').each(function(){
-        
+
         var container = $(this).attr('id');
         var table = $(this).find('.mqc_table').attr('id');
         var height = $(this).find('.mqc_table').height();
         var offset = $(this).find('.mqc_table').offset().top;
-        
+
         var clone_id = table + '_clone';
         var top = offset - wTop;
         var visible = top + height;
@@ -143,12 +143,11 @@ $(function () {
             var col = chroma.rgb(rgb).hex();
             $(this).find('.wrapper .bar').css('background-color', col);
           });
-          
+
         }
       });
     });
-    
-    
+
     /////// COLUMN CONFIG
     // show + hide columns
     $('.mqc_table_col_visible').change(function(){
@@ -191,7 +190,7 @@ $(function () {
       $(target+'_numrows').text( $(target+' tbody tr:visible').length );
       $(target+'_numcols').text( $(target+' thead th:visible').length - 1 );
     }
-    
+
     // Make rows in MultiQC tables sortable
     $('.mqc_table.mqc_sortable tbody').sortable({
       handle: '.sorthandle',
@@ -200,7 +199,7 @@ $(function () {
         return ui;
       }
     });
-    
+
     // Change order of columns
     $('.mqc_configModal_table').on('sortstop', function(e, ui){
       change_mqc_table_col_order( $(this) );
@@ -208,9 +207,9 @@ $(function () {
     $('.mqc_configModal_table').bind('sortEnd',function() { 
       change_mqc_table_col_order( $(this) );
     });
-    
+
     // TOOLBOX LISTENERS
-    
+
     // highlight samples
     $(document).on('mqc_highlights', function(e, f_texts, f_cols, regex_mode){
       $('.mqc_table_sortHighlight').hide();
@@ -229,7 +228,7 @@ $(function () {
         $(this).css('color', thiscol);
       });
     });
-    
+
     // Sort MultiQC tables by highlight
     $('.mqc_table_sortHighlight').click(function(e){
       e.preventDefault();
@@ -248,7 +247,7 @@ $(function () {
         $(this).data('direction', 'desc');
       }
     });
-    
+
     // Rename samples
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
       $(".mqc_table tbody th").each(function(){
@@ -264,10 +263,10 @@ $(function () {
         $(this).text(s_name);
       });
     });
-    
+
     // Hide samples
     $(document).on('mqc_hidesamples', function(e, f_texts, regex_mode){
-      
+
       // Hide rows in MultiQC tables
       $(".mqc_table tbody th").each(function(){
         var match = false;
@@ -290,7 +289,7 @@ $(function () {
         var tid = $(this).attr('id').replace('_numrows','');
         $(this).text( $('#'+tid+' tbody tr:visible').length );
       });
-      
+
       // Hide empty columns
       $('.mqc_table').each(function(){
         var table = $(this);
@@ -316,21 +315,100 @@ $(function () {
         $(this).text( $('#'+tid+' thead th:visible').length - 1 );
       });
     });
-    
-  } // End of check for table
-  
-});
 
+  } // End of check for table
+
+  // Table Scatter Modal
+  $('#tableScatterForm').submit(function(e){
+    e.preventDefault();
+  });
+  $('.mqc_table_makeScatter').click(function(e){
+    // Reset dropdowns
+    if($('#tableScatter_tid').val() != $(this).data('table')){
+      $('#tableScatter_col1, #tableScatter_col2').html('<option value="">Select Column</option>');
+      // Add columns to dropdowns
+      $($(this).data('table')+' thead tr th').each(function(e){
+        var c_id = $(this).attr('id');
+        if(c_id != undefined){
+          var c_name = $(this).children('span').attr('data-original-title');
+          $('#tableScatter_col1, #tableScatter_col2').append('<option value="'+c_id+'">'+c_name+'</select>');
+        }
+      });
+      $('#tableScatter_tid').val($(this).data('table'));
+      $('#tableScatterPlot').html('<small>Please select two table columns.</small>').addClass('not_rendered');
+    }
+  });
+  $('#tableScatterForm select').change(function(e){
+    var tid = $('#tableScatter_tid').val();
+    var col1 = $('#tableScatter_col1').val().replace('header_', '');
+    var col2 = $('#tableScatter_col2').val().replace('header_', '');
+    var col1_name = $('#tableScatter_col1 option:selected').text();
+    var col2_name = $('#tableScatter_col2 option:selected').text();
+    var col1_max = parseFloat($(tid+' thead th#header_'+col1).data('chroma-max'));
+    var col1_min = parseFloat($(tid+' thead th#header_'+col1).data('chroma-min'));
+    var col2_max = parseFloat($(tid+' thead th#header_'+col2).data('chroma-max'));
+    var col2_min = parseFloat($(tid+' thead th#header_'+col2).data('chroma-min'));
+    if(isNaN(col1_max)){ col1_max = undefined; }
+    if(isNaN(col1_min)){ col1_min = undefined; }
+    if(isNaN(col2_max)){ col2_max = undefined; }
+    if(isNaN(col2_min)){ col2_min = undefined; }
+    if(col1 != '' && col2 != ''){
+      $('#tableScatterPlot').html('<small>loading..</small>');
+      // Get the data values
+      mqc_plots['tableScatterPlot'] = {
+        'plot_type': 'scatter',
+        'config': {
+          'id': 'tableScatter_'+tid,
+          'title': tid,
+          'xlab': col1_name,
+          'ylab': col2_name,
+          'xmin': col1_min,
+          'xmax': col1_max,
+          'ymin': col2_min,
+          'ymax': col2_max,
+        },
+        'datasets': [[]]
+      };
+      $(tid+' tbody tr').each(function(e){
+        var s_name = $(this).children('th.rowheader').text();
+        var val_1 = $(this).children('td.'+col1).text().replace(/[^\d\.]/g,'');
+        var val_2 = $(this).children('td.'+col2).text().replace(/[^\d\.]/g,'');
+        if(!isNaN(parseFloat(val_1)) && isFinite(val_1) && !isNaN(parseFloat(val_2)) && isFinite(val_2)){
+          mqc_plots['tableScatterPlot']['datasets'][0].push({
+            'name': s_name,
+            'x': parseFloat(val_1),
+            'y': parseFloat(val_2)
+          });
+        }
+      });
+      if(Object.keys(mqc_plots['tableScatterPlot']['datasets'][0]).length > 0){
+        if(plot_scatter_plot('tableScatterPlot') == false){
+          $('#tableScatterPlot').html('<small>Error: Something went wrong when plotting the scatter plot.</small>');
+          $('#tableScatterPlot').addClass('not_rendered');
+        } else {
+          $('#tableScatterPlot').removeClass('not_rendered');
+        }
+      } else {
+        $('#tableScatterPlot').html('<small>Error: No data pairs found for these columns.</small>');
+        $('#tableScatterPlot').addClass('not_rendered');
+      }
+    } else {
+      $('#tableScatterPlot').html('<small>Please select two table columns.</small>');
+      $('#tableScatterPlot').addClass('not_rendered');
+    }
+  });
+
+});
 
 // Reorder columns in MultiQC tables.
 // Note: Don't have to worry about floating headers, as 'Configure Columns'
 // button is only visible when this is hidden. Ace!
 function change_mqc_table_col_order(table){
-  
+
   // Find the targets of this sorting
   var tid = table.attr('id');
   var target = tid.replace('_configModal_table','');
-    
+
   // Collect the desired order of columns
   var classes = [];
   $('#'+tid+' tbody tr').each(function(){

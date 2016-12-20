@@ -9,7 +9,19 @@ var mqc_colours = chroma.brewer.Set1;
 // TOOLBOX LISTENERS
 //////////////////////////////////////////////////////
 $(function () {
-  
+
+  // Hide toolbox when clicking outside
+  $(document).mouseup(function (e){
+    if (!$(".mqc-toolbox").is(e.target) && $(".mqc-toolbox").has(e.target).length === 0){
+      mqc_toolbox_openclose(undefined, false);
+    }
+  });
+
+  // Hide toolbox when a modal is shown
+  $('.modal').on('show.bs.modal', function(e){
+    mqc_toolbox_openclose(undefined, false);
+  });
+
   // Listener to re-plot graphs if config loaded
   $(document).on('mqc_config_loaded', function(e){
     $('.hc-plot').each(function(){
@@ -41,7 +53,7 @@ $(function () {
     apply_mqc_highlights();
     $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
   });
-  
+
   // Rename samples
   var mqc_renamesamples_idx = 300;
   $('#mqc_renamesamples_form').submit(function(e){
@@ -66,7 +78,7 @@ $(function () {
     apply_mqc_renamesamples();
     $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
   });
-  
+
   // Bulk rename samples
   $('#mqc_renamesamples_bulk_collapse').on('shown.bs.collapse', function () {
     $('#mqc_renamesamples_bulk_form textarea').focus();
@@ -90,7 +102,7 @@ $(function () {
     $(this).find('textarea').val('');
     $('#mqc_renamesamples_bulk_collapse').collapse('hide');
   });
-  
+
   // Hide sample filters
   var mqc_hidesamples_idx = 200;
   $('#mqc_hidesamples_form').submit(function(e){
@@ -112,7 +124,7 @@ $(function () {
     apply_mqc_hidesamples();
     $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
   });
-  
+
   // EXPORTING PLOTS
   // Change text on download button
   $('#mqc_exportplots a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
@@ -154,7 +166,7 @@ $(function () {
         $('#mqc_exp_width').val( $(this).val() * mqc_exp_aspect_ratio );
       }
     });
-    
+
     // Export the plots
     $('#mqc_exportplots').submit(function(e){
       e.preventDefault();
@@ -285,7 +297,7 @@ $(function () {
     $('#mqc_exportplots').hide();
     $('.mqc-toolbox-buttons a[href=#mqc_exportplots]').parent().hide();
   }
-  
+
   /// SAVING STUFF
   // Load the saved setting names
   populate_mqc_saveselect();
@@ -321,7 +333,7 @@ $(function () {
       }
     }
   });
-  
+
   // Filter text is changed
   $('.mqc_filters').on('blur', 'li input', function(){
     var target = $(this).parent().parent().attr('id');
@@ -358,7 +370,7 @@ $(function () {
     if(target == 'mqc_hidesamples_filters'){ $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
     if(target == 'mqc_renamesamples_filters'){ $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
   });
-  
+
   // Use jQuery UI to make the colour filters sortable
   $("#mqc_col_filters").sortable();
   $("#mqc_col_filters").on("sortstop", function(event, ui){
@@ -376,9 +388,7 @@ $(function () {
     if($(this).parent().attr('id') == 'mqc_renamesamples'){ $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
     if($(this).parent().attr('id') == 'mqc_hidesamples'){ $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
   });
-  
-  
-  
+
   /////////////////////////
   // REGEX HELP MODAL
   /////////////////////////
@@ -404,16 +414,16 @@ $(function () {
       }
     });
   }
-  
+
 });
-
-
 
 //////////////////////////////////////////////////////
 // GENERAL TOOLBOX FUNCTIONS
 //////////////////////////////////////////////////////
 function mqc_toolbox_openclose (target, open){
+  // Hide any open tooltip so it's not left dangling
   $('.mqc-toolbox-buttons li a').tooltip('hide');
+  // Find if what we clicked is already open
   var btn = $('.mqc-toolbox-buttons li a[href="'+target+'"]');
   if(open === undefined){
     if(btn.hasClass('active')){ open = false; }
@@ -421,6 +431,9 @@ function mqc_toolbox_openclose (target, open){
   }
   var already_open = $('.mqc-toolbox').hasClass('active');
   if(open){
+    if(already_open){
+      mqc_toolbox_confirmapply();
+    }
     $('.mqc-toolbox, .mqc-toolbox-buttons li a, .mqc_filter_section').removeClass('active');
     btn.addClass('active');
     $('.mqc-toolbox, '+target).addClass('active');
@@ -432,18 +445,36 @@ function mqc_toolbox_openclose (target, open){
       if(target == '#mqc_hidesamples'){ $('#mqc_hidesamples_filter').focus(); }
     }, timeout);
   } else {
+    mqc_toolbox_confirmapply();
     btn.removeClass('active');
     $('.mqc-toolbox, .mqc-toolbox-buttons li a').removeClass('active');
     $(document).trigger('mqc_toolbox_close');
   }
 }
-
+function mqc_toolbox_confirmapply(){
+  // Check if there's anything waiting to be applied
+  if($('#mqc_cols_apply').is(':enabled') && $('#mqc_cols').is(':visible')){
+    if(confirm('Apply highlights?')){
+      $('#mqc_cols_apply').trigger('click');
+    }
+  }
+  if($('#mqc_rename_apply').is(':enabled') && $('#mqc_renamesamples').is(':visible')){
+    if(confirm('Apply rename patterns?')){
+      $('#mqc_rename_apply').trigger('click');
+    }
+  }
+  if($('#mqc_hide_apply').is(':enabled') && $('#mqc_hidesamples').is(':visible')){
+    if(confirm('Hide samples?')){
+      $('#mqc_hide_apply').trigger('click');
+    }
+  }
+}
 
 //////////////////////////////////////////////////////
 // HIGHLIGHT SAMPLES
 //////////////////////////////////////////////////////
 function apply_mqc_highlights(){
-  
+
   // Collect the filters into an array
   var f_texts = [];
   var f_cols = [];
@@ -455,7 +486,7 @@ function apply_mqc_highlights(){
     f_texts.push($(this).val());
     f_cols.push($(this).css('color'));
   });
-  
+
   // Apply a 'background' highlight to remove default colouring first
   // Also highlight toolbox drawer icon
   if(f_texts.length > 0){
@@ -465,11 +496,11 @@ function apply_mqc_highlights(){
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').removeClass('in_use');
   }
-  
+
   window.mqc_highlight_f_texts = f_texts;
   window.mqc_highlight_f_cols = f_cols;
   window.mqc_highlight_regex_mode = regex_mode;
-  
+
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
 }
@@ -479,7 +510,7 @@ function apply_mqc_highlights(){
 //////////////////////////////////////////////////////
 
 function apply_mqc_renamesamples(){
-  
+
   // Collect filters
   var f_texts = [];
   var t_texts = [];
@@ -487,22 +518,21 @@ function apply_mqc_renamesamples(){
   $('#mqc_renamesamples_filters .from_text').each(function(){ f_texts.push($(this).val()); });
   $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
   if($('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on')){ regex_mode = true; }
-  
+
   // If something was renamed, highlight the toolbox icon
   if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').removeClass('in_use');
   }
-  
+
   window.mqc_rename_f_texts = f_texts;
   window.mqc_rename_t_texts = t_texts;
   window.mqc_rename_regex_mode = regex_mode;
-  
+
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_renamesamples', [f_texts, t_texts, regex_mode]);
 }
-
 
 //////////////////////////////////////////////////////
 // HIDE SAMPLES
@@ -518,22 +548,21 @@ function apply_mqc_hidesamples(){
   $('#mqc_hidesamples_filters li .f_text').each(function(){
     f_texts.push($(this).val());
   });
-  
+
   // If something was hidden, highlight the toolbox icon
   if(f_texts.length > 0){
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_hidesamples"]').removeClass('in_use');
   }
-  
+
   window.mqc_hide_mode = mode;
   window.mqc_hide_f_texts = f_texts;
   window.mqc_hide_regex_mode = regex_mode;
-  
+
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
 }
-
 
 //////////////////////////////////////////////////////
 // SAVE TOOLBOX SETTINGS
@@ -543,7 +572,7 @@ function apply_mqc_hidesamples(){
 function mqc_save_config(name, clear){
   if(name === undefined){ return false; }
   var config = {};
-  
+
   // Collect the toolbox vars
   config['highlights_f_texts'] =  window.mqc_highlight_f_texts;
   config['highlights_f_cols'] =   window.mqc_highlight_f_cols;
@@ -554,7 +583,7 @@ function mqc_save_config(name, clear){
   config['hidesamples_mode'] =    window.mqc_hide_mode;
   config['hidesamples_f_texts'] = window.mqc_hide_f_texts;
   config['hidesamples_regex'] =   window.mqc_hide_regex_mode;
-  
+
   var prev_config = {};
   // Load existing configs (inc. from other reports)
   try {
@@ -564,7 +593,7 @@ function mqc_save_config(name, clear){
     } else {
       prev_config  = {};
     }
-    
+
     // Update config obj with current config
     if(clear == true){
       delete prev_config[name];
@@ -573,7 +602,7 @@ function mqc_save_config(name, clear){
       prev_config[name]['last_updated'] = Date();
     }
     localStorage.setItem("mqc_config", JSON.stringify(prev_config));
-    
+
     if(clear == true){
       // Remove from load select box
       $("#mqc_loadconfig_form select option:contains('"+name+"')").remove();
@@ -627,7 +656,7 @@ function load_mqc_config(name){
       }
     }
   } catch(e){ console.log('Could not load local config: '+e); }
-  
+
   // Apply config - highlights
   if(notEmptyObj(config['highlight_regex'])){
     if(config['highlight_regex'] == true){
@@ -646,7 +675,7 @@ function load_mqc_config(name){
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
     $(document).trigger('mqc_highlights', [config['highlights_f_texts'], config['highlights_f_cols'], config['highlight_regex']]);
   }
-  
+
   // Rename samples
   if(notEmptyObj(config['rename_regex'])){
     if(config['rename_regex'] == true){
@@ -667,7 +696,7 @@ function load_mqc_config(name){
     });
     $(document).trigger('mqc_renamesamples', [config['rename_from_texts'], config['rename_from_texts'], config['rename_regex']]);
   }
-  
+
   // Hide samples
   if(notEmptyObj(config['hidesamples_regex'])){
     if(config['hidesamples_regex'] == true){
@@ -693,8 +722,5 @@ function load_mqc_config(name){
 
   // Trigger loaded event to initialise plots
   $(document).trigger('mqc_config_loaded');
-  
+
 }
-
-
-

@@ -5,6 +5,7 @@
 from collections import defaultdict, OrderedDict
 import logging
 import random
+import re
 
 from multiqc.utils import config, report, util_functions
 from multiqc.plots import table_object, beeswarm
@@ -47,6 +48,7 @@ def make_table (dt):
     """
 
     table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
+    table_id = re.sub(r'\W+', '_', table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = defaultdict(lambda: dict())
@@ -173,6 +175,9 @@ def make_table (dt):
         </button>
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{tid}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
+        </button>
+        <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
+            <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
         </button>
         <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nrows}</sup>/<sub>{nrows}</sub> rows and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns.</small>
     """.format(tid=table_id, nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
