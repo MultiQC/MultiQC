@@ -64,18 +64,29 @@ class FlagstatReportMixin():
                 'decimalPlaces': 2,
                 'shared_key': 'read_count'
             }
-            keys['flagstat_total'] = dict(reads, **{'title': 'Total Reads' })
-            keys['total_passed'] = dict(reads, **{'title': 'Total Passed QC' })
-            keys['mapped_passed'] = dict(reads, **{'title': 'Mapped' })
-            keys['secondary_passed'] = dict(reads, **{'title': 'Secondary Alignments' })
-            keys['supplementary_passed'] = dict(reads, **{'title': 'Supplementary Alignments' })
-            keys['duplicates_passed'] = dict(reads, **{'title': 'Duplicates' })
-            keys['paired in sequencing_passed'] = dict(reads, **{'title': 'Paired in Sequencing' })
-            keys['properly paired_passed'] = dict(reads, **{'title': 'Properly Paired' })
-            keys['with itself and mate mapped_passed'] = dict(reads, **{'title': 'Self and mate mapped', 'description': 'Reads with itself and mate mapped' })
-            keys['singletons_passed'] = dict(reads, **{'title': 'Singletons' })
-            keys['with mate mapped to a different chr_passed'] = dict(reads, **{'title': 'Mate mapped to diff chr', 'description': 'Mate mapped to different chromosome' })
-            keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = dict(reads, **{'title': 'Diff chr (mapQ >= 5)', 'description':'Mate mapped to different chromosome (mapQ >= 5)' })
+            keys['flagstat_total']              = dict(reads, title = 'Total Reads' )
+            keys['total_passed']                = dict(reads, title = 'Total Passed QC' )
+            keys['mapped_passed']               = dict(reads, title = 'Mapped' )
+
+            if any(v['secondary_passed'] for v in self.samtools_flagstat.values()):
+                keys['secondary_passed']        = dict(reads, title = 'Secondary Alignments' )
+
+            if any(v['supplementary_passed'] for v in self.samtools_flagstat.values()):
+                keys['supplementary_passed']    = dict(reads, title = 'Supplementary Alignments' )
+
+            keys['duplicates_passed']           = dict(reads, title = 'Duplicates' )
+            keys['paired in sequencing_passed'] = dict(reads, title = 'Paired in Sequencing' )
+            keys['properly paired_passed']      = dict(reads, title = 'Properly Paired' )
+            keys['with itself and mate mapped_passed'] = \
+                                                  dict(reads, title = 'Self and mate mapped',
+                                                              description = 'Reads with itself and mate mapped' )
+            keys['singletons_passed']           = dict(reads, title = 'Singletons' )
+            keys['with mate mapped to a different chr_passed'] = \
+                                                  dict(reads, title = 'Mate mapped to diff chr',
+                                                              description = 'Mate mapped to different chromosome' )
+            keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = \
+                                                  dict(reads, title = 'Diff chr (mapQ >= 5)',
+                                                              description = 'Mate mapped to different chromosome (mapQ >= 5)' )
 
             self.sections.append({
                 'name': 'Samtools Flagstat',
