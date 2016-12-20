@@ -26,7 +26,7 @@ def parse_reports(self):
         cov_col = None
         for l in f['f']:
             # New log starting
-            if 'picard.analysis.CollectGcBiasMetrics' in l and 'INPUT' in l:
+            if 'GcBiasMetrics' in l and 'INPUT' in l:
                 s_name = None
 
                 # Pull sample name from input
@@ -46,7 +46,7 @@ def parse_reports(self):
                         gc_col = None
                         cov_col = None
 
-                if 'picard.analysis.GcBiasDetailMetrics' in l and '## METRICS CLASS' in l:
+                if 'GcBiasDetailMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_GCbias_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='GcBiasDetailMetrics')

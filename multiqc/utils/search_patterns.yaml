@@ -150,11 +150,11 @@ samtools:
 skewer:
     contents: 'maximum error ratio allowed (-r):'
 slamdunk:
-    summary: 
+    summary:
         contents: '# slamdunk summary'
-    PCA: 
+    PCA:
         contents: '# slamdunk PCA'
-    rates: 
+    rates:
         contents: '# slamdunk rates'
     utrrates:
         contents: '# slamdunk utrrates'
