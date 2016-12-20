@@ -170,7 +170,7 @@ def custom_module_classes():
         # Initialise this new module class and append to list
         else:
             parsed_modules.append( MultiqcModule(k, mod) )
-            log.info("{}: Found {} samples".format(k, len(mod['data'])), extra={'mname': k})
+            log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
 
     return parsed_modules
 
@@ -250,46 +250,41 @@ def _guess_file_format(f):
     Returns: csv | tsv | spaces   (spaces by default if all else fails)
     """
     filename, file_extension = os.path.splitext(f['fn'])
-    if file_extension == '.csv':
-        return 'csv'
-    if file_extension == '.tsv':
+    tabs = []
+    commas = []
+    spaces = []
+    j = 0
+    for l in f['f'].splitlines():
+        if not l.startswith('#'):
+            j += 1
+            tabs.append(len(l.split("\t")))
+            commas.append(len(l.split(",")))
+            spaces.append(len(l.split()))
+        if j == 10:
+            break
+    tab_mode = max(set(tabs), key=tabs.count)
+    commas_mode = max(set(commas), key=commas.count)
+    spaces_mode = max(set(spaces), key=spaces.count)
+    tab_lc = tabs.count(tab_mode) if tab_mode > 1 else 0
+    commas_lc = commas.count(commas_mode) if commas_mode > 1 else 0
+    spaces_lc = spaces.count(spaces_mode) if spaces_mode > 1 else 0
+    if tab_lc == j:
         return 'tsv'
+    elif commas_lc == j:
+        return 'csv'
     else:
-        tabs = []
-        commas = []
-        spaces = []
-        j = 0
-        for l in f['f'].splitlines():
-            if not l.startswith('#'):
-                j += 1
-                tabs.append(len(l.split("\t")))
-                commas.append(len(l.split(",")))
-                spaces.append(len(l.split()))
-            if j == 10:
-                break
-        tab_mode = max(set(tabs), key=tabs.count)
-        commas_mode = max(set(commas), key=commas.count)
-        spaces_mode = max(set(spaces), key=spaces.count)
-        tab_lc = tabs.count(tab_mode) if tab_mode > 1 else 0
-        commas_lc = commas.count(commas_mode) if commas_mode > 1 else 0
-        spaces_lc = spaces.count(spaces_mode) if spaces_mode > 1 else 0
-        if tab_lc == j:
+        if tab_lc > commas_lc and tab_lc > spaces_lc:
             return 'tsv'
-        elif commas_lc == j:
+        elif commas_lc > tab_lc and commas_lc > spaces_lc:
             return 'csv'
+        elif spaces_lc > tab_lc and spaces_lc > commas_lc:
+            return 'spaces'
         else:
-            if tab_lc > commas_lc and tab_lc > spaces_lc:
-                return 'tsv'
-            elif commas_lc > tab_lc and commas_lc > spaces_lc:
-                return 'csv'
-            elif spaces_lc > tab_lc and spaces_lc > commas_lc:
-                return 'spaces'
-            else:
-                if tab_mode == commas_lc and tab_mode > spaces_lc:
-                    if tab_mode > commas_mode:
-                        return 'tsv'
-                    else:
-                        return 'csv'
+            if tab_mode == commas_lc and tab_mode > spaces_lc:
+                if tab_mode > commas_mode:
+                    return 'tsv'
+                else:
+                    return 'csv'
     return 'spaces'
 
 def _parse_txt(f, conf):
