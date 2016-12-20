@@ -657,26 +657,7 @@ function load_mqc_config(name){
     }
   } catch(e){ console.log('Could not load local config: '+e); }
 
-  // Apply config - highlights
-  if(notEmptyObj(config['highlight_regex'])){
-    if(config['highlight_regex'] == true){
-      $('#mqc_cols .mqc_regex_mode .re_mode').removeClass('off').addClass('on').text('on');
-      window.mqc_highlight_regex_mode = true;
-    }
-  }
-  if(notEmptyObj(config['highlights_f_texts']) && notEmptyObj(config['highlights_f_cols'])){
-    $.each(config['highlights_f_texts'], function(idx, f_text){
-      var f_col = config['highlights_f_cols'][idx];
-      $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
-      window.mqc_highlight_f_texts.push(f_text);
-      window.mqc_highlight_f_cols.push(f_col);
-      mqc_colours_idx += 1;
-    });
-    $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
-    $(document).trigger('mqc_highlights', [config['highlights_f_texts'], config['highlights_f_cols'], config['highlight_regex']]);
-  }
-
-  // Rename samples
+  // Apply config - rename samples
   if(notEmptyObj(config['rename_regex'])){
     if(config['rename_regex'] == true){
       $('#mqc_renamesamples .mqc_regex_mode .re_mode').removeClass('off').addClass('on').text('on');
@@ -694,10 +675,29 @@ function load_mqc_config(name){
       window.mqc_rename_t_texts.push(to_text);
       $('#mqc_renamesamples_filters').append(li);
     });
-    $(document).trigger('mqc_renamesamples', [config['rename_from_texts'], config['rename_from_texts'], config['rename_regex']]);
+    $(document).trigger('mqc_renamesamples', [window.mqc_rename_f_texts, window.mqc_rename_t_texts, config['rename_regex']]);
   }
 
-  // Hide samples
+  // Apply config - highlights
+  if(notEmptyObj(config['highlight_regex'])){
+    if(config['highlight_regex'] == true){
+      $('#mqc_cols .mqc_regex_mode .re_mode').removeClass('off').addClass('on').text('on');
+      window.mqc_highlight_regex_mode = true;
+    }
+  }
+  if(notEmptyObj(config['highlights_f_texts']) && notEmptyObj(config['highlights_f_cols'])){
+    $.each(config['highlights_f_texts'], function(idx, f_text){
+      var f_col = config['highlights_f_cols'][idx];
+      $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      window.mqc_highlight_f_texts.push(f_text);
+      window.mqc_highlight_f_cols.push(f_col);
+      mqc_colours_idx += 1;
+    });
+    $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
+    $(document).trigger('mqc_highlights', [window.mqc_highlight_f_texts, window.mqc_highlight_f_cols, config['highlight_regex']]);
+  }
+
+  // Apply config - hide samples
   if(notEmptyObj(config['hidesamples_regex'])){
     if(config['hidesamples_regex'] == true){
       $('#mqc_hidesamples .mqc_regex_mode .re_mode').removeClass('off').addClass('on').text('on');
@@ -717,7 +717,7 @@ function load_mqc_config(name){
       $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
       window.mqc_hide_f_texts.push(f_text);
     });
-    $(document).trigger('mqc_hidesamples', [config['hidesamples_f_texts'], config['hidesamples_regex']]);
+    $(document).trigger('mqc_hidesamples', [window.mqc_hide_f_texts, config['hidesamples_regex']]);
   }
 
   // Trigger loaded event to initialise plots
