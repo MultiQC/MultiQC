@@ -26,7 +26,10 @@ script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
 try:
-    git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=script_path, stderr=subprocess.STDOUT)
+    git_hash = subprocess.check_output( ['git', 'rev-parse', 'HEAD'],
+                                        cwd=script_path,
+                                        stderr=subprocess.STDOUT,
+                                        universal_newlines=True )
     git_hash_short = git_hash[:7]
     version = '{} ({})'.format(version, git_hash_short)
 except subprocess.CalledProcessError:
