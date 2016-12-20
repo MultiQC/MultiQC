@@ -28,6 +28,7 @@ Module updates:
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
   * New feature to customise coverage shown from `HsMetrics` in General Statistics table
     see the [docs](http://multiqc.info/docs/#picard) for info).
+  * Fixed compatibility problem with output from `CollectMultipleMetrics` for `CollectAlignmentSummaryMetrics`
 * **Preseq**
   * Module now recognises output from `c_curve` mode.
 * **RSeQC**
@@ -75,6 +76,8 @@ Core Updates:
   * New `tt_decimals` and `tt_suffix` options for bar plots
   * Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.
   * New option `hide_zero_cats:False` to force legends to be shown even when all data is 0
+* General Stats _Showing x of y_ columns count is fixed on page load.
+* Big code whitespace cleanup
 
 #### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 Module updates:
