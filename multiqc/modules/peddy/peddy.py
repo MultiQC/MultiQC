@@ -187,8 +187,8 @@ class MultiqcModule(BaseMultiqcModule):
                 ckey += '<div style="background-color:{}; display:inline-block; '.format(col)
                 ckey += 'height: 10px; width: 10px; border:1px solid #333;"></div> {} &nbsp; &nbsp; '.format(k)
             return """<p>First and second PCA components, projected onto thousand genomes data.
-                    Treat plot with a little care - Peddy doesn't export the underlying
-                    PCA co-ordinates, so these are bundled with MultiQC and may be out of date.<br />
+                    Treat plot with a little care, the background co-ordinates are bundled with MultiQC.
+                    If in doubt, check the Peddy output HTML.<br />
                     {}</p>
                     """.format(ckey) + plots.scatter.plot(data, pconfig)
 
