@@ -157,6 +157,7 @@ and many others. Thanks for your support!
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [gatk]:           http://multiqc.info/docs/#gatk
 [hicup]:          http://multiqc.info/docs/#hicup
+[htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [methylqa]:       http://multiqc.info/docs/#methylqa
 [peddy]:          http://multiqc.info/docs/#peddy
