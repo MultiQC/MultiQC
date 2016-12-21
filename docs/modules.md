@@ -233,7 +233,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mod_data = dict()
         for f in self.find_log_files(config.sp['mymod']):
             self.mod_data[f['s_name']] = self.parse_logs(f['f'])
-    
+
     def parse_logs(self, f):
         data = {}
         for l in f.splitlines():
@@ -267,6 +267,12 @@ this will prepend the directory name if requested on the command line:
 input_fname = s[3] # Or parsed however
 s_name = self.clean_s_name(input_fname, f['root'])
 ```
+
+This function has already been applied to the contents of `f['s_name']`.
+
+> `self.clean_s_name()` **must** be used on sample names parsed from the file
+> contents. Without it, features such as prepending directories (`--dirs`)
+> will not work.
 
 ### Identical sample names
 If modules find samples with identical names, then the previous sample
