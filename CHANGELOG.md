@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-#### v0.9dev
+#### [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
 A major new feature is released in v0.9 - support for _custom content_. This means
 that MultiQC can now easily include output from custom scripts within reports without
 the need for a new module or plugin. For more information, please see the
