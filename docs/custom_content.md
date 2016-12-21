@@ -16,6 +16,10 @@ Custom content parsing is a little more restricted than standard modules. Specif
 * Only one plot per section is possible
 * Plot customisation is more limited
 
+All plot types can be generated using custom content - see the
+[test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
+for examples of how data should be structured.
+
 # Configuration
 Data should typically be submitted alongside some configuration, to specify how
 MultiQC should parse and display the data. All of these configuration parameters
