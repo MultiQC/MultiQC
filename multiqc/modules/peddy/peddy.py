@@ -4,9 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import json
 import logging
-import os
 
 from multiqc import config, BaseMultiqcModule, plots
 
@@ -69,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
         pca_plot = self.peddy_pca_plot()
         if pca_plot is not None:
             self.sections.append({
-                'name': 'PCA Projection onto 1000 Genomes',
+                'name': 'PCA Plot',
                 'anchor': 'peddy-pca-plot',
                 'content': pca_plot
             })
@@ -146,49 +144,11 @@ class MultiqcModule(BaseMultiqcModule):
                     'y': float(d['PC2']),
                 }
 
-        thou_genomes = {
-            'AFR': 'rgba(230, 48, 50, 0.2)',
-            'AMR': 'rgba(74, 138, 189, 0.2)',
-            'EAS': 'rgba(94, 181, 91, 0.2)',
-            'EUR': 'rgba(153,78,162,0.2)',
-            'SAS': 'rgba(254, 141, 25, 0.2)',
-        }
         pconfig = {
             'id': 'peddy_pca_plot',
-            'title': 'PCA Projection onto 1000 Genomes',
-            'marker_colour': 'rgba(47, 126, 216, 0.7)',
-            'marker_line_colour': '#000',
-            'enableHover': False,
-            'extra_series': []
+            'title': 'Peddy PCA Plot',
         }
-        for k, col in thou_genomes.items():
-            fn = os.path.join( os.path.dirname(__file__), 'thousand_genomes', '{}.json'.format(k) )
-            with open(fn) as f:
-                d = json.load(f)
-                for v in d:
-                    pconfig['extra_series'].append({
-                        'x': v[0],
-                        'y': v[1],
-                        'name': k,
-                        'lineWidth': 0,
-                        'color': col,
-                        'marker': {
-                            'enabled': True,
-                            'radius': 2,
-                            'lineWidth': 0
-                        },
-                        'noTooltip': True
-                    })
 
         if len(data) > 0:
-            ckey = ''
-            for k, col in thou_genomes.items():
-                col = col.replace('0.2', '0.7')
-                ckey += '<div style="background-color:{}; display:inline-block; '.format(col)
-                ckey += 'height: 10px; width: 10px; border:1px solid #333;"></div> {} &nbsp; &nbsp; '.format(k)
-            return """<p>First and second PCA components, projected onto thousand genomes data.
-                    Treat plot with a little care, the background co-ordinates are bundled with MultiQC.
-                    If in doubt, check the Peddy output HTML.<br />
-                    {}</p>
-                    """.format(ckey) + plots.scatter.plot(data, pconfig)
+            return plots.scatter.plot(data, pconfig)
 
