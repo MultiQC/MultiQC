@@ -120,6 +120,61 @@ class MultiqcModule(BaseMultiqcModule):
         """ Write some more statistics about the assemblies in a table. """
 
         headers = OrderedDict()
+        headers['N50'] = {
+            'title': 'N50 (Kbp)',
+            'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
+            'min': 0,
+            'suffix': 'bp',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}',
+            'modify': lambda x: x / 1000
+        }
+
+        headers['N75'] = {
+            'title': 'N75 (Kbp)',
+            'description': 'N75 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
+            'min': 0,
+            'suffix': 'bp',
+            'scale': 'RdYlGn',
+            'format': '{:.1f}',
+            'modify': lambda x: x / 1000
+        }
+        headers['L50'] = {
+            'title': 'L50 (k)',
+            'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising half the total assembly length.',
+            'min': 0,
+            'suffix': '',
+            'scale': 'GnYlRd',
+            'format': '{:.1f}',
+            'modify': lambda x: x / 1000
+        }
+        headers['L75'] = {
+            'title': 'L75 (k)',
+            'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising three quarters of the total assembly length.',
+            'min': 0,
+            'suffix': '',
+            'scale': 'GnYlRd',
+            'format': '{:.1f}',
+            'modify': lambda x: x / 1000
+        }
+        headers['Largest contig'] = {
+            'title': 'Largest contig (Kbp)',
+            'description': 'The total number of bases in the assembly (mega base pairs).',
+            'min': 0,
+            'suffix': 'bp',
+            'scale': 'YlGn',
+            'format': '{:.1f}',
+            'modify': lambda x: x / 1000
+        }
+        headers['Total length'] = {
+            'title': 'Length (Mbp)',
+            'description': 'The total number of bases in the assembly (mega base pairs).',
+            'min': 0,
+            'suffix': 'bp',
+            'scale': 'YlGn',
+            'format': '{:.1f}',
+            'modify': lambda x: x / 1000000
+        }
         headers['# misassemblies'] = {
             'title': 'Misassemblies',
             'description': 'The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).',
@@ -148,6 +203,13 @@ class MultiqcModule(BaseMultiqcModule):
         headers['# genes_partial'] = {
             'title': 'Genes (Partial)',
             'description': '# Genes (Partial)',
+            'scale': 'YlGnBu',
+            'format': '{:.0f}',
+            'shared_key': 'gene_count'
+        }
+        headers['# predicted genes (unique)'] = {
+            'title': 'Genes',
+            'description': '# Predicted Genes (Unique)',
             'scale': 'YlGnBu',
             'format': '{:.0f}',
             'shared_key': 'gene_count'
