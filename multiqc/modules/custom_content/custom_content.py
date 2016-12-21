@@ -208,7 +208,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Scatter plot
         elif mod['config'].get('plot_type') == 'scatter':
-            print(json.dumps(mod['data'], indent=4))
             self.intro += plots.scatter.plot(mod['data'], pconfig)
 
         # Heatmap
