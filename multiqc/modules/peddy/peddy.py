@@ -6,7 +6,9 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import scatter
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -177,7 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if len(data) > 0:
-            return plots.scatter.plot(data, pconfig)
+            return scatter.plot(data, pconfig)
 
     def peddy_relatedness_plot(self):
         data = dict()
@@ -206,4 +208,4 @@ class MultiqcModule(BaseMultiqcModule):
             return """<p>Shared allele rates between sample pairs. Points are coloured by degree of relatedness:
             <span style="color: #6DA4CA;">less than 0.25</span>,
             <span style="color: #FAA051;">0.25 - 0.5</span>,
-            <span style="color: #2B9F2B;">greather than 0.5</span>.</p>"""+plots.scatter.plot(data, pconfig)
+            <span style="color: #2B9F2B;">greather than 0.5</span>.</p>"""+scatter.plot(data, pconfig)
