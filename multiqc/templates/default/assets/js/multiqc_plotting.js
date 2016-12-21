@@ -172,6 +172,21 @@ $(function () {
     }
   });
 
+  // Sort a heatmap by highlighted names
+  $('.mqc_heatmap_sortHighlight').click(function(e){
+    e.preventDefault();
+    var target = $(this).data('target').substr(1);
+    if(mqc_plots[target]['config']['sortHighlights'] == true){
+      mqc_plots[target]['config']['sortHighlights'] = false;
+      $(this).removeClass('active');
+    } else {
+      mqc_plots[target]['config']['sortHighlights'] = true;
+      $(this).addClass('active');
+    }
+    $(this).blur();
+    plot_heatmap(target);
+  });
+
 });
 
 // Call to render any plot
@@ -1133,6 +1148,59 @@ function plot_heatmap(target, ds){
     }
   }
 
+  // Sort samples by highlight
+  $('.mqc_heatmap_sortHighlight').attr('disabled', false);
+  if(config['sortHighlights'] == true){
+    if(window.mqc_highlight_f_texts.length > 0){
+      // Collect the highlighting indices
+      var xcat_hl = Array();
+      var ycat_hl = Array();
+      for (i=0; i < xcats.length; i++) {
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if(f_text == ''){ xcat_hl[i] = 0; }
+          else if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
+            xcat_hl[i] = window.mqc_highlight_f_texts.length - idx;
+          }
+        });
+      }
+      for (i=0; i < ycats.length; i++) {
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if(f_text == ''){ ycat_hl[i] = 0; }
+          else if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
+            ycat_hl[i] = window.mqc_highlight_f_texts.length - idx;
+          }
+        });
+      }
+      // Reshape the data - needs deepcopy as indexes are updated
+      var newdata = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
+      var new_xcats = [], new_ycats = [];
+      var xidx = 0, yidx = 0;
+      for (hl = window.mqc_highlight_f_texts.length; hl >= 0; hl--){
+        for (i=0; i < xcats.length; i++) {
+          if(xcat_hl[i] == hl){
+            new_xcats.push(xcats[i])
+            for (j=0; j < data.length; j++) {
+              if(data[j][0] == i){ newdata[j][0] = xidx; }
+            }
+            xidx += 1;
+          }
+        }
+        for (i=0; i < ycats.length; i++) {
+          if(ycat_hl[i] == hl){
+            new_ycats.push(ycats[i])
+            for (j=0; j < data.length; j++) {
+              if(data[j][1] == i){ newdata[j][1] = yidx; }
+            }
+            yidx += 1;
+          }
+        }
+      }
+      data = newdata;
+      xcats = new_xcats;
+      ycats = new_ycats;
+    }
+  }
+
   // Hide samples
   var num_total = Math.max(xcats.length, ycats.length);
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
@@ -1212,14 +1280,15 @@ function plot_heatmap(target, ds){
 
   // Highlight samples - do this last as we convert numerical arrays to associative
   if(window.mqc_highlight_f_texts.length > 0){
-    var highlight = Array();
+    $('.mqc_heatmap_sortHighlight').attr('disabled', false);
+    var highlight_cells = Array();
     for (i=0; i < xcats.length; i++) {
       $.each(window.mqc_highlight_f_texts, function(idx, f_text){
         if(f_text == ''){ return true; }
         if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
-            highlight[idx] = ( typeof highlight[idx] != 'undefined' && highlight[idx] instanceof Array ) ? highlight[idx] : [];
-            if (data[n][1] == i){ highlight[idx].push(n); }
+            highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
+            if (data[n][1] == i){ highlight_cells[idx].push(n); }
           }
         }
       });
@@ -1230,16 +1299,16 @@ function plot_heatmap(target, ds){
         if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
             if (data[n][0] == i){
-              highlight[idx] = ( typeof highlight[idx] != 'undefined' && highlight[idx] instanceof Array ) ? highlight[idx] : [];
-              if(highlight[idx].indexOf(n) < 0){ highlight[idx].push(n); }
+              highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
+              if(highlight_cells[idx].indexOf(n) < 0){ highlight_cells[idx].push(n); }
             }
           }
         }
       });
     }
     // Give highlighted cells a border
-    for (var idx in highlight){
-      var hl = highlight[idx];
+    for (var idx in highlight_cells){
+      var hl = highlight_cells[idx];
       hl = hl.sort(function(a, b){return a-b}); // Sorts alphabetically by default, even with integers
       var h = hl.length;
       while(h--){
@@ -1253,6 +1322,8 @@ function plot_heatmap(target, ds){
         }
       }
     }
+  } else {
+    $('.mqc_heatmap_sortHighlight').attr('disabled', true);
   }
 
   // We set undefined config vars so that they stay the same when hiding samples
@@ -1384,9 +1455,8 @@ function plot_heatmap(target, ds){
         color: config['datalabel_colour']
       }
     }]
-  },
-  // Maintain aspect ratio as chart size changes
-  function(this_chart){
+  }, function(this_chart){
+    // Maintain aspect ratio as chart size changes
     if(config['square']){
       var resizeCh = function(chart){
         // Extra width for legend
@@ -1407,7 +1477,11 @@ function plot_heatmap(target, ds){
       resizeCh(this_chart);
       // Resize on graph resize
       $(this_chart.renderTo).on('mqc_plotresize', function(e){
-        resizeCh(this_chart);
+        try {
+          resizeCh(this_chart);
+        } catch(e){
+          plot_heatmap($(this).attr('id'));
+        }
       });
     }
   });

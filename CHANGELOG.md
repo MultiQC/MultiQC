@@ -60,6 +60,7 @@ Core Updates:
 * Added _'Apply'_ button to Highlight / Rename / Hide.
   * These tools can become slow with large reports. This means that you can enter several
     things without having to wait for the report to replot each change.
+* Report heatmaps can now be sorted by highlight
 * New config options `decimalPoint_format` and `thousandsSep_format`
   * Allows you to change the default `1 234.56` number formatting for plots.
 * New config option `top_modules` allows you to specify modules that should come at the top of the report
