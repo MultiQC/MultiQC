@@ -7,7 +7,8 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ def parse_reports(self):
         self.sections.append({
             'name': 'Bamtools Stats',
             'anchor': 'bamtools-stats',
-            'content': plots.beeswarm.plot(self.bamtools_stats_data, keys)
+            'content': beeswarm.plot(self.bamtools_stats_data, keys)
         })
 
     # Return number of samples found

@@ -7,7 +7,9 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import beeswarm, linegraph, bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -369,7 +371,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return plots.bargraph.plot(self.bismark_data['alignment'], keys, config)
+        return bargraph.plot(self.bismark_data['alignment'], keys, config)
 
 
     def bismark_strand_chart (self):
@@ -404,7 +406,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return d_mode + plots.bargraph.plot(self.bismark_data['alignment'], keys, config)
+        return d_mode + bargraph.plot(self.bismark_data['alignment'], keys, config)
 
 
     def bismark_dedup_chart (self):
@@ -424,7 +426,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return plots.bargraph.plot(self.bismark_data['dedup'], keys, config)
+        return bargraph.plot(self.bismark_data['dedup'], keys, config)
 
 
 
@@ -443,7 +445,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['percent_chg_meth'] = dict(defaults, **{ 'title': 'Methylated CHG' })
         keys['percent_chh_meth'] = dict(defaults, **{ 'title': 'Methylated CHH' })
 
-        return plots.beeswarm.plot(self.bismark_data['methextract'], keys, {'id': 'bismark-methylation-dp'})
+        return beeswarm.plot(self.bismark_data['methextract'], keys, {'id': 'bismark-methylation-dp'})
 
 
     def bismark_mbias_plot (self):
@@ -482,6 +484,6 @@ class MultiqcModule(BaseMultiqcModule):
             datasets.append(self.bismark_mbias_data['meth']['CHG_R2'])
             datasets.append(self.bismark_mbias_data['meth']['CHH_R2'])
 
-        html += plots.linegraph.plot(datasets, pconfig)
+        html += linegraph.plot(datasets, pconfig)
 
         return html

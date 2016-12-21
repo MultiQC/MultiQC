@@ -1,8 +1,6 @@
 import logging
-
-logger = logging.getLogger(__name__)
-
 from multiqc.utils import config
-from multiqc.modules.base_module import BaseMultiqcModule
+
+config.logger = logging.getLogger(__name__)
 
 __version__ = config.version

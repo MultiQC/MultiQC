@@ -7,7 +7,8 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ def parse_reports(self):
             'name': 'Read Distribution',
             'anchor': 'rseqc-read_distribution',
             'content': "<p>"+p_link+" calculates how mapped reads are distributed over genome features.</p>" +
-                plots.bargraph.plot(self.read_dist, keys, pconfig)
+                bargraph.plot(self.read_dist, keys, pconfig)
         })
 
     # Return number of samples found

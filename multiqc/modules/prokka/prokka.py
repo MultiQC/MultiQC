@@ -9,7 +9,9 @@ import logging
 import os
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table, bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -168,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
         }
 
-        return plots.table.plot(self.prokka, headers, table_config)
+        return table.plot(self.prokka, headers, table_config)
 
     def prokka_barplot(self):
         """ Make a basic plot of the annotation stats """
@@ -189,4 +191,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Features'
         }
 
-        return plots.bargraph.plot(self.prokka, keys, plot_config)
+        return bargraph.plot(self.prokka, keys, plot_config)

@@ -28,8 +28,10 @@ except ImportError:
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-from multiqc import logger, plots, __version__
+from multiqc import __version__
+from multiqc.plots import table
 from multiqc.utils import report, plugin_hooks, config, log
+logger = config.logger
 
 @click.command(
     context_settings = dict( help_option_names = ['-h', '--help'] )
@@ -400,7 +402,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
             'save_file': True,
             'raw_data_fn':'multiqc_general_stats'
         }
-        report.general_stats_html = plots.table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        report.general_stats_html = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
     else:
         config.skip_generalstats = True
 

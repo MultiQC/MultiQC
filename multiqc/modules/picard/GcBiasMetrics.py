@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ def parse_reports(self):
             'anchor': 'picard-gcbias',
             'content': '<p>This plot shows bias in coverage across regions of the genome with varying GC content.'\
                 ' A perfect library would be a flat line at <code>y = 1</code>.</p>' +
-                plots.linegraph.plot(self.picard_GCbias_data, pconfig)
+                linegraph.plot(self.picard_GCbias_data, pconfig)
         })
 
 

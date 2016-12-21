@@ -6,7 +6,9 @@ from __future__ import print_function
 
 from collections import OrderedDict
 import logging
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph, linegraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -177,7 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
             'logswitch': True
         }
 
-        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
+        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
 
     def effects_impact_plot(self):
@@ -199,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
             'logswitch': True
         }
 
-        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
+        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
     def effects_function_plot(self):
         """ Generate the SnpEff Counts by Functional Class plot """
@@ -220,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
             'logswitch': True
         }
 
-        return plots.bargraph.plot(self.snpeff_data, pkeys, pconfig)
+        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
 
 
@@ -237,5 +239,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0
         }
 
-        return plots.linegraph.plot(self.snpeff_qualities, pconfig)
+        return linegraph.plot(self.snpeff_qualities, pconfig)
 

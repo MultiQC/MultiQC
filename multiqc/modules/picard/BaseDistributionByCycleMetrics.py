@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -196,14 +197,14 @@ def parse_reports(self):
             reformat_items = lambda n: {
                 cycle : tup[n] for cycle, tup in cycles.items()
             }
-            for linegraph, index in zip(linegraph_data, range(5)):
-                linegraph[s_name] = reformat_items(index)
+            for lg, index in zip(linegraph_data, range(5)):
+                lg[s_name] = reformat_items(index)
 
         self.sections.append({
             'name': 'Base Distribution',
             'anchor': 'picard-base-distribution-by-cycle',
             'content': '<p>Plot shows the distribution of bases by cycle.</p>' +
-                         plots.linegraph.plot(linegraph_data, pconfig)
+                         linegraph.plot(linegraph_data, pconfig)
         })
 
 

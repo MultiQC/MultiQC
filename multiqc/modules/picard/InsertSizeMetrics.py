@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -171,7 +172,7 @@ def parse_reports(self):
                 'name': 'Insert Size',
                 'anchor': 'picard-insertsize',
                 'content': '<p>Plot shows the number of reads at a given insert size. Reads with different orientations are summed.</p>' +
-                            plots.linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig)
+                            linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig)
             })
 
 

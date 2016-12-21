@@ -5,7 +5,8 @@
 
 import logging
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -167,7 +168,7 @@ def count_variants_barplot(data):
         'ylab': '# Variants',
         'cpswitch_counts_label': 'Number of Variants'
     }
-    return plots.bargraph.plot(data, keys, plot_conf)
+    return bargraph.plot(data, keys, plot_conf)
 
 
 def comp_overlap_table(data):
@@ -212,5 +213,5 @@ def comp_overlap_table(data):
         'min': 0,
         'modify': lambda x: float(x) / 1000000.0
     }
-    table_html = plots.table.plot(data, headers, {'id': 'gatk_compare_overlap'})
+    table_html = table.plot(data, headers, {'id': 'gatk_compare_overlap'})
     return table_html

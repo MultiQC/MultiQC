@@ -8,7 +8,9 @@ import json
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -201,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return ("<p>Summed alignment percentages are shown below. Note that percentages \
                 can sum to greater than 100% if reads align to multiple organisms.</p>" +
-                plots.bargraph.plot(data, cats, pconfig) )
+                bargraph.plot(data, cats, pconfig) )
 
 
 

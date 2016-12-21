@@ -6,7 +6,8 @@ http://rseqc.sourceforge.net/#inner-distance-py """
 from collections import OrderedDict
 import logging
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ def parse_reports(self):
             except:
                 # Don't bother running through whole file if wrong
                 break
+
         # Only add if we actually found something i,e it was PE data
         if len(parsed_data) > 0:
             self.inner_distance[f['s_name']] = parsed_data
@@ -66,9 +68,8 @@ def parse_reports(self):
             'content': "<p>"+p_link+" calculates the inner distance" \
                 " (or insert size) between two paired RNA reads." \
                 " Note that this can be negative if fragments overlap.</p>" +
-                plots.linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
+                linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
         })
 
     # Return number of samples found
     return len(self.inner_distance)
-

@@ -4,7 +4,8 @@
 
 import logging
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ class StatsReportMixin():
                     fields = ['ts', 'tv', 'tstv', 'ts_1st_ALT', 'tv_1st_ALT', 'tstv_1st_ALT']
                     for i, f in enumerate(fields):
                         value = float(s[i+2].strip())
+
                         self.bcftools_stats[s_name][f] = value
 
                 # Parse substitution types
@@ -91,7 +93,7 @@ class StatsReportMixin():
             self.sections.append({
                 'name': 'Variant Substitution Types',
                 'anchor': 'bcftools-stats',
-                'content': plots.bargraph.plot(self.bcftools_stats, keys, pconfig)
+                'content': bargraph.plot(self.bcftools_stats, keys, pconfig)
             })
 
             # Make line graph of indel lengths
@@ -108,7 +110,7 @@ class StatsReportMixin():
                 self.sections.append({
                     'name': 'Indel Distribution',
                     'anchor': 'bcftools-stats',
-                    'content': plots.linegraph.plot(self.bcftools_stats_indels, pconfig)
+                    'content': linegraph.plot(self.bcftools_stats_indels, pconfig)
                 })
 
         # Return the number of logs that were found
