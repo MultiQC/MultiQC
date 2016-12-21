@@ -459,17 +459,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         theoretical_gc_desc = ''
         if theoretical_gc is not None:
-            pconfig['extra_series'] = [{
+            # Calculate the count version of the theoretical data based on the largest data store
+            max_total = max([sum (d.values()) for d in data.values() ])
+            esconfig = {
                 'name': 'Theoretical GC Content',
-                'data': theoretical_gc,
                 'dashStyle': 'Dash',
                 'lineWidth': 2,
                 'color': '#000000',
                 'marker': { 'enabled': False },
                 'enableMouseTracking': False,
                 'showInLegend': False,
-            }]
-            theoretical_gc_desc = '<p>The dashed black line shows the theoretical GC content: {}.</p>'.format(theoretical_gc_name)
+            }
+            pconfig['extra_series'] = [ [dict(esconfig)], [dict(esconfig)] ]
+            pconfig['extra_series'][0][0]['data'] = theoretical_gc
+            pconfig['extra_series'][1][0]['data'] = [ [ d[0], (d[1]/100.0)*max_total ] for d in theoretical_gc ]
+            theoretical_gc_desc = '<p>The dashed black line shows theoretical GC content: {}.</p>'.format(theoretical_gc_name)
 
         self.sections.append({
             'name': 'Per Sequence GC Content',
