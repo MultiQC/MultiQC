@@ -12,6 +12,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
+import io
 import json
 import logging
 import os
@@ -423,10 +424,30 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Try to find and plot a theoretical GC line
         theoretical_gc = None
+        theoretical_gc_raw = None
         theoretical_gc_name = None
         for f in self.find_log_files(config.sp['fastqc']['theoretical_gc']):
+            if theoretical_gc_raw is not None:
+                log.warn("Multiple FastQC Theoretical GC Content files found, now using {}".format(f['fn']))
+            theoretical_gc_raw = f['f']
+            theoretical_gc_name = f['fn']
+        if theoretical_gc_raw is None:
+            tgc = getattr(config, 'fastqc_config', {}).get('fastqc_theoretical_gc', None)
+            if tgc is not None:
+                theoretical_gc_name = os.path.basename(tgc)
+                tgc_fn = 'fastqc_theoretical_gc_{}.txt'.format(tgc)
+                tgc_path = os.path.join(os.path.dirname(__file__), 'fastqc_theoretical_gc', tgc_fn)
+                if not os.path.isfile(tgc_path):
+                    tgc_path = tgc
+                try:
+                    with io.open (tgc_path, "r", encoding='utf-8') as f:
+                        theoretical_gc_raw = f.read()
+                except IOError:
+                    log.warn("Couldn't open FastQC Theoretical GC Content file {}".format(tgc_path))
+                    theoretical_gc_raw = None
+        if theoretical_gc_raw is not None:
             theoretical_gc = list()
-            for l in f['f'].splitlines():
+            for l in theoretical_gc_raw.splitlines():
                 if '# FastQC theoretical GC content curve:' in l:
                     theoretical_gc_name = l[39:]
                 elif not l.startswith('#'):
@@ -435,22 +456,20 @@ class MultiqcModule(BaseMultiqcModule):
                         theoretical_gc.append([float(s[0]), float(s[1])])
                     except (TypeError, IndexError):
                         pass
+
         theoretical_gc_desc = ''
         if theoretical_gc is not None:
             pconfig['extra_series'] = [{
                 'name': 'Theoretical GC Content',
                 'data': theoretical_gc,
                 'dashStyle': 'Dash',
-                'lineWidth': 1,
+                'lineWidth': 2,
                 'color': '#000000',
                 'marker': { 'enabled': False },
                 'enableMouseTracking': False,
                 'showInLegend': False,
             }]
-            t_name = ''
-            if theoretical_gc_name is not None:
-                t_name = ' for this <em>{}</em>'.format(theoretical_gc_name)
-            theoretical_gc_desc = '<p>The dashed black line shows the theoretical GC content{}.</p>'.format(t_name)
+            theoretical_gc_desc = '<p>The dashed black line shows the theoretical GC content: {}.</p>'.format(theoretical_gc_name)
 
         self.sections.append({
             'name': 'Per Sequence GC Content',

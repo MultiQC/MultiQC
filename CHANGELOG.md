@@ -21,6 +21,9 @@ Module updates:
 * **FastQC**
   * New plot showing total overrepresented sequence percentages.
   * New option to parse a file containing a theoretical GC curve to display in the background.
+    * Human & Mouse Genome / Transcriptome curves bundled, or make your own using
+      [fastqcTheoreticalGC](https://github.com/mikelove/fastqcTheoreticalGC). See the
+      [MultiQC docs](http://multiqc.info/docs/#fastqc) for more information.
 * **featureCounts**
   * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
 * **GATK**
