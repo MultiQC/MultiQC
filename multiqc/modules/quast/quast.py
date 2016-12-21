@@ -60,6 +60,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Pull out the sample names from the first row
         s_names = lines[0].split("\t")
+        # Prepend directory name(s) to sample names as configured
+        s_names = [self.clean_s_name(s_name, f['root'])
+                   for s_name in s_names]
         for s_name in s_names[1:]:
             if s_name in self.quast_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
