@@ -5,8 +5,13 @@ if [ -z "${MULTIQC_TEST_ROOT:-}" ] ; then
     MULTIQC_TEST_ROOT="$(dirname $0)"/../../MultiQC_TestData
 fi
 
-#Canonicalize it
-MULTIQC_TEST_ROOT="`readlink -f $MULTIQC_TEST_ROOT`"
+# Canonicalize it
+{ # Fake try/catch - `readlink -f` doesn't work on OSX
+    MULTIQC_TEST_ROOT_CANON="`readlink -f $MULTIQC_TEST_ROOT 2> /dev/null`"
+} || {
+    MULTIQC_TEST_ROOT_CANON="$(perl -MCwd -e 'print Cwd::abs_path shift' $MULTIQC_TEST_ROOT)"
+}
+MULTIQC_TEST_ROOT=$MULTIQC_TEST_ROOT_CANON
 
 if [ ! -d "$MULTIQC_TEST_ROOT/unit_tests" ] ; then
     cat <<.
