@@ -54,13 +54,11 @@ class MultiqcModule(BaseMultiqcModule):
             'content': self.quast_contigs_barplot()
         })
         # Number of genes plot
-        genes_plot = self.quast_predicted_genes_barplot()
-        if genes_plot is not None:
-            self.sections.append({
-                'name': 'Number of Predicted Genes',
-                'anchor': 'quast-genes',
-                'content': self.quast_predicted_genes_barplot()
-            })
+        self.sections.append({
+            'name': 'Number of Predicted Genes',
+            'anchor': 'quast-genes',
+            'content': self.quast_predicted_genes_barplot()
+        })
 
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
