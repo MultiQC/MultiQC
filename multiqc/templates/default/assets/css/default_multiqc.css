@@ -283,7 +283,7 @@ input.form-control[type=color]{
     .mqc-toolbox {
         display: block;
         position: fixed;
-        z-index: 1200;
+        z-index: 1040;
         width: 36px;
         height: 100% !important;
         top: 0;

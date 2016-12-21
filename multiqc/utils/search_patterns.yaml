@@ -45,11 +45,15 @@ fastqc:
         fn: 'fastqc_data.txt'
     zip:
         fn: '*_fastqc.zip'
+    theoretical_gc:
+        fn: '*fastqc_theoretical_gc*'
 featurecounts:
     fn: '*.summary'
 gatk:
     varianteval:
         contents: '#:GATKReport'
+htseq:
+    contents: '__too_low_aQual'
 hicup:
     fn: 'HiCUP_summary_report*'
 kallisto:
@@ -148,11 +152,11 @@ samtools:
 skewer:
     contents: 'maximum error ratio allowed (-r):'
 slamdunk:
-    summary: 
+    summary:
         contents: '# slamdunk summary'
-    PCA: 
+    PCA:
         contents: '# slamdunk PCA'
-    rates: 
+    rates:
         contents: '# slamdunk rates'
     utrrates:
         contents: '# slamdunk utrrates'

@@ -5,7 +5,6 @@
 from __future__ import print_function
 import logging
 import re
-from distutils.version import StrictVersion
 from collections import OrderedDict
 
 from multiqc import config
@@ -193,9 +192,15 @@ class MultiqcModule(BaseMultiqcModule):
         for fromBase in baseDict:
             for toBase in baseDict[fromBase]:
                 if(toBase.islower()):
-                    baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase.lower()]) * 100
+                    if divisor[fromBase.lower()] > 0:
+                        baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase.lower()]) * 100
+                    else :
+                        baseDict[fromBase][toBase] = 0.0
                 else:
-                    baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase]) * 100
+                    if divisor[fromBase] > 0:
+                        baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase]) * 100
+                    else :
+                        baseDict[fromBase][toBase] = 0.0
 
         self.rates_data_plus[sample] = {}
         self.rates_data_minus[sample] = {}

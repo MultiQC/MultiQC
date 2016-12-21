@@ -11,7 +11,8 @@
 ############################################################
 
 from __future__ import print_function
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
+import io
 import json
 import logging
 import os
@@ -422,12 +423,65 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
 
+        # Try to find and plot a theoretical GC line
+        theoretical_gc = None
+        theoretical_gc_raw = None
+        theoretical_gc_name = None
+        for f in self.find_log_files(config.sp['fastqc']['theoretical_gc']):
+            if theoretical_gc_raw is not None:
+                log.warn("Multiple FastQC Theoretical GC Content files found, now using {}".format(f['fn']))
+            theoretical_gc_raw = f['f']
+            theoretical_gc_name = f['fn']
+        if theoretical_gc_raw is None:
+            tgc = getattr(config, 'fastqc_config', {}).get('fastqc_theoretical_gc', None)
+            if tgc is not None:
+                theoretical_gc_name = os.path.basename(tgc)
+                tgc_fn = 'fastqc_theoretical_gc_{}.txt'.format(tgc)
+                tgc_path = os.path.join(os.path.dirname(__file__), 'fastqc_theoretical_gc', tgc_fn)
+                if not os.path.isfile(tgc_path):
+                    tgc_path = tgc
+                try:
+                    with io.open (tgc_path, "r", encoding='utf-8') as f:
+                        theoretical_gc_raw = f.read()
+                except IOError:
+                    log.warn("Couldn't open FastQC Theoretical GC Content file {}".format(tgc_path))
+                    theoretical_gc_raw = None
+        if theoretical_gc_raw is not None:
+            theoretical_gc = list()
+            for l in theoretical_gc_raw.splitlines():
+                if '# FastQC theoretical GC content curve:' in l:
+                    theoretical_gc_name = l[39:]
+                elif not l.startswith('#'):
+                    s = l.split()
+                    try:
+                        theoretical_gc.append([float(s[0]), float(s[1])])
+                    except (TypeError, IndexError):
+                        pass
+
+        theoretical_gc_desc = ''
+        if theoretical_gc is not None:
+            # Calculate the count version of the theoretical data based on the largest data store
+            max_total = max([sum (d.values()) for d in data.values() ])
+            esconfig = {
+                'name': 'Theoretical GC Content',
+                'dashStyle': 'Dash',
+                'lineWidth': 2,
+                'color': '#000000',
+                'marker': { 'enabled': False },
+                'enableMouseTracking': False,
+                'showInLegend': False,
+            }
+            pconfig['extra_series'] = [ [dict(esconfig)], [dict(esconfig)] ]
+            pconfig['extra_series'][0][0]['data'] = theoretical_gc
+            pconfig['extra_series'][1][0]['data'] = [ [ d[0], (d[1]/100.0)*max_total ] for d in theoretical_gc ]
+            theoretical_gc_desc = '<p>The dashed black line shows theoretical GC content: {}.</p>'.format(theoretical_gc_name)
+
         self.sections.append({
             'name': 'Per Sequence GC Content',
             'anchor': 'fastqc_per_sequence_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        linegraph.plot([data_norm, data], pconfig)
+                        theoretical_gc_desc + linegraph.plot([data_norm, data], pconfig)
         })
 
 

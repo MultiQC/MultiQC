@@ -4,7 +4,6 @@
 """ MultiQC submodule to parse output from GATK varianteval """
 
 import logging
-import re
 from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import bargraph, table
@@ -180,7 +179,7 @@ def comp_overlap_table(data):
         'description': 'Ratio of known variants found in the reference set.',
         'namespace': 'GATK',
         'min': 0,
-        'max': 1,
+        'max': 100,
         'format': '{:.2f}%',
         'scale': 'Blues',
     }
@@ -189,27 +188,30 @@ def comp_overlap_table(data):
         'description': 'Ratio of variants matching alleles in the reference set.',
         'namespace': 'GATK',
         'min': 0,
-        'max': 1,
+        'max': 100,
         'format': '{:.2f}%',
         'scale': 'Blues',
     }
     headers['eval_variants'] = {
-        'title': 'Evaluated variants',
-        'description': 'Number of called variants.',
+        'title': 'M Evaluated variants',
+        'description': 'Number of called variants (millions)',
         'namespace': 'GATK',
-        'min': 0
+        'min': 0,
+        'modify': lambda x: float(x) / 1000000.0
     }
     headers['known_sites'] = {
-        'title': 'Known sites',
-        'description': 'Number of known variants.',
+        'title': 'M Known sites',
+        'description': 'Number of known variants (millions)',
         'namespace': 'GATK',
-        'min': 0
+        'min': 0,
+        'modify': lambda x: float(x) / 1000000.0
     }
     headers['novel_sites'] = {
-        'title': 'Novel sites',
-        'description': 'Number of novel variants.',
+        'title': 'M Novel sites',
+        'description': 'Number of novel variants (millions)',
         'namespace': 'GATK',
-        'min': 0
+        'min': 0,
+        'modify': lambda x: float(x) / 1000000.0
     }
     table_html = table.plot(data, headers, {'id': 'gatk_compare_overlap'})
     return table_html

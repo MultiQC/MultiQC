@@ -27,6 +27,7 @@ MultiQC Modules:
     Bcftools: modules/bcftools.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
+    HTSeq: modules/htseq.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
@@ -50,7 +51,7 @@ Coding with MultiQC:
 
 # Welcome!
 
-## MultiQC v0.9dev Documentation
+## MultiQC v1.0dev Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number

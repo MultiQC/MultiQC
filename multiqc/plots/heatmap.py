@@ -48,6 +48,13 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
     html = '<div class="mqc_hcplot_plotgroup">'
 
+    # The 'sort by highlights button'
+    html += """<div class="btn-group hc_switch_group">
+        <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{id}" disabled="disabled">
+            <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
+        </button>
+    </div>""".format(id=pconfig['id'])
+
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-heatmap"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
 
