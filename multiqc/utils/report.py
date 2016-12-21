@@ -82,6 +82,8 @@ def get_filelist():
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
 
+                logger.debug("Looking in: {}".format(root))
+
                 # Skip any sub-directories matching ignore params
                 orig_dirnames = dirnames[:]
                 for n in config.fn_ignore_dirs:
@@ -103,7 +105,7 @@ def get_filelist():
                     continue
                 p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
                 if len(p_matches) > 0:
-                    logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
+                    logger.debug("Ignoring directory {} as it matched {} in fn_ignore_paths".format(root, p_matches[0]))
                     continue
 
                 # Search filenames in this directory
