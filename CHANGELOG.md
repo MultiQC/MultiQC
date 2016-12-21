@@ -1,5 +1,41 @@
 # MultiQC Version History
 
+#### v1.0dev
+Version 1.0! Bumping the major version number for a couple of reasons:
+
+1. MultiQC is now hopefully relatively stable. A number of facilities and users
+   are now using it in a production setting and it's published. It feels like it
+   probably deserves v1 status now somehow.
+2. This update brings some fairly major changes which will break backwards
+   compatibility for plugins. As such, semantic versioning suggests a change in
+   major version number.
+
+Breaking changes you say? Most people who run MultiQC just use the core installation.
+If this is the case for you, then you have nothing to worry about. The changes
+I'm talking about will only apply to plugins and external code bases.
+
+The main changes coming in this version are (or will be):
+
+* Module import refactoring to allow a new testing environment
+  * Pioneered by the brave [@tbooth](https://github.com/tbooth), this should allow
+    better, more modular, unit testing. This should equate to more reliable and
+    maintainable code
+  * Unfortunately this means that all modules need to change some of their import
+    statements. This includes plugin modules outside of the core MultiQC package.
+* _Potentially_: refactoring of the file search mechanism.
+  * I'm hoping that this won't break backwards compatability, but it could do.
+* _Potentially_: Larger changes to do with changing where modules are kept and how
+  they're called?
+
+If you have any questions, open an issue.
+
+Module updates:
+_none yet.._
+
+Core MultiQC updates:
+_none yet.._
+
+
 #### [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
 A major new feature is released in v0.9 - support for _custom content_. This means
 that MultiQC can now easily include output from custom scripts within reports without
