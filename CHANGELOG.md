@@ -28,6 +28,34 @@ The main changes coming in this version are (or will be):
 * _Potentially_: Larger changes to do with changing where modules are kept and how
   they're called?
 
+There are two things that you probably need to change in your plugin modules to
+make them work with the updated version of MultiQC, both to do with imports.
+Instead of this style of importing modules:
+```python
+from multiqc import config, BaseMultiqcModule, plots
+```
+
+You now need this:
+```python
+from multiqc import config
+from multiqc.plots import bargraph   # Load specific plot types here
+from multiqc.modules.base_module import BaseMultiqcModule
+```
+You will also need to update any plotting functions, removing the `plot.` prefix.
+For example, change this:
+```python
+return plots.bargraph.plot(data, keys, pconfig)
+```
+to this:
+```python
+return bargraph.plot(data, keys, pconfig)
+```
+
+These changes have been made to simplify the module imports within MultiQC,
+allowing specific parts of the codebase to be imported into a Python script
+on their own. This enables small, atomic, clean unit testing.
+
+
 If you have any questions, please open an issue.
 
 #### Module updates:
