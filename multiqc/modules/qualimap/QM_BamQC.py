@@ -7,7 +7,8 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -246,7 +247,7 @@ def report_sections(self):
         self.sections.append({
             'name': 'Coverage histogram',
             'anchor': 'qualimap-coverage-histogram',
-            'content': plots.linegraph.plot(self.qualimap_bamqc_coverage_hist, {
+            'content': linegraph.plot(self.qualimap_bamqc_coverage_hist, {
                 'id': 'qualimap_coverage_histogram',
                 'title': 'Coverage histogram',
                 'ylab': 'Genome bin counts',
@@ -262,7 +263,7 @@ def report_sections(self):
         self.sections.append({
             'name': 'Cumulative coverage genome fraction',
             'anchor': 'qualimap-cumulative-genome-fraction-coverage',
-            'content': plots.linegraph.plot(rates_within_threshs, {
+            'content': linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
                 'title': 'Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',
@@ -281,7 +282,7 @@ def report_sections(self):
         self.sections.append({
             'name': 'Insert size histogram',
             'anchor': 'qualimap-insert-size-histogram',
-            'content': plots.linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
+            'content': linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
                 'id': 'qualimap_insert_size',
                 'title': 'Insert size histogram',
                 'ylab': 'Fraction of reads',
@@ -312,7 +313,7 @@ def report_sections(self):
         self.sections.append({
             'name': 'GC content distribution',
             'anchor': 'qualimap-gc-distribution',
-            'content': content + plots.linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
+            'content': content + linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
                 'id': 'qualimap_gc_content',
                 'title': 'GC content distribution',
                 'ylab': 'Fraction of reads',

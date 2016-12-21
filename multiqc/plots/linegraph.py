@@ -29,8 +29,14 @@ except Exception as e:
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-# Load the template so that we can access it's configuration
-template_mod = config.avail_templates[config.template].load()
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
 
 def plot (data, pconfig={}):
     """ Plot a line graph with X,Y data.
@@ -96,7 +102,7 @@ def plot (data, pconfig={}):
 
     # Make a plot - template custom, or interactive or flat
     try:
-        return template_mod.linegraph(plotdata, pconfig)
+        return get_template_mod().linegraph(plotdata, pconfig)
     except (AttributeError, TypeError):
         if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
             try:
@@ -157,6 +163,7 @@ def highcharts_linegraph (plotdata, pconfig={}):
     </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
 
     report.num_hc_plots += 1
+
     return html
 
 
@@ -366,7 +373,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                 fig.savefig(plot_fn, format=fformat, bbox_inches='tight')
 
         # Output the figure to a base64 encoded string
-        if getattr(template_mod, 'base64_plots', True) is True:
+        if getattr(get_template_mod(), 'base64_plots', True) is True:
             img_buffer = io.BytesIO()
             fig.savefig(img_buffer, format='png', bbox_inches='tight')
             b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
@@ -385,8 +392,8 @@ def matplotlib_linegraph (plotdata, pconfig={}):
     html += '</div>'
 
     report.num_mpl_plots += 1
-    return html
 
+    return html
 
 
 def smooth_line_data(data, numpoints, sumcounts=True):

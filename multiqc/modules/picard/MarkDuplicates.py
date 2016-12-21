@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ def parse_reports(self):
             'id': 'picard_mark_duplicates',
             'name': 'Mark Duplicates',
             'anchor': 'picard-markduplicates',
-            'content': plots.bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
+            'content': bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
         })
 
     # Return the number of detected samples to the parent module

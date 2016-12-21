@@ -8,7 +8,9 @@ import json
 import logging
 import os
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import linegraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -29,7 +31,6 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = os.path.basename( os.path.dirname(f['root']) )
             s_name = self.clean_s_name(s_name, f['root'])
             self.salmon_meta[s_name] = json.loads(f['f'])
-
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
         for f in self.find_log_files(config.sp['salmon']['fld']):
@@ -90,5 +91,5 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
 
-        self.intro += plots.linegraph.plot(self.salmon_fld, pconfig)
+        self.intro += linegraph.plot(self.salmon_fld, pconfig)
 

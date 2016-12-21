@@ -9,7 +9,9 @@ import json
 import os
 import yaml
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -196,27 +198,27 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table
         if mod['config'].get('plot_type') == 'table':
-            self.intro += plots.table.plot(mod['data'], None, pconfig)
+            self.intro += table.plot(mod['data'], None, pconfig)
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
-            self.intro += plots.bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig)
+            self.intro += bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig)
 
         # Line plot
         elif mod['config'].get('plot_type') == 'linegraph':
-            self.intro += plots.linegraph.plot(mod['data'], pconfig)
+            self.intro += linegraph.plot(mod['data'], pconfig)
 
         # Scatter plot
         elif mod['config'].get('plot_type') == 'scatter':
-            self.intro += plots.scatter.plot(mod['data'], pconfig)
+            self.intro += scatter.plot(mod['data'], pconfig)
 
         # Heatmap
         elif mod['config'].get('plot_type') == 'heatmap':
-            self.intro += plots.heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig)
+            self.intro += heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig)
 
         # Beeswarm plot
         elif mod['config'].get('plot_type') == 'beeswarm':
-            self.intro += plots.beeswarm.plot(mod['data'], pconfig)
+            self.intro += beeswarm.plot(mod['data'], pconfig)
 
         # Not supplied
         elif mod['config'].get('plot_type') == None:

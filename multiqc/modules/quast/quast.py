@@ -7,7 +7,9 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import table, bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -232,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'QUAST',
             'min': 0,
         }
-        return plots.table.plot(self.quast_data, headers, config)
+        return table.plot(self.quast_data, headers, config)
 
     def quast_contigs_barplot(self):
         """ Make a bar plot showing the number and length of contigs for each assembly """
@@ -266,6 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
             '25000-50000 bp',
             '>= 50000 bp',
         ]
+
         pconfig = {
             'id': 'quast_num_contigs',
             'title': 'Number of Contigs',
@@ -273,7 +276,7 @@ class MultiqcModule(BaseMultiqcModule):
             'yDecimals': False
         }
 
-        return "{}{}".format(html, plots.bargraph.plot(data, cats, pconfig))
+        return "{}{}".format(html, bargraph.plot(data, cats, pconfig))
 
     def quast_predicted_genes_barplot(self):
         """
@@ -325,6 +328,6 @@ class MultiqcModule(BaseMultiqcModule):
                  for low,high in zip(all_thresholds, all_thresholds[1:]+[None]) ]
 
         if len(cats) > 0:
-            return "\n".join([html, plots.bargraph.plot(data, cats)])
+            return "\n".join([html, bargraph.plot(data, cats)])
         else:
             return None

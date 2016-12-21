@@ -7,7 +7,9 @@ import logging
 import re
 from distutils.version import StrictVersion
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import linegraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -96,7 +98,6 @@ class MultiqcModule(BaseMultiqcModule):
                     except:
                         # I think the pattern "cutadapt version XX" is only pre-1.6?
                         cutadapt_version = '1.6'
-
             # Get sample name from end of command line params
             if l.startswith('Command line parameters'):
                 s_name = l.split()[-1]
@@ -180,6 +181,6 @@ class MultiqcModule(BaseMultiqcModule):
                             {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
         }
 
-        html += plots.linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+        html += linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
 
         return html

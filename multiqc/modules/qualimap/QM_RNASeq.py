@@ -7,7 +7,8 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -115,14 +116,14 @@ def parse_reports(self):
         self.sections.append({
             'name': 'Genomic origin of reads',
             'anchor': 'qualimap-reads-genomic-origin',
-            'content': plots.bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
+            'content': bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
         })
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
         self.sections.append({
             'name': 'Gene Coverage Profile',
             'anchor': 'qualimap-genome-fraction-coverage',
-            'content': plots.linegraph.plot(self.qualimap_rnaseq_cov_hist, {
+            'content': linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
