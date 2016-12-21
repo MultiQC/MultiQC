@@ -10,9 +10,6 @@ from collections import OrderedDict, defaultdict
 from multiqc import config
 from multiqc.plots import beeswarm
 
-from multiqc import config
-from multiqc.plots import beeswarm
-
 # Initialise the logger
 log = logging.getLogger(__name__)
 
