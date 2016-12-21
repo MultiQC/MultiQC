@@ -330,7 +330,7 @@ $(function () {
       $($(this).data('table')+' thead tr th').each(function(e){
         var c_id = $(this).attr('id');
         if(c_id != undefined){
-          var c_name = $(this).children('span').attr('data-original-title');
+          var c_name = $(this).attr('data-namespace') + ': ' + $(this).text();
           $('#tableScatter_col1, #tableScatter_col2').append('<option value="'+c_id+'">'+c_name+'</select>');
         }
       });

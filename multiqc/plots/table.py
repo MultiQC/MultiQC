@@ -77,8 +77,8 @@ def make_table (dt):
 
             c_col = '' if header['scale'] == False else 'chroma-col'
 
-            data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" {}' \
-                .format(header['scale'], header['dmax'], header['dmin'], shared_key)
+            data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" data-namespace="{}" {}' \
+                .format(header['scale'], header['dmax'], header['dmin'], header['namespace'], shared_key)
 
             cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
                 .format(header['namespace'], header['description'], header['title'])
