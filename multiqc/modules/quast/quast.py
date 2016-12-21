@@ -321,4 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats = [ ourpat.format(low,-high if high else "")
                  for low,high in zip(all_thresholds, all_thresholds[1:]+[None]) ]
 
-        return "\n".join([html, plots.bargraph.plot(data, cats)])
+        if len(cats) > 0:
+            return "\n".join([html, plots.bargraph.plot(data, cats)])
+        else:
+            return None
