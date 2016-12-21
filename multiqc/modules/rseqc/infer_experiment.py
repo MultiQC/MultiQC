@@ -7,7 +7,8 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ def parse_reports(self):
             'name': 'Infer experiment',
             'anchor': 'rseqc-infer_experiment',
             'content': "<p>"+p_link+" counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts. It can be used to infer whether RNA-seq library preps are stranded (sense or antisense) .</p>" +
-                plots.bargraph.plot(pdata, keys, pconfig)
+                bargraph.plot(pdata, keys, pconfig)
         })
 
     # Return number of samples found

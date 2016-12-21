@@ -5,7 +5,8 @@
 
 import logging
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import beeswarm, bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ class StatsReportMixin():
             keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs'})
             keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs'})
 
-            plot_html = plots.beeswarm.plot(self.samtools_stats, keys,
+            plot_html = beeswarm.plot(self.samtools_stats, keys,
                                             {'id': 'samtools-stats-dp'})
             self.sections.append({
                 'name': 'Alignment metrics',
@@ -170,4 +171,4 @@ def alignment_chart(data):
         'ylab': '# Reads',
         'cpswitch_counts_label': 'Number of Reads'
     }
-    return plots.bargraph.plot(data, keys, plot_conf)
+    return bargraph.plot(data, keys, plot_conf)

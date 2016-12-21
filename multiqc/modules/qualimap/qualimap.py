@@ -7,7 +7,8 @@ from collections import defaultdict, OrderedDict
 import logging
 import os
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)

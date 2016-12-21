@@ -5,7 +5,8 @@
 import logging
 import re
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class RmdupReportMixin():
             self.sections.append({
                 'name': 'Duplicates removed',
                 'anchor': 'samtools-rmdup',
-                'content': plots.bargraph.plot(self.samtools_rmdup, keys, pconfig)
+                'content': bargraph.plot(self.samtools_rmdup, keys, pconfig)
             })
 
             # Add a column to the General Stats table

@@ -8,7 +8,9 @@ import logging
 import os
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -225,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return plots.bargraph.plot(self.star_data, keys, pconfig)
+        return bargraph.plot(self.star_data, keys, pconfig)
 
     def star_genecount_chart (self):
         """ Make a plot for the ReadsPerGene output """
@@ -251,4 +253,4 @@ class MultiqcModule(BaseMultiqcModule):
             self.star_genecounts_first_strand,
             self.star_genecounts_second_strand
         ]
-        return plots.bargraph.plot(datasets, [keys,keys,keys,keys], pconfig)
+        return bargraph.plot(datasets, [keys,keys,keys,keys], pconfig)

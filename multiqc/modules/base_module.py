@@ -10,7 +10,6 @@ import logging
 import os
 import re
 
-from multiqc import plots
 from multiqc.utils import report, config, util_functions
 logger = logging.getLogger(__name__)
 
@@ -106,7 +105,6 @@ class BaseMultiqcModule(object):
                     if config.report_readerrors:
                         logger.debug("Couldn't read file when looking for output: {}".format(fn))
 
-
     def clean_s_name(self, s_name, root):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
@@ -139,8 +137,7 @@ class BaseMultiqcModule(object):
                 elif ext['type'] == 'replace':
                     s_name = s_name.replace(ext['pattern'], '')
                 elif ext['type'] == 'regex':
-                    re_pattern = re.compile(r'{}'.format(ext['pattern']))
-                    s_name = re.sub(re_pattern, '', s_name)
+                    s_name = re.sub(ext['pattern'], '', s_name)
                 else:
                     logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext['type']))
             # Trim off characters at the end of names
@@ -212,11 +209,13 @@ class BaseMultiqcModule(object):
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
     ##################################################
-    #### DEPRECIATED FORWARDERS
+    #### DEPRECATED FORWARDERS
     def plot_bargraph (self, data, cats=None, pconfig={}):
         """ Depreciated function. Forwards to new location. """
-        return plots.bargraph.plot(data, cats, pconfig)
+        from multiqc.plots import bargraph
+        return bargraph.plot(data, cats, pconfig)
 
     def plot_xy_data(self, data, pconfig={}):
         """ Depreciated function. Forwards to new location. """
-        return plots.linegraph.plot(data, pconfig)
+        from multiqc.plots import linegraph
+        return linegraph.plot(data, pconfig)

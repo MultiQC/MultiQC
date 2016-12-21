@@ -13,7 +13,8 @@ import mimetypes
 import os
 import yaml
 
-from multiqc import logger, config
+from multiqc import config
+logger = config.logger
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
 from yaml.representer import Representer, SafeRepresenter

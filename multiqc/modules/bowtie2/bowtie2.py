@@ -7,7 +7,9 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -230,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
             sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
             config['id'] = 'bowtie2_se_plot'
             config['title'] = 'Bowtie 2 SE Alignment Scores'
-            se_plot = plots.bargraph.plot(self.bowtie2_data, sekeys, config)
+            se_plot = bargraph.plot(self.bowtie2_data, sekeys, config)
 
         pe_plot = ''
         if self.num_pe > 0:
@@ -246,6 +248,6 @@ class MultiqcModule(BaseMultiqcModule):
             config['title'] = 'Bowtie 2 PE Alignment Scores'
             if se_plot != '':
                 pe_plot = '<hr>'
-            pe_plot += plots.bargraph.plot(self.bowtie2_data, pekeys, config)
+            pe_plot += bargraph.plot(self.bowtie2_data, pekeys, config)
 
         return half_warning + se_plot + pe_plot

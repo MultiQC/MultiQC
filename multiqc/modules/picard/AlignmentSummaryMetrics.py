@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -117,7 +118,7 @@ def parse_reports(self):
             'name': 'Alignment Summary',
             'anchor': 'picard-alignmentsummary',
             'content': "<p>Plase note that Picard's read counts are divided by two for paired-end data.</p>"+
-                plots.bargraph.plot(pdata, keys, pconfig)
+                bargraph.plot(pdata, keys, pconfig)
         })
 
     # Return the number of detected samples to the parent module

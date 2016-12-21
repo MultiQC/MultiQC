@@ -9,7 +9,9 @@ import logging
 import os
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -123,4 +125,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return plots.bargraph.plot(self.trimmomatic, keys, pconfig)
+        return bargraph.plot(self.trimmomatic, keys, pconfig)

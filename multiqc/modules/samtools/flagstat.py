@@ -8,6 +8,9 @@ import re
 from collections import OrderedDict, defaultdict
 from multiqc import config, plots
 
+from multiqc import config
+from multiqc.plots import beeswarm
+
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -67,7 +70,7 @@ class FlagstatReportMixin():
                 'name': 'Samtools Flagstat',
                 'anchor': 'samtools-flagstat',
                 'content': '<p>This module parses the output from <code>samtools flagstat</code>. All numbers in millions.</p>' +
-                            plots.beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
+                            beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
             })
 
         # Return the number of logs that were found

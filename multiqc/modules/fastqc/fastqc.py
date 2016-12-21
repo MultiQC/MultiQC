@@ -19,7 +19,9 @@ import os
 import re
 import zipfile
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import linegraph, bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -87,8 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add to the general statistics table
         self.fastqc_general_stats()
-
-
 
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
         statuses = dict()
@@ -174,6 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
                             self.dup_keys.append(float(s[0]))
                         except ValueError:
                             self.dup_keys.append(s[0])
+
         # Tidy up the Basic Stats
         self.fastqc_data[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_data[s_name]['basic_statistics']}
 
@@ -298,7 +299,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_per_base_sequence_quality',
             'content': '<p>The mean quality value across each base position in the read. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot(data, pconfig)
+                        linegraph.plot(data, pconfig)
         })
 
 
@@ -336,7 +337,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_per_sequence_quality_scores',
             'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot(data, pconfig)
+                        linegraph.plot(data, pconfig)
         })
 
 
@@ -480,7 +481,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_per_sequence_gc_content',
             'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        theoretical_gc_desc + plots.linegraph.plot([data_norm, data], pconfig)
+                        theoretical_gc_desc + linegraph.plot([data_norm, data], pconfig)
         })
 
 
@@ -521,7 +522,7 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_per_base_n_content',
             'content': '<p>The percentage of base calls at each position for which an N was called. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot(data, pconfig)
+                        linegraph.plot(data, pconfig)
         })
 
 
@@ -562,7 +563,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
             html =  '<p>The distribution of fragment sizes (read lengths) found. \
                 See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.</p>'
-            html += plots.linegraph.plot(data, pconfig)
+            html += linegraph.plot(data, pconfig)
 
         self.sections.append({
             'name': 'Sequence Length Distribution',
@@ -608,9 +609,8 @@ class MultiqcModule(BaseMultiqcModule):
             'anchor': 'fastqc_sequence_duplication_levels',
             'content': '<p>The relative level of duplication found for every sequence. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.</p>' +
-                        plots.linegraph.plot(data, pconfig)
+                        linegraph.plot(data, pconfig)
         })
-
 
     def overrepresented_sequences (self):
         """Sum the percentages of overrepresented sequences and display them in a bar plot"""
@@ -655,7 +655,7 @@ class MultiqcModule(BaseMultiqcModule):
         if max([ x['total_overrepresented'] for x in data.values()]) < 1:
             plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(len(data))
         else:
-            plot_html = plots.bargraph.plot(data, cats, pconfig)
+            plot_html = bargraph.plot(data, cats, pconfig)
 
         self.sections.append({
             'name': 'Overrepresented sequences',
@@ -664,8 +664,6 @@ class MultiqcModule(BaseMultiqcModule):
                     'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html" target="_bkank">FastQC help for further information</a>.</p>'
                     + plot_html
             })
-
-
 
 
     def adapter_content_plot (self):
@@ -714,7 +712,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if len(data) > 0:
-            plot_html = plots.linegraph.plot(data, pconfig)
+            plot_html = linegraph.plot(data, pconfig)
         else:
             plot_html = '<div class="alert alert-warning">No samples found with any adapter contamination > 0.1%</div>'
 
@@ -754,4 +752,3 @@ class MultiqcModule(BaseMultiqcModule):
             status = self.fastqc_data[s_name]['statuses'].get(section, 'default')
             colours[s_name] = self.status_colours[status]
         return colours
-
