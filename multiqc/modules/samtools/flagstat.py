@@ -52,18 +52,29 @@ class FlagstatReportMixin():
                 'decimalPlaces': 2,
                 'shared_key': 'read_count'
             }
-            keys['flagstat_total'] = dict(reads, **{'title': 'Total Reads' })
-            keys['total_passed'] = dict(reads, **{'title': 'Total Passed QC' })
-            keys['mapped_passed'] = dict(reads, **{'title': 'Mapped' })
-            keys['secondary_passed'] = dict(reads, **{'title': 'Secondary Alignments' })
-            keys['supplementary_passed'] = dict(reads, **{'title': 'Supplementary Alignments' })
-            keys['duplicates_passed'] = dict(reads, **{'title': 'Duplicates' })
-            keys['paired in sequencing_passed'] = dict(reads, **{'title': 'Paired in Sequencing' })
-            keys['properly paired_passed'] = dict(reads, **{'title': 'Properly Paired' })
-            keys['with itself and mate mapped_passed'] = dict(reads, **{'title': 'Self and mate mapped', 'description': 'Reads with itself and mate mapped' })
-            keys['singletons_passed'] = dict(reads, **{'title': 'Singletons' })
-            keys['with mate mapped to a different chr_passed'] = dict(reads, **{'title': 'Mate mapped to diff chr', 'description': 'Mate mapped to different chromosome' })
-            keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = dict(reads, **{'title': 'Diff chr (mapQ >= 5)', 'description':'Mate mapped to different chromosome (mapQ >= 5)' })
+            keys['flagstat_total']              = dict(reads, title = 'Total Reads' )
+            keys['total_passed']                = dict(reads, title = 'Total Passed QC' )
+            keys['mapped_passed']               = dict(reads, title = 'Mapped' )
+
+            if any(v['secondary_passed'] for v in self.samtools_flagstat.values()):
+                keys['secondary_passed']        = dict(reads, title = 'Secondary Alignments' )
+
+            if any(v['supplementary_passed'] for v in self.samtools_flagstat.values()):
+                keys['supplementary_passed']    = dict(reads, title = 'Supplementary Alignments' )
+
+            keys['duplicates_passed']           = dict(reads, title = 'Duplicates' )
+            keys['paired in sequencing_passed'] = dict(reads, title = 'Paired in Sequencing' )
+            keys['properly paired_passed']      = dict(reads, title = 'Properly Paired' )
+            keys['with itself and mate mapped_passed'] = \
+                                                  dict(reads, title = 'Self and mate mapped',
+                                                              description = 'Reads with itself and mate mapped' )
+            keys['singletons_passed']           = dict(reads, title = 'Singletons' )
+            keys['with mate mapped to a different chr_passed'] = \
+                                                  dict(reads, title = 'Mate mapped to diff chr',
+                                                              description = 'Mate mapped to different chromosome' )
+            keys['with mate mapped to a different chr (mapQ >= 5)_passed'] = \
+                                                  dict(reads, title = 'Diff chr (mapQ >= 5)',
+                                                              description = 'Mate mapped to different chromosome (mapQ >= 5)' )
 
             self.sections.append({
                 'name': 'Samtools Flagstat',
@@ -83,13 +94,13 @@ flagstat_regexes = {
     'secondary':     r"(\d+) \+ (\d+) secondary",
     'supplementary': r"(\d+) \+ (\d+) supplementary",
     'duplicates':    r"(\d+) \+ (\d+) duplicates",
-    'mapped':        r"(\d+) \+ (\d+) mapped \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)",
+    'mapped':        r"(\d+) \+ (\d+) mapped \((.+):(.+)\)",
     'paired in sequencing': r"(\d+) \+ (\d+) paired in sequencing",
     'read1':         r"(\d+) \+ (\d+) read1",
     'read2':         r"(\d+) \+ (\d+) read2",
-    'properly paired': r"(\d+) \+ (\d+) properly paired \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)",
+    'properly paired': r"(\d+) \+ (\d+) properly paired \((.+):(.+)\)",
     'with itself and mate mapped': r"(\d+) \+ (\d+) with itself and mate mapped",
-    'singletons':    r"(\d+) \+ (\d+) singletons \(([\d\.]+|-?nan)%:([\d\.]+|-?nan)%\)",
+    'singletons':    r"(\d+) \+ (\d+) singletons \((.+):(.+)\)",
     'with mate mapped to a different chr': r"(\d+) \+ (\d+) with mate mapped to a different chr",
     'with mate mapped to a different chr (mapQ >= 5)': r"(\d+) \+ (\d+) with mate mapped to a different chr \(mapQ>=5\)",
 }
@@ -108,9 +119,12 @@ def parse_single_report(file_obj):
             for i,j in enumerate(re_groups):
                 try:
                     key = "{}_{}".format(k, j)
-                    parsed_data[key] = float(r_search.group(i+1))
+                    val = r_search.group(i+1).strip('% ')
+                    parsed_data[key] = float(val) if ('.' in val) else int(val)
                 except IndexError:
                     pass # Not all regexes have percentages
+                except ValueError:
+                    parsed_data[key] = float('nan')
     # Work out the total read count
     try:
         parsed_data['flagstat_total'] = parsed_data['total_passed'] + parsed_data['total_failed']
