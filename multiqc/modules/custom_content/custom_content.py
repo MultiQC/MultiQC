@@ -110,7 +110,7 @@ def custom_module_classes():
                 # Parse data
                 try:
                     parsed_data, conf = _parse_txt( f, m_config )
-                    if parsed_data is None:
+                    if parsed_data is None or len(parsed_data) == 0:
                         log.warning("Not able to parse custom data in {}".format(f['fn']))
                     else:
                         # Did we get a new section id from the file?
@@ -349,7 +349,8 @@ def _parse_txt(f, conf):
                 conf['plot_type'] = 'bargraph'
             else:
                 conf['plot_type'] = 'table'
-        return (data, conf)
+        if conf.get('plot_type') is 'bargraph' or conf.get('plot_type') is 'table':
+            return (data, conf)
 
     # Scatter plot: No header row, str : num : num
     if (conf.get('plot_type') is None and len(d[0]) == 3 and
@@ -358,10 +359,13 @@ def _parse_txt(f, conf):
     if conf.get('plot_type') == 'scatter':
         data = dict()
         for s in d:
-            data[s[0]] = {
-                'x': s[1],
-                'y': s[2]
-            }
+            try:
+                data[s[0]] = {
+                    'x': float(s[1]),
+                    'y': float(s[2])
+                }
+            except (IndexError, ValueError):
+                pass
         return (data, conf)
 
     # Single sample line / bar graph

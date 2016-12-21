@@ -4,9 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import json
 import logging
-import os
 
 from multiqc import config, BaseMultiqcModule, plots
 
@@ -37,19 +35,22 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_peddy_summary(f)
             if parsed_data is not None:
                 for s_name in parsed_data:
+                    s_name = self.clean_s_name(s_name, f['root'])
                     try:
                         self.peddy_data[s_name].update(parsed_data[s_name])
                     except KeyError:
                         self.peddy_data[s_name] = parsed_data[s_name]
 
-        for f in self.find_log_files(config.sp['peddy']['sex_check']):
-            parsed_data = self.parse_peddy_sexcheck(f)
-            if parsed_data is not None:
-                for s_name in parsed_data:
-                    try:
-                        self.peddy_data[s_name].update(parsed_data[s_name])
-                    except KeyError:
-                        self.peddy_data[s_name] = parsed_data[s_name]
+        for pattern in ['het_check', 'ped_check', 'sex_check']:
+            for f in self.find_log_files(config.sp['peddy'][pattern]):
+                parsed_data = self.parse_peddy_csv(f)
+                if parsed_data is not None:
+                    for s_name in parsed_data:
+                        s_name = self.clean_s_name(s_name, f['root'])
+                        try:
+                            self.peddy_data[s_name].update(parsed_data[s_name])
+                        except KeyError:
+                            self.peddy_data[s_name] = parsed_data[s_name]
 
         if len(self.peddy_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -69,11 +70,19 @@ class MultiqcModule(BaseMultiqcModule):
         pca_plot = self.peddy_pca_plot()
         if pca_plot is not None:
             self.sections.append({
-                'name': 'PCA Projection onto 1000 Genomes',
+                'name': 'PCA Plot',
                 'anchor': 'peddy-pca-plot',
                 'content': pca_plot
             })
 
+        # Relatedness plot
+        relatedplot = self.peddy_relatedness_plot()
+        if relatedplot is not None:
+            self.sections.append({
+                'name': 'Relatedness',
+                'anchor': 'peddy-relatedness-plot',
+                'content': relatedplot
+            })
 
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
@@ -88,13 +97,16 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data[s[1]] = dict()
                 for i, v in enumerate(s):
                     if i != 1:
-                        parsed_data[s[1]][headers[i]] = v
+                        try:
+                            parsed_data[s[1]][headers[i]] = float(v)
+                        except ValueError:
+                            parsed_data[s[1]][headers[i]] = v
         if len(parsed_data) == 0:
             return None
         return parsed_data
 
-    def parse_peddy_sexcheck(self, f):
-        """ Go through the sex check output from peddy """
+    def parse_peddy_csv(self, f):
+        """ Parse csv output from peddy """
         parsed_data = dict()
         headers = None
         s_name_idx = None
@@ -102,12 +114,23 @@ class MultiqcModule(BaseMultiqcModule):
             s = l.split(",")
             if headers is None:
                 headers = s
-                s_name_idx = headers.index("sample_id")
+                try:
+                    s_name_idx = [headers.index("sample_id")]
+                except ValueError:
+                    try:
+                        s_name_idx = [headers.index("sample_a"), headers.index("sample_b")]
+                    except ValueError:
+                        log.warn("Could not find sample name in Peddy output: {}".format(f['fn']))
+                        return None
             else:
-                parsed_data[s[s_name_idx]] = dict()
+                s_name = '-'.join([s[idx] for idx in s_name_idx])
+                parsed_data[s_name] = dict()
                 for i, v in enumerate(s):
-                    if i != s_name_idx:
-                        parsed_data[s[s_name_idx]][headers[i]] = v
+                    if i not in s_name_idx:
+                        try:
+                            parsed_data[s_name][headers[i]] = float(v)
+                        except ValueError:
+                            parsed_data[s_name][headers[i]] = v
         if len(parsed_data) == 0:
             return None
         return parsed_data
@@ -142,53 +165,45 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.peddy_data.items():
             if 'PC1' in d and 'PC2' in d:
                 data[s_name] = {
-                    'x': float(d['PC1']),
-                    'y': float(d['PC2']),
+                    'x': d['PC1'],
+                    'y': d['PC2'],
                 }
 
-        thou_genomes = {
-            'AFR': 'rgba(230, 48, 50, 0.2)',
-            'AMR': 'rgba(74, 138, 189, 0.2)',
-            'EAS': 'rgba(94, 181, 91, 0.2)',
-            'EUR': 'rgba(153,78,162,0.2)',
-            'SAS': 'rgba(254, 141, 25, 0.2)',
-        }
         pconfig = {
             'id': 'peddy_pca_plot',
-            'title': 'PCA Projection onto 1000 Genomes',
-            'marker_colour': 'rgba(47, 126, 216, 0.7)',
-            'marker_line_colour': '#000',
-            'enableHover': False,
-            'extra_series': []
+            'title': 'Peddy PCA Plot',
+            'xlab': 'PC1',
+            'ylab': 'PC2'
         }
-        for k, col in thou_genomes.items():
-            fn = os.path.join( os.path.dirname(__file__), 'thousand_genomes', '{}.json'.format(k) )
-            with open(fn) as f:
-                d = json.load(f)
-                for v in d:
-                    pconfig['extra_series'].append({
-                        'x': v[0],
-                        'y': v[1],
-                        'name': k,
-                        'lineWidth': 0,
-                        'color': col,
-                        'marker': {
-                            'enabled': True,
-                            'radius': 2,
-                            'lineWidth': 0
-                        },
-                        'noTooltip': True
-                    })
 
         if len(data) > 0:
-            ckey = ''
-            for k, col in thou_genomes.items():
-                col = col.replace('0.2', '0.7')
-                ckey += '<div style="background-color:{}; display:inline-block; '.format(col)
-                ckey += 'height: 10px; width: 10px; border:1px solid #333;"></div> {} &nbsp; &nbsp; '.format(k)
-            return """<p>First and second PCA components, projected onto thousand genomes data.
-                    Treat plot with a little care, the background co-ordinates are bundled with MultiQC.
-                    If in doubt, check the Peddy output HTML.<br />
-                    {}</p>
-                    """.format(ckey) + plots.scatter.plot(data, pconfig)
+            return plots.scatter.plot(data, pconfig)
 
+    def peddy_relatedness_plot(self):
+        data = dict()
+        for s_name, d in self.peddy_data.items():
+            if 'ibs0' in d and 'ibs2' in d:
+                data[s_name] = {
+                    'x': d['ibs0'],
+                    'y': d['ibs2']
+                }
+            if 'rel' in d:
+                if d['rel'] < 0.25:
+                    data[s_name]['color'] = 'rgba(109, 164, 202, 0.9)'
+                elif d['rel'] < 0.5:
+                    data[s_name]['color'] = 'rgba(250, 160, 81, 0.8)'
+                else:
+                    data[s_name]['color'] = 'rgba(43, 159, 43, 0.8)'
+
+        pconfig = {
+            'id': 'peddy_relatedness_plot',
+            'title': 'Peddy Relatedness Plot',
+            'xlab': 'IBS0 (no alleles shared)',
+            'ylab': 'IBS2 (both alleles shared)',
+        }
+
+        if len(data) > 0:
+            return """<p>Shared allele rates between sample pairs. Points are coloured by degree of relatedness:
+            <span style="color: #6DA4CA;">less than 0.25</span>,
+            <span style="color: #FAA051;">0.25 - 0.5</span>,
+            <span style="color: #2B9F2B;">greather than 0.5</span>.</p>"""+plots.scatter.plot(data, pconfig)
