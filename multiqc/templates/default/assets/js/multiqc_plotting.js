@@ -6,6 +6,7 @@
 window.mqc_highlight_f_texts = [];
 window.mqc_highlight_f_cols = [];
 window.mqc_highlight_regex_mode = false;
+window.mqc_highlight_original_cols = [];
 window.mqc_rename_f_texts = [];
 window.mqc_rename_t_texts = [];
 window.mqc_rename_regex_mode = false;
@@ -72,12 +73,75 @@ $(function () {
     $('#mqc-warning-many-samples').hide();
   });
 
-  // Replot graphs when something changed in filters
-  $(document).on('mqc_highlights mqc_renamesamples mqc_hidesamples', function(){
-    // Replot graphs
+  // Highlight plots (Without replotting where possible)
+  $(document).on('mqc_highlights', function(){
+    // Bar graphs - reset
+    $('.hc-plot.hc-bar-plot .highcharts-xaxis-labels text').css('fill', '#666666');
+    $('.hc-plot.hc-bar-plot .highcharts-xaxis-labels text').css('color', '#666666');
+    $('.hc-plot.hc-bar-plot .highcharts-xaxis-labels text').css('font-weight', 'normal');
+    // Bar graphs - set highlights
+    if(window.mqc_highlight_f_texts.length > 0){
+      $('.hc-plot.hc-bar-plot .highcharts-xaxis-labels text').each(function(){
+        var label = $(this);
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if(f_text == ''){ return true; }
+          if((window.mqc_highlight_regex_mode && label.text().match(f_text)) || (!window.mqc_highlight_regex_mode && label.text().indexOf(f_text) > -1)){
+            label.css('fill', window.mqc_highlight_f_cols[idx]);
+            label.css('color', window.mqc_highlight_f_cols[idx]);
+            label.css('font-weight', 'bold');
+          }
+        });
+      });
+    }
+
+    // Line plots
+    $('.hc-plot.hc-line-plot').each(function(){
+      var c_id = $(this).attr('id');
+      var chart = $(this).highcharts();
+      $.each(chart.series, function(idx, series){
+        var label = series.name;
+        // Reset
+        series.options.color = window.mqc_highlight_original_cols[c_id][label];
+        series.update(series.options);
+        // Set highlights
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if((window.mqc_highlight_regex_mode && label.match(f_text)) || (!window.mqc_highlight_regex_mode && label.indexOf(f_text) > -1)){
+            series.options.color = window.mqc_highlight_f_cols[idx];
+            series.update(series.options);
+          }
+        });
+      });
+    });
+
+    // // Heatmaps - reset
+    // $('.hc-plot.hc-heatmap .highcharts-xaxis-labels text').css('fill', '#666666');
+    // $('.hc-plot.hc-heatmap .highcharts-xaxis-labels text').css('color', '#666666');
+    // $('.hc-plot.hc-heatmap .highcharts-xaxis-labels text').css('font-weight', 'normal');
+    // $('.mqc_heatmap_sortHighlight').attr('disabled', true);
+    // // Heatmaps - set highlights
+    // if(window.mqc_highlight_f_texts.length > 0){
+    //   $('.mqc_heatmap_sortHighlight').attr('disabled', false);
+    //   $('.hc-plot.hc-heatmap .highcharts-axis-labels text').each(function(){
+    //     var label = $(this);
+    //     $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+    //       if(f_text == ''){ return true; }
+    //       if((window.mqc_highlight_regex_mode && label.text().match(f_text)) || (!window.mqc_highlight_regex_mode && label.text().indexOf(f_text) > -1)){
+    //         label.css('fill', window.mqc_highlight_f_cols[idx]);
+    //         label.css('color', window.mqc_highlight_f_cols[idx]);
+    //         label.css('font-weight', 'bold');
+    //       }
+    //     });
+    //   });
+    // }
+    $('.hc-plot.hc-heatmap').each(function(){
+      plot_graph( $(this).attr('id') );
+    });
+  });
+
+  // Replot graphs when renaming or hiding samples
+  $(document).on('mqc_renamesamples mqc_hidesamples', function(){
     $('.hc-plot:not(.not_rendered)').each(function(){
-      var target = $(this).attr('id');
-      plot_graph(target);
+      plot_graph( $(this).attr('id') );
     });
   });
 
@@ -340,7 +404,7 @@ function plot_xy_line_graph(target, ds){
   }
 
   // Make the highcharts plot
-  Highcharts.chart(target, {
+  var chart = Highcharts.chart(target, {
     chart: {
       type: 'line',
       zoomType: 'x'
@@ -398,6 +462,16 @@ function plot_xy_line_graph(target, ds){
 			useHTML: true
     },
     series: data
+  });
+
+  // Store default colours so that we can restore after new highlighting
+  if(window.mqc_highlight_original_cols[target] == undefined){
+    window.mqc_highlight_original_cols[target] = [];
+  }
+  $.each(chart.series, function(idx, series){
+    if(window.mqc_highlight_original_cols[target][series.name] == undefined){
+      window.mqc_highlight_original_cols[target][series.name] = series.color;
+    }
   });
 }
 
@@ -1372,7 +1446,7 @@ function plot_heatmap(target, ds){
   }
 
   // Make the highcharts plot
-  Highcharts.chart(target, {
+  var chart = Highcharts.chart(target, {
     chart: {
       type: 'heatmap',
       height: config['square'] ? 500 : undefined,
@@ -1486,6 +1560,24 @@ function plot_heatmap(target, ds){
     }
   });
 
+  // Higlight labels - reset
+  $(target+' .highcharts-xaxis-labels text').css('fill', '#666666');
+  $(target+' .highcharts-xaxis-labels text').css('color', '#666666');
+  $(target+' .highcharts-xaxis-labels text').css('font-weight', 'normal');
+  // Higlight labels - set highlights
+  if(window.mqc_highlight_f_texts.length > 0){
+    $(target+' .highcharts-axis-labels text').each(function(){
+      var label = $(this);
+      $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+        if(f_text == ''){ return true; }
+        if((window.mqc_highlight_regex_mode && label.text().match(f_text)) || (!window.mqc_highlight_regex_mode && label.text().indexOf(f_text) > -1)){
+          label.css('fill', window.mqc_highlight_f_cols[idx]);
+          label.css('color', window.mqc_highlight_f_cols[idx]);
+          label.css('font-weight', 'bold');
+        }
+      });
+    });
+  }
 }
 
 // Highlight text with a fadeout background colour highlight
