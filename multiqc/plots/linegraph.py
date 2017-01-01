@@ -88,7 +88,7 @@ def plot (data, pconfig={}):
 
     # Add on annotation data series
     try:
-        if 'extra_series' in pconfig:
+        if pconfig.get('extra_series'):
             extra_series = pconfig['extra_series']
             if type(pconfig['extra_series']) == dict:
                 extra_series = [[ pconfig['extra_series'] ]]
