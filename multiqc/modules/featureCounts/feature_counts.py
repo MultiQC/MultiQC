@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Calculate the percent aligned if we can
             try:
                 data['percent_assigned'] = (float(data['Assigned'])/float(data['Total'])) * 100.0
-            Except (KeyError, ZeroDivisionError):
+            except (KeyError, ZeroDivisionError):
                 pass
 
             # Add to the main dictionary
