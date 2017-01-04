@@ -98,10 +98,12 @@ ended in `:MultiqcModule` - this tells MultiQC to try to execute a class or
 function called `MultiqcModule`.
 
 To use the helper functions bundled with MultiQC, you should extend this
-class from `multiqc.BaseMultiqcModule`. This will give you access to a
-number of functions on the `self` namespace. For example:
+class from `multiqc.modules.base_module.BaseMultiqcModule`. This will give
+you access to a number of functions on the `self` namespace. For example:
 ```python
-class MultiqcModule(multiqc.BaseMultiqcModule):
+from multiqc.modules.base_module import BaseMultiqcModule
+
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='My Module', anchor='mymod',
