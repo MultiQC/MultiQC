@@ -41,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.featurecounts_data, 'multiqc_featureCounts')
 
         # Basic Stats Table
-        # Report table is immutable, so just updating it works
         self.featurecounts_stats_table()
 
         # Assignment bar plot
@@ -90,8 +89,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data['Total'] += parsed_data[k][idx]
 
             # Calculate the percent aligned if we can
-            if 'Assigned' in data:
+            try:
                 data['percent_assigned'] = (float(data['Assigned'])/float(data['Total'])) * 100.0
+            except (KeyError, ZeroDivisionError):
+                pass
 
             # Add to the main dictionary
             if len(data) > 1:

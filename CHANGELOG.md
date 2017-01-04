@@ -1,12 +1,80 @@
 # MultiQC Version History
 
-#### v0.9dev
+## v1.0dev
+Version 1.0! Bumping the major version number for a couple of reasons:
+
+1. MultiQC is now hopefully relatively stable. A number of facilities and users
+   are now using it in a production setting and it's published. It feels like it
+   probably deserves v1 status now somehow.
+2. This update brings some fairly major changes which will break backwards
+   compatibility for plugins. As such, semantic versioning suggests a change in
+   major version number.
+
+#### Updates required for MultiQC plugins
+Most people who run MultiQC just use the core installation.
+If this is the case for you, then you have nothing to worry about. The changes
+I'm talking about will only apply to plugins and external code bases.
+
+The main changes coming in this version are (or will be):
+
+* Module import refactoring to allow a new testing environment
+  * Pioneered by the brave [@tbooth](https://github.com/tbooth), this should allow
+    better, more modular, unit testing. This should equate to more reliable and
+    maintainable code
+  * Unfortunately this means that all modules need to change some of their import
+    statements. This includes plugin modules outside of the core MultiQC package.
+* _Potentially_: refactoring of the file search mechanism.
+  * I'm hoping that this won't break backwards compatability, but it could do.
+* _Potentially_: Larger changes to do with changing where modules are kept and how
+  they're called?
+
+There are two things that you probably need to change in your plugin modules to
+make them work with the updated version of MultiQC, both to do with imports.
+Instead of this style of importing modules:
+```python
+from multiqc import config, BaseMultiqcModule, plots
+```
+
+You now need this:
+```python
+from multiqc import config
+from multiqc.plots import bargraph   # Load specific plot types here
+from multiqc.modules.base_module import BaseMultiqcModule
+```
+You will also need to update any plotting functions, removing the `plot.` prefix.
+For example, change this:
+```python
+return plots.bargraph.plot(data, keys, pconfig)
+```
+to this:
+```python
+return bargraph.plot(data, keys, pconfig)
+```
+
+These changes have been made to simplify the module imports within MultiQC,
+allowing specific parts of the codebase to be imported into a Python script
+on their own. This enables small, atomic, clean unit testing.
+
+
+If you have any questions, please open an issue.
+
+#### Module updates:
+_none yet.._
+
+#### Core MultiQC updates:
+* Change in module structure and import statements (see above).
+* Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+
+
+## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
 A major new feature is released in v0.9 - support for _custom content_. This means
 that MultiQC can now easily include output from custom scripts within reports without
 the need for a new module or plugin. For more information, please see the
 [MultiQC documentation](http://multiqc.info/docs/#custom-content).
 
-Module updates:
+#### Module updates:
+* [**HTSeq**](http://www-huber.embl.de/HTSeq/doc/count.html) - new module!
+  * New module for the `htseq-count` tool, often used in RNA-seq analysis.
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
 * [**Slamdunk**](http://t-neumann.github.io/slamdunk/) - new module!
@@ -18,6 +86,10 @@ Module updates:
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
 * **FastQC**
   * New plot showing total overrepresented sequence percentages.
+  * New option to parse a file containing a theoretical GC curve to display in the background.
+    * Human & Mouse Genome / Transcriptome curves bundled, or make your own using
+      [fastqcTheoreticalGC](https://github.com/mikelove/fastqcTheoreticalGC). See the
+      [MultiQC docs](http://multiqc.info/docs/#fastqc) for more information.
 * **featureCounts**
   * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
 * **GATK**
@@ -26,6 +98,7 @@ Module updates:
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
   * New feature to customise coverage shown from `HsMetrics` in General Statistics table
     see the [docs](http://multiqc.info/docs/#picard) for info).
+  * Fixed compatibility problem with output from `CollectMultipleMetrics` for `CollectAlignmentSummaryMetrics`
 * **Preseq**
   * Module now recognises output from `c_curve` mode.
 * **RSeQC**
@@ -45,13 +118,15 @@ Module updates:
   * New ability to customise coverage thresholds shown in General Statistics table
     (see the [docs](http://multiqc.info/docs/#qualimap) for info).
 
-Core Updates:
+#### Core MultiQC updates:
 * Support for _custom content_ (see top of release notes).
+* New ninja report tool: make scatter plots of any two table columns!
 * Plot data now saved in `multiqc_data` when 'flat' image plots are created
   * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
 * Added _'Apply'_ button to Highlight / Rename / Hide.
   * These tools can become slow with large reports. This means that you can enter several
     things without having to wait for the report to replot each change.
+* Report heatmaps can now be sorted by highlight
 * New config options `decimalPoint_format` and `thousandsSep_format`
   * Allows you to change the default `1 234.56` number formatting for plots.
 * New config option `top_modules` allows you to specify modules that should come at the top of the report
@@ -73,9 +148,11 @@ Core Updates:
   * New `tt_decimals` and `tt_suffix` options for bar plots
   * Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.
   * New option `hide_zero_cats:False` to force legends to be shown even when all data is 0
+* General Stats _Showing x of y_ columns count is fixed on page load.
+* Big code whitespace cleanup
 
-#### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
-Module updates:
+## [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
+#### Module updates:
 * [**GATK**](https://software.broadinstitute.org/gatk/) - new module!
   * Added support for VariantEval reports, only parsing a little of the information
     in there so far, but it's a start.
@@ -107,7 +184,7 @@ Module updates:
   * `flagstat` - new submodule! Written by @HLWiencko
   * `idxstats` - new submodule! This one by @ewels again
 
-Core updates:
+#### Core MultiQC updates:
 * New `--export`/`-p` option to generate static images plot in `multiqc_plots` (`.png`, `.svg` and `.pdf`)
   * Configurable with `export_plots`, `plots_dir_name` and `export_plot_formats` config options
   * `--flat` option no longer saves plots in `multiqc_data/multiqc_plots`
@@ -137,12 +214,13 @@ Core updates:
 * Fixed nasty bug in beeswarm dot plots where sample names were mixed up (#278)
 * Beeswarm header text is now more informative (sample count with more info on a tooltip)
 * Beeswarm plots now work when reports have > 1000 samples
+* Fixed some buggy behaviour in saving / loading report highlighting + renaming configs (#354)
 
 Many thanks to those at the [OpenBio Codefest 2016](https://www.open-bio.org/wiki/Codefest_2016)
 who worked on MultiQC projects.
 
-#### [v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
-Module updates:
+## [v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
+#### Module updates:
 * [**Kallisto**](https://pachterlab.github.io/kallisto/) - new module!
 * **Picard**
   * Code refactored to make maintenance and additions easier.
@@ -179,7 +257,7 @@ Module updates:
 * **MethylQA** now handles variable spacing in logs
 * **featureCounts** now splits columns on tabs instead of whitespace, can handle filenames with spaces
 
-Core updates:
+#### Core MultiQC updates:
 * **Galaxy**: MultiQC now available in Galax! Work by @devengineson / @yvanlebras / @cmonjeau
   * See it in the [Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/)
 * **Heatmap**: New plot type!
@@ -206,8 +284,8 @@ Core updates:
 * Numerous other small bugs.
 
 
-#### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
-Module updates:
+## [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
+#### Module updates:
 * New [Salmon](http://combine-lab.github.io/salmon/) module.
 * New [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) module.
 * New [Bamtools stats](https://github.com/pezmaster31/bamtools) module.
@@ -217,7 +295,7 @@ Module updates:
 * Made cutadapt show counts by default instead of obs/exp
 * Added percentage view to Picard insert size plot
 
-Core updates:
+#### Core MultiQC updates:
 * Dynamic plots now update their labels properly when changing datasets and to percentages
 * Config files now loaded from working directory if present
 * Started new docs describing how each module works
@@ -240,8 +318,8 @@ Bugfixes:
 * Plots now properly change y axis limits and labels when changing datasets
 * Flat plots now have correct path in `default_dev` template
 
-#### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
-Module updates:
+## [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
+#### Module updates:
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
 * New [Samtools stats](http://www.htslib.org/) module, written by @lpantano
@@ -249,7 +327,7 @@ Module updates:
 * New [SnpEff](http://snpeff.sourceforge.net/) module
 * New [methylQA](http://methylqa.sourceforge.net/) module
 
-Core updates:
+#### Core MultiQC updates:
 * New "Flat" image plots, rendered at run time with MatPlotLib
   * By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)
   * Means that _very_ large numbers of samples can be viewed in reports. _eg._ single cell data.
@@ -268,7 +346,7 @@ Core updates:
 * Everything (including the data directory) is now created in a temporary directory and moved when MultiQC is complete.
 * A handful of performance updates for large analysis directories
 
-#### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
+## [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
 * New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample
 * Export parsed data as tab-delimited text, `JSON` or `YAML` using the new `-k`/`--data-format` command line option
 * Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
@@ -285,7 +363,7 @@ Core updates:
 * Bugfix: MultiQC default_dev template now copies module assets properly
 * Bufgix: General Stats table floating header now resizes properly when page width changes
 
-#### [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
+## [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
 * All modules now load their log file search parameters from a config
   file, allowing you to overwrite them using your user config file
   * This is useful if your analysis pipeline renames program outputs
@@ -329,13 +407,13 @@ Core updates:
 * Bugfix for Qualimap RNA Seq reports with paired end data
 
 
-#### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
+## [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
 * Hotfix patch to fix broken FastQC module (wasn't finding `.zip` files properly)
 * General Stats table colours now flat. Should improve browser speed.
 * Empty rows now hidden if appear due to column removal in general stats
 * FastQC Kmer plot removed until we have something better to show.
 
-#### [v0.3](https://github.com/ewels/MultiQC/releases/tag/v0.3) - 2015-11-04
+## [v0.3](https://github.com/ewels/MultiQC/releases/tag/v0.3) - 2015-11-04
 * Lots of lovely new documentation!
 * Child templates - easily customise specific parts of the default report template
 * Plugin hooks - allow other tools to execute custom code during MultiQC execution
@@ -369,7 +447,7 @@ Core updates:
 * Plots with highlighted and renamed samples now honour this when exporting to
   different file types.
 
-#### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
+## [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
   functions now handle many more functions (plots, config, file import)
   * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
@@ -389,7 +467,7 @@ Core updates:
 * Bugfix: FastQC seq content heatmap highlighting
 * Many, many small bugfixes
 
-#### [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
+## [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
 * The first public release of MultiQC, after a month of development. Basic
 structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark, 
 STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching

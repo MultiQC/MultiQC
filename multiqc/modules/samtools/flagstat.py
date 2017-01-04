@@ -65,10 +65,10 @@ class FlagstatReportMixin():
             keys['total_passed']                = dict(reads, title = 'Total Passed QC' )
             keys['mapped_passed']               = dict(reads, title = 'Mapped' )
 
-            if any(v['secondary_passed'] for v in self.samtools_flagstat.values()):
+            if any(v.get('secondary_passed') for v in self.samtools_flagstat.values()):
                 keys['secondary_passed']        = dict(reads, title = 'Secondary Alignments' )
 
-            if any(v['supplementary_passed'] for v in self.samtools_flagstat.values()):
+            if any(v.get('supplementary_passed') for v in self.samtools_flagstat.values()):
                 keys['supplementary_passed']    = dict(reads, title = 'Supplementary Alignments' )
 
             keys['duplicates_passed']           = dict(reads, title = 'Duplicates' )

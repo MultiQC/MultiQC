@@ -88,8 +88,15 @@ def plot (data, pconfig={}):
 
     # Add on annotation data series
     try:
-        for s in pconfig['extra_series']:
-            plotdata[0].append(s)
+        if pconfig.get('extra_series'):
+            extra_series = pconfig['extra_series']
+            if type(pconfig['extra_series']) == dict:
+                extra_series = [[ pconfig['extra_series'] ]]
+            elif type(pconfig['extra_series']) == list and type(pconfig['extra_series'][0]) == dict:
+                extra_series = [ pconfig['extra_series'] ]
+            for i, es in enumerate(extra_series):
+                for s in es:
+                    plotdata[i].append(s)
     except KeyError:
         pass
 

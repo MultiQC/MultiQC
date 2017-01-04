@@ -33,12 +33,13 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
 [Cutadapt][cutadapt]         | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa]
 [FastQC][fastqc]             | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]
 [FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
-[Skewer][skewer]             | [HiCUP][hicup]         | [Picard][picard]          | [Qualimap][qualimap]
-[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Prokka][prokka]          | [QUAST][quast]
-                             | [Salmon][salmon]       | [Samblaster][samblaster]  | [RSeQC][rseqc]
-                             | [Slamdunk][slamdunk]   | [Samtools][samtools]      |
-                             | [STAR][star]           | [SnpEff][snpeff]          |
-                             | [Tophat][tophat]       | [Subread featureCounts][featurecounts] |
+[Skewer][skewer]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
+[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
+                             | [Salmon][salmon]       | [Prokka][prokka]          | [RSeQC][rseqc]
+                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  |
+                             | [STAR][star]           | [Samtools][samtools]      |
+                             | [Tophat][tophat]       | [SnpEff][snpeff]          |
+                             |                        | [Subread featureCounts][featurecounts] |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -156,6 +157,7 @@ and many others. Thanks for your support!
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [gatk]:           http://multiqc.info/docs/#gatk
 [hicup]:          http://multiqc.info/docs/#hicup
+[htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [methylqa]:       http://multiqc.info/docs/#methylqa
 [peddy]:          http://multiqc.info/docs/#peddy

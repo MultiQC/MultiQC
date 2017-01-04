@@ -16,7 +16,7 @@ window.HCDefaults = undefined;
 
 // Execute when page load has finished loading
 $(function () {
-  
+
   // HighCharts Defaults
   window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});
   Highcharts.setOptions({
@@ -45,7 +45,7 @@ $(function () {
       }
     }
   });
-  
+
   // Render plots on page load
   $('.hc-plot').each(function(){
     var target = $(this).attr('id');
@@ -53,7 +53,7 @@ $(function () {
     var max_num = num_datasets_plot_limit * 50;
     plot_graph(target, undefined, max_num);
   });
-  
+
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
     var target = $(this).parent().attr('id');
@@ -62,7 +62,7 @@ $(function () {
       $('#mqc-warning-many-samples').hide();
     }
   });
-  
+
   // Render all plots from header
   $('#mqc-render-all-plots').click(function(){
     $('.hc-plot.not_rendered').each(function(){
@@ -71,7 +71,7 @@ $(function () {
     });
     $('#mqc-warning-many-samples').hide();
   });
-  
+
   // Replot graphs when something changed in filters
   $(document).on('mqc_highlights mqc_renamesamples mqc_hidesamples', function(){
     // Replot graphs
@@ -80,7 +80,7 @@ $(function () {
       plot_graph(target);
     });
   });
-  
+
   // Switch a HighCharts axis or data source
   $('.hc_switch_group button').click(function(e){
     e.preventDefault();
@@ -122,15 +122,15 @@ $(function () {
 
   // Make HighCharts divs height-draggable
   // http://jsfiddle.net/Lkwb86c8/
-  $('.hc-plot').each(function(){
+  $('.hc-plot:not(.no-handle)').each(function(){
     if(!$(this).parent().hasClass('hc-plot-wrapper')){
       $(this).wrap('<div class="hc-plot-wrapper"></div>');
     }
     if(!$(this).siblings().hasClass('hc-plot-handle')){
       $(this).after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
     }
+    $(this).css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
   });
-  $('.hc-plot').css({ height: 'auto', top: 0, bottom: '10px', position: 'absolute' });
   $('.hc-plot-handle').on('mousedown', function(e){
     var wrapper = $(this).parent();
     var handle = $(this);
@@ -154,7 +154,7 @@ $(function () {
       $(this).highcharts().reflow();
     }
   });
-  
+
   // Switch a y axis limit on or off
   $('.mqc_hcplot_plotgroup').on('click', '.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper', function(){
     var target = $( $(this).data('target') ).highcharts();
@@ -171,7 +171,22 @@ $(function () {
       mqc_switch.removeClass('off').addClass('on').text('on');
     }
   });
-  
+
+  // Sort a heatmap by highlighted names
+  $('.mqc_heatmap_sortHighlight').click(function(e){
+    e.preventDefault();
+    var target = $(this).data('target').substr(1);
+    if(mqc_plots[target]['config']['sortHighlights'] == true){
+      mqc_plots[target]['config']['sortHighlights'] = false;
+      $(this).removeClass('active');
+    } else {
+      mqc_plots[target]['config']['sortHighlights'] = true;
+      $(this).addClass('active');
+    }
+    $(this).blur();
+    plot_heatmap(target);
+  });
+
 });
 
 // Call to render any plot
@@ -236,7 +251,7 @@ function plot_xy_line_graph(target, ds){
   var config = mqc_plots[target]['config'];
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
-  
+
   if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else {
@@ -248,11 +263,11 @@ function plot_xy_line_graph(target, ds){
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{series.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{series.name}</span><br>'+config['tt_label'];
   }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -266,7 +281,7 @@ function plot_xy_line_graph(target, ds){
       });
     });
   }
-  
+
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -277,7 +292,7 @@ function plot_xy_line_graph(target, ds){
       });
     });
   }
-  
+
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.mqc_hcplot_plotgroup').show();
@@ -314,7 +329,7 @@ function plot_xy_line_graph(target, ds){
       return false;
     }
   }
-  
+
   // Toggle buttons for y-axis limis
   // Handler for this is at top, so doesn't get created multiple times
   if(config['ymax'] != undefined || config['ymin'] != undefined ){
@@ -325,7 +340,7 @@ function plot_xy_line_graph(target, ds){
   }
 
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'line',
       zoomType: 'x'
@@ -401,12 +416,12 @@ function plot_stacked_bar_graph(target, ds){
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['tt_percentages'] === undefined){ config['tt_percentages'] = true; }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
   var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
-  
+
   if (config['ytype'] == 'logarithmic'){
     if(config['ymin'] == 0 || config['ymin'] == undefined){
       config['ymin'] = 1;
@@ -415,7 +430,7 @@ function plot_stacked_bar_graph(target, ds){
   } else {
     var minTickInt = undefined;
   }
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     $.each(cats, function(j, s_name){
@@ -429,7 +444,7 @@ function plot_stacked_bar_graph(target, ds){
       });
     });
   }
-  
+
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(cats, function(j, s_name){
@@ -450,7 +465,7 @@ function plot_stacked_bar_graph(target, ds){
     if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
   }
   if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
-  
+
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.mqc_hcplot_plotgroup').show();
@@ -491,9 +506,9 @@ function plot_stacked_bar_graph(target, ds){
       return false;
     }
   }
-  
+
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'bar'
     },
@@ -574,7 +589,7 @@ function plot_scatter_plot (target, ds){
   var config = mqc_plots[target]['config'];
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
-  
+
   if(config['marker_colour'] === undefined){ config['marker_colour'] = 'rgba(124, 181, 236, .5)'; }
   if(config['marker_size'] === undefined){ config['marker_size'] = 5; }
   if(config['marker_line_colour'] === undefined){ config['marker_line_colour'] = '#999'; }
@@ -590,11 +605,11 @@ function plot_scatter_plot (target, ds){
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{point.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{point.name}</span><br>'+config['tt_label'];
   }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     $.each(data, function(j, s){
@@ -608,11 +623,15 @@ function plot_scatter_plot (target, ds){
       });
     });
   }
-  
+
   // Highlight samples
   if(window.mqc_highlight_f_texts.length > 0){
     $.each(data, function(j, s){
-      data[j]['marker'] = { lineWidth: 0 }
+      if ('marker' in data[j]){
+        data[j]['marker']['lineWidth'] = 0;
+      } else {
+        data[j]['marker'] = {'lineWidth': 0};
+      }
       var match = false;
       $.each(window.mqc_highlight_f_texts, function(idx, f_text){
         if(f_text == ''){ return true; }
@@ -626,7 +645,7 @@ function plot_scatter_plot (target, ds){
       }
     });
   }
-  
+
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.mqc_hcplot_plotgroup').show();
@@ -663,9 +682,9 @@ function plot_scatter_plot (target, ds){
       return false;
     }
   }
-  
+
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'scatter',
       zoomType: 'xy',
@@ -716,11 +735,13 @@ function plot_scatter_plot (target, ds){
           lineWidth: config['marker_line_width'],
           states: {
             hover: {
-              enabled: true,
+              enabled: config['enableHover'] == undefined ? true : config['enableHover'],
               lineColor: 'rgb(100,100,100)'
             }
           }
         },
+        turboThreshold: config['turboThreshold'],
+        enableMouseTracking: config['enableMouseTracking'],
         cursor: config['cursor'],
         point: {
           events: {
@@ -735,7 +756,15 @@ function plot_scatter_plot (target, ds){
     tooltip: {
       headerFormat: '',
 			pointFormat: config['pointFormat'],
-			useHTML: true
+			useHTML: true,
+      formatter: (function() {
+        if(!this.point.noTooltip) {
+          // Formatter function doesn't do name for some reason
+          fstring = config['pointFormat'].replace('{point.name}', this.point.name);
+          return Highcharts.Point.prototype.tooltipFormatter.call(this, fstring);
+        }
+        return false;
+      })
     },
     series: [{
       color: config['marker_colour'],
@@ -768,11 +797,7 @@ function plot_scatter_plot (target, ds){
       });
     }
   });
-  
 }
-
-
-
 
 // Beeswarm plot
 function plot_beeswarm_graph(target, ds){
@@ -781,13 +806,13 @@ function plot_beeswarm_graph(target, ds){
   }
   var config = mqc_plots[target]['config'];
   if(ds === undefined){ ds = 0; }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var datasets = JSON.parse(JSON.stringify(mqc_plots[target]['datasets']));
   var samples = JSON.parse(JSON.stringify(mqc_plots[target]['samples']));
   var categories = JSON.parse(JSON.stringify(mqc_plots[target]['categories']));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     for (i=0; i < samples.length; i++) {
@@ -803,7 +828,7 @@ function plot_beeswarm_graph(target, ds){
       }
     }
   }
-  
+
   // Highlight samples
   var baseColour = 'rgb(55,126,184)'; // Blue points by default
   var seriesColours = {};
@@ -819,7 +844,7 @@ function plot_beeswarm_graph(target, ds){
       }
     }
   }
-  
+
   // Hide samples
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.hc-plot-wrapper').show();
@@ -863,25 +888,25 @@ function plot_beeswarm_graph(target, ds){
       return false;
     }
   }
-  
+
   // Figure out how tall to make each plot
   var ph_min = 40;
   var ph_max = 100;
   var pheight = 600 / categories.length;
   pheight = Math.min(ph_max, Math.max(ph_min, pheight));
-  
+
   // Clear the loading text and add hover text placeholder
   $('#'+target).html('<div class="beeswarm-hovertext"><em class="placeholder">Hover over a data point for more information</em></div><div class="beeswarm-plots"></div>');
   // Resize the parent draggable div
   $('#'+target).parent().css('height', ((pheight*categories.length)+40)+'px');
-  
+
   for (var i = 0; i < categories.length; i++) {
-    
+
     var borderCol = categories[i]['bordercol'];
     if (borderCol == undefined){
       borderCol = '#cccccc';
     }
-    
+
     var data = datasets[i];
     var s_names = samples[i];
     if (categories[i]['namespace'] == ''){
@@ -895,7 +920,7 @@ function plot_beeswarm_graph(target, ds){
     var decimalPlaces = categories[i]['decimalPlaces'];
     var minx = categories[i]['min'];
     var maxx = categories[i]['max'];
-    
+
     // Size and spacing options
     var markerRadius = 2.5
   	var yspace = 70;
@@ -910,7 +935,7 @@ function plot_beeswarm_graph(target, ds){
       yspace = 30;
       ysep = 30;
     }
-    
+
     if (maxx == undefined){
     	maxx = Math.max.apply(null, data);
     }
@@ -1055,7 +1080,7 @@ function plot_beeswarm_graph(target, ds){
                       }
                     }
                   });
-                  
+
                 },
                 mouseOut: function () {
                   $('#'+target+' .beeswarm-plot').each(function(){
@@ -1084,22 +1109,21 @@ function plot_beeswarm_graph(target, ds){
   }
 }
 
-
 // Heatmap plot
 function plot_heatmap(target, ds){
   if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'heatmap'){
     return false;
   }
   var config = mqc_plots[target]['config'];
-  
+
   if(config['square'] === undefined){ config['square'] = true; }
-  
+
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
   var xcats = JSON.parse(JSON.stringify(mqc_plots[target]['xcats']));
   var ycats = JSON.parse(JSON.stringify(mqc_plots[target]['ycats']));
-  
+
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
     for (i=0; i < xcats.length; i++) {
@@ -1123,7 +1147,60 @@ function plot_heatmap(target, ds){
       });
     }
   }
-  
+
+  // Sort samples by highlight
+  $('.mqc_heatmap_sortHighlight').attr('disabled', false);
+  if(config['sortHighlights'] == true){
+    if(window.mqc_highlight_f_texts.length > 0){
+      // Collect the highlighting indices
+      var xcat_hl = Array();
+      var ycat_hl = Array();
+      for (i=0; i < xcats.length; i++) {
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if(f_text == ''){ xcat_hl[i] = 0; }
+          else if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
+            xcat_hl[i] = window.mqc_highlight_f_texts.length - idx;
+          }
+        });
+      }
+      for (i=0; i < ycats.length; i++) {
+        $.each(window.mqc_highlight_f_texts, function(idx, f_text){
+          if(f_text == ''){ ycat_hl[i] = 0; }
+          else if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
+            ycat_hl[i] = window.mqc_highlight_f_texts.length - idx;
+          }
+        });
+      }
+      // Reshape the data - needs deepcopy as indexes are updated
+      var newdata = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
+      var new_xcats = [], new_ycats = [];
+      var xidx = 0, yidx = 0;
+      for (hl = window.mqc_highlight_f_texts.length; hl >= 0; hl--){
+        for (i=0; i < xcats.length; i++) {
+          if(xcat_hl[i] == hl){
+            new_xcats.push(xcats[i])
+            for (j=0; j < data.length; j++) {
+              if(data[j][0] == i){ newdata[j][0] = xidx; }
+            }
+            xidx += 1;
+          }
+        }
+        for (i=0; i < ycats.length; i++) {
+          if(ycat_hl[i] == hl){
+            new_ycats.push(ycats[i])
+            for (j=0; j < data.length; j++) {
+              if(data[j][1] == i){ newdata[j][1] = yidx; }
+            }
+            yidx += 1;
+          }
+        }
+      }
+      data = newdata;
+      xcats = new_xcats;
+      ycats = new_ycats;
+    }
+  }
+
   // Hide samples
   var num_total = Math.max(xcats.length, ycats.length);
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
@@ -1200,17 +1277,18 @@ function plot_heatmap(target, ds){
       return false;
     }
   }
-  
+
   // Highlight samples - do this last as we convert numerical arrays to associative
   if(window.mqc_highlight_f_texts.length > 0){
-    var highlight = Array();
+    $('.mqc_heatmap_sortHighlight').attr('disabled', false);
+    var highlight_cells = Array();
     for (i=0; i < xcats.length; i++) {
       $.each(window.mqc_highlight_f_texts, function(idx, f_text){
         if(f_text == ''){ return true; }
         if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
-            highlight[idx] = ( typeof highlight[idx] != 'undefined' && highlight[idx] instanceof Array ) ? highlight[idx] : [];
-            if (data[n][1] == i){ highlight[idx].push(n); }
+            highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
+            if (data[n][1] == i){ highlight_cells[idx].push(n); }
           }
         }
       });
@@ -1221,16 +1299,16 @@ function plot_heatmap(target, ds){
         if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
             if (data[n][0] == i){
-              highlight[idx] = ( typeof highlight[idx] != 'undefined' && highlight[idx] instanceof Array ) ? highlight[idx] : [];
-              if(highlight[idx].indexOf(n) < 0){ highlight[idx].push(n); }
+              highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
+              if(highlight_cells[idx].indexOf(n) < 0){ highlight_cells[idx].push(n); }
             }
           }
         }
       });
     }
     // Give highlighted cells a border
-    for (var idx in highlight){
-      var hl = highlight[idx];
+    for (var idx in highlight_cells){
+      var hl = highlight_cells[idx];
       hl = hl.sort(function(a, b){return a-b}); // Sorts alphabetically by default, even with integers
       var h = hl.length;
       while(h--){
@@ -1244,8 +1322,10 @@ function plot_heatmap(target, ds){
         }
       }
     }
+  } else {
+    $('.mqc_heatmap_sortHighlight').attr('disabled', true);
   }
-  
+
   // We set undefined config vars so that they stay the same when hiding samples
   if(config['min'] === undefined || config['max'] === undefined){
     var dmin = data[0][2];
@@ -1290,9 +1370,9 @@ function plot_heatmap(target, ds){
     }
     colstops.reverse();
   }
-  
+
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'heatmap',
       height: config['square'] ? 500 : undefined,
@@ -1322,13 +1402,25 @@ function plot_heatmap(target, ds){
     },
     xAxis: {
       categories: xcats,
-      title: { enabled: true, text: config['xTitle'] }
+      title: { enabled: true, text: config['xTitle'] },
+      labels: {
+        formatter: function(){
+          try { return this.value.substr(0, 20); }
+          catch(err) { return this.value; }
+        }
+      }
     },
     yAxis: {
       categories: ycats,
       reversed: true,
       opposite: true,
-      title: config['yTitle']
+      title: config['yTitle'],
+      labels: {
+        formatter: function(){
+          try { return this.value.substr(0, 20); }
+          catch(err) { return this.value; }
+        }
+      }
     },
     colorAxis: {
       reversed: config['reverseColors'],
@@ -1363,9 +1455,8 @@ function plot_heatmap(target, ds){
         color: config['datalabel_colour']
       }
     }]
-  },
-  // Maintain aspect ratio as chart size changes
-  function(this_chart){
+  }, function(this_chart){
+    // Maintain aspect ratio as chart size changes
     if(config['square']){
       var resizeCh = function(chart){
         // Extra width for legend
@@ -1386,14 +1477,16 @@ function plot_heatmap(target, ds){
       resizeCh(this_chart);
       // Resize on graph resize
       $(this_chart.renderTo).on('mqc_plotresize', function(e){
-        resizeCh(this_chart);
+        try {
+          resizeCh(this_chart);
+        } catch(e){
+          plot_heatmap($(this).attr('id'));
+        }
       });
     }
   });
-  
-}
-  
 
+}
 
 // Highlight text with a fadeout background colour highlight
 function highlight_fade_text(obj){

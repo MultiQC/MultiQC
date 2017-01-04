@@ -2,10 +2,9 @@
 // Static MatPlotLib Plots Javascript Code
 ////////////////////////////////////////////////
 
-
 // On page load
 $(function () {
-    
+
     // Switch between counts and percentages in a bar plot
     $('.mqc_mplplot_bargraph_setcountspcnt button').click(function(e){
         e.preventDefault();
@@ -23,7 +22,7 @@ $(function () {
             $(target).show();
         }
     });
-    
+
     // Switch datasets in a bar plot
     $('.mqc_mplplot_bargraph_switchds button').click(function(e){
         e.preventDefault();
@@ -39,7 +38,5 @@ $(function () {
             $(target).show();
         }
     });
-
-
 
 });

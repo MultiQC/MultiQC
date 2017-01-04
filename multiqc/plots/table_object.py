@@ -5,12 +5,11 @@
 from collections import defaultdict, OrderedDict
 import logging
 import random
+import re
 
 from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 class datatable (object):
     """ Data table class. Prepares and holds data and configuration
@@ -64,7 +63,7 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = '{}_{}'.format(id(headers[idx]), k)
+                headers[idx][k]['rid'] = '{}_{}'.format( id(headers[idx]), re.sub(r'\W+', '_', k) )
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]['namespace']   = headers[idx][k].get('namespace', pconfig.get('namespace', ''))

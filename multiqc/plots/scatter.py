@@ -4,10 +4,9 @@
 
 import json
 import logging
-import os
 import random
 
-from multiqc.utils import config, report
+from multiqc.utils import report
 
 logger = logging.getLogger(__name__)
 

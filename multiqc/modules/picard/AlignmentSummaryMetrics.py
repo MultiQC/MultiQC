@@ -26,7 +26,7 @@ def parse_reports(self):
         keys = None
         for l in f['f']:
             # New log starting
-            if 'picard.analysis.CollectAlignmentSummaryMetrics' in l and 'INPUT' in l:
+            if 'AlignmentSummaryMetrics' in l and 'INPUT' in l:
                 s_name = None
                 keys = None
                 # Pull sample name from input
@@ -37,7 +37,7 @@ def parse_reports(self):
                     parsed_data[s_name] = dict()
 
             if s_name is not None:
-                if 'picard.analysis.AlignmentSummaryMetrics' in l and '## METRICS CLASS' in l:
+                if 'AlignmentSummaryMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
                 elif keys:
                     vals = l.strip("\n").split("\t")
