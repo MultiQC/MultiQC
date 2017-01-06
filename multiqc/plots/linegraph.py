@@ -1,16 +1,17 @@
 #!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
 
 """ MultiQC functions to plot a linegraph """
 
-from __future__ import print_function
 from collections import OrderedDict
 import base64
 import io
 import json
 import logging
 import os
-import random
 import sys
+
+from . import get_uid
 
 from multiqc.utils import config, report, util_functions
 logger = logging.getLogger(__name__)
@@ -26,8 +27,6 @@ except Exception as e:
     print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
     print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
     logger.exception(e)
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
@@ -127,7 +126,7 @@ def highcharts_linegraph (plotdata, pconfig={}):
 
     # Build the HTML for the page
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(get_uid)
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets
@@ -176,7 +175,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
     # Plot group ID
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_mplplot_{}'.format(get_uid())
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):

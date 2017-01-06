@@ -1,18 +1,17 @@
 #!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
 
 """ MultiQC functions to plot a heatmap """
 
-from __future__ import print_function
 import json
 import logging
 import os
-import random
+
+from . import get_uid
 
 from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 def plot (data, xcats, ycats=None, pconfig={}):
     """ Plot a 2D heatmap.
@@ -45,7 +44,7 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
 
     # Build the HTML for the page
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(get_uid())
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # The 'sort by highlights button'

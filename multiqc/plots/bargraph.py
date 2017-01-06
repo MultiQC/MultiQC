@@ -1,8 +1,8 @@
 #!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
 
 """ MultiQC functions to plot a bargraph """
 
-from __future__ import print_function
 import base64
 from collections import OrderedDict
 import io
@@ -10,8 +10,9 @@ import json
 import logging
 import math
 import os
-import random
 import sys
+
+from . import get_uid
 
 from multiqc.utils import config, report, util_functions
 logger = logging.getLogger(__name__)
@@ -27,8 +28,6 @@ except Exception as e:
     print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
     print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
     logger.exception(e)
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
@@ -159,7 +158,7 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
     called by plot_bargraph, which properly formats input data.
     """
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(get_uid())
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Counts / Percentages / Log Switches
@@ -240,7 +239,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
 
     # Plot group ID
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_mplplot_{}'.format(get_uid())
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):

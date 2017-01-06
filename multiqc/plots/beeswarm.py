@@ -1,18 +1,18 @@
 #!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
 
 """ MultiQC functions to plot a beeswarm group """
 
 import json
 import logging
 import os
-import random
+
+from . import get_uid
 
 from multiqc.utils import config, report
 from multiqc.plots import table_object
 
 logger = logging.getLogger(__name__)
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 def plot (data, headers=[], pconfig={}):
     """ Helper HTML for a beeswarm plot.
@@ -31,7 +31,7 @@ def plot (data, headers=[], pconfig={}):
 
 def make_plot(dt):
 
-    bs_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
+    bs_id = dt.pconfig.get( 'id', 'table_{}'.format(get_uid()) )
     categories = []
     s_names = []
     data = []

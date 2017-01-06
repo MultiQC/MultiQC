@@ -1,17 +1,18 @@
 #!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
 
 """ MultiQC functions to plot a table """
 
 from collections import defaultdict, OrderedDict
 import logging
-import random
 import re
+
+from . import get_uid
 
 from multiqc.utils import config, report, util_functions
 from multiqc.plots import table_object, beeswarm
 logger = logging.getLogger(__name__)
 
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 def plot (data, headers=[], pconfig={}):
     """ Return HTML for a MultiQC table.
@@ -46,7 +47,7 @@ def make_table (dt):
     :param data: MultiQC datatable object
     """
 
-    table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
+    table_id = dt.pconfig.get('id', 'table_{}'.format(get_uid()) )
     table_id = re.sub(r'\W+', '_', table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
@@ -115,7 +116,7 @@ def make_table (dt):
         for (s_name, samp) in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
-                kname = '{}_{}'.format(header['namespace'], rid.split('_',1)[1]) # trucate '12345_' random prefix from rid
+                kname = '{}_{}'.format(header['namespace'], rid.split('_',1)[1]) # trucate '1234_' random prefix from rid
                 dt.raw_vals[s_name][kname] = val
 
                 if 'modify' in header and callable(header['modify']):

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
 
 """ MultiQC datatable class, used by tables and beeswarm plots """
 
 from collections import defaultdict, OrderedDict
 import logging
-import random
 import re
+
+from . import get_uid
 
 from multiqc.utils import config
 
@@ -63,7 +65,7 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = '{}_{}'.format( id(headers[idx]), re.sub(r'\W+', '_', k) )
+                headers[idx][k]['rid'] = '{}_{}'.format( get_uid(), re.sub(r'\W+', '_', k) )
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]['namespace']   = headers[idx][k].get('namespace', pconfig.get('namespace', ''))

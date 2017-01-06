@@ -1,16 +1,16 @@
 #!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
 
 """ MultiQC functions to plot a scatter plot """
 
 import json
 import logging
-import random
 
 from multiqc.utils import report
 
-logger = logging.getLogger(__name__)
+from . import get_uid
 
-letters = 'abcdefghijklmnopqrstuvwxyz'
+logger = logging.getLogger(__name__)
 
 def plot (data, pconfig={}):
     """ Plot a scatter plot with X,Y data.
@@ -64,7 +64,7 @@ def highcharts_scatter_plot (plotdata, pconfig={}):
 
     # Build the HTML for the page
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(get_uid())
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets
