@@ -127,7 +127,7 @@ def parse_reports(self):
                 'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
-                'xlab': 'Transcript Position (bp)',
+                'xlab': 'Transcript Position (%)',
                 'ymin': 0,
                 'xmin': 0,
                 'xmax': 100,
