@@ -340,7 +340,7 @@ function plot_xy_line_graph(target, ds){
   }
 
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'line',
       zoomType: 'x'
@@ -508,7 +508,7 @@ function plot_stacked_bar_graph(target, ds){
   }
 
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'bar'
     },
@@ -684,7 +684,7 @@ function plot_scatter_plot (target, ds){
   }
 
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'scatter',
       zoomType: 'xy',
@@ -1372,7 +1372,7 @@ function plot_heatmap(target, ds){
   }
 
   // Make the highcharts plot
-  $('#'+target).highcharts({
+  Highcharts.chart(target, {
     chart: {
       type: 'heatmap',
       height: config['square'] ? 500 : undefined,

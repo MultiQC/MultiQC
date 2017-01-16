@@ -93,7 +93,7 @@ preseq:
     # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
     # contents: 'TOTAL_BASES	EXPECTED_DISTINCT'
 prokka:
-    contents: 'organism:'
+    fn: '*.txt'
 qualimap:
     bamqc:
         genome_results:
