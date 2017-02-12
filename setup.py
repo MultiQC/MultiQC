@@ -63,6 +63,7 @@ setup(
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
