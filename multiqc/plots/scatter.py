@@ -6,8 +6,6 @@ from __future__ import division, print_function, absolute_import
 import json
 import logging
 
-from multiqc.utils import report
-
 from . import get_uid
 
 logger = logging.getLogger(__name__)
@@ -84,22 +82,24 @@ def highcharts_scatter_plot (plotdata, pconfig={}):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
+            html += '''<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>
+                '''.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
     # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
+    html += '''<div class="hc-plot-wrapper">
+        <div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div>
+        </div></div>
+        '''.format(id=pconfig['id'])
 
     # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "scatter", \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-
-    report.num_hc_plots += 1
+    html += '''<script type="text/javascript">
+        mqc_plots["{id}"] = {{
+            "plot_type": "scatter",
+            "datasets": {d},
+            "config": {c}
+            }}
+        </script>
+        '''.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
 
     return html
-

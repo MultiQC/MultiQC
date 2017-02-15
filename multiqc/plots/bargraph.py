@@ -14,7 +14,7 @@ import sys
 
 from . import get_uid
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, util_functions
 logger = logging.getLogger(__name__)
 
 try:
@@ -214,18 +214,18 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
         html += '</div>\n\n'
 
     # Plot and javascript function
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div></div> \n\
-    </div> \n\
-    <script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "bar_graph", \n\
-            "samples": {s}, \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
-
-    report.num_hc_plots += 1
+    html += '''<div class="hc-plot-wrapper">
+        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div></div>
+        </div>
+        <script type="text/javascript">
+            mqc_plots["{id}"] = {{
+                "plot_type": "bar_graph",
+                "samples": {s},
+                "datasets": {d},
+                "config": {c}
+            }}
+        </script>
+        '''.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
 
     return html
 
@@ -444,8 +444,6 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
 
     # Close wrapping div
     html += '</div>'
-
-    report.num_mpl_plots += 1
 
     return html
 

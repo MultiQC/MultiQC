@@ -26,14 +26,12 @@ except NameError:
     pass # Python 3
 
 # Set up global variables shared across modules
+modules_output = list()
 general_stats_data = list()
 general_stats_headers = list()
 general_stats_html = ''
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
-num_hc_plots = 0
-num_mpl_plots = 0
 saved_raw_data = dict()
-
 
 
 # Make a list of files to search
@@ -118,7 +116,7 @@ def get_filelist():
             add_file(os.path.basename(path), os.path.dirname(path))
 
 
-def data_sources_tofile ():
+def data_sources_tofile():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])
     with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
         if config.data_format == 'json':
@@ -134,3 +132,27 @@ def data_sources_tofile ():
                         lines.append([mod, sec, s_name, source])
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
+
+def count_hc_plots():
+    """This looks to see if any HighCharts plots are included in the output.
+       Previously, a global counter was incremented whenever such a plot was generated,
+       but doing it this way removes the coupling between the plot and report modules.
+    """
+    found = 0
+
+    for m in modules_output:
+        for s in vars(m).get('sections', []):
+            found += str(s.get('content')).count('<div class="hc-plot-wrapper"')
+
+    return found
+
+def count_mpl_plots():
+    """Similar to count_hc_plots above
+    """
+    found = 0
+
+    for m in modules_output:
+        for s in vars(m).get('sections', []):
+            found += str(s.get('content')).count('<div class="mqc_mplplot"')
+
+    return found

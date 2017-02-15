@@ -13,7 +13,7 @@ import sys
 
 from . import get_uid
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, util_functions
 logger = logging.getLogger(__name__)
 
 try:
@@ -150,18 +150,20 @@ def highcharts_linegraph (plotdata, pconfig={}):
         html += '</div>\n\n'
 
     # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
+    html += '''<div class="hc-plot-wrapper">
+        <div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div>
+        </div></div>
+        '''.format(id=pconfig['id'])
 
     # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "xy_line", \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-
-    report.num_hc_plots += 1
+    html += '''<script type="text/javascript">
+        mqc_plots["{id}"] = {{
+            "plot_type": "xy_line",
+            "datasets": {d},
+            "config": {c}
+        }}
+        </script>
+        '''.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
 
     return html
 
@@ -389,8 +391,6 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
     # Close wrapping div
     html += '</div>'
-
-    report.num_mpl_plots += 1
 
     return html
 

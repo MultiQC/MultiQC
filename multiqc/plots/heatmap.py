@@ -9,7 +9,7 @@ import os
 
 from . import get_uid
 
-from multiqc.utils import config, report
+from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
 
@@ -48,27 +48,30 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # The 'sort by highlights button'
-    html += """<div class="btn-group hc_switch_group">
+    html += '''<div class="btn-group hc_switch_group">
         <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{id}" disabled="disabled">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
-    </div>""".format(id=pconfig['id'])
+        </div>
+        '''.format(id=pconfig['id'])
 
     # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-heatmap"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
+    html += '''<div class="hc-plot-wrapper">
+        <div id="{id}" class="hc-plot not_rendered hc-heatmap"><small>loading..</small></div>
+        </div></div>
+        '''.format(id=pconfig['id'])
 
     # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "heatmap", \n\
-            "data": {d}, \n\
-            "xcats": {x}, \n\
-            "ycats": {y}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(pdata), x=json.dumps(xcats), y=json.dumps(ycats), c=json.dumps(pconfig));
-
-    report.num_hc_plots += 1
+    html += '''<script type="text/javascript">
+        mqc_plots["{id}"] = {{
+            "plot_type": "heatmap",
+            "data": {d},
+            "xcats": {x},
+            "ycats": {y},
+            "config": {c}
+            }}
+        </script>
+        '''.format(id=pconfig['id'], d=json.dumps(pdata), x=json.dumps(xcats), y=json.dumps(ycats), c=json.dumps(pconfig));
 
     return html
 

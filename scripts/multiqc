@@ -338,7 +338,6 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
 
     # Run the modules!
     plugin_hooks.mqc_trigger('before_modules')
-    report.modules_output = list()
     sys_exit_code = 0
     for this_module in run_modules:
         try:
@@ -505,7 +504,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         raise IOError ("Could not load {} template file '{}'".format(config.template, template_mod.base_fn))
 
     # Use jinja2 to render the template and overwrite
+    report.num_mpl_plots = report.count_mpl_plots()
+    report.num_hc_plots = report.count_hc_plots()
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
+
     report_output = j_template.render(report=report, config=config)
     if filename == 'stdout':
         print(report_output.encode('utf-8'), file = sys.stdout)

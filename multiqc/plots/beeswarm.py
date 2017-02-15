@@ -9,7 +9,7 @@ import os
 
 from . import get_uid
 
-from multiqc.utils import config, report
+from multiqc.utils import config
 from multiqc.plots import table_object
 
 logger = logging.getLogger(__name__)
@@ -70,17 +70,16 @@ def make_plot(dt):
             s_names.append(these_snames)
 
     # Plot and javascript function
-    html = """<div class="hc-plot-wrapper"><div id="{bid}" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div>
-    <script type="text/javascript">
+    html = '''<div class="hc-plot-wrapper"><div id="{bid}" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div>
+        <script type="text/javascript">
         mqc_plots["{bid}"] = {{
             "plot_type": "beeswarm",
             "samples": {s},
             "datasets": {d},
             "categories": {c}
         }}
-    </script>""".format(bid=bs_id, s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories))
+        </script>
+        '''.format(bid=bs_id, s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories))
 
-    report.num_hc_plots += 1
     return html
-
 
