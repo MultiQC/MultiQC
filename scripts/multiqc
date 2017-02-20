@@ -397,7 +397,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, profile, *
 
     if config.profile:
         pr.disable()
-        pr.dump_stats(os.path.join(config.output_dir, "profile.cprof"))
+        pr.dump_stats(os.path.join(config.data_dir, "multiqc.cprof"))
 
     # Did we find anything?
     if len(report.modules_output) == 0:
