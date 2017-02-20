@@ -7,7 +7,7 @@ Note that much more extensive customisation of reports is possible using
 [custom templates](http://multiqc.info/docs/#writing-new-templates).
 
 ## Titles and introductory text
-You can specify a custom title for the report using the `-t`/`--title`
+You can specify a custom title for the report using the `-i`/`--title`
 command line option. The `-b`/`--comment` option can be used to add a
 longer comment to the top of the report at run time.
 
