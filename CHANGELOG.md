@@ -70,6 +70,7 @@ If you have any questions, please open an issue.
 #### Core MultiQC updates:
 * Change in module structure and import statements (see above).
 * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+* Handle error when `git` isn't installed on the system.
 * Docs updates (thanks to @varemo)
 
 

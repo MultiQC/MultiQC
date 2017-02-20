@@ -31,7 +31,7 @@ try:
     git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.STDOUT)
     git_hash_short = git_hash[:7]
     version = '{} ({})'.format(version, git_hash_short)
-except subprocess.CalledProcessError:
+except:
     pass
 os.chdir(cwd)
 
