@@ -458,6 +458,35 @@ types is described in the _Plotting Functions_ section of the docs.
 
 ## Appendices
 
+### Profiling Performance
+It's important that MultiQC runs quickly and efficiently, especially on big
+projects with large numbers of samples. The recommended method to check this is
+by using `cProfile` to profile the code execution. To do this, run MultiQC as follows:
+
+```bash
+python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc -f .
+```
+
+You can create a `.bashrc` alias to make this easier to run:
+```bash
+alias profile_multiqc='python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc '
+profile_multiqc -f .
+```
+
+MultiQC should run as normal, but produce the additional binary file `multiqc_profile.prof`.
+This can then be visualised with software such as [SnakeViz](https://jiffyclub.github.io/snakeviz/).
+
+To install SnakeViz and visualise the results, do the following:
+```bash
+pip install snakeviz
+snakeviz multiqc_profile.prof
+```
+
+A web page should open where you can explore the execution times of different nested functions.
+It's a good idea to run MultiQC with a comparable number of results from other tools (eg. FastQC)
+to have a reference to compare against for how long the code should take to run.
+
+
 ### Adding Custom CSS / Javascript
 If you would like module-specific CSS and / or JavaScript added to the template,
 just add to the `self.css` and `self.js` dictionaries that come with the
