@@ -53,8 +53,9 @@ gatk:
     varianteval:
         contents: '#:GATKReport'
 goleft_indexcov:
-    coverage:
-        fn: '*-indexcov.tsv'
+   # disabled due to parsing and display speed
+   # coverage:
+   #      fn: '*-indexcov.tsv'
     roc:
         fn: '*-indexcov.roc'
     ped:

@@ -18,10 +18,12 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(name='goleft indexcov', anchor='goleft_indexcov',
                                             href='https://github.com/brentp/goleft/tree/master/indexcov',
                                             info="quickly estimates coverage from a whole-genome bam index.")
-        cov_plot = self.coverage_plot()
+        # Skip coverage plot, too resource intensive with multiple samples
+        # cov_plot = self.coverage_plot()
+        cov_plot = None
         roc_plot = self.roc_plot()
         bin_plot = self.bin_plot()
-        if not cov_plot:
+        if not roc_plot and not bin_plot:
             log.debug("Did not find goleft indexcov outputs in {}".format(config.analysis_dir))
             raise UserWarning
 
