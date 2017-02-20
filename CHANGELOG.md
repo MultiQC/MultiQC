@@ -59,11 +59,15 @@ on their own. This enables small, atomic, clean unit testing.
 If you have any questions, please open an issue.
 
 #### Module updates:
-_none yet.._
+* **Cutadapt**
+  * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **Qualimap**
+  * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
 
 #### Core MultiQC updates:
 * Change in module structure and import statements (see above).
 * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+* Docs updates (thanks to @varemo)
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
