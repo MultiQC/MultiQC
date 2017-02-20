@@ -63,6 +63,9 @@ If you have any questions, please open an issue.
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
 * **Qualimap**
   * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
+* **RSeQC**
+  * Fixed Python3 error in Junction Saturation code
+  * Fixed JS error for Junction Saturation that made the single-sample combined plot only show _All Junctions_
 
 #### Core MultiQC updates:
 * Change in module structure and import statements (see above).
