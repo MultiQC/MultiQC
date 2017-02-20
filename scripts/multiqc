@@ -8,8 +8,6 @@ from __future__ import print_function
 import base64
 import click
 import cProfile
-import pstats
-import StringIO
 from distutils import version
 from distutils.dir_util import copy_tree
 import io
@@ -399,11 +397,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, profile, *
 
     if config.profile:
         pr.disable()
-        s = StringIO.StringIO()
-        stats=pstats.Stats(pr, stream=s)
-        stats.sort_stats('cumulative').print_stats()
-        with open(os.path.join(config.output_dir, "profile.txt"), 'w') as pf_f:
-            pf_f.write(s.getvalue())
+        pr.dump_stats(os.path.join(config.output_dir, "profile.cprof"))
 
     # Did we find anything?
     if len(report.modules_output) == 0:
