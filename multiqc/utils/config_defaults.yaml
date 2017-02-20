@@ -20,6 +20,7 @@ custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
 simple_output: false
+profile: false
 template: 'default'
 pandoc_template: null
 output_fn_name: 'multiqc_report.html'
