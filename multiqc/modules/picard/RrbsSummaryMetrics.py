@@ -101,7 +101,7 @@ def parse_reports(self):
 
 
 
-        # Make the bar plot of alignment read count
+        # Make the bar plot of converted bases
         pdata_cpg = dict()
         pdata_noncpg = dict()
         for s_name in self.picard_rrbs_metrics.keys():
@@ -133,6 +133,42 @@ def parse_reports(self):
             'name': 'RRBS Converted Bases',
             'anchor': 'picard-rrbssummary-convertedbases',
             'content': bargraph.plot([pdata_cpg, pdata_noncpg], [keys, keys], pconfig)
+        })
+
+
+        # Make the bar plot of processed reads
+        pdata = dict()
+        for s_name in self.picard_rrbs_metrics.keys():
+            pdata[s_name] = dict()
+            pdata[s_name]['with_no_cpg'] = self.picard_rrbs_metrics[s_name]['READS_WITH_NO_CPG']
+            pdata[s_name]['ignored_short'] = self.picard_rrbs_metrics[s_name]['READS_IGNORED_SHORT']
+            pdata[s_name]['ignored_mismatches'] = self.picard_rrbs_metrics[s_name]['READS_IGNORED_MISMATCHES']
+            pdata[s_name]['not_ignored'] = (
+                self.picard_rrbs_metrics[s_name]['READS_ALIGNED'] -
+                pdata[s_name]['with_no_cpg'] -
+                pdata[s_name]['ignored_short'] -
+                pdata[s_name]['ignored_mismatches']
+            )
+
+        keys = OrderedDict()
+        keys['not_ignored'] = {'name': 'Utilised reads'}
+        keys['with_no_cpg'] = {'name': 'Ignored (no CpG sites)'}
+        keys['ignored_short'] = {'name': 'Ignored (too short)'}
+        keys['ignored_mismatches'] = {'name': 'Ignored (exceeded mismatch threshold)'}
+
+        # Config for the plot
+        pconfig = {
+            'id': 'picard_rrbs_ignored_reads_plot',
+            'title': 'Picard: RRBS Read Counts',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+
+        self.sections.append({
+            'id': 'picard_rrbs_readcounts',
+            'name': 'RRBS Read Counts',
+            'anchor': 'picard-rrbssummary-readcounts',
+            'content': bargraph.plot(pdata, keys, pconfig)
         })
 
     # Return the number of detected samples to the parent module
