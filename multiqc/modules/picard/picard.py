@@ -18,6 +18,7 @@ from . import HsMetrics
 from . import OxoGMetrics
 from . import RnaSeqMetrics
 from . import AlignmentSummaryMetrics
+from . import RrbsSummaryMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -74,6 +75,10 @@ class MultiqcModule(BaseMultiqcModule):
         n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
         if n['AlignmentMetrics'] > 0:
             log.info("Found {} AlignmentSummaryMetrics reports".format(n['AlignmentMetrics']))
+
+        n['RrbsSummaryMetrics'] = RrbsSummaryMetrics.parse_reports(self)
+        if n['RrbsSummaryMetrics'] > 0:
+            log.info("Found {} RrbsSummaryMetrics reports".format(n['RrbsSummaryMetrics']))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

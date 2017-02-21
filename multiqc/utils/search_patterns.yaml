@@ -86,6 +86,8 @@ picard:
         contents: 'picard.analysis.CollectOxoGMetrics'
     rnaseqmetrics:
         contents: 'picard.analysis.CollectRnaSeqMetrics'
+    rrbs_metrics:
+        contents: 'picard.analysis.RrbsSummaryMetrics'
 preseq:
     contents:
         - 'EXPECTED_DISTINCT'

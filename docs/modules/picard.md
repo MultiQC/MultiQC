@@ -21,6 +21,7 @@ Supported commands:
 * `BaseDistributionByCycl`
 * `RnaSeqMetrics`
 * `AlignmentSummaryMetrics`
+* `RrbsSummaryMetrics`
 
 #### HsMetrics
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage that's
