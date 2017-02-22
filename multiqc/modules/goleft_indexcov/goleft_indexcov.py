@@ -84,6 +84,10 @@ class MultiqcModule(BaseMultiqcModule):
             return linegraph.plot([data[c] for c in chroms], pconfig)
 
     def roc_plot(self):
+        desc = '<p>Coverage (ROC) plot that shows genome coverage at at given (scaled) depth. \n\
+        Lower coverage samples have shorter curves where the proportion of regions covered \n\
+        drops off more quickly. This indicates a higher fraction of low coverage regions. \n\
+        </p>'
         data = collections.defaultdict(lambda: collections.defaultdict(dict))
         for fn in self.find_log_files(config.sp["goleft_indexcov"]["roc"], filehandles=True):
             header = fn['f'].readline()
@@ -100,11 +104,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'id': 'goleft_indexcov-roc-plot',
                 'title': 'ROC: genome coverage per scaled depth by chromosome',
                 'xlab': 'Scaled coverage',
-                'xlab': 'Proportion of regions covered',
+                'ylab': 'Proportion of regions covered',
                 'ymin': 0, 'ymax': 1.0,
                 'xmin': 0, 'xmax': 1.5,
                 'data_labels': [{"name": self._short_chrom(c)} for c in chroms]}
-            return linegraph.plot([data[c] for c in chroms], pconfig)
+            return desc + linegraph.plot([data[c] for c in chroms], pconfig)
 
     def _clean_name(self, name):
         """Remove standard extra extensions from sample names.
@@ -128,13 +132,13 @@ class MultiqcModule(BaseMultiqcModule):
             for sample_parts in (l.split("\t") for l in fn['f']):
                 cur = dict(zip(header, sample_parts))
                 cur["sample_id"] = self._clean_name(cur["sample_id"])
-                data[cur["sample_id"]] =  {"x": int(cur["bins.lo"]),
-                                           "y": int(cur["bins.out"])}
+                total = float(cur["bins.in"]) + float(cur["bins.out"])
+                data[cur["sample_id"]] =  {"x": float(cur["bins.lo"]) / total,
+                                           "y": float(cur["bins.out"]) / total}
         if data:
             pconfig = {
                 'id': 'goleft_indexcov-bin-plot',
                 'title': 'Problematic low and non-uniform coverage bins',
-                'xDecimals': False, 'yDecimals': False,
-                'xlab': 'Total bins with depth < 0.15',
-                'ylab': 'Total bins with depth outside of (0.85, 1.15)'}
+                'xlab': 'Proportion of bins with depth < 0.15',
+                'ylab': 'Proportion of bins with depth outside of (0.85, 1.15)'}
             return desc + scatter.plot(data, pconfig)
