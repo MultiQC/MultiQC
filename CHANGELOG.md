@@ -62,7 +62,8 @@ If you have any questions, please open an issue.
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
 * **Picard**
-  * New RrbsSummaryMetrics Submodule!
+  * New `RrbsSummaryMetrics` Submodule!
+  * New `WgsMetrics` Submodule!
 * **Qualimap**
   * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
 * **RSeQC**

@@ -88,6 +88,8 @@ picard:
         contents: 'picard.analysis.CollectRnaSeqMetrics'
     rrbs_metrics:
         contents: 'picard.analysis.RrbsSummaryMetrics'
+    wgs_metrics:
+        contents: 'picard.analysis.CollectWgsMetrics$WgsMetrics'
 preseq:
     contents:
         - 'EXPECTED_DISTINCT'

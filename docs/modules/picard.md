@@ -23,18 +23,25 @@ Supported commands:
 * `AlignmentSummaryMetrics`
 * `RrbsSummaryMetrics`
 
-#### HsMetrics
-It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage that's
+#### Coverage Levels
+It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and
+WgsMetrics _"Fraction of Bases over 30X"_ that are
 shown in the general statistics table. This must correspond to field names in the
-HsMetrics report, such as `PCT_TARGET_BASES_2X`. Any numbers not found in the
-reports will be ignored. The coverage levels available are
-[typically](https://github.com/ewels/MultiQC_TestData/blob/master/data/modules/picard/HsMetrics/alignment-hs_metrics.txt)
-2, 10, 20, 30, 40, 50 and 100X.
+picard report, such as `PCT_TARGET_BASES_2X` / `PCT_10X`. Any numbers not found in the
+reports will be ignored.
 
-To customise this, add something like the following to your MultiQC config:
+The coverage levels available for HsMetrics are
+[typically](http://broadinstitute.github.io/picard/picard-metric-definitions.html#HsMetrics)
+1, 2, 10, 20, 30, 40, 50 and 100X.
+
+The coverage levels available for WgsMetrics are
+[typically](http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics)
+1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90 and 100X.
+
+To customise this, add the following to your MultiQC config:
 ```yaml
 picard_config:
     general_stats_target_coverage:
-        - 2
         - 10
+        - 50
 ```
