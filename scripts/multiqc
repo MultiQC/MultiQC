@@ -567,7 +567,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     logger.info("MultiQC complete")
 
     # Move the log file into the data directory
-    log.copy_tmp_log(logger)
+    log.move_tmp_log(logger)
 
     # Exit with an error code if a module broke
     sys.exit(sys_exit_code)

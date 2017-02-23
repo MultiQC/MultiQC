@@ -47,6 +47,7 @@ Coding with MultiQC:
   Writing new modules: modules.md
   Plotting Functions: plots.md
   MultiQC Plugins: plugins.md
+  Updating for compatibility: compatibility.md
 ---
 
 # Welcome!
@@ -73,7 +74,8 @@ The documentation has the following pages:
    - [Writing new templates](templates.md)
    - [Writing new modules](modules.md)
    - [Plugins](plugins.md)
-   - [JavaScript](javascript.md)
+   - [MultiQC Plugins](plugins.md)
+   - [Updating for compatibility](compatibility.md)
 
 These docs can be read in any of three ways:
  - On the MultiQC Website: http://multiqc.info

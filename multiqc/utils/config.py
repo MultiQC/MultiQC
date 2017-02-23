@@ -22,18 +22,18 @@ logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
 version = pkg_resources.get_distribution("multiqc").version
-cwd = os.getcwd()
 script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
 try:
-    os.chdir(script_path)
-    git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.STDOUT)
+    git_hash = subprocess.check_output( ['git', 'rev-parse', 'HEAD'],
+                                        cwd=script_path,
+                                        stderr=subprocess.STDOUT,
+                                        universal_newlines=True )
     git_hash_short = git_hash[:7]
     version = '{} ({})'.format(version, git_hash_short)
 except:
     pass
-os.chdir(cwd)
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))

@@ -51,8 +51,8 @@ class BaseMultiqcModule(object):
         if 'contents' in patterns:
             contents_match = patterns['contents']
         if fn_match == None and contents_match == None:
-            logger.warning("No file patterns specified for find_log_files")
-            yield None
+            logger.warning("No file patterns specified for {}".format(self.name))
+            return
 
         # Loop through files, yield results if we find something
         for f in report.files:
