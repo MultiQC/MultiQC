@@ -166,7 +166,7 @@ def parse_reports(self):
                 'ymax': 100,
                 'data_labels': [
                     {'name': 'Percentage Drop-Off', 'ylab': 'Percentage of Bases', 'ymax': 100},
-                    {'name': 'Counts', 'ylab': 'Coverage', 'ymax': maxval}
+                    {'name': 'Counts Histogram', 'ylab': 'Coverage', 'ymax': maxval}
                 ]
             }
             self.sections.append({
@@ -206,8 +206,8 @@ def parse_reports(self):
             }
 
             self.sections.append({
-                'id': 'picard_rrbs_converted_bases',
-                'name': 'RRBS Converted Bases',
+                'id': 'picard_wgs_filtered_bases',
+                'name': 'WGS Filtered Bases',
                 'anchor': 'picard-wgsmetrics-bases',
                 'content': '<p>For more information about the filtered categories, see the '+
                            '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.</p>' +
