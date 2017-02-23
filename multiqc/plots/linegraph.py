@@ -97,7 +97,7 @@ def plot (data, pconfig={}):
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except KeyError:
+    except (KeyError, IndexError):
         pass
 
     # Make a plot - template custom, or interactive or flat
