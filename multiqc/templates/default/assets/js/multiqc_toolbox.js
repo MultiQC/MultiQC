@@ -587,21 +587,27 @@ function mqc_save_config(name, clear){
   var prev_config = {};
   // Load existing configs (inc. from other reports)
   try {
-    prev_config = localStorage.getItem("mqc_config");
-    if(prev_config !== null && prev_config !== undefined){
-      prev_config = JSON.parse(prev_config);
-    } else {
-      prev_config  = {};
-    }
+    try {
 
-    // Update config obj with current config
-    if(clear == true){
-      delete prev_config[name];
-    } else {
-      prev_config[name] = config;
-      prev_config[name]['last_updated'] = Date();
+      prev_config = localStorage.getItem("mqc_config");
+      if(prev_config !== null && prev_config !== undefined){
+        prev_config = JSON.parse(prev_config);
+      } else {
+        prev_config  = {};
+      }
+
+      // Update config obj with current config
+      if(clear == true){
+        delete prev_config[name];
+      } else {
+        prev_config[name] = config;
+        prev_config[name]['last_updated'] = Date();
+      }
+      localStorage.setItem("mqc_config", JSON.stringify(prev_config));
+
+    } catch(e){
+      console.log('Could not access localStorage');
     }
-    localStorage.setItem("mqc_config", JSON.stringify(prev_config));
 
     if(clear == true){
       // Remove from load select box
@@ -637,7 +643,16 @@ function populate_mqc_saveselect(){
         $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
       }
     }
-  } catch(e){ console.log('Could not load local config: '+e); }
+  } catch(e){
+    console.log('Could not load local config: '+e);
+    $('#mqc_saveconfig').html('<h4>Error accessing localStorage</h4>'+
+      '<p>This feature uses a web browser feature called "localStorage". '+
+      "We're not able to access this at the moment, which probably means that "+
+      'you have the <em>"Block third-party cookies and site data"</em> setting ticked (Chrome) '+
+      'or equivalent in other browsers.</p><p>Please '+
+      '<a href="https://www.google.se/search?q=Block+third-party+cookies+and+site+data" target="_blank">change this browser setting</a>'+
+      ' to save MultiQC report configs.</p>');
+  }
   $('#mqc_loadconfig_form select').val('');
 }
 
@@ -648,7 +663,9 @@ function load_mqc_config(name){
   if(name === undefined){ return false; }
   var config = {};
   try {
-    var local_config = localStorage.getItem("mqc_config");
+    try {
+      var local_config = localStorage.getItem("mqc_config");
+    } catch(e){ console.log('Could not access localStorage'); }
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
       for (var attr in local_config[name]) {
