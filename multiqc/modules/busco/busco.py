@@ -49,10 +49,11 @@ class MultiqcModule(BaseMultiqcModule):
         # State the lineage(s)
         lineages = set()
         for s_name in self.busco_data:
-            lineages.add(self.busco_data[s_name].get('lineage_dataset'))
+            if 'lineage_dataset' in self.busco_data[s_name]:
+                lineages.add(self.busco_data[s_name]['lineage_dataset'])
         if len(lineages) > 1:
             self.intro += '<p class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> Lineage datasets used: <em>{}</em></p>'.format(', '.join(lineages))
-        else:
+        elif len(lineages) == 1:
             self.intro += '<p class="text-info"><span class="glyphicon glyphicon-info-sign"></span> Lineage dataset used: <em>{}</em></p>'.format(lineages.pop())
 
         # Alignment Rate Plot
@@ -76,14 +77,16 @@ class MultiqcModule(BaseMultiqcModule):
     def busco_plot (self):
         """ Make the HighCharts HTML for the BUSCO plot """
 
+        plot_keys = ['complete_single_copy','complete_duplicated','fragmented','missing']
+        plot_cols = ['#7CB5EC', '#434348', '#F7A35C', '#FF3C50']
         keys = OrderedDict()
-        for k in ['complete_single_copy','complete_duplicated','fragmented','missing']:
-            keys[k] = {'name': self.busco_keys[k]}
+        for k, col in zip(plot_keys, plot_cols):
+            keys[k] = {'name': self.busco_keys[k], 'color': col}
 
         # Config for the plot
         config = {
             'id': 'busco_plot',
-            'title': 'BUSCO: Summarized benchmarking',
+            'title': 'BUSCO Assessment Results',
             'ylab': '# BUSCOs',
             'cpswitch_counts_label': 'Number of BUSCOs'
         }
