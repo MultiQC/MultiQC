@@ -25,6 +25,8 @@ bowtie:
     contents: '# reads processed:'
 bowtie2:
     contents: 'reads; of these:'
+busco:
+    fn: 'short_summary_*.txt'
 custom_content:
     fn:
         - '*_mqc.yaml'

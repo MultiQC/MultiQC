@@ -36,7 +36,7 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
 [Skewer][skewer]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
 [Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
                              | [Salmon][salmon]       | [Prokka][prokka]          | [RSeQC][rseqc]
-                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  |
+                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [BUSCO][busco]
                              | [STAR][star]           | [Samtools][samtools]      |
                              | [Tophat][tophat]       | [SnpEff][snpeff]          |
                              |                        | [Subread featureCounts][featurecounts] |
@@ -151,6 +151,7 @@ and many others. Thanks for your support!
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1
 [bowtie-2]:       http://multiqc.info/docs/#bowtie-2
+[busco]:          http://multiqc.info/docs/#busco
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc

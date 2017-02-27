@@ -121,6 +121,7 @@ fn_clean_trim:
     - '.yml'
     - '.json'
     - '_mqc'
+    - 'short_summary_'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.

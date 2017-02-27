@@ -17,6 +17,8 @@ To see what changes need to applied to your custom plugin code, please see
 the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
 #### Module updates:
+* [**BUSCO**](http://busco.ezlab.org/) - new module!
+  * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
 * **Picard**

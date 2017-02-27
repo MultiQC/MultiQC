@@ -25,6 +25,7 @@ MultiQC Modules:
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
+    BUSCO: modules/busco.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     HTSeq: modules/htseq.md
