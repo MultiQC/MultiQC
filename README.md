@@ -37,7 +37,7 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
 [Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
                              | [Salmon][salmon]       | [Prokka][prokka]          | [RSeQC][rseqc]
                              | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [BUSCO][busco]
-                             | [STAR][star]           | [Samtools][samtools]      |
+                             | [STAR][star]           | [Samtools][samtools]      | [goleft][goleft]
                              | [Tophat][tophat]       | [SnpEff][snpeff]          |
                              |                        | [Subread featureCounts][featurecounts] |
 
@@ -157,6 +157,7 @@ and many others. Thanks for your support!
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [gatk]:           http://multiqc.info/docs/#gatk
+[goleft]:         http://multiqc.info/docs/#goleft-indexcov
 [hicup]:          http://multiqc.info/docs/#hicup
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto

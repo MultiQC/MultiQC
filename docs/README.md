@@ -28,6 +28,7 @@ MultiQC Modules:
     BUSCO: modules/busco.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
+    goleft_indexcov: modules/goleft_indexcov.md
     HTSeq: modules/htseq.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md

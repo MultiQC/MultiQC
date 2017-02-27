@@ -19,6 +19,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 #### Module updates:
 * [**BUSCO**](http://busco.ezlab.org/) - new module!
   * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
+* [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
+  * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
+    data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
 * **Picard**
