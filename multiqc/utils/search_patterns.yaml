@@ -54,6 +54,12 @@ featurecounts:
 gatk:
     varianteval:
         contents: '#:GATKReport'
+goleft_indexcov:
+    roc:
+        fn: '*-indexcov.roc'
+    ped:
+        fn: '*-indexcov.ped'
+picard:
 htseq:
     contents: '__too_low_aQual'
 hicup:

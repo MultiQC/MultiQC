@@ -160,6 +160,7 @@ module_order:
     - 'picard'
     - 'preseq'
     - 'prokka'
+    - 'goleft_indexcov'
     - 'samblaster'
     - 'samtools'
     - 'bamtools'
