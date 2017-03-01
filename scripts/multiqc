@@ -179,7 +179,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if config.no_version_check is not True:
         try:
             response = urlopen('http://multiqc.info/version.php?v={}'.format(__version__), timeout=5)
-            remote_version = response.read().decode('utf-8')
+            remote_version = response.read().decode('utf-8').strip()
             if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', __version__)):
                 logger.warn('MultiQC Version {} now available!'.format(remote_version))
         except:
