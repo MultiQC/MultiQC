@@ -37,6 +37,10 @@ $(function () {
             // Tick only this plot in the toolbox and slide out
             $('#mqc_export_selectplots input').prop('checked', false);
             $('#mqc_export_selectplots input[value="'+this.renderTo.id+'"]').prop('checked', true);
+            // Special case - Table scatter plots are in a modal, need to close this first
+            if(this.renderTo.id == 'tableScatterPlot'){
+              $('#tableScatterModal').modal('hide');
+            }
             mqc_toolbox_openclose('#mqc_exportplots', true);
           },
           text: '<span style="color:#999999;">Export Plot</span>',

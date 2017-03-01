@@ -213,5 +213,5 @@ def comp_overlap_table(data):
         'min': 0,
         'modify': lambda x: float(x) / 1000000.0
     }
-    table_html = table.plot(data, headers, {'id': 'gatk_compare_overlap'})
+    table_html = table.plot(data, headers, {'id': 'gatk_compare_overlap', 'table_title': 'GATK - Compare Overlap'})
     return table_html

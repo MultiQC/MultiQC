@@ -354,12 +354,17 @@ $(function () {
     if(isNaN(col2_min)){ col2_min = undefined; }
     if(col1 != '' && col2 != ''){
       $('#tableScatterPlot').html('<small>loading..</small>');
+      if ($(tid).attr('data-title')) {
+        plot_title = $(tid).attr('data-title');
+      } else {
+        plot_title = tid.replace(/^#/, '').replace(/_/g, ' ');
+      }
       // Get the data values
       mqc_plots['tableScatterPlot'] = {
         'plot_type': 'scatter',
         'config': {
           'id': 'tableScatter_'+tid,
-          'title': tid,
+          'title': plot_title,
           'xlab': col1_name,
           'ylab': col2_name,
           'xmin': col1_min,

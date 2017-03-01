@@ -55,6 +55,9 @@ def make_table (dt):
     dt.raw_vals = defaultdict(lambda: dict())
     empty_cells = dict()
     hidden_cols = 1
+    table_title = dt.pconfig.get('table_title')
+    if table_title is None:
+        table_title = table_id.replace("_", " ").title()
 
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
@@ -187,8 +190,8 @@ def make_table (dt):
     html += """
         <div id="{tid}_container" class="mqc_table_container">
             <div class="table-responsive">
-                <table id="{tid}" class="table table-condensed mqc_table">
-        """.format(tid=table_id)
+                <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}">
+        """.format( tid=table_id, title=table_title )
 
     # Build the header row
     html += '<thead><tr><th class="rowheader">Sample Name</th>{}</tr></thead>'.format(''.join(t_headers.values()))
@@ -221,7 +224,7 @@ def make_table (dt):
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showAll">Show All</button>
                 <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" data-target="#{tid}" data-action="showNone">Show None</button>
             </p>
-            <table class="table mqc_table mqc_sortable mqc_configModal_table" id="{tid}_configModal_table">
+            <table class="table mqc_table mqc_sortable mqc_configModal_table" id="{tid}_configModal_table" data-title="{title}">
               <thead>
                 <tr>
                   <th class="sorthandle" style="text-align:center;">Sort</th>
@@ -239,7 +242,7 @@ def make_table (dt):
             </table>
         </div>
         <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> </div>
-    </div> </div> </div>""".format( tid=table_id, title=dt.pconfig.get('table_title', table_id), trows=''.join(t_modal_headers.values()) )
+    </div> </div> </div>""".format( tid=table_id, title=table_title, trows=''.join(t_modal_headers.values()) )
 
     # Save the raw values to a file if requested
     if dt.pconfig.get('save_file') is True:
