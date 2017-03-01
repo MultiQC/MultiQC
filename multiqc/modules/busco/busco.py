@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import re
 from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -46,19 +47,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.busco_data, 'multiqc_busco')
 
-        # State the lineage(s)
-        lineages = set()
-        for s_name in self.busco_data:
-            if 'lineage_dataset' in self.busco_data[s_name]:
-                lineages.add(self.busco_data[s_name]['lineage_dataset'])
-        if len(lineages) > 1:
-            self.intro += '<p class="text-danger"><span class="glyphicon glyphicon-exclamation-sign"></span> Lineage datasets used: <em>{}</em></p>'.format(', '.join(lineages))
-        elif len(lineages) == 1:
-            self.intro += '<p class="text-info"><span class="glyphicon glyphicon-info-sign"></span> Lineage dataset used: <em>{}</em></p>'.format(lineages.pop())
-
-        # Alignment Rate Plot
-        self.intro += self.busco_plot()
-
+        # One Alignment Rate Plot per lineage
+        self.sections = list()
+        lineages = set([ self.busco_data[s_name].get('lineage_dataset') for s_name in self.busco_data.keys() ])
+        for lin in lineages:
+            self.sections.append({
+                'name': 'Lineage Assessment' if lin is None else 'Lineage: {}'.format(lin),
+                'anchor': 'busco-lineage-{}'.format(re.sub('\W+', '_', str(lin))),
+                'content': self.busco_plot(lin)
+            })
 
     def parse_busco_log(self, f):
         parsed_data = {}
@@ -74,8 +71,13 @@ class MultiqcModule(BaseMultiqcModule):
         if len(parsed_data) > 0:
             self.busco_data[f['s_name']] = parsed_data
 
-    def busco_plot (self):
-        """ Make the HighCharts HTML for the BUSCO plot """
+    def busco_plot (self, lin):
+        """ Make the HighCharts HTML for the BUSCO plot for a particular lineage """
+
+        data = {}
+        for s_name in self.busco_data:
+            if self.busco_data[s_name].get('lineage_dataset') == lin:
+                data[s_name] = self.busco_data[s_name]
 
         plot_keys = ['complete_single_copy','complete_duplicated','fragmented','missing']
         plot_cols = ['#7CB5EC', '#434348', '#F7A35C', '#FF3C50']
@@ -85,10 +87,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
-            'id': 'busco_plot',
-            'title': 'BUSCO Assessment Results',
+            'id': 'busco_plot_{}'.format(re.sub('\W+', '_', str(lin))),
+            'title': 'BUSCO Assessment Results' if lin is None else 'BUSCO Assessment Results: {}'.format(lin),
             'ylab': '# BUSCOs',
             'cpswitch_counts_label': 'Number of BUSCOs'
         }
 
-        return bargraph.plot(self.busco_data, keys, config)
+        return bargraph.plot(data, keys, config)
