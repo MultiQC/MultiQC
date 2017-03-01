@@ -382,7 +382,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
         # Save to a file and link <img>
         else:
-            plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
+            plot_relpath = os.path.join(config.plots_dir_name, 'png', '{}.png'.format(pid))
             html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
 
         plt.close(fig)

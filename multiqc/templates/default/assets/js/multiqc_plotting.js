@@ -470,7 +470,7 @@ function plot_stacked_bar_graph(target, ds){
     // Bump the borderWidth to make the highlights more obvious
     if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
   }
-  if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
+  if(config['borderWidth'] === undefined){ config['borderWidth'] = 0; }
 
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
