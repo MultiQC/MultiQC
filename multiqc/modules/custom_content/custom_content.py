@@ -334,13 +334,13 @@ def _parse_txt(f, conf):
         data = [s[1:] for s in d[1:]]
         return (data, conf)
 
-    # Header row
-    if first_row_str == len(d[0]):
+    # Header row of strings, or configured as table
+    if first_row_str == len(d[0]) or conf.get('plot_type') == 'table':
         data = dict()
         for s in d[1:]:
             data[s[0]] = OrderedDict()
             for i, v in enumerate(s[1:]):
-                cat = d[0][i+1]
+                cat = str(d[0][i+1])
                 data[s[0]][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get('plot_type') is None:
@@ -351,13 +351,16 @@ def _parse_txt(f, conf):
                 conf['plot_type'] = 'bargraph'
             else:
                 conf['plot_type'] = 'table'
-        if conf.get('plot_type') is 'bargraph' or conf.get('plot_type') is 'table':
+        if conf.get('plot_type') == 'bargraph' or conf.get('plot_type') == 'table':
             return (data, conf)
+        else:
+            data = dict() # reset
 
-    # Scatter plot: No header row, str : num : num
+    # Scatter plot: First row is  str : num : num
     if (conf.get('plot_type') is None and len(d[0]) == 3 and
         type(d[0][0]) != float and type(d[0][1]) == float and type(d[0][2]) == float):
         conf['plot_type'] = 'scatter'
+
     if conf.get('plot_type') == 'scatter':
         data = dict()
         for s in d:
@@ -370,14 +373,15 @@ def _parse_txt(f, conf):
                 pass
         return (data, conf)
 
-    # Single sample line / bar graph
+    # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
-        # Line graph: No header row, num : num
+        # Line graph - row, num : num
         if (conf.get('plot_type') is None and type(d[0][0]) == float and type(d[0][1]) == float):
             conf['plot_type'] = 'linegraph'
-        # Bar graph: No header row, str : num
+        # Bar graph - str : num
         if (conf.get('plot_type') is None and type(d[0][0]) != float and type(d[0][1]) == float):
             conf['plot_type'] = 'bargraph'
+
         # Data structure is the same
         if (conf.get('plot_type') == 'linegraph' or conf.get('plot_type') == 'bargraph'):
             # Set section id based on directory if not known
@@ -391,6 +395,7 @@ def _parse_txt(f, conf):
     # Multi-sample line graph: No header row, str : lots of num columns
     if conf.get('plot_type') is None and len(d[0]) > 4 and all_numeric:
         conf['plot_type'] = 'linegraph'
+
     if conf.get('plot_type') == 'linegraph':
         data = dict()
         # Use 1..n range for x values
@@ -402,6 +407,8 @@ def _parse_txt(f, conf):
         return (data, conf)
 
     # Got to the end and haven't returned. It's a mystery, capn'!
+    log.debug("Not able to figure out a plot type for '{}' ".format(f['fn']) +
+      "plot type = {}, all numeric = {}, first row str = {}".format( conf.get('plot_type'), all_numeric, first_row_str ))
     return (None, conf)
 
 
