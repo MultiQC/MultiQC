@@ -18,7 +18,7 @@ a subtitle and the introductory text in your config file:
 title: "My Title"
 subtitle: "A subtitle to go underneath in grey"
 intro_text: "MultiQC reports summarise analysis results."
-custom_message: "This is a comment about this report."
+report_comment: "This is a comment about this report."
 ```
 
 Note that if `intro_text` is `None` the template will display the default
