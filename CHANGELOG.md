@@ -39,6 +39,7 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * Handle error when `git` isn't installed on the system.
 * Docs updates (thanks to @varemo)
 * Previously hidden log file `.multiqc.log` renamed to `multiqc.log` in `multiqc_data`
+* Added option to load MultiQC config file from a path specified in the environment variable `MULTIQC_CONFIG_PATH`
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21

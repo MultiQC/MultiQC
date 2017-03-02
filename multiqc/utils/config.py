@@ -98,6 +98,10 @@ def mqc_load_userconfig(path=None):
     # Load and parse a user config file if we find it
     mqc_load_config(os.path.expanduser('~/.multiqc_config.yaml'))
 
+    # Load and parse a config file path set in an ENV variable if we find it
+    if os.environ.get('MULTIQC_CONFIG_PATH') is not None:
+        mqc_load_config( os.environ.get('MULTIQC_CONFIG_PATH') )
+
     # Load and parse a config file in this working directory if we find it
     mqc_load_config('multiqc_config.yaml')
 
