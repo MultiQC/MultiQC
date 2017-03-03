@@ -342,7 +342,7 @@ single_header = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
-    'scale': 'GnBu',                # Colour scale for colour coding
+    'scale': 'GnBu',                # Colour scale for colour coding (set to False to disable numeric bar)
     'colour': '<auto from palette>',# Colour for column grouping
     'format': '{:.1f}',             # Output format() string
     'shared_key': None              # See below for description
@@ -354,6 +354,8 @@ table_config = {
     'table_title': '<table id>',             # Title of the table. Used in the column config modal
     'save_file': False,                      # Whether to save the table data to a file
     'raw_data_fn':'multiqc_<table_id>_table' # File basename to use for raw data file
+    'sortRows': True                         # Whether to sort rows alphabetically
+    'col1_header': 'Sample Name'             # The header used for the first column
     'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```

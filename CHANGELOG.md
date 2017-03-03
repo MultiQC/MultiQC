@@ -19,6 +19,8 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 #### Module updates:
 * [**BUSCO**](http://busco.ezlab.org/) - new module!
   * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
+* [**Cluster Flow**](http://clusterflow.io) - new module!
+  * Cluster Flow is a workflow tool for bioinformatics pipelines. The new module parses executed tool commands.
 * [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
   * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
     data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
@@ -40,6 +42,10 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * Docs updates (thanks to @varemo)
 * Previously hidden log file `.multiqc.log` renamed to `multiqc.log` in `multiqc_data`
 * Added option to load MultiQC config file from a path specified in the environment variable `MULTIQC_CONFIG_PATH`
+* New table configuration options
+  * `sortRows: False` prevents table rows from being sorted alphabetically
+  * `col1_header` allows the default first column header to be changed from "Sample Name"
+* Tables no longer show _Configure Columns_ and _Plot_ buttons if they only have a single column
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21

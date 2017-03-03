@@ -30,12 +30,12 @@ Currently, supported tools include:
 
 Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC
 -----------------------------|------------------------|---------------------------|-------------------
-[Cutadapt][cutadapt]         | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa]
-[FastQC][fastqc]             | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]
-[FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
-[Skewer][skewer]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
-[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
-                             | [Salmon][salmon]       | [Prokka][prokka]          | [RSeQC][rseqc]
+[Cluster Flow][clusterflow]  | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa]
+[Cutadapt][cutadapt]         | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]
+[FastQC][fastqc]             | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
+[FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
+[Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
+[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RSeQC][rseqc]
                              | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [BUSCO][busco]
                              | [STAR][star]           | [Samtools][samtools]      | [goleft][goleft]
                              | [Tophat][tophat]       | [SnpEff][snpeff]          |
@@ -152,6 +152,7 @@ and many others. Thanks for your support!
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1
 [bowtie-2]:       http://multiqc.info/docs/#bowtie-2
 [busco]:          http://multiqc.info/docs/#busco
+[clusterflow]:    http://multiqc.info/docs/#cluster-flow
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc

@@ -8,6 +8,7 @@ Using MultiQC:
   Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:
+    Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     FastQC: modules/fastqc.md
     FastQ Screen: modules/fastq_screen.md

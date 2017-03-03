@@ -143,24 +143,27 @@ fn_ignore_files:
 # modules (even those not present in the below list).
 top_modules: []
 
-# Order that modules should appear in report. Try to list in order of analysis,
-# eg. FastQC is usually the first step, so should be last in this list.
+# Order that modules should appear in report. Try to list in order of analysis.
 module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
-    # Post-alignment analysis results
+    # Post-alignment QC
     - 'peddy'
-    - 'quast'
-    - 'snpeff'
+    - 'methylQA'
     - 'qualimap'
+    - 'preseq'
+    - 'quast'
+    - 'rseqc'
+    - 'busco'
+    - 'goleft_indexcov'
+    # Post-alignment processing
+    - 'snpeff'
+    - 'gatk'
+    - 'htseq'
     - 'bcftools'
     - 'featureCounts'
-    - 'methylQA'
-    - 'rseqc'
     - 'picard'
-    - 'preseq'
     - 'prokka'
-    - 'goleft_indexcov'
     - 'samblaster'
     - 'samtools'
     - 'bamtools'
@@ -180,3 +183,4 @@ module_order:
     - 'skewer'
     - 'fastq_screen'
     - 'fastqc'
+    - 'clusterflow'
