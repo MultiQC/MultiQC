@@ -93,7 +93,9 @@ picard:
     oxogmetrics:
         contents: 'picard.analysis.CollectOxoGMetrics'
     rnaseqmetrics:
-        contents: 'picard.analysis.CollectRnaSeqMetrics'
+        contents:
+          - 'picard.analysis.CollectRnaSeqMetrics'
+          - 'picard.analysis.Collectrnaseqmetrics'
     rrbs_metrics:
         contents: 'picard.analysis.RrbsSummaryMetrics'
     wgs_metrics:

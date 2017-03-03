@@ -39,7 +39,7 @@ def parse_reports(self):
                     in_hist = False
 
             # New log starting
-            if 'RnaSeqMetrics' in l and 'INPUT' in l:
+            if 'rnaseqmetrics' in l.lower() and 'INPUT' in l:
                 s_name = None
                 # Pull sample name from input
                 fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
@@ -48,7 +48,7 @@ def parse_reports(self):
                     s_name = self.clean_s_name(s_name, f['root'])
 
             if s_name is not None:
-                if 'RnaSeqMetrics' in l and '## METRICS CLASS' in l:
+                if 'rnaseqmetrics' in l.lower() and '## METRICS CLASS' in l:
                     if s_name in self.picard_RnaSeqMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.picard_RnaSeqMetrics_data[s_name] = dict()
@@ -71,13 +71,9 @@ def parse_reports(self):
                         except IndexError:
                             pass # missing data
 
-                    # Skip lines on to histogram
-                    l = f['f'].readline()
-                    l = f['f'].readline()
-                    l = f['f'].readline().strip("\n")
-
-                    self.picard_RnaSeqMetrics_histogram[s_name] = dict()
-                    in_hist = True
+            if s_name is not None and 'normalized_position	All_Reads.normalized_coverage' in l:
+                self.picard_RnaSeqMetrics_histogram[s_name] = dict()
+                in_hist = True
 
         for key in list(self.picard_RnaSeqMetrics_data.keys()):
             if len(self.picard_RnaSeqMetrics_data[key]) == 0:
