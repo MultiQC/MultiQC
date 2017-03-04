@@ -158,8 +158,7 @@ def make_table (dt):
 
                         if s_name not in t_rows.keys():
                             t_rows[s_name] = dict()
-                        t_rows[s_name][rid] = \
-                            '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
+                        t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
 
             # Remove header if we don't have any filled cells for it
             if sum([len(rows) for rows in t_rows.values()]) == 0:
