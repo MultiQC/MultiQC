@@ -86,12 +86,13 @@ class MultiqcModule(BaseMultiqcModule):
             MultiQC splits these by whitespace, collects by the tool name
             and shows the first command found. Any terms not found in <em>all</em> subsequent
             calls are replaced with <code>[variable]</code>
-            <em>(typically input and ouput filenames)</em>.</p>'''
+            <em>(typically input and ouput filenames)</em>. Each column is for one Cluster Flow run.</p>'''
 
         # Loop through pipelines
         tool_cmds = OrderedDict()
+        headers = dict()
         for pipeline_id, commands in self.clusterflow_commands.items():
-
+            headers[pipeline_id] = {'scale': False}
             self.var_html = '<span style="background-color:#dedede; color:#999;">[variable]</span>'
             tool_cmd_parts = OrderedDict()
             for cmd in commands:
@@ -120,11 +121,11 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             'id': 'clusterflow-commands',
             'table_title': 'Cluster Flow Commands',
-            'col1_header': 'Base Tool',
+            'col1_header': 'Tool',
             'sortRows': False,
             'no_beeswarm': True
         }
-        return html + table.plot(tool_cmds, None, table_config)
+        return html + table.plot(tool_cmds, headers, table_config)
 
 
     def _replace_variable_chunks(self, cmds):
