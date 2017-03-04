@@ -11,7 +11,7 @@ install:
 # commands to run tests
 script:
   - multiqc data
-  - multiqc data -f -i "Forced Report" -z -m fastqc -n custom_fn --no-data-dir
-  - multiqc data -f -z -v --flat -e fastqc
-  - multiqc -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
+  - multiqc data -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" -z -n custom_fn --no-data-dir
+  - multiqc data -f -v --flat -e star -x ngi -s
+  - multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
   
