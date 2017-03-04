@@ -148,7 +148,7 @@ def make_table (dt):
 
                     # Build HTML
                     if not header['scale']:
-                        if s_name not in t_rows.keys():
+                        if s_name not in t_rows:
                             t_rows[s_name] = dict()
                         t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
                     else:
@@ -156,7 +156,7 @@ def make_table (dt):
                         val_html = '<span class="val">{}</span>'.format(val)
                         wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
 
-                        if s_name not in t_rows.keys():
+                        if s_name not in t_rows:
                             t_rows[s_name] = dict()
                         t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
 

@@ -13,5 +13,5 @@ script:
   - multiqc data
   - multiqc data -f -i "Forced Report" -z -m fastqc -n custom_fn --no-data-dir
   - multiqc data -f -z -v --flat -e fastqc
-  - multiqc data -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
+  - multiqc -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
   
