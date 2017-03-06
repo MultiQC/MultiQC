@@ -71,11 +71,12 @@ class MultiqcModule(BaseMultiqcModule):
             header = fn['f'].readline()
             sample_names = [self.clean_s_name(x, fn["root"]) for x in header.strip().split()[2:]]
             for parts in (l.rstrip().split() for l in fn['f']):
-                chrom, cov = parts[:2]
-                sample_vals = parts[2:]
-                if self._short_chrom(chrom) is not None:
-                    for val, sample in zip(sample_vals, sample_names):
-                        data[chrom][sample][float(cov)] = float(val)
+                if len(parts) > 2:
+                    chrom, cov = parts[:2]
+                    sample_vals = parts[2:]
+                    if self._short_chrom(chrom) is not None:
+                        for val, sample in zip(sample_vals, sample_names):
+                            data[chrom][sample][float(cov)] = float(val)
         if data:
             def to_padded_str(x):
                 x = self._short_chrom(x)
