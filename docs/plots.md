@@ -334,7 +334,7 @@ Finally, a the function accepts a third parameter, a config dictionary.
 This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 
-The default header keys and table config options are:
+The default header keys are:
 ```python
 single_header = {
     'namespace': '',                # Name for grouping in table
@@ -349,7 +349,11 @@ single_header = {
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
 }
+```
+A third parameter can be specified with settings for the whole table:
+```python
 table_config = {
+    'namespace': '',                         # Module / section that table is in. Prepends header descriptions.
     'id': '<random string>',                 # ID used for the table
     'table_title': '<table id>',             # Title of the table. Used in the column config modal
     'save_file': False,                      # Whether to save the table data to a file
@@ -359,16 +363,8 @@ table_config = {
     'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
-Finally, a third parameter can be specified with table settings.
-```python
-tconfig = {
-    'id': None,             # ID for the table in the HTML
-    'table_title': None,    # Title printed above the table
-    'save_file': False,     # Save the data in the table to a file in `multiqc_data`
-    'raw_data_fn': None,    # Filename to use if saving data file
-    'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
-}
-```
+Header keys such as `max`, `min` and `scale` can also be specified in the table config.
+These will then be applied to all columns.
 
 A very basic example is shown below:
 ```python

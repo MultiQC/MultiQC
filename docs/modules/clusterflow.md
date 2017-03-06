@@ -13,7 +13,8 @@ Cluster Flow easy enough to set up and use for non-bioinformaticians
 (given a basic knowledge of the command line), and it's simplicity
 makes it great for low to medium throughput analyses.
 
-The MultiQC module for Cluster Flow parses `*_clusterflow.txt` run logs
-and finds commands executed by modules. These are saved in
-`multiqc_data/multiqc_clusterflow.txt` and consensus commands are
-shown in the report.
+The MultiQC module for Cluster Flow parses `*_clusterflow.txt` logs
+and finds consensus commands executed by modules in each pipeline run.
+
+The Cluster Flow `*.run` files are also parsed and pipeline information
+shown (some basic statistics plus the pipeline steps / params used).
