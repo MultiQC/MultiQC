@@ -6,6 +6,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import re
+import os
 
 from multiqc import config
 from multiqc.plots import table
@@ -67,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
                     pipeline_r = re.match(r"(cf_.+)_"+re.escape(module)+r"_\d+$", job_id)
                     if pipeline_r:
                         pipeline_id = pipeline_r.group(1)
-            
+
             # Get commands that have been run
             if l.startswith('###CFCMD'):
                 if pipeline_id is None:
@@ -79,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def clusterflow_commands_table (self):
         """ Generate the trimming length plot """
-        
+
         # I wrote this when I was tired. Sorry if it's incomprehensible.
 
         html = '''<p>Every Cluster Flow run will have many different commands.
@@ -97,17 +98,18 @@ class MultiqcModule(BaseMultiqcModule):
             tool_cmd_parts = OrderedDict()
             for cmd in commands:
                 s = cmd.split()
-                if s[0] not in tool_cmd_parts.keys():
-                    tool_cmd_parts[s[0]] = list()
-                tool_cmd_parts[s[0]].append(s)
+                tool = self._guess_cmd_name(s)
+                if tool not in tool_cmd_parts.keys():
+                    tool_cmd_parts[tool] = list()
+                tool_cmd_parts[tool].append(s)
 
-            
+
             for tool, cmds in tool_cmd_parts.items():
                 cons_cmd = self._replace_variable_chunks(cmds)
                 # Try again with first two blocks if all variable
                 variable_count = cons_cmd.count(self.var_html)
                 if variable_count == len(cmds[0]) - 1 and len(cmds[0]) > 2:
-                    for subcmd in set([s[1] for s in cmds]):
+                    for subcmd in set([x[1] for x in cmds]):
                         sub_cons_cmd = self._replace_variable_chunks([cmd for cmd in cmds if cmd[1] == subcmd])
                         tool = "{} {}".format(tool, subcmd)
                         if tool not in tool_cmds:
@@ -117,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if tool not in tool_cmds:
                         tool_cmds[tool] = dict()
                     tool_cmds[tool][pipeline_id] = '<code style="white-space:nowrap;">{}</code>'.format(" ".join(cons_cmd) )
-        
+
         table_config = {
             'id': 'clusterflow-commands',
             'table_title': 'Cluster Flow Commands',
@@ -131,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
     def _replace_variable_chunks(self, cmds):
         """ List through a list of command chunks. Return a single list
         with any variable bits blanked out. """
-        
+
         cons_cmd = None
         while cons_cmd is None:
             for cmd in cmds:
@@ -142,3 +144,20 @@ class MultiqcModule(BaseMultiqcModule):
                         if s not in cmd:
                             cons_cmd[idx] = self.var_html
         return cons_cmd
+
+    def _guess_cmd_name(self, cmd):
+        """ Manually guess some known command names, where we can
+        do a better job than the automatic parsing. """
+
+        # zcat to bowtie
+        if cmd[0] == 'zcat' and 'bowtie' in cmd:
+            return 'bowtie'
+        # samtools
+        if cmd[0] == 'samtools':
+            return ' '.join(cmd[0:2])
+        # java (eg. picard)
+        if cmd[0] == 'java':
+            jars = [s for s in cmd if '.jar' in s]
+            return os.path.basename(jars[0].replace('.jar', ''))
+        return cmd[0]
+
