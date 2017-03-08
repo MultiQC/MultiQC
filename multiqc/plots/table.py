@@ -20,11 +20,6 @@ def plot (data, headers=[], pconfig={}):
     :return: HTML ready to be inserted into the page
     """
 
-    # Ensure that headers are strings
-    for s_name in data:
-        for k, v in data[s_name].items():
-            data[s_name][str(k)] = v
-
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
 

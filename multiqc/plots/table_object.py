@@ -33,13 +33,11 @@ class datatable (object):
             # Get the header keys
             try:
                 keys = headers[idx].keys()
-                keys = [str(k) for k in keys]
                 assert len(keys) > 0
             except (IndexError, AttributeError, AssertionError):
                 keys = list()
                 for samp in d.values():
                     for k in samp.keys():
-                        k = str(k)
                         if k not in keys:
                             keys.append(k)
                 try:
@@ -49,6 +47,14 @@ class datatable (object):
                 headers[idx] = OrderedDict()
                 for k in keys:
                     headers[idx][k] = {}
+
+            # Ensure that keys are strings, not numeric
+            keys = [str(k) for k in keys]
+            for k in headers[idx].keys():
+                headers[idx][str(k)] = headers[idx].pop(k)
+            for s_name in data[idx].keys():
+                for k in data[idx][s_name].keys():
+                    data[idx][s_name][str(k)] = data[idx][s_name].pop(k)
 
             # Check that we have some data in each column
             empties = list()
