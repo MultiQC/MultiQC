@@ -52,7 +52,9 @@ setup(
         'simplejson',
         'pyyaml',
         'click',
-        'matplotlib'
+        'matplotlib',
+        'numpy',
+        'spectra'
     ],
     entry_points = {
         'multiqc.modules.v1': [

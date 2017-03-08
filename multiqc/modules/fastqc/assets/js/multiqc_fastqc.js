@@ -103,7 +103,7 @@ function fastqc_seq_content_heatmap() {
         });
         ypos = 0;
         $.each(sample_names, function(idx, s_name){
-          
+
             // Add a 5px wide bar indicating either status or Highlight
             var status = sample_statuses[s_name];
             var s_col = '#999999';
@@ -118,7 +118,7 @@ function fastqc_seq_content_heatmap() {
             });
             ctx.fillStyle = s_col;
             ctx.fillRect (0, ypos+1, 5, s_height-2);
-            
+
             // Plot the squares for the heatmap
             var s = p_data[s_name];
             var xpos = 6;
@@ -138,7 +138,7 @@ function fastqc_seq_content_heatmap() {
                 var r = (v['t'] / 100)*255;
                 var g = (v['a'] / 100)*255;
                 var b = (v['c'] / 100)*255;
-                ctx.fillStyle = chroma(r,g,b).css();
+                ctx.fillStyle = 'rgba('+r+','+g+','+b+',1)';
                 // width+1 to avoid vertical white line gaps.
                 ctx.fillRect (xpos, ypos, this_width+1, s_height);
                 xpos += this_width;

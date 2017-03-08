@@ -360,7 +360,7 @@ headers['name'] = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
-    'scale': 'GnBu',                # Colour scale for colour coding
+    'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
     'format': '{:.1f}',             # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
@@ -371,10 +371,9 @@ headers['name'] = {
   * This prepends the column title in the mouse hover: _Namespace: Title_.
     It's automatically generated for the General Statistics table.
 * `scale`
-  * Colour scales are the names of ColorBrewer palettes. See the
-    [chroma.js documentation](https://github.com/gka/chroma.js/wiki/Predefined-Colors)
-    for a list of available colour scales
+  * Colour scales are the names of ColorBrewer palettes. See below for available scales.
   * Add `-rev` to the name of a colour scale to reverse it
+  * Set to `False` to disable colouring and background bars
 * `shared_key`
   * Any string can be specified here, if other columns are found that share
     the same key, a consistent colour scheme and data scale will be used in
@@ -389,6 +388,9 @@ headers['name'] = {
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
+
+The colour scales are from [ColorBrewer2](http://colorbrewer2.org/) and are named as follows:
+![color brewer](images/cbrewer_scales.png)
 
 A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling

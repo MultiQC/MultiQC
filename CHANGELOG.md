@@ -39,6 +39,10 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
 * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
 * Handle error when `git` isn't installed on the system.
+* Refactored colouring of table cells
+  * Was previously done in the browser using [chroma.js](http://gka.github.io/chroma.js/)
+  * Now done at report generation time using the [spectra](https://pypi.python.org/pypi/spectra) package
+  * Should helpfully speed up report rendering time in the web browser, especially for large reports
 * Docs updates (thanks to @varemo)
 * Previously hidden log file `.multiqc.log` renamed to `multiqc.log` in `multiqc_data`
 * Added option to load MultiQC config file from a path specified in the environment variable `MULTIQC_CONFIG_PATH`

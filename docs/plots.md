@@ -342,8 +342,8 @@ single_header = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
-    'scale': 'GnBu',                # Colour scale for colour coding (set to False to disable numeric bar)
-    'colour': '<auto from palette>',# Colour for column grouping
+    'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
+    'colour': '<auto>',             # Colour for column grouping
     'format': '{:.1f}',             # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
@@ -365,6 +365,9 @@ table_config = {
 ```
 Header keys such as `max`, `min` and `scale` can also be specified in the table config.
 These will then be applied to all columns.
+
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
+![color brewer](images/cbrewer_scales.png)
 
 A very basic example is shown below:
 ```python

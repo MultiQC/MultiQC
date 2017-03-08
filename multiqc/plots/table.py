@@ -7,7 +7,7 @@ import logging
 import random
 import re
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, report, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
 logger = logging.getLogger(__name__)
 
@@ -78,16 +78,14 @@ def make_table (dt):
                 checked = ''
                 hidden_cols += 1
 
-            c_col = '' if header['scale'] == False else 'chroma-col'
-
-            data_attr = 'data-chroma-scale="{}" data-chroma-max="{}" data-chroma-min="{}" data-namespace="{}" {}' \
-                .format(header['scale'], header['dmax'], header['dmin'], header['namespace'], shared_key)
+            data_attr = 'data-dmax="{}" data-dmin="{}" data-namespace="{}" {}' \
+                .format(header['dmax'], header['dmin'], header['namespace'], shared_key)
 
             cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
                 .format(header['namespace'], header['description'], header['title'])
 
-            t_headers[rid] = '<th id="header_{rid}" class="{cc} {rid} {h}" {d}>{c}</th>' \
-                .format(rid=rid, d=data_attr, h=hide, c=cell_contents, cc=c_col)
+            t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>' \
+                .format(rid=rid, h=hide, da=data_attr, c=cell_contents)
 
             empty_cells[rid] = '<td class="data-coloured {rid} {h}"></td>'.format(rid=rid, h=hide)
 
@@ -115,6 +113,12 @@ def make_table (dt):
                     col_id = '<code>{}</code>'.format(k),
                     sk = header.get('shared_key', '')
                 )
+
+            # Make a colour scale
+            if header['scale'] == False:
+                c_scale = None
+            else:
+                c_scale = mqc_colour.mqc_colour_scale(header['scale'], header['dmin'], header['dmax'])
 
             # Add the data table cells
             for (s_name, samp) in dt.data[idx].items():
@@ -152,7 +156,11 @@ def make_table (dt):
                             t_rows[s_name] = dict()
                         t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
                     else:
-                        bar_html = '<span class="bar" style="width:{}%;"></span>'.format(percentage)
+                        if c_scale is not None:
+                            col = ' background-color:{};'.format(c_scale.get_colour(val))
+                        else:
+                            col = ''
+                        bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)
                         val_html = '<span class="val">{}</span>'.format(val)
                         wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
 
