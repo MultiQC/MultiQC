@@ -50,10 +50,10 @@ class datatable (object):
 
             # Ensure that keys are strings, not numeric
             keys = [str(k) for k in keys]
-            for k in headers[idx].keys():
+            for k in list(headers[idx].keys()):
                 headers[idx][str(k)] = headers[idx].pop(k)
             for s_name in data[idx].keys():
-                for k in data[idx][s_name].keys():
+                for k in list(data[idx][s_name].keys()):
                     data[idx][s_name][str(k)] = data[idx][s_name].pop(k)
 
             # Check that we have some data in each column
