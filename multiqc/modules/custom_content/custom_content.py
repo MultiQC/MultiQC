@@ -67,9 +67,25 @@ def custom_module_classes():
             # YAML and JSON files are the easiest
             parsed_data = None
             if f_extension == '.yaml' or f_extension == '.yml':
-                parsed_data = yaml.load(f['f'])
+                try:
+                    # Parsing as OrderedDict is slightly messier with YAML
+                    # http://stackoverflow.com/a/21048064/713980
+                    def dict_constructor(loader, node):
+                        return OrderedDict(loader.construct_pairs(node))
+                    yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
+                    parsed_data = yaml.load(f['f'])
+                except Exception as e:
+                    log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
+                    log.warning("YAML error: {}".format(e))
+                    break
             elif f_extension == '.json':
-                parsed_data = json.loads(f['f'])
+                try:
+                    # Use OrderedDict for objects so that column order is honoured
+                    parsed_data = json.loads(f['f'], object_pairs_hook=OrderedDict)
+                except Exception as e:
+                    log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
+                    log.warning("JSON error: {}".format(e))
+                    break
             if parsed_data is not None:
                 c_id = parsed_data.get('id', k)
                 if len(parsed_data.get('data', {})) > 0:

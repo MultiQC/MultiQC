@@ -67,7 +67,7 @@ conda install -c bioconda multiqc
 
 If you would like the development version instead, the command is:
 ```bash
-pip install git+https://github.com/ewels/MultiQC.git
+pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
 ```
 
 MultiQC is also available in the

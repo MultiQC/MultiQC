@@ -33,11 +33,13 @@ class datatable (object):
             # Get the header keys
             try:
                 keys = headers[idx].keys()
+                keys = [str(k) for k in keys]
                 assert len(keys) > 0
             except (IndexError, AttributeError, AssertionError):
                 keys = list()
                 for samp in d.values():
                     for k in samp.keys():
+                        k = str(k)
                         if k not in keys:
                             keys.append(k)
                 try:

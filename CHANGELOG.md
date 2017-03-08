@@ -46,6 +46,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
   * `sortRows: False` prevents table rows from being sorted alphabetically
   * `col1_header` allows the default first column header to be changed from "Sample Name"
 * Tables no longer show _Configure Columns_ and _Plot_ buttons if they only have a single column
+* Custom content bugfixes
+  * JSON + YAML tables now remember order of table columns
+  * Many minor bugfixes
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
