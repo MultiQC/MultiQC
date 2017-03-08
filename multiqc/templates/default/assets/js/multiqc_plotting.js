@@ -58,7 +58,7 @@ $(function () {
     // Only one point per dataset, so multiply limit by arbitrary number.
     var max_num = num_datasets_plot_limit * 50;
     plot_graph(target, undefined, max_num);
-  });
+  }).promise().done(function(){ $('.mqc_loading_warning').hide(); });
 
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){

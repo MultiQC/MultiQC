@@ -83,6 +83,11 @@ kbd {
     font-weight: normal;
     padding: 15px 0;
 }
+.side-nav .mqc_loading_warning {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    color: #ca424c;
+}
 .side-nav p {
     font-size: 0.8em;
     color: #999;
