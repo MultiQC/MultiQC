@@ -135,6 +135,15 @@ quast:
 rna_seqc:
     metrics:
         fn: 'metrics.tsv'
+    coverage:
+        fn:
+            - 'meanCoverageNorm_high.txt'
+            - 'meanCoverageNorm_medium.txt'
+            - 'meanCoverageNorm_low.txt'
+    correlation:
+        fn:
+            - 'corrMatrixPearson.txt'
+            - 'corrMatrixSpearman.txt'
 rseqc:
     bam_stat:
         contents: 'Proper-paired reads map to different chrom:'

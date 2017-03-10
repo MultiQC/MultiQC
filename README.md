@@ -35,10 +35,10 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
 [FastQC][fastqc]             | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
 [FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
 [Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
-[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RSeQC][rseqc]
-                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [BUSCO][busco]
-                             | [STAR][star]           | [Samtools][samtools]      | [goleft][goleft]
-                             | [Tophat][tophat]       | [SnpEff][snpeff]          |
+[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc]
+                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]]
+                             | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]
+                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]
                              |                        | [Subread featureCounts][featurecounts] |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -169,6 +169,7 @@ and many others. Thanks for your support!
 [prokka]:         http://multiqc.info/docs/#prokka
 [qualimap]:       http://multiqc.info/docs/#qualimap
 [quast]:          http://multiqc.info/docs/#quast
+[rna_seqc]:       http://multiqc.info/docs/#rna_seqc
 [rseqc]:          http://multiqc.info/docs/#rseqc
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster

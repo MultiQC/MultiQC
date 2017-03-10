@@ -21,6 +21,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
   * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
 * [**Cluster Flow**](http://clusterflow.io) - new module!
   * Cluster Flow is a workflow tool for bioinformatics pipelines. The new module parses executed tool commands.
+* [**RNA-SeQC**](http://archive.broadinstitute.org/cancer/cga/rna-seqc) - new module!
+  * New module to parse output from RNA-SeQC, a java program which computes a series
+    of quality control metrics for RNA-seq data.
 * [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
   * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
     data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
