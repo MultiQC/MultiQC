@@ -201,7 +201,8 @@ class MultiqcModule(BaseMultiqcModule):
         """ Return HTML for correlation heatmap """
         data = None
         corr_type = None
-        if self.rna_seqc_spearman is not None:
+        correlation_type = getattr(config, 'rna_seqc' ,{}).get('default_correlation', 'spearman')
+        if self.rna_seqc_spearman is not None and correlation_type != 'pearson':
             data = self.rna_seqc_spearman
             corr_type = 'Spearman'
         elif self.rna_seqc_pearson is not None:

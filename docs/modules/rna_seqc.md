@@ -13,6 +13,13 @@ which MultiQC also supports).
 RNA-SeQC is a java program which computes a series of quality
 control metrics for RNA-seq data.
 
-RNA-SeQC is built on the GATK as well as the Picard API.
+This module shows the Spearman correlation heatmap if both
+Spearman and Pearson's are found. To plot Pearson's by default instead,
+add the following to your MultiQC config file:
+
+```yaml
+rna_seqc:
+    default_correlation: pearson
+```
 
 
