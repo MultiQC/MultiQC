@@ -36,7 +36,7 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
 [FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
 [Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
 [Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc]
-                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]]
+                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]
                              | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]
                              | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]
                              |                        | [Subread featureCounts][featurecounts] |
