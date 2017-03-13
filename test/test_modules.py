@@ -37,7 +37,7 @@ try:
     modules = list(set([f[0] for f in fixtures]))
     pytest_modules = [pytest.config.option.module] if pytest.config.option.module else modules
 except ImportError as e:
-    print("pytest-ngsfixtures not installed; install with 'conda install -c percyfal pytest-ngsfixtures'")
+    print("\n\n   pytest-ngsfixtures not installed; install with 'conda install -c percyfal pytest-ngsfixtures'\n\n")
 
 
 def multiqc_module_command_exists(name, mod, command):
