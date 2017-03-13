@@ -39,6 +39,24 @@ try:
 except ImportError as e:
     print("pytest-ngsfixtures not installed; install with 'conda install -c percyfal pytest-ngsfixtures'")
 
+
+def multiqc_module_command_exists(name, mod, command):
+    loader = importlib.find_loader(mod)
+    m = loader.load_module()
+    if m is None:
+        # For now assume we can do something with data
+        return True
+    moduledir = os.path.dirname(m.__file__)
+    submodules = [os.path.basename(x).replace(".py", "") for x in os.listdir(moduledir)]
+    for submod in submodules:
+        if submod.startswith("__"):
+            continue
+        if re.search(submod, command.replace("{}_".format(name), "")):
+            return True
+    return False
+
+
+
 supported_multiqc_modules = []
 missing_multiqc_parsers = []
 
