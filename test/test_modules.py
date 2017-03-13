@@ -66,7 +66,7 @@ for f in fixtures:
     try:
         importlib.import_module(mod)
         supported_multiqc_modules.append(module)
-        if module in pytest_modules:
+        if module in pytest_modules and multiqc_module_command_exists(module, mod, command):
             test_fixtures.append(f)
     except ImportError as e:
         # Test data available in pytest-ngsfixtures but no parser in multiqc
@@ -87,28 +87,28 @@ def evaluate_parser(multiqc_obj, module, command):
 @pytest.fixture(scope="function", autouse=False, params=test_fixtures,
                 ids=["{} {}:{}/{}".format(x[0], x[1], x[2], x[3]) for x in test_fixtures])
 def data(request, tmpdir_factory):
-    module, command, version, end, fmt = request.param
+    module, command, version, end, fmtdict = request.param
     params = {'version': version, 'end': end}
-    output = fmt.format(**params)
-    src = os.path.join("applications", module, output)
-    dst = os.path.basename(src)
+    outputs = [fmt.format(**params) for fmt in fmtdict.values()]
+    sources = [os.path.join("applications", module, output) for output in outputs]
+    dests = [os.path.basename(src) for src in sources]
     fdir = os.path.join(module, str(version), command, end)
-    p = factories.safe_mktemp(tmpdir_factory, fdir)
-    p = factories.safe_symlink(p, src, dst)
-    if pytest.config.option.ngs_show_fixture:
-        logger.info(p)
-    return module, command, p
+    pdir = factories.safe_mktemp(tmpdir_factory, fdir)
+    for src, dst in zip(sources, dests):
+        p = factories.safe_symlink(pdir, src, dst)
+    return module, command, pdir
 
 
 
 @pytest.mark.skipif(not has_ngsfixtures, reason="pytest-ngsfixtures not installed")
 def test_module(data, monkeypatch):
-    module, command, p = data
+    module, command, pdir = data
 
     def mockwrite(data, fn, sort_cols, data_format):
         return None
 
-    monkeypatch.setattr(multiqc.utils.report, 'files', [{'root': p.dirname, 'fn': p.basename}])
+    filelist = [{'root': p.dirname, 'fn': p.basename} for p in pdir.visit()]
+    monkeypatch.setattr(multiqc.utils.report, 'files', filelist)
     monkeypatch.setattr(multiqc.utils.util_functions, 'write_data_file', mockwrite)
 
     mod = "multiqc.modules.{}".format(module)
