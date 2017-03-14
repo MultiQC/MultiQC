@@ -60,13 +60,15 @@ def multiqc_module_command_exists(name, mod, command):
 supported_multiqc_modules = []
 missing_multiqc_parsers = []
 
+remap = {'bowtie': 'bowtie1'}
+
 for f in fixtures:
     module, command, version, end, fmt = f
-    mod = "multiqc.modules.{}".format(module)
+    mod = "multiqc.modules.{}".format(remap.get(module, module))
     try:
         importlib.import_module(mod)
         supported_multiqc_modules.append(module)
-        if module in pytest_modules and multiqc_module_command_exists(module, mod, command):
+        if module in pytest_modules and multiqc_module_command_exists(remap.get(module, module), mod, remap.get(command, command)):
             test_fixtures.append(f)
     except ImportError as e:
         # Test data available in pytest-ngsfixtures but no parser in multiqc
@@ -78,9 +80,11 @@ missing_modules = MULTIQC_MODULES.difference(set(supported_multiqc_modules))
 logger.info("pytest_ngsfixtures test data missing for the following MultiQC modules: {}".format(", ".join(sorted(missing_modules))))
 logger.info("MultiQC parsers missing for the following pytest_ngsfixtures test fixtures: {}".format(", ".join(sorted(sorted(set(missing_multiqc_parsers))))))
 
+
+name_map = {'bowtie1': 'bowtie 1', 'bowtie2': 'bowtie 2'}
 def evaluate_parser(multiqc_obj, module, command):
     """Evaluate parsed data from multiqc in some way"""
-    assert multiqc_obj.name.lower() == module
+    assert multiqc_obj.name.lower() == name_map.get(module, module)
 
 
 @pytest.mark.skipif(not has_ngsfixtures, reason="pytest-ngsfixtures not installed")
@@ -96,7 +100,7 @@ def data(request, tmpdir_factory):
     pdir = factories.safe_mktemp(tmpdir_factory, fdir)
     for src, dst in zip(sources, dests):
         p = factories.safe_symlink(pdir, src, dst)
-    return module, command, pdir
+    return remap.get(module, module), remap.get(command, command), pdir
 
 
 
