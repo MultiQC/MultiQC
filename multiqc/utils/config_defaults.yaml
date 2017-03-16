@@ -179,6 +179,7 @@ module_order:
     - 'bowtie2'
     - 'bowtie1'
     # Pre-alignment QC
+    - 'adapterRemoval'
     - 'cutadapt'
     - 'trimmomatic'
     - 'skewer'
