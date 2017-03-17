@@ -31,13 +31,13 @@ def plot (data, pconfig={}):
             if type(ds[s_name]) is not list:
                 ds[s_name] = [ ds[s_name] ]
             for k in ds[s_name]:
-                if 'xmax' in pconfig and k['x'] > pconfig['xmax']:
+                if 'xmax' in pconfig and float(k['x']) > float(pconfig['xmax']):
                     continue
-                if 'xmin' in pconfig and k['x'] < pconfig['xmin']:
+                if 'xmin' in pconfig and float(k['x']) < float(pconfig['xmin']):
                     continue
-                if 'ymax' in pconfig and k['y'] > pconfig['ymax']:
+                if 'ymax' in pconfig and float(k['y']) > float(pconfig['ymax']):
                     continue
-                if 'ymin' in pconfig and k['y'] < pconfig['ymin']:
+                if 'ymin' in pconfig and float(k['y']) < float(pconfig['ymin']):
                     continue
                 this_series = { 'x': k['x'], 'y': k['y'] }
                 try:

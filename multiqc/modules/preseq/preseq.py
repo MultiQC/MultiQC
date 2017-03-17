@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
             xmax = 0
             for d in self.preseq_data.values():
                 maxy = max(d.values()) * 0.9
-                for x in reversed(d.keys()):
+                for x in reversed(list(d.keys())):
                     if d[x] < maxy:
                         xmax = max(xmax, x)
                         break
