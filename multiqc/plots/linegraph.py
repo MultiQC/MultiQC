@@ -73,6 +73,14 @@ def plot (data, pconfig={}):
                     maxval = max(maxval, d[s][k])
             else:
                 for k in sorted(d[s].keys()):
+                    if 'xmax' in pconfig and k > pconfig['xmax']:
+                        continue
+                    if 'xmin' in pconfig and k < pconfig['xmin']:
+                        continue
+                    if 'ymax' in pconfig and d[s][k] > pconfig['ymax']:
+                        continue
+                    if 'ymin' in pconfig and d[s][k] < pconfig['ymin']:
+                        continue
                     pairs.append([k, d[s][k]])
                     try:
                         maxval = max(maxval, d[s][k])
@@ -82,7 +90,8 @@ def plot (data, pconfig={}):
                 this_series = { 'name': s, 'data': pairs }
                 try:
                     this_series['color'] = pconfig['colors'][s]
-                except: pass
+                except:
+                    pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
 

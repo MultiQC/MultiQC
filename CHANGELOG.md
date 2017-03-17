@@ -32,6 +32,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * **Picard**
   * New `RrbsSummaryMetrics` Submodule!
   * New `WgsMetrics` Submodule!
+* **Preseq**
+  * Now trims the x axis to the point that meets 80% of `max(unique molecules)`
+  * Hopefully prevents ridiculous x axes without sacrificing too much useful information.
 * **Qualimap**
   * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
 * **RSeQC**
@@ -56,6 +59,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * Custom content bugfixes
   * JSON + YAML tables now remember order of table columns
   * Many minor bugfixes
+* Line graphs and scatter graphs axis limits
+  * If limits are specified, data exceeding this is no longer saved in report
+  * Visually identical, but can make report file sizes considerable smaller in some cases
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21

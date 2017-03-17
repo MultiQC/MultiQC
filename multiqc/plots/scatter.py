@@ -31,6 +31,14 @@ def plot (data, pconfig={}):
             if type(ds[s_name]) is not list:
                 ds[s_name] = [ ds[s_name] ]
             for k in ds[s_name]:
+                if 'xmax' in pconfig and k['x'] > pconfig['xmax']:
+                    continue
+                if 'xmin' in pconfig and k['x'] < pconfig['xmin']:
+                    continue
+                if 'ymax' in pconfig and k['y'] > pconfig['ymax']:
+                    continue
+                if 'ymin' in pconfig and k['y'] < pconfig['ymin']:
+                    continue
                 this_series = { 'x': k['x'], 'y': k['y'] }
                 try:
                     this_series['name'] = "{}: {}".format(s_name, k['name'])
