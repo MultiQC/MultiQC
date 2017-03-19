@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from HTSeq Count """
+""" MultiQC module to parse output from Adapter Removal """
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -24,13 +24,17 @@ class MultiqcModule(BaseMultiqcModule):
         href='https://github.com/MikkelSchubert/adapterremoval',
         info=" rapid adapter trimming, identification, and read merging ")
 
+        self.__read_type = None
+        self.__collapsed = None
         self.s_name = None
         self.adapter_removal_data = dict()
-        self.adapter_removal_counts_mate1 = dict()
-        self.adapter_removal_counts_mate2 = dict()
-        self.adapter_removal_counts_singleton = dict()
-        self.adapter_removal_counts_discarged = dict()
-        self.adapter_removal_counts_all = dict()
+        self.arc_mate1 = dict()
+        self.arc_mate2 = dict()
+        self.arc_singleton = dict()
+        self.arc_collapsed = dict()
+        self.arc_collapsed_truncated = dict()
+        self.arc_discarged = dict()
+        self.arc_all = dict()
 
         for f in self.find_log_files(config.sp['adapterRemoval'], filehandles=True):
             self.s_name = f['s_name']
@@ -81,6 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             settings_data[block_title].append(str(line))
 
+        # set data for further working
         self.set_result_data(settings_data)
 
         # todo: return or set by member var?
@@ -101,20 +106,47 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data['percent_aligned'] = round((self.result_data['aligned'] * 100) / self.result_data['total'], 2)
 
     def set_len_dist(self, len_dist_data):
-        self.adapter_removal_counts_mate1[self.s_name] = dict()
-        self.adapter_removal_counts_mate2[self.s_name] = dict()
-        self.adapter_removal_counts_singleton[self.s_name] = dict()
-        self.adapter_removal_counts_discarged[self.s_name] = dict()
-        self.adapter_removal_counts_all[self.s_name] = dict()
+        self.arc_mate1[self.s_name] = dict()
+        self.arc_mate2[self.s_name] = dict()
+        self.arc_singleton[self.s_name] = dict()
+        self.arc_collapsed[self.s_name] = dict()
+        self.arc_collapsed_truncated[self.s_name] = dict()
+        self.arc_discarged[self.s_name] = dict()
+        self.arc_all[self.s_name] = dict()
+
+        head_line = len_dist_data[0].rstrip('\n').split('\t')
+        self.__read_type = 'paired' if head_line[2] == 'Mate2' else 'single'
+        self.__collapsed = True if head_line[-3] == 'CollapsedTruncated' else False
 
         for line in len_dist_data[1:]:
-            #length, mate1, discarded, all = line.rstrip('\n').split('\t')
             l_data = line.rstrip('\n').split('\t')
-            self.adapter_removal_counts_mate1[self.s_name][l_data[0]] = int(l_data[1])
-            self.adapter_removal_counts_mate2[self.s_name][l_data[0]] = int(l_data[2])
-            self.adapter_removal_counts_singleton[self.s_name][l_data[0]] = int(l_data[3])
-            self.adapter_removal_counts_discarged[self.s_name][l_data[0]] = int(l_data[4])
-            self.adapter_removal_counts_all[self.s_name][l_data[0]] = int(l_data[5])
+            l_data = map(int, l_data)
+            if self.__read_type == 'single':
+                if not self.__collapsed:
+                    self.arc_mate1[self.s_name][l_data[0]] = l_data[1]
+                    self.arc_discarged[self.s_name][l_data[0]] = l_data[2]
+                    self.arc_all[self.s_name][l_data[0]] = l_data[3]
+                else:
+                    self.arc_mate1[self.s_name][l_data[0]] = l_data[1]
+                    self.arc_collapsed[self.s_name][l_data[0]] = l_data[2]
+                    self.arc_collapsed_truncated[self.s_name][l_data[0]] = l_data[3]
+                    self.arc_discarged[self.s_name][l_data[0]] = l_data[4]
+                    self.arc_all[self.s_name][l_data[0]] = l_data[5]
+            else:
+                if not self.__collapsed:
+                    self.arc_mate1[self.s_name][l_data[0]] = l_data[1]
+                    self.arc_mate2[self.s_name][l_data[0]] = l_data[2]
+                    self.arc_singleton[self.s_name][l_data[0]] = l_data[3]
+                    self.arc_discarged[self.s_name][l_data[0]] = l_data[4]
+                    self.arc_all[self.s_name][l_data[0]] = l_data[5]
+                else:
+                    self.arc_mate1[self.s_name][l_data[0]] = l_data[1]
+                    self.arc_mate2[self.s_name][l_data[0]] = l_data[2]
+                    self.arc_singleton[self.s_name][l_data[0]] = l_data[3]
+                    self.arc_collapsed[self.s_name][l_data[0]] = l_data[4]
+                    self.arc_collapsed_truncated[self.s_name][l_data[0]] = l_data[5]
+                    self.arc_discarged[self.s_name][l_data[0]] = l_data[6]
+                    self.arc_all[self.s_name][l_data[0]] = l_data[7]
 
     def adapter_removal_stats_table(self):
 
@@ -141,8 +173,8 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_counts_chart(self):
 
         cats = OrderedDict()
-        cats['aligned'] =      { 'name': 'aligned' }
-        cats['unaligned'] =     { 'name': 'unaligned' }
+        cats['aligned'] = {'name': 'aligned'}
+        cats['unaligned'] = {'name': 'unaligned'}
         config = {
             'id': 'adapter_removal_alignment_plot',
             'title': 'Adapter Removal Alignments',
@@ -164,17 +196,31 @@ class MultiqcModule(BaseMultiqcModule):
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            'data_labels': [{'name': 'Mate1', 'ylab': 'Count'},
-                            {'name': 'Mate2', 'ylab': 'Count'},
-                            {'name': 'Singleton', 'ylab': 'Count'},
-                            {'name': 'Discarged', 'ylab': 'Count'},
-                            {'name': 'All', 'ylab': 'Count'},]
+            'data_labels': []
         }
-        #print(self.adapter_removal_counts_mate1)
-        lineplot_data = [self.adapter_removal_counts_mate1,
-                         self.adapter_removal_counts_mate2,
-                         self.adapter_removal_counts_singleton,
-                         self.adapter_removal_counts_discarged,
-                         self.adapter_removal_counts_all]
+
+        dl_mate1 = {'name': 'Mate1', 'ylab': 'Count'}
+        dl_mate2 = {'name': 'Mate2', 'ylab': 'Count'}
+        dl_singleton = {'name': 'Singleton', 'ylab': 'Count'}
+        dl_collapsed = {'name': 'Collapsed', 'ylab': 'Count'}
+        dl_collapsed_truncated = {'name': 'Collapsed Truncated', 'ylab': 'Count'}
+        dl_discarded = {'name': 'Discarded', 'ylab': 'Count'}
+        dl_all = {'name': 'All', 'ylab': 'Count'}
+
+        if self.__read_type == 'single':
+            if not self.__collapsed:
+                lineplot_data = [self.arc_mate1, self.arc_discarged, self.arc_all]
+                pconfig['data_labels'].extend([dl_mate1, dl_discarded, dl_all])
+            else:
+                lineplot_data = [self.arc_mate1, self.arc_collapsed, self.arc_collapsed_truncated, self.arc_discarged, self.arc_all]
+                pconfig['data_labels'].extend([dl_mate1, dl_collapsed, dl_collapsed_truncated, dl_discarded, dl_all])
+        else:
+            if not self.__collapsed:
+                lineplot_data = [self.arc_mate1, self.arc_mate2, self.arc_singleton, self.arc_discarged, self.arc_all]
+                pconfig['data_labels'].extend([dl_mate1, dl_mate2, dl_singleton, dl_discarded, dl_all])
+            else:
+                lineplot_data = [self.arc_mate1, self.arc_mate2, self.arc_singleton, self.arc_collapsed, self.arc_collapsed_truncated, self.arc_discarged, self.arc_all]
+                pconfig['data_labels'].extend([dl_mate1, dl_mate2, dl_singleton, dl_collapsed, dl_collapsed_truncated, dl_discarded, dl_all])
+
         html += linegraph.plot(lineplot_data, pconfig)
         return html
