@@ -66,6 +66,10 @@ for entry_point in pkg_resources.iter_entry_points('multiqc.modules.v1'):
     nicename = str(entry_point).split('=')[0].strip()
     avail_modules[nicename] = entry_point
 
+# run_modules defined here so it can be shared between the main script and plugin
+# hooks.
+run_modules = []
+
 ##### Available templates
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
 # Get all templates, including those from other extension packages

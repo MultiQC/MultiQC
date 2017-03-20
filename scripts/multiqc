@@ -291,19 +291,21 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         logger.info("Searching '{}'".format(d))
 
     # Get the list of modules we want to run, in the order that we want them
-    run_modules = [ m for m in config.top_modules if m in config.avail_modules.keys() ]
+    run_modules = config.run_modules
+    run_modules.extend( [ m for m in config.top_modules if m in config.avail_modules.keys() ] )
     run_modules.extend( [ m for m in config.avail_modules.keys() if m not in config.module_order and m not in run_modules ] )
     run_modules.extend( [ m for m in config.module_order if m in config.avail_modules.keys() and m not in run_modules ] )
 
     if module:
-        run_modules = [m for m in run_modules if m in module]
+        #In-place list modification with [:] to edit config.run_modules
+        run_modules[:] = [m for m in run_modules if m in module]
         logger.info('Only using modules {}'.format(', '.join(module)))
     elif exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
             config.skip_generalstats = True
             exclude = tuple(x for x in exclude if x != 'general_stats')
-        run_modules = [m for m in run_modules if m not in exclude]
+        run_modules[:] = [m for m in run_modules if m not in exclude]
     if len(run_modules) == 0:
         logger.critical('No analysis modules specified!')
         sys.exit(1)
@@ -337,6 +339,8 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     report.get_filelist()
 
     # Run the modules!
+    # Note this hook is now allowed to inspect and amend the list in
+    # config.run_modules.
     plugin_hooks.mqc_trigger('before_modules')
     sys_exit_code = 0
     for this_module in run_modules:
