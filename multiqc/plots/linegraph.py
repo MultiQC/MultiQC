@@ -73,14 +73,16 @@ def plot (data, pconfig={}):
                     maxval = max(maxval, d[s][k])
             else:
                 for k in sorted(d[s].keys()):
-                    if 'xmax' in pconfig and float(k) > float(pconfig['xmax']):
-                        continue
-                    if 'xmin' in pconfig and float(k) < float(pconfig['xmin']):
-                        continue
-                    if 'ymax' in pconfig and float(d[s][k]) > float(pconfig['ymax']):
-                        continue
-                    if 'ymin' in pconfig and float(d[s][k]) < float(pconfig['ymin']):
-                        continue
+                    if k is not None:
+                        if 'xmax' in pconfig and float(k) > float(pconfig['xmax']):
+                            continue
+                        if 'xmin' in pconfig and float(k) < float(pconfig['xmin']):
+                            continue
+                    if d[s][k] is not None:
+                        if 'ymax' in pconfig and float(d[s][k]) > float(pconfig['ymax']):
+                            continue
+                        if 'ymin' in pconfig and float(d[s][k]) < float(pconfig['ymin']):
+                            continue
                     pairs.append([k, d[s][k]])
                     try:
                         maxval = max(maxval, d[s][k])
