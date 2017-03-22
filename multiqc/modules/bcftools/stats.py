@@ -113,7 +113,7 @@ class StatsReportMixin():
             })
 
             # Make line graph of indel lengths
-            if len(self.bcftools_stats_indels) > 1:
+            if len(self.bcftools_stats_indels) > 0:
                 pconfig = {
                     'id': 'bcftools_stats_indel-lengths',
                     'title': 'Bcftools Stats: Indel Distribution',
