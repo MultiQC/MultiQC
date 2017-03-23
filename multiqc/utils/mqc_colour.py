@@ -40,24 +40,28 @@ class mqc_colour_scale(object):
 
 	def get_colour(self, val, colformat='hex'):
 		""" Given a value, return a colour within the colour scale """
+		try:
+			# Sanity checks
+			val = re.sub("[^0-9\.]", "", str(val))
+			if val == '':
+				val = self.minval
+			val = float(val)
+			val = max(val, self.minval)
+			val = min(val, self.maxval)
 
-		# Sanity checks
-		val = re.sub("[^0-9\.]", "", str(val))
-		if val == '':
-			val = self.minval
-		val = float(val)
-		val = max(val, self.minval)
-		val = min(val, self.maxval)
+			domain_nums = list( np.linspace(self.minval, self.maxval, len(self.colours)) )
+			my_scale = spectra.scale(self.colours).domain(domain_nums)
 
-		domain_nums = list( np.linspace(self.minval, self.maxval, len(self.colours)) )
-		my_scale = spectra.scale(self.colours).domain(domain_nums)
+			# Weird, I know. I ported this from the original JavaScript for continuity
+			# Seems to work better than adjusting brightness / saturation / luminosity
+			rgb_converter = lambda x: max(0, min(1, 1+((x-1)*0.3)))
+			thecolour = spectra.rgb( *[rgb_converter(v) for v in my_scale(val).rgb] )
 
-		# Weird, I know. I ported this from the original JavaScript for continuity
-		# Seems to work better than adjusting brightness / saturation / luminosity
-		rgb_converter = lambda x: max(0, min(1, 1+((x-1)*0.3)))
-		thecolour = spectra.rgb( *[rgb_converter(v) for v in my_scale(val).rgb] )
+			return thecolour.hexcode
 
-		return thecolour.hexcode
+		except:
+			# Shouldn't crash all of MultiQC just for colours
+			return ''
 
 
 	def get_colours(self, name='GnBu'):
