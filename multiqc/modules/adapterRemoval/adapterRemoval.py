@@ -51,7 +51,6 @@ class MultiqcModule(BaseMultiqcModule):
         # todo:
         # Write parsed report data to a file
 
-        self.adapter_removal_stats_table()
         self.intro += self.adapter_removal_counts_chart()
         self.intro += self.adapter_removal_length_dist_plot()
 
@@ -147,28 +146,6 @@ class MultiqcModule(BaseMultiqcModule):
                     self.arc_collapsed_truncated[self.s_name][l_data[0]] = l_data[5]
                     self.arc_discarged[self.s_name][l_data[0]] = l_data[6]
                     self.arc_all[self.s_name][l_data[0]] = l_data[7]
-
-    def adapter_removal_stats_table(self):
-
-        headers = OrderedDict()
-        headers['percent_aligned'] = {
-            'title': '% Aligned',
-            'description': '% Aligned reads',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%',
-            'shared_key': 'percent_aligned',
-        }
-        headers['aligned'] = {
-            'title': 'Total Aligned',
-            'description': 'total aligned reads',
-            'min': 0,
-            'scale': 'PuBu',
-            'shared_key': 'aligned'
-        }
-        self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_counts_chart(self):
 
