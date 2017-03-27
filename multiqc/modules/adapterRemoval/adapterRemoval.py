@@ -38,7 +38,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files(config.sp['adapterRemoval'], filehandles=True):
             self.s_name = f['s_name']
-            parsed_data = self.parse_settings_file(f)
+            try:
+                parsed_data = self.parse_settings_file(f)
+            except UserWarning:
+                continue
             if parsed_data is not None:
                 self.adapter_removal_data[self.s_name] = parsed_data
 
@@ -126,11 +129,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.arc_discarged[self.s_name][l_data[0]] = l_data[2]
                     self.arc_all[self.s_name][l_data[0]] = l_data[3]
                 else:
-                    self.arc_mate1[self.s_name][l_data[0]] = l_data[1]
-                    self.arc_collapsed[self.s_name][l_data[0]] = l_data[2]
-                    self.arc_collapsed_truncated[self.s_name][l_data[0]] = l_data[3]
-                    self.arc_discarged[self.s_name][l_data[0]] = l_data[4]
-                    self.arc_all[self.s_name][l_data[0]] = l_data[5]
+                    # biological/technical relevance is not clear
+                    log.warning("Case single-end and collapse is not "\
+                                "implemented -> File %s skipped" % self.s_name)
+                    raise UserWarning
             else:
                 if not self.__collapsed:
                     self.arc_mate1[self.s_name][l_data[0]] = l_data[1]
@@ -189,8 +191,8 @@ class MultiqcModule(BaseMultiqcModule):
                 lineplot_data = [self.arc_mate1, self.arc_discarged, self.arc_all]
                 pconfig['data_labels'].extend([dl_mate1, dl_discarded, dl_all])
             else:
-                lineplot_data = [self.arc_mate1, self.arc_collapsed, self.arc_collapsed_truncated, self.arc_discarged, self.arc_all]
-                pconfig['data_labels'].extend([dl_mate1, dl_collapsed, dl_collapsed_truncated, dl_discarded, dl_all])
+                # this case should not be reached (see case at method set_len_dist())
+                pass
         else:
             if not self.__collapsed:
                 lineplot_data = [self.arc_mate1, self.arc_mate2, self.arc_singleton, self.arc_discarged, self.arc_all]
