@@ -53,9 +53,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # todo:
         # Write parsed report data to a file
+        self.write_data_file(self.adapter_removal_data, 'multiqc_adapter_removal')
 
-        self.intro += self.adapter_removal_counts_chart()
-        self.intro += self.adapter_removal_length_dist_plot()
+        # Start the sections
+        self.sections = list()
+
+        self.adapter_removal_counts_chart()
+        self.adapter_removal_retained_chart()
+        self.adapter_removal_length_dist_plot()
 
     def parse_settings_file(self, f):
 
@@ -63,7 +68,9 @@ class MultiqcModule(BaseMultiqcModule):
             'total': None,
             'unaligned': None,
             'aligned': None,
-            'percent_aligned': None,
+            'reads_total': None,
+            'retained': None,
+            'discarded': None,
         }
 
         settings_data = {'header': []}
@@ -94,18 +101,41 @@ class MultiqcModule(BaseMultiqcModule):
         return self.result_data
 
     def set_result_data(self, settings_data):
+        # set read and collapsed type
+        self.set_ar_type(settings_data['Length distribution'])
+
+        # set result_data
         self.set_trim_stat(settings_data['Trimming statistics'])
         self.set_len_dist(settings_data['Length distribution'])
 
+    def set_ar_type(self, len_dist_data):
+        head_line = len_dist_data[0].rstrip('\n').split('\t')
+        self.__read_type = 'paired' if head_line[2] == 'Mate2' else 'single'
+        self.__collapsed = True if head_line[-3] == 'CollapsedTruncated' else False
+
+        # biological/technical relevance is not clear -> skip
+        if self.__read_type == 'single' and self.__collapsed:
+            log.warning("Case single-end and collapse is not " \
+                        "implemented -> File %s skipped" % self.s_name)
+            raise UserWarning
+
     def set_trim_stat(self, trim_data):
-        data_pattern = {'total': 0, 'unaligned': 1, 'aligned': 2}
+        data_pattern = {'total': 0,
+                        'unaligned': 1,
+                        'aligned': 2,
+                        'retained': -3}
 
         for title, key in data_pattern.iteritems():
             tmp = trim_data[key]
             value = tmp.split(': ')[1]
             self.result_data[title] = int(value)
 
-        self.result_data['percent_aligned'] = round((self.result_data['aligned'] * 100) / self.result_data['total'], 2)
+        reads_total = self.result_data['total']
+        if self.__read_type == 'paired':
+            reads_total = self.result_data['total'] * 2
+
+        self.result_data['reads_total'] = reads_total
+        self.result_data['discarded'] = reads_total - self.result_data['retained']
 
     def set_len_dist(self, len_dist_data):
         self.arc_mate1[self.s_name] = dict()
@@ -116,10 +146,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.arc_discarged[self.s_name] = dict()
         self.arc_all[self.s_name] = dict()
 
-        head_line = len_dist_data[0].rstrip('\n').split('\t')
-        self.__read_type = 'paired' if head_line[2] == 'Mate2' else 'single'
-        self.__collapsed = True if head_line[-3] == 'CollapsedTruncated' else False
-
         for line in len_dist_data[1:]:
             l_data = line.rstrip('\n').split('\t')
             l_data = map(int, l_data)
@@ -129,10 +155,8 @@ class MultiqcModule(BaseMultiqcModule):
                     self.arc_discarged[self.s_name][l_data[0]] = l_data[2]
                     self.arc_all[self.s_name][l_data[0]] = l_data[3]
                 else:
-                    # biological/technical relevance is not clear
-                    log.warning("Case single-end and collapse is not "\
-                                "implemented -> File %s skipped" % self.s_name)
-                    raise UserWarning
+                    # this case should not be reached (see case at method set_ar_type())
+                    pass
             else:
                 if not self.__collapsed:
                     self.arc_mate1[self.s_name][l_data[0]] = l_data[1]
@@ -152,26 +176,50 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_counts_chart(self):
 
         cats = OrderedDict()
-        cats['aligned'] = {'name': 'aligned'}
-        cats['unaligned'] = {'name': 'unaligned'}
-        config = {
+        cats['aligned'] = {'name': 'with adapter'}
+        cats['unaligned'] = {'name': 'without adapter'}
+        pconfig = {
             'id': 'adapter_removal_alignment_plot',
-            'title': 'Adapter Removal Alignments',
+            'title': 'Adapter Alignments',
             'ylab': '# Reads',
             'hide_zero_cats': False,
             'cpswitch_counts_label': 'Number of Reads'
         }
-        return bargraph.plot(self.adapter_removal_data, cats, config)
+
+        self.sections.append({
+            'name': 'Adapter Alignments',
+            'anchor': 'adapter_removal_alignment',
+            'content': '<p>The proportions of reads with and without adapter.</p>' +
+                       bargraph.plot(self.adapter_removal_data, cats, pconfig)
+        })
+
+    def adapter_removal_retained_chart(self):
+
+        cats = OrderedDict()
+        cats['retained'] = {'name': 'retained'}
+        cats['discarded'] = {'name': 'discarded'}
+        pconfig = {
+            'id': 'adapter_removal_retained_plot',
+            'title': 'retained and discarded',
+            'ylab': '# Reads',
+            'hide_zero_cats': False,
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+
+        self.sections.append({
+            'name': 'Retained and Discarded',
+            'anchor': 'adapter_removal_retained',
+            'content': '<p>The proportions of retained and discarded reads.</p>' +
+                       bargraph.plot(self.adapter_removal_data, cats, pconfig)
+        })
 
     def adapter_removal_length_dist_plot(self):
 
-        html = '<p>add description here...</p>'
-
         pconfig = {
             'id': 'adapter_removal_lenght_count_plot',
-            'title': 'Lengths of Trimmed Sequences',
+            'title': 'Length Distribution',
             'ylab': 'Counts',
-            'xlab': 'Length Trimmed (bp)',
+            'xlab': 'read length',
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
@@ -191,7 +239,7 @@ class MultiqcModule(BaseMultiqcModule):
                 lineplot_data = [self.arc_mate1, self.arc_discarged, self.arc_all]
                 pconfig['data_labels'].extend([dl_mate1, dl_discarded, dl_all])
             else:
-                # this case should not be reached (see case at method set_len_dist())
+                # this case should not be reached (see case at method set_ar_type())
                 pass
         else:
             if not self.__collapsed:
@@ -201,5 +249,9 @@ class MultiqcModule(BaseMultiqcModule):
                 lineplot_data = [self.arc_mate1, self.arc_mate2, self.arc_singleton, self.arc_collapsed, self.arc_collapsed_truncated, self.arc_discarged, self.arc_all]
                 pconfig['data_labels'].extend([dl_mate1, dl_mate2, dl_singleton, dl_collapsed, dl_collapsed_truncated, dl_discarded, dl_all])
 
-        html += linegraph.plot(lineplot_data, pconfig)
-        return html
+        self.sections.append({
+            'name': 'Lenght Distribution',
+            'anchor': 'adapter_removal_lenght_count',
+            'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
+                       linegraph.plot(lineplot_data, pconfig)
+        })
