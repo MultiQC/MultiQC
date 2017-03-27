@@ -51,7 +51,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.adapter_removal_data)))
 
-        # todo:
         # Write parsed report data to a file
         self.write_data_file(self.adapter_removal_data, 'multiqc_adapter_removal')
 
@@ -97,7 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
         # set data for further working
         self.set_result_data(settings_data)
 
-        # todo: return or set by member var?
         return self.result_data
 
     def set_result_data(self, settings_data):
