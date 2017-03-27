@@ -106,10 +106,10 @@ def plot (data, cats=None, pconfig={}):
                 if s not in sample_dcount:
                     sample_dcount[s] = 0
                 try:
-                    thisdata.append(d[s][c])
+                    thisdata.append(float(d[s][c]))
                     catcount += 1
                     sample_dcount[s] += 1
-                except KeyError:
+                except (KeyError, ValueError):
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float('nan'))
             if catcount > 0:
