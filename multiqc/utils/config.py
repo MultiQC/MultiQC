@@ -4,7 +4,6 @@
 config variables to be used across all other modules """
 
 from __future__ import print_function
-from collections import OrderedDict
 from datetime import datetime
 import inspect
 import os
@@ -22,18 +21,18 @@ logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
 version = pkg_resources.get_distribution("multiqc").version
-cwd = os.getcwd()
 script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
 try:
-    os.chdir(script_path)
-    git_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.STDOUT)
+    git_hash = subprocess.check_output( ['git', 'rev-parse', 'HEAD'],
+                                        cwd=script_path,
+                                        stderr=subprocess.STDOUT,
+                                        universal_newlines=True )
     git_hash_short = git_hash[:7]
     version = '{} ({})'.format(version, git_hash_short)
-except subprocess.CalledProcessError:
+except:
     pass
-os.chdir(cwd)
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
@@ -98,6 +97,10 @@ def mqc_load_userconfig(path=None):
 
     # Load and parse a user config file if we find it
     mqc_load_config(os.path.expanduser('~/.multiqc_config.yaml'))
+
+    # Load and parse a config file path set in an ENV variable if we find it
+    if os.environ.get('MULTIQC_CONFIG_PATH') is not None:
+        mqc_load_config( os.environ.get('MULTIQC_CONFIG_PATH') )
 
     # Load and parse a config file in this working directory if we find it
     mqc_load_config('multiqc_config.yaml')

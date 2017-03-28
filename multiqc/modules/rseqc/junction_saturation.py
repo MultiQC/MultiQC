@@ -50,14 +50,12 @@ def parse_reports(self):
     if len(self.junction_saturation_all) > 0:
 
         # Make a normalised percentage version of the data
-        empty_datasets = 0
         for s_name in self.junction_saturation_all:
             self.junction_saturation_all_pct[s_name] = OrderedDict()
             self.junction_saturation_known_pct[s_name] = OrderedDict()
             self.junction_saturation_novel_pct[s_name] = OrderedDict()
-            total = self.junction_saturation_all[s_name].values()[-1]
-            if total == 0:
-                empty_datasets += 1
+            total = list(self.junction_saturation_all[s_name].values())[-1]
+            if total == 0: # Shouldn't happen..?
                 continue
             for k, v in self.junction_saturation_all[s_name].items():
                 self.junction_saturation_all_pct[s_name][k] = (v/total)*100
@@ -84,9 +82,6 @@ def parse_reports(self):
             'click_func': plot_single()
         }
         p_link = '<a href="http://rseqc.sourceforge.net/#junction-saturation-py" target="_blank">Junction Saturation</a>'
-        warning = ''
-        if empty_datasets > 0:
-            warning = '<div class="alert alert-warning"><strong>Warning:</strong>{} datasets had 0 observed junctions</div>'.format(empty_datasets)
         self.sections.append({
             'name': 'Junction Saturation',
             'anchor': 'rseqc-junction_saturation',
@@ -124,7 +119,7 @@ def plot_single():
         ];
         for (var i = 0; i < 3; i++) {
             var ds = mqc_plots['rseqc_junction_saturation_plot']['datasets'][i];
-            for (var k = 0; i < ds.length; k++){
+            for (var k = 0; k < ds.length; k++){
                 if(ds[k]['name'] == this.series.name){
                     data[i]['data'] = ds[k]['data'];
                     break;

@@ -7,7 +7,7 @@ Note that much more extensive customisation of reports is possible using
 [custom templates](http://multiqc.info/docs/#writing-new-templates).
 
 ## Titles and introductory text
-You can specify a custom title for the report using the `-t`/`--title`
+You can specify a custom title for the report using the `-i`/`--title`
 command line option. The `-b`/`--comment` option can be used to add a
 longer comment to the top of the report at run time.
 
@@ -18,7 +18,7 @@ a subtitle and the introductory text in your config file:
 title: "My Title"
 subtitle: "A subtitle to go underneath in grey"
 intro_text: "MultiQC reports summarise analysis results."
-custom_message: "This is a comment about this report."
+report_comment: "This is a comment about this report."
 ```
 
 Note that if `intro_text` is `None` the template will display the default

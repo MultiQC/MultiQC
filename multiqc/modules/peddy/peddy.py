@@ -16,8 +16,6 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     Peddy module class, parses stderr logs.
-    Also understands logs saved by Trim Galore!
-    (which contain peddy logs)
     """
 
     def __init__(self):

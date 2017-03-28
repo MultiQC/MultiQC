@@ -10,61 +10,60 @@ Version 1.0! Bumping the major version number for a couple of reasons:
    compatibility for plugins. As such, semantic versioning suggests a change in
    major version number.
 
-#### Updates required for MultiQC plugins
 Most people who run MultiQC just use the core installation.
 If this is the case for you, then you have nothing to worry about. The changes
-I'm talking about will only apply to plugins and external code bases.
-
-The main changes coming in this version are (or will be):
-
-* Module import refactoring to allow a new testing environment
-  * Pioneered by the brave [@tbooth](https://github.com/tbooth), this should allow
-    better, more modular, unit testing. This should equate to more reliable and
-    maintainable code
-  * Unfortunately this means that all modules need to change some of their import
-    statements. This includes plugin modules outside of the core MultiQC package.
-* _Potentially_: refactoring of the file search mechanism.
-  * I'm hoping that this won't break backwards compatability, but it could do.
-* _Potentially_: Larger changes to do with changing where modules are kept and how
-  they're called?
-
-There are two things that you probably need to change in your plugin modules to
-make them work with the updated version of MultiQC, both to do with imports.
-Instead of this style of importing modules:
-```python
-from multiqc import config, BaseMultiqcModule, plots
-```
-
-You now need this:
-```python
-from multiqc import config
-from multiqc.plots import bargraph   # Load specific plot types here
-from multiqc.modules.base_module import BaseMultiqcModule
-```
-You will also need to update any plotting functions, removing the `plot.` prefix.
-For example, change this:
-```python
-return plots.bargraph.plot(data, keys, pconfig)
-```
-to this:
-```python
-return bargraph.plot(data, keys, pconfig)
-```
-
-These changes have been made to simplify the module imports within MultiQC,
-allowing specific parts of the codebase to be imported into a Python script
-on their own. This enables small, atomic, clean unit testing.
-
-
-If you have any questions, please open an issue.
+mentioned above will only apply to plugins and external code bases.
+To see what changes need to applied to your custom plugin code, please see
+the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
 #### Module updates:
 * [**BBMap**](http://jgi.doe.gov/data-and-tools/bbtools/) - new module!
   * New module for the `BBTools` read mapping/trimming/stats suite/
+* [**BUSCO**](http://busco.ezlab.org/) - new module!
+  * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
+* [**Cluster Flow**](http://clusterflow.io) - new module!
+  * Cluster Flow is a workflow tool for bioinformatics pipelines. The new module parses executed tool commands.
+* [**RNA-SeQC**](http://archive.broadinstitute.org/cancer/cga/rna-seqc) - new module!
+  * New module to parse output from RNA-SeQC, a java program which computes a series
+    of quality control metrics for RNA-seq data.
+* [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
+  * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
+    data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
+* **Cutadapt**
+  * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **Picard**
+  * New `RrbsSummaryMetrics` Submodule!
+  * New `WgsMetrics` Submodule!
+* **Preseq**
+  * Now trims the x axis to the point that meets 80% of `max(unique molecules)`
+  * Hopefully prevents ridiculous x axes without sacrificing too much useful information.
+* **Qualimap**
+  * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
+* **RSeQC**
+  * Fixed Python3 error in Junction Saturation code
+  * Fixed JS error for Junction Saturation that made the single-sample combined plot only show _All Junctions_
 
 #### Core MultiQC updates:
-* Change in module structure and import statements (see above).
+* Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
 * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+* Handle error when `git` isn't installed on the system.
+* Refactored colouring of table cells
+  * Was previously done in the browser using [chroma.js](http://gka.github.io/chroma.js/)
+  * Now done at report generation time using the [spectra](https://pypi.python.org/pypi/spectra) package
+  * Should helpfully speed up report rendering time in the web browser, especially for large reports
+* Docs updates (thanks to @varemo)
+* Previously hidden log file `.multiqc.log` renamed to `multiqc.log` in `multiqc_data`
+* Added option to load MultiQC config file from a path specified in the environment variable `MULTIQC_CONFIG_PATH`
+* New table configuration options
+  * `sortRows: False` prevents table rows from being sorted alphabetically
+  * `col1_header` allows the default first column header to be changed from "Sample Name"
+* Tables no longer show _Configure Columns_ and _Plot_ buttons if they only have a single column
+* Custom content bugfixes
+  * JSON + YAML tables now remember order of table columns
+  * Many minor bugfixes
+* Line graphs and scatter graphs axis limits
+  * If limits are specified, data exceeding this is no longer saved in report
+  * Visually identical, but can make report file sizes considerable smaller in some cases
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21

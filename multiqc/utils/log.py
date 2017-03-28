@@ -12,19 +12,24 @@ import tempfile
 from multiqc.utils import config, util_functions
 
 LEVELS = {0: 'INFO', 1: 'DEBUG'}
-log_tmp_dir = tempfile.mkdtemp()
-log_tmp_fn = os.path.join(log_tmp_dir, 'multiqc.log')
+log_tmp_dir = None
+log_tmp_fn = '/dev/null'
 
 def init_log(logger, loglevel=0):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
     Also prints verbose log to the multiqc data directory if available.
-    (multiqc_data/.multiqc_log)
+    (multiqc_data/multiqc.log)
 
     Args:
         loglevel (str): Determines the level of the log output.
     """
+    # File for logging
+    global log_tmp_dir, log_tmp_fn
+    log_tmp_dir = tempfile.mkdtemp()
+    log_tmp_fn = os.path.join(log_tmp_dir, 'multiqc.log')
+
     # Logging templates
     debug_template = '[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s'
     info_template = '[%(levelname)-7s] %(module)15s : %(message)s'
@@ -47,14 +52,14 @@ def init_log(logger, loglevel=0):
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
 
-def copy_tmp_log(logger):
-    """ Copy the temporary log file to the MultiQC data directory
+def move_tmp_log(logger):
+    """ Move the temporary log file to the MultiQC data directory
     if it exists. """
 
     try:
-        shutil.copyfile(log_tmp_fn, os.path.join(config.data_dir, '.multiqc.log'))
         # https://stackoverflow.com/questions/15435652/python-does-not-release-filehandles-to-logfile
-        logger.shutdown()
+        logging.shutdown()
+        shutil.move(log_tmp_fn, os.path.join(config.data_dir, 'multiqc.log'))
         util_functions.robust_rmtree(log_tmp_dir)
     except (AttributeError, TypeError, IOError):
         pass

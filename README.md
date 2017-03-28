@@ -36,8 +36,8 @@ Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processin
 [FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [HTSeq][htseq]            | [Qualimap][qualimap]
 [Skewer][skewer]             | [HiCUP][hicup]         | [Picard][picard]          | [QUAST][quast]
 [Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Prokka][prokka]          | [RSeQC][rseqc]
-                             | [Salmon][salmon]       | [Samblaster][samblaster]  |
-                             | [Slamdunk][slamdunk]   | [Samtools][samtools]      |
+                             | [Salmon][salmon]       | [Samblaster][samblaster]  | [BUSCO][busco]
+                             | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [goleft][goleft]
                              | [STAR][star]           | [SnpEff][snpeff]          |
                              | [Tophat][tophat]       | [Subread featureCounts][featurecounts] |
                              |                        |
@@ -68,7 +68,7 @@ conda install -c bioconda multiqc
 
 If you would like the development version instead, the command is:
 ```bash
-pip install git+https://github.com/ewels/MultiQC.git
+pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
 ```
 
 MultiQC is also available in the
@@ -153,11 +153,14 @@ and many others. Thanks for your support!
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1
 [bowtie-2]:       http://multiqc.info/docs/#bowtie-2
+[busco]:          http://multiqc.info/docs/#busco
+[clusterflow]:    http://multiqc.info/docs/#cluster-flow
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [gatk]:           http://multiqc.info/docs/#gatk
+[goleft]:         http://multiqc.info/docs/#goleft-indexcov
 [hicup]:          http://multiqc.info/docs/#hicup
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
@@ -168,6 +171,7 @@ and many others. Thanks for your support!
 [prokka]:         http://multiqc.info/docs/#prokka
 [qualimap]:       http://multiqc.info/docs/#qualimap
 [quast]:          http://multiqc.info/docs/#quast
+[rna_seqc]:       http://multiqc.info/docs/#rna_seqc
 [rseqc]:          http://multiqc.info/docs/#rseqc
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster

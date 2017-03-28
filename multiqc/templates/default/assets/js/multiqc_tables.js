@@ -101,53 +101,6 @@ $(function () {
       clone.css('margin-left', -$(this).scrollLeft());
     });
 
-    // Colour code table cells using chroma.js
-    $('.mqc_table').each(function(){
-      var table = $(this);
-      table.find('thead th').each(function(idx){
-        if($(this).hasClass('chroma-col')){
-
-          // Get the colour scheme if set
-          var colscheme_rev = false;
-          var colscheme = $(this).data('chroma-scale');
-          if(colscheme.substr(colscheme.length - 4) == '-rev'){
-            colscheme_rev = true;
-            colscheme = colscheme.substr(0, colscheme.length - 4);
-          }
-          if(colscheme === undefined || brewer_scales.indexOf(colscheme) == -1){
-            colscheme = 'GnBu';
-          }
-
-          // Get the max and min values from data attributes
-          var maxval = $(this).data('chroma-max');
-          var minval = $(this).data('chroma-min');
-          if(isNaN(minval) || isNaN(maxval)){
-            console.log('Could not find max or min value for '+$(this).text()+': ['+[minval, maxval]+']')
-            return true; // Skip to next loop
-          }
-
-          // Go through table cells again, adding colour
-          var i = 0;
-          var scale = chroma.scale(colscheme).domain([minval, maxval]);
-          if(colscheme_rev){
-            scale = chroma.scale(colscheme).domain([maxval, minval]);
-          }
-          table.find('tr td:nth-of-type('+idx+')').each(function(){
-            var val = parseFloat($(this).text());
-            var rgb = scale(val).rgb(); //.luminance(0.7).css();
-            for (i in rgb){
-              rgb[i] = 255+(rgb[i]-255)*0.3;
-              if(rgb[i] > 255){ rgb[i] = 255; }
-              if(rgb[i] < 0){ rgb[i] = 0; }
-            }
-            var col = chroma.rgb(rgb).hex();
-            $(this).find('.wrapper .bar').css('background-color', col);
-          });
-
-        }
-      });
-    });
-
     /////// COLUMN CONFIG
     // show + hide columns
     $('.mqc_table_col_visible').change(function(){
@@ -344,22 +297,27 @@ $(function () {
     var col2 = $('#tableScatter_col2').val().replace('header_', '');
     var col1_name = $('#tableScatter_col1 option:selected').text();
     var col2_name = $('#tableScatter_col2 option:selected').text();
-    var col1_max = parseFloat($(tid+' thead th#header_'+col1).data('chroma-max'));
-    var col1_min = parseFloat($(tid+' thead th#header_'+col1).data('chroma-min'));
-    var col2_max = parseFloat($(tid+' thead th#header_'+col2).data('chroma-max'));
-    var col2_min = parseFloat($(tid+' thead th#header_'+col2).data('chroma-min'));
+    var col1_max = parseFloat($(tid+' thead th#header_'+col1).data('dmax'));
+    var col1_min = parseFloat($(tid+' thead th#header_'+col1).data('dmin'));
+    var col2_max = parseFloat($(tid+' thead th#header_'+col2).data('dmax'));
+    var col2_min = parseFloat($(tid+' thead th#header_'+col2).data('dmin'));
     if(isNaN(col1_max)){ col1_max = undefined; }
     if(isNaN(col1_min)){ col1_min = undefined; }
     if(isNaN(col2_max)){ col2_max = undefined; }
     if(isNaN(col2_min)){ col2_min = undefined; }
     if(col1 != '' && col2 != ''){
       $('#tableScatterPlot').html('<small>loading..</small>');
+      if ($(tid).attr('data-title')) {
+        plot_title = $(tid).attr('data-title');
+      } else {
+        plot_title = tid.replace(/^#/, '').replace(/_/g, ' ');
+      }
       // Get the data values
       mqc_plots['tableScatterPlot'] = {
         'plot_type': 'scatter',
         'config': {
           'id': 'tableScatter_'+tid,
-          'title': tid,
+          'title': plot_title,
           'xlab': col1_name,
           'ylab': col2_name,
           'xmin': col1_min,

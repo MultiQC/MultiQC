@@ -52,7 +52,9 @@ setup(
         'simplejson',
         'pyyaml',
         'click',
-        'matplotlib'
+        'matplotlib',
+        'numpy',
+        'spectra'
     ],
     entry_points = {
         'multiqc.modules.v1': [
@@ -63,7 +65,10 @@ setup(
             'bismark = multiqc.modules.bismark:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
+            'busco = multiqc.modules.busco:MultiqcModule',
+            'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
@@ -77,6 +82,7 @@ setup(
             'prokka = multiqc.modules.prokka:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
+            'rna_seqc = multiqc.modules.rna_seqc:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
             'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',

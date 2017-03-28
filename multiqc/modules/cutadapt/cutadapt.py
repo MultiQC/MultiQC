@@ -101,7 +101,11 @@ class MultiqcModule(BaseMultiqcModule):
             # Get sample name from end of command line params
             if l.startswith('Command line parameters'):
                 s_name = l.split()[-1]
-                s_name = self.clean_s_name(s_name, f['root'])
+                # Manage case where sample name is '-' (reading from stdin)
+                if s_name == '-':
+                    s_name = f['s_name']
+                else:
+                    s_name = self.clean_s_name(s_name, f['root'])
                 if s_name in self.cutadapt_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.cutadapt_data[s_name] = dict()

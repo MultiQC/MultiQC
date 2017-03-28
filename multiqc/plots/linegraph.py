@@ -73,6 +73,16 @@ def plot (data, pconfig={}):
                     maxval = max(maxval, d[s][k])
             else:
                 for k in sorted(d[s].keys()):
+                    if k is not None:
+                        if 'xmax' in pconfig and float(k) > float(pconfig['xmax']):
+                            continue
+                        if 'xmin' in pconfig and float(k) < float(pconfig['xmin']):
+                            continue
+                    if d[s][k] is not None:
+                        if 'ymax' in pconfig and float(d[s][k]) > float(pconfig['ymax']):
+                            continue
+                        if 'ymin' in pconfig and float(d[s][k]) < float(pconfig['ymin']):
+                            continue
                     pairs.append([k, d[s][k]])
                     try:
                         maxval = max(maxval, d[s][k])
@@ -82,7 +92,8 @@ def plot (data, pconfig={}):
                 this_series = { 'name': s, 'data': pairs }
                 try:
                     this_series['color'] = pconfig['colors'][s]
-                except: pass
+                except:
+                    pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
 
@@ -97,7 +108,7 @@ def plot (data, pconfig={}):
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except KeyError:
+    except (KeyError, IndexError):
         pass
 
     # Make a plot - template custom, or interactive or flat
@@ -382,7 +393,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
         # Save to a file and link <img>
         else:
-            plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
+            plot_relpath = os.path.join(config.plots_dir_name, 'png', '{}.png'.format(pid))
             html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
 
         plt.close(fig)
