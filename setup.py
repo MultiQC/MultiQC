@@ -58,6 +58,7 @@ setup(
         'multiqc.modules.v1': [
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
+            'bbmap = multiqc.modules.bbmap:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',

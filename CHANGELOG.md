@@ -59,7 +59,8 @@ on their own. This enables small, atomic, clean unit testing.
 If you have any questions, please open an issue.
 
 #### Module updates:
-_none yet.._
+* [**BBMap**](http://jgi.doe.gov/data-and-tools/bbtools/) - new module!
+  * New module for the `BBTools` read mapping/trimming/stats suite/
 
 #### Core MultiQC updates:
 * Change in module structure and import statements (see above).
