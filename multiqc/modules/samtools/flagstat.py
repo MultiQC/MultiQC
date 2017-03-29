@@ -19,7 +19,7 @@ class FlagstatReportMixin():
         """ Find Samtools flagstat logs and parse their data """
 
         self.samtools_flagstat = dict()
-        for f in self.find_log_files(config.sp['samtools']['flagstat']):
+        for f in self.find_log_files('samtools/flagstat'):
             parsed_data = parse_single_report(f['f'])
             if len(parsed_data) > 0:
                 if f['s_name'] in self.samtools_flagstat:

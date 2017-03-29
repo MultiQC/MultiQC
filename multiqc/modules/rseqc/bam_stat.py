@@ -41,7 +41,7 @@ def parse_reports(self):
     is_paired_end=False
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files(config.sp['rseqc']['bam_stat']):
+    for f in self.find_log_files('rseqc/bam_stat'):
         d = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)

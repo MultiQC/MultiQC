@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs
         self.prokka = dict()
-        for f in self.find_log_files(config.sp['prokka'], filehandles=True):
+        for f in self.find_log_files('prokka', filehandles=True):
             self.parse_prokka(f)
 
         if len(self.prokka) == 0:

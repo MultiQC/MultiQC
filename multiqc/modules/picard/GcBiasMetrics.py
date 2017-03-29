@@ -21,7 +21,7 @@ def parse_reports(self):
     self.picard_GCbias_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['gcbias'], filehandles=True):
+    for f in self.find_log_files('picard/gcbias', filehandles=True):
         s_name = None
         gc_col = None
         cov_col = None

@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs
         self.trimmomatic = dict()
-        for f in self.find_log_files(config.sp['trimmomatic'], filehandles=True):
+        for f in self.find_log_files('trimmomatic', filehandles=True):
             self.parse_trimmomatic(f)
 
         if len(self.trimmomatic) == 0:

@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.peddy_length_exp = dict()
         self.peddy_length_obsexp = dict()
 
-        for f in self.find_log_files(config.sp['peddy']['summary_table']):
+        for f in self.find_log_files('peddy/summary_table'):
             parsed_data = self.parse_peddy_summary(f)
             if parsed_data is not None:
                 for s_name in parsed_data:

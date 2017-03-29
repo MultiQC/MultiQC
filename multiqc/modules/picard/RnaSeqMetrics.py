@@ -22,7 +22,7 @@ def parse_reports(self):
     self.picard_RnaSeqMetrics_histogram = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['rnaseqmetrics'], filehandles=True):
+    for f in self.find_log_files('picard/rnaseqmetrics', filehandles=True):
         s_name = None
         in_hist = False
         for l in f['f']:

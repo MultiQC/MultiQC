@@ -21,7 +21,7 @@ def parse_reports(self):
     self.read_gc_pct = dict()
 
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['read_gc']):
+    for f in self.find_log_files('rseqc/read_gc'):
 
         if f['f'].startswith('GC%	read_count'):
             gc = list()

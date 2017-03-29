@@ -31,7 +31,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files(config.sp['rseqc']['junction_annotation']):
+    for f in self.find_log_files('rseqc/junction_annotation'):
         d = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)

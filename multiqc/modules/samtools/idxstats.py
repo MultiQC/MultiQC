@@ -18,7 +18,7 @@ class IdxstatsReportMixin():
         """ Find Samtools idxstats logs and parse their data """
 
         self.samtools_idxstats = dict()
-        for f in self.find_log_files(config.sp['samtools']['idxstats']):
+        for f in self.find_log_files('samtools/idxstats'):
             parsed_data = parse_single_report(f['f'])
             if len(parsed_data) > 0:
                 if f['s_name'] in self.samtools_idxstats:

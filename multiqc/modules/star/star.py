@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any STAR reports
         self.star_data = dict()
-        for f in self.find_log_files(config.sp['star']):
+        for f in self.find_log_files('star'):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
                 s_name = f['s_name']
@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.star_genecounts_unstranded = dict()
         self.star_genecounts_first_strand = dict()
         self.star_genecounts_second_strand = dict()
-        for f in self.find_log_files(config.sp['star_genecounts'], filehandles=True):
+        for f in self.find_log_files('star_genecounts', filehandles=True):
             parsed_data = self.parse_star_genecount_report(f)
             if parsed_data is not None:
                 s_name = f['s_name']

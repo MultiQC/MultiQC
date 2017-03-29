@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.snpeff_section_totals = dict()
         self.snpeff_qualities = dict()
 
-        for f in self.find_log_files(config.sp['snpeff'], filehandles=True):
+        for f in self.find_log_files('snpeff', filehandles=True):
             self.parse_snpeff_log(f)
 
         if len(self.snpeff_data) == 0:

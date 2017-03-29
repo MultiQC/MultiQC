@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Kallisto reports
         self.kallisto_data = dict()
-        for f in self.find_log_files(config.sp['kallisto'], filehandles=True):
+        for f in self.find_log_files('kallisto', filehandles=True):
             self.parse_kallisto_log(f)
 
         if len(self.kallisto_data) == 0:
