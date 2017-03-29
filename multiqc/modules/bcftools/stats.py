@@ -25,6 +25,7 @@ class StatsReportMixin():
 
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
+        depth_data = dict()
         for f in self.find_log_files(config.sp['bcftools']['stats']):
             s_names = list()
             for line in f['f'].splitlines():
@@ -38,6 +39,7 @@ class StatsReportMixin():
                     self.add_data_source(f, s_name, section='stats')
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
+                    depth_data[s_name] = OrderedDict()
                     self.bcftools_stats_indels[s_name][0] = None # Avoid joining line across missing 0
 
                 # Parse key stats
@@ -71,6 +73,20 @@ class StatsReportMixin():
                     count = float(s[3].strip())
                     self.bcftools_stats_indels[s_name][length] = count
 
+                # Per-sample counts
+                if s[0] == "PSC" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    fields = ['variations_hom', 'variations_het']
+                    for i, f in enumerate(fields):
+                        self.bcftools_stats[s_name][f] = int(s[i + 4].strip())
+
+                # Depth plots
+                if s[0] == "DP" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    bin_name = s[2].strip()
+                    percent_sites = float(s[-1].strip())
+                    depth_data[s_name][bin_name] = percent_sites
+
         if len(self.bcftools_stats) > 0:
 
             # Write parsed report data to a file
@@ -97,7 +113,7 @@ class StatsReportMixin():
             })
 
             # Make line graph of indel lengths
-            if len(self.bcftools_stats_indels) > 1:
+            if len(self.bcftools_stats_indels) > 0:
                 pconfig = {
                     'id': 'bcftools_stats_indel-lengths',
                     'title': 'Bcftools Stats: Indel Distribution',
@@ -109,9 +125,18 @@ class StatsReportMixin():
                 }
                 self.sections.append({
                     'name': 'Indel Distribution',
-                    'anchor': 'bcftools-stats',
+                    'anchor': 'bcftools-stats_indel_plot',
                     'content': linegraph.plot(self.bcftools_stats_indels, pconfig)
                 })
+            # Make line graph of variants per depth
+            if len(depth_data) > 0:
+                pconfig = {'id': 'bcftools_stats_depth', 'title': 'Variant depths',
+                           'ylab': 'Fraction of sites (%)', 'xlab': 'Variant depth',
+                           'ymin': 0, 'ymax': 100, 'categories': True}
+                desc = '<p>Read depth support distribution for called variants</p>'
+                self.sections.append({'name': 'Variant depths',
+                                      'anchor': 'bcftools-stats_depth_plot',
+                                      'content': desc + linegraph.plot(depth_data, pconfig)})
 
         # Return the number of logs that were found
         return len(self.bcftools_stats)
@@ -119,38 +144,39 @@ class StatsReportMixin():
     def bcftools_stats_genstats_table(self):
         """ Add key statistics to the General Stats table """
         stats_headers = OrderedDict()
-        stats_headers['number_of_SNPs'] = {
-            'title': 'M SNPs',
-            'description': 'Number of SNPs (millions)',
-            'min': 0,
-            'format': '{:.2f}',
-            'modify': lambda x: x / 1000000
+        stats_headers['number_of_records'] = {
+            'title': 'Variations',
+            'description': 'Variations Total',
+            'min': 0, 'format': '{:.0f}',
         }
-        stats_headers['tstv'] = {
-            'title': 'ts/tv',
-            'description': 'SNP transitions / transversions ratio',
-            'min': 0,
-            'format': '{:.2f}',
+        stats_headers['variations_hom'] = {
+            'title': 'Homozygous',
+            'description': 'Variations homozygous',
+            'min': 0, 'format': '{:.0f}',
+        }
+        stats_headers['variations_het'] = {
+            'title': 'Heterozygous',
+            'description': 'Variations heterozygous',
+            'min': 0, 'format': '{:.0f}',
+        }
+        stats_headers['number_of_SNPs'] = {
+            'title': 'SNPs',
+            'description': 'Variation SNPs',
+            'min': 0, 'format': '{:.0f}',
         }
         stats_headers['number_of_indels'] = {
-            'title': 'M Indels',
-            'description': 'Number of indels (millions)',
-            'min': 0,
-            'format': '{:.2f}',
-            'modify': lambda x: x / 1000000
+            'title': 'Indels',
+            'description': 'Variation Insertions/Deletions',
+            'min': 0, 'format': '{:.0f}',
+        }
+        stats_headers['tstv'] = {
+            'title': 'Ts/Tv',
+            'description': 'Variant SNP transition / transversion ratio',
+            'min': 0, 'format': '{:.0f}',
         }
         stats_headers['number_of_MNPs'] = {
-            'title': 'M MNPs',
-            'description': 'Number of MNPs (millions)',
-            'min': 0,
-            'format': '{:.2f}',
-            'modify': lambda x: x / 1000000
-        }
-        stats_headers['number_of_others'] = {
-            'title': 'M Others',
-            'description': 'Number of others (millions)',
-            'min': 0,
-            'format': '{:.2f}',
-            'modify': lambda x: x / 1000000
+            'title': 'MNPs',
+            'description': 'Variation Multinucleotide Polymorphisms',
+            'min': 0, 'format': '{:.0f}', "hidden": True,
         }
         self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')

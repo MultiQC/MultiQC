@@ -98,10 +98,12 @@ ended in `:MultiqcModule` - this tells MultiQC to try to execute a class or
 function called `MultiqcModule`.
 
 To use the helper functions bundled with MultiQC, you should extend this
-class from `multiqc.BaseMultiqcModule`. This will give you access to a
-number of functions on the `self` namespace. For example:
+class from `multiqc.modules.base_module.BaseMultiqcModule`. This will give
+you access to a number of functions on the `self` namespace. For example:
 ```python
-class MultiqcModule(multiqc.BaseMultiqcModule):
+from multiqc.modules.base_module import BaseMultiqcModule
+
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='My Module', anchor='mymod',
@@ -358,7 +360,7 @@ headers['name'] = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
-    'scale': 'GnBu',                # Colour scale for colour coding
+    'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
     'format': '{:.1f}',             # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
@@ -369,10 +371,9 @@ headers['name'] = {
   * This prepends the column title in the mouse hover: _Namespace: Title_.
     It's automatically generated for the General Statistics table.
 * `scale`
-  * Colour scales are the names of ColorBrewer palettes. See the
-    [chroma.js documentation](https://github.com/gka/chroma.js/wiki/Predefined-Colors)
-    for a list of available colour scales
+  * Colour scales are the names of ColorBrewer palettes. See below for available scales.
   * Add `-rev` to the name of a colour scale to reverse it
+  * Set to `False` to disable colouring and background bars
 * `shared_key`
   * Any string can be specified here, if other columns are found that share
     the same key, a consistent colour scheme and data scale will be used in
@@ -387,6 +388,9 @@ headers['name'] = {
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
+
+The colour scales are from [ColorBrewer2](http://colorbrewer2.org/) and are named as follows:
+![color brewer](images/cbrewer_scales.png)
 
 A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
@@ -457,6 +461,35 @@ Ok, you have some data, now the fun bit - visualising it! Each of the plot
 types is described in the _Plotting Functions_ section of the docs.
 
 ## Appendices
+
+### Profiling Performance
+It's important that MultiQC runs quickly and efficiently, especially on big
+projects with large numbers of samples. The recommended method to check this is
+by using `cProfile` to profile the code execution. To do this, run MultiQC as follows:
+
+```bash
+python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc -f .
+```
+
+You can create a `.bashrc` alias to make this easier to run:
+```bash
+alias profile_multiqc='python -m cProfile -o multiqc_profile.prof /path/to/MultiQC/scripts/multiqc '
+profile_multiqc -f .
+```
+
+MultiQC should run as normal, but produce the additional binary file `multiqc_profile.prof`.
+This can then be visualised with software such as [SnakeViz](https://jiffyclub.github.io/snakeviz/).
+
+To install SnakeViz and visualise the results, do the following:
+```bash
+pip install snakeviz
+snakeviz multiqc_profile.prof
+```
+
+A web page should open where you can explore the execution times of different nested functions.
+It's a good idea to run MultiQC with a comparable number of results from other tools (eg. FastQC)
+to have a reference to compare against for how long the code should take to run.
+
 
 ### Adding Custom CSS / Javascript
 If you would like module-specific CSS and / or JavaScript added to the template,

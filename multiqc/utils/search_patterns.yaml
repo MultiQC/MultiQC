@@ -25,6 +25,8 @@ bowtie:
     contents: '# reads processed:'
 bowtie2:
     contents: 'reads; of these:'
+busco:
+    fn: 'short_summary_*'
 custom_content:
     fn:
         - '*_mqc.yaml'
@@ -35,6 +37,11 @@ custom_content:
         - '*_mqc.tsv'
         - '*_mqc.log'
         - '*_mqc.out'
+clusterflow:
+    logs:
+        fn: '*_clusterFlow.txt'
+    runfiles:
+        fn: '*.run'
 cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
@@ -52,6 +59,12 @@ featurecounts:
 gatk:
     varianteval:
         contents: '#:GATKReport'
+goleft_indexcov:
+    roc:
+        fn: '*-indexcov.roc'
+    ped:
+        fn: '*-indexcov.ped'
+picard:
 htseq:
     contents: '__too_low_aQual'
 hicup:
@@ -85,7 +98,13 @@ picard:
     oxogmetrics:
         contents: 'picard.analysis.CollectOxoGMetrics'
     rnaseqmetrics:
-        contents: 'picard.analysis.CollectRnaSeqMetrics'
+        contents:
+          - 'picard.analysis.CollectRnaSeqMetrics'
+          - 'picard.analysis.Collectrnaseqmetrics'
+    rrbs_metrics:
+        contents: 'picard.analysis.RrbsSummaryMetrics'
+    wgs_metrics:
+        contents: 'picard.analysis.CollectWgsMetrics$WgsMetrics'
 preseq:
     contents:
         - 'EXPECTED_DISTINCT'
@@ -113,6 +132,18 @@ qualimap:
             fn: 'coverage_profile_along_genes_(total).txt'
 quast:
     fn: 'report.tsv'
+rna_seqc:
+    metrics:
+        fn: 'metrics.tsv'
+    coverage:
+        fn:
+            - 'meanCoverageNorm_high.txt'
+            - 'meanCoverageNorm_medium.txt'
+            - 'meanCoverageNorm_low.txt'
+    correlation:
+        fn:
+            - 'corrMatrixPearson.txt'
+            - 'corrMatrixSpearman.txt'
 rseqc:
     bam_stat:
         contents: 'Proper-paired reads map to different chrom:'

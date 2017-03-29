@@ -30,15 +30,15 @@ Currently, supported tools include:
 
 Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC
 -----------------------------|------------------------|---------------------------|-------------------
-[Cutadapt][cutadapt]         | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa]
-[FastQC][fastqc]             | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]
-[FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
-[Skewer][skewer]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
-[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
-                             | [Salmon][salmon]       | [Prokka][prokka]          | [RSeQC][rseqc]
-                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  |
-                             | [STAR][star]           | [Samtools][samtools]      |
-                             | [Tophat][tophat]       | [SnpEff][snpeff]          |
+[Cluster Flow][clusterflow]  | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa]
+[Cutadapt][cutadapt]         | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]
+[FastQC][fastqc]             | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
+[FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
+[Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
+[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc]
+                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]
+                             | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]
+                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]
                              |                        | [Subread featureCounts][featurecounts] |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -67,7 +67,7 @@ conda install -c bioconda multiqc
 
 If you would like the development version instead, the command is:
 ```bash
-pip install git+https://github.com/ewels/MultiQC.git
+pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
 ```
 
 MultiQC is also available in the
@@ -151,11 +151,14 @@ and many others. Thanks for your support!
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1
 [bowtie-2]:       http://multiqc.info/docs/#bowtie-2
+[busco]:          http://multiqc.info/docs/#busco
+[clusterflow]:    http://multiqc.info/docs/#cluster-flow
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [gatk]:           http://multiqc.info/docs/#gatk
+[goleft]:         http://multiqc.info/docs/#goleft-indexcov
 [hicup]:          http://multiqc.info/docs/#hicup
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
@@ -166,6 +169,7 @@ and many others. Thanks for your support!
 [prokka]:         http://multiqc.info/docs/#prokka
 [qualimap]:       http://multiqc.info/docs/#qualimap
 [quast]:          http://multiqc.info/docs/#quast
+[rna_seqc]:       http://multiqc.info/docs/#rna_seqc
 [rseqc]:          http://multiqc.info/docs/#rseqc
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster

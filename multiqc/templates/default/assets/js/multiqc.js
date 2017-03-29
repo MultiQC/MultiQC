@@ -25,14 +25,18 @@ $(function () {
   });
 
   // Hide welcome alert if setting saved
-  var hide_welcome = localStorage.getItem("mqc_hide_welcome");
-  if(hide_welcome !== 'true'){
-    $('#mqc_header_hr').slideUp();
-    $('#mqc_welcome').slideDown();
+  try {
+    var hide_welcome = localStorage.getItem("mqc_hide_welcome");
+    if(hide_welcome !== 'true'){
+      $('#mqc_header_hr').slideUp();
+      $('#mqc_welcome').slideDown();
+    }
+    $('#mqc_hide_welcome_btn').click(function(e){
+      localStorage.setItem("mqc_hide_welcome", 'true');
+    });
+  } catch(e){
+    console.log("Could not access localStorage: "+e+"\nPlease disable 'Block third-party cookies and site data' or browser equivalent.")
   }
-  $('#mqc_hide_welcome_btn').click(function(e){
-    localStorage.setItem("mqc_hide_welcome", 'true');
-  });
   $('#mqc_hide_welcome_btn, #mqc_welcome .close').click(function(e){
     $('#mqc_header_hr').show();
   });

@@ -106,10 +106,10 @@ def plot (data, cats=None, pconfig={}):
                 if s not in sample_dcount:
                     sample_dcount[s] = 0
                 try:
-                    thisdata.append(d[s][c])
+                    thisdata.append(float(d[s][c]))
                     catcount += 1
                     sample_dcount[s] += 1
-                except KeyError:
+                except (KeyError, ValueError):
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float('nan'))
             if catcount > 0:
@@ -328,11 +328,14 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
                     hide_plot = True
 
             # Set up figure
-            plt_height = min(30, max(6, len(plotsamples[pidx]) / 2.3))
+            plt_height = len(plotsamples[pidx]) / 2.3
+            plt_height = max(6, plt_height) # At least 6" tall
+            plt_height = min(30, plt_height) # Cap at 30" tall
+            bar_width = 0.8
+
             fig = plt.figure(figsize=(14, plt_height), frameon=False)
             axes = fig.add_subplot(111)
             y_ind = range(len(plotsamples[pidx]))
-            bar_width = 0.8
 
             # Count totals for each sample
             if plot_pct is True:
@@ -344,7 +347,6 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
             # Plot bars
             dlabels = []
             for idx, d in enumerate(pdata):
-
                 # Plot percentages
                 values = d['data']
                 if len(values) < len(y_ind):
@@ -371,8 +373,13 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
                 dlabels.append(d['name'])
                 # Add the series of bars to the plot
                 axes.barh(
-                    y_ind, values, bar_width, left=prevdata,
-                    color=d.get('color', default_colors[cidx]), align='center', linewidth=1, edgecolor='w'
+                    y_ind,
+                    values,
+                    bar_width,
+                    left = prevdata,
+                    color = d.get('color', default_colors[cidx]),
+                    align = 'center',
+                    linewidth = pconfig.get('borderWidth', 0)
                 )
 
             # Tidy up axes
@@ -437,7 +444,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
 
             # Link to the saved image
             else:
-                plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
+                plot_relpath = os.path.join(config.plots_dir_name, 'png', '{}.png'.format(pid))
                 html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
 
             plt.close(fig)

@@ -37,10 +37,16 @@ $(function () {
             // Tick only this plot in the toolbox and slide out
             $('#mqc_export_selectplots input').prop('checked', false);
             $('#mqc_export_selectplots input[value="'+this.renderTo.id+'"]').prop('checked', true);
+            // Special case - Table scatter plots are in a modal, need to close this first
+            if(this.renderTo.id == 'tableScatterPlot'){
+              $('#tableScatterModal').modal('hide');
+            }
             mqc_toolbox_openclose('#mqc_exportplots', true);
           },
           text: '<span style="color:#999999;">Export Plot</span>',
           symbol: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAXNJREFUOBHNUsuqwkAMPX2g4kJd+wOCuKgL//8btAXXIogvtOhCax9xzkBqveLg8gamHZKck+RMgP9mnquh5XIpaZrC8zx0Oh1EUfQ1P3QRkeR6vcL3fdxuN1cqnERhGIKHREEQOIl8V1RE0DyuXCeRC/g39iFeHMdSlqUV+HK5oCgKeyew1+vZEauqwnQ6fcN+aJTnObbbLdrtttWGL0bjiBT/fr9jMBhYX/PzxsrA4/EQ8+zY7/dotVpgdRoFZ5F+v4/ZbPaBCw+Hg8znc5s8Ho8J9kxV04DAxCwZg6aAJWEO7XQ6yWKxQJZlGI1Gr+fXEZhkls8zCTUZfexkMpmg2+2+dUMci1qNlKS5K0YjC0iSRDgSO1EfiblfxOmpxaaDr3Q8HqWpC1+NFbnhu91OSMKC5/OZ19pqIoq5Xq+xWq3qIAnoZxFdCQ3Sx65o9WisqsYENb0rofr1T3Iexi1qs9mIgjTp1z9JhsPhq/qvwG95Tw3FukJt8JteAAAAAElFTkSuQmCC)',
+          symbolX: 23,
+          symbolY: 19
         }
       }
     }
@@ -52,7 +58,7 @@ $(function () {
     // Only one point per dataset, so multiply limit by arbitrary number.
     var max_num = num_datasets_plot_limit * 50;
     plot_graph(target, undefined, max_num);
-  });
+  }).promise().done(function(){ $('.mqc_loading_warning').hide(); });
 
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
@@ -464,7 +470,7 @@ function plot_stacked_bar_graph(target, ds){
     // Bump the borderWidth to make the highlights more obvious
     if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
   }
-  if(config['borderWidth'] === undefined){ config['borderWidth'] = 1; }
+  if(config['borderWidth'] === undefined){ config['borderWidth'] = 0; }
 
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();

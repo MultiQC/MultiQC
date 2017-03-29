@@ -8,6 +8,7 @@ Using MultiQC:
   Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:
+    Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     FastQC: modules/fastqc.md
     FastQ Screen: modules/fastq_screen.md
@@ -25,8 +26,10 @@ MultiQC Modules:
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
+    BUSCO: modules/busco.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
+    goleft_indexcov: modules/goleft_indexcov.md
     HTSeq: modules/htseq.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md
@@ -35,6 +38,7 @@ MultiQC Modules:
     Prokka: modules/prokka.md
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
+    RNA-SeQC: modules/rna_seqc.md
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
@@ -47,6 +51,7 @@ Coding with MultiQC:
   Writing new modules: modules.md
   Plotting Functions: plots.md
   MultiQC Plugins: plugins.md
+  Updating for compatibility: compatibility.md
 ---
 
 # Welcome!
@@ -73,7 +78,8 @@ The documentation has the following pages:
    - [Writing new templates](templates.md)
    - [Writing new modules](modules.md)
    - [Plugins](plugins.md)
-   - [JavaScript](javascript.md)
+   - [MultiQC Plugins](plugins.md)
+   - [Updating for compatibility](compatibility.md)
 
 These docs can be read in any of three ways:
  - On the MultiQC Website: http://multiqc.info

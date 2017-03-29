@@ -11,8 +11,6 @@ from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
 
-letters = 'abcdefghijklmnopqrstuvwxyz'
-
 class datatable (object):
     """ Data table class. Prepares and holds data and configuration
     for either a table or a beeswarm plot. """
@@ -50,6 +48,14 @@ class datatable (object):
                 for k in keys:
                     headers[idx][k] = {}
 
+            # Ensure that keys are strings, not numeric
+            keys = [str(k) for k in keys]
+            for k in list(headers[idx].keys()):
+                headers[idx][str(k)] = headers[idx].pop(k)
+            for s_name in data[idx].keys():
+                for k in list(data[idx][s_name].keys()):
+                    data[idx][s_name][str(k)] = data[idx][s_name].pop(k)
+
             # Check that we have some data in each column
             empties = list()
             for k in keys:
@@ -65,8 +71,7 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = '{}_{}'.format(''.join(random.sample(letters, 4)), k)
-                headers[idx][k]['rid'] = re.sub(r'\W+', '_', headers[idx][k]['rid'])
+                headers[idx][k]['rid'] = '{}_{}'.format( id(headers[idx]), re.sub(r'\W+', '_', k) )
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]['namespace']   = headers[idx][k].get('namespace', pconfig.get('namespace', ''))
@@ -100,13 +105,13 @@ class datatable (object):
                 try:
                     headers[idx][k]['dmax'] = float(headers[idx][k]['max'])
                 except TypeError:
-                    headers[idx][k]['dmax'] = float("-inf")
+                    headers[idx][k]['dmax'] = 0
                     setdmax = True
 
                 try:
                     headers[idx][k]['dmin'] = float(headers[idx][k]['min'])
                 except TypeError:
-                    headers[idx][k]['dmin'] = float("inf")
+                    headers[idx][k]['dmin'] = 0
                     setdmin = True
 
                 # Figure out the min / max if not supplied

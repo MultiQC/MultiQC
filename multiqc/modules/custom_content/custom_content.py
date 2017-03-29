@@ -28,7 +28,7 @@ def custom_module_classes():
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mods = defaultdict(lambda: defaultdict(lambda: dict()))
+    cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
     search_patterns = OrderedDict()
@@ -67,9 +67,25 @@ def custom_module_classes():
             # YAML and JSON files are the easiest
             parsed_data = None
             if f_extension == '.yaml' or f_extension == '.yml':
-                parsed_data = yaml.load(f['f'])
+                try:
+                    # Parsing as OrderedDict is slightly messier with YAML
+                    # http://stackoverflow.com/a/21048064/713980
+                    def dict_constructor(loader, node):
+                        return OrderedDict(loader.construct_pairs(node))
+                    yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
+                    parsed_data = yaml.load(f['f'])
+                except Exception as e:
+                    log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
+                    log.warning("YAML error: {}".format(e))
+                    break
             elif f_extension == '.json':
-                parsed_data = json.loads(f['f'])
+                try:
+                    # Use OrderedDict for objects so that column order is honoured
+                    parsed_data = json.loads(f['f'], object_pairs_hook=OrderedDict)
+                except Exception as e:
+                    log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
+                    log.warning("JSON error: {}".format(e))
+                    break
             if parsed_data is not None:
                 c_id = parsed_data.get('id', k)
                 if len(parsed_data.get('data', {})) > 0:
@@ -198,7 +214,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table
         if mod['config'].get('plot_type') == 'table':
-            self.intro += table.plot(mod['data'], None, pconfig)
+            pconfig['sortRows'] = pconfig.get('sortRows', False)
+            headers = mod['config'].get('headers')
+            self.intro += table.plot(mod['data'], headers, pconfig)
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
@@ -334,30 +352,34 @@ def _parse_txt(f, conf):
         data = [s[1:] for s in d[1:]]
         return (data, conf)
 
-    # Header row
-    if first_row_str == len(d[0]):
-        data = dict()
+    # Header row of strings, or configured as table
+    if first_row_str == len(d[0]) or conf.get('plot_type') == 'table':
+        data = OrderedDict()
         for s in d[1:]:
             data[s[0]] = OrderedDict()
             for i, v in enumerate(s[1:]):
-                cat = d[0][i+1]
+                cat = str(d[0][i+1])
                 data[s[0]][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get('plot_type') is None:
             allfloats = True
-            for v in d[1][1:]:
-                allfloats = allfloats and type(v) == float
+            for r in d:
+                for v in r[1:]:
+                    allfloats = allfloats and type(v) == float
             if allfloats:
                 conf['plot_type'] = 'bargraph'
             else:
                 conf['plot_type'] = 'table'
-        if conf.get('plot_type') is 'bargraph' or conf.get('plot_type') is 'table':
+        if conf.get('plot_type') == 'bargraph' or conf.get('plot_type') == 'table':
             return (data, conf)
+        else:
+            data = OrderedDict() # reset
 
-    # Scatter plot: No header row, str : num : num
+    # Scatter plot: First row is  str : num : num
     if (conf.get('plot_type') is None and len(d[0]) == 3 and
         type(d[0][0]) != float and type(d[0][1]) == float and type(d[0][2]) == float):
         conf['plot_type'] = 'scatter'
+
     if conf.get('plot_type') == 'scatter':
         data = dict()
         for s in d:
@@ -370,14 +392,15 @@ def _parse_txt(f, conf):
                 pass
         return (data, conf)
 
-    # Single sample line / bar graph
+    # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
-        # Line graph: No header row, num : num
+        # Line graph - row, num : num
         if (conf.get('plot_type') is None and type(d[0][0]) == float and type(d[0][1]) == float):
             conf['plot_type'] = 'linegraph'
-        # Bar graph: No header row, str : num
+        # Bar graph - str : num
         if (conf.get('plot_type') is None and type(d[0][0]) != float and type(d[0][1]) == float):
             conf['plot_type'] = 'bargraph'
+
         # Data structure is the same
         if (conf.get('plot_type') == 'linegraph' or conf.get('plot_type') == 'bargraph'):
             # Set section id based on directory if not known
@@ -391,6 +414,7 @@ def _parse_txt(f, conf):
     # Multi-sample line graph: No header row, str : lots of num columns
     if conf.get('plot_type') is None and len(d[0]) > 4 and all_numeric:
         conf['plot_type'] = 'linegraph'
+
     if conf.get('plot_type') == 'linegraph':
         data = dict()
         # Use 1..n range for x values
@@ -402,6 +426,8 @@ def _parse_txt(f, conf):
         return (data, conf)
 
     # Got to the end and haven't returned. It's a mystery, capn'!
+    log.debug("Not able to figure out a plot type for '{}' ".format(f['fn']) +
+      "plot type = {}, all numeric = {}, first row str = {}".format( conf.get('plot_type'), all_numeric, first_row_str ))
     return (None, conf)
 
 

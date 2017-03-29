@@ -13,7 +13,7 @@
 title: null
 subtitle: null
 intro_text: null
-custom_message: null
+report_comment: null
 report_header_info: null
 config_file: null
 custom_logo: null
@@ -121,6 +121,7 @@ fn_clean_trim:
     - '.yml'
     - '.json'
     - '_mqc'
+    - 'short_summary_'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -142,22 +143,27 @@ fn_ignore_files:
 # modules (even those not present in the below list).
 top_modules: []
 
-# Order that modules should appear in report. Try to list in order of analysis,
-# eg. FastQC is usually the first step, so should be last in this list.
+# Order that modules should appear in report. Try to list in order of analysis.
 module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
-    # Post-alignment analysis results
+    # Post-alignment QC
     - 'peddy'
-    - 'quast'
-    - 'snpeff'
+    - 'methylQA'
     - 'qualimap'
+    - 'preseq'
+    - 'quast'
+    - 'rna-seqc'
+    - 'rseqc'
+    - 'busco'
+    - 'goleft_indexcov'
+    # Post-alignment processing
+    - 'snpeff'
+    - 'gatk'
+    - 'htseq'
     - 'bcftools'
     - 'featureCounts'
-    - 'methylQA'
-    - 'rseqc'
     - 'picard'
-    - 'preseq'
     - 'prokka'
     - 'samblaster'
     - 'samtools'
@@ -178,3 +184,4 @@ module_order:
     - 'skewer'
     - 'fastq_screen'
     - 'fastqc'
+    - 'clusterflow'

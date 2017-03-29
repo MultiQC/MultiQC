@@ -8,7 +8,7 @@ of the report.
 #}
 
 <div class="mqc-toolbox collapse">
-  
+
   <!-- Toolbar show/hide buttons -->
   <div class="mqc-toolbox-buttons hidden-xs">
     <a class="mqc-toolbox-label" href="#mqc_cols" title="Open Toolbox">Toolbox</a>
@@ -21,14 +21,13 @@ of the report.
       <li><a href="#mqc_about" title="About" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-question-sign"></span></a></li>
     </ul>
   </div>
-  
-  
+
   <div class="mqc-toolbox-wrapper">
     <!-- Header - always visible -->
     <div class="mqc-toolbox-header hidden-xs">
       <h3>MultiQC Toolbox</h3>
     </div>
-    
+
     <!-- Highlighting -->
     <div id="mqc_cols" class="mqc_filter_section">
       <h4>
@@ -55,7 +54,7 @@ of the report.
       </p>
       <ul id="mqc_col_filters" class="mqc_filters"></ul>
     </div>
-    
+
     <!-- Renaming -->
     <div id="mqc_renamesamples" class="mqc_filter_section">
       <h4>
@@ -91,7 +90,7 @@ of the report.
       </p>
       <ul id="mqc_renamesamples_filters" class="mqc_filters"></ul>
     </div>
-    
+
     <!-- Hiding -->
     <div id="mqc_hidesamples" class="mqc_filter_section">
       <h4>
@@ -126,7 +125,7 @@ of the report.
       </p>
       <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
     </div>
-    
+
     <!-- Export Plots -->
     <div id="mqc_exportplots" class="mqc_filter_section">
       <h4>Export Plots</h4>
@@ -175,7 +174,7 @@ of the report.
               </div>
             </div>
           </div>
-          
+
           <div role="tabpanel" class="tab-pane fade" id="mqc_data_download">
             <p>Download the raw data used to create the plots in this report below:</p>
             <div class="row">
@@ -196,15 +195,17 @@ of the report.
             <div id="mqc_export_data_log"></div>
           </div>
         </div>
-        
+
         <hr>
         <h5>Choose Plots</h5>
         <button class="btn btn-sm btn-default" id="mqc_export_sall"><span class="glyphicon glyphicon-check"></span> All</button>
         <button class="btn btn-sm btn-default" id="mqc_export_snone"><span class="glyphicon glyphicon-unchecked"></span> None</button>
         <div id="mqc_export_selectplots"></div>
-        
+
         <hr>
-        <button type="submit" class="btn btn-block btn-default"><span class="glyphicon glyphicon-download-alt"></span> &nbsp; Download Plot <span id="mqc-dl-plot-txt">Images</span></button>
+        <button type="submit" class="btn btn-block btn-default" id="mqc-dl-plot-btn">
+          <span class="glyphicon glyphicon-download-alt"></span> &nbsp; Download Plot <span id="mqc-dl-plot-txt">Images</span>
+        </button>
         <p><small>If you use plots from MultiQC in a publication or presentation, please cite:</small></p>
         <blockquote>
           <strong>MultiQC: Summarize analysis results for multiple tools and samples in a single report</strong><br>
@@ -215,7 +216,7 @@ of the report.
         </blockquote>
       </form>
     </div>
-    
+
     <!-- Save Config -->
     <div id="mqc_saveconfig" class="mqc_filter_section">
       <h4>Save Settings</h4>
@@ -225,7 +226,7 @@ of the report.
         <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
       </form>
       <hr>
-      
+
       <h4>Load Settings</h4>
       <p>Choose a saved report profile from the dropdown box below:</p>
       <form id="mqc_loadconfig_form">
@@ -240,7 +241,7 @@ of the report.
         </div>
       </form>
     </div>
-    
+
     <!-- Help / About -->
     <div id="mqc_about" class="mqc_filter_section">
       <h4>About MultiQC</h4>
@@ -260,7 +261,7 @@ of the report.
         PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/27312411" target="_blank">27312411</a>
       </blockquote>
     </div>
-    
+
   </div>
   <a href="#top" class="mqc-toplink hidden-xs" title="Go to top"><span class="glyphicon glyphicon-chevron-up"></span></a>
 </div>
