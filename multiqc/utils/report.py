@@ -16,6 +16,9 @@ import yaml
 from multiqc import config
 logger = config.logger
 
+from multiqc.utils import mime
+magic = mime.Magic()
+
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
 from yaml.representer import Representer, SafeRepresenter
 yaml.add_representer(defaultdict, Representer.represent_dict)
@@ -37,6 +40,11 @@ saved_raw_data = dict()
 # Make a list of files to search
 files = list()
 def get_filelist():
+    with magic:
+        get_filelist_()
+
+
+def get_filelist_():
 
     def add_file(fn, root):
 
@@ -70,10 +78,13 @@ def get_filelist():
                 logger.debug("Ignoring file as too large: {}".format(fn))
                 return None
 
+        mod = magic.guess_type(os.path.join(root, fn))
+
         # Looks good! Remember this file
         files.append({
             'root': root,
-            'fn': fn
+            'fn': fn,
+            'mod': mod
         })
 
     # Go through the analysis directories
