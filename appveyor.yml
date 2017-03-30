@@ -33,14 +33,13 @@ install:
   - "curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip"
   - '7z x test_data.zip -y -o"%APPVEYOR_BUILD_FOLDER%"'
   - "mkdir empty_dir"
-  - "dir"
 
 # Not a C# project, nothing to build
 build: false
 
 test_script:
-  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\test_data\data'
-  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\test_data\data -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" -n custom_fn --no-data-dir'
-  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\test_data\data -f -v --flat -e star -x ngi -s -z'
-  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc --file-list %APPVEYOR_BUILD_FOLDER%\test_data\data\special_cases\file_list.txt -m star -o %APPVEYOR_BUILD_FOLDER%\test_data\tests\multiqc_report_dev -t default_dev -k json'
+  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\data'
+  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\data -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" -n custom_fn --no-data-dir'
+  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\data -f -v --flat -e star -x ngi -s -z'
+  - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc --file-list %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\data\special_cases\file_list.txt -m star -o %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\tests\multiqc_report_dev -t default_dev -k json'
   - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc -f empty_dir'
