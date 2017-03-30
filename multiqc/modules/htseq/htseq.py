@@ -59,7 +59,10 @@ class MultiqcModule(BaseMultiqcModule):
             if s[0] in keys:
                 parsed_data[s[0][2:]] = int(s[1])
             else:
-                assigned_counts += int(s[1])
+                try:
+                    assigned_counts += int(s[1])
+                except (ValueError, IndexError):
+                    pass
         if len(parsed_data) > 0:
             parsed_data['assigned'] = assigned_counts
             parsed_data['total_count'] = sum([v for v in parsed_data.values()])
