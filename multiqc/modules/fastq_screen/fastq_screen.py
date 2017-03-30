@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
-        if False and len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
+        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
             self.intro += self.fqscreen_plot()
         # Use simpler plot that works with many samples
         else:
@@ -83,10 +83,13 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
                     parsed_data[org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
                     parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
-        # Calculate no hits counts
-        parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(reads_processed)) }
+
         if len(parsed_data) == 0:
             return None
+
+        # Calculate no hits counts
+        if reads_processed and nohits_pct:
+            parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(reads_processed)) }
 
         self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data
