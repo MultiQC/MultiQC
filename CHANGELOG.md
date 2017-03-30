@@ -27,8 +27,14 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
   * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
     data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
+* **Bcftools**
+  * Fixed bug with display of indels when only one sample
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **FastQ Screen**
+  * Rewritten plotting method for high sample numbers plot (~ > 20 samples)
+  * Now shows counts for single-species hits and bins all multi-species hits
+  * Allows plot to show proper percentage view for each sample, much easier to interpret.
 * **HTSeq**
   * Fix bug where header lines caused module to crash
 * **Picard**
