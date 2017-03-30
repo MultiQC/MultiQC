@@ -114,11 +114,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%',
         }
         headers['Deduplication_Read_Pairs_Uniques'] = {
-            'title': 'M Unique',
-            'description': 'Unique Di-Tags (millions)',
+            'title': '{} Unique'.format(config.read_count_prefix),
+            'description': 'Unique Di-Tags ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['Percentage_Uniques'] = {
@@ -132,11 +132,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%',
         }
         headers['Valid_Pairs'] = {
-            'title': 'M Valid',
-            'description': 'Valid Pairs (millions)',
+            'title': '{} Valid'.format(config.read_count_prefix),
+            'description': 'Valid Pairs ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['Percentage_Valid'] = {
@@ -149,11 +149,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%',
         }
         headers['Paired_Read_1'] = {
-            'title': 'M Pairs Aligned',
-            'description': 'Paired Alignments (millions)',
+            'title': '{} Pairs Aligned'.format(config.read_count_prefix),
+            'description': 'Paired Alignments ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['Percentage_Mapped'] = {

@@ -51,6 +51,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
 #### Core MultiQC updates:
 * Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
+* New config option to change numeric multiplier in General Stats
+  * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
+  * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
 * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
 * Handle error when `git` isn't installed on the system.
 * Refactored colouring of table cells

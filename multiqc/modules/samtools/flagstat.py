@@ -35,10 +35,10 @@ class FlagstatReportMixin():
             # General Stats Table
             flagstats_headers = dict()
             flagstats_headers['mapped_passed'] = {
-                'title': 'M Reads Mapped',
-                'description': 'Reads Mapped in the bam file',
+                'title': '{} Reads Mapped'.format(config.read_count_prefix),
+                'description': 'Reads Mapped in the bam file ({})'.format(config.read_count_desc),
                 'min': 0,
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
             self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, 'Samtools Flagstat')
