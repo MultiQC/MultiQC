@@ -29,6 +29,8 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
     data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **HTSeq**
+  * Fix bug where header lines caused module to crash
 * **Picard**
   * New `RrbsSummaryMetrics` Submodule!
   * New `WgsMetrics` Submodule!
