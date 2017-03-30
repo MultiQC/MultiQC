@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
-        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
+        if False and len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
             self.intro += self.fqscreen_plot()
         # Use simpler plot that works with many samples
         else:
@@ -218,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_c_active': False
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
-        cats['No hits'] = { 'name': 'No hits', 'color': '#002B36' }
+        cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
 
         return bargraph.plot(data, cats, pconfig)
 
