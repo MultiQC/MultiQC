@@ -19,7 +19,7 @@ import fnmatch
 import re
 import logging
 
-from multiqc.utils import report, config
+from multiqc.utils import config
 
 
 logger = logging.getLogger(__name__)
