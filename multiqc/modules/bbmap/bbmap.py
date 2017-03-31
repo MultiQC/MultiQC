@@ -244,9 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         kv = {}
         data = {}
-        lines = 0
-        for line in f:
-            lines += 1
+        for line_number, line in enumerate(f, start=1):
             line = line.strip().split('\t')
             if line[0][0] == '#':
                 # It's a header row
@@ -258,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if len(line) !=2:
                         # Not two items? Wrong!
                         log.error("Expected key value pair in %s/%s:%d but found '%s'",
-                                  root, s_name, lines, repr(line))
+                                  root, s_name, line_number, repr(line))
                         log.error("Table header should begin with '%s'",
                                   cols[0])
                         continue
@@ -274,8 +272,8 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 if isinstance(log_descr['cols'], OrderedDict):
                     line = [
-                        type(value)
-                        for type, value in zip(log_descr['cols'].values(), line)
+                        value_type(value)
+                        for value_type, value in zip(log_descr['cols'].values(), line)
                     ]
                 else:
                     line = map(int, line)
