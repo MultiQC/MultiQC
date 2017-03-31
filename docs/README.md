@@ -15,6 +15,7 @@ MultiQC Modules:
     Skewer: modules/skewer.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
+    BBMap: modules/bbmap.md
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
