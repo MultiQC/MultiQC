@@ -28,19 +28,19 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
-Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC
------------------------------|------------------------|---------------------------|-------------------
-[BBMap/BBTools][bbmap]       | [BBMap/BBTools][bbmap] | [Bamtools][bamtools]      | [methylQA][methylqa]
-[Cutadapt][cutadapt]         | [Bismark][bismark]     | [Bcftools][bcftools]      | [Peddy][peddy]
-[FastQC][fastqc]             | [Bowtie][bowtie-1]     | [GATK][gatk]              | [Preseq][prese
-[FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [HTSeq][htseq]            | [Qualimap][qualimap]
-[Skewer][skewer]             | [HiCUP][hicup]         | [Picard][picard]          | [QUAST][quast]
-[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Prokka][prokka]          | [RSeQC][rseqc]
-                             | [Salmon][salmon]       | [Samblaster][samblaster]  | [BUSCO][busco]
-                             | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [goleft][goleft]
-                             | [STAR][star]           | [SnpEff][snpeff]          |
-                             | [Tophat][tophat]       | [Subread featureCounts][featurecounts] |
-                             |                        |
+Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing              | Post-alignment QC
+-----------------------------|------------------------|----------------------------------------|-------------------
+[BBMap/BBTools][bbmap]       | [BBMap/BBTools][bbmap] | [Bamtools][bamtools]                   | [methylQA][methylqa]
+[Cutadapt][cutadapt]         | [Bismark][bismark]     | [Bcftools][bcftools]                   | [Peddy][peddy]
+[FastQC][fastqc]             | [Bowtie][bowtie-1]     | [GATK][gatk]                           | [Preseq][prese
+[FastQ Screen][fastq-screen] | [Bowtie 2][bowtie-2]   | [HTSeq][htseq]                         | [Qualimap][qualimap]
+[Skewer][skewer]             | [HiCUP][hicup]         | [Picard][picard]                       | [QUAST][quast]
+[Trimmomatic][trimmomatic]   | [Kallisto][kallisto]   | [Prokka][prokka]                       | [RSeQC][rseqc]
+-                            | [Salmon][salmon]       | [Samblaster][samblaster]               | [BUSCO][busco]
+-                            | [Slamdunk][slamdunk]   | [Samtools][samtools]                   | [goleft][goleft]
+-                            | [STAR][star]           | [SnpEff][snpeff]                       |
+-                            | [Tophat][tophat]       | [Subread featureCounts][featurecounts] |
+-                            |                        |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -145,6 +145,8 @@ Code contributions from:
 [@avilella](https://github.com/avilella),
 [@vladsaveliev](https://github.com/vladsaveliev)
 [@t-neumann](https://github.com/t-neumann)
+[@epruesse](https://github.com/epruesse)
+[@boulund](https://github.com/boulund)
 and many others. Thanks for your support!
 
 [bamtools]:       http://multiqc.info/docs/#bamtools
