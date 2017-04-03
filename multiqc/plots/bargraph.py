@@ -39,7 +39,7 @@ def get_template_mod():
         _template_mod = config.avail_templates[config.template].load()
     return _template_mod
 
-def plot (data, cats=None, pconfig={}):
+def plot (data, cats=None, pconfig=None):
     """ Plot a horizontal bar graph. Expects a 2D dict of sample
     data. Also can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
@@ -50,7 +50,7 @@ def plot (data, cats=None, pconfig={}):
     :return: HTML and JS, ready to be inserted into the page
     """
 
-    if not pconfig:
+    if pconfig is None:
         pconfig = {}
 
     # Given one dataset - turn it into a list
@@ -153,11 +153,13 @@ def plot (data, cats=None, pconfig={}):
 
 
 
-def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
+def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
     """
     Build the HTML needed for a HighCharts bar graph. Should be
     called by plot_bargraph, which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -231,12 +233,15 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig={}):
     return html
 
 
-def matplotlib_bargraph (plotdata, plotsamples, pconfig={}):
+def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
     """
     Plot a bargraph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by
     plot_bargraph, which properly formats the input data.
     """
+
+    if pconfig is None:
+        pconfig = {}
 
     # Plot group ID
     if pconfig.get('id') is None:
