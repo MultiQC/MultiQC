@@ -17,6 +17,8 @@ To see what changes need to applied to your custom plugin code, please see
 the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
 #### Module updates:
+* [**BBMap**](http://jgi.doe.gov/data-and-tools/bbtools/) - new module!
+  * New module for the `BBTools` read mapping/trimming/stats suite/
 * [**BUSCO**](http://busco.ezlab.org/) - new module!
   * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
 * [**Cluster Flow**](http://clusterflow.io) - new module!

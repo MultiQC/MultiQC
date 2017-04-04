@@ -30,7 +30,7 @@ class BaseMultiqcModule(object):
             mname = target
         self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
 
-    def find_log_files(self, patterns, filecontents=True, filehandles=False):
+    def find_log_files(self, patterns, filecontents=True, filehandles=False, maxlines=0):
         """
         Search the analysis directory for log files of interest. Can take either a filename
         suffix or a search string to return only log files that contain relevant info.
@@ -82,11 +82,12 @@ class BaseMultiqcModule(object):
             if fn_matched or contents_match is not None:
                 try:
                     with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-
+                        logger.debug("parsing %s/%s", root, fn)
                         # Search this file for our string of interest
                         returnfile = False
                         if contents_match is not None and fn_matched is False:
-                            for line in f:
+                            for lineno, line in enumerate(f):
+                                if maxlines and lineno > maxlines: break
                                 for m in contents_match:
                                     if m in line:
                                         returnfile = True

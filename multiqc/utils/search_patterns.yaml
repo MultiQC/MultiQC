@@ -5,6 +5,46 @@
 bamtools:
     stats:
       contents: 'Stats for BAM file(s):'
+bbmap:
+    aqhist:
+        contents: '#Quality        count1  fraction1       count2  fraction2'
+    bhist:
+        contents: '#Pos	A	C	G	T	N'
+    bincov:
+        # 3rd line (1st is #Mean)
+        contents: '#RefName	Cov	Pos	RunningPos'
+    bqhist:
+        contents: '#BaseNum	count_1	min_1	max_1	mean_1	Q1_1	med_1	Q3_1	LW_1	RW_1	count_2	min_2	max_2	mean_2	Q1_2	med_2	Q3_2	LW_2	RW_2'
+    covhist:
+        contents: '#Coverage	numBases'
+    covstats:
+        contents: '#ID	Avg_fold'
+    ehist:
+        contents: '#Errors	Count'
+    gchist:
+        # 5th line (1st is #Mean)
+        contents: '#GC	Count'
+    idhist:
+        contents: '#Mean_reads'
+    ihist:
+        # 6th line (first is #Mean)
+        contents: '#InsertSize	Count'
+    indelhist:
+        contents: '#Length	Deletions	Insertions'
+    lhist:
+        contents: '#Length	Count'
+    mhist:
+        contents: '#BaseNum	Match1	Sub1	Del1	Ins1	N1	Other1	Match2	Sub2	Del2	Ins2	N2	Other2'
+    qahist:
+        contents: '#Deviation'
+    qhist:
+        contents: '#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured'
+    rpkm:
+        contents: '#File	'
+    statsfile_machine:
+        contents: 'Reads Used='
+    statsfile:
+        contents: 'Reads Used:'
 bcftools:
     stats:
         contents: 'This file was produced by bcftools stats'
