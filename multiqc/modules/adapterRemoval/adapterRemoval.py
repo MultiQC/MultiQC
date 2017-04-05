@@ -177,7 +177,19 @@ class MultiqcModule(BaseMultiqcModule):
         data_pattern = {'total': 0,
                         'unaligned': 1,
                         'aligned': 2,
-                        'retained': -3}
+                        'discarded_m1': 3,
+                        'singleton_m1': 4,
+                        'retained': 6}
+
+        if self.__read_type == 'paired':
+            data_pattern['discarded_m2'] = 5
+            data_pattern['singleton_m2'] = 6
+            if not self.__collapsed:
+                data_pattern['retained'] = 8
+            else:
+                data_pattern['full-length_cp'] = 8
+                data_pattern['truncated_cp'] = 9
+                data_pattern['retained'] = 10
 
         for title, key in data_pattern.iteritems():
             tmp = trim_data[key]
@@ -189,7 +201,11 @@ class MultiqcModule(BaseMultiqcModule):
             reads_total = self.result_data['total'] * 2
 
         self.result_data['reads_total'] = reads_total
-        self.result_data['discarded'] = reads_total - self.result_data['retained']
+        self.result_data['discarded_total'] = reads_total - self.result_data['retained']
+
+        if self.__read_type == 'paired':
+            self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
+        print(self.result_data)
 
     def set_len_dist(self, len_dist_data):
 
@@ -304,9 +320,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def adapter_removal_retained_chart(self):
 
-        cats = OrderedDict()
-        cats['retained'] = {'name': 'retained'}
-        cats['discarded'] = {'name': 'discarded'}
         pconfig = {
             'title': 'retained and discarded',
             'ylab': '# Reads',
@@ -316,30 +329,89 @@ class MultiqcModule(BaseMultiqcModule):
 
         # plot different results if exists
         if self.adapter_removal_data['single']:
+            cats_se = OrderedDict()
+            cats_se['singleton_m1'] = {
+                'name': 'singleton mate1',
+                'color': '#305ead'
+            }
+            cats_se['discarded_m1'] = {
+                'name': 'discarded mate1',
+                'color': '#bd5dbf'
+            }
             pconfig['id'] = 'ar_retained_plot_se'
             self.sections.append({
                 'name': 'Retained and Discarded Single-End',
                 'anchor': 'adapter_removal_retained_plot_se',
                 'content': '<p>The proportions of retained and discarded reads.</p>' +
-                           bargraph.plot(self.adapter_removal_data['single'], cats, pconfig)
+                           bargraph.plot(self.adapter_removal_data['single'], cats_se, pconfig)
             })
 
         if self.adapter_removal_data['paired']['noncollapsed']:
+            cats_penc = OrderedDict()
+            cats_penc['singleton_m1'] = {
+                'name': 'singleton mate1',
+                'color': '#305ead'
+            }
+            cats_penc['singleton_m2'] = {
+                'name': 'singleton mate2',
+                'color': '#3b66af'
+            }
+            cats_penc['retained_reads'] = {
+                'name': 'retained read pairs',
+                'color': '#b1b5bc'
+            }
+            cats_penc['discarded_m1'] = {
+                'name': 'discarded mate1',
+                'color': '#e08fc1'
+            }
+            cats_penc['discarded_m2'] = {
+                'name': 'discarded mate2',
+                'color': '#bd5dbf'
+            }
             pconfig['id'] = 'ar_retained_plot_penc'
             self.sections.append({
                 'name': 'Retained and Discarded Paired-End Noncollapsed',
                 'anchor': 'adapter_removal_retained_plot_penc',
                 'content': '<p>The proportions of retained and discarded reads.</p>' +
-                           bargraph.plot(self.adapter_removal_data['paired']['noncollapsed'], cats, pconfig)
+                           bargraph.plot(self.adapter_removal_data['paired']['noncollapsed'], cats_penc, pconfig)
             })
 
         if self.adapter_removal_data['paired']['collapsed']:
+            cats_pec = OrderedDict()
+            cats_pec['singleton_m1'] = {
+                'name': 'singleton mate1',
+                'color': '#305ead'
+            }
+            cats_pec['singleton_m2'] = {
+                'name': 'singleton mate2',
+                'color': '#3b66af'
+            }
+            cats_pec['retained_reads'] = {
+                'name': 'retained read pairs',
+                'color': '#b1b5bc'
+            }
+            cats_pec['full-length_cp'] = {
+                'name': 'full-length collapsed pairs',
+                'color': '#717f99'
+            }
+            cats_pec['truncated_cp'] = {
+                'name': 'truncated collapsed pairs',
+                'color': '#748ab2'
+            }
+            cats_pec['discarded_m1'] = {
+                'name': 'discarded mate1',
+                'color': '#e08fc1'
+            }
+            cats_pec['discarded_m2'] = {
+                'name': 'discarded mate2',
+                'color': '#bd5dbf'
+            }
             pconfig['id'] = 'ar_retained_plot_pec'
             self.sections.append({
                 'name': 'Retained and Discarded Paired-End Collapsed',
                 'anchor': 'adapter_removal_retained_plot_pec',
                 'content': '<p>The proportions of retained and discarded reads.</p>' +
-                           bargraph.plot(self.adapter_removal_data['paired']['collapsed'], cats, pconfig)
+                           bargraph.plot(self.adapter_removal_data['paired']['collapsed'], cats_pec, pconfig)
             })
 
     def adapter_removal_length_dist_plot(self):
