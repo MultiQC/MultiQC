@@ -19,6 +19,7 @@ def parse_reports(self):
 
     # Set up vars
     self.picard_GCbias_data = dict()
+    self.picard_GCbiasSummary_data = dict()
 
     # Go through logs and find Metrics
     for f in self.find_log_files(config.sp['picard']['gcbias'], filehandles=True):
@@ -58,12 +59,30 @@ def parse_reports(self):
                     gc_col = s.index('GC')
                     cov_col = s.index('NORMALIZED_COVERAGE')
 
+                if 'GcBiasSummaryMetrics' in l and '## METRICS CLASS' in l:
+                    if s_name in self.picard_GCbias_data:
+                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
+                    self.add_data_source(f, s_name, section='GcBiasSummaryMetrics')
+                    self.picard_GCbiasSummary_data[s_name] = dict()
+
+                    keys = f['f'].readline().rstrip("\n").split("\t")
+                    vals = f['f'].readline().rstrip("\n").split("\t")
+                    for i, k in enumerate(keys):
+                        try:
+                            self.picard_GCbiasSummary_data[s_name][k] = float(vals[i])
+                        except ValueError:
+                            self.picard_GCbiasSummary_data[s_name][k] = vals[i]
+
 
         for s_name in list(self.picard_GCbias_data.keys()):
             if len(self.picard_GCbias_data[s_name]) == 0:
                 self.picard_GCbias_data.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))
 
+        for s_name in list(self.picard_GCbiasSummary_data.keys()):
+            if len(self.picard_GCbiasSummary_data[s_name]) == 0:
+                self.picard_GCbiasSummary_data.pop(s_name, None)
+                log.debug("Removing {} as no data parsed".format(s_name))
 
 
 
@@ -94,7 +113,10 @@ def parse_reports(self):
                 linegraph.plot(self.picard_GCbias_data, pconfig)
         })
 
+    if len(self.picard_GCbiasSummary_data) > 0:
+        # Write parsed summary data to a file
+        self.write_data_file(self.picard_GCbiasSummary_data, 'multiqc_picard_gcbias')
+
 
     # Return the number of detected samples to the parent module
     return len(self.picard_GCbias_data)
-
