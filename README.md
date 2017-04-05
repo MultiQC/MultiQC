@@ -144,6 +144,7 @@ Code contributions from:
 [@avilella](https://github.com/avilella),
 [@vladsaveliev](https://github.com/vladsaveliev)
 [@t-neumann](https://github.com/t-neumann)
+[@ahvigil](https://github.com/ahvigil)
 and many others. Thanks for your support!
 
 [bamtools]:       http://multiqc.info/docs/#bamtools

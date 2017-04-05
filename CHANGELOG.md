@@ -40,11 +40,13 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * **Picard**
   * New `RrbsSummaryMetrics` Submodule!
   * New `WgsMetrics` Submodule!
+  * `CollectGcBiasMetrics` module now prints summary statistics to `multiqc_data` if found. Thanks to @ahvigil
 * **Preseq**
   * Now trims the x axis to the point that meets 80% of `max(unique molecules)`
   * Hopefully prevents ridiculous x axes without sacrificing too much useful information.
 * **Qualimap**
   * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
+  * BamQC module now doesn't crash if reports don't have genome gc distributions
 * **RSeQC**
   * Fixed Python3 error in Junction Saturation code
   * Fixed JS error for Junction Saturation that made the single-sample combined plot only show _All Junctions_
@@ -73,6 +75,8 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * Line graphs and scatter graphs axis limits
   * If limits are specified, data exceeding this is no longer saved in report
   * Visually identical, but can make report file sizes considerable smaller in some cases
+* Creating multiple plots without a config dict now works (previously just gave grey boxes in report)
+* All changes are now tested on a Windows system, using [AppVeyor](https://ci.appveyor.com/project/ewels/multiqc/)
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
