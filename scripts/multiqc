@@ -395,6 +395,7 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     plugin_hooks.mqc_trigger('after_modules')
 
     # Generate the General Statistics HTML & write to file
+    report.general_stats_data = [d for d in report.general_stats_data if len(d) > 0]
     if len(report.general_stats_data) > 0:
         pconfig = {
             'id': 'general_stats_table',

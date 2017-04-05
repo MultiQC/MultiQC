@@ -77,6 +77,7 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
   * Visually identical, but can make report file sizes considerable smaller in some cases
 * Creating multiple plots without a config dict now works (previously just gave grey boxes in report)
 * All changes are now tested on a Windows system, using [AppVeyor](https://ci.appveyor.com/project/ewels/multiqc/)
+* Fixed rare error where some reports could get empty General Statistics tables when no data present.
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
