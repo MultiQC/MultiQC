@@ -28,18 +28,18 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
-Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC
------------------------------|------------------------|---------------------------|-------------------
-[Cluster Flow][clusterflow]  | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa]
-[Cutadapt][cutadapt]         | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]
-[FastQC][fastqc]             | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]
-[FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap]
-[Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]
-[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc]
-                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]
-                             | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]
-                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]
-                             |                        | [Subread featureCounts][featurecounts] |
+|Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
+|-----------------------------|------------------------|---------------------------|----------------------|
+|[Cluster Flow][clusterflow]  | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa] |
+|[Cutadapt][cutadapt]         | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]       |
+|[FastQC][fastqc]             | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]     |
+|[FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap] |
+|[Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]       |
+|[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
+|                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
+|                             | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
+|                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
+|                             |                        | [Subread featureCounts][featurecounts] |         |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
