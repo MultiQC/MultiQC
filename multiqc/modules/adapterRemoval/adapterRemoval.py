@@ -197,15 +197,20 @@ class MultiqcModule(BaseMultiqcModule):
             self.result_data[title] = int(value)
 
         reads_total = self.result_data['total']
+        aligned_total = self.result_data['aligned']
+        unaligned_total = self.result_data['unaligned']
         if self.__read_type == 'paired':
             reads_total = self.result_data['total'] * 2
+            aligned_total = self.result_data['aligned'] * 2
+            unaligned_total = self.result_data['unaligned'] * 2
 
+        self.result_data['aligned_total'] = aligned_total
+        self.result_data['unaligned_total'] = unaligned_total
         self.result_data['reads_total'] = reads_total
         self.result_data['discarded_total'] = reads_total - self.result_data['retained']
 
         if self.__read_type == 'paired':
             self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
-        print(self.result_data)
 
     def set_len_dist(self, len_dist_data):
 
@@ -281,8 +286,8 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_counts_chart(self):
 
         cats = OrderedDict()
-        cats['aligned'] = {'name': 'with adapter'}
-        cats['unaligned'] = {'name': 'without adapter'}
+        cats['aligned_total'] = {'name': 'with adapter'}
+        cats['unaligned_total'] = {'name': 'without adapter'}
         pconfig = {
             'title': 'Adapter Alignments',
             'ylab': '# Reads',
