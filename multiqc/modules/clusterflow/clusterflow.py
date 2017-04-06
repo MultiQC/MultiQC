@@ -56,20 +56,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections = list()
 
         # Pipeline Info
-        pipelines_section = self.clusterflow_pipelines_table()
-        pipelines_section += self.clusterflow_pipelines_printout()
-        self.sections.append({
-            'name': 'Pipelines',
-            'anchor': 'clusterflow-pipelines',
-            'content': pipelines_section
-        })
+        if len(self.clusterflow_runfiles) > 0:
+            pipelines_section = self.clusterflow_pipelines_table()
+            pipelines_section += self.clusterflow_pipelines_printout()
+            self.sections.append({
+                'name': 'Pipelines',
+                'anchor': 'clusterflow-pipelines',
+                'content': pipelines_section
+            })
 
         # Commands
-        self.sections.append({
-            'name': 'Commands',
-            'anchor': 'clusterflow-commands',
-            'content': self.clusterflow_commands_table()
-        })
+        if len(self.clusterflow_commands) > 0:
+            self.sections.append({
+                'name': 'Commands',
+                'anchor': 'clusterflow-commands',
+                'content': self.clusterflow_commands_table()
+            })
 
 
     def parse_clusterflow_logs(self, f):
@@ -101,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def clusterflow_commands_table (self):
-        """ Generate the trimming length plot """
+        """ Make a table of the Cluster Flow commands """
 
         # I wrote this when I was tired. Sorry if it's incomprehensible.
 
@@ -192,8 +194,12 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         in_comment = False
         seen_pipeline = False
+        cf_file = False
         for l in f['f']:
             l = l.rstrip()
+            # Check that this is from Cluster Flow
+            if 'Cluster Flow' in l:
+                cf_file = True
             # Header
             if l.startswith('Pipeline: '):
                 data['pipeline_name'] = l[10:]
@@ -242,6 +248,11 @@ class MultiqcModule(BaseMultiqcModule):
             dt_r = re.match(r'(\d{2}):(\d{2}), (\d{2})-(\d{2})-(\d{4})', data['pipeline_start'])
             if dt_r:
                 dt = datetime(dt_r.group(5),dt_r.group(4),dt_r.group(3),dt_r.group(1),dt_r.group(2))
+
+        # Not a Cluster Flow file (eg. Nextflow .run file)
+        if not cf_file:
+            return None
+
         if dt is not None:
             data['pipeline_start_dateparts'] = {
                 'year':        dt.year,
