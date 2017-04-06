@@ -305,25 +305,27 @@ def report_sections(self):
                 'color': ['#000000', '#E89191'][i % 2],
             })
         content = ''
+        lg_config = {
+            'id': 'qualimap_gc_content',
+            'title': 'GC content distribution',
+            'ylab': 'Fraction of reads',
+            'xlab': 'GC content (%)',
+            'ymin': 0,
+            'xmin': 0,
+            'xmax': 100,
+            'tt_label': '<b>{point.x}%</b>: {point.y:.3f}'
+        }
         if len(extra_series) == 1:
             content += '<p>The dotted line represents a pre-calculated GC destribution for the reference genome.</p>'
+            lg_config['extra_series'] = extra_series
         elif len(extra_series) > 1:
             content += '<p>The dotted lines represent pre-calculated GC destributions for the reference genomes.</p>'
+            lg_config['extra_series'] = extra_series
 
         self.sections.append({
             'name': 'GC content distribution',
             'anchor': 'qualimap-gc-distribution',
-            'content': content + linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
-                'id': 'qualimap_gc_content',
-                'title': 'GC content distribution',
-                'ylab': 'Fraction of reads',
-                'xlab': 'GC content (%)',
-                'ymin': 0,
-                'xmin': 0,
-                'xmax': 100,
-                'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
-                'extra_series': extra_series,
-            })
+            'content': content + linegraph.plot(self.qualimap_bamqc_gc_content_dist, lg_config)
         })
 
 def general_stats_headers (self):

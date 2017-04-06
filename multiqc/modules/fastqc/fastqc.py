@@ -256,11 +256,11 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True
         }
         headers['total_sequences'] = {
-            'title': 'M Seqs',
-            'description': 'Total Sequences (millions)',
+            'title': '{} Seqs'.format(config.read_count_prefix),
+            'description': 'Total Sequences ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'Blues',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(data, headers)

@@ -394,6 +394,11 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
 
     plugin_hooks.mqc_trigger('after_modules')
 
+    # Remove empty data sections from the General Stats table
+    for i, d in enumerate(report.general_stats_data[:]):
+        if len(d) == 0:
+            del report.general_stats_data[i]
+            del report.general_stats_headers[i]
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0:
         pconfig = {

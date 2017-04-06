@@ -40,15 +40,18 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(config.sp['rna_seqc']['correlation']):
             self.parse_correlation(f)
 
-        if max( len(self.rna_seqc_metrics), len(self.rna_seqc_norm_high_cov),
-                len(self.rna_seqc_norm_medium_cov), len(self.rna_seqc_norm_low_cov),
-                len(self.rna_seqc_pearson), len(self.rna_seqc_spearman) ) == 0:
+        num_found = max( len(self.rna_seqc_metrics), len(self.rna_seqc_norm_high_cov),
+                         len(self.rna_seqc_norm_medium_cov), len(self.rna_seqc_norm_low_cov) )
+        if self.rna_seqc_pearson is not None:
+            num_found += 1
+        if self.rna_seqc_spearman is not None:
+            num_found += 1
+        if num_found == 0:
             log.debug("Could not find any RNA-SeQC data in {}".format(config.analysis_dir))
             raise UserWarning
 
-        if len(self.rna_seqc_metrics) > 0:
-            log.info("Found {} metrics reports".format(len(self.rna_seqc_metrics)))
-            self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
+        log.info("Found {} samples".format(num_found))
+        self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
 
         self.rnaseqc_general_stats()
         self.sections = list()

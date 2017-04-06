@@ -13,12 +13,16 @@ logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-def plot (data, headers=[], pconfig={}):
+def plot (data, headers=None, pconfig=None):
     """ Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param headers: list of optional dicts with column config in key:value pairs.
     :return: HTML ready to be inserted into the page
     """
+    if headers is None:
+        headers = []
+    if pconfig is None:
+        pconfig = {}
 
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
@@ -190,7 +194,7 @@ def make_table (dt):
         """
 
         # Configure Columns Button
-        if len(dt.headers) > 2:
+        if len(t_headers) > 2:
             html += """
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure Columns
@@ -205,7 +209,7 @@ def make_table (dt):
         """.format(tid=table_id)
 
         # Scatter Plot Button
-        if len(dt.headers) > 2:
+        if len(t_headers) > 2:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
                 <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
