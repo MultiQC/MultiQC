@@ -104,11 +104,16 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        elements_count = len(self.adapter_removal_data['single']) + len(self.adapter_removal_data['paired'])
+        elements_count = len(self.adapter_removal_data['single']) + \
+                         len(self.adapter_removal_data['paired']['noncollapsed']) + \
+                         len(self.adapter_removal_data['paired']['collapsed'])
+
         log.info("Found {} reports".format(elements_count))
 
         # Write parsed report data to a file
-        self.write_data_file(self.adapter_removal_data, 'multiqc_adapter_removal')
+        self.write_data_file(self.adapter_removal_data['single'], 'multiqc_adapter_removal_single_end')
+        self.write_data_file(self.adapter_removal_data['paired']['noncollapsed'], 'multiqc_adapter_removal_paired_end_noncollapsed')
+        self.write_data_file(self.adapter_removal_data['paired']['collapsed'], 'multiqc_adapter_removal_paired_end_collapsed')
 
         # Start the sections
         self.sections = list()
