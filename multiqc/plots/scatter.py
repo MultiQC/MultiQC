@@ -12,12 +12,14 @@ logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-def plot (data, pconfig={}):
+def plot (data, pconfig=None):
     """ Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Given one dataset - turn it into a list
     if type(data) is not list:
@@ -31,6 +33,16 @@ def plot (data, pconfig={}):
             if type(ds[s_name]) is not list:
                 ds[s_name] = [ ds[s_name] ]
             for k in ds[s_name]:
+                if k['x'] is not None:
+                    if 'xmax' in pconfig and float(k['x']) > float(pconfig['xmax']):
+                        continue
+                    if 'xmin' in pconfig and float(k['x']) < float(pconfig['xmin']):
+                        continue
+                if k['y'] is not None:
+                    if 'ymax' in pconfig and float(k['y']) > float(pconfig['ymax']):
+                        continue
+                    if 'ymin' in pconfig and float(k['y']) < float(pconfig['ymin']):
+                        continue
                 this_series = { 'x': k['x'], 'y': k['y'] }
                 try:
                     this_series['name'] = "{}: {}".format(s_name, k['name'])
@@ -56,11 +68,13 @@ def plot (data, pconfig={}):
     # Make a plot
     return highcharts_scatter_plot(plotdata, pconfig)
 
-def highcharts_scatter_plot (plotdata, pconfig={}):
+def highcharts_scatter_plot (plotdata, pconfig=None):
     """
     Build the HTML needed for a HighCharts scatter plot. Should be
     called by scatter.plot(), which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Build the HTML for the page
     if pconfig.get('id') is None:

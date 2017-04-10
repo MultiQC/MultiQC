@@ -108,11 +108,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         headers['aligned_not_multimapped_discordant'] = {
-            'title': 'M Aligned',
-            'description': 'Aligned reads, not multimapped or discordant (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'Aligned reads, not multimapped or discordant ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.tophat_data, headers)

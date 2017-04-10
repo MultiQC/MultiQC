@@ -48,7 +48,8 @@ def parse_reports(self):
                         except ValueError:
                             self.picard_dupMetrics_data[s_name][k] = vals[i]
                     # Check that this sample had some reads
-                    if self.picard_dupMetrics_data[s_name].get('READ_PAIRS_EXAMINED', 0) == 0:
+                    if self.picard_dupMetrics_data[s_name].get('READ_PAIRS_EXAMINED', 0) == 0 and \
+                       self.picard_dupMetrics_data[s_name].get('UNPAIRED_READS_EXAMINED', 0) == 0:
                         self.picard_dupMetrics_data.pop(s_name, None)
                         log.warn("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
                     s_name = None

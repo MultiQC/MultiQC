@@ -91,7 +91,9 @@ picard:
     basedistributionbycycle:
         contents: 'picard.analysis.BaseDistributionByCycleMetrics'
     gcbias:
-        contents: 'picard.analysis.GcBiasDetailMetrics'
+        contents:
+          - 'picard.analysis.GcBiasDetailMetrics'
+          - 'picard.analysis.GcBiasSummaryMetrics'
     hsmetrics:
         contents: 'picard.analysis.directed.HsMetrics'
     insertsize:

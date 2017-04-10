@@ -28,7 +28,7 @@ def custom_module_classes():
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mods = defaultdict(lambda: defaultdict(lambda: dict()))
+    cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
     search_patterns = OrderedDict()
@@ -214,7 +214,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table
         if mod['config'].get('plot_type') == 'table':
-            self.intro += table.plot(mod['data'], None, pconfig)
+            pconfig['sortRows'] = pconfig.get('sortRows', False)
+            headers = mod['config'].get('headers')
+            self.intro += table.plot(mod['data'], headers, pconfig)
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
@@ -352,7 +354,7 @@ def _parse_txt(f, conf):
 
     # Header row of strings, or configured as table
     if first_row_str == len(d[0]) or conf.get('plot_type') == 'table':
-        data = dict()
+        data = OrderedDict()
         for s in d[1:]:
             data[s[0]] = OrderedDict()
             for i, v in enumerate(s[1:]):
@@ -361,8 +363,9 @@ def _parse_txt(f, conf):
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get('plot_type') is None:
             allfloats = True
-            for v in d[1][1:]:
-                allfloats = allfloats and type(v) == float
+            for r in d:
+                for v in r[1:]:
+                    allfloats = allfloats and type(v) == float
             if allfloats:
                 conf['plot_type'] = 'bargraph'
             else:
@@ -370,7 +373,7 @@ def _parse_txt(f, conf):
         if conf.get('plot_type') == 'bargraph' or conf.get('plot_type') == 'table':
             return (data, conf)
         else:
-            data = dict() # reset
+            data = OrderedDict() # reset
 
     # Scatter plot: First row is  str : num : num
     if (conf.get('plot_type') is None and len(d[0]) == 3 and

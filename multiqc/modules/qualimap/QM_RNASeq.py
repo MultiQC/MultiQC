@@ -142,12 +142,12 @@ def parse_reports(self):
         'format': '{:.2f}',
     }
     self.general_stats_headers['reads_aligned'] = {
-        'title': 'M Aligned',
-        'description': 'Reads Aligned (millions)',
+        'title': '{} Aligned'.format(config.read_count_prefix),
+        'description': 'Reads Aligned ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'RdBu',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier
     }
 
     # Return the number of reports we found

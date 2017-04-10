@@ -320,20 +320,20 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         headers['dedup']['dedup_reads'] = {
-            'title': 'M Unique',
-            'description': 'Deduplicated Alignments (millions)',
+            'title': '{} Unique'.format(config.read_count_prefix),
+            'description': 'Deduplicated Alignments ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'Greens',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count',
             'hidden': True
         }
         headers['alignment']['aligned_reads'] = {
-            'title': 'M Aligned',
-            'description': 'Total Aligned Sequences (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'Total Aligned Sequences ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count',
             'hidden': True
         }

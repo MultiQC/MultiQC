@@ -93,6 +93,28 @@ table_columns_visible:
 Note that you can set these to `True` to show columns that would otherwise be hidden
 by default.
 
+## Number base (multiplier)
+To make numbers in the General Statistics table easier to read and compare quickly,
+MultiQC sometimes divides them by one million (typically read counts). If your
+samples have very low read counts then this can result in the table showing
+counts of `0.0`, which isn't very helpful.
+
+To change this behaviour, you can customise three config variables in your MultiQC
+config. The defaults are as follows:
+```yaml
+read_count_multiplier: 0.000001
+read_count_prefix: 'M'
+read_count_desc: 'millions'
+```
+
+So, to show thousands of reads instead of millions, change these to:
+```yaml
+read_count_multiplier: 0.001
+read_count_prefix: 'K'
+read_count_desc: 'thousands'
+```
+
+
 ## Number formatting
 By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand
 separators and points for decimal places (_e.g._ `1 234 567.89`). Different countries

@@ -15,8 +15,12 @@ class datatable (object):
     """ Data table class. Prepares and holds data and configuration
     for either a table or a beeswarm plot. """
 
-    def __init__ (self, data, headers=[], pconfig={}):
+    def __init__ (self, data, headers=None, pconfig=None):
         """ Prepare data for use in a table or plot """
+        if headers is None:
+            headers = []
+        if pconfig is None:
+            pconfig = {}
 
         # Given one dataset - turn it into a list
         if type(data) is not list:

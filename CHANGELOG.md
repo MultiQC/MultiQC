@@ -27,19 +27,35 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
   * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
     data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
+* **Bcftools**
+  * Fixed bug with display of indels when only one sample
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **FastQ Screen**
+  * Rewritten plotting method for high sample numbers plot (~ > 20 samples)
+  * Now shows counts for single-species hits and bins all multi-species hits
+  * Allows plot to show proper percentage view for each sample, much easier to interpret.
+* **HTSeq**
+  * Fix bug where header lines caused module to crash
 * **Picard**
   * New `RrbsSummaryMetrics` Submodule!
   * New `WgsMetrics` Submodule!
+  * `CollectGcBiasMetrics` module now prints summary statistics to `multiqc_data` if found. Thanks to @ahvigil
+* **Preseq**
+  * Now trims the x axis to the point that meets 80% of `max(unique molecules)`
+  * Hopefully prevents ridiculous x axes without sacrificing too much useful information.
 * **Qualimap**
   * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
+  * BamQC module now doesn't crash if reports don't have genome gc distributions
 * **RSeQC**
   * Fixed Python3 error in Junction Saturation code
   * Fixed JS error for Junction Saturation that made the single-sample combined plot only show _All Junctions_
 
 #### Core MultiQC updates:
 * Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
+* New config option to change numeric multiplier in General Stats
+  * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
+  * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
 * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
 * Handle error when `git` isn't installed on the system.
 * Refactored colouring of table cells
@@ -56,6 +72,12 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * Custom content bugfixes
   * JSON + YAML tables now remember order of table columns
   * Many minor bugfixes
+* Line graphs and scatter graphs axis limits
+  * If limits are specified, data exceeding this is no longer saved in report
+  * Visually identical, but can make report file sizes considerable smaller in some cases
+* Creating multiple plots without a config dict now works (previously just gave grey boxes in report)
+* All changes are now tested on a Windows system, using [AppVeyor](https://ci.appveyor.com/project/ewels/multiqc/)
+* Fixed rare error where some reports could get empty General Statistics tables when no data present.
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
