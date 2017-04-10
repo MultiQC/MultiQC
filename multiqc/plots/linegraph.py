@@ -38,12 +38,16 @@ def get_template_mod():
         _template_mod = config.avail_templates[config.template].load()
     return _template_mod
 
-def plot (data, pconfig={}):
+def plot (data, pconfig=None):
     """ Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
+    # Why not just set {} as a default argument? See:
+    # http://python-guide-pt-br.readthedocs.io/en/latest/writing/gotchas/
+    if pconfig is None:
+        pconfig = {}
 
     # Given one dataset - turn it into a list
     if type(data) is not list:
@@ -73,6 +77,16 @@ def plot (data, pconfig={}):
                     maxval = max(maxval, d[s][k])
             else:
                 for k in sorted(d[s].keys()):
+                    if k is not None:
+                        if 'xmax' in pconfig and float(k) > float(pconfig['xmax']):
+                            continue
+                        if 'xmin' in pconfig and float(k) < float(pconfig['xmin']):
+                            continue
+                    if d[s][k] is not None:
+                        if 'ymax' in pconfig and float(d[s][k]) > float(pconfig['ymax']):
+                            continue
+                        if 'ymin' in pconfig and float(d[s][k]) < float(pconfig['ymin']):
+                            continue
                     pairs.append([k, d[s][k]])
                     try:
                         maxval = max(maxval, d[s][k])
@@ -82,7 +96,8 @@ def plot (data, pconfig={}):
                 this_series = { 'name': s, 'data': pairs }
                 try:
                     this_series['color'] = pconfig['colors'][s]
-                except: pass
+                except:
+                    pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
 
@@ -119,11 +134,13 @@ def plot (data, pconfig={}):
 
 
 
-def highcharts_linegraph (plotdata, pconfig={}):
+def highcharts_linegraph (plotdata, pconfig=None):
     """
     Build the HTML needed for a HighCharts line graph. Should be
     called by linegraph.plot(), which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Build the HTML for the page
     if pconfig.get('id') is None:
@@ -167,12 +184,14 @@ def highcharts_linegraph (plotdata, pconfig={}):
     return html
 
 
-def matplotlib_linegraph (plotdata, pconfig={}):
+def matplotlib_linegraph (plotdata, pconfig=None):
     """
     Plot a line graph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by
     plot_bargraph, which properly formats the input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Plot group ID
     if pconfig.get('id') is None:

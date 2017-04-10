@@ -19,8 +19,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Preseq', anchor='preseq',
         href='http://smithlabresearch.org/software/preseq/',
-        info="estimates the complexity of a library, showing how many additional "\
-         "unique reads are sequenced for increasing total read count.")
+        info="""estimates the complexity of a library, showing how many additional
+         unique reads are sequenced for increasing total read count.
+         A shallow curve indicates complexity saturation. The dashed line
+         shows a perfectly complex library where total reads = unique reads.""")
 
         # Find and load any Preseq reports
         self.preseq_data = dict()
@@ -72,6 +74,17 @@ class MultiqcModule(BaseMultiqcModule):
 
     def preseq_length_trimmed_plot (self):
         """ Generate the preseq plot """
+        # Trim the data to not have a ridiculous x-axis (10Gbp anyone?)
+        xmax = None
+        if getattr(config, 'preseq', {}).get('notrim', False) is not True:
+            xmax = 0
+            for d in self.preseq_data.values():
+                maxy = max(d.values()) * 0.9
+                for x in reversed(list(d.keys())):
+                    if d[x] < maxy:
+                        xmax = max(xmax, x)
+                        break
+
         pconfig = {
             'id': 'preseq_plot',
             'title': 'Preseq complexity curve',
@@ -91,6 +104,9 @@ class MultiqcModule(BaseMultiqcModule):
                 'showInLegend': False,
             }]
         }
-        return "<p>A shallow curve indicates complexity saturation. The dashed line \
-                shows a perfectly complex library where total reads = unique reads.</o>" \
-                 + linegraph.plot(self.preseq_data, pconfig)
+        intro_text = ''
+        if xmax is not None:
+            pconfig['xmax'] = xmax
+            intro_text += "<p>Note that the x axis is trimmed until one of the datasets \
+                shows 90% of its maximum y-value, to avoid ridiculous scales.</p>"
+        return intro_text + linegraph.plot(self.preseq_data, pconfig)

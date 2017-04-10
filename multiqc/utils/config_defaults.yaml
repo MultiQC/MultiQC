@@ -22,6 +22,9 @@ custom_logo_title: null
 simple_output: false
 template: 'default'
 pandoc_template: null
+read_count_multiplier: 0.000001
+read_count_prefix: 'M'
+read_count_desc: 'millions'
 output_fn_name: 'multiqc_report.html'
 data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
@@ -46,7 +49,8 @@ thousandsSep_format: null
 
 fn_ignore_dirs:
     - 'multiqc_data'
-fn_ignore_paths: []
+fn_ignore_paths:
+    - '*/work/??/??????????????????????????????' # Nextflow work directories - always same hash lengths
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false

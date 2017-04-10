@@ -117,11 +117,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         headers['Assigned'] = {
-            'title': 'M Assigned',
-            'description': 'Assigned reads (millions)',
+            'title': '{} Assigned'.format(config.read_count_prefix),
+            'description': 'Assigned reads ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuBu',
-            'modify': lambda x: float(x) / 1000000,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.featurecounts_data, headers)

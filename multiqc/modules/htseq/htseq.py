@@ -59,7 +59,10 @@ class MultiqcModule(BaseMultiqcModule):
             if s[0] in keys:
                 parsed_data[s[0][2:]] = int(s[1])
             else:
-                assigned_counts += int(s[1])
+                try:
+                    assigned_counts += int(s[1])
+                except (ValueError, IndexError):
+                    pass
         if len(parsed_data) > 0:
             parsed_data['assigned'] = assigned_counts
             parsed_data['total_count'] = sum([v for v in parsed_data.values()])
@@ -83,11 +86,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         headers['assigned'] = {
-            'title': 'M Assigned',
-            'description': 'Assigned reads (millions)',
+            'title': '{} Assigned'.format(config.read_count_prefix),
+            'description': 'Assigned Reads ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuBu',
-            'modify': lambda x: float(x) / 1000000,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.htseq_data, headers)

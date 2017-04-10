@@ -408,11 +408,11 @@ headers['aligned_percent'] = {
     'max': 100,
 }
 headers['aligned'] = {
-    'title': 'M Aligned',
-    'description': 'Aligned Reads (millions)',
+    'title': '{} Aligned'.format(config.read_count_prefix),
+    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
     'format': '{:.2f}',
     'shared_key': 'read_count',
-    'modify': lambda x: x / 1000000
+    'modify': lambda x: x * config.read_count_multiplier
 }
 config = {
     'namespace': 'My Module',

@@ -103,11 +103,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.1f}%'
         }
         headers['pseudoaligned_reads'] = {
-            'title': 'M Aligned',
-            'description': 'pseudoaligned reads (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'Pseudoaligned reads ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.kallisto_data, headers)

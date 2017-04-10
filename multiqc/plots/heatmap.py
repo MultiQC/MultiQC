@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-def plot (data, xcats, ycats=None, pconfig={}):
+def plot (data, xcats, ycats=None, pconfig=None):
     """ Plot a 2D heatmap.
     :param data: List of lists, each a representing a row of values.
     :param xcats: Labels for x axis
@@ -22,6 +22,9 @@ def plot (data, xcats, ycats=None, pconfig={}):
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
+
+    if pconfig is None:
+        pconfig = {}
 
     if ycats is None:
         ycats = xcats
@@ -31,11 +34,13 @@ def plot (data, xcats, ycats=None, pconfig={}):
 
 
 
-def highcharts_heatmap (data, xcats, ycats, pconfig={}):
+def highcharts_heatmap (data, xcats, ycats, pconfig=None):
     """
     Build the HTML needed for a HighCharts line graph. Should be
     called by plot_xy_data, which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Reformat the data for highcharts
     pdata = []

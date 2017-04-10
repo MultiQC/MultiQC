@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-def plot (data, headers=[], pconfig={}):
+def plot (data, headers=None, pconfig=None):
     """ Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
     :param headers: A list of Dicts / OrderedDicts with information
@@ -22,6 +22,10 @@ def plot (data, headers=[], pconfig={}):
                     max values etc.
     :return: HTML string
     """
+    if headers is None:
+        headers = []
+    if pconfig is None:
+        pconfig = {}
 
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)

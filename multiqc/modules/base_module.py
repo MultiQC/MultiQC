@@ -149,7 +149,7 @@ class BaseMultiqcModule(object):
         return s_name
 
 
-    def general_stats_addcols(self, data, headers={}, namespace=None):
+    def general_stats_addcols(self, data, headers=None, namespace=None):
         """ Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
         in required config variables if not supplied.
@@ -160,6 +160,8 @@ class BaseMultiqcModule(object):
                         See docs/writing_python.md for more information.
         :return: None
         """
+        if headers is None:
+            headers = {}
         # Use the module namespace as the name if not supplied
         if namespace is None:
             namespace = self.name
@@ -210,12 +212,16 @@ class BaseMultiqcModule(object):
 
     ##################################################
     #### DEPRECATED FORWARDERS
-    def plot_bargraph (self, data, cats=None, pconfig={}):
+    def plot_bargraph (self, data, cats=None, pconfig=None):
         """ Depreciated function. Forwards to new location. """
         from multiqc.plots import bargraph
+        if pconfig is None:
+            pconfig = {}
         return bargraph.plot(data, cats, pconfig)
 
-    def plot_xy_data(self, data, pconfig={}):
+    def plot_xy_data(self, data, pconfig=None):
         """ Depreciated function. Forwards to new location. """
         from multiqc.plots import linegraph
+        if pconfig is None:
+            pconfig = {}
         return linegraph.plot(data, pconfig)
