@@ -172,7 +172,7 @@ class StatsReportMixin():
         stats_headers['tstv'] = {
             'title': 'Ts/Tv',
             'description': 'Variant SNP transition / transversion ratio',
-            'min': 0, 'format': '{:.0f}',
+            'min': 0, 'format': '{:.2f}',
         }
         stats_headers['number_of_MNPs'] = {
             'title': 'MNPs',
