@@ -36,7 +36,7 @@ Currently, supported tools include:
 |[FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap] |
 |[Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]       |
 |[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
-|                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
+|[Adapter Removal][adapterremoval] | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
 |                             | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
 |                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
 |                             |                        | [Subread featureCounts][featurecounts] |         |
@@ -147,6 +147,7 @@ Code contributions from:
 [@ahvigil](https://github.com/ahvigil)
 and many others. Thanks for your support!
 
+[adapterremoval]: http://multiqc.info/docs/#adapteremoval
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
 [bismark]:        http://multiqc.info/docs/#bismark
