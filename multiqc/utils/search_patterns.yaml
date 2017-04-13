@@ -199,12 +199,12 @@ slamdunk:
         contents: '# slamdunk tcperutr'
 snpeff:
     contents: 'SnpEff_version'
+sortmerna:
+    contents: 'Minimal SW score based on E-value'
 star:
     fn: '*Log.final.out'
 star_genecounts:
     fn: '*ReadsPerGene.out.tab'
-sortmerna:
-    contents: 'Command: sortmerna'
 tophat:
     fn: '*align_summary.txt'
 trimmomatic:

@@ -9,8 +9,9 @@ import logging
 import os
 import re
 
-from multiqc.modules.base_module import config, BaseMultiqcModule
-from multiqc import plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -22,8 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='SortMeRNA', anchor='sortmerna',
         href='http://bioinfo.lifl.fr/RNA/sortmerna/',
-        info="is a program tool for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.")
-
+        info="is a program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.")
+        
         # Parse logs
         self.sortmerna = dict()
         for f in self.find_log_files(config.sp['sortmerna'], filehandles=True):
@@ -33,14 +34,14 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Could not find any SortMeRNA data in {}".format(config.analysis_dir))
             raise UserWarning
 
-        log.info("Found {} logs".format(len(self.sortmerna)))
-        self.write_data_file(self.sortmerna, 'multiqc_sortmerna')
-        log.debug(self.sortmerna)
+        # Get custom table header, default to 'rRNA'
+        tab_header = getattr(config, 'sortmerna', {}).get('seqname', '% rRNA')
+
         # Add rRNA rate to the general stats table
         headers = OrderedDict()
         headers['rRNA_pct'] = {
-            'title': '% rRNA',
-            'description': '% rRNA',
+            'title': tab_header,
+            'description': 'Percentage of reads matched to a SortMeRNA database',
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -50,7 +51,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.sortmerna, headers)
 
         # Make barplot
-        self.intro += self.sortmerna_overall_barplot()
         self.intro += self.sortmerna_detailed_barplot()
 
     def parse_sortmerna(self, f):
@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for l in f["f"]:
             if "Reads file" in l:
-                s_name = os.path.basename(l.split(" ")[-1]).strip().split(".")[0]
+                s_name = self.clean_s_name( l.split('=')[-1], f['root'] )
                 self.sortmerna[s_name] = dict()
             if "Results:" in l and not post_results_start:
                 post_results_start = True
@@ -110,25 +110,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.sortmerna.pop(s_name, 'None')
         s_name = None
 
-    def sortmerna_overall_barplot (self):
-        keys = OrderedDict()
-        keys["non_rRNA"] = { 'color': '#a6cee3', 'name': 'Other' }
-        keys["rRNA"] = { 'color': '#e31a1c', 'name': 'rRNA' }
-        pconfig = {
-            'id': 'SortMeRNA overall',
-            'title': 'SortMeRNA Other vs rRNA',
-            'ylab': 'Reads'
-        }
-        log.debug(keys)
-        return plots.bargraph.plot(self.sortmerna, keys, pconfig)
-
     def sortmerna_detailed_barplot (self):
         """ Make the HighCharts HTML to plot the sortmerna rates """
-
-        colors = ["#1f78b4", "#b2df8a", "#33a02c", "#fb9a99",
-                  "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6",
-                  "#6a3d9a", "#ffff99", "#b15928"]
-
+        
         # Specify the order of the different possible categories
         keys = OrderedDict()
         metrics = set()
@@ -137,10 +121,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if not key in ["total", "rRNA", "non_rRNA"] and not "_pct" in key:
                     metrics.add(key)
 
-        col_index = 0
         for key in metrics:
-            keys[key] = { 'color': colors[col_index], 'name': key.replace("_count","") }
-            col_index = col_index + 1
+            keys[key] = { 'name': key.replace("_count","") }
         # Config for the plot
         pconfig = {
             'id': 'SortMeRNA detailed',
@@ -148,4 +130,4 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'Reads'
         }
 
-        return plots.bargraph.plot(self.sortmerna, keys, pconfig)
+        return bargraph.plot(self.sortmerna, keys, pconfig)
