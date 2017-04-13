@@ -203,6 +203,8 @@ star:
     fn: '*Log.final.out'
 star_genecounts:
     fn: '*ReadsPerGene.out.tab'
+sortmerna:
+    contents: 'Command: sortmerna'
 tophat:
     fn: '*align_summary.txt'
 trimmomatic:
