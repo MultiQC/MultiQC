@@ -27,6 +27,8 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
   * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
     data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
+* [**SortMeRNA**](http://bioinfo.lifl.fr/RNA/sortmerna/) - new module! Written by @bschiffthaler
+  * New module for `SortMeRNA`, commonly used for removing rRNA contamination from datasets.
 * **Bcftools**
   * Fixed bug with display of indels when only one sample
 * **Cutadapt**
