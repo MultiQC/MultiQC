@@ -193,3 +193,4 @@ module_order:
     - 'fastq_screen'
     - 'fastqc'
     - 'clusterflow'
+    - 'sortmerna'

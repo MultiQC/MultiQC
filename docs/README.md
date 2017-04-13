@@ -13,6 +13,7 @@ MultiQC Modules:
     FastQC: modules/fastqc.md
     FastQ Screen: modules/fastq_screen.md
     Skewer: modules/skewer.md
+    SortMeRNA: module/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
     Bismark: modules/bismark.md
