@@ -93,7 +93,7 @@ or `json` instead).
 For more detailed instructions, run `multiqc -h` or see the
 [documentation](http://multiqc.info/docs/#running-multiqc).
 
-## Citation
+## Citation
 Please consider citing MultiQC if you use it in your analysis.
 
 > **MultiQC: Summarize analysis results for multiple tools and samples in a single report** <br/>
