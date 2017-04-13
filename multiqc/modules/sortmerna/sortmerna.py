@@ -34,6 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Could not find any SortMeRNA data in {}".format(config.analysis_dir))
             raise UserWarning
 
+        log.info("Found {} logs".format(len(self.sortmerna)))
+        self.write_data_file(self.sortmerna, 'multiqc_sortmerna')
+
         # Get custom table header, default to 'rRNA'
         tab_header = getattr(config, 'sortmerna', {}).get('seqname', '% rRNA')
 
