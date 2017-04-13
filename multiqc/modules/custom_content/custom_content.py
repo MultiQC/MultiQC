@@ -190,7 +190,12 @@ def custom_module_classes():
             parsed_modules.append( MultiqcModule(k, mod) )
             log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
 
-    return parsed_modules
+    # Sort sections if we have a config option for order
+    mod_order = getattr(config, 'custom_content', {}).get('order', [])
+    sorted_modules = [m for m in parsed_modules if m.anchor not in mod_order ]
+    sorted_modules.extend([m for k in mod_order for m in parsed_modules if m.anchor == k ])
+
+    return sorted_modules
 
 
 class MultiqcModule(BaseMultiqcModule):
