@@ -54,7 +54,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
 
         self.rnaseqc_general_stats()
-        self.sections = list()
         self.plot_correlation_heatmap()
         self.strand_barplot()
         self.coverage_lineplot()
@@ -127,12 +126,11 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
             'cpswitch_c_active': False
         }
-        self.sections.append({
-            'id': 'rna_seqc_strandedness',
-            'name': 'Strand Specificity',
-            'anchor': 'rna_seqc_strand_specificity',
-            'content': bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
-        })
+        self.add_section (
+            name = 'Strand Specificity',
+            anchor = 'rna_seqc_strand_specificity',
+            content = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+        )
 
 
     def parse_coverage (self, f):
@@ -174,15 +172,15 @@ class MultiqcModule(BaseMultiqcModule):
                 {'name': 'Low Expressed'}
             ]
         }
-        self.sections.append({
-            'name': 'Mean Coverage',
-            'anchor': 'rseqc-rna_seqc_mean_coverage',
-            'content': linegraph.plot( [
+        self.add_section (
+            name = 'Mean Coverage',
+            anchor = 'rseqc-rna_seqc_mean_coverage',
+            content = linegraph.plot( [
                 self.rna_seqc_norm_high_cov,
                 self.rna_seqc_norm_medium_cov,
                 self.rna_seqc_norm_low_cov
                 ], pconfig)
-        })
+        )
 
     def parse_correlation(self, f):
         """ Parse RNA-SeQC correlation matrices """
@@ -216,8 +214,8 @@ class MultiqcModule(BaseMultiqcModule):
                 'id': 'rna_seqc_correlation_heatmap',
                 'title': 'RNA-SeQC: {} Sample Correlation'.format(corr_type)
             }
-            self.sections.append({
-                'name': '{} Correlation'.format(corr_type),
-                'anchor': 'rseqc-rna_seqc_correlation',
-                'content': heatmap.plot(data[1], data[0], data[0], pconfig)
-            })
+            self.add_section (
+                name = '{} Correlation'.format(corr_type),
+                anchor = 'rseqc-rna_seqc_correlation',
+                content = heatmap.plot(data[1], data[0], data[0], pconfig)
+            )

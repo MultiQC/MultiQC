@@ -95,12 +95,12 @@ def parse_reports(self):
         }
 
         p_link = '<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
-        self.sections.append({
-            'name': 'Read Distribution',
-            'anchor': 'rseqc-read_distribution',
-            'content': "<p>"+p_link+" calculates how mapped reads are distributed over genome features.</p>" +
+        self.add_section (
+            name = 'Read Distribution',
+            anchor = 'rseqc-read_distribution',
+            content = "<p>"+p_link+" calculates how mapped reads are distributed over genome features.</p>" +
                 bargraph.plot(self.read_dist, keys, pconfig)
-        })
+        )
 
     # Return number of samples found
     return len(self.read_dist)

@@ -442,17 +442,16 @@ If you have multiple plots to show (_eg._ the Qualimap and FastQC modules),
 you can create a list to hold the sections:
 
 ```python
-self.sections = list()
-self.sections.append({
-    'name': 'First Module Section',
-    'anchor': 'mymod_first',
-    'content': 'My amazing module output, from the first section'
-})
-self.sections.append({
-    'name': 'Second Module Section',
-    'anchor': 'mymod_second',
-    'content': 'My amazing module output, from the second section'
-})
+self.add_section (
+    name = 'First Module Section',
+    anchor = 'mymod-first',
+    content = 'My amazing module output, from the first section'
+)
+self.add_section (
+    name = 'Second Module Section',
+    anchor = 'mymod-second',
+    content = 'My amazing module output, from the second section'
+)
 ```
 The will automatically be labelled and linked in the navigation.
 

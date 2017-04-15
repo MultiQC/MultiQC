@@ -23,11 +23,11 @@ and configuration options, and they return a string of HTML to add to the
 report. You can add this to the module introduction or sections as described
 above. For example:
 ```python
-self.sections.append({
-    'name': 'Module Section',
-    'anchor': 'mymod_section',
-    'content': bargraph.plot(self.parsed_data, categories, pconfig)
-})
+self.add_section (
+    name = 'Module Section',
+    anchor = 'mymod_section',
+    content = bargraph.plot(self.parsed_data, categories, pconfig)
+)
 ```
 
 ## Bar graphs

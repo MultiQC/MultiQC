@@ -51,11 +51,11 @@ class RmdupReportMixin():
                 'title': 'Samtools rmdup: Duplicate alignments',
                 'yDecimals': False
             }
-            self.sections.append({
-                'name': 'Duplicates removed',
-                'anchor': 'samtools-rmdup',
-                'content': bargraph.plot(self.samtools_rmdup, keys, pconfig)
-            })
+            self.add_section (
+                name = 'Duplicates removed',
+                anchor = 'samtools-rmdup',
+                content = bargraph.plot(self.samtools_rmdup, keys, pconfig)
+            )
 
             # Add a column to the General Stats table
             # General Stats Table

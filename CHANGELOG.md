@@ -58,7 +58,12 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
-* Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+* Module sections tidied and refactored
+  * New helper function `self.add_section()`
+  * Sections hidden in nav if no title (no more need for the hacky `self.info += `)
+  * Content broken into `description`, `help` and `plot`, with automatic formatting
+  * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+  * Changes should be backwards-compatible
 * Handle error when `git` isn't installed on the system.
 * Refactored colouring of table cells
   * Was previously done in the browser using [chroma.js](http://gka.github.io/chroma.js/)

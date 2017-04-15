@@ -58,18 +58,18 @@ class VariantEvalMixin():
             self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, 'GATK VariantEval')
 
             # Variant Counts plot
-            self.sections.append({
-                'name': 'Variant Counts',
-                'anchor': 'gatk-count-variants',
-                'content': count_variants_barplot(self.gatk_varianteval)
-            })
+            self.add_section (
+                name = 'Variant Counts',
+                anchor = 'gatk-count-variants',
+                content = count_variants_barplot(self.gatk_varianteval)
+            )
 
             # Compare Overlap Table
-            self.sections.append({
-                'name': 'Compare Overlap',
-                'anchor': 'gatk-compare-overlap',
-                'content': comp_overlap_table(self.gatk_varianteval)
-            })
+            self.add_section (
+                name = 'Compare Overlap',
+                anchor = 'gatk-compare-overlap',
+                content = comp_overlap_table(self.gatk_varianteval)
+            )
 
 
         # Return the number of logs that were found

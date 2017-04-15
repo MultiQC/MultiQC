@@ -64,25 +64,23 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.peddy_general_stats_table()
 
-        self.sections = list()
-
         # PCA plot
         pca_plot = self.peddy_pca_plot()
         if pca_plot is not None:
-            self.sections.append({
-                'name': 'PCA Plot',
-                'anchor': 'peddy-pca-plot',
-                'content': pca_plot
-            })
+            self.add_section (
+                name = 'PCA Plot',
+                anchor = 'peddy-pca-plot',
+                content = pca_plot
+            )
 
         # Relatedness plot
         relatedplot = self.peddy_relatedness_plot()
         if relatedplot is not None:
-            self.sections.append({
-                'name': 'Relatedness',
-                'anchor': 'peddy-relatedness-plot',
-                'content': relatedplot
-            })
+            self.add_section (
+                name = 'Relatedness',
+                anchor = 'peddy-relatedness-plot',
+                content = relatedplot
+            )
 
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """

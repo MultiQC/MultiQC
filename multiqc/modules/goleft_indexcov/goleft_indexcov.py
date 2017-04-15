@@ -24,19 +24,18 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Did not find goleft indexcov outputs in {}".format(config.analysis_dir))
             raise UserWarning
 
-        self.sections = list()
         if roc_plot:
-            self.sections.append({
-                'name': 'Scaled coverage ROC plot',
-                'anchor': 'goleft_indexcov-roc',
-                'content': roc_plot
-            })
+            self.add_section (
+                name = 'Scaled coverage ROC plot',
+                anchor = 'goleft_indexcov-roc',
+                content = roc_plot
+            )
         if bin_plot:
-            self.sections.append({
-                'name': 'Problem coverage bins',
-                'anchor': 'goleft_indexcov-roc',
-                'content': bin_plot
-            })
+            self.add_section (
+                name = 'Problem coverage bins',
+                anchor = 'goleft_indexcov-roc',
+                content = bin_plot
+            )
 
     def _short_chrom(self, chrom):
         """Plot standard chromosomes + X, sorted numerically.

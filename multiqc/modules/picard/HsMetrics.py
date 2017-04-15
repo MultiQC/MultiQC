@@ -163,16 +163,24 @@ def parse_reports(self):
             self.general_stats_data[s_name].update( data[s_name] )
         data_table = _clean_table(data)
         table_html = table.plot(data_table, _get_headers(data_table))
-        if not isinstance(self.sections, list):
-            self.sections = list()
-        self.sections.append({
-                'name': 'HSMetrics',
-                'anchor': 'picard_hsmetrics',
-                'content': table_html})
-        self.sections.append(_add_target_bases(data))
-        penalty_html = _add_hs_penalty(data)
-        if penalty_html:
-            self.sections.append(penalty_html)
+        self.add_section (
+                name = 'HSMetrics',
+                anchor = 'picard_hsmetrics',
+                content = table_html
+        )
+        tbases = _add_target_bases(data)
+        self.add_section (
+            name = tbases['name'],
+            anchor = tbases['anchor'],
+            content = tbases['content']
+        )
+        hs_pen = _add_hs_penalty(data)
+        if hs_pen is not None:
+            self.add_section (
+                name = hs_pen['name'],
+                anchor = hs_pen['anchor'],
+                content = hs_pen['content']
+            )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
@@ -235,9 +243,11 @@ def _add_target_bases(data):
                 'ymin': 0,
                 'xmin': 0,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
-    return {'name': 'Target Region Coverage',
-    'anchor': 'picard_hsmetrics_target_bases',
-    'content': subtitle + linegraph.plot(data_clean, pconfig)}
+    return {
+        'name': 'Target Region Coverage',
+        'anchor': 'picard_hsmetrics_target_bases',
+        'content': subtitle + linegraph.plot(data_clean, pconfig)
+    }
 
 def _add_hs_penalty(data):
     subtitle = "<p>The \"hybrid selection penalty\" incurred to get 80% of target bases to a given coverage. Can be used with the formula <code>required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty</code>.</p>"
@@ -258,10 +268,10 @@ def _add_hs_penalty(data):
                 'ymin': 0,
                 'xmin': 0,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
-    section =  {'name': 'HS penalty',
-    'anchor': 'picard_hsmetrics_hs_penalty',
-    'content': subtitle + linegraph.plot(data_clean, pconfig)}
 
-    if not any_non_zero:
-        return None
-    return section
+    if any_non_zero:
+        return {
+            'name': 'HS penalty',
+            'anchor': 'picard_hsmetrics_hs_penalty',
+            'content': subtitle + linegraph.plot(data_clean, pconfig)
+        }

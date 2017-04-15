@@ -42,36 +42,35 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicup_stats_table()
 
         # Report sections
-        self.sections = list()
-        self.sections.append({
-            'name': 'Read Truncation',
-            'anchor': 'hicup-truncating',
-            'content': self.hicup_truncating_chart()
-        })
-        self.sections.append({
-            'name': 'Read Mapping',
-            'anchor': 'hicup-mapping',
-            'content': self.hicup_alignment_chart()
-        })
+        self.add_section (
+            name = 'Read Truncation',
+            anchor = 'hicup-truncating',
+            content = self.hicup_truncating_chart()
+        )
+        self.add_section (
+            name = 'Read Mapping',
+            anchor = 'hicup-mapping',
+            content = self.hicup_alignment_chart()
+        )
 
-        self.sections.append({
-            'name': 'Read Pair Filtering',
-            'anchor': 'hicup-filtering',
-            'content': self.hicup_filtering_chart()
-        })
+        self.add_section (
+            name = 'Read Pair Filtering',
+            anchor = 'hicup-filtering',
+            content = self.hicup_filtering_chart()
+        )
 
         # TODO: Is there a log file with this data for a line plot?
-        # self.sections.append({
-        #     'name': 'Di-Tag Length Distribution',
-        #     'anchor': 'hicup-lengths',
-        #     'content': self.hicup_lengths_chart()
-        # })
+        # self.add_section (
+        #     name = 'Di-Tag Length Distribution',
+        #     anchor = 'hicup-lengths',
+        #     content = self.hicup_lengths_chart()
+        # )
 
-        self.sections.append({
-            'name': 'De-Duplication &amp; Di-Tag Separation',
-            'anchor': 'hicup-deduplication',
-            'content': self.hicup_dedup_chart()
-        })
+        self.add_section (
+            name = 'De-Duplication &amp; Di-Tag Separation',
+            anchor = 'hicup-deduplication',
+            content = self.hicup_dedup_chart()
+        )
 
 
     def parse_hicup_logs(self, f):

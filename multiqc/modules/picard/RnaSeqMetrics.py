@@ -122,13 +122,12 @@ def parse_reports(self):
         bg_cats['INTERGENIC_BASES'] = { 'name': 'Intergenic' }
         bg_cats['RIBOSOMAL_BASES'] = { 'name': 'Ribosomal' }
         bg_cats['PF_NOT_ALIGNED_BASES'] = { 'name': 'PF not aligned' }
-        self.sections.append({
-            'id': 'picard_rna_assignment',
-            'name': 'RnaSeqMetrics Assignment',
-            'anchor': 'picard-rna-assignment',
-            'content': '<p>Number of bases in primary alignments that align to regions in the reference genome.</p>' +
+        self.add_section (
+            name = 'RnaSeqMetrics Assignment',
+            anchor = 'picard-rna-assignment',
+            content = '<p>Number of bases in primary alignments that align to regions in the reference genome.</p>' +
                         bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats)
-        })
+        )
 
         # Section with histogram plot
         if len(self.picard_RnaSeqMetrics_histogram) > 0:
@@ -144,12 +143,11 @@ def parse_reports(self):
                 'tt_label': '<b>{point.x}%</b>: {point.y:.0f}',
                 'ymin': 0,
             }
-            self.sections.append({
-                'id': 'picard_gene_coverage',
-                'name': 'Gene Coverage',
-                'anchor': 'picard-rna-coverage',
-                'content': linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
-            })
+            self.add_section (
+                name = 'Gene Coverage',
+                anchor = 'picard-rna-coverage',
+                content = linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
+            )
 
 
     # Return the number of detected samples to the parent module

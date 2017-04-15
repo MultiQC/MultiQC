@@ -135,8 +135,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        self.sections = list()
-
         # Basic Stats Table
         self.bismark_stats_table()
 
@@ -144,43 +142,43 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bismark_data['alignment']) > 0:
             self.write_data_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment', sort_cols=True)
             log.info("Found {} bismark alignment reports".format(len(self.bismark_data['alignment'])))
-            self.sections.append({
-                'name': 'Alignment Rates',
-                'anchor': 'bismark-alignment',
-                'content': self.bismark_alignment_chart()
-            })
+            self.add_section (
+                name = 'Alignment Rates',
+                anchor = 'bismark-alignment',
+                content = self.bismark_alignment_chart()
+            )
 
         if len(self.bismark_data['dedup']) > 0:
             self.write_data_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup', sort_cols=True)
             log.info("Found {} bismark dedup reports".format(len(self.bismark_data['dedup'])))
-            self.sections.append({
-                'name': 'Deduplication',
-                'anchor': 'bismark-deduplication',
-                'content': self.bismark_dedup_chart()
-            });
+            self.add_section (
+                name = 'Deduplication',
+                anchor = 'bismark-deduplication',
+                content = self.bismark_dedup_chart()
+            )
 
         if len(self.bismark_data['alignment']) > 0:
-            self.sections.append({
-                'name': 'Strand Alignment',
-                'anchor': 'bismark-strands',
-                'content': self.bismark_strand_chart()
-            })
+            self.add_section (
+                name = 'Strand Alignment',
+                anchor = 'bismark-strands',
+                content = self.bismark_strand_chart()
+            )
 
         if len(self.bismark_data['methextract']) > 0:
             self.write_data_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract', sort_cols=True)
             log.info("Found {} bismark methextract reports".format(len(self.bismark_data['methextract'])))
-            self.sections.append({
-                'name': 'Cytosine Methylation',
-                'anchor': 'bismark-methylation',
-                'content': self.bismark_methlyation_chart()
-            })
+            self.add_section (
+                name = 'Cytosine Methylation',
+                anchor = 'bismark-methylation',
+                content = self.bismark_methlyation_chart()
+            )
 
         if len(self.bismark_mbias_data['meth']['CpG_R1']) > 0:
-            self.sections.append({
-                'name': 'M-Bias',
-                'anchor': 'bismark-mbias',
-                'content': self.bismark_mbias_plot()
-            })
+            self.add_section (
+                name = 'M-Bias',
+                anchor = 'bismark-mbias',
+                content = self.bismark_mbias_plot()
+            )
 
         if len(self.bismark_data['bam2nuc']) > 0:
             self.write_data_file(self.bismark_data['bam2nuc'], 'multiqc_bismark_bam2nuc', sort_cols=True)

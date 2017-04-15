@@ -200,12 +200,12 @@ def parse_reports(self):
             for lg, index in zip(linegraph_data, range(5)):
                 lg[s_name] = reformat_items(index)
 
-        self.sections.append({
-            'name': 'Base Distribution',
-            'anchor': 'picard-base-distribution-by-cycle',
-            'content': '<p>Plot shows the distribution of bases by cycle.</p>' +
+        self.add_section (
+            name = 'Base Distribution',
+            anchor = 'picard-base-distribution-by-cycle',
+            content = '<p>Plot shows the distribution of bases by cycle.</p>' +
                          linegraph.plot(linegraph_data, pconfig)
-        })
+        )
 
 
     # Return the number of detected samples to the parent module

@@ -48,14 +48,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.busco_data, 'multiqc_busco')
 
         # One Alignment Rate Plot per lineage
-        self.sections = list()
         lineages = set([ self.busco_data[s_name].get('lineage_dataset') for s_name in self.busco_data.keys() ])
         for lin in lineages:
-            self.sections.append({
-                'name': 'Lineage Assessment' if lin is None else 'Lineage: {}'.format(lin),
-                'anchor': 'busco-lineage-{}'.format(re.sub('\W+', '_', str(lin))),
-                'content': self.busco_plot(lin)
-            })
+            self.add_section (
+                name = 'Lineage Assessment' if lin is None else 'Lineage: {}'.format(lin),
+                anchor = 'busco-lineage-{}'.format(re.sub('\W+', '_', str(lin))),
+                content = self.busco_plot(lin)
+            )
 
     def parse_busco_log(self, f):
         parsed_data = {}

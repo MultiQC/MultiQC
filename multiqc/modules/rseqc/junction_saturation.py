@@ -82,10 +82,10 @@ def parse_reports(self):
             'click_func': plot_single()
         }
         p_link = '<a href="http://rseqc.sourceforge.net/#junction-saturation-py" target="_blank">Junction Saturation</a>'
-        self.sections.append({
-            'name': 'Junction Saturation',
-            'anchor': 'rseqc-junction_saturation',
-            'content': "<p>"+p_link+" calculates percentage of known splicing junctions that are observed" \
+        self.add_section (
+            name = 'Junction Saturation',
+            anchor = 'rseqc-junction_saturation',
+            content = "<p>"+p_link+" calculates percentage of known splicing junctions that are observed" \
                 " in each dataset. If sequencing depth is sufficient, all (annotated) splice junctions should" \
                 " be rediscovered, resulting in a curve that reaches a plateau. Missing low abundance splice" \
                 " junctions can affect downstream analysis. Counts are normalised to the total number of" \
@@ -98,7 +98,7 @@ def parse_reports(self):
                     self.junction_saturation_known_pct,
                     self.junction_saturation_novel_pct
                 ], pconfig)
-        })
+        )
 
     # Return number of samples found
     return len(self.junction_saturation_all)

@@ -53,25 +53,23 @@ class MultiqcModule(BaseMultiqcModule):
         log.debug("Found {} log pipelines".format(num_log_pipelines))
         log.debug("Found {} runfile pipelines".format(num_runfile_pipelines))
 
-        self.sections = list()
-
         # Pipeline Info
         if len(self.clusterflow_runfiles) > 0:
             pipelines_section = self.clusterflow_pipelines_table()
             pipelines_section += self.clusterflow_pipelines_printout()
-            self.sections.append({
-                'name': 'Pipelines',
-                'anchor': 'clusterflow-pipelines',
-                'content': pipelines_section
-            })
+            self.add_section (
+                name = 'Pipelines',
+                anchor = 'clusterflow-pipelines',
+                content = pipelines_section
+            )
 
         # Commands
         if len(self.clusterflow_commands) > 0:
-            self.sections.append({
-                'name': 'Commands',
-                'anchor': 'clusterflow-commands',
-                'content': self.clusterflow_commands_table()
-            })
+            self.add_section (
+                name = 'Commands',
+                anchor = 'clusterflow-commands',
+                content = self.clusterflow_commands_table()
+            )
 
 
     def parse_clusterflow_logs(self, f):

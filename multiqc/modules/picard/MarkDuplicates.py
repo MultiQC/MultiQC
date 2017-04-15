@@ -106,12 +106,11 @@ def parse_reports(self):
             'cpswitch_c_active': False
         }
 
-        self.sections.append({
-            'id': 'picard_mark_duplicates',
-            'name': 'Mark Duplicates',
-            'anchor': 'picard-markduplicates',
-            'content': bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
-        })
+        self.add_section (
+            name = 'Mark Duplicates',
+            anchor = 'picard-markduplicates',
+            content = bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_dupMetrics_data)

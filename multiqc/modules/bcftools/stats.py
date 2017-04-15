@@ -106,11 +106,11 @@ class StatsReportMixin():
                 'ylab': '# Substitutions',
                 'cpswitch_counts_label': 'Number of Substitutions'
             }
-            self.sections.append({
-                'name': 'Variant Substitution Types',
-                'anchor': 'bcftools-stats',
-                'content': bargraph.plot(self.bcftools_stats, keys, pconfig)
-            })
+            self.add_section (
+                name = 'Variant Substitution Types',
+                anchor = 'bcftools-stats',
+                content = bargraph.plot(self.bcftools_stats, keys, pconfig)
+            )
 
             # Make line graph of indel lengths
             if len(self.bcftools_stats_indels) > 0:
@@ -123,20 +123,22 @@ class StatsReportMixin():
                     'ymin': 0,
                     # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
                 }
-                self.sections.append({
-                    'name': 'Indel Distribution',
-                    'anchor': 'bcftools-stats_indel_plot',
-                    'content': linegraph.plot(self.bcftools_stats_indels, pconfig)
-                })
+                self.add_section (
+                    name = 'Indel Distribution',
+                    anchor = 'bcftools-stats_indel_plot',
+                    content = linegraph.plot(self.bcftools_stats_indels, pconfig)
+                )
             # Make line graph of variants per depth
             if len(depth_data) > 0:
                 pconfig = {'id': 'bcftools_stats_depth', 'title': 'Variant depths',
                            'ylab': 'Fraction of sites (%)', 'xlab': 'Variant depth',
                            'ymin': 0, 'ymax': 100, 'categories': True}
                 desc = '<p>Read depth support distribution for called variants</p>'
-                self.sections.append({'name': 'Variant depths',
-                                      'anchor': 'bcftools-stats_depth_plot',
-                                      'content': desc + linegraph.plot(depth_data, pconfig)})
+                self.add_section (
+                    name = 'Variant depths',
+                    anchor = 'bcftools-stats_depth_plot',
+                    content = desc + linegraph.plot(depth_data, pconfig)
+                )
 
         # Return the number of logs that were found
         return len(self.bcftools_stats)

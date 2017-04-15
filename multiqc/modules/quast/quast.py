@@ -42,25 +42,24 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.quast_general_stats_table()
 
-        self.sections = list()
         # Quast Stats Table
-        self.sections.append({
-            'name': 'Assembly Statistics',
-            'anchor': 'quast-stats',
-            'content': self.quast_table()
-        })
+        self.add_section (
+            name = 'Assembly Statistics',
+            anchor = 'quast-stats',
+            content = self.quast_table()
+        )
         # Number of contigs plot
-        self.sections.append({
-            'name': 'Number of Contigs',
-            'anchor': 'quast-contigs',
-            'content': self.quast_contigs_barplot()
-        })
+        self.add_section (
+            name = 'Number of Contigs',
+            anchor = 'quast-contigs',
+            content = self.quast_contigs_barplot()
+        )
         # Number of genes plot
-        self.sections.append({
-            'name': 'Number of Predicted Genes',
-            'anchor': 'quast-genes',
-            'content': self.quast_predicted_genes_barplot()
-        })
+        self.add_section (
+            name = 'Number of Predicted Genes',
+            anchor = 'quast-genes',
+            content = self.quast_predicted_genes_barplot()
+        )
 
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
