@@ -431,15 +431,7 @@ when being written to tab-separated files.
 
 ## Step 6 - Create report sections
 Great! It's time to start creating sections of the report with more information.
-If you only have one plot / section to create, just add it to the introduction.
-For example (content to be replaced with a brilliant plot in the bit of the docs):
-
-```python
-self.intro += 'My amazing module output'
-```
-
-If you have multiple plots to show (_eg._ the Qualimap and FastQC modules),
-you can create a list to hold the sections:
+To do this, use the `self.add_section()` helper function:
 
 ```python
 self.add_section (
@@ -453,7 +445,8 @@ self.add_section (
     content = 'My amazing module output, from the second section'
 )
 ```
-The will automatically be labelled and linked in the navigation.
+These will automatically be labelled and linked in the navigation (unless
+the module has only one section).
 
 ## Step 7 - Plot some data
 Ok, you have some data, now the fun bit - visualising it! Each of the plot

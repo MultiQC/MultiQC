@@ -84,11 +84,9 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
-
-        html_content = linegraph.plot(self.skewer_readlen_dist, pconfig)
-
-        # Only one section, so add to the intro
-        self.intro += html_content
+        self.add_section(
+            plot = linegraph.plot(self.skewer_readlen_dist, pconfig)
+        )
 
     def parse_skewer_log(self, f):
         """ Go through log file looking for skewer output """

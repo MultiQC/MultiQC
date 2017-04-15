@@ -52,8 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_general_stats_table()
 
         # Trimming Length Profiles
-        # Only one section, so add to the intro
-        self.intro += self.cutadapt_length_trimmed_plot()
+        self.cutadapt_length_trimmed_plot()
 
 
     def parse_cutadapt_logs(self, f):
@@ -167,11 +166,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def cutadapt_length_trimmed_plot (self):
         """ Generate the trimming length plot """
-        html = '<p>This plot shows the number of reads with certain lengths of adapter trimmed. \n\
+
+        description = 'This plot shows the number of reads with certain lengths of adapter trimmed. \n\
         Obs/Exp shows the raw counts divided by the number expected due to sequencing errors. A defined peak \n\
         may be related to adapter length. See the \n\
         <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
-        for more information on how these numbers are generated.</p>'
+        for more information on how these numbers are generated.'
 
         pconfig = {
             'id': 'cutadapt_plot',
@@ -185,6 +185,7 @@ class MultiqcModule(BaseMultiqcModule):
                             {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
         }
 
-        html += linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
-
-        return html
+        self.add_section(
+            description = description,
+            plot = linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+        )

@@ -74,15 +74,12 @@ class MultiqcModule(BaseMultiqcModule):
             # Basic Stats Table
             self.star_stats_table()
 
-            if len(self.star_genecounts_unstranded) == 0:
-                # Alignment bar plot - only one section, so add to the module intro
-                self.intro += self.star_alignment_chart()
-            else:
-                self.add_section (
-                    name = 'Alignment Scores',
-                    anchor = 'star_alignments',
-                    content = self.star_alignment_chart()
-                )
+            # Alignment bar plot
+            self.add_section (
+                name = 'Alignment Scores',
+                anchor = 'star_alignments',
+                plot = self.star_alignment_chart()
+            )
 
         if len(self.star_genecounts_unstranded) > 0:
             self.add_section (

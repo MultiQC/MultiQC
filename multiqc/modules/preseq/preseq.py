@@ -42,8 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.preseq_data)))
 
         # Preseq plot
-        # Only one section, so add to the intro
-        self.intro += self.preseq_length_trimmed_plot()
+        self.preseq_length_trimmed_plot()
 
 
     def parse_preseq_logs(self, f):
@@ -104,9 +103,13 @@ class MultiqcModule(BaseMultiqcModule):
                 'showInLegend': False,
             }]
         }
-        intro_text = ''
+        description = ''
         if xmax is not None:
             pconfig['xmax'] = xmax
-            intro_text += "<p>Note that the x axis is trimmed until one of the datasets \
-                shows 90% of its maximum y-value, to avoid ridiculous scales.</p>"
-        return intro_text + linegraph.plot(self.preseq_data, pconfig)
+            description += "Note that the x axis is trimmed until one of the datasets \
+                shows 90% of its maximum y-value, to avoid ridiculous scales."
+
+        self.add_section(
+            description = description,
+            plot = linegraph.plot(self.preseq_data, pconfig)
+        )

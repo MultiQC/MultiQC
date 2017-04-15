@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.trimmomatic, headers)
 
         # Make barplot
-        self.intro += self.trimmomatic_barplot()
+        self.add_section( plot = self.trimmomatic_barplot() )
 
     def parse_trimmomatic(self, f):
         s_name = None

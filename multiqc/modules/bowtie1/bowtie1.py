@@ -61,8 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie_general_stats_table()
 
         # Alignment Rate Plot
-        # Only one section, so add to the intro
-        self.intro += self.bowtie_alignment_plot()
+        self.add_section( plot = self.bowtie_alignment_plot() )
 
 
     def parse_bowtie_logs(self, f):

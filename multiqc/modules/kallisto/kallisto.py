@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.kallisto_general_stats_table()
 
         # Alignment Rate Plot
-        self.intro += self.kallisto_alignment_plot()
+        self.add_section( plot = self.kallisto_alignment_plot() )
 
 
     def parse_kallisto_log(self, f):

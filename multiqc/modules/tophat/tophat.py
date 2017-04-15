@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_general_stats_table()
 
         # Alignment Rate Plot
-        self.intro += self.tophat_alignment_plot()
+        self.add_section( plot = self.tophat_alignment_plot() )
 
 
     def parse_tophat_log (self, raw_data):

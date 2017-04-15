@@ -46,10 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
         if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
-            self.intro += self.fqscreen_plot()
+            self.add_section( plot = self.fqscreen_plot() )
         # Use simpler plot that works with many samples
         else:
-            self.intro += self.fqscreen_simple_plot()
+            self.add_section( plot = self.fqscreen_simple_plot() )
 
         # Write the total counts and percentages to files
         self.write_data_file(self.parse_csv(), 'multiqc_fastq_screen')

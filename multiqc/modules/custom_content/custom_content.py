@@ -221,27 +221,27 @@ class MultiqcModule(BaseMultiqcModule):
         if mod['config'].get('plot_type') == 'table':
             pconfig['sortRows'] = pconfig.get('sortRows', False)
             headers = mod['config'].get('headers')
-            self.intro += table.plot(mod['data'], headers, pconfig)
+            self.add_section( plot = table.plot(mod['data'], headers, pconfig) )
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
-            self.intro += bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig)
+            self.add_section( plot = bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig) )
 
         # Line plot
         elif mod['config'].get('plot_type') == 'linegraph':
-            self.intro += linegraph.plot(mod['data'], pconfig)
+            self.add_section( plot = linegraph.plot(mod['data'], pconfig) )
 
         # Scatter plot
         elif mod['config'].get('plot_type') == 'scatter':
-            self.intro += scatter.plot(mod['data'], pconfig)
+            self.add_section( plot = scatter.plot(mod['data'], pconfig) )
 
         # Heatmap
         elif mod['config'].get('plot_type') == 'heatmap':
-            self.intro += heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig)
+            self.add_section( plot = heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig) )
 
         # Beeswarm plot
         elif mod['config'].get('plot_type') == 'beeswarm':
-            self.intro += beeswarm.plot(mod['data'], pconfig)
+            self.add_section( plot = beeswarm.plot(mod['data'], pconfig) )
 
         # Not supplied
         elif mod['config'].get('plot_type') == None:

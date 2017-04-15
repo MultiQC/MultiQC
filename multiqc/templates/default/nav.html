@@ -35,13 +35,15 @@ The side navigation for the report.
       <li>
         <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
         <ul>
-        {% for s in m.sections -%}
-          {% if s['name'] is not none and s['name'] | length > 0 %}
-          <li>
-            <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
-          </li>
-          {% endif %}
-        {%- endfor %}
+        {% if m.sections | length > 1 -%}
+          {% for s in m.sections -%}
+            {% if s['name'] is not none and s['name'] | length > 0 %}
+            <li>
+              <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
+            </li>
+            {% endif %}
+          {%- endfor %}
+        {% endif %}
         </ul>
       </li>
       {% endfor %}

@@ -118,14 +118,14 @@ class BaseMultiqcModule(object):
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
 
-        # Build the content
+        # Format the content
         if autoformat:
-            description = '<p class="mqc-section-description">{}</p>'.format(description)
-            helptext = '<p class="mqc-section-helptext">{}</p>'.format(helptext)
-            plot = '<div class="mqc-section-plot">{}</div>'.format(plot)
-        content += description
-        content += helptext
-        content += plot
+            if len(description) > 0:
+                description = '<p class="mqc-section-description">{}</p>'.format(description)
+            if len(helptext) > 0:
+                helptext = '<p class="mqc-section-helptext">{}</p>'.format(helptext)
+            if len(plot) > 0:
+                plot = '<div class="mqc-section-plot">{}</div>'.format(plot)
 
         self.sections.append({
             'name': name,
@@ -133,7 +133,7 @@ class BaseMultiqcModule(object):
             'description': description,
             'helptext': helptext,
             'plot': plot,
-            'content': content
+            'content': description + helptext + plot + content
         })
 
     def clean_s_name(self, s_name, root):

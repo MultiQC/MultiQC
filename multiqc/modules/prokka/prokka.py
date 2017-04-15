@@ -67,9 +67,9 @@ class MultiqcModule(BaseMultiqcModule):
         # 'prokka_barplot', to specify whether to include a table or a barplot, or both.
         # Default is to make a plot only.
         if getattr(config, 'prokka_table', False):
-            self.intro += self.prokka_table()
+            self.add_section( plot = self.prokka_table() )
         if getattr(config, 'prokka_barplot', True):
-            self.intro += self.prokka_barplot()
+            self.add_section( plot = self.prokka_barplot() )
 
 
     def parse_prokka(self, f):

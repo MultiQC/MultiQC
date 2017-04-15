@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(name='SortMeRNA', anchor='sortmerna',
         href='http://bioinfo.lifl.fr/RNA/sortmerna/',
         info="is a program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.")
-        
+
         # Parse logs
         self.sortmerna = dict()
         for f in self.find_log_files(config.sp['sortmerna'], filehandles=True):
@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.sortmerna, headers)
 
         # Make barplot
-        self.intro += self.sortmerna_detailed_barplot()
+        self.sortmerna_detailed_barplot()
 
     def parse_sortmerna(self, f):
         s_name = None
@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def sortmerna_detailed_barplot (self):
         """ Make the HighCharts HTML to plot the sortmerna rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         metrics = set()
@@ -126,6 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for key in metrics:
             keys[key] = { 'name': key.replace("_count","") }
+
         # Config for the plot
         pconfig = {
             'id': 'SortMeRNA detailed',
@@ -133,4 +134,4 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'Reads'
         }
 
-        return bargraph.plot(self.sortmerna, keys, pconfig)
+        self.add_section( plot = bargraph.plot(self.sortmerna, keys, pconfig) )
