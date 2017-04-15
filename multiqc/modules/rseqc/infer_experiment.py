@@ -74,12 +74,13 @@ def parse_reports(self):
             'cpswitch': False
         }
 
-        p_link = '<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
         self.add_section (
             name = 'Infer experiment',
             anchor = 'rseqc-infer_experiment',
-            content = "<p>"+p_link+" counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts. It can be used to infer whether RNA-seq library preps are stranded (sense or antisense) .</p>" +
-                bargraph.plot(pdata, keys, pconfig)
+            description = '<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>' \
+                " counts the percentage of reads and read pairs that match the strandedness of overlapping transcripts." \
+                " It can be used to infer whether RNA-seq library preps are stranded (sense or antisense).",
+            plot = bargraph.plot(pdata, keys, pconfig)
         )
 
     # Return number of samples found

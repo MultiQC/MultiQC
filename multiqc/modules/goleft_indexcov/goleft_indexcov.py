@@ -24,19 +24,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Did not find goleft indexcov outputs in {}".format(config.analysis_dir))
             raise UserWarning
 
-        if roc_plot:
-            self.add_section (
-                name = 'Scaled coverage ROC plot',
-                anchor = 'goleft_indexcov-roc',
-                content = roc_plot
-            )
-        if bin_plot:
-            self.add_section (
-                name = 'Problem coverage bins',
-                anchor = 'goleft_indexcov-roc',
-                content = bin_plot
-            )
-
     def _short_chrom(self, chrom):
         """Plot standard chromosomes + X, sorted numerically.
 
@@ -60,10 +47,9 @@ class MultiqcModule(BaseMultiqcModule):
             return chrom_clean
 
     def roc_plot(self):
-        desc = '<p>Coverage (ROC) plot that shows genome coverage at at given (scaled) depth. \n\
+        desc = 'Coverage (ROC) plot that shows genome coverage at at given (scaled) depth. \n\
         Lower coverage samples have shorter curves where the proportion of regions covered \n\
-        drops off more quickly. This indicates a higher fraction of low coverage regions. \n\
-        </p>'
+        drops off more quickly. This indicates a higher fraction of low coverage regions.'
         max_chroms = 50
         data = collections.defaultdict(lambda: collections.defaultdict(dict))
         for fn in self.find_log_files(config.sp["goleft_indexcov"]["roc"], filehandles=True):
@@ -96,10 +82,18 @@ class MultiqcModule(BaseMultiqcModule):
                 'ymin': 0, 'ymax': 1.0,
                 'xmin': 0, 'xmax': 1.5,
                 'data_labels': [{"name": self._short_chrom(c)} for c in chroms]}
-            return desc + linegraph.plot([data[c] for c in chroms], pconfig)
+            self.add_section (
+                name = 'Scaled coverage ROC plot',
+                anchor = 'goleft_indexcov-roc',
+                description = desc,
+                plot = linegraph.plot([data[c] for c in chroms], pconfig)
+            )
+            return True
+        else:
+            return False
 
     def bin_plot(self):
-        desc = '<p>This plot identifies problematic samples using binned coverage distributions. \n\
+        desc = 'This plot identifies problematic samples using binned coverage distributions. \n\
         We expect bins to be around 1, so deviations from this indicate problems. \n\
         Low coverage bins (< 0.15) on the x-axis have regions with low or missing coverage. \n\
         Higher values indicate truncated BAM files or missing data. \n\
@@ -107,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
         Large values on the y-axis are likely to impact CNV and structural variant calling. \n\
         See the \n\
         <a href="https://github.com/brentp/goleft/blob/master/docs/indexcov/help-bin.md" target="_blank">goleft indexcov bin documentation</a> \n\
-        for more details.</p>'
+        for more details.'
 
         data = {}
         for fn in self.find_log_files(config.sp["goleft_indexcov"]["ped"], filehandles=True):
@@ -126,4 +120,12 @@ class MultiqcModule(BaseMultiqcModule):
                 'xlab': 'Proportion of bins with depth < 0.15',
                 'ylab': 'Proportion of bins with depth outside of (0.85, 1.15)',
                 'yCeiling': 1.0, 'yFloor': 0.0, 'xCeiling': 1.0, 'xFloor': 0.0}
-            return desc + scatter.plot(data, pconfig)
+            self.add_section (
+                name = 'Problem coverage bins',
+                anchor = 'goleft_indexcov-roc',
+                description = desc,
+                plot = scatter.plot(data, pconfig)
+            )
+            return True
+        else:
+            return False

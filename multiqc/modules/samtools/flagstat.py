@@ -79,8 +79,8 @@ class FlagstatReportMixin():
             self.add_section (
                 name = 'Samtools Flagstat',
                 anchor = 'samtools-flagstat',
-                content = '<p>This module parses the output from <code>samtools flagstat</code>. All numbers in millions.</p>' +
-                            beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
+                description = 'This module parses the output from <code>samtools flagstat</code>. All numbers in millions.',
+                plot = beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
             )
 
         # Return the number of logs that were found

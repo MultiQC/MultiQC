@@ -90,14 +90,14 @@ def parse_reports(self):
                 {'name': 'Counts', 'ylab': 'Coverage'}
             ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>'
         self.add_section (
             name = 'Gene Body Coverage',
             anchor = 'rseqc-gene_body_coverage',
-            content = "<p>"+p_link+" calculates read coverage over gene bodies." \
+            description = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>' \
+                " calculates read coverage over gene bodies." \
                 " This is used to check if reads coverage is uniform and" \
-                " if there is any 5' or 3' bias.</p>" +
-                linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig)
+                " if there is any 5' or 3' bias.",
+            plot = linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig)
         )
 
     # Return number of samples found

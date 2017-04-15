@@ -119,7 +119,8 @@ def parse_reports(self):
         self.add_section (
             name = 'Bam Stat',
             anchor = 'rseqc-bam_stat',
-            content = '<p>All numbers reported in millions.</p>'+beeswarm.plot(self.bam_stat_data, keys)
+            description = 'All numbers reported in millions.',
+            plot = beeswarm.plot(self.bam_stat_data, keys)
         )
 
     # Return number of samples found

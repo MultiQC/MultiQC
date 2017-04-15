@@ -61,14 +61,14 @@ def parse_reports(self):
                 {'name': 'Percentages', 'ylab': 'Percentage'}
             ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#inner-distance-py" target="_blank">Inner Distance</a>'
         self.add_section (
             name = 'Inner Distance',
             anchor = 'rseqc-inner_distance',
-            content = "<p>"+p_link+" calculates the inner distance" \
+            description = '<a href="http://rseqc.sourceforge.net/#inner-distance-py" target="_blank">Inner Distance</a>' \
+                " calculates the inner distance" \
                 " (or insert size) between two paired RNA reads." \
-                " Note that this can be negative if fragments overlap.</p>" +
-                linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
+                " Note that this can be negative if fragments overlap.",
+            plot = linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
         )
 
     # Return number of samples found

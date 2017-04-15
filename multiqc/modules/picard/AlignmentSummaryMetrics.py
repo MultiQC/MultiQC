@@ -116,8 +116,8 @@ def parse_reports(self):
         self.add_section (
             name = 'Alignment Summary',
             anchor = 'picard-alignmentsummary',
-            content = "<p>Plase note that Picard's read counts are divided by two for paired-end data.</p>"+
-                bargraph.plot(pdata, keys, pconfig)
+            description = "Plase note that Picard's read counts are divided by two for paired-end data.",
+            plot = bargraph.plot(pdata, keys, pconfig)
         )
 
     # Return the number of detected samples to the parent module

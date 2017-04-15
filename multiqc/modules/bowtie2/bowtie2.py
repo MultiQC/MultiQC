@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie2_general_stats_table()
 
         # Alignment Rate Plot
-        self.add_section( content = self.bowtie2_alignment_plot() )
+        self.bowtie2_alignment_plot()
 
 
     def parse_bowtie2_logs(self, f):
@@ -213,7 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         half_warning = ''
         for s_name in self.bowtie2_data:
             if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_none_halved' in self.bowtie2_data[s_name]:
-                half_warning = '<p><em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em></p>'
+                half_warning = '<em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em>'
 
 
         # Config for the plot
@@ -223,7 +223,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Two plots, don't mix SE with PE
-        se_plot = ''
         if self.num_se > 0:
             sekeys = OrderedDict()
             sekeys['unpaired_aligned_one'] = { 'color': '#20568f', 'name': 'SE mapped uniquely' }
@@ -231,9 +230,10 @@ class MultiqcModule(BaseMultiqcModule):
             sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
             config['id'] = 'bowtie2_se_plot'
             config['title'] = 'Bowtie 2 SE Alignment Scores'
-            se_plot = bargraph.plot(self.bowtie2_data, sekeys, config)
+            self.add_section(
+                plot = bargraph.plot(self.bowtie2_data, sekeys, config)
+            )
 
-        pe_plot = ''
         if self.num_pe > 0:
             pekeys = OrderedDict()
             pekeys['paired_aligned_one'] = { 'color': '#20568f', 'name': 'PE mapped uniquely' }
@@ -245,8 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
             pekeys['paired_aligned_mate_none_halved'] = { 'color': '#981919', 'name': 'PE neither mate aligned' }
             config['id'] = 'bowtie2_pe_plot'
             config['title'] = 'Bowtie 2 PE Alignment Scores'
-            if se_plot != '':
-                pe_plot = '<hr>'
-            pe_plot += bargraph.plot(self.bowtie2_data, pekeys, config)
-
-        return half_warning + se_plot + pe_plot
+            self.add_section(
+                description = half_warning,
+                plot = bargraph.plot(self.bowtie2_data, pekeys, config)
+            )

@@ -126,12 +126,11 @@ class StatsReportMixin():
             keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs'})
             keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs'})
 
-            plot_html = beeswarm.plot(self.samtools_stats, keys,
-                                            {'id': 'samtools-stats-dp'})
             self.add_section (
                 name = 'Alignment metrics',
                 anchor = 'samtools-stats',
-                content = "<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p> {}".format(plot_html)
+                description = "This module parses the output from <code>samtools stats</code>. All numbers in millions.",
+                plot = beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
             )
 
         # Return the number of logs that were found
@@ -148,12 +147,11 @@ class StatsReportMixin():
             else:
                 log.warn("sum of mapped/unmapped reads not matching total, "
                          "skipping samtools plot for: {}".format(sample_id))
-        bargraph = alignment_chart(bedgraph_data)
         self.add_section (
             name = 'Percent Mapped',
             anchor = 'samtools-stats-alignment',
-            content = ("<p>Alignment metrics from <code>samtools stats</code>;"
-                        " mapped vs. unmapped reads.</p> {}".format(bargraph))
+            description = "Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads.",
+            plot = alignment_chart(bedgraph_data)
         )
 
 

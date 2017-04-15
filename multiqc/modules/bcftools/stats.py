@@ -109,7 +109,7 @@ class StatsReportMixin():
             self.add_section (
                 name = 'Variant Substitution Types',
                 anchor = 'bcftools-stats',
-                content = bargraph.plot(self.bcftools_stats, keys, pconfig)
+                plot = bargraph.plot(self.bcftools_stats, keys, pconfig)
             )
 
             # Make line graph of indel lengths
@@ -126,18 +126,18 @@ class StatsReportMixin():
                 self.add_section (
                     name = 'Indel Distribution',
                     anchor = 'bcftools-stats_indel_plot',
-                    content = linegraph.plot(self.bcftools_stats_indels, pconfig)
+                    plot = linegraph.plot(self.bcftools_stats_indels, pconfig)
                 )
             # Make line graph of variants per depth
             if len(depth_data) > 0:
                 pconfig = {'id': 'bcftools_stats_depth', 'title': 'Variant depths',
                            'ylab': 'Fraction of sites (%)', 'xlab': 'Variant depth',
                            'ymin': 0, 'ymax': 100, 'categories': True}
-                desc = '<p>Read depth support distribution for called variants</p>'
                 self.add_section (
                     name = 'Variant depths',
                     anchor = 'bcftools-stats_depth_plot',
-                    content = desc + linegraph.plot(depth_data, pconfig)
+                    description = 'Read depth support distribution for called variants',
+                    plot = linegraph.plot(depth_data, pconfig)
                 )
 
         # Return the number of logs that were found

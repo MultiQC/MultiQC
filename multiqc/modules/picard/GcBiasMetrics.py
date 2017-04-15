@@ -108,9 +108,9 @@ def parse_reports(self):
         self.add_section (
             name = 'GC Coverage Bias',
             anchor = 'picard-gcbias',
-            content = '<p>This plot shows bias in coverage across regions of the genome with varying GC content.'\
-                ' A perfect library would be a flat line at <code>y = 1</code>.</p>' +
-                linegraph.plot(self.picard_GCbias_data, pconfig)
+            description = 'This plot shows bias in coverage across regions of the genome with varying GC content.'\
+                ' A perfect library would be a flat line at <code>y = 1</code>.',
+            plot = linegraph.plot(self.picard_GCbias_data, pconfig)
         )
 
     if len(self.picard_GCbiasSummary_data) > 0:

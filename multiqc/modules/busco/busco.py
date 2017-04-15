@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = 'Lineage Assessment' if lin is None else 'Lineage: {}'.format(lin),
                 anchor = 'busco-lineage-{}'.format(re.sub('\W+', '_', str(lin))),
-                content = self.busco_plot(lin)
+                plot = self.busco_plot(lin)
             )
 
     def parse_busco_log(self, f):

@@ -411,8 +411,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Filter statistics',
             anchor = 'slamdunk_filtering',
-            content = '<p> This table shows the number of reads filtered with each filter criterion during filtering phase of slamdunk.</p>' +
-                        table.plot(self.slamdunk_data, headers, config)
+            description = 'This table shows the number of reads filtered with each filter criterion during filtering phase of slamdunk.',
+            plot = table.plot(self.slamdunk_data, headers, config)
         )
 
     def slamdunkOverallRatesPlot (self):
@@ -446,11 +446,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Conversion rates per read',
             anchor = 'slamdunk_overall_rates',
-            content = """<p>This plot shows the individual conversion rates over all reads.
+            description = """This plot shows the individual conversion rates over all reads.
                         It shows these conversion rates strand-specific: This means for a properly labelled
                         sample you would see a T&gt;C excess on the plus-strand and an A&gt;G excess on the minus strand
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk docs</a>).</p>"""
-                        + bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk docs</a>).""",
+            plot = bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
         )
 
 
@@ -477,9 +477,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Conversion rates per UTR',
             anchor = 'slamdunk_utr_rates',
-            content = """<p>This plot shows the individual conversion rates for all UTRs
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#utrrates" target="_blank">slamdunk docs</a>).</p>"""
-                        + bargraph.plot(self.utrates_data, cats, pconfig)
+            description = """This plot shows the individual conversion rates for all UTRs
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#utrrates" target="_blank">slamdunk docs</a>).""",
+            plot = bargraph.plot(self.utrates_data, cats, pconfig)
         )
 
     def slamdunkPCAPlot (self):
@@ -496,10 +496,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'PCA (T&gt;C based)',
             anchor = 'slamdunk_PCA',
-            content = """<p> This plot shows the principal components of samples based
+            description = """This plot shows the principal components of samples based
                         on the distribution of reads with T&gt;C conversions within UTRs
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#summary" target="_blank">slamdunk docs</a>).</p>"""
-                        + scatter.plot(self.PCA_data, pconfig)
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#summary" target="_blank">slamdunk docs</a>).""",
+            plot = scatter.plot(self.PCA_data, pconfig)
         )
 
     def slamdunkTcPerReadPosPlot (self):
@@ -532,17 +532,17 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Non T&gt;C mutations over read positions',
             anchor = 'slamdunk_nontcperreadpos',
-            content = """<p>This plot shows the distribution of non T&gt;C mutations across read positions
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc)
+            description = """This plot shows the distribution of non T&gt;C mutations across read positions
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc)
         )
 
         self.add_section (
             name = 'T&gt;C conversions over read positions',
             anchor = 'slamdunk_tcperreadpos',
-            content = """<p>This plot shows the distribution of T&gt;C conversions across read positions
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc)
+            description = """This plot shows the distribution of T&gt;C conversions across read positions
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc)
         )
 
     def slamdunkTcPerUTRPosPlot (self):
@@ -575,15 +575,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Non T&gt;C mutations over UTR positions',
             anchor = 'slamdunk_nontcperutrpos',
-            content = """<p>This plot shows the distribution of non T&gt;C mutations across UTR positions for the last 200 bp from the 3\' UTR end
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc)
+            description = """This plot shows the distribution of non T&gt;C mutations across UTR positions for the last 200 bp from the 3\' UTR end
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc)
         )
 
         self.add_section (
             name = 'T&gt;C conversions over UTR positions',
             anchor = 'tcperutrpos',
-            content = """<p>This plot shows the distribution of T&gt;C conversions across UTR positions for the last 200 bp from the 3\' UTR end
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc)
+            description = """This plot shows the distribution of T&gt;C conversions across UTR positions for the last 200 bp from the 3\' UTR end
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc)
         )

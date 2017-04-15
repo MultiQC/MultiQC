@@ -437,16 +437,21 @@ To do this, use the `self.add_section()` helper function:
 self.add_section (
     name = 'First Module Section',
     anchor = 'mymod-first',
-    content = 'My amazing module output, from the first section'
+    description = 'My amazing module output, from the first section',
+    help = "If you're not sure how to interpret the data, we can help!",
+    plot = bargraph.plot(data)
 )
 self.add_section (
     name = 'Second Module Section',
     anchor = 'mymod-second',
-    content = 'My amazing module output, from the second section'
+    plot = linegraph.plot(data2)
+)
+self.add_section (
+    content = '<p>Some custom HTML.</p>'
 )
 ```
 These will automatically be labelled and linked in the navigation (unless
-the module has only one section).
+the module has only one section or `name` is not specified).
 
 ## Step 7 - Plot some data
 Ok, you have some data, now the fun bit - visualising it! Each of the plot

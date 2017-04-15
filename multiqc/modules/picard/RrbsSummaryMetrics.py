@@ -131,7 +131,7 @@ def parse_reports(self):
         self.add_section (
             name = 'RRBS Converted Bases',
             anchor = 'picard-rrbssummary-convertedbases',
-            content = bargraph.plot([pdata_cpg, pdata_noncpg], [keys, keys], pconfig)
+            plot = bargraph.plot([pdata_cpg, pdata_noncpg], [keys, keys], pconfig)
         )
 
 
@@ -166,7 +166,7 @@ def parse_reports(self):
         self.add_section (
             name = 'RRBS Read Counts',
             anchor = 'picard-rrbssummary-readcounts',
-            content = bargraph.plot(pdata, keys, pconfig)
+            plot = bargraph.plot(pdata, keys, pconfig)
         )
 
     # Return the number of detected samples to the parent module

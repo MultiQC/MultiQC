@@ -83,14 +83,14 @@ def parse_reports(self):
             'cpswitch_c_active': False,
             'data_labels': [ 'Junctions', 'Events' ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>'
         self.add_section (
             name = 'Junction Annotation',
             anchor = 'rseqc_junction_annotation',
-            content = "<p>"+p_link+" compares detected splice junctions to" \
+            description = '<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>' \
+                " compares detected splice junctions to" \
                 " a reference gene model. An RNA read can be spliced 2" \
-                " or more times, each time is called a splicing event.</p>" +
-                bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
+                " or more times, each time is called a splicing event.",
+            plot = bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
         )
 
     # Return number of samples found

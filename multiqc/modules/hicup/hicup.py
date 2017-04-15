@@ -45,31 +45,31 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Read Truncation',
             anchor = 'hicup-truncating',
-            content = self.hicup_truncating_chart()
+            plot = self.hicup_truncating_chart()
         )
         self.add_section (
             name = 'Read Mapping',
             anchor = 'hicup-mapping',
-            content = self.hicup_alignment_chart()
+            plot = self.hicup_alignment_chart()
         )
 
         self.add_section (
             name = 'Read Pair Filtering',
             anchor = 'hicup-filtering',
-            content = self.hicup_filtering_chart()
+            plot = self.hicup_filtering_chart()
         )
 
         # TODO: Is there a log file with this data for a line plot?
         # self.add_section (
         #     name = 'Di-Tag Length Distribution',
         #     anchor = 'hicup-lengths',
-        #     content = self.hicup_lengths_chart()
+        #     plot = self.hicup_lengths_chart()
         # )
 
         self.add_section (
             name = 'De-Duplication &amp; Di-Tag Separation',
             anchor = 'hicup-deduplication',
-            content = self.hicup_dedup_chart()
+            plot = self.hicup_dedup_chart()
         )
 
 

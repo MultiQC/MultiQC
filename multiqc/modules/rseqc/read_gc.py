@@ -61,12 +61,12 @@ def parse_reports(self):
                 {'name': 'Percentages', 'ylab': 'Percentage of Reads'}
             ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#read-gc-py" target="_blank">read_GC</a>'
         self.add_section (
             name = 'Read GC Content',
             anchor = 'rseqc-read_gc',
-            content = "<p>"+p_link+" calculates a histogram of read GC content.</p>" +
-                linegraph.plot([self.read_gc, self.read_gc_pct], pconfig)
+            description = '<a href="http://rseqc.sourceforge.net/#read-gc-py" target="_blank">read_GC</a>' \
+                " calculates a histogram of read GC content.</p>",
+            plot = linegraph.plot([self.read_gc, self.read_gc_pct], pconfig)
         )
 
     # Return number of samples found

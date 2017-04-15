@@ -162,24 +162,25 @@ def parse_reports(self):
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( data[s_name] )
         data_table = _clean_table(data)
-        table_html = table.plot(data_table, _get_headers(data_table))
         self.add_section (
                 name = 'HSMetrics',
                 anchor = 'picard_hsmetrics',
-                content = table_html
+                plot = table.plot(data_table, _get_headers(data_table))
         )
         tbases = _add_target_bases(data)
         self.add_section (
             name = tbases['name'],
             anchor = tbases['anchor'],
-            content = tbases['content']
+            description = tbases['description'],
+            plot = tbases['plot']
         )
         hs_pen = _add_hs_penalty(data)
         if hs_pen is not None:
             self.add_section (
                 name = hs_pen['name'],
                 anchor = hs_pen['anchor'],
-                content = hs_pen['content']
+                description = hs_pen['description'],
+                plot = hs_pen['plot']
             )
 
     # Return the number of detected samples to the parent module
@@ -228,7 +229,7 @@ def _get_headers(data):
     return OrderedDict(sorted(header.items(), key=lambda t: t[1]['title']))
 
 def _add_target_bases(data):
-    subtitle = "<p>The percentage of all target bases with at least <code>x</code> fold coverage.</p>"
+    subtitle = "The percentage of all target bases with at least <code>x</code> fold coverage."
     data_clean = defaultdict(dict)
     for s in data:
         for h in data[s]:
@@ -246,11 +247,12 @@ def _add_target_bases(data):
     return {
         'name': 'Target Region Coverage',
         'anchor': 'picard_hsmetrics_target_bases',
-        'content': subtitle + linegraph.plot(data_clean, pconfig)
+        'description': subtitle,
+        'plot' : linegraph.plot(data_clean, pconfig)
     }
 
 def _add_hs_penalty(data):
-    subtitle = "<p>The \"hybrid selection penalty\" incurred to get 80% of target bases to a given coverage. Can be used with the formula <code>required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty</code>.</p>"
+    subtitle = "The \"hybrid selection penalty\" incurred to get 80% of target bases to a given coverage. Can be used with the formula <code>required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty</code>."
     data_clean = defaultdict(dict)
     any_non_zero = False
     for s in data:
@@ -273,5 +275,6 @@ def _add_hs_penalty(data):
         return {
             'name': 'HS penalty',
             'anchor': 'picard_hsmetrics_hs_penalty',
-            'content': subtitle + linegraph.plot(data_clean, pconfig)
+            'description': subtitle,
+            'plot': linegraph.plot(data_clean, pconfig)
         }

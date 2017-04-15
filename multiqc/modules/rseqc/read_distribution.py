@@ -94,12 +94,12 @@ def parse_reports(self):
             'cpswitch_c_active': False
         }
 
-        p_link = '<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
         self.add_section (
             name = 'Read Distribution',
             anchor = 'rseqc-read_distribution',
-            content = "<p>"+p_link+" calculates how mapped reads are distributed over genome features.</p>" +
-                bargraph.plot(self.read_dist, keys, pconfig)
+            description = '<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>' \
+                " calculates how mapped reads are distributed over genome features.",
+            plot = bargraph.plot(self.read_dist, keys, pconfig)
         )
 
     # Return number of samples found

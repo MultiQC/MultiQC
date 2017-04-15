@@ -125,8 +125,8 @@ def parse_reports(self):
         self.add_section (
             name = 'RnaSeqMetrics Assignment',
             anchor = 'picard-rna-assignment',
-            content = '<p>Number of bases in primary alignments that align to regions in the reference genome.</p>' +
-                        bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats)
+            description = 'Number of bases in primary alignments that align to regions in the reference genome.',
+            plot = bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats)
         )
 
         # Section with histogram plot
@@ -146,7 +146,7 @@ def parse_reports(self):
             self.add_section (
                 name = 'Gene Coverage',
                 anchor = 'picard-rna-coverage',
-                content = linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
+                plot = linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
             )
 
 

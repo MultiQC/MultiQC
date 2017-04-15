@@ -117,7 +117,7 @@ def parse_reports(self):
         self.add_section (
             name = 'Bamtools Stats',
             anchor = 'bamtools-stats',
-            content = beeswarm.plot(self.bamtools_stats_data, keys)
+            plot = beeswarm.plot(self.bamtools_stats_data, keys)
         )
 
     # Return number of samples found

@@ -54,7 +54,7 @@ class RmdupReportMixin():
             self.add_section (
                 name = 'Duplicates removed',
                 anchor = 'samtools-rmdup',
-                content = bargraph.plot(self.samtools_rmdup, keys, pconfig)
+                plot = bargraph.plot(self.samtools_rmdup, keys, pconfig)
             )
 
             # Add a column to the General Stats table

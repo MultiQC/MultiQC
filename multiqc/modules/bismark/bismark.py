@@ -142,43 +142,23 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bismark_data['alignment']) > 0:
             self.write_data_file(self.bismark_data['alignment'], 'multiqc_bismark_alignment', sort_cols=True)
             log.info("Found {} bismark alignment reports".format(len(self.bismark_data['alignment'])))
-            self.add_section (
-                name = 'Alignment Rates',
-                anchor = 'bismark-alignment',
-                content = self.bismark_alignment_chart()
-            )
+            self.bismark_alignment_chart()
 
         if len(self.bismark_data['dedup']) > 0:
             self.write_data_file(self.bismark_data['dedup'], 'multiqc_bismark_dedup', sort_cols=True)
             log.info("Found {} bismark dedup reports".format(len(self.bismark_data['dedup'])))
-            self.add_section (
-                name = 'Deduplication',
-                anchor = 'bismark-deduplication',
-                content = self.bismark_dedup_chart()
-            )
+            self.bismark_dedup_chart()
 
         if len(self.bismark_data['alignment']) > 0:
-            self.add_section (
-                name = 'Strand Alignment',
-                anchor = 'bismark-strands',
-                content = self.bismark_strand_chart()
-            )
+            self.bismark_strand_chart()
 
         if len(self.bismark_data['methextract']) > 0:
             self.write_data_file(self.bismark_data['methextract'], 'multiqc_bismark_methextract', sort_cols=True)
             log.info("Found {} bismark methextract reports".format(len(self.bismark_data['methextract'])))
-            self.add_section (
-                name = 'Cytosine Methylation',
-                anchor = 'bismark-methylation',
-                content = self.bismark_methlyation_chart()
-            )
+            self.bismark_methlyation_chart()
 
         if len(self.bismark_mbias_data['meth']['CpG_R1']) > 0:
-            self.add_section (
-                name = 'M-Bias',
-                anchor = 'bismark-mbias',
-                content = self.bismark_mbias_plot()
-            )
+            self.bismark_mbias_plot()
 
         if len(self.bismark_data['bam2nuc']) > 0:
             self.write_data_file(self.bismark_data['bam2nuc'], 'multiqc_bismark_bam2nuc', sort_cols=True)
@@ -369,7 +349,11 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.bismark_data['alignment'], keys, config)
+        self.add_section (
+            name = 'Alignment Rates',
+            anchor = 'bismark-alignment',
+            plot = bargraph.plot(self.bismark_data['alignment'], keys, config)
+        )
 
 
     def bismark_strand_chart (self):
@@ -391,9 +375,9 @@ class MultiqcModule(BaseMultiqcModule):
         if directional == len(self.bismark_data['alignment']):
             keys.pop('strand_ctob', None)
             keys.pop('strand_ctot', None)
-            d_mode = '<p>All samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.</p>'
+            d_mode = 'All samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.'
         elif directional > 0:
-            d_mode = '<p>{} samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.</p>'.format(directional)
+            d_mode = '{} samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.'.format(directional)
 
         # Config for the plot
         config = {
@@ -404,7 +388,12 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return d_mode + bargraph.plot(self.bismark_data['alignment'], keys, config)
+        self.add_section (
+            name = 'Strand Alignment',
+            anchor = 'bismark-strands',
+            description = d_mode,
+            plot = bargraph.plot(self.bismark_data['alignment'], keys, config)
+        )
 
 
     def bismark_dedup_chart (self):
@@ -424,7 +413,11 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.bismark_data['dedup'], keys, config)
+        self.add_section (
+            name = 'Deduplication',
+            anchor = 'bismark-deduplication',
+            plot = bargraph.plot(self.bismark_data['dedup'], keys, config)
+        )
 
 
 
@@ -443,13 +436,17 @@ class MultiqcModule(BaseMultiqcModule):
         keys['percent_chg_meth'] = dict(defaults, **{ 'title': 'Methylated CHG' })
         keys['percent_chh_meth'] = dict(defaults, **{ 'title': 'Methylated CHH' })
 
-        return beeswarm.plot(self.bismark_data['methextract'], keys, {'id': 'bismark-methylation-dp'})
+        self.add_section (
+            name = 'Cytosine Methylation',
+            anchor = 'bismark-methylation',
+            plot = beeswarm.plot(self.bismark_data['methextract'], keys, {'id': 'bismark-methylation-dp'})
+        )
 
 
     def bismark_mbias_plot (self):
         """ Make the M-Bias plot """
 
-        html = '<p>This plot shows the average percentage methylation and coverage across reads. See the \n\
+        description = '<p>This plot shows the average percentage methylation and coverage across reads. See the \n\
         <a href="https://rawgit.com/FelixKrueger/Bismark/master/Docs/Bismark_User_Guide.html#m-bias-plot" target="_blank">bismark user guide</a> \n\
         for more information on how these numbers are generated.</p>'
 
@@ -482,6 +479,9 @@ class MultiqcModule(BaseMultiqcModule):
             datasets.append(self.bismark_mbias_data['meth']['CHG_R2'])
             datasets.append(self.bismark_mbias_data['meth']['CHH_R2'])
 
-        html += linegraph.plot(datasets, pconfig)
-
-        return html
+        self.add_section (
+            name = 'M-Bias',
+            anchor = 'bismark-mbias',
+            description = description,
+            plot = linegraph.plot(datasets, pconfig)
+        )

@@ -61,14 +61,14 @@ class VariantEvalMixin():
             self.add_section (
                 name = 'Variant Counts',
                 anchor = 'gatk-count-variants',
-                content = count_variants_barplot(self.gatk_varianteval)
+                plot = count_variants_barplot(self.gatk_varianteval)
             )
 
             # Compare Overlap Table
             self.add_section (
                 name = 'Compare Overlap',
                 anchor = 'gatk-compare-overlap',
-                content = comp_overlap_table(self.gatk_varianteval)
+                plot = comp_overlap_table(self.gatk_varianteval)
             )
 
 

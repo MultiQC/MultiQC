@@ -172,9 +172,9 @@ def parse_reports(self):
             self.add_section (
                 name = 'WGS Coverage',
                 anchor = 'picard-wgsmetrics-cov',
-                content = '<p>The number of bases in the genome territory for each fold coverage. ' +
-                            'Note that final 1% of data is hidden to prevent very long tails.</p>' +
-                            linegraph.plot([data_percent, data], pconfig)
+                description = 'The number of bases in the genome territory for each fold coverage. ' +
+                            'Note that final 1% of data is hidden to prevent very long tails.',
+                plot = linegraph.plot([data_percent, data], pconfig)
             )
 
             # Bar plot of ignored bases
@@ -208,9 +208,9 @@ def parse_reports(self):
             self.add_section (
                 name = 'WGS Filtered Bases',
                 anchor = 'picard-wgsmetrics-bases',
-                content = '<p>For more information about the filtered categories, see the '+
-                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.</p>' +
-                           bargraph.plot(pdata, keys, pconfig)
+                description = 'For more information about the filtered categories, see the '+
+                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.',
+                plot = bargraph.plot(pdata, keys, pconfig)
             )
 
 

@@ -46,20 +46,26 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Assembly Statistics',
             anchor = 'quast-stats',
-            content = self.quast_table()
+            plot = self.quast_table()
         )
         # Number of contigs plot
         self.add_section (
             name = 'Number of Contigs',
             anchor = 'quast-contigs',
-            content = self.quast_contigs_barplot()
+            description = """<p>This plot shows the number of contigs found for each assembly, broken
+                    down by length.</p> """,
+            plot = self.quast_contigs_barplot()
         )
         # Number of genes plot
-        self.add_section (
-            name = 'Number of Predicted Genes',
-            anchor = 'quast-genes',
-            content = self.quast_predicted_genes_barplot()
-        )
+        ng_pdata = self.quast_predicted_genes_barplot()
+        if ng_pdata:
+            self.add_section (
+                name = 'Number of Predicted Genes',
+                anchor = 'quast-genes',
+                description = """<p>This plot shows the number of predicted genes found for each
+                          assembly, broken down by length.</p>""",
+                plot = ng_pdata
+            )
 
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
@@ -238,10 +244,6 @@ class MultiqcModule(BaseMultiqcModule):
     def quast_contigs_barplot(self):
         """ Make a bar plot showing the number and length of contigs for each assembly """
 
-        # Intro text
-        html = """<p>This plot shows the number of contigs found for each assembly, broken
-                down by length.</p> """
-
         # Prep the data
         data = dict()
         for s_name, d in self.quast_data.items():
@@ -275,17 +277,13 @@ class MultiqcModule(BaseMultiqcModule):
             'yDecimals': False
         }
 
-        return "{}{}".format(html, bargraph.plot(data, cats, pconfig))
+        return bargraph.plot(data, cats, pconfig)
 
     def quast_predicted_genes_barplot(self):
         """
         Make a bar plot showing the number and length of predicted genes
         for each assembly
         """
-
-        # Intro text
-        html = """<p>This plot shows the number of predicted genes found for each
-                  assembly, broken down by length.</p>"""
 
         # Prep the data
         # extract the ranges given to quast with "--gene-thresholds"
@@ -327,6 +325,6 @@ class MultiqcModule(BaseMultiqcModule):
                  for low,high in zip(all_thresholds, all_thresholds[1:]+[None]) ]
 
         if len(cats) > 0:
-            return "\n".join([html, bargraph.plot(data, cats)])
+            return bargraph.plot(data, cats)
         else:
             return None

@@ -203,8 +203,8 @@ def parse_reports(self):
         self.add_section (
             name = 'Base Distribution',
             anchor = 'picard-base-distribution-by-cycle',
-            content = '<p>Plot shows the distribution of bases by cycle.</p>' +
-                         linegraph.plot(linegraph_data, pconfig)
+            description = 'Plot shows the distribution of bases by cycle.',
+            plot = linegraph.plot(linegraph_data, pconfig)
         )
 
 

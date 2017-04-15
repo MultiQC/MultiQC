@@ -26,7 +26,7 @@ above. For example:
 self.add_section (
     name = 'Module Section',
     anchor = 'mymod_section',
-    content = bargraph.plot(self.parsed_data, categories, pconfig)
+    plot = bargraph.plot(self.parsed_data, categories, pconfig)
 )
 ```
 

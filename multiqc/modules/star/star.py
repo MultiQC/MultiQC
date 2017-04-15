@@ -85,10 +85,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = 'Gene Counts',
                 anchor = 'star_geneCounts',
-                content = "<p>Statistics from results generated using <code>--quantMode GeneCounts</code>. " +
+                description = "Statistics from results generated using <code>--quantMode GeneCounts</code>. " +
                            "The three tabs show counts for unstranded RNA-seq, counts for the 1st read strand " +
-                           "aligned with RNA and counts for the 2nd read strand aligned with RNA.</p>"
-                           + self.star_genecount_chart()
+                           "aligned with RNA and counts for the 2nd read strand aligned with RNA.",
+                plot = self.star_genecount_chart()
             )
 
 

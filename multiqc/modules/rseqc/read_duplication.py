@@ -46,14 +46,14 @@ def parse_reports(self):
             'yLog': True,
             'tt_label': "<strong>{point.x} occurances</strong>: {point.y} reads",
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#read-duplication-py" target="_blank">read_duplication.py</a>'
 
         self.add_section (
             name = 'Read Duplication',
             anchor = 'rseqc-read_dups',
-            content = "<p>"+p_link+" calculates how many alignment positions have a certain number of exact duplicates."\
-                " Note - plot truncated at 500 occurances and binned.</p>" +
-                linegraph.plot(self.read_dups, pconfig)
+            description = '<a href="http://rseqc.sourceforge.net/#read-duplication-py" target="_blank">read_duplication.py</a>' \
+                " calculates how many alignment positions have a certain number of exact duplicates."\
+                " Note - plot truncated at 500 occurances and binned.</p>",
+            plot = linegraph.plot(self.read_dups, pconfig)
         )
 
     # Return number of samples found

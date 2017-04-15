@@ -129,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Strand Specificity',
             anchor = 'rna_seqc_strand_specificity',
-            content = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
         )
 
 
@@ -175,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Mean Coverage',
             anchor = 'rseqc-rna_seqc_mean_coverage',
-            content = linegraph.plot( [
+            plot = linegraph.plot( [
                 self.rna_seqc_norm_high_cov,
                 self.rna_seqc_norm_medium_cov,
                 self.rna_seqc_norm_low_cov
@@ -217,5 +217,5 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = '{} Correlation'.format(corr_type),
                 anchor = 'rseqc-rna_seqc_correlation',
-                content = heatmap.plot(data[1], data[0], data[0], pconfig)
+                plot = heatmap.plot(data[1], data[0], data[0], pconfig)
             )

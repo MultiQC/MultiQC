@@ -109,7 +109,7 @@ def parse_reports(self):
         self.add_section (
             name = 'Mark Duplicates',
             anchor = 'picard-markduplicates',
-            content = bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
+            plot = bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
         )
 
     # Return the number of detected samples to the parent module
