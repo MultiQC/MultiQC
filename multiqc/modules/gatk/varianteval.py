@@ -17,7 +17,7 @@ class VariantEvalMixin():
         """ Find GATK varianteval logs and parse their data """
 
         self.gatk_varianteval = dict()
-        for f in self.find_log_files(config.sp['gatk']['varianteval'], filehandles=True):
+        for f in self.find_log_files('gatk/varianteval', filehandles=True):
             parsed_data = parse_single_report(f['f'])
             if len(parsed_data) > 0:
                 if f['s_name'] in self.gatk_varianteval:

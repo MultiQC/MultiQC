@@ -31,7 +31,7 @@ class BaseMultiqcModule(object):
         self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
         self.sections = list()
 
-    def find_log_files(self, patterns, filecontents=True, filehandles=False):
+    def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
         Search the analysis directory for log files of interest. Can take either a filename
         suffix or a search string to return only log files that contain relevant info.
@@ -43,6 +43,12 @@ class BaseMultiqcModule(object):
                  and either the file contents or file handle for the current matched file.
                  As yield is used, the results can be iterated over without loading all files at once
         """
+
+        # Get the search patterns
+        if isinstance(sp_key, dict):
+            patterns = sp_key
+        else:
+            patterns = config.sp.get(sp_key, {})
 
         # Get the search parameters
         fn_match = None

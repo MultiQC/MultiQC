@@ -167,35 +167,32 @@ myothermod:
     contents: This is myprogram v1.3
 ```
 
-Note that if you want to find multiple log files, you can nest these
-dictionaries (though they must end with either `fn` or `contents`).
-For example, see the `FastQC` module:
+Note that if you want to find multiple log files, the convention is
+to use the module name and a forward slash separator _(this helps
+backwards-compatibility)_:
 ```yaml
-fastqc:
-    data:
-        fn: fastqc_data.txt
-    zip:
-        fn: _fastqc.zip
+fastqc/data:
+    fn: fastqc_data.txt
+fastqc/zip:
+    fn: _fastqc.zip
 ```
 
-You can supply a list of strings if needed, eg. the `bismark` module:
+You can also supply a list of strings if needed, eg. the `bismark` module:
 ```yaml
-bismark:
-    align:
-        fn:
-            - _PE_report.txt
-            - _SE_report.txt
+bismark/align:
+    fn:
+        - _PE_report.txt
+        - _SE_report.txt
 ```
 
 The value of adding these strings here is that they can be overwritten
 by users in their own config files. This is helpful as people have weird
 and wonderful processing pipelines with their own file naming conventions.
 
-Once your strings are added, you can call them in your module with the
-`config.sp['mymod']`. Next, use the base function `self.find_log_files()`
-to look for your files like this:
+Once your strings are added, you can find files in your module with the
+base function `self.find_log_files()`, using the key you set in the YAML:
 ```python
-self.find_log_files(config.sp['mymod'], filehandles=False)
+self.find_log_files('mymod', filehandles=False)
 ```
 
 This will recursively search the analysis directories looking for a matching
@@ -209,7 +206,7 @@ This function yields a dictionary with various information about matching
 files. The `f` key contains the contents of matching files by default.
 ```python
 # Find all files for mymod
-for f in self.find_log_files(config.sp['mymod']):
+for f in self.find_log_files('mymod'):
     print f['f']        # File contents
     print f['s_name']   # Sample name (from cleaned fn)
     print f['root']     # Directory file was in
@@ -221,7 +218,7 @@ instead:
 ```python
 # Find all files which contain the string 'My Statistic:'
 # Return a filehandle instead of the file contents
-for f in self.find_log_files(config.sp['mymod'], filehandles=True):
+for f in self.find_log_files('mymod', filehandles=True):
     line = f['f'].readline()  # f['f'] is now a filehandle instead of contents
 ```
 
@@ -237,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # [...]
         self.mod_data = dict()
-        for f in self.find_log_files(config.sp['mymod']):
+        for f in self.find_log_files('mymod'):
             self.mod_data[f['s_name']] = self.parse_logs(f['f'])
 
     def parse_logs(self, f):
@@ -301,7 +298,7 @@ is typically written immediately after the above warning.
 If you've used the `self.find_log_files` function, writing to the sources file
 is as simple as passing the log file variable to the `self.add_data_source` function:
 ```python
-for f in self.find_log_files(config.sp['mymod']):
+for f in self.find_log_files('mymod'):
     self.add_data_source(f)
 ```
 

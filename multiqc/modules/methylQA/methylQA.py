@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.methylqa_data = dict()
         self.methylqa_coverage_counts = dict()
         self.methylqa_coverage_percentages = dict()
-        for f in self.find_log_files(config.sp['methylQA']):
+        for f in self.find_log_files('methylQA'):
             self.parse_methylqa_logs(f)
 
         if len(self.methylqa_data) == 0:

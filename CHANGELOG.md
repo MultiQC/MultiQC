@@ -10,11 +10,27 @@ Version 1.0! Bumping the major version number for a couple of reasons:
    compatibility for plugins. As such, semantic versioning suggests a change in
    major version number.
 
-Most people who run MultiQC just use the core installation.
-If this is the case for you, then you have nothing to worry about. The changes
-mentioned above will only apply to plugins and external code bases.
-To see what changes need to applied to your custom plugin code, please see
-the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
+For most people, you shouldn't have any problems upgrading. There are two
+scenarios where you may need to make changes with this update:
+
+1. You have custom file search patterns
+  * These have been flattened. For example, change the following:
+```yaml
+fastqc:
+    data:
+        fn: 'fastqc_data.txt'
+    zip:
+        fn: '*_fastqc.zip'
+```
+  to this:
+```yaml
+fastqc/data:
+    fn: 'fastqc_data.txt'
+fastqc/zip:
+    fn: '*_fastqc.zip'
+```
+2. You have custom plugins / modules / external code
+  * To see what changes need to applied to your custom plugin code, please see the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
 #### Module updates:
 * [**BUSCO**](http://busco.ezlab.org/) - new module!
@@ -55,6 +71,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
 #### Core MultiQC updates:
 * Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
+* Module file search has been rewritten (see above changes to configs)
+  * Significant improvement in search speed
+  * More options for modules to find their logs (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`

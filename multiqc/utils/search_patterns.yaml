@@ -2,25 +2,20 @@
 # Default configurations for how modules can find their log files.
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
-bamtools:
-    stats:
-      contents: 'Stats for BAM file(s):'
-bcftools:
-    stats:
-        contents: 'This file was produced by bcftools stats'
-bismark:
-    align:
-        fn: '*_[SP]E_report.txt'
-        # contents: Writing a C -> T converted version of the input file
-    dedup:
-        fn: '*.deduplication_report.txt'
-    meth_extract:
-        fn: '*_splitting_report.txt'
-        # contents: Bismark Extractor Version
-    m_bias:
-        fn: '*M-bias.txt'
-    bam2nuc:
-        fn: '*.nucleotide_stats.txt'
+bamtools/stats:
+    contents: 'Stats for BAM file(s):'
+bcftools/stats:
+    contents: 'This file was produced by bcftools stats'
+bismark/align:
+    fn: '*_[SP]E_report.txt'
+bismark/dedup:
+    fn: '*.deduplication_report.txt'
+bismark/meth_extract:
+    fn: '*_splitting_report.txt'
+bismark/m_bias:
+    fn: '*M-bias.txt'
+bismark/bam2nuc:
+    fn: '*.nucleotide_stats.txt'
 bowtie:
     contents: '# reads processed:'
 bowtie2:
@@ -37,34 +32,29 @@ custom_content:
         - '*_mqc.tsv'
         - '*_mqc.log'
         - '*_mqc.out'
-clusterflow:
-    logs:
-        fn: '*_clusterFlow.txt'
-    runfiles:
-        fn: '*.run'
+clusterflow/logs:
+    fn: '*_clusterFlow.txt'
+clusterflow/runfiles:
+    fn: '*.run'
 cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
 fastq_screen:
     fn: '*_screen.txt'
-fastqc:
-    data:
-        fn: 'fastqc_data.txt'
-    zip:
-        fn: '*_fastqc.zip'
-    theoretical_gc:
-        fn: '*fastqc_theoretical_gc*'
+fastqc/data:
+    fn: 'fastqc_data.txt'
+fastqc/zip:
+    fn: '*_fastqc.zip'
+fastqc/theoretical_gc:
+    fn: '*fastqc_theoretical_gc*'
 featurecounts:
     fn: '*.summary'
-gatk:
-    varianteval:
-        contents: '#:GATKReport'
-goleft_indexcov:
-    roc:
-        fn: '*-indexcov.roc'
-    ped:
-        fn: '*-indexcov.ped'
-picard:
+gatk/varianteval:
+    contents: '#:GATKReport'
+goleft_indexcov/roc:
+    fn: '*-indexcov.roc'
+goleft_indexcov/ped:
+    fn: '*-indexcov.ped'
 htseq:
     contents: '__too_low_aQual'
 hicup:
@@ -73,130 +63,118 @@ kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
 methylQA:
     fn: '*.report'
-peddy:
-    summary_table:
-        fn: '*.peddy.ped'
-    het_check:
-        fn: '*.het_check.csv'
-    ped_check:
-        fn: '*.ped_check.csv'
-    sex_check:
-        fn: '*.sex_check.csv'
-picard:
-    alignment_metrics:
-        contents: 'picard.analysis.AlignmentSummaryMetrics'
-    basedistributionbycycle:
-        contents: 'picard.analysis.BaseDistributionByCycleMetrics'
-    gcbias:
-        contents:
-          - 'picard.analysis.GcBiasDetailMetrics'
-          - 'picard.analysis.GcBiasSummaryMetrics'
-    hsmetrics:
-        contents: 'picard.analysis.directed.HsMetrics'
-    insertsize:
-        contents: 'picard.analysis.InsertSizeMetrics'
-    markdups:
-        contents: 'picard.sam.DuplicationMetrics'
-    oxogmetrics:
-        contents: 'picard.analysis.CollectOxoGMetrics'
-    rnaseqmetrics:
-        contents:
-          - 'picard.analysis.CollectRnaSeqMetrics'
-          - 'picard.analysis.Collectrnaseqmetrics'
-    rrbs_metrics:
-        contents: 'picard.analysis.RrbsSummaryMetrics'
-    wgs_metrics:
-        contents: 'picard.analysis.CollectWgsMetrics$WgsMetrics'
+peddy/summary_table:
+    fn: '*.peddy.ped'
+peddy/het_check:
+    fn: '*.het_check.csv'
+peddy/ped_check:
+    fn: '*.ped_check.csv'
+peddy/sex_check:
+    fn: '*.sex_check.csv'
+picard/alignment_metrics:
+    contents: 'picard.analysis.AlignmentSummaryMetrics'
+picard/basedistributionbycycle:
+    contents: 'picard.analysis.BaseDistributionByCycleMetrics'
+picard/gcbias:
+    contents:
+        - 'picard.analysis.GcBiasDetailMetrics'
+        - 'picard.analysis.GcBiasSummaryMetrics'
+picard/hsmetrics:
+    contents: 'picard.analysis.directed.HsMetrics'
+picard/insertsize:
+    contents: 'picard.analysis.InsertSizeMetrics'
+picard/markdups:
+    contents: 'picard.sam.DuplicationMetrics'
+picard/oxogmetrics:
+    contents: 'picard.analysis.CollectOxoGMetrics'
+picard/rnaseqmetrics:
+    contents:
+        - 'picard.analysis.CollectRnaSeqMetrics'
+        - 'picard.analysis.Collectrnaseqmetrics'
+picard/rrbs_metrics:
+    contents: 'picard.analysis.RrbsSummaryMetrics'
+picard/wgs_metrics:
+    contents: 'picard.analysis.CollectWgsMetrics$WgsMetrics'
 preseq:
     contents:
         - 'EXPECTED_DISTINCT'
         - 'distinct_reads'
-    # contents: 'TOTAL_READS	EXPECTED_DISTINCT'
-    # contents: 'TOTAL_BASES	EXPECTED_DISTINCT'
 prokka:
     fn: '*.txt'
-qualimap:
-    bamqc:
-        genome_results:
-            fn: 'genome_results.txt'
-        coverage:
-            fn: 'coverage_histogram.txt'
-        insert_size:
-            fn: 'insert_size_histogram.txt'
-        genome_fraction:
-            fn: 'genome_fraction_coverage.txt'
-        gc_dist:
-            fn: 'mapped_reads_gc-content_distribution.txt'
-    rnaseq:
-        rnaseq_results:
-            fn: 'rnaseq_qc_results.txt'
-        coverage:
-            fn: 'coverage_profile_along_genes_(total).txt'
+qualimap/bamqc/genome_results:
+    fn: 'genome_results.txt'
+qualimap/bamqc/coverage:
+    fn: 'coverage_histogram.txt'
+qualimap/bamqc/insert_size:
+    fn: 'insert_size_histogram.txt'
+qualimap/bamqc/genome_fraction:
+    fn: 'genome_fraction_coverage.txt'
+qualimap/bamqc/gc_dist:
+    fn: 'mapped_reads_gc-content_distribution.txt'
+qualimap/rnaseq/rnaseq_results:
+    fn: 'rnaseq_qc_results.txt'
+qualimap/rnaseq/coverage:
+    fn: 'coverage_profile_along_genes_(total).txt'
 quast:
     fn: 'report.tsv'
-rna_seqc:
-    metrics:
-        fn: 'metrics.tsv'
-    coverage:
-        fn:
-            - 'meanCoverageNorm_high.txt'
-            - 'meanCoverageNorm_medium.txt'
-            - 'meanCoverageNorm_low.txt'
-    correlation:
-        fn:
-            - 'corrMatrixPearson.txt'
-            - 'corrMatrixSpearman.txt'
-rseqc:
-    bam_stat:
-        contents: 'Proper-paired reads map to different chrom:'
-    gene_body_coverage:
-        fn: '*.geneBodyCoverage.txt'
-    inner_distance:
-        fn: '*.inner_distance_freq.txt'
-    junction_annotation:
-        contents: 'Partial Novel Splicing Junctions:'
-    junction_saturation:
-        fn: '*.junctionSaturation_plot.r'
-    read_gc:
-        fn: '*.GC.xls'
-    read_distribution:
-        contents: 'Group               Total_bases         Tag_count           Tags/Kb'
-    read_duplication_pos:
-        fn: '*.pos.DupRate.xls'
-    infer_experiment:
-        fn: '*infer_experiment.txt'
-        contents: 'Fraction of reads explained by'
-salmon:
-    meta:
-        fn: 'meta_info.json'
-    fld:
-        fn: 'flenDist.txt'
+rna_seqc/metrics:
+    fn: 'metrics.tsv'
+rna_seqc/coverage:
+    fn:
+        - 'meanCoverageNorm_high.txt'
+        - 'meanCoverageNorm_medium.txt'
+        - 'meanCoverageNorm_low.txt'
+rna_seqc/correlation:
+    fn:
+        - 'corrMatrixPearson.txt'
+        - 'corrMatrixSpearman.txt'
+rseqc/bam_stat:
+    contents: 'Proper-paired reads map to different chrom:'
+rseqc/gene_body_coverage:
+    fn: '*.geneBodyCoverage.txt'
+rseqc/inner_distance:
+    fn: '*.inner_distance_freq.txt'
+rseqc/junction_annotation:
+    contents: 'Partial Novel Splicing Junctions:'
+rseqc/junction_saturation:
+    fn: '*.junctionSaturation_plot.r'
+rseqc/read_gc:
+    fn: '*.GC.xls'
+rseqc/read_distribution:
+    contents: 'Group               Total_bases         Tag_count           Tags/Kb'
+rseqc/read_duplication_pos:
+    fn: '*.pos.DupRate.xls'
+rseqc/infer_experiment:
+    fn: '*infer_experiment.txt'
+    contents: 'Fraction of reads explained by'
+salmon/meta:
+    fn: 'meta_info.json'
+salmon/fld:
+    fn: 'flenDist.txt'
 samblaster:
     contents: 'samblaster: Version'
-samtools:
-    stats:
-        contents: 'This file was produced by samtools stats'
-    flagstat:
-        contents: 'in total (QC-passed reads + QC-failed reads)'
-    idxstats:
-        fn: '*idxstat*'
-    rmdup:
-        contents: '[bam_rmdup'
+samtools/stats:
+    contents: 'This file was produced by samtools stats'
+samtools/flagstat:
+    contents: 'in total (QC-passed reads + QC-failed reads)'
+samtools/idxstats:
+    fn: '*idxstat*'
+samtools/rmdup:
+    contents: '[bam_rmdup'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
-slamdunk:
-    summary:
-        contents: '# slamdunk summary'
-    PCA:
-        contents: '# slamdunk PCA'
-    rates:
-        contents: '# slamdunk rates'
-    utrrates:
-        contents: '# slamdunk utrrates'
-    tcperreadpos:
-        contents: '# slamdunk tcperreadpos'
-    tcperutrpos:
-        contents: '# slamdunk tcperutr'
+slamdunk/summary:
+    contents: '# slamdunk summary'
+slamdunk/PCA:
+    contents: '# slamdunk PCA'
+slamdunk/rates:
+    contents: '# slamdunk rates'
+slamdunk/utrrates:
+    contents: '# slamdunk utrrates'
+slamdunk/tcperreadpos:
+    contents: '# slamdunk tcperreadpos'
+slamdunk/tcperutrpos:
+    contents: '# slamdunk tcperutr'
 snpeff:
     contents: 'SnpEff_version'
 sortmerna:

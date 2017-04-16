@@ -21,7 +21,7 @@ def parse_reports(self):
     self.inner_distance_pct = dict()
 
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['inner_distance']):
+    for f in self.find_log_files('rseqc/inner_distance'):
         if f['s_name'] in self.inner_distance:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
         self.add_data_source(f, section='inner_distance')

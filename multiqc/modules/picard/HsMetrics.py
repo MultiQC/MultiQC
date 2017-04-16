@@ -62,7 +62,7 @@ def parse_reports(self):
     self.picard_HsMetrics_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['hsmetrics'], filehandles=True):
+    for f in self.find_log_files('picard/hsmetrics', filehandles=True):
         parsed_data = dict()
         s_name = None
         keys = None

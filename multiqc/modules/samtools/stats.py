@@ -19,7 +19,7 @@ class StatsReportMixin():
         """ Find Samtools stats logs and parse their data """
 
         self.samtools_stats = dict()
-        for f in self.find_log_files(config.sp['samtools']['stats']):
+        for f in self.find_log_files('samtools/stats'):
             parsed_data = dict()
             for line in f['f'].splitlines():
                 if not line.startswith("SN"):
