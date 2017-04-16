@@ -180,6 +180,7 @@ and many others. Thanks for your support!
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [skewer]:         http://multiqc.info/docs/#skewer
 [snpeff]:         http://multiqc.info/docs/#snpeff
+[sortmerna]:      http://multiqc.info/docs/#sortmerna
 [star]:           http://multiqc.info/docs/#star
 [samtools]:       http://multiqc.info/docs/#samtools
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic

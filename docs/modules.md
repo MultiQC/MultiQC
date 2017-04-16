@@ -87,6 +87,10 @@ Your documentation goes here. Feel free to use markdown and write whatever
 you think would be helpful. Please avoid using heading levels 1 to 3.
 ```
 
+Make a reference to this in the YAML frontmatter at the top of
+`docs/README.md` - this allows the website to find the file to build
+the documentation.
+
 ### Readme and Changelog
 Last but not least, remember to add your new module to the main `README.md`
 file and `CHANGELOG.md`, so that people know that it's there. Feel free to
