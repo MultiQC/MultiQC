@@ -10,6 +10,7 @@ import os
 import yaml
 
 from multiqc import config
+from multiqc.utils import report
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
 
@@ -31,8 +32,7 @@ def custom_module_classes():
     cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
-    search_patterns = OrderedDict()
-    search_patterns['core_sp'] = config.sp['custom_content']
+    search_patterns = ['custom_content']
 
     # First - find files using patterns described in the config
     config_data = getattr(config, 'custom_data', {})
@@ -50,17 +50,19 @@ def custom_module_classes():
             cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
             continue
 
-        # File name patterns supplied in config
-        if 'sp' in f:
+        # Custom Content ID has search patterns in the config
+        if c_id in report.files:
             cust_mods[c_id]['config'] = f
-            search_patterns[c_id] = f['sp']
-        else:
-            log.debug("Search pattern not found for custom module: {}".format(c_id))
+            search_patterns.append(c_id)
+            continue
+
+        # We should have had sometihng by now
+        log.warn("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
-    for k, sp in search_patterns.items():
-        for f in bm.find_log_files(sp):
+    for k in search_patterns:
+        for f in bm.find_log_files(k):
 
             f_extension = os.path.splitext(f['fn'])[1]
 
@@ -106,14 +108,14 @@ def custom_module_classes():
                     s_name = m_config.get('sample_name')
                 else:
                     c_id = k
-                    m_config = dict()
+                    m_config = cust_mods[c_id]['config']
 
                 # Guess sample name if not given
                 if s_name is None:
                     s_name = bm.clean_s_name(f['s_name'], f['root'])
 
                 # Guess c_id if no information known
-                if k == 'core_sp':
+                if k == 'custom_content':
                     c_id = s_name
 
                 # Add information about the file to the config dict
