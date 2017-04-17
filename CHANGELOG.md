@@ -29,6 +29,8 @@ fastqc/data:
 fastqc/zip:
     fn: '*_fastqc.zip'
 ```
+  * See the [documentation](http://multiqc.info/docs/#step-1-find-log-files) for instructions on how to write the new file search syntax.
+  * See [`search_patterns.yaml`](multiqc/utils/search_patterns.yaml) for examples.
 2. You have custom plugins / modules / external code
   * To see what changes need to applied to your custom plugin code, please see the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
@@ -72,8 +74,8 @@ fastqc/zip:
 #### Core MultiQC updates:
 * Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
 * Module file search has been rewritten (see above changes to configs)
-  * Significant improvement in search speed
-  * More options for modules to find their logs (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
+  * Significant improvement in search speed (test dataset runs in approximately half the time)
+  * More options for modules to find their logs, eg. filename regexes (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
