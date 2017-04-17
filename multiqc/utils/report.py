@@ -37,6 +37,7 @@ num_mpl_plots = 0
 saved_raw_data = dict()
 
 # Make a dict of discovered files for each seach key
+searchfiles = list()
 files = dict()
 def get_filelist():
 
@@ -134,7 +135,7 @@ def get_filelist():
         # Search by file contents
         if pattern.get('contents') is not None:
             try:
-                with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
+                with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
                     l = 1
                     for line in f:
                         if pattern['contents'] in line:
@@ -153,10 +154,9 @@ def get_filelist():
         return fn_matched and contents_matched
 
     # Go through the analysis directories and get file list
-    sfiles = []
     for path in config.analysis_dir:
         if os.path.isfile(path):
-            sfiles.append([os.path.basename(path), os.path.dirname(path)])
+            searchfiles.append([os.path.basename(path), os.path.dirname(path)])
         elif os.path.isdir(path):
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
@@ -186,10 +186,10 @@ def get_filelist():
                     continue
                 # Search filenames in this directory
                 for fn in filenames:
-                    sfiles.append([fn, root])
+                    searchfiles.append([fn, root])
     # Search through collected files
-    with click.progressbar(sfiles, label="Searching {} files..".format(len(sfiles))) as searchfiles:
-        for sf in searchfiles:
+    with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
+        for sf in sfiles:
             add_file(sf[0], sf[1])
 
 

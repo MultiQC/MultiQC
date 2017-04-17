@@ -32,22 +32,14 @@ class BaseMultiqcModule(object):
 
     def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
-        Search the analysis directory for log files of interest. Can take either a filename
-        suffix or a search string to return only log files that contain relevant info.
-        :param patterns: Dict with keys 'fn' or 'contents' (or both). Keys can contain
-        string or a list of strings. 'fn' matches filenames, 'contents' matches file contents.
-        NB: Both searches return file if *any* of the supplied strings are matched.
+        Return matches log files of interest.
+        :param sp_key: Search pattern key specified in config
         :param filehandles: Set to true to return a file handle instead of slurped file contents
-        :return: Yields a set with two items - a sample name generated from the filename
-                 and either the file contents or file handle for the current matched file.
+        :return: Yields a dict with filename (fn), root directory (root), cleaned sample name
+                 generated from the filename (s_name) and either the file contents or file handle
+                 for the current matched file (f).
                  As yield is used, the results can be iterated over without loading all files at once
         """
-
-        # # Get the search patterns
-        # if isinstance(sp_key, dict):
-        #     patterns = sp_key
-        # else:
-        #     patterns = config.sp.get(sp_key, {})
 
         if not isinstance(sp_key, str):
             logger.warn("Depreciated: Please use new style for find_log_files()")

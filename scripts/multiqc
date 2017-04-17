@@ -232,12 +232,13 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if file_list:
         if len(analysis_dir) > 1:
             raise ValueError("If --file-list is giving, analysis_dir should have only one plain text file.")
-        config.analysis_dir = ()
+        config.analysis_dir = []
         with (open(analysis_dir[0])) as in_handle:
             for line in in_handle:
                 if os.path.exists(line.strip()):
-                    config.analysis_dir += (os.path.abspath(line.strip()),)
-        if len(config.analysis_dir) == 0:
+                    path = os.path.abspath(line.strip())
+                    report.searchfiles.append([os.path.basename(path), os.path.dirname(path)])
+        if len(report.searchfiles) == 0:
             logger.error("No files were added from {} using --file-list option.".format(analysis_dir[0]))
             logger.error("Please, check that {} contains correct file paths.".format(analysis_dir[0]))
             raise ValueError("Any files to be searched.")
