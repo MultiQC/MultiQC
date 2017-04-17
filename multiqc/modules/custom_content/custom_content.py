@@ -108,7 +108,7 @@ def custom_module_classes():
                     s_name = m_config.get('sample_name')
                 else:
                     c_id = k
-                    m_config = cust_mods[c_id]['config']
+                    m_config = dict(cust_mods[c_id]['config'])
 
                 # Guess sample name if not given
                 if s_name is None:
