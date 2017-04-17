@@ -75,7 +75,7 @@ fastqc/zip:
 * Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
 * Module file search has been rewritten (see above changes to configs)
   * Significant improvement in search speed (test dataset runs in approximately half the time)
-  * More options for modules to find their logs, eg. filename regexes (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
+  * More options for modules to find their logs, eg. filename and contents matching regexes (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`

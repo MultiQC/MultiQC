@@ -165,7 +165,10 @@ or more search criteria. The following keys can be used:
 * `fn_re`
   * A regex filename pattern
 * `contents`
-  * A string to match within the file contents
+  * A string to match within the file contents (checked line by line)
+* `contents_re`
+  * A regex to match within the file contents (checked line by line)
+  * NB: Regex must match entire line (add `.*` to start and end of pattern to avoid this)
 * `num_lines`
   * The number of lines to search through for the `contents` string. Default: all lines.
 * `shared`

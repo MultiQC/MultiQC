@@ -93,10 +93,8 @@ picard/oxogmetrics:
     contents: 'picard.analysis.CollectOxoGMetrics'
     shared: true
 picard/rnaseqmetrics:
-    - contents: 'picard.analysis.CollectRnaSeqMetrics'
-      shared: true
-    - contents: 'picard.analysis.Collectrnaseqmetrics'
-      shared: true
+    contents_re: '.*picard\.analysis\.Collect[Rr]na[Ss]eq[Mm]etrics.*'
+    shared: true
 picard/rrbs_metrics:
     contents: 'picard.analysis.RrbsSummaryMetrics'
     shared: true

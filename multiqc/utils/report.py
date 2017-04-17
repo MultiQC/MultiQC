@@ -45,13 +45,20 @@ def get_filelist():
     list of files to search. Then fire search functions for each file.
     """
     # Prep search patterns
-    spatterns = [{},{},{},{}]
+    spatterns = [{},{},{},{},{},{},{}]
     for key, sps in config.sp.items():
         files[key] = list()
         if not isinstance(sps, list):
             sps = [sps]
         # Split search patterns according to speed of execution.
-        if any([x for x in sps if 'contents' in x]):
+        if any([x for x in sps if 'contents_re' in x]):
+            if any([x for x in sps if 'num_lines' in x]):
+                spatterns[4][key] = sps
+            elif any([x for x in sps if 'max_filesize' in x]):
+                spatterns[5][key] = sps
+            else:
+                spatterns[6][key] = sps
+        elif any([x for x in sps if 'contents' in x]):
             if any([x for x in sps if 'num_lines' in x]):
                 spatterns[1][key] = sps
             elif any([x for x in sps if 'max_filesize' in x]):
@@ -145,9 +152,7 @@ def search_file (pattern, f):
     """
     Function to searach a single file for a single search pattern.
     """
-    # import json
-    # print(json.dumps(pattern, indent=4))
-    # print(json.dumps(f, indent=4))
+
     fn_matched = False
     contents_matched = False
 
@@ -167,27 +172,37 @@ def search_file (pattern, f):
     if pattern.get('fn') is not None:
         if fnmatch.fnmatch(f['fn'], pattern['fn']):
             fn_matched = True
-            if pattern.get('contents') is None:
+            if pattern.get('contents') is None and pattern.get('contents_re') is None:
                 return True
 
     # Search by file name (regex)
     if pattern.get('fn_re') is not None:
         if re.match( pattern['fn_re'], f['fn']):
             fn_matched = True
-            if pattern.get('contents') is None:
+            if pattern.get('contents') is None and pattern.get('contents_re') is None:
                 return True
 
     # Search by file contents
-    if pattern.get('contents') is not None:
+    if pattern.get('contents') is not None or pattern.get('contents_re') is not None:
         try:
             with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
                 l = 1
                 for line in f:
-                    if pattern['contents'] in line:
-                        contents_matched = True
-                        if pattern.get('fn') is None and pattern.get('fn_re') is None:
-                            return True
-                        break
+                    # Search by file contents (string)
+                    if pattern.get('contents') is not None:
+                        if pattern['contents'] in line:
+                            contents_matched = True
+                            if pattern.get('fn') is None and pattern.get('fn_re') is None:
+                                return True
+                            break
+                    # Search by file contents (regex)
+                    elif pattern.get('contents_re') is not None:
+                        if re.match( pattern['contents_re'], line):
+                            contents_matched = True
+                            if pattern.get('fn') is None and pattern.get('fn_re') is None:
+                                return True
+                            break
+                    # Break if we've searched enough lines for this pattern
                     if pattern.get('num_lines') and l >= pattern.get('num_lines'):
                         break
                     l += 1
