@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import fnmatch
 import io
 import logging
 import os
@@ -44,73 +43,33 @@ class BaseMultiqcModule(object):
                  As yield is used, the results can be iterated over without loading all files at once
         """
 
-        # Get the search patterns
-        if isinstance(sp_key, dict):
-            patterns = sp_key
-        else:
-            patterns = config.sp.get(sp_key, {})
+        # # Get the search patterns
+        # if isinstance(sp_key, dict):
+        #     patterns = sp_key
+        # else:
+        #     patterns = config.sp.get(sp_key, {})
 
-        # Get the search parameters
-        fn_match = None
-        contents_match = None
-        if 'fn' in patterns:
-            fn_match = patterns['fn']
-        if 'contents' in patterns:
-            contents_match = patterns['contents']
-        if fn_match == None and contents_match == None:
-            logger.warning("No file patterns specified for {}".format(self.name))
+        if not isinstance(sp_key, str):
+            logger.warn("Depreciated: Please use new style for find_log_files()")
             return
 
-        # Loop through files, yield results if we find something
-        for f in report.files:
-
-            # Set up vars
-            root = f['root']
-            fn = f['fn']
-
+        for f in report.files[sp_key]:
             # Make a sample name from the filename
-            s_name = self.clean_s_name(fn, root)
-
-            # Make search strings into lists if a string is given
-            if type(fn_match) is str:
-                fn_match = [fn_match]
-            if type(contents_match) is str:
-                contents_match = [contents_match]
-
-            # Search for file names ending in a certain string
-            fn_matched = False
-            if fn_match is not None:
-                for m in fn_match:
-                    if fnmatch.fnmatch(fn, m):
-                        fn_matched = True
-                        if not filehandles and not filecontents:
-                            yield {'s_name': s_name, 'root': root, 'fn': fn}
-
-            if fn_matched or contents_match is not None:
+            f['s_name'] = self.clean_s_name(f['fn'], f['root'])
+            if filehandles or filecontents:
                 try:
-                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-
-                        # Search this file for our string of interest
-                        returnfile = False
-                        if contents_match is not None and fn_matched is False:
-                            for line in f:
-                                for m in contents_match:
-                                    if m in line:
-                                        returnfile = True
-                                        break
-                            f.seek(0)
-                        else:
-                            returnfile = True
-
-                        if returnfile:
-                            if filehandles:
-                                yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
-                            elif filecontents:
-                                yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
-
+                    with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
+                        if filehandles:
+                            f['f'] = fh
+                        elif filecontents:
+                            f['f'] = fh.read()
+                            yield f # Yield inside the with, so file still open
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     if config.report_readerrors:
-                        logger.debug("Couldn't read file when looking for output: {}".format(fn))
+                        logger.debug("Couldn't open filehandle when returning file: {}".format(f['fn']))
+                        f['f'] = None
+            else:
+                yield f
 
     def add_section(self, name=None, anchor=None, description='', helptext='', plot='', content='', autoformat=True):
         """ Add a section to the module report output """

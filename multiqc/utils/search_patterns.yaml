@@ -18,22 +18,17 @@ bismark/bam2nuc:
     fn: '*.nucleotide_stats.txt'
 bowtie:
     contents: '# reads processed:'
+    shared: true
 bowtie2:
     contents: 'reads; of these:'
+    shared: true
 busco:
     fn: 'short_summary_*'
 custom_content:
-    fn:
-        - '*_mqc.yaml'
-        - '*_mqc.yml'
-        - '*_mqc.json'
-        - '*_mqc.txt'
-        - '*_mqc.csv'
-        - '*_mqc.tsv'
-        - '*_mqc.log'
-        - '*_mqc.out'
+    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
 clusterflow/logs:
     fn: '*_clusterFlow.txt'
+    shared: true
 clusterflow/runfiles:
     fn: '*.run'
 cutadapt:
@@ -73,34 +68,45 @@ peddy/sex_check:
     fn: '*.sex_check.csv'
 picard/alignment_metrics:
     contents: 'picard.analysis.AlignmentSummaryMetrics'
+    shared: true
 picard/basedistributionbycycle:
     contents: 'picard.analysis.BaseDistributionByCycleMetrics'
+    shared: true
 picard/gcbias:
-    contents:
-        - 'picard.analysis.GcBiasDetailMetrics'
-        - 'picard.analysis.GcBiasSummaryMetrics'
+    - contents: 'picard.analysis.GcBiasDetailMetrics'
+      shared: true
+    - contents: 'picard.analysis.GcBiasSummaryMetrics'
+      shared: true
 picard/hsmetrics:
     contents: 'picard.analysis.directed.HsMetrics'
+    shared: true
 picard/insertsize:
     contents: 'picard.analysis.InsertSizeMetrics'
+    shared: true
 picard/markdups:
     contents: 'picard.sam.DuplicationMetrics'
+    shared: true
 picard/oxogmetrics:
     contents: 'picard.analysis.CollectOxoGMetrics'
+    shared: true
 picard/rnaseqmetrics:
-    contents:
-        - 'picard.analysis.CollectRnaSeqMetrics'
-        - 'picard.analysis.Collectrnaseqmetrics'
+    - contents: 'picard.analysis.CollectRnaSeqMetrics'
+      shared: true
+    - contents: 'picard.analysis.Collectrnaseqmetrics'
+      shared: true
 picard/rrbs_metrics:
     contents: 'picard.analysis.RrbsSummaryMetrics'
+    shared: true
 picard/wgs_metrics:
     contents: 'picard.analysis.CollectWgsMetrics$WgsMetrics'
+    shared: true
 preseq:
-    contents:
-        - 'EXPECTED_DISTINCT'
-        - 'distinct_reads'
+    - contents: 'EXPECTED_DISTINCT'
+    - contents: 'distinct_reads'
 prokka:
     fn: '*.txt'
+    contents: 'contigs:'
+    num_lines: 2
 qualimap/bamqc/genome_results:
     fn: 'genome_results.txt'
 qualimap/bamqc/coverage:
@@ -120,14 +126,9 @@ quast:
 rna_seqc/metrics:
     fn: 'metrics.tsv'
 rna_seqc/coverage:
-    fn:
-        - 'meanCoverageNorm_high.txt'
-        - 'meanCoverageNorm_medium.txt'
-        - 'meanCoverageNorm_low.txt'
+    fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
-    fn:
-        - 'corrMatrixPearson.txt'
-        - 'corrMatrixSpearman.txt'
+    fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
 rseqc/gene_body_coverage:
@@ -145,8 +146,8 @@ rseqc/read_distribution:
 rseqc/read_duplication_pos:
     fn: '*.pos.DupRate.xls'
 rseqc/infer_experiment:
-    fn: '*infer_experiment.txt'
-    contents: 'Fraction of reads explained by'
+    - fn: '*infer_experiment.txt'
+    - contents: 'Fraction of reads explained by'
 salmon/meta:
     fn: 'meta_info.json'
 salmon/fld:
@@ -165,16 +166,22 @@ skewer:
     contents: 'maximum error ratio allowed (-r):'
 slamdunk/summary:
     contents: '# slamdunk summary'
+    num_lines: 1
 slamdunk/PCA:
     contents: '# slamdunk PCA'
+    num_lines: 1
 slamdunk/rates:
     contents: '# slamdunk rates'
+    num_lines: 1
 slamdunk/utrrates:
     contents: '# slamdunk utrrates'
+    num_lines: 1
 slamdunk/tcperreadpos:
     contents: '# slamdunk tcperreadpos'
+    num_lines: 1
 slamdunk/tcperutrpos:
     contents: '# slamdunk tcperutr'
+    num_lines: 1
 snpeff:
     contents: 'SnpEff_version'
 sortmerna:
