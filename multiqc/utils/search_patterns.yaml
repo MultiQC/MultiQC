@@ -4,8 +4,10 @@
 
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
+    shared: true
 bcftools/stats:
     contents: 'This file was produced by bcftools stats'
+    shared: true
 bismark/align:
     fn: '*_[SP]E_report.txt'
 bismark/dedup:
@@ -47,6 +49,7 @@ featurecounts:
     fn: '*.summary'
 gatk/varianteval:
     contents: '#:GATKReport'
+    shared: true
 goleft_indexcov/roc:
     fn: '*-indexcov.roc'
 goleft_indexcov/ped:
@@ -57,6 +60,7 @@ hicup:
     fn: 'HiCUP_summary_report*'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
+    shared: true
 methylQA:
     fn: '*.report'
 peddy/summary_table:
@@ -74,10 +78,8 @@ picard/basedistributionbycycle:
     contents: 'picard.analysis.BaseDistributionByCycleMetrics'
     shared: true
 picard/gcbias:
-    - contents: 'picard.analysis.GcBiasDetailMetrics'
-      shared: true
-    - contents: 'picard.analysis.GcBiasSummaryMetrics'
-      shared: true
+    contents: 'picard.analysis.GcBias'
+    shared: true
 picard/hsmetrics:
     contents: 'picard.analysis.directed.HsMetrics'
     shared: true
@@ -103,9 +105,10 @@ picard/wgs_metrics:
     shared: true
 preseq:
     - contents: 'EXPECTED_DISTINCT'
+      max_filesize: 500000
     - contents: 'distinct_reads'
+      max_filesize: 500000
 prokka:
-    fn: '*.txt'
     contents: 'contigs:'
     num_lines: 2
 qualimap/bamqc/genome_results:
@@ -132,39 +135,48 @@ rna_seqc/correlation:
     fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
+    max_filesize: 500000
 rseqc/gene_body_coverage:
     fn: '*.geneBodyCoverage.txt'
 rseqc/inner_distance:
     fn: '*.inner_distance_freq.txt'
 rseqc/junction_annotation:
     contents: 'Partial Novel Splicing Junctions:'
+    max_filesize: 500000
 rseqc/junction_saturation:
     fn: '*.junctionSaturation_plot.r'
 rseqc/read_gc:
     fn: '*.GC.xls'
 rseqc/read_distribution:
     contents: 'Group               Total_bases         Tag_count           Tags/Kb'
+    max_filesize: 500000
 rseqc/read_duplication_pos:
     fn: '*.pos.DupRate.xls'
 rseqc/infer_experiment:
     - fn: '*infer_experiment.txt'
     - contents: 'Fraction of reads explained by'
+      max_filesize: 500000
 salmon/meta:
     fn: 'meta_info.json'
 salmon/fld:
     fn: 'flenDist.txt'
 samblaster:
     contents: 'samblaster: Version'
+    shared: true
 samtools/stats:
     contents: 'This file was produced by samtools stats'
+    shared: true
 samtools/flagstat:
     contents: 'in total (QC-passed reads + QC-failed reads)'
+    shared: true
 samtools/idxstats:
     fn: '*idxstat*'
 samtools/rmdup:
     contents: '[bam_rmdup'
+    shared: true
 skewer:
     contents: 'maximum error ratio allowed (-r):'
+    shared: true
 slamdunk/summary:
     contents: '# slamdunk summary'
     num_lines: 1
@@ -185,8 +197,10 @@ slamdunk/tcperutrpos:
     num_lines: 1
 snpeff:
     contents: 'SnpEff_version'
+    max_filesize: 1000000
 sortmerna:
     contents: 'Minimal SW score based on E-value'
+    shared: true
 star:
     fn: '*Log.final.out'
 star_genecounts:
@@ -195,3 +209,4 @@ tophat:
     fn: '*align_summary.txt'
 trimmomatic:
     contents: 'Trimmomatic'
+    shared: true
