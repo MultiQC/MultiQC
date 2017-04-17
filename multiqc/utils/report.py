@@ -6,6 +6,7 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import click
 import fnmatch
 import io
 import json
@@ -151,10 +152,11 @@ def get_filelist():
 
         return fn_matched and contents_matched
 
-    # Go through the analysis directories
+    # Go through the analysis directories and get file list
+    sfiles = []
     for path in config.analysis_dir:
         if os.path.isfile(path):
-            add_file({'fn': os.path.basename(path), 'root': os.path.dirname(path)})
+            sfiles.append([os.path.basename(path), os.path.dirname(path)])
         elif os.path.isdir(path):
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
@@ -182,10 +184,13 @@ def get_filelist():
                 if len(p_matches) > 0:
                     logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
                     continue
-
                 # Search filenames in this directory
                 for fn in filenames:
-                    add_file(fn, root)
+                    sfiles.append([fn, root])
+    # Search through collected files
+    with click.progressbar(sfiles, label="Searching {} files..".format(len(sfiles))) as searchfiles:
+        for sf in searchfiles:
+            add_file(sf[0], sf[1])
 
 
 def data_sources_tofile ():
