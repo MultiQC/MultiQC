@@ -189,7 +189,7 @@ module_order:
     - 'cutadapt'
     - 'trimmomatic'
     - 'skewer'
+    - 'sortmerna'
     - 'fastq_screen'
     - 'fastqc'
     - 'clusterflow'
-    - 'sortmerna'

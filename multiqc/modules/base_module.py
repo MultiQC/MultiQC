@@ -41,8 +41,7 @@ class BaseMultiqcModule(object):
                  As yield is used, the results can be iterated over without loading all files at once
         """
 
-        # Old, depreciated syntax support
-        # Can also be used by Custom Content
+        # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
             report.files[self.name] = list()
             for sf in report.searchfiles:
@@ -66,9 +65,10 @@ class BaseMultiqcModule(object):
                     with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
                         if filehandles:
                             f['f'] = fh
+                            yield f
                         elif filecontents:
                             f['f'] = fh.read()
-                            yield f # Yield inside the with, so file still open
+                            yield f
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     if config.report_readerrors:
                         logger.debug("Couldn't open filehandle when returning file: {}".format(f['fn']))
