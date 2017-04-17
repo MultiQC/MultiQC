@@ -48,15 +48,17 @@ def custom_module_classes():
         if 'data' in f:
             cust_mods[c_id]['data'].update( f['data'] )
             cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
+            cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
             continue
 
         # Custom Content ID has search patterns in the config
         if c_id in report.files:
             cust_mods[c_id]['config'] = f
+            cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
             search_patterns.append(c_id)
             continue
 
-        # We should have had sometihng by now
+        # We should have had something by now
         log.warn("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
 
     # Now go through each of the file search patterns
@@ -103,12 +105,15 @@ def custom_module_classes():
                 s_name = None
                 if m_config is not None:
                     c_id = m_config.get('id', k)
-                    cust_mods[c_id]['config'].update( m_config )
-                    m_config = cust_mods[c_id]['config']
+                    # Update the base config with anything parsed from the file
+                    b_config = cust_mods.get(c_id, {}).get('config', {})
+                    b_config.update( m_config )
+                    # Now set the module config to the merged dict
+                    m_config = dict(b_config)
                     s_name = m_config.get('sample_name')
                 else:
                     c_id = k
-                    m_config = dict(cust_mods[c_id]['config'])
+                    m_config = cust_mods.get(c_id, {}).get('config', {})
 
                 # Guess sample name if not given
                 if s_name is None:
