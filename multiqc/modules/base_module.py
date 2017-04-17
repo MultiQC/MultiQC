@@ -41,8 +41,21 @@ class BaseMultiqcModule(object):
                  As yield is used, the results can be iterated over without loading all files at once
         """
 
-        if not isinstance(sp_key, str):
-            logger.warn("Depreciated: Please use new style for find_log_files()")
+        # Old, depreciated syntax support
+        # Can also be used by Custom Content
+        if isinstance(sp_key, dict):
+            report.files[self.name] = list()
+            for sf in report.searchfiles:
+                if report.search_file(sp_key, {'fn': sf[0], 'root': sf[1]}):
+                    report.files[self.name].append({'fn': sf[0], 'root': sf[1]})
+            sp_key = self.name
+            logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)
+            if len(report.files[self.name]) > 0:
+                logger.warn(logwarn)
+            else:
+                logger.debug(logwarn)
+        elif not isinstance(sp_key, str):
+            logger.warn("Did not understand find_log_files() search key")
             return
 
         for f in report.files[sp_key]:

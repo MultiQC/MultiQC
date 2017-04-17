@@ -160,7 +160,7 @@ module_order:
     - 'qualimap'
     - 'preseq'
     - 'quast'
-    - 'rna-seqc'
+    - 'rna_seqc'
     - 'rseqc'
     - 'busco'
     - 'goleft_indexcov'

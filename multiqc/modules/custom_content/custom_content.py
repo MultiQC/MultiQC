@@ -406,7 +406,7 @@ def _parse_txt(f, conf):
 
     # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
-        # Line graph - row, num : num
+        # Line graph - num : num
         if (conf.get('plot_type') is None and type(d[0][0]) == float and type(d[0][1]) == float):
             conf['plot_type'] = 'linegraph'
         # Bar graph - str : num

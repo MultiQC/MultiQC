@@ -40,7 +40,10 @@ saved_raw_data = dict()
 searchfiles = list()
 files = dict()
 def get_filelist():
-
+    """
+    Go through all supplied search directories and assembly a master
+    list of files to search. Then fire search functions for each file.
+    """
     # Prep search patterns
     spatterns = [{},{},{},{}]
     for key, sps in config.sp.items():
@@ -99,60 +102,6 @@ def get_filelist():
                         else:
                             break
 
-    def search_file (pattern, f):
-        """
-        Function to searach a single file for a single search pattern.
-        """
-        fn_matched = False
-        contents_matched = False
-
-        # Use mimetypes to exclude binary files where possible
-        (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
-        if encoding is not None:
-            return False
-        if ftype is not None and ftype.startswith('image'):
-            return False
-
-        # Search pattern specific filesize limit
-        if pattern.get('max_filesize') is not None and 'filesize' in f:
-            if f['filesize'] > pattern.get('max_filesize'):
-                return False
-
-        # Search by file name (glob)
-        if pattern.get('fn') is not None:
-            if fnmatch.fnmatch(f['fn'], pattern['fn']):
-                fn_matched = True
-                if pattern.get('contents') is None:
-                    return True
-
-        # Search by file name (regex)
-        if pattern.get('fn_re') is not None:
-            if re.match( pattern['fn_re'], f['fn']):
-                fn_matched = True
-                if pattern.get('contents') is None:
-                    return True
-
-        # Search by file contents
-        if pattern.get('contents') is not None:
-            try:
-                with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
-                    l = 1
-                    for line in f:
-                        if pattern['contents'] in line:
-                            contents_matched = True
-                            if pattern.get('fn') is None and pattern.get('fn_re') is None:
-                                return True
-                            break
-                        if pattern.get('num_lines') and l >= pattern.get('num_lines'):
-                            break
-                        l += 1
-            except (IOError, OSError, ValueError, UnicodeDecodeError):
-                if config.report_readerrors:
-                    logger.debug("Couldn't read file when looking for output: {}".format(fn))
-                    return False
-
-        return fn_matched and contents_matched
-
     # Go through the analysis directories and get file list
     for path in config.analysis_dir:
         if os.path.isfile(path):
@@ -192,6 +141,62 @@ def get_filelist():
         for sf in sfiles:
             add_file(sf[0], sf[1])
 
+def search_file (pattern, f):
+    """
+    Function to searach a single file for a single search pattern.
+    """
+    # import json
+    # print(json.dumps(pattern, indent=4))
+    # print(json.dumps(f, indent=4))
+    fn_matched = False
+    contents_matched = False
+
+    # Use mimetypes to exclude binary files where possible
+    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+    if encoding is not None:
+        return False
+    if ftype is not None and ftype.startswith('image'):
+        return False
+
+    # Search pattern specific filesize limit
+    if pattern.get('max_filesize') is not None and 'filesize' in f:
+        if f['filesize'] > pattern.get('max_filesize'):
+            return False
+
+    # Search by file name (glob)
+    if pattern.get('fn') is not None:
+        if fnmatch.fnmatch(f['fn'], pattern['fn']):
+            fn_matched = True
+            if pattern.get('contents') is None:
+                return True
+
+    # Search by file name (regex)
+    if pattern.get('fn_re') is not None:
+        if re.match( pattern['fn_re'], f['fn']):
+            fn_matched = True
+            if pattern.get('contents') is None:
+                return True
+
+    # Search by file contents
+    if pattern.get('contents') is not None:
+        try:
+            with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
+                l = 1
+                for line in f:
+                    if pattern['contents'] in line:
+                        contents_matched = True
+                        if pattern.get('fn') is None and pattern.get('fn_re') is None:
+                            return True
+                        break
+                    if pattern.get('num_lines') and l >= pattern.get('num_lines'):
+                        break
+                    l += 1
+        except (IOError, OSError, ValueError, UnicodeDecodeError):
+            if config.report_readerrors:
+                logger.debug("Couldn't read file when looking for output: {}".format(f['fn']))
+                return False
+
+    return fn_matched and contents_matched
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])
