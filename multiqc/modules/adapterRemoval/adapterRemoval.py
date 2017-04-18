@@ -8,8 +8,7 @@ import logging
 import copy
 
 from multiqc import config
-from multiqc.plots import bargraph
-from multiqc.plots import linegraph
+from multiqc.plots import bargraph, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -196,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data_pattern['truncated_cp'] = 9
                 data_pattern['retained'] = 10
 
-        for title, key in data_pattern.iteritems():
+        for title, key in data_pattern.items():
             tmp = trim_data[key]
             value = tmp.split(': ')[1]
             self.result_data[title] = int(value)

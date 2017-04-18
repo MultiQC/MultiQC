@@ -30,13 +30,13 @@ Currently, supported tools include:
 
 |Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |-----------------------------|------------------------|---------------------------|----------------------|
-|[Cluster Flow][clusterflow]  | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa] |
-|[Cutadapt][cutadapt]         | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]       |
-|[FastQC][fastqc]             | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]     |
-|[FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap] |
-|[Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]       |
-|[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
-|[Adapter Removal][adapterremoval] | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
+|[Adapter Removal][adapterremoval] | [Bismark][bismark]| [Bamtools][bamtools]      | [methylQA][methylqa] |
+|[Cluster Flow][clusterflow]  | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]       |
+|[Cutadapt][cutadapt]         | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]     |
+|[FastQC][fastqc]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap] |
+|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]       |
+|[Skewer][skewer]             | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
+|[Trimmomatic][trimmomatic]   | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
 |                             | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
 |                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
 |                             |                        | [Subread featureCounts][featurecounts] |         |
