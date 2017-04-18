@@ -98,9 +98,14 @@ class MultiqcModule(BaseMultiqcModule):
                         self.adapter_removal_data[self.__read_type]['collapsed'][self.s_name] = parsed_data
                     else:
                         self.adapter_removal_data[self.__read_type]['noncollapsed'][self.s_name] = parsed_data
+        counts = [
+            len(self.adapter_removal_data['single']),
+            len(self.adapter_removal_data['paired']['collapsed']),
+            len(self.adapter_removal_data['paired']['noncollapsed']),
+        ]
 
-        if len(self.adapter_removal_data['single']) == 0 and len(self.adapter_removal_data['paired']) == 0:
-            log.warning("Could not find any reports in {}".format(config.analysis_dir))
+        if sum(counts) == 0:
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         elements_count = len(self.adapter_removal_data['single']) + \
