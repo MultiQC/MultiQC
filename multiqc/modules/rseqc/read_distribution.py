@@ -38,7 +38,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files(config.sp['rseqc']['read_distribution']):
+    for f in self.find_log_files('rseqc/read_distribution'):
         d = dict()
         for k, r in first_regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)

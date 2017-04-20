@@ -32,23 +32,23 @@ def parse_reports(self):
 
     # General stats - genome_results.txt
     self.qualimap_bamqc_genome_results = dict()
-    for f in self.find_log_files(sp['genome_results']):
+    for f in self.find_log_files('qualimap/bamqc/genome_results'):
         parse_genome_results(self, f)
 
     # Coverage - coverage_histogram.txt
     self.qualimap_bamqc_coverage_hist = dict()
-    for f in self.find_log_files(sp['coverage'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/coverage', filehandles=True):
         parse_coverage(self, f)
 
     # Insert size - insert_size_histogram.txt
     self.qualimap_bamqc_insert_size_hist = dict()
-    for f in self.find_log_files(sp['insert_size'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/insert_size', filehandles=True):
         parse_insert_size(self, f)
 
     # GC distribution - mapped_reads_gc-content_distribution.txt
     self.qualimap_bamqc_gc_content_dist = dict()
     self.qualimap_bamqc_gc_by_species = dict()  # {'HUMAN': data_dict, 'MOUSE': data_dict}
-    for f in self.find_log_files(sp['gc_dist'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/gc_dist', filehandles=True):
         parse_gc_dist(self, f)
 
     # Make the plots for the report

@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie2_data = dict()
         self.num_se = 0
         self.num_pe = 0
-        for f in self.find_log_files(config.sp['bowtie2'], filehandles=True):
+        for f in self.find_log_files('bowtie2', filehandles=True):
             # Check that this isn't actually Bismark using bowtie
             if f['f'].read().find('bisulfite', 0) < 0:
                 f['f'].seek(0)

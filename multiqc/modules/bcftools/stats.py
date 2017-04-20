@@ -26,7 +26,7 @@ class StatsReportMixin():
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
         depth_data = dict()
-        for f in self.find_log_files(config.sp['bcftools']['stats']):
+        for f in self.find_log_files('bcftools/stats'):
             s_names = list()
             for line in f['f'].splitlines():
                 s = line.split("\t")

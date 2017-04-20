@@ -43,6 +43,13 @@ class BaseMultiqcModule(object):
                  and either the file contents or file handle for the current matched file.
                  As yield is used, the results can be iterated over without loading all files at once
         """
+        if isinstance(patterns, str):
+            module = patterns
+            patterns = config.sp
+            for sub in module.split('/'):
+                patterns = patterns[sub]
+        else:
+            module = None
 
         # Get the search parameters
         fn_match = None
@@ -61,6 +68,10 @@ class BaseMultiqcModule(object):
             # Set up vars
             root = f['root']
             fn = f['fn']
+            mod = f['mod']
+
+            if mod is not [] and module not in mod:
+                continue
 
             # Make a sample name from the filename
             s_name = self.clean_s_name(fn, root)

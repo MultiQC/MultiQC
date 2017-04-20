@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any QUAST reports
         self.quast_data = dict()
-        for f in self.find_log_files(config.sp['quast']):
+        for f in self.find_log_files('quast'):
             self.parse_quast_log(f)
 
         if len(self.quast_data) == 0:

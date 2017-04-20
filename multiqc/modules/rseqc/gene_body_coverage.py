@@ -24,7 +24,7 @@ def parse_reports(self):
     # and add these to the general stats table?
 
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['gene_body_coverage']):
+    for f in self.find_log_files('rseqc/gene_body_coverage'):
 
         # RSeQC >= v2.4
         if f['f'].startswith('Percentile'):

@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Summary Reports
         self.slamdunk_data = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['summary'], filehandles = True):
+        for f in self.find_log_files('slamdunk/summary', filehandles = True):
             self.parseSummary(f)
         if len(self.slamdunk_data) > 0:
             self.slamdunkGeneralStatsTable()
@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # PCA Plots
         self.PCA_data = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['PCA'], filehandles = True):
+        for f in self.find_log_files('slamdunk/PCA', filehandles = True):
             self.parsePCA(f)
         if len(self.PCA_data) > 0:
             self.slamdunkPCAPlot()
@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # UTR Rate reports
         self.utrates_data = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
+        for f in self.find_log_files('slamdunk/utrrates', filehandles = True):
             self.parseUtrRates(f)
         if len(self.utrates_data) > 0:
             self.write_data_file(self.utrates_data, 'multiqc_slamdunk_utrrates')
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Read rate reports
         self.rates_data_plus = dict()
         self.rates_data_minus = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
+        for f in self.find_log_files('slamdunk/rates', filehandles = True):
             self.parseSlamdunkRates(f)
         if len(self.rates_data_plus) > 0:
             self.write_data_file(self.rates_data_plus, 'multiqc_slamdunk_readrates_plus')
@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.nontc_per_readpos_minus = dict()
         self.tc_per_readpos_plus = dict()
         self.tc_per_readpos_minus = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['tcperreadpos'], filehandles = True):
+        for f in self.find_log_files('slamdunk/tcperreadpos', filehandles = True):
             self.parseSlamdunkTCPerReadpos(f)
         if len(self.tc_per_readpos_plus) > 0:
             self.write_data_file(self.tc_per_readpos_plus, 'multiqc_slamdunk_tcperreadpos_plus')
@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.nontc_per_utrpos_minus = dict()
         self.tc_per_utrpos_plus = dict()
         self.tc_per_utrpos_minus = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['tcperutrpos'], filehandles = True):
+        for f in self.find_log_files('slamdunk/tcperutrpos', filehandles = True):
             self.parseSlamdunkTCPerUtrpos(f)
         if len(self.nontc_per_utrpos_plus) > 0:
             self.write_data_file(self.tc_per_utrpos_plus, 'multiqc_slamdunk_tcperutrpos_plus')
