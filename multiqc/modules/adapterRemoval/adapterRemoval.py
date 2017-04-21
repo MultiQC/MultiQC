@@ -5,7 +5,6 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import copy
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
@@ -27,63 +26,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.__read_type = None
         self.__collapsed = None
         self.s_name = None
-        self.adapter_removal_data = {
-            'single': dict(),
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
+        self.adapter_removal_data = {}
+
+        self.len_dist_plot_data = {
+            'mate1': dict(),
+            'mate2': dict(),
+            'singleton': dict(),
+            'collapsed': dict(),
+            'collapsed_truncated': dict(),
+            'discarged': dict(),
+            'all': dict(),
         }
 
-        # variable definition for single- and paired-end reads
-        self.arc_mate1 = {
-            'single': dict(),
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
-        }
-        self.arc_discarged = {
-            'single': dict(),
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
-        }
-        self.arc_all = {
-            'single': dict(),
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
-        }
-
-        # variable definition for paired-end only reads
-        self.arc_mate2 = {
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
-        }
-        self.arc_singleton = {
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
-        }
-        self.arc_collapsed = {
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
-        }
-        self.arc_collapsed_truncated = {
-            'paired': {
-                'collapsed': dict(),
-                'noncollapsed': dict(),
-            }
-        }
-
+        parsed_data = None
         for f in self.find_log_files(config.sp['adapterRemoval'], filehandles=True):
             self.s_name = f['s_name']
             try:
@@ -91,38 +46,23 @@ class MultiqcModule(BaseMultiqcModule):
             except UserWarning:
                 continue
             if parsed_data is not None:
-                if self.__read_type == 'single':
-                    self.adapter_removal_data[self.__read_type][self.s_name] = parsed_data
-                else:
-                    if self.__collapsed:
-                        self.adapter_removal_data[self.__read_type]['collapsed'][self.s_name] = parsed_data
-                    else:
-                        self.adapter_removal_data[self.__read_type]['noncollapsed'][self.s_name] = parsed_data
-        counts = [
-            len(self.adapter_removal_data['single']),
-            len(self.adapter_removal_data['paired']['collapsed']),
-            len(self.adapter_removal_data['paired']['noncollapsed']),
-        ]
+                self.adapter_removal_data[self.s_name] = parsed_data
 
-        if sum(counts) == 0:
+        if len(self.adapter_removal_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
-        elements_count = len(self.adapter_removal_data['single']) + \
-                         len(self.adapter_removal_data['paired']['noncollapsed']) + \
-                         len(self.adapter_removal_data['paired']['collapsed'])
-
-        log.info("Found {} reports".format(elements_count))
+        log.info("Found {} reports".format(len(self.adapter_removal_data)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.adapter_removal_data['single'], 'multiqc_adapter_removal_single_end')
-        self.write_data_file(self.adapter_removal_data['paired']['noncollapsed'], 'multiqc_adapter_removal_paired_end_noncollapsed')
-        self.write_data_file(self.adapter_removal_data['paired']['collapsed'], 'multiqc_adapter_removal_paired_end_collapsed')
+        self.write_data_file(self.adapter_removal_data, 'multiqc_adapter_removal')
+
+        # add data to Basic Stats Table
+        self.adapter_removal_stats_table()
 
         # Start the sections
         self.sections = list()
 
-        self.adapter_removal_counts_chart()
         self.adapter_removal_retained_chart()
         self.adapter_removal_length_dist_plot()
 
@@ -134,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
             'aligned': None,
             'reads_total': None,
             'retained': None,
-            'discarded': None,
+            'percent_aligned': None,
         }
 
         settings_data = {'header': []}
@@ -183,6 +123,8 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
     def set_trim_stat(self, trim_data):
+        required = ['total', 'unaligned', 'aligned', 'discarded_m1', 'singleton_m1', 'retained', 'discarded_m2', 'singleton_m2',
+                    'full-length_cp', 'truncated_cp']
         data_pattern = {'total': 0,
                         'unaligned': 1,
                         'aligned': 2,
@@ -200,10 +142,13 @@ class MultiqcModule(BaseMultiqcModule):
                 data_pattern['truncated_cp'] = 9
                 data_pattern['retained'] = 10
 
-        for title, key in data_pattern.items():
-            tmp = trim_data[key]
-            value = tmp.split(': ')[1]
-            self.result_data[title] = int(value)
+        for field in required:
+            if field in data_pattern:
+                tmp = trim_data[data_pattern[field]]
+                value = tmp.split(': ')[1]
+                self.result_data[field] = int(value)
+            else:
+                self.result_data[field] = 0
 
         reads_total = self.result_data['total']
         aligned_total = self.result_data['aligned']
@@ -218,119 +163,77 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data['reads_total'] = reads_total
         self.result_data['discarded_total'] = reads_total - self.result_data['retained']
 
-        if self.__read_type == 'paired':
-            self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
+        self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
+        self.result_data['percent_aligned'] = round((float(self.result_data['aligned']) * 100.0) / float(self.result_data['total']), 2)
 
     def set_len_dist(self, len_dist_data):
 
         for line in len_dist_data[1:]:
             l_data = line.rstrip('\n').split('\t')
-            l_data = map(int, l_data)
+            l_data = list(map(int, l_data))
+
+            # initialize file name
+            if self.s_name not in self.len_dist_plot_data['mate1']:
+                self.len_dist_plot_data['mate1'][self.s_name] = dict()
+                self.len_dist_plot_data['mate2'][self.s_name] = dict()
+                self.len_dist_plot_data['singleton'][self.s_name] = dict()
+                self.len_dist_plot_data['collapsed'][self.s_name] = dict()
+                self.len_dist_plot_data['collapsed_truncated'][self.s_name] = dict()
+                self.len_dist_plot_data['discarged'][self.s_name] = dict()
+                self.len_dist_plot_data['all'][self.s_name] = dict()
+
             if self.__read_type == 'single':
                 if not self.__collapsed:
-                    if self.s_name not in self.arc_mate1['single']:
-                        self.arc_mate1['single'][self.s_name] = dict()
-                    self.arc_mate1['single'][self.s_name][l_data[0]] = l_data[1]
-
-                    if self.s_name not in self.arc_discarged['single']:
-                        self.arc_discarged['single'][self.s_name] = dict()
-                    self.arc_discarged['single'][self.s_name][l_data[0]] = l_data[2]
-
-                    if self.s_name not in self.arc_all['single']:
-                        self.arc_all['single'][self.s_name] = dict()
-                    self.arc_all['single'][self.s_name][l_data[0]] = l_data[3]
+                    self.len_dist_plot_data['mate1'][self.s_name][l_data[0]] = l_data[1]
+                    self.len_dist_plot_data['mate2'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[2]
+                    self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[3]
                 else:
                     # this case should not be reached (see case at method set_ar_type())
                     pass
             else:
                 if not self.__collapsed:
-                    if self.s_name not in self.arc_mate1['paired']['noncollapsed']:
-                        self.arc_mate1['paired']['noncollapsed'][self.s_name] = dict()
-                    self.arc_mate1['paired']['noncollapsed'][self.s_name][l_data[0]] = l_data[1]
-
-                    if self.s_name not in self.arc_mate2['paired']['noncollapsed']:
-                        self.arc_mate2['paired']['noncollapsed'][self.s_name] = dict()
-                    self.arc_mate2['paired']['noncollapsed'][self.s_name][l_data[0]] = l_data[2]
-
-                    if self.s_name not in self.arc_singleton['paired']['noncollapsed']:
-                        self.arc_singleton['paired']['noncollapsed'][self.s_name] = dict()
-                    self.arc_singleton['paired']['noncollapsed'][self.s_name][l_data[0]] = l_data[3]
-
-                    if self.s_name not in self.arc_discarged['paired']['noncollapsed']:
-                        self.arc_discarged['paired']['noncollapsed'][self.s_name] = dict()
-                    self.arc_discarged['paired']['noncollapsed'][self.s_name][l_data[0]] = l_data[4]
-
-                    if self.s_name not in self.arc_all['paired']['noncollapsed']:
-                        self.arc_all['paired']['noncollapsed'][self.s_name] = dict()
-                    self.arc_all['paired']['noncollapsed'][self.s_name][l_data[0]] = l_data[5]
+                    self.len_dist_plot_data['mate1'][self.s_name][l_data[0]] = l_data[1]
+                    self.len_dist_plot_data['mate2'][self.s_name][l_data[0]] = l_data[2]
+                    self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = l_data[3]
+                    self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[4]
+                    self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[5]
                 else:
-                    if self.s_name not in self.arc_mate1['paired']['collapsed']:
-                        self.arc_mate1['paired']['collapsed'][self.s_name] = dict()
-                    self.arc_mate1['paired']['collapsed'][self.s_name][l_data[0]] = l_data[1]
+                    self.len_dist_plot_data['mate1'][self.s_name][l_data[0]] = l_data[1]
+                    self.len_dist_plot_data['mate2'][self.s_name][l_data[0]] = l_data[2]
+                    self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = l_data[3]
+                    self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = l_data[4]
+                    self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = l_data[5]
+                    self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[6]
+                    self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[7]
 
-                    if self.s_name not in self.arc_mate2['paired']['collapsed']:
-                        self.arc_mate2['paired']['collapsed'][self.s_name] = dict()
-                    self.arc_mate2['paired']['collapsed'][self.s_name][l_data[0]] = l_data[2]
+    def adapter_removal_stats_table(self):
 
-                    if self.s_name not in self.arc_singleton['paired']['collapsed']:
-                        self.arc_singleton['paired']['collapsed'][self.s_name] = dict()
-                    self.arc_singleton['paired']['collapsed'][self.s_name][l_data[0]] = l_data[3]
-
-                    if self.s_name not in self.arc_collapsed['paired']['collapsed']:
-                        self.arc_collapsed['paired']['collapsed'][self.s_name] = dict()
-                    self.arc_collapsed['paired']['collapsed'][self.s_name][l_data[0]] = l_data[4]
-
-                    if self.s_name not in self.arc_collapsed_truncated['paired']['collapsed']:
-                        self.arc_collapsed_truncated['paired']['collapsed'][self.s_name] = dict()
-                    self.arc_collapsed_truncated['paired']['collapsed'][self.s_name][l_data[0]] = l_data[5]
-
-                    if self.s_name not in self.arc_discarged['paired']['collapsed']:
-                        self.arc_discarged['paired']['collapsed'][self.s_name] = dict()
-                    self.arc_discarged['paired']['collapsed'][self.s_name][l_data[0]] = l_data[6]
-
-                    if self.s_name not in self.arc_all['paired']['collapsed']:
-                        self.arc_all['paired']['collapsed'][self.s_name] = dict()
-                    self.arc_all['paired']['collapsed'][self.s_name][l_data[0]] = l_data[7]
-
-    def adapter_removal_counts_chart(self):
-
-        cats = OrderedDict()
-        cats['aligned_total'] = {'name': 'with adapter'}
-        cats['unaligned_total'] = {'name': 'without adapter'}
-        pconfig = {
-            'title': 'Adapter Alignments',
-            'ylab': '# Reads',
-            'hide_zero_cats': False,
-            'cpswitch_counts_label': 'Number of Reads'
+        headers = OrderedDict()
+        headers['percent_aligned'] = {
+                'title': '% Trimmed',
+                'description': '% trimmed reads',
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'scale': 'RdYlGn',
+                'format': '{:.1f}%',
+                'shared_key': 'percent_aligned',
         }
-
-        # plot different results if exists
-        if self.adapter_removal_data['single']:
-            pconfig['id'] = 'ar_alignment_plot_se'
-            self.sections.append({
-                'name': 'Adapter Alignments Single-End',
-                'anchor': 'ar_alignment_se',
-                'content': '<p>The proportions of reads with and without adapter.</p>' +
-                           bargraph.plot(self.adapter_removal_data['single'], cats, pconfig)
-            })
-
-        if self.adapter_removal_data['paired']['noncollapsed']:
-            pconfig['id'] = 'ar_alignment_plot_penc'
-            self.sections.append({
-                'name': 'Adapter Alignments Paired-End Noncollapsed',
-                'anchor': 'adapter_removal_alignment_penc',
-                'content': '<p>The proportions of reads with and without adapter.</p>' +
-                           bargraph.plot(self.adapter_removal_data['paired']['noncollapsed'], cats, pconfig)
-            })
-
-        if self.adapter_removal_data['paired']['collapsed']:
-            pconfig['id'] = 'ar_alignment_plot_pec'
-            self.sections.append({
-                'name': 'Adapter Alignments Paired-End Collapsed',
-                'anchor': 'adapter_removal_alignment_pec',
-                'content': '<p>The proportions of reads with and without adapter.</p>' +
-                           bargraph.plot(self.adapter_removal_data['paired']['collapsed'], cats, pconfig)
-            })
+        headers['aligned_total'] = {
+                'title': 'Total Trimmed',
+                'description': 'total trimmed reads',
+                'min': 0,
+                'scale': 'PuBu',
+                'shared_key': 'aligned_total'
+        }
+        print(self.adapter_removal_data)
+        self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_retained_chart(self):
 
@@ -341,188 +244,54 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        # plot different results if exists
-        if self.adapter_removal_data['single']:
-            cats_se = OrderedDict()
-            cats_se['singleton_m1'] = {
-                'name': 'singleton mate1',
-                'color': '#305ead'
-            }
-            cats_se['discarded_m1'] = {
-                'name': 'discarded mate1',
-                'color': '#bd5dbf'
-            }
-            pconfig['id'] = 'ar_retained_plot_se'
-            self.sections.append({
-                'name': 'Retained and Discarded Single-End',
-                'anchor': 'adapter_removal_retained_plot_se',
-                'content': '<p>The proportions of retained and discarded reads.</p>' +
-                           bargraph.plot(self.adapter_removal_data['single'], cats_se, pconfig)
-            })
-
-        if self.adapter_removal_data['paired']['noncollapsed']:
-            cats_penc = OrderedDict()
-            cats_penc['singleton_m1'] = {
-                'name': 'singleton mate1',
-                'color': '#305ead'
-            }
-            cats_penc['singleton_m2'] = {
-                'name': 'singleton mate2',
-                'color': '#3b66af'
-            }
-            cats_penc['retained_reads'] = {
-                'name': 'retained read pairs',
-                'color': '#b1b5bc'
-            }
-            cats_penc['discarded_m1'] = {
-                'name': 'discarded mate1',
-                'color': '#e08fc1'
-            }
-            cats_penc['discarded_m2'] = {
-                'name': 'discarded mate2',
-                'color': '#bd5dbf'
-            }
-            pconfig['id'] = 'ar_retained_plot_penc'
-            self.sections.append({
-                'name': 'Retained and Discarded Paired-End Noncollapsed',
-                'anchor': 'adapter_removal_retained_plot_penc',
-                'content': '<p>The proportions of retained and discarded reads.</p>' +
-                           bargraph.plot(self.adapter_removal_data['paired']['noncollapsed'], cats_penc, pconfig)
-            })
-
-        if self.adapter_removal_data['paired']['collapsed']:
-            cats_pec = OrderedDict()
-            cats_pec['singleton_m1'] = {
-                'name': 'singleton mate1',
-                'color': '#305ead'
-            }
-            cats_pec['singleton_m2'] = {
-                'name': 'singleton mate2',
-                'color': '#3b66af'
-            }
-            cats_pec['retained_reads'] = {
-                'name': 'retained read pairs',
-                'color': '#b1b5bc'
-            }
-            cats_pec['full-length_cp'] = {
-                'name': 'full-length collapsed pairs',
-                'color': '#717f99'
-            }
-            cats_pec['truncated_cp'] = {
-                'name': 'truncated collapsed pairs',
-                'color': '#748ab2'
-            }
-            cats_pec['discarded_m1'] = {
-                'name': 'discarded mate1',
-                'color': '#e08fc1'
-            }
-            cats_pec['discarded_m2'] = {
-                'name': 'discarded mate2',
-                'color': '#bd5dbf'
-            }
-            pconfig['id'] = 'ar_retained_plot_pec'
-            self.sections.append({
-                'name': 'Retained and Discarded Paired-End Collapsed',
-                'anchor': 'adapter_removal_retained_plot_pec',
-                'content': '<p>The proportions of retained and discarded reads.</p>' +
-                           bargraph.plot(self.adapter_removal_data['paired']['collapsed'], cats_pec, pconfig)
-            })
+        cats_pec = OrderedDict()
+        cats_pec['singleton_m1'] = {'name': 'singleton mate1'}
+        cats_pec['singleton_m2'] = {'name': 'singleton mate2'}
+        cats_pec['retained_reads'] = {'name': 'retained read pairs'}
+        cats_pec['full-length_cp'] = {'name': 'full-length collapsed pairs'}
+        cats_pec['truncated_cp'] = {'name': 'truncated collapsed pairs'}
+        cats_pec['discarded_m1'] = {'name': 'discarded mate1'}
+        cats_pec['discarded_m2'] = {'name': 'discarded mate2'}
+        pconfig['id'] = 'ar_retained_plot'
+        self.sections.append({
+            'name': 'Retained and Discarded Paired-End Collapsed',
+            'anchor': 'adapter_removal_retained_plot',
+            'content': '<p>The proportions of retained and discarded reads.</p>' +
+                       bargraph.plot(self.adapter_removal_data, cats_pec, pconfig)
+        })
 
     def adapter_removal_length_dist_plot(self):
-
-        config_template = {
+        pconfig = {
             'title': 'Length Distribution',
+            'id': 'ar_lenght_count_plot',
             'ylab': 'Counts',
             'xlab': 'read length',
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            'data_labels': []
+            'data_labels': [
+                {'name': 'Mate1', 'ylab': 'Count'},
+                {'name': 'Mate2', 'ylab': 'Count'},
+                {'name': 'Singleton', 'ylab': 'Count'},
+                {'name': 'Collapsed', 'ylab': 'Count'},
+                {'name': 'Collapsed Truncated', 'ylab': 'Count'},
+                {'name': 'Discarded', 'ylab': 'Count'},
+                {'name': 'All', 'ylab': 'Count'}
+            ]
         }
 
-        pconfig = {
-            'single': copy.deepcopy(config_template),
-            'paired': {
-                'collapsed': copy.deepcopy(config_template),
-                'noncollapsed': copy.deepcopy(config_template),
-            }
-        }
-
-        dl_mate1 = {'name': 'Mate1', 'ylab': 'Count'}
-        dl_mate2 = {'name': 'Mate2', 'ylab': 'Count'}
-        dl_singleton = {'name': 'Singleton', 'ylab': 'Count'}
-        dl_collapsed = {'name': 'Collapsed', 'ylab': 'Count'}
-        dl_collapsed_truncated = {'name': 'Collapsed Truncated', 'ylab': 'Count'}
-        dl_discarded = {'name': 'Discarded', 'ylab': 'Count'}
-        dl_all = {'name': 'All', 'ylab': 'Count'}
-
-        lineplot_data = {
-            'single': None,
-            'paired': {
-                'collapsed': None,
-                'noncollapsed': None,
-            }
-        }
-
-        if self.adapter_removal_data['single']:
-            lineplot_data['single'] = [
-                self.arc_mate1['single'],
-                self.arc_discarged['single'],
-                self.arc_all['single']]
-            pconfig['single']['id'] = 'ar_lenght_count_plot_se'
-            pconfig['single']['data_labels'].extend([
-                dl_mate1,
-                dl_discarded,
-                dl_all])
-            self.sections.append({
-                'name': 'Lenght Distribution Single End',
-                'anchor': 'ar_lenght_count_se',
-                'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
-                           linegraph.plot(lineplot_data['single'], pconfig['single'])
-            })
-
-        if self.adapter_removal_data['paired']['noncollapsed']:
-            lineplot_data['paired']['noncollapsed'] = [
-                self.arc_mate1['paired']['noncollapsed'],
-                self.arc_mate2['paired']['noncollapsed'],
-                self.arc_singleton['paired']['noncollapsed'],
-                self.arc_discarged['paired']['noncollapsed'],
-                self.arc_all['paired']['noncollapsed']]
-            pconfig['paired']['noncollapsed']['id'] = 'ar_lenght_count_plot_penc'
-            pconfig['paired']['noncollapsed']['data_labels'].extend([
-                dl_mate1,
-                dl_mate2,
-                dl_singleton,
-                dl_discarded,
-                dl_all])
-            self.sections.append({
-                'name': 'Lenght Distribution Paired End Noncollapsed',
-                'anchor': 'ar_lenght_count_penc',
-                'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
-                           linegraph.plot(lineplot_data['paired']['noncollapsed'], pconfig['paired']['noncollapsed'])
-            })
-
-        if self.adapter_removal_data['paired']['collapsed']:
-            lineplot_data['paired']['collapsed'] = [
-                self.arc_mate1['paired']['collapsed'],
-                self.arc_mate2['paired']['collapsed'],
-                self.arc_singleton['paired']['collapsed'],
-                self.arc_collapsed['paired']['collapsed'],
-                self.arc_collapsed_truncated['paired']['collapsed'],
-                self.arc_discarged['paired']['collapsed'],
-                self.arc_all['paired']['collapsed']]
-            pconfig['paired']['collapsed']['id'] = 'ar_lenght_count_plot_pec'
-            pconfig['paired']['collapsed']['data_labels'].extend([
-                dl_mate1,
-                dl_mate2,
-                dl_singleton,
-                dl_collapsed,
-                dl_collapsed_truncated,
-                dl_discarded,
-                dl_all])
-            self.sections.append({
-                'name': 'Lenght Distribution Paired End Collapsed',
-                'anchor': 'ar_lenght_count_pec',
-                'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
-                           linegraph.plot(lineplot_data['paired']['collapsed'], pconfig['paired']['collapsed'])
-            })
+        lineplot_data = [
+            self.len_dist_plot_data['mate1'],
+            self.len_dist_plot_data['mate2'],
+            self.len_dist_plot_data['singleton'],
+            self.len_dist_plot_data['collapsed'],
+            self.len_dist_plot_data['collapsed_truncated'],
+            self.len_dist_plot_data['discarged'],
+            self.len_dist_plot_data['all']
+        ]
+        self.sections.append({
+            'name': 'Lenght Distribution Paired End Collapsed',
+            'anchor': 'ar_lenght_count',
+            'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
+                       linegraph.plot(lineplot_data, pconfig)
+        })
