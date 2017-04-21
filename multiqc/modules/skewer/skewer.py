@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data = dict()
         self.skewer_readlen_dist = dict()
 
-        for f in self.find_log_files(config.sp['skewer'], filehandles=True):
+        for f in self.find_log_files('skewer', filehandles=True):
             self.parse_skewer_log(f)
 
         if len(self.skewer_data) == 0:

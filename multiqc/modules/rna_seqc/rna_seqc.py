@@ -24,20 +24,20 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse metrics information.
         self.rna_seqc_metrics = dict()
-        for f in self.find_log_files(config.sp['rna_seqc']['metrics']):
+        for f in self.find_log_files('rna_seqc/metrics'):
             self.parse_metrics(f)
 
         # Parse normalised coverage information.
         self.rna_seqc_norm_high_cov = dict()
         self.rna_seqc_norm_medium_cov = dict()
         self.rna_seqc_norm_low_cov = dict()
-        for f in self.find_log_files(config.sp['rna_seqc']['coverage']):
+        for f in self.find_log_files('rna_seqc/coverage'):
             self.parse_coverage(f)
 
         # Parse correlation matrices
         self.rna_seqc_pearson = None
         self.rna_seqc_spearman = None
-        for f in self.find_log_files(config.sp['rna_seqc']['correlation']):
+        for f in self.find_log_files('rna_seqc/correlation'):
             self.parse_correlation(f)
 
         num_found = max( len(self.rna_seqc_metrics), len(self.rna_seqc_norm_high_cov),

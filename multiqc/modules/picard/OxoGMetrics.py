@@ -20,7 +20,7 @@ def parse_reports(self):
     self.picard_OxoGMetrics_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['oxogmetrics'], filehandles=True):
+    for f in self.find_log_files('picard/oxogmetrics', filehandles=True):
         # We use lists to make sure that we don't overwrite when no data will be parsed
         parsed_data = list()
         sample_names = list()

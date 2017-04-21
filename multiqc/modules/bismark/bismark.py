@@ -80,10 +80,9 @@ class MultiqcModule(BaseMultiqcModule):
             'meth': {'CpG_R1' : {}, 'CHG_R1' : {}, 'CHH_R1' : {}, 'CpG_R2' : {}, 'CHG_R2' : {}, 'CHH_R2' : {}},
             'cov': {'CpG_R1' : {}, 'CHG_R1' : {}, 'CHH_R1' : {}, 'CpG_R2' : {}, 'CHG_R2' : {}, 'CHH_R2' : {}}
         }
-        sp = config.sp['bismark']
 
         # Find and parse bismark alignment reports
-        for f in self.find_log_files(sp['align']):
+        for f in self.find_log_files('bismark/align'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['alignment'])
             if parsed_data is not None:
                 # Calculate percent_aligned - doubles as a good check that stuff has worked
@@ -98,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bismark_data['alignment'][f['s_name']] = parsed_data
 
         # Find and parse bismark deduplication reports
-        for f in self.find_log_files(sp['dedup']):
+        for f in self.find_log_files('bismark/dedup'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['dedup'])
             if parsed_data is not None:
                 if f['s_name'] in self.bismark_data['dedup']:
@@ -107,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bismark_data['dedup'][f['s_name']] = parsed_data
 
         # Find and parse bismark methylation extractor reports
-        for f in self.find_log_files(sp['meth_extract']):
+        for f in self.find_log_files('bismark/meth_extract'):
             parsed_data = self.parse_bismark_report(f['f'], regexes['methextract'])
             s_name = f['s_name']
             if parsed_data is not None:
@@ -117,12 +116,12 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bismark_data['methextract'][s_name] = parsed_data
 
         # Find and parse M-bias plot data
-        for f in self.find_log_files(sp['m_bias'], filehandles=True):
+        for f in self.find_log_files('bismark/m_bias', filehandles=True):
             self.parse_bismark_mbias(f)
             self.add_data_source(f, section='m_bias')
 
         # Find and parse bam2nuc reports
-        for f in self.find_log_files(sp['bam2nuc'], filehandles=True):
+        for f in self.find_log_files('bismark/bam2nuc', filehandles=True):
             self.parse_bismark_bam2nuc(f)
             self.add_data_source(f, section='bam2nuc')
 

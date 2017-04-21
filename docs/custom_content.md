@@ -261,19 +261,17 @@ should be parsed.
 
 As described in the above [_Data as part of MultiQC config_](#data-as-part-of-multiqc-config) section,
 this configuration should be held within a section called `custom_data` with a section-specific id.
-The only difference is that no `data` subsection should be present and the `sp` key _must_ be present.
+The only difference is that no `data` subsection is given and a search pattern for the given id must
+be supplied.
 
-The `sp` key tells MultiQC how to find files. This should have `fn` and/or `contents` under it, as
-described in the [Module search patterns](http://multiqc.info/docs/#module-search-patterns) section
-of the docs.
+Search patterns are added [as with any other module](http://multiqc.info/docs/#module-search-patterns).
+Ensure that the search pattern key is the same as your `custom_data` section ID.
 
 For example:
 ```yaml
 # Other MultiQC config stuff here
 custom_data:
     example_files:
-        sp:
-            fn: 'example_files_*'
         file_format: 'tsv'
         section_name: 'Coverage Decay'
         description: 'This plot comes from files acommpanied by a mutliqc_config.yaml file for configuration'
@@ -284,6 +282,9 @@ custom_data:
             ylab: 'X Coverage'
             ymax: 100
             ymin: 0
+sp:
+    example_files:
+        fn: 'example_files_*'
 ```
 A data file within the MultiQC search directories could then simply look like this:
 

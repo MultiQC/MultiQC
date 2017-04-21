@@ -33,10 +33,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_commands = dict()
         self.clusterflow_runfiles = dict()
 
-        for f in self.find_log_files(config.sp['clusterflow']['logs'], filehandles=True):
+        for f in self.find_log_files('clusterflow/logs', filehandles=True):
             self.parse_clusterflow_logs(f)
             self.add_data_source(f, 'log')
-        for f in self.find_log_files(config.sp['clusterflow']['runfiles'], filehandles=True):
+        for f in self.find_log_files('clusterflow/runfiles', filehandles=True):
             parsed_data = self.parse_clusterflow_runfiles(f)
             if parsed_data is not None:
                 self.clusterflow_runfiles[f['s_name']] = parsed_data
@@ -240,7 +240,13 @@ class MultiqcModule(BaseMultiqcModule):
         elif 'pipeline_start' in data:
             dt_r = re.match(r'(\d{2}):(\d{2}), (\d{2})-(\d{2})-(\d{4})', data['pipeline_start'])
             if dt_r:
-                dt = datetime(dt_r.group(5),dt_r.group(4),dt_r.group(3),dt_r.group(1),dt_r.group(2))
+                dt = datetime.datetime(
+                    int(dt_r.group(5)), # year
+                    int(dt_r.group(4)), # month
+                    int(dt_r.group(3)), # day
+                    int(dt_r.group(1)), # hour
+                    int(dt_r.group(2))  # minute
+                )
 
         # Not a Cluster Flow file (eg. Nextflow .run file)
         if not cf_file:

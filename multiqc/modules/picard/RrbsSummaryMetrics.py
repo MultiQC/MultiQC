@@ -20,7 +20,7 @@ def parse_reports(self):
     self.picard_rrbs_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['rrbs_metrics'], filehandles=True):
+    for f in self.find_log_files('picard/rrbs_metrics', filehandles=True):
         parsed_data = dict()
         s_name = None
         keys = None

@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_exp = dict()
         self.cutadapt_length_obsexp = dict()
 
-        for f in self.find_log_files(config.sp['cutadapt'], filehandles=True):
+        for f in self.find_log_files('cutadapt', filehandles=True):
             self.parse_cutadapt_logs(f)
 
         if len(self.cutadapt_data) == 0:
