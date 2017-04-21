@@ -116,11 +116,12 @@ def parse_reports(self):
             keys['proper-paired_reads_map_to_different_chrom'] = dict(defaults, **{
                         'title': 'Different chrom', 'description': 'Proper-paired reads map to different chrom' })
 
-        self.sections.append({
-            'name': 'Bam Stat',
-            'anchor': 'rseqc-bam_stat',
-            'content': '<p>All numbers reported in millions.</p>'+beeswarm.plot(self.bam_stat_data, keys)
-        })
+        self.add_section (
+            name = 'Bam Stat',
+            anchor = 'rseqc-bam_stat',
+            description = 'All numbers reported in millions.',
+            plot = beeswarm.plot(self.bam_stat_data, keys)
+        )
 
     # Return number of samples found
     return len(self.bam_stat_data)

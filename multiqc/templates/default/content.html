@@ -14,7 +14,9 @@ the output from each module and print it in sections.
   {% for s in m.sections %}
     {% if s['content'] is not none and s['content'] | length > 0 %}
       <div class="mqc-section mqc-section-{{ m.anchor }}">
-        <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
+        {% if s['name'] is not none and s['name'] | length > 0 %}
+          <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
+        {% endif %}
         {{ s['content'] if s['content'] }}
         {{ '<hr>' if not loop.last }}
       </div>

@@ -244,10 +244,10 @@ def report_sections(self):
                     self.general_stats_data[s_name]['{}_x_pc'.format(c)] = 0
 
         # Section 1 - BamQC Coverage Histogram
-        self.sections.append({
-            'name': 'Coverage histogram',
-            'anchor': 'qualimap-coverage-histogram',
-            'content': linegraph.plot(self.qualimap_bamqc_coverage_hist, {
+        self.add_section (
+            name = 'Coverage histogram',
+            anchor = 'qualimap-coverage-histogram',
+            plot = linegraph.plot(self.qualimap_bamqc_coverage_hist, {
                 'id': 'qualimap_coverage_histogram',
                 'title': 'Coverage histogram',
                 'ylab': 'Genome bin counts',
@@ -258,12 +258,12 @@ def report_sections(self):
                 'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y}',
             })
-        })
+        )
         # Section 2 - BamQC cumulative coverage genome fraction
-        self.sections.append({
-            'name': 'Cumulative coverage genome fraction',
-            'anchor': 'qualimap-cumulative-genome-fraction-coverage',
-            'content': linegraph.plot(rates_within_threshs, {
+        self.add_section (
+            name = 'Cumulative coverage genome fraction',
+            anchor = 'qualimap-cumulative-genome-fraction-coverage',
+            plot = linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
                 'title': 'Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',
@@ -275,14 +275,14 @@ def report_sections(self):
                 'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
             })
-        })
+        )
 
     # Section 3 - Insert size histogram
     if len(self.qualimap_bamqc_insert_size_hist) > 0:
-        self.sections.append({
-            'name': 'Insert size histogram',
-            'anchor': 'qualimap-insert-size-histogram',
-            'content': linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
+        self.add_section (
+            name = 'Insert size histogram',
+            anchor = 'qualimap-insert-size-histogram',
+            plot = linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
                 'id': 'qualimap_insert_size',
                 'title': 'Insert size histogram',
                 'ylab': 'Fraction of reads',
@@ -291,7 +291,7 @@ def report_sections(self):
                 'xmin': 0,
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             })
-        })
+        )
 
     # Section 4 - GC-content distribution
     if len(self.qualimap_bamqc_gc_content_dist) > 0:
@@ -304,7 +304,7 @@ def report_sections(self):
                 'lineWidth': 1,
                 'color': ['#000000', '#E89191'][i % 2],
             })
-        content = ''
+        desc = ''
         lg_config = {
             'id': 'qualimap_gc_content',
             'title': 'GC content distribution',
@@ -316,17 +316,18 @@ def report_sections(self):
             'tt_label': '<b>{point.x}%</b>: {point.y:.3f}'
         }
         if len(extra_series) == 1:
-            content += '<p>The dotted line represents a pre-calculated GC destribution for the reference genome.</p>'
+            desc += 'The dotted line represents a pre-calculated GC destribution for the reference genome.'
             lg_config['extra_series'] = extra_series
         elif len(extra_series) > 1:
-            content += '<p>The dotted lines represent pre-calculated GC destributions for the reference genomes.</p>'
+            desc += 'The dotted lines represent pre-calculated GC destributions for the reference genomes.'
             lg_config['extra_series'] = extra_series
 
-        self.sections.append({
-            'name': 'GC content distribution',
-            'anchor': 'qualimap-gc-distribution',
-            'content': content + linegraph.plot(self.qualimap_bamqc_gc_content_dist, lg_config)
-        })
+        self.add_section (
+            name = 'GC content distribution',
+            anchor = 'qualimap-gc-distribution',
+            description = desc,
+            plot = linegraph.plot(self.qualimap_bamqc_gc_content_dist, lg_config)
+        )
 
 def general_stats_headers (self):
     try:

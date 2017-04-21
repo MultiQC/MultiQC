@@ -66,8 +66,6 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
 
-        self.sections = list()
-
         if len(self.star_data) > 0:
 
             # Write parsed report data to a file
@@ -76,25 +74,22 @@ class MultiqcModule(BaseMultiqcModule):
             # Basic Stats Table
             self.star_stats_table()
 
-            if len(self.star_genecounts_unstranded) == 0:
-                # Alignment bar plot - only one section, so add to the module intro
-                self.intro += self.star_alignment_chart()
-            else:
-                self.sections.append({
-                    'name': 'Alignment Scores',
-                    'anchor': 'star_alignments',
-                    'content': self.star_alignment_chart()
-                })
+            # Alignment bar plot
+            self.add_section (
+                name = 'Alignment Scores',
+                anchor = 'star_alignments',
+                plot = self.star_alignment_chart()
+            )
 
         if len(self.star_genecounts_unstranded) > 0:
-            self.sections.append({
-                'name': 'Gene Counts',
-                'anchor': 'star_geneCounts',
-                'content': "<p>Statistics from results generated using <code>--quantMode GeneCounts</code>. " +
+            self.add_section (
+                name = 'Gene Counts',
+                anchor = 'star_geneCounts',
+                description = "Statistics from results generated using <code>--quantMode GeneCounts</code>. " +
                            "The three tabs show counts for unstranded RNA-seq, counts for the 1st read strand " +
-                           "aligned with RNA and counts for the 2nd read strand aligned with RNA.</p>"
-                           + self.star_genecount_chart()
-            })
+                           "aligned with RNA and counts for the 2nd read strand aligned with RNA.",
+                plot = self.star_genecount_chart()
+            )
 
 
     def parse_star_report (self, raw_data):

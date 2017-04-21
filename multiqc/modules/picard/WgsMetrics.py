@@ -169,13 +169,13 @@ def parse_reports(self):
                     {'name': 'Counts Histogram', 'ylab': 'Coverage', 'ymax': maxval}
                 ]
             }
-            self.sections.append({
-                'name': 'WGS Coverage',
-                'anchor': 'picard-wgsmetrics-cov',
-                'content': '<p>The number of bases in the genome territory for each fold coverage. ' +
-                            'Note that final 1% of data is hidden to prevent very long tails.</p>' +
-                            linegraph.plot([data_percent, data], pconfig)
-            })
+            self.add_section (
+                name = 'WGS Coverage',
+                anchor = 'picard-wgsmetrics-cov',
+                description = 'The number of bases in the genome territory for each fold coverage. ' +
+                            'Note that final 1% of data is hidden to prevent very long tails.',
+                plot = linegraph.plot([data_percent, data], pconfig)
+            )
 
             # Bar plot of ignored bases
             pdata = dict()
@@ -205,14 +205,13 @@ def parse_reports(self):
                 'ymax': 100
             }
 
-            self.sections.append({
-                'id': 'picard_wgs_filtered_bases',
-                'name': 'WGS Filtered Bases',
-                'anchor': 'picard-wgsmetrics-bases',
-                'content': '<p>For more information about the filtered categories, see the '+
-                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.</p>' +
-                           bargraph.plot(pdata, keys, pconfig)
-            })
+            self.add_section (
+                name = 'WGS Filtered Bases',
+                anchor = 'picard-wgsmetrics-bases',
+                description = 'For more information about the filtered categories, see the '+
+                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.',
+                plot = bargraph.plot(pdata, keys, pconfig)
+            )
 
 
     # Return the number of detected samples to the parent module

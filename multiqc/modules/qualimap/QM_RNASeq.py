@@ -113,17 +113,17 @@ def parse_reports(self):
             'title': 'Genomic Origin',
             'cpswitch_c_active': False
         }
-        self.sections.append({
-            'name': 'Genomic origin of reads',
-            'anchor': 'qualimap-reads-genomic-origin',
-            'content': bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
-        })
+        self.add_section (
+            name = 'Genomic origin of reads',
+            anchor = 'qualimap-reads-genomic-origin',
+            plot = bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
+        )
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
-        self.sections.append({
-            'name': 'Gene Coverage Profile',
-            'anchor': 'qualimap-genome-fraction-coverage',
-            'content': linegraph.plot(self.qualimap_rnaseq_cov_hist, {
+        self.add_section (
+            name = 'Gene Coverage Profile',
+            anchor = 'qualimap-genome-fraction-coverage',
+            plot = linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
@@ -133,7 +133,7 @@ def parse_reports(self):
                 'xmax': 100,
                 'tt_label': '<b>{point.x} bp</b>: {point.y:.0f}%',
             })
-        })
+        )
 
 
     #### General Stats

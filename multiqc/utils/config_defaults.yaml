@@ -65,6 +65,10 @@ export_plot_formats:
     - 'svg'
     - 'pdf'
 
+# Custom Config settings
+custom_content:
+  order: []
+
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
 
@@ -190,3 +194,4 @@ module_order:
     - 'fastq_screen'
     - 'fastqc'
     - 'clusterflow'
+    - 'sortmerna'

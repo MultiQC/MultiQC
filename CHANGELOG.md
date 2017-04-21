@@ -29,6 +29,8 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
   * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
     data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
+* [**SortMeRNA**](http://bioinfo.lifl.fr/RNA/sortmerna/) - new module! Written by @bschiffthaler
+  * New module for `SortMeRNA`, commonly used for removing rRNA contamination from datasets.
 * **Bcftools**
   * Fixed bug with display of indels when only one sample
 * **Cutadapt**
@@ -58,7 +60,12 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
-* Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+* Module sections tidied and refactored
+  * New helper function `self.add_section()`
+  * Sections hidden in nav if no title (no more need for the hacky `self.intro += `)
+  * Content broken into `description`, `help` and `plot`, with automatic formatting
+  * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+  * Changes should be backwards-compatible
 * Handle error when `git` isn't installed on the system.
 * Refactored colouring of table cells
   * Was previously done in the browser using [chroma.js](http://gka.github.io/chroma.js/)
@@ -71,7 +78,9 @@ the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
   * `sortRows: False` prevents table rows from being sorted alphabetically
   * `col1_header` allows the default first column header to be changed from "Sample Name"
 * Tables no longer show _Configure Columns_ and _Plot_ buttons if they only have a single column
-* Custom content bugfixes
+* Custom content updates
+  * New `custom_content`/`order` config option to specify order of Custom Content sections
+  * Tables now use the header for the first column instead of always having `Sample Name`
   * JSON + YAML tables now remember order of table columns
   * Many minor bugfixes
 * Line graphs and scatter graphs axis limits

@@ -29,6 +29,7 @@ class BaseMultiqcModule(object):
         else:
             mname = target
         self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
+        self.sections = list()
 
     def find_log_files(self, patterns, filecontents=True, filehandles=False):
         """
@@ -104,6 +105,36 @@ class BaseMultiqcModule(object):
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     if config.report_readerrors:
                         logger.debug("Couldn't read file when looking for output: {}".format(fn))
+
+    def add_section(self, name=None, anchor=None, description='', helptext='', plot='', content='', autoformat=True):
+        """ Add a section to the module report output """
+
+        # Default anchor
+        if anchor is None:
+            if name is not None:
+                nid = name.lower().strip().replace(' ','-')
+                anchor = '{}-{}'.format(self.anchor, nid)
+            else:
+                sl = len(self.sections) + 1
+                anchor = '{}-section-{}'.format(self.anchor, sl)
+
+        # Format the content
+        if autoformat:
+            if len(description) > 0:
+                description = '<p class="mqc-section-description">{}</p>'.format(description)
+            if len(helptext) > 0:
+                helptext = '<p class="mqc-section-helptext">{}</p>'.format(helptext)
+            if len(plot) > 0:
+                plot = '<div class="mqc-section-plot">{}</div>'.format(plot)
+
+        self.sections.append({
+            'name': name,
+            'anchor': anchor,
+            'description': description,
+            'helptext': helptext,
+            'plot': plot,
+            'content': description + helptext + plot + content
+        })
 
     def clean_s_name(self, s_name, root):
         """ Helper function to take a long file name and strip it

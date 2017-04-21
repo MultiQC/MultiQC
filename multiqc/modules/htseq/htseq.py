@@ -45,8 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.htseq_stats_table()
 
         # Assignment bar plot
-        # Only one section, so add to the intro
-        self.intro += self.htseq_counts_chart()
+        self.add_section( plot = self.htseq_counts_chart() )
 
 
     def parse_htseq_report (self, f):

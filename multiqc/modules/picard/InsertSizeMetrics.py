@@ -168,12 +168,12 @@ def parse_reports(self):
                     {'name': 'Percentages', 'ylab': 'Percentage of Counts'}
                 ]
             }
-            self.sections.append({
-                'name': 'Insert Size',
-                'anchor': 'picard-insertsize',
-                'content': '<p>Plot shows the number of reads at a given insert size. Reads with different orientations are summed.</p>' +
-                            linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig)
-            })
+            self.add_section (
+                name = 'Insert Size',
+                anchor = 'picard-insertsize',
+                description = 'Plot shows the number of reads at a given insert size. Reads with different orientations are summed.',
+                plot = linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig)
+            )
 
 
     # Return the number of detected samples to the parent module
