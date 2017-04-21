@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import fnmatch
 import io
 import logging
 import os
@@ -31,80 +30,51 @@ class BaseMultiqcModule(object):
         self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
         self.sections = list()
 
-    def find_log_files(self, patterns, filecontents=True, filehandles=False):
+    def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
-        Search the analysis directory for log files of interest. Can take either a filename
-        suffix or a search string to return only log files that contain relevant info.
-        :param patterns: Dict with keys 'fn' or 'contents' (or both). Keys can contain
-        string or a list of strings. 'fn' matches filenames, 'contents' matches file contents.
-        NB: Both searches return file if *any* of the supplied strings are matched.
+        Return matches log files of interest.
+        :param sp_key: Search pattern key specified in config
         :param filehandles: Set to true to return a file handle instead of slurped file contents
-        :return: Yields a set with two items - a sample name generated from the filename
-                 and either the file contents or file handle for the current matched file.
+        :return: Yields a dict with filename (fn), root directory (root), cleaned sample name
+                 generated from the filename (s_name) and either the file contents or file handle
+                 for the current matched file (f).
                  As yield is used, the results can be iterated over without loading all files at once
         """
 
-        # Get the search parameters
-        fn_match = None
-        contents_match = None
-        if 'fn' in patterns:
-            fn_match = patterns['fn']
-        if 'contents' in patterns:
-            contents_match = patterns['contents']
-        if fn_match == None and contents_match == None:
-            logger.warning("No file patterns specified for {}".format(self.name))
+        # Old, depreciated syntax support. Likely to be removed in a future version.
+        if isinstance(sp_key, dict):
+            report.files[self.name] = list()
+            for sf in report.searchfiles:
+                if report.search_file(sp_key, {'fn': sf[0], 'root': sf[1]}):
+                    report.files[self.name].append({'fn': sf[0], 'root': sf[1]})
+            sp_key = self.name
+            logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)
+            if len(report.files[self.name]) > 0:
+                logger.warn(logwarn)
+            else:
+                logger.debug(logwarn)
+        elif not isinstance(sp_key, str):
+            logger.warn("Did not understand find_log_files() search key")
             return
 
-        # Loop through files, yield results if we find something
-        for f in report.files:
-
-            # Set up vars
-            root = f['root']
-            fn = f['fn']
-
+        for f in report.files[sp_key]:
             # Make a sample name from the filename
-            s_name = self.clean_s_name(fn, root)
-
-            # Make search strings into lists if a string is given
-            if type(fn_match) is str:
-                fn_match = [fn_match]
-            if type(contents_match) is str:
-                contents_match = [contents_match]
-
-            # Search for file names ending in a certain string
-            fn_matched = False
-            if fn_match is not None:
-                for m in fn_match:
-                    if fnmatch.fnmatch(fn, m):
-                        fn_matched = True
-                        if not filehandles and not filecontents:
-                            yield {'s_name': s_name, 'root': root, 'fn': fn}
-
-            if fn_matched or contents_match is not None:
+            f['s_name'] = self.clean_s_name(f['fn'], f['root'])
+            if filehandles or filecontents:
                 try:
-                    with io.open (os.path.join(root,fn), "r", encoding='utf-8') as f:
-
-                        # Search this file for our string of interest
-                        returnfile = False
-                        if contents_match is not None and fn_matched is False:
-                            for line in f:
-                                for m in contents_match:
-                                    if m in line:
-                                        returnfile = True
-                                        break
-                            f.seek(0)
-                        else:
-                            returnfile = True
-
-                        if returnfile:
-                            if filehandles:
-                                yield {'s_name': s_name, 'f': f, 'root': root, 'fn': fn}
-                            elif filecontents:
-                                yield {'s_name': s_name, 'f': f.read(), 'root': root, 'fn': fn}
-
+                    with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
+                        if filehandles:
+                            f['f'] = fh
+                            yield f
+                        elif filecontents:
+                            f['f'] = fh.read()
+                            yield f
                 except (IOError, OSError, ValueError, UnicodeDecodeError):
                     if config.report_readerrors:
-                        logger.debug("Couldn't read file when looking for output: {}".format(fn))
+                        logger.debug("Couldn't open filehandle when returning file: {}".format(f['fn']))
+                        f['f'] = None
+            else:
+                yield f
 
     def add_section(self, name=None, anchor=None, description='', helptext='', plot='', content='', autoformat=True):
         """ Add a section to the module report output """

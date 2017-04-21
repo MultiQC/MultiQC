@@ -10,6 +10,7 @@ import os
 import yaml
 
 from multiqc import config
+from multiqc.utils import report
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
 
@@ -31,8 +32,7 @@ def custom_module_classes():
     cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
-    search_patterns = OrderedDict()
-    search_patterns['core_sp'] = config.sp['custom_content']
+    search_patterns = ['custom_content']
 
     # First - find files using patterns described in the config
     config_data = getattr(config, 'custom_data', {})
@@ -48,19 +48,23 @@ def custom_module_classes():
         if 'data' in f:
             cust_mods[c_id]['data'].update( f['data'] )
             cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
+            cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
             continue
 
-        # File name patterns supplied in config
-        if 'sp' in f:
+        # Custom Content ID has search patterns in the config
+        if c_id in report.files:
             cust_mods[c_id]['config'] = f
-            search_patterns[c_id] = f['sp']
-        else:
-            log.debug("Search pattern not found for custom module: {}".format(c_id))
+            cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
+            search_patterns.append(c_id)
+            continue
+
+        # We should have had something by now
+        log.warn("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
-    for k, sp in search_patterns.items():
-        for f in bm.find_log_files(sp):
+    for k in search_patterns:
+        for f in bm.find_log_files(k):
 
             f_extension = os.path.splitext(f['fn'])[1]
 
@@ -101,19 +105,22 @@ def custom_module_classes():
                 s_name = None
                 if m_config is not None:
                     c_id = m_config.get('id', k)
-                    cust_mods[c_id]['config'].update( m_config )
-                    m_config = cust_mods[c_id]['config']
+                    # Update the base config with anything parsed from the file
+                    b_config = cust_mods.get(c_id, {}).get('config', {})
+                    b_config.update( m_config )
+                    # Now set the module config to the merged dict
+                    m_config = dict(b_config)
                     s_name = m_config.get('sample_name')
                 else:
                     c_id = k
-                    m_config = dict()
+                    m_config = cust_mods.get(c_id, {}).get('config', {})
 
                 # Guess sample name if not given
                 if s_name is None:
                     s_name = bm.clean_s_name(f['s_name'], f['root'])
 
                 # Guess c_id if no information known
-                if k == 'core_sp':
+                if k == 'custom_content':
                     c_id = s_name
 
                 # Add information about the file to the config dict
@@ -404,7 +411,7 @@ def _parse_txt(f, conf):
 
     # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
-        # Line graph - row, num : num
+        # Line graph - num : num
         if (conf.get('plot_type') is None and type(d[0][0]) == float and type(d[0][1]) == float):
             conf['plot_type'] = 'linegraph'
         # Bar graph - str : num

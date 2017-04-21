@@ -26,7 +26,7 @@ def parse_reports(self):
     self.junction_saturation_novel_pct = dict()
 
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['junction_saturation']):
+    for f in self.find_log_files('rseqc/junction_saturation'):
         parsed = dict()
         for l in f['f'].splitlines():
             r = re.search(r"^([xyzw])=c\(([\d,]+)\)$", l)

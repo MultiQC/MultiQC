@@ -91,10 +91,7 @@ def parse_reports(self):
     self.picard_baseDistributionByCycle_samplestats = dict()
 
     # Go through logs and find Metrics
-    base_dist_files = self.find_log_files(
-        config.sp['picard']['basedistributionbycycle'],
-        filehandles=True
-    )
+    base_dist_files = self.find_log_files('picard/basedistributionbycycle', filehandles=True)
 
     for f in base_dist_files:
         try:

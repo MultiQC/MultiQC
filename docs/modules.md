@@ -157,73 +157,99 @@ First, add your default patterns to:
 MULTIQC_ROOT/multiqc/utils/search_patterns.yaml
 ```
 
-You should see the patterns for all other modules to give you an idea,
-but you want a yaml key with the name of your module, then either `fn`
-or `contents` for strings to match against filenames or file contents:
+Each search has a yaml key (typically the name of your module), with one
+or more search criteria. The following keys can be used:
+
+* `fn`
+  * A glob filename pattern, used with the Python [`fnmatch`](https://docs.python.org/2/library/fnmatch.html) function
+* `fn_re`
+  * A regex filename pattern
+* `contents`
+  * A string to match within the file contents (checked line by line)
+* `contents_re`
+  * A regex to match within the file contents (checked line by line)
+  * NB: Regex must match entire line (add `.*` to start and end of pattern to avoid this)
+* `num_lines`
+  * The number of lines to search through for the `contents` string. Default: all lines.
+* `shared`
+  * By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
+* `max_filesize`
+  * Files larger than the `log_filesize_limit` config key (default: 10MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
+
+Please try to use `num_lines` and `max_filesize` where possible as they will speed up
+MultiQC execution time.
+
+For example, two typical modules could specify search patterns as follows:
+
 ```yaml
 mymod:
-    fn: _myprogram.txt
+    fn: '_myprogram.txt'
 myothermod:
-    contents: This is myprogram v1.3
+    contents: 'This is myprogram v1.3'
 ```
 
-Note that if you want to find multiple log files, you can nest these
-dictionaries (though they must end with either `fn` or `contents`).
-For example, see the `FastQC` module:
+Note that if you want to find multiple different log files for a single module,
+the convention is to use the module name and a forward slash separator _(this changed
+in the v1.0 release and the slashes help backwards-compatibility)_:
 ```yaml
-fastqc:
-    data:
-        fn: fastqc_data.txt
-    zip:
-        fn: _fastqc.zip
+fastqc/data:
+    fn: fastqc_data.txt
+fastqc/zip:
+    fn: _fastqc.zip
 ```
 
-You can supply a list of strings if needed, eg. the `bismark` module:
+You can also supply a list of different patterns for a single log file type if needed.
+If any of the patterns are matched, the file will be returned:
 ```yaml
-bismark:
-    align:
-        fn:
-            - _PE_report.txt
-            - _SE_report.txt
+mymod:
+    - fn: 'mylog.txt'
+    - fn: 'different_fn.out'
 ```
 
-The value of adding these strings here is that they can be overwritten
-by users in their own config files. This is helpful as people have weird
-and wonderful processing pipelines with their own file naming conventions.
+You can use _AND_ logic by specifying keys within a single list item. For example:
+```yaml
+mymod:
+    fn: 'mylog.txt'
+    contents: 'mystring'
+myothermod:
+    - fn: 'different_fn.out'
+      contents: 'This is myprogram v1.3'
+    - fn: 'another.txt'
+      contents: 'What are these files anyway?'
+```
+Here, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
 
-Once your strings are added, you can call them in your module with the
-`config.sp['mymod']`. Next, use the base function `self.find_log_files()`
-to look for your files like this:
+Remember that users can overwrite these defaults in their own config files.
+This is helpful as people have weird and wonderful processing pipelines with
+their own conventions.
+
+Once your strings are added, you can find files in your module with the
+base function `self.find_log_files()`, using the key you set in the YAML:
 ```python
-self.find_log_files(config.sp['mymod'], filehandles=False)
+self.find_log_files('mymod')
 ```
 
-This will recursively search the analysis directories looking for a matching
-file name (if the `fn` key is there) or a text string held within a file
-(if the `contents` key is there). Contents matching is only done on files
-smaller than `config.log_filesize_limit` (default 1MB).
-Note that both `fn` and `contents` can be used in combination
-if required - files will be returned if anything matches (`OR` not `AND`).
-
-This function yields a dictionary with various information about matching
-files. The `f` key contains the contents of matching files by default.
+This function yields a dictionary with various information about each matching
+file. The `f` key contains the contents of the matching file:
 ```python
 # Find all files for mymod
-for f in self.find_log_files(config.sp['mymod']):
-    print f['f']        # File contents
-    print f['s_name']   # Sample name (from cleaned fn)
-    print f['root']     # Directory file was in
-    print f['fn']       # Filename
+for myfile in self.find_log_files('mymod'):
+    print( myfile['f'] )       # File contents
+    print( myfile['s_name'] )  # Sample name (from cleaned filename)
+    print( myfile['fn'] )      # Filename
+    print( myfile['root'] )    # Directory file was in
 ```
 
 If `filehandles=True` is specified, the `f` key contains a file handle
 instead:
 ```python
-# Find all files which contain the string 'My Statistic:'
-# Return a filehandle instead of the file contents
-for f in self.find_log_files(config.sp['mymod'], filehandles=True):
-    line = f['f'].readline()  # f['f'] is now a filehandle instead of contents
+for f in self.find_log_files('mymod', filehandles=True):
+    # f['f'] is now a filehandle instead of contents
+    for l in f['f']:
+        print( l )
 ```
+This is good if the file is large, as Python doesn't read the entire
+file into memory in one go.
 
 ## Step 2 - Parse data from the input files
 What most MultiQC modules do once they have found matching analysis files
@@ -237,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # [...]
         self.mod_data = dict()
-        for f in self.find_log_files(config.sp['mymod']):
+        for f in self.find_log_files('mymod'):
             self.mod_data[f['s_name']] = self.parse_logs(f['f'])
 
     def parse_logs(self, f):
@@ -301,7 +327,7 @@ is typically written immediately after the above warning.
 If you've used the `self.find_log_files` function, writing to the sources file
 is as simple as passing the log file variable to the `self.add_data_source` function:
 ```python
-for f in self.find_log_files(config.sp['mymod']):
+for f in self.find_log_files('mymod'):
     self.add_data_source(f)
 ```
 

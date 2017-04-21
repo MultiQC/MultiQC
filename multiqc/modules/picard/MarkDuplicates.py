@@ -21,7 +21,7 @@ def parse_reports(self):
     self.picard_dupMetrics_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['markdups'], filehandles=True):
+    for f in self.find_log_files('picard/markdups', filehandles=True):
         s_name = None
         for l in f['f']:
             # New log starting

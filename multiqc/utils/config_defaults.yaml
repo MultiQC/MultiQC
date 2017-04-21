@@ -54,7 +54,6 @@ fn_ignore_paths:
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false
-report_imgskips: false
 skip_generalstats: false
 data_format_extensions:
     tsv: 'txt'
@@ -161,7 +160,7 @@ module_order:
     - 'qualimap'
     - 'preseq'
     - 'quast'
-    - 'rna-seqc'
+    - 'rna_seqc'
     - 'rseqc'
     - 'busco'
     - 'goleft_indexcov'
@@ -190,7 +189,7 @@ module_order:
     - 'cutadapt'
     - 'trimmomatic'
     - 'skewer'
+    - 'sortmerna'
     - 'fastq_screen'
     - 'fastqc'
     - 'clusterflow'
-    - 'sortmerna'

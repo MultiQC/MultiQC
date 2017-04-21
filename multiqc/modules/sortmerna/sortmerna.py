@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs
         self.sortmerna = dict()
-        for f in self.find_log_files(config.sp['sortmerna'], filehandles=True):
+        for f in self.find_log_files('sortmerna', filehandles=True):
             self.parse_sortmerna(f)
 
         if len(self.sortmerna) == 0:

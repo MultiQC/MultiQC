@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 def parse_reports(self):
     """ Find Qualimap RNASeq reports and parse their data """
 
-    sp = config.sp['qualimap']['rnaseq']
     self.qualimap_rnaseq_genome_results = dict()
     regexes = {
         'reads_aligned': r"read(?:s| pairs) aligned\s*=\s*([\d,]+)",
@@ -31,7 +30,7 @@ def parse_reports(self):
         'reads_aligned_intergenic': r"intergenic\s*=\s*([\d,]+)",
         'reads_aligned_overlapping_exon': r"overlapping exon\s*=\s*([\d,]+)",
     }
-    for f in self.find_log_files(sp['rnaseq_results']):
+    for f in self.find_log_files('qualimap/rnaseq/rnaseq_results'):
         d = dict()
 
         # Get the sample name
@@ -78,7 +77,7 @@ def parse_reports(self):
 
     #### Coverage profile
     self.qualimap_rnaseq_cov_hist = dict()
-    for f in self.find_log_files(sp['coverage'], filehandles=True):
+    for f in self.find_log_files('qualimap/rnaseq/coverage', filehandles=True):
         s_name = self.get_s_name(f)
         d = dict()
         for l in f['f']:

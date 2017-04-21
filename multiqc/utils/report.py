@@ -6,11 +6,13 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import click
 import fnmatch
 import io
 import json
 import mimetypes
 import os
+import re
 import yaml
 
 from multiqc import config
@@ -34,11 +36,45 @@ num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
 
-# Make a list of files to search
-files = list()
+# Make a dict of discovered files for each seach key
+searchfiles = list()
+files = dict()
 def get_filelist():
+    """
+    Go through all supplied search directories and assembly a master
+    list of files to search. Then fire search functions for each file.
+    """
+    # Prep search patterns
+    spatterns = [{},{},{},{},{},{},{}]
+    for key, sps in config.sp.items():
+        files[key] = list()
+        if not isinstance(sps, list):
+            sps = [sps]
+        # Split search patterns according to speed of execution.
+        if any([x for x in sps if 'contents_re' in x]):
+            if any([x for x in sps if 'num_lines' in x]):
+                spatterns[4][key] = sps
+            elif any([x for x in sps if 'max_filesize' in x]):
+                spatterns[5][key] = sps
+            else:
+                spatterns[6][key] = sps
+        elif any([x for x in sps if 'contents' in x]):
+            if any([x for x in sps if 'num_lines' in x]):
+                spatterns[1][key] = sps
+            elif any([x for x in sps if 'max_filesize' in x]):
+                spatterns[2][key] = sps
+            else:
+                spatterns[3][key] = sps
+        else:
+            spatterns[0][key] = sps
 
     def add_file(fn, root):
+        """
+        Function applied to each file found when walking the analysis
+        directories. Runs through all search patterns and returns True
+        if a match is found.
+        """
+        f = {'fn': fn, 'root': root}
 
         # Check that this is a file and not a pipe or anything weird
         if not os.path.isfile(os.path.join(root, fn)):
@@ -50,35 +86,34 @@ def get_filelist():
             logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
             return None
 
-        # Use mimetypes to exclude binary files where possible
-        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-        if encoding is not None:
-            logger.debug("Ignoring file as is encoded: {}".format(fn))
-            return None
-        if ftype is not None and ftype.startswith('image'):
-            if config.report_imgskips:
-                logger.debug("Ignoring file as has filetype '{}': {}".format(ftype, fn))
-            return None
-
-        # Limit search to files under 5MB to avoid 30GB FastQ files etc.
+        # Limit search to small files, to avoid 30GB FastQ files etc.
         try:
-            filesize = os.path.getsize(os.path.join(root,fn))
+            f['filesize'] = os.path.getsize(os.path.join(root,fn))
         except (IOError, OSError, ValueError, UnicodeDecodeError):
             logger.debug("Couldn't read file when checking filesize: {}".format(fn))
         else:
-            if filesize > config.log_filesize_limit:
-                logger.debug("Ignoring file as too large: {}".format(fn))
-                return None
+            if f['filesize'] > config.log_filesize_limit:
+                return False
 
-        # Looks good! Remember this file
-        files.append({
-            'root': root,
-            'fn': fn
-        })
+        # Test file for each search pattern
+        for patterns in spatterns:
+            for key, sps in patterns.items():
+                for sp in sps:
+                    if search_file (sp, f):
+                        # Looks good! Remember this file
+                        files[key].append(f)
+                        # Don't keep searching this file for other modules
+                        if not sp.get('shared', False):
+                            return
+                        # Don't look at other patterns for this module
+                        else:
+                            break
 
-    # Go through the analysis directories
+    # Go through the analysis directories and get file list
     for path in config.analysis_dir:
-        if os.path.isdir(path):
+        if os.path.isfile(path):
+            searchfiles.append([os.path.basename(path), os.path.dirname(path)])
+        elif os.path.isdir(path):
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
 
@@ -105,14 +140,78 @@ def get_filelist():
                 if len(p_matches) > 0:
                     logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
                     continue
-
                 # Search filenames in this directory
                 for fn in filenames:
-                    add_file(fn, root)
+                    searchfiles.append([fn, root])
+    # Search through collected files
+    with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
+        for sf in sfiles:
+            add_file(sf[0], sf[1])
 
-        elif os.path.isfile(path):
-            add_file(os.path.basename(path), os.path.dirname(path))
+def search_file (pattern, f):
+    """
+    Function to searach a single file for a single search pattern.
+    """
 
+    fn_matched = False
+    contents_matched = False
+
+    # Use mimetypes to exclude binary files where possible
+    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+    if encoding is not None:
+        return False
+    if ftype is not None and ftype.startswith('image'):
+        return False
+
+    # Search pattern specific filesize limit
+    if pattern.get('max_filesize') is not None and 'filesize' in f:
+        if f['filesize'] > pattern.get('max_filesize'):
+            return False
+
+    # Search by file name (glob)
+    if pattern.get('fn') is not None:
+        if fnmatch.fnmatch(f['fn'], pattern['fn']):
+            fn_matched = True
+            if pattern.get('contents') is None and pattern.get('contents_re') is None:
+                return True
+
+    # Search by file name (regex)
+    if pattern.get('fn_re') is not None:
+        if re.match( pattern['fn_re'], f['fn']):
+            fn_matched = True
+            if pattern.get('contents') is None and pattern.get('contents_re') is None:
+                return True
+
+    # Search by file contents
+    if pattern.get('contents') is not None or pattern.get('contents_re') is not None:
+        try:
+            with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
+                l = 1
+                for line in f:
+                    # Search by file contents (string)
+                    if pattern.get('contents') is not None:
+                        if pattern['contents'] in line:
+                            contents_matched = True
+                            if pattern.get('fn') is None and pattern.get('fn_re') is None:
+                                return True
+                            break
+                    # Search by file contents (regex)
+                    elif pattern.get('contents_re') is not None:
+                        if re.match( pattern['contents_re'], line):
+                            contents_matched = True
+                            if pattern.get('fn') is None and pattern.get('fn_re') is None:
+                                return True
+                            break
+                    # Break if we've searched enough lines for this pattern
+                    if pattern.get('num_lines') and l >= pattern.get('num_lines'):
+                        break
+                    l += 1
+        except (IOError, OSError, ValueError, UnicodeDecodeError):
+            if config.report_readerrors:
+                logger.debug("Couldn't read file when looking for output: {}".format(f['fn']))
+                return False
+
+    return fn_matched and contents_matched
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])

@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any BUSCO reports
         self.busco_data = dict()
-        for f in self.find_log_files(config.sp['busco']):
+        for f in self.find_log_files('busco'):
             self.parse_busco_log(f)
 
         if len(self.busco_data) == 0:
