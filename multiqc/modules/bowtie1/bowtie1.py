@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             'bowtie.right_kept_reads.m2g_um_seg1.log',
             'bowtie.right_kept_reads.m2g_um_seg2.log'
         ]
-        for f in self.find_log_files(config.sp['bowtie']):
+        for f in self.find_log_files('bowtie'):
             if f['fn'] in fn_ignore:
                 log.debug('Skipping file because looks like tophat log: {}/{}'.format(f['root'], f['fn']))
                 continue

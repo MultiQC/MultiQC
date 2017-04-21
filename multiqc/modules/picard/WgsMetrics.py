@@ -23,7 +23,7 @@ def parse_reports(self):
     self.picard_wgsmetrics_samplestats = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['wgs_metrics'], filehandles=True):
+    for f in self.find_log_files('picard/wgs_metrics', filehandles=True):
         s_name = None
         in_hist = False
         for l in f['f']:

@@ -232,12 +232,13 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if file_list:
         if len(analysis_dir) > 1:
             raise ValueError("If --file-list is giving, analysis_dir should have only one plain text file.")
-        config.analysis_dir = ()
+        config.analysis_dir = []
         with (open(analysis_dir[0])) as in_handle:
             for line in in_handle:
                 if os.path.exists(line.strip()):
-                    config.analysis_dir += (os.path.abspath(line.strip()),)
-        if len(config.analysis_dir) == 0:
+                    path = os.path.abspath(line.strip())
+                    report.searchfiles.append([os.path.basename(path), os.path.dirname(path)])
+        if len(report.searchfiles) == 0:
             logger.error("No files were added from {} using --file-list option.".format(analysis_dir[0]))
             logger.error("Please, check that {} contains correct file paths.".format(analysis_dir[0]))
             raise ValueError("Any files to be searched.")
@@ -395,10 +396,11 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     plugin_hooks.mqc_trigger('after_modules')
 
     # Remove empty data sections from the General Stats table
-    for i, d in enumerate(report.general_stats_data[:]):
-        if len(d) == 0:
-            del report.general_stats_data[i]
-            del report.general_stats_headers[i]
+    empty_keys = [i for i, d in enumerate(report.general_stats_data[:]) if len(d) == 0]
+    empty_keys.sort(reverse=True)
+    for i in empty_keys:
+        del report.general_stats_data[i]
+        del report.general_stats_headers[i]
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0:
         pconfig = {

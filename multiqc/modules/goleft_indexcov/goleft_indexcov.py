@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         drops off more quickly. This indicates a higher fraction of low coverage regions.'
         max_chroms = 50
         data = collections.defaultdict(lambda: collections.defaultdict(dict))
-        for fn in self.find_log_files(config.sp["goleft_indexcov"]["roc"], filehandles=True):
+        for fn in self.find_log_files('goleft_indexcov/roc', filehandles=True):
             header = fn['f'].readline()
             sample_names = [self.clean_s_name(x, fn["root"]) for x in header.strip().split()[2:]]
             for parts in (l.rstrip().split() for l in fn['f']):
@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
         for more details.'
 
         data = {}
-        for fn in self.find_log_files(config.sp["goleft_indexcov"]["ped"], filehandles=True):
+        for fn in self.find_log_files('goleft_indexcov/ped', filehandles=True):
             header = fn['f'].readline()[1:].strip().split("\t")
             for sample_parts in (l.split("\t") for l in fn['f']):
                 cur = dict(zip(header, sample_parts))
