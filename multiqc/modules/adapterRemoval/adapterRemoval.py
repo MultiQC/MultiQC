@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         parsed_data = None
-        for f in self.find_log_files(config.sp['adapterRemoval'], filehandles=True):
+        for f in self.find_log_files('adapterRemoval', filehandles=True):
             self.s_name = f['s_name']
             try:
                 parsed_data = self.parse_settings_file(f)
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_removal_stats_table()
 
         # Start the sections
-        self.sections = list()
+        #self.sections = list()
 
         self.adapter_removal_retained_chart()
         self.adapter_removal_length_dist_plot()
@@ -232,13 +232,13 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'PuBu',
                 'shared_key': 'aligned_total'
         }
-        print(self.adapter_removal_data)
         self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_retained_chart(self):
 
         pconfig = {
             'title': 'retained and discarded',
+            'id': 'ar_retained_plot',
             'ylab': '# Reads',
             'hide_zero_cats': False,
             'cpswitch_counts_label': 'Number of Reads'
@@ -252,13 +252,20 @@ class MultiqcModule(BaseMultiqcModule):
         cats_pec['truncated_cp'] = {'name': 'truncated collapsed pairs'}
         cats_pec['discarded_m1'] = {'name': 'discarded mate1'}
         cats_pec['discarded_m2'] = {'name': 'discarded mate2'}
-        pconfig['id'] = 'ar_retained_plot'
-        self.sections.append({
-            'name': 'Retained and Discarded Paired-End Collapsed',
-            'anchor': 'adapter_removal_retained_plot',
-            'content': '<p>The proportions of retained and discarded reads.</p>' +
-                       bargraph.plot(self.adapter_removal_data, cats_pec, pconfig)
-        })
+
+        #self.sections.append({
+        #    'name': 'Retained and Discarded Paired-End Collapsed',
+        #    'anchor': 'adapter_removal_retained_plot',
+        #    'content': '<p>The proportions of retained and discarded reads.</p>' +
+        #               bargraph.plot(self.adapter_removal_data, cats_pec, pconfig)
+        #})
+
+        self.add_section(
+            name='Retained and Discarded Paired-End Collapsed',
+            anchor='adapter_removal_retained_plot',
+            description='The proportions of retained and discarded reads.',
+            plot=bargraph.plot(self.adapter_removal_data, cats_pec, pconfig)
+        )
 
     def adapter_removal_length_dist_plot(self):
         pconfig = {
@@ -289,9 +296,16 @@ class MultiqcModule(BaseMultiqcModule):
             self.len_dist_plot_data['discarged'],
             self.len_dist_plot_data['all']
         ]
-        self.sections.append({
-            'name': 'Lenght Distribution Paired End Collapsed',
-            'anchor': 'ar_lenght_count',
-            'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
-                       linegraph.plot(lineplot_data, pconfig)
-        })
+        #self.sections.append({
+        #    'name': 'Lenght Distribution Paired End Collapsed',
+        #    'anchor': 'ar_lenght_count',
+        #    'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
+        #               linegraph.plot(lineplot_data, pconfig)
+        #})
+
+        self.add_section(
+            name='Lenght Distribution Paired End Collapsed',
+            anchor='ar_lenght_count',
+            description='The lenght distribution of reads after processing adapter alignment.',
+            plot=linegraph.plot(lineplot_data, pconfig)
+        )
