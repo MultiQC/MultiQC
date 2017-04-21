@@ -3,18 +3,20 @@
 ## v1.0dev
 Version 1.0! Bumping the major version number for a couple of reasons:
 
-1. MultiQC is now hopefully relatively stable. A number of facilities and users
+1. MultiQC is now _(hopefully)_ relatively stable. A number of facilities and users
    are now using it in a production setting and it's published. It feels like it
    probably deserves v1 status now somehow.
 2. This update brings some fairly major changes which will break backwards
    compatibility for plugins. As such, semantic versioning suggests a change in
    major version number.
 
+### Breaking Changes
 For most people, you shouldn't have any problems upgrading. There are two
 scenarios where you may need to make changes with this update:
 
-1. You have custom file search patterns
-  * These have been flattened. For example, change the following:
+#### 1. You have custom file search patterns
+Search patterns have been flattened and may no longer have arbitrary depth.
+For example, you may need to change the following:
 ```yaml
 fastqc:
     data:
@@ -22,19 +24,22 @@ fastqc:
     zip:
         fn: '*_fastqc.zip'
 ```
-  to this:
+to this:
 ```yaml
 fastqc/data:
     fn: 'fastqc_data.txt'
 fastqc/zip:
     fn: '*_fastqc.zip'
 ```
-  * See the [documentation](http://multiqc.info/docs/#step-1-find-log-files) for instructions on how to write the new file search syntax.
-  * See [`search_patterns.yaml`](multiqc/utils/search_patterns.yaml) for examples.
-2. You have custom plugins / modules / external code
-  * To see what changes need to applied to your custom plugin code, please see the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
+See the [documentation](http://multiqc.info/docs/#step-1-find-log-files) for instructions on how to write the new file search syntax.
 
-#### Module updates:
+See [`search_patterns.yaml`](multiqc/utils/search_patterns.yaml) for the new module search keys
+and more examples.
+
+####  2. You have custom plugins / modules / external code
+To see what changes need to applied to your custom plugin code, please see the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
+
+### Module updates:
 * [**BUSCO**](http://busco.ezlab.org/) - new module!
   * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
 * [**Cluster Flow**](http://clusterflow.io) - new module!
@@ -71,7 +76,7 @@ fastqc/zip:
   * Fixed Python3 error in Junction Saturation code
   * Fixed JS error for Junction Saturation that made the single-sample combined plot only show _All Junctions_
 
-#### Core MultiQC updates:
+### Core MultiQC updates:
 * Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
 * Module file search has been rewritten (see above changes to configs)
   * Significant improvement in search speed (test dataset runs in approximately half the time)

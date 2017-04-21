@@ -193,9 +193,9 @@ the convention is to use the module name and a forward slash separator _(this ch
 in the v1.0 release and the slashes help backwards-compatibility)_:
 ```yaml
 fastqc/data:
-    fn: fastqc_data.txt
+    fn: 'fastqc_data.txt'
 fastqc/zip:
-    fn: _fastqc.zip
+    fn: '_fastqc.zip'
 ```
 
 You can also supply a list of different patterns for a single log file type if needed.
