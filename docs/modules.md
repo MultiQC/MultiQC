@@ -87,6 +87,10 @@ Your documentation goes here. Feel free to use markdown and write whatever
 you think would be helpful. Please avoid using heading levels 1 to 3.
 ```
 
+Make a reference to this in the YAML frontmatter at the top of
+`docs/README.md` - this allows the website to find the file to build
+the documentation.
+
 ### Readme and Changelog
 Last but not least, remember to add your new module to the main `README.md`
 file and `CHANGELOG.md`, so that people know that it's there. Feel free to
@@ -431,30 +435,27 @@ when being written to tab-separated files.
 
 ## Step 6 - Create report sections
 Great! It's time to start creating sections of the report with more information.
-If you only have one plot / section to create, just add it to the introduction.
-For example (content to be replaced with a brilliant plot in the bit of the docs):
+To do this, use the `self.add_section()` helper function:
 
 ```python
-self.intro += 'My amazing module output'
+self.add_section (
+    name = 'First Module Section',
+    anchor = 'mymod-first',
+    description = 'My amazing module output, from the first section',
+    help = "If you're not sure how to interpret the data, we can help!",
+    plot = bargraph.plot(data)
+)
+self.add_section (
+    name = 'Second Module Section',
+    anchor = 'mymod-second',
+    plot = linegraph.plot(data2)
+)
+self.add_section (
+    content = '<p>Some custom HTML.</p>'
+)
 ```
-
-If you have multiple plots to show (_eg._ the Qualimap and FastQC modules),
-you can create a list to hold the sections:
-
-```python
-self.sections = list()
-self.sections.append({
-    'name': 'First Module Section',
-    'anchor': 'mymod_first',
-    'content': 'My amazing module output, from the first section'
-})
-self.sections.append({
-    'name': 'Second Module Section',
-    'anchor': 'mymod_second',
-    'content': 'My amazing module output, from the second section'
-})
-```
-The will automatically be labelled and linked in the navigation.
+These will automatically be labelled and linked in the navigation (unless
+the module has only one section or `name` is not specified).
 
 ## Step 7 - Plot some data
 Ok, you have some data, now the fun bit - visualising it! Each of the plot

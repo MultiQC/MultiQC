@@ -190,7 +190,12 @@ def custom_module_classes():
             parsed_modules.append( MultiqcModule(k, mod) )
             log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
 
-    return parsed_modules
+    # Sort sections if we have a config option for order
+    mod_order = getattr(config, 'custom_content', {}).get('order', [])
+    sorted_modules = [m for m in parsed_modules if m.anchor not in mod_order ]
+    sorted_modules.extend([m for k in mod_order for m in parsed_modules if m.anchor == k ])
+
+    return sorted_modules
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -216,27 +221,27 @@ class MultiqcModule(BaseMultiqcModule):
         if mod['config'].get('plot_type') == 'table':
             pconfig['sortRows'] = pconfig.get('sortRows', False)
             headers = mod['config'].get('headers')
-            self.intro += table.plot(mod['data'], headers, pconfig)
+            self.add_section( plot = table.plot(mod['data'], headers, pconfig) )
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
-            self.intro += bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig)
+            self.add_section( plot = bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig) )
 
         # Line plot
         elif mod['config'].get('plot_type') == 'linegraph':
-            self.intro += linegraph.plot(mod['data'], pconfig)
+            self.add_section( plot = linegraph.plot(mod['data'], pconfig) )
 
         # Scatter plot
         elif mod['config'].get('plot_type') == 'scatter':
-            self.intro += scatter.plot(mod['data'], pconfig)
+            self.add_section( plot = scatter.plot(mod['data'], pconfig) )
 
         # Heatmap
         elif mod['config'].get('plot_type') == 'heatmap':
-            self.intro += heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig)
+            self.add_section( plot = heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig) )
 
         # Beeswarm plot
         elif mod['config'].get('plot_type') == 'beeswarm':
-            self.intro += beeswarm.plot(mod['data'], pconfig)
+            self.add_section( plot = beeswarm.plot(mod['data'], pconfig) )
 
         # Not supplied
         elif mod['config'].get('plot_type') == None:
@@ -370,6 +375,11 @@ def _parse_txt(f, conf):
                 conf['plot_type'] = 'bargraph'
             else:
                 conf['plot_type'] = 'table'
+        # Set table col_1 header
+        if conf.get('plot_type') == 'table' and d[0][0].strip() != '':
+            conf['pconfig'] = conf.get('pconfig', {})
+            conf['pconfig']['col1_header'] = d[0][0].strip()
+        # Return parsed data
         if conf.get('plot_type') == 'bargraph' or conf.get('plot_type') == 'table':
             return (data, conf)
         else:

@@ -113,13 +113,12 @@ def parse_reports(self):
             'cpswitch_counts_label': 'Number of Reads',
         }
 
-        self.sections.append({
-            'id': 'picard_alignment_summary',
-            'name': 'Alignment Summary',
-            'anchor': 'picard-alignmentsummary',
-            'content': "<p>Plase note that Picard's read counts are divided by two for paired-end data.</p>"+
-                bargraph.plot(pdata, keys, pconfig)
-        })
+        self.add_section (
+            name = 'Alignment Summary',
+            anchor = 'picard-alignmentsummary',
+            description = "Plase note that Picard's read counts are divided by two for paired-end data.",
+            plot = bargraph.plot(pdata, keys, pconfig)
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_alignment_metrics)

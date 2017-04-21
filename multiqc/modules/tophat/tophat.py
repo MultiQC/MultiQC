@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_general_stats_table()
 
         # Alignment Rate Plot
-        self.intro += self.tophat_alignment_plot()
+        self.tophat_alignment_plot()
 
 
     def parse_tophat_log (self, raw_data):
@@ -135,4 +135,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.tophat_data, keys, config)
+        self.add_section( plot =  bargraph.plot(self.tophat_data, keys, config) )

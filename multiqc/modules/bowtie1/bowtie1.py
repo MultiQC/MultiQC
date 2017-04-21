@@ -61,8 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie_general_stats_table()
 
         # Alignment Rate Plot
-        # Only one section, so add to the intro
-        self.intro += self.bowtie_alignment_plot()
+        self.bowtie_alignment_plot()
 
 
     def parse_bowtie_logs(self, f):
@@ -148,4 +147,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.bowtie_data, keys, config)
+        self.add_section( plot = bargraph.plot(self.bowtie_data, keys, config) )

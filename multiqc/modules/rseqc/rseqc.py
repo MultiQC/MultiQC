@@ -37,7 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
         " comprehensively evaluate high throughput RNA-seq data.")
 
         # Set up class objects to hold parsed data
-        self.sections = list()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
         n = dict()

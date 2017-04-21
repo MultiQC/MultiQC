@@ -373,7 +373,9 @@ function plot_single_seqcontent(s_name){
     {'name': '% A', 'data':[]},
     {'name': '% G', 'data':[]}
   ];
-  for (var d in data){
+  var bases = Object.keys(data).sort(function (a, b) {  return a - b;  });
+  for (i=0; i<bases.length; i++){
+    var d = bases[i];
     var base = data[d]['base'].toString().split('-');
     base = parseFloat(base[0]);
     plot_data[0]['data'].push([base, data[d]['t']]);

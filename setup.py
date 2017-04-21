@@ -90,6 +90,7 @@ setup(
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',

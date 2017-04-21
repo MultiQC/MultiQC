@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.methylqa_general_stats_table()
 
         # Alignment bar plot - only one section, so add to the module intro
-        self.intro += self.methylqa_alignment_plot()
+        self.add_section( plot = self.methylqa_alignment_plot() )
 
 
     def parse_methylqa_logs(self, f):

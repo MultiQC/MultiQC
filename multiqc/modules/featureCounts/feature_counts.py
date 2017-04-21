@@ -44,8 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.featurecounts_stats_table()
 
         # Assignment bar plot
-        # Only one section, so add to the intro
-        self.intro += self.featureCounts_chart()
+        self.add_section( plot = self.featureCounts_chart() )
 
 
     def parse_featurecounts_report (self, f):

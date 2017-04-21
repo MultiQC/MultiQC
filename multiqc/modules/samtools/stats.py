@@ -94,7 +94,7 @@ class StatsReportMixin():
             self.general_stats_addcols(self.samtools_stats, stats_headers, 'Samtools Stats')
 
             # Make bargraph plot of mapped/unmapped reads
-            self.sections.append(alignment_section(self.samtools_stats))
+            self.alignment_section(self.samtools_stats)
 
             # Make dot plot of counts
             keys = OrderedDict()
@@ -126,36 +126,33 @@ class StatsReportMixin():
             keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs'})
             keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs'})
 
-            plot_html = beeswarm.plot(self.samtools_stats, keys,
-                                            {'id': 'samtools-stats-dp'})
-            self.sections.append({
-                'name': 'Alignment metrics',
-                'anchor': 'samtools-stats',
-                'content': "<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p> {}".format(plot_html)
-            })
+            self.add_section (
+                name = 'Alignment metrics',
+                anchor = 'samtools-stats',
+                description = "This module parses the output from <code>samtools stats</code>. All numbers in millions.",
+                plot = beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
+            )
 
         # Return the number of logs that were found
         return len(self.samtools_stats)
 
 
-def alignment_section(samples_data):
-    bedgraph_data = {}
-    for sample_id, data in samples_data.items():
-        expected_total = data['raw_total_sequences']
-        read_sum = (data['reads_mapped'] + data['reads_unmapped'])
-        if read_sum == expected_total:
-            bedgraph_data[sample_id] = data
-        else:
-            log.warn("sum of mapped/unmapped reads not matching total, "
-                     "skipping samtools plot for: {}".format(sample_id))
-    bargraph = alignment_chart(bedgraph_data)
-    section = {
-        'name': 'Percent Mapped',
-        'anchor': 'samtools-stats-alignment',
-        'content': ("<p>Alignment metrics from <code>samtools stats</code>;"
-                    " mapped vs. unmapped reads.</p> {}".format(bargraph))
-    }
-    return section
+    def alignment_section(self, samples_data):
+        bedgraph_data = {}
+        for sample_id, data in samples_data.items():
+            expected_total = data['raw_total_sequences']
+            read_sum = (data['reads_mapped'] + data['reads_unmapped'])
+            if read_sum == expected_total:
+                bedgraph_data[sample_id] = data
+            else:
+                log.warn("sum of mapped/unmapped reads not matching total, "
+                         "skipping samtools plot for: {}".format(sample_id))
+        self.add_section (
+            name = 'Percent Mapped',
+            anchor = 'samtools-stats-alignment',
+            description = "Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads.",
+            plot = alignment_chart(bedgraph_data)
+        )
 
 
 def alignment_chart(data):

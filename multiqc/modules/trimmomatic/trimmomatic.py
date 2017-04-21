@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.trimmomatic, headers)
 
         # Make barplot
-        self.intro += self.trimmomatic_barplot()
+        self.trimmomatic_barplot()
 
     def parse_trimmomatic(self, f):
         s_name = None
@@ -125,4 +125,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.trimmomatic, keys, pconfig)
+        self.add_section( plot = bargraph.plot(self.trimmomatic, keys, pconfig) )

@@ -21,8 +21,36 @@ All plot types can be generated using custom content - see the
 for examples of how data should be structured.
 
 # Configuration
-Data should typically be submitted alongside some configuration, to specify how
-MultiQC should parse and display the data. All of these configuration parameters
+## Order of sections
+If you have multiple different Custom Content sections, their order will be random
+and may vary between runs. To avoid this, you can specify an order in your MultiQC
+config as follows:
+
+```yaml
+custom_content:
+  order:
+    - first_cc_section
+    - second_cc_section
+```
+
+Each section name should be the ID assigned to that section. You can explicitly set
+this (see below), or the Custom Content module will automatically assign an ID.
+To find out what your custom content section ID is, generate a report and click
+the side navigation to your section. The browser URL should update and show something
+that looks like this:
+
+```
+multiqc_report.html#my_cc_section
+```
+
+The section ID is the part after the `#` (`my_cc_section` in the above section).
+
+Note that any Custom Content sections found that are _not_ specified in the config
+will be placed at the top of the report.
+
+## Section configuration
+See below for how these config options can be specified (either within the data file
+or in a MultiQC config file). All of these configuration parameters
 are optional, and MultiQC will do its best to guess sensible defaults if they are
 not specified.
 

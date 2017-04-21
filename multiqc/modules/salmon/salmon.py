@@ -79,7 +79,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.salmon_meta, headers)
 
         # Fragment length distribution plot
-        # Only one section, so add to the intro
         pconfig = {
             'smooth_points': 500,
             'id': 'salmon_plot',
@@ -90,6 +89,5 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
-
-        self.intro += linegraph.plot(self.salmon_fld, pconfig)
+        self.add_section( plot = linegraph.plot(self.salmon_fld, pconfig) )
 
