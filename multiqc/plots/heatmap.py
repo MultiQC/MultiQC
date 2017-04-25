@@ -10,6 +10,11 @@ import random
 
 from multiqc.utils import config, report
 
+import scipy
+import pylab
+import scipy.cluster.hierarchy as sch
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -28,6 +33,28 @@ def plot (data, xcats, ycats=None, pconfig=None):
 
     if ycats is None:
         ycats = xcats
+
+    # make a numpy array to be compatible with linkage function
+    data2 = np.array(data)
+
+    # rows clustering
+    Y = sch.linkage(data2, method='complete')
+    Z1 = sch.dendrogram(Y)
+
+    # columns clustering
+    Y = sch.linkage(data2.T, method='complete')
+    Z2 = sch.dendrogram(Y)
+
+    # dendrogram label indices
+    idx1 = Z1['leaves']
+    idx2 = Z2['leaves']
+    data2 = data2[idx1,:]
+    data2 = data2[:,idx2]
+    data = data2.tolist()
+
+    # the new labels order
+    xcats = [ xcats[i] for i in idx2 ]
+    ycats = [ ycats[i] for i in idx1 ]
 
     # Make a plot
     return highcharts_heatmap(data, xcats, ycats, pconfig)
