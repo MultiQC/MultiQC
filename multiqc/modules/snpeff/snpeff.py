@@ -182,7 +182,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def effects_impact_plot(self):
-        """ Generate the SnpEff Counts by Genomic Region plot """
+        """ Generate the SnpEff Counts by Effects Impact plot """
 
         # Put keys in a more logical order
         keys = [ 'MODIFIER', 'LOW', 'MODERATE', 'HIGH' ]
@@ -195,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'snpeff_variant_effects_impact',
-            'title': 'SnpEff: Counts by Genomic Region',
+            'title': 'SnpEff: Counts by Effects Impact',
             'ylab': '# Reads',
             'logswitch': True
         }
