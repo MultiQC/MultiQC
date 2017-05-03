@@ -103,7 +103,8 @@ def plot (data, pconfig={}):
     try:
         return get_template_mod().linegraph(plotdata, pconfig)
     except (AttributeError, TypeError):
-        if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
+        if config.plots_force_flat or (not config.plots_force_interactive
+                                       and len(plotdata[0]) > config.plots_flat_numseries):
             try:
                 return matplotlib_linegraph(plotdata, pconfig)
             except:
@@ -146,7 +147,9 @@ def highcharts_linegraph (plotdata, pconfig={}):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
+            html += ('<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym}' +
+                     ' data-newdata="{k}" data-target="{id}">{n}</button>\n'
+                    ).format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
     # The plot div
@@ -189,9 +192,11 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
         pids.append(pid)
 
-    html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
-          'Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ' + \
-          '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
+    html = '''
+        <p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
+        Flat image plot. Toolbox functions such as highlighting / hiding samples will not work
+        (see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>
+    '''
     html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig['id'])
 
     # Same defaults as HighCharts for consistency
@@ -208,7 +213,8 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                 name = pconfig['data_labels'][k]['name']
             except:
                 name = k+1
-            html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(a=active, pid=pid, n=name)
+            html += ('<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'
+                    ).format(a=active, pid=pid, n=name)
         html += '</div>\n\n'
 
     # Go through datasets creating plots
@@ -268,10 +274,20 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
             # Reformat data (again)
             try:
-                axes.plot([x[0] for x in d['data']], [x[1] for x in d['data']], label=d['name'], color=d.get('color', default_colors[cidx]), linestyle=linestyle, linewidth=1, marker=None)
+                axes.plot( [x[0] for x in d['data']],
+                           [x[1] for x in d['data']],
+                           label = d['name'],
+                           color = d.get('color', default_colors[cidx]),
+                           linestyle = linestyle,
+                           linewidth = 1,
+                           marker = None)
             except TypeError:
                 # Categorical data on x axis
-                axes.plot(d['data'], label=d['name'], color=d.get('color', default_colors[cidx]), linewidth=1, marker=None)
+                axes.plot(d['data'],
+                          label = d['name'],
+                          color = d.get('color', default_colors[cidx]),
+                          linewidth = 1,
+                          marker = None)
 
         # Tidy up axes
         axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)
@@ -323,7 +339,12 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
         # Plot title
         if 'title' in pconfig:
-            plt.text(0.5, 1.05, pconfig['title'], horizontalalignment='center', fontsize=16, transform=axes.transAxes)
+            plt.text( 0.5,
+                      1.05,
+                      pconfig['title'],
+                      horizontalalignment = 'center',
+                      fontsize = 16,
+                      transform = axes.transAxes)
         axes.grid(True, zorder=10, which='both', axis='y', linestyle='-', color='#dedede', linewidth=1)
 
         # X axis categories, if specified
@@ -344,15 +365,32 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         if 'yPlotBands' in pconfig:
             xlim = axes.get_xlim()
             for pb in pconfig['yPlotBands']:
-                axes.barh(pb['from'], xlim[1], height = pb['to']-pb['from'], left=xlim[0], color=pb['color'], linewidth=0, zorder=0)
+                axes.barh( pb['from'],
+                           xlim[1],
+                           height = pb['to']-pb['from'],
+                           left = xlim[0],
+                           color = pb['color'],
+                           linewidth = 0,
+                           zorder = 0 )
         if 'xPlotBands' in pconfig:
             ylim = axes.get_ylim()
             for pb in pconfig['xPlotBands']:
-                axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0)
+                axes.bar( pb['from'],
+                          ylim[1],
+                          width = pb['to']-pb['from'],
+                          bottom = ylim[0],
+                          color = pb['color'],
+                          linewidth = 0,
+                          zorder = 0)
 
         # Tight layout - makes sure that legend fits in and stuff
         if len(pdata) <= 15:
-            lgd = axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+            lgd = axes.legend( loc = 'lower center',
+                               bbox_to_anchor = (0, -0.22, 1, .102),
+                               ncol = 5,
+                               mode = 'expand',
+                               fontsize = 8,
+                               frameon = False)
             plt.tight_layout(rect=[0,0.08,1,0.92])
         else:
             plt.tight_layout(rect=[0,0,1,0.92])
@@ -379,12 +417,14 @@ def matplotlib_linegraph (plotdata, pconfig={}):
             fig.savefig(img_buffer, format='png', bbox_inches='tight')
             b64_img = base64.b64encode(img_buffer.getvalue()).decode('utf8')
             img_buffer.close()
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(pid, hidediv, b64_img)
+            html += ('<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'
+                    ).format(pid, hidediv, b64_img)
 
         # Save to a file and link <img>
         else:
             plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
+            html += ('<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'
+                    ).format(pid, hidediv, plot_relpath)
 
         plt.close(fig)
 
