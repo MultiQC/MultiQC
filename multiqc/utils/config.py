@@ -13,6 +13,7 @@ import random
 import subprocess
 import sys
 import yaml
+from pprint import pformat
 
 import multiqc
 
@@ -45,10 +46,6 @@ with open(searchp_fn) as f:
     configs = yaml.load(f)
     for c, v in configs.items():
         globals()[c] = v
-# Module filename search patterns
-searchp_fn = os.path.join( MULTIQC_DIR, 'utils', 'search_patterns.yaml')
-with open(searchp_fn) as f:
-    sp = yaml.load(f)
 
 # Other defaults that can't be set in YAML
 modules_dir = os.path.join(MULTIQC_DIR, 'modules')
@@ -62,9 +59,28 @@ report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuv
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
 avail_modules = dict()
+module_roots = set()
 for entry_point in pkg_resources.iter_entry_points('multiqc.modules.v1'):
-    nicename = str(entry_point).split('=')[0].strip()
-    avail_modules[nicename] = entry_point
+    avail_modules[entry_point.name] = entry_point
+
+    # Infer where the module is actually going to be loaded from.
+    module_roots.add(os.path.join(entry_point.dist.location, entry_point.module_name.split(".")[0]))
+
+# Module filename search patterns
+# Look for search_patterns.yaml in the utils directory where the module is located,
+# so that plugin modules can add their own patterns.
+sp = dict()
+for searchp_fn in [ os.path.join( d, 'utils', 'search_patterns.yaml') for d in module_roots ]:
+    try:
+        with open(searchp_fn) as f:
+            sp.update(yaml.load(f))
+    except OSError:
+        pass
+
+# We can't log yet, but this is a serious error.
+if not sp:
+    print("No default search patterns were loaded. Looked in locations:\n{}".format(pformat(module_roots)),
+          file = sys.stderr)
 
 # run_modules defined here so it can be shared between the main script and plugin
 # hooks.
@@ -93,6 +109,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
         the installation script (python setup.py install)", file=sys.stderr)
     sys.exit(1)
 
+
 # Functions to load user config files. These are called by the main MultiQC script.
 def mqc_load_userconfig(path=None):
     """ Overwrite config defaults with user config files """
@@ -109,7 +126,6 @@ def mqc_load_userconfig(path=None):
     # Custom command line config
     if path is not None:
         mqc_load_config(path)
-
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
