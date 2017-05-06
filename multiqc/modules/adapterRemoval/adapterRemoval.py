@@ -60,9 +60,6 @@ class MultiqcModule(BaseMultiqcModule):
         # add data to Basic Stats Table
         self.adapter_removal_stats_table()
 
-        # Start the sections
-        #self.sections = list()
-
         self.adapter_removal_retained_chart()
         self.adapter_removal_length_dist_plot()
 
@@ -185,10 +182,10 @@ class MultiqcModule(BaseMultiqcModule):
             if self.__read_type == 'single':
                 if not self.__collapsed:
                     self.len_dist_plot_data['mate1'][self.s_name][l_data[0]] = l_data[1]
-                    self.len_dist_plot_data['mate2'][self.s_name][l_data[0]] = 0
-                    self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = 0
-                    self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = 0
-                    self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['mate2'][self.s_name][l_data[0]] = None
+                    self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = None
+                    self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = None
+                    self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = None
                     self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[2]
                     self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[3]
                 else:
@@ -199,8 +196,8 @@ class MultiqcModule(BaseMultiqcModule):
                     self.len_dist_plot_data['mate1'][self.s_name][l_data[0]] = l_data[1]
                     self.len_dist_plot_data['mate2'][self.s_name][l_data[0]] = l_data[2]
                     self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = l_data[3]
-                    self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = 0
-                    self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = 0
+                    self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = None
+                    self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = None
                     self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[4]
                     self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[5]
                 else:
@@ -221,91 +218,82 @@ class MultiqcModule(BaseMultiqcModule):
                 'max': 100,
                 'min': 0,
                 'suffix': '%',
-                'scale': 'RdYlGn',
+                'scale': 'RdYlGn-rev',
                 'format': '{:.1f}%',
                 'shared_key': 'percent_aligned',
         }
         headers['aligned_total'] = {
-                'title': 'Total Trimmed',
-                'description': 'total trimmed reads',
+                'title': '{} Reads Trimmed'.format(config.read_count_prefix),
+                'description': 'Total trimmed reads ({})'.format(config.read_count_desc),
+                'modify': lambda x: x * config.read_count_multiplier,
                 'min': 0,
                 'scale': 'PuBu',
-                'shared_key': 'aligned_total'
+                'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_retained_chart(self):
 
         pconfig = {
-            'title': 'retained and discarded',
+            'title': 'Discarded Reads',
             'id': 'ar_retained_plot',
             'ylab': '# Reads',
             'hide_zero_cats': False,
             'cpswitch_counts_label': 'Number of Reads'
         }
 
+        # todo: the paired-end categories if every dataset is single-end data
         cats_pec = OrderedDict()
-        cats_pec['singleton_m1'] = {'name': 'singleton mate1'}
-        cats_pec['singleton_m2'] = {'name': 'singleton mate2'}
-        cats_pec['retained_reads'] = {'name': 'retained read pairs'}
-        cats_pec['full-length_cp'] = {'name': 'full-length collapsed pairs'}
-        cats_pec['truncated_cp'] = {'name': 'truncated collapsed pairs'}
-        cats_pec['discarded_m1'] = {'name': 'discarded mate1'}
-        cats_pec['discarded_m2'] = {'name': 'discarded mate2'}
-
-        #self.sections.append({
-        #    'name': 'Retained and Discarded Paired-End Collapsed',
-        #    'anchor': 'adapter_removal_retained_plot',
-        #    'content': '<p>The proportions of retained and discarded reads.</p>' +
-        #               bargraph.plot(self.adapter_removal_data, cats_pec, pconfig)
-        #})
+        cats_pec['retained_reads'] = {'name': 'Retained Read Pairs'}
+        cats_pec['singleton_m1'] = {'name': 'Singleton R1'}
+        cats_pec['singleton_m2'] = {'name': 'Singleton R2'}
+        cats_pec['full-length_cp'] = {'name': 'Full-length Collapsed Pairs'}
+        cats_pec['truncated_cp'] = {'name': 'Truncated Collapsed Pairs'}
+        cats_pec['discarded_m1'] = {'name': 'Discarded R1'}
+        cats_pec['discarded_m2'] = {'name': 'Discarded R2'}
 
         self.add_section(
             name='Retained and Discarded Paired-End Collapsed',
             anchor='adapter_removal_retained_plot',
-            description='The proportions of retained and discarded reads.',
+            description='The number of retained and discarded reads.',
             plot=bargraph.plot(self.adapter_removal_data, cats_pec, pconfig)
         )
 
     def adapter_removal_length_dist_plot(self):
+        # todo: remove the paired-end specific plots when all report datasets are single end
         pconfig = {
             'title': 'Length Distribution',
-            'id': 'ar_lenght_count_plot',
+            'id': 'ar_length_count_plot',
             'ylab': 'Counts',
             'xlab': 'read length',
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
             'data_labels': [
+                {'name': 'All', 'ylab': 'Count'},
                 {'name': 'Mate1', 'ylab': 'Count'},
                 {'name': 'Mate2', 'ylab': 'Count'},
                 {'name': 'Singleton', 'ylab': 'Count'},
                 {'name': 'Collapsed', 'ylab': 'Count'},
                 {'name': 'Collapsed Truncated', 'ylab': 'Count'},
-                {'name': 'Discarded', 'ylab': 'Count'},
-                {'name': 'All', 'ylab': 'Count'}
+                {'name': 'Discarded', 'ylab': 'Count'}
             ]
         }
 
+        # todo: remove the paired-end specific plots when all report datasets are single end
         lineplot_data = [
+            self.len_dist_plot_data['all'],
             self.len_dist_plot_data['mate1'],
             self.len_dist_plot_data['mate2'],
             self.len_dist_plot_data['singleton'],
             self.len_dist_plot_data['collapsed'],
             self.len_dist_plot_data['collapsed_truncated'],
-            self.len_dist_plot_data['discarged'],
-            self.len_dist_plot_data['all']
+            self.len_dist_plot_data['discarged']
         ]
-        #self.sections.append({
-        #    'name': 'Lenght Distribution Paired End Collapsed',
-        #    'anchor': 'ar_lenght_count',
-        #    'content': '<p>The lenght distribution of reads after processing adapter alignment.</p>' +
-        #               linegraph.plot(lineplot_data, pconfig)
-        #})
 
         self.add_section(
-            name='Lenght Distribution Paired End Collapsed',
-            anchor='ar_lenght_count',
-            description='The lenght distribution of reads after processing adapter alignment.',
+            name='Length Distribution Paired End Collapsed',
+            anchor='ar_length_count',
+            description='The length distribution of reads after processing adapter alignment.',
             plot=linegraph.plot(lineplot_data, pconfig)
         )
