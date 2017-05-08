@@ -210,8 +210,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         config.make_data_dir = True
     if no_data_dir:
         config.make_data_dir = False
-    config.force = force
-    config.zip_data_dir = zip_data_dir
+    if force:
+        config.force = True
+    if zip_data_dir:
+        config.zip_data_dir = True
     if data_format is not None:
         config.data_format = data_format
     if export_plots:
