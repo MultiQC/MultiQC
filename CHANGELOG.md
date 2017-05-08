@@ -83,6 +83,9 @@ To see what changes need to applied to your custom plugin code, please see the [
 * Module file search has been rewritten (see above changes to configs)
   * Significant improvement in search speed (test dataset runs in approximately half the time)
   * More options for modules to find their logs, eg. filename and contents matching regexes (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
+* New `--ignore-samples` option to skip samples based on parsed sample name
+  * Alternative to filtering by input filename, which doesn't always work
+  * Also can use config vars `sample_names_ignore` (glob patterns) and `sample_names_ignore_re` (regex patterns).
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
