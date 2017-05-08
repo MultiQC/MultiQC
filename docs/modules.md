@@ -274,6 +274,22 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 ```
 
+### Filtering by parsed sample names
+MultiQC users can use the `--ignore-samples` flag to skip sample names
+that match specific patterns. As sample names are generated in a different
+way by every module, this filter has to be applied after log parsing.
+
+There is a core function to do this task - assuming that your data is
+in a dictionary with the first key as sample name, pass it through the
+`self.ignore_samples` function as follows:
+
+```python
+self.yourdata = self.ignore_samples(self.yourdata)
+```
+
+This will remove any dictionary keys where the sample name matches
+a user pattern.
+
 ### No files found
 If your module cannot find any matching files, it needs to raise an
 exception of type `UserWarning`. This tells the core MultiQC program

@@ -25,6 +25,9 @@ class VariantEvalMixin():
                 self.add_data_source(f, section='varianteval')
                 self.gatk_varianteval[f['s_name']] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.gatk_varianteval = self.ignore_samples(self.gatk_varianteval)
+
         if len(self.gatk_varianteval) > 0:
 
             # Write parsed report data to a file (restructure first)

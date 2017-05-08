@@ -6,7 +6,6 @@ http://rseqc.sourceforge.net/#genebody-coverage-py """
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -66,6 +65,9 @@ def parse_reports(self):
             if nrows == 0:
                 del self.gene_body_cov_hist_counts[f['s_name']]
                 log.warning("Empty geneBodyCoverage file found: {}".format(f['fn']))
+
+    # Filter to strip out ignored sample names
+    self.gene_body_cov_hist_counts = self.ignore_samples(self.gene_body_cov_hist_counts)
 
     if len(self.gene_body_cov_hist_counts) > 0:
 

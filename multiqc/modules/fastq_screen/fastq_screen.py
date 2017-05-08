@@ -37,6 +37,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f)
                 self.fq_screen_data[f['s_name']] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
+
         if len(self.fq_screen_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

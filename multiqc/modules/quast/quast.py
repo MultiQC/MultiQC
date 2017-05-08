@@ -30,6 +30,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('quast'):
             self.parse_quast_log(f)
 
+        # Filter to strip out ignored sample names
+        self.quast_data = self.ignore_samples(self.quast_data)
+
         if len(self.quast_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

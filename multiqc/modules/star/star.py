@@ -54,6 +54,12 @@ class MultiqcModule(BaseMultiqcModule):
                 self.star_genecounts_first_strand[s_name] = parsed_data['first_strand']
                 self.star_genecounts_second_strand[s_name] = parsed_data['second_strand']
 
+        # Filter to strip out ignored sample names
+        self.star_data = self.ignore_samples(self.star_data)
+        self.star_genecounts_unstranded = self.ignore_samples(self.star_genecounts_unstranded)
+        self.star_genecounts_first_strand = self.ignore_samples(self.star_genecounts_first_strand)
+        self.star_genecounts_second_strand = self.ignore_samples(self.star_genecounts_second_strand)
+
         if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

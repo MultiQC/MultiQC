@@ -62,6 +62,11 @@ class MultiqcModule(BaseMultiqcModule):
                     if self._short_chrom(chrom) is not None:
                         for val, sample in zip(sample_vals, sample_names):
                             data[chrom][sample][float(cov)] = float(val)
+
+        # Filter to strip out ignored sample names
+        for chrom in data:
+            data[chrom] = self.ignore_samples(data[chrom])
+
         if data:
             def to_padded_str(x):
                 x = self._short_chrom(x)
@@ -112,6 +117,10 @@ class MultiqcModule(BaseMultiqcModule):
                 total = float(cur["bins.in"]) + float(cur["bins.out"])
                 data[cur["sample_id"]] = {"x": float(cur["bins.lo"]) / total,
                                           "y": float(cur["bins.out"]) / total}
+
+        # Filter to strip out ignored sample names
+        data = self.ignore_samples(data)
+
         if data:
             log.info("Found goleft indexcov bin reports for %s samples" % (len(data)))
             pconfig = {

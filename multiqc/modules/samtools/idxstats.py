@@ -4,7 +4,6 @@
 """ MultiQC submodule to parse output from Samtools idxstats """
 
 import logging
-import re
 from collections import OrderedDict, defaultdict
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
@@ -25,6 +24,9 @@ class IdxstatsReportMixin():
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f, section='idxstats')
                 self.samtools_idxstats[f['s_name']] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.samtools_idxstats = self.ignore_samples(self.samtools_idxstats)
 
         if len(self.samtools_idxstats) > 0:
 

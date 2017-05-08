@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -40,6 +39,9 @@ def parse_reports(self):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='infer_experiment')
             self.infer_exp[f['s_name']] = d
+
+    # Filter to strip out ignored sample names
+    self.infer_exp = self.ignore_samples(self.infer_exp)
 
     if len(self.infer_exp) > 0:
 

@@ -98,6 +98,10 @@ def parse_reports(self):
         self.qualimap_rnaseq_cov_hist[s_name] = d
         self.add_data_source(f, s_name=s_name, section='rna_coverage_histogram')
 
+    # Filter to strip out ignored sample names
+    self.qualimap_rnaseq_genome_results = self.ignore_samples(self.qualimap_rnaseq_genome_results)
+    self.qualimap_rnaseq_cov_hist = self.ignore_samples(self.qualimap_rnaseq_cov_hist)
+
     #### Plots
 
     # Genomic Origin Bar Graph

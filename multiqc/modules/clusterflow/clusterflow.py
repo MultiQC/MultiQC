@@ -42,6 +42,10 @@ class MultiqcModule(BaseMultiqcModule):
                 self.clusterflow_runfiles[f['s_name']] = parsed_data
                 self.add_data_source(f, 'runfile')
 
+        # Filters to strip out ignored sample names
+        self.clusterflow_commands = self.ignore_samples(self.clusterflow_commands)
+        self.clusterflow_runfiles = self.ignore_samples(self.clusterflow_runfiles)
+
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

@@ -29,6 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('kallisto', filehandles=True):
             self.parse_kallisto_log(f)
 
+        # Filter to strip out ignored sample names
+        self.kallisto_data = self.ignore_samples(self.kallisto_data)
+
         if len(self.kallisto_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

@@ -5,7 +5,6 @@
 import logging
 import re
 from collections import OrderedDict
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -37,6 +36,9 @@ class RmdupReportMixin():
                     self.samtools_rmdup[s_name]['n_tot'] = int(match.group(2))
                     self.samtools_rmdup[s_name]['n_unique'] = int(match.group(2)) - int(match.group(1))
                     self.samtools_rmdup[s_name]['pct_dups'] = float(match.group(3))*100
+
+        # Filter to strip out ignored sample names
+        self.samtools_rmdup = self.ignore_samples(self.samtools_rmdup)
 
         if len(self.samtools_rmdup) > 0:
             # Write parsed report data to a file

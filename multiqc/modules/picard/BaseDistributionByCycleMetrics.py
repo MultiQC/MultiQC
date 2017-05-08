@@ -2,12 +2,10 @@
 
 """ MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -163,6 +161,9 @@ def parse_reports(self):
         v['mean_pct_c'] = v['sum_pct_c'] / v['cycle_count']
         v['mean_pct_g'] = v['sum_pct_g'] / v['cycle_count']
         v['mean_pct_t'] = v['sum_pct_t'] / v['cycle_count']
+
+    # Filter to strip out ignored sample names
+    self.picard_baseDistributionByCycle_data = self.ignore_samples(self.picard_baseDistributionByCycle_data)
 
     if len(self.picard_baseDistributionByCycle_data) > 0:
 

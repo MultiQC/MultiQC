@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph, bargraph
 
 # Initialise the logger
@@ -86,6 +85,9 @@ def parse_reports(self):
             if len(self.picard_RnaSeqMetrics_histogram[s_name]) == 0:
                 self.picard_RnaSeqMetrics_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
+
+    # Filter to strip out ignored sample names
+    self.picard_RnaSeqMetrics_data = self.ignore_samples(self.picard_RnaSeqMetrics_data)
 
     if len(self.picard_RnaSeqMetrics_data) > 0:
 

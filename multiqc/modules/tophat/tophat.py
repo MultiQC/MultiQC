@@ -40,6 +40,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.tophat_data = self.ignore_samples(self.tophat_data)
+
         if len(self.tophat_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

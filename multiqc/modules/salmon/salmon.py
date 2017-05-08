@@ -47,6 +47,10 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f, s_name)
                     self.salmon_fld[s_name] = parsed
 
+        # Filter to strip out ignored sample names
+        self.salmon_meta = self.ignore_samples(self.salmon_meta)
+        self.salmon_fld = self.ignore_samples(self.salmon_fld)
+
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
             log.debug("Could not find any Salmon data in {}".format(config.analysis_dir))
             raise UserWarning

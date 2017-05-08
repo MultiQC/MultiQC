@@ -31,6 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('snpeff', filehandles=True):
             self.parse_snpeff_log(f)
 
+        # Filter to strip out ignored sample names
+        self.snpeff_data = self.ignore_samples(self.snpeff_data)
+
         if len(self.snpeff_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning

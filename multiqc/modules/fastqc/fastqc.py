@@ -67,6 +67,9 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
+        # Filter to strip out ignored sample names
+        self.fastqc_data = self.ignore_samples(self.fastqc_data)
+
         if len(self.fastqc_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

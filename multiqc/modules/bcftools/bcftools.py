@@ -8,7 +8,6 @@ from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Samtools submodules
-from . import stats
 from .stats import StatsReportMixin
 
 # Initialise the logger

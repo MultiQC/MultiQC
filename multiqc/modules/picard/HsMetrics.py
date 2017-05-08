@@ -119,6 +119,9 @@ def parse_reports(self):
                 self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
 
 
+    # Filter to strip out ignored sample names
+    self.picard_HsMetrics_data = self.ignore_samples(self.picard_HsMetrics_data)
+
     if len(self.picard_HsMetrics_data) > 0:
 
         # Write parsed data to a file

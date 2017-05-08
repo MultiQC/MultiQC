@@ -7,7 +7,6 @@ import logging
 import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph, linegraph, scatter
 
@@ -37,6 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.slamdunk_data = dict()
         for f in self.find_log_files('slamdunk/summary', filehandles = True):
             self.parseSummary(f)
+        self.slamdunk_data = self.ignore_samples(self.slamdunk_data)
         if len(self.slamdunk_data) > 0:
             self.slamdunkGeneralStatsTable()
             self.slamdunkFilterStatsTable()
@@ -47,6 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.PCA_data = dict()
         for f in self.find_log_files('slamdunk/PCA', filehandles = True):
             self.parsePCA(f)
+        self.PCA_data = self.ignore_samples(self.PCA_data)
         if len(self.PCA_data) > 0:
             self.slamdunkPCAPlot()
             log.debug("Found {} PCA plots".format(len(self.PCA_data)))
@@ -56,6 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.utrates_data = dict()
         for f in self.find_log_files('slamdunk/utrrates', filehandles = True):
             self.parseUtrRates(f)
+        self.utrates_data = self.ignore_samples(self.utrates_data)
         if len(self.utrates_data) > 0:
             self.write_data_file(self.utrates_data, 'multiqc_slamdunk_utrrates')
             self.slamdunkUtrRatesPlot()
@@ -67,6 +69,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.rates_data_minus = dict()
         for f in self.find_log_files('slamdunk/rates', filehandles = True):
             self.parseSlamdunkRates(f)
+        self.rates_data_plus = self.ignore_samples(self.rates_data_plus)
+        self.rates_data_minus = self.ignore_samples(self.rates_data_minus)
         if len(self.rates_data_plus) > 0:
             self.write_data_file(self.rates_data_plus, 'multiqc_slamdunk_readrates_plus')
             self.write_data_file(self.rates_data_minus, 'multiqc_slamdunk_readrates_minus')
@@ -81,6 +85,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.tc_per_readpos_minus = dict()
         for f in self.find_log_files('slamdunk/tcperreadpos', filehandles = True):
             self.parseSlamdunkTCPerReadpos(f)
+        self.nontc_per_readpos_plus = self.ignore_samples(self.nontc_per_readpos_plus)
+        self.nontc_per_readpos_minus = self.ignore_samples(self.nontc_per_readpos_minus)
+        self.tc_per_readpos_plus = self.ignore_samples(self.tc_per_readpos_plus)
+        self.tc_per_readpos_minus = self.ignore_samples(self.tc_per_readpos_minus)
         if len(self.tc_per_readpos_plus) > 0:
             self.write_data_file(self.tc_per_readpos_plus, 'multiqc_slamdunk_tcperreadpos_plus')
             self.write_data_file(self.nontc_per_readpos_plus, 'multiqc_slamdunk_nontcperreadpos_plus')
@@ -97,6 +105,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.tc_per_utrpos_minus = dict()
         for f in self.find_log_files('slamdunk/tcperutrpos', filehandles = True):
             self.parseSlamdunkTCPerUtrpos(f)
+        self.nontc_per_utrpos_plus = self.ignore_samples(self.nontc_per_utrpos_plus)
+        self.nontc_per_utrpos_minus = self.ignore_samples(self.nontc_per_utrpos_minus)
+        self.tc_per_utrpos_plus = self.ignore_samples(self.tc_per_utrpos_plus)
+        self.tc_per_utrpos_minus = self.ignore_samples(self.tc_per_utrpos_minus)
         if len(self.nontc_per_utrpos_plus) > 0:
             self.write_data_file(self.tc_per_utrpos_plus, 'multiqc_slamdunk_tcperutrpos_plus')
             self.write_data_file(self.nontc_per_utrpos_plus, 'multiqc_slamdunk_nontcperutrpos_plus')

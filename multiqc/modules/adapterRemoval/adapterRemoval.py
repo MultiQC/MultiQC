@@ -50,6 +50,9 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 self.adapter_removal_data[self.s_name] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.adapter_removal_data = self.ignore_samples(self.adapter_removal_data)
+
         if len(self.adapter_removal_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

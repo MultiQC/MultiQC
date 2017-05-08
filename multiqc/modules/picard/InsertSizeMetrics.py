@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -107,6 +106,9 @@ def parse_reports(self):
                 self.picard_insertSize_samplestats[s_name]['summed_median'] = idx
                 break
 
+
+    # Filter to strip out ignored sample names
+    self.picard_insertSize_data = self.ignore_samples(self.picard_insertSize_data)
 
     if len(self.picard_insertSize_data) > 0:
 

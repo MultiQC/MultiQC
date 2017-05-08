@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import beeswarm
 
 # Initialise the logger
@@ -64,6 +63,9 @@ def parse_reports(self):
             if d['read_2'] != 0:
                 is_paired_end = True
             self.bam_stat_data[f['s_name']] = d
+
+    # Filter to strip out ignored sample names
+    self.bam_stat_data = self.ignore_samples(self.bam_stat_data)
 
     if len(self.bam_stat_data) > 0:
         # Write to file

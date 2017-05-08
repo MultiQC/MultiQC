@@ -6,7 +6,6 @@ http://rseqc.sourceforge.net/#read-duplication-py """
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -33,6 +32,9 @@ def parse_reports(self):
                         self.read_dups[f['s_name']][int(s[0])] = int(s[1])
                 except:
                     pass
+
+    # Filter to strip out ignored sample names
+    self.read_dups = self.ignore_samples(self.read_dups)
 
     if len(self.read_dups) > 0:
 

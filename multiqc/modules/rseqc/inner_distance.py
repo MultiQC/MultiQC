@@ -6,7 +6,6 @@ http://rseqc.sourceforge.net/#inner-distance-py """
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -39,6 +38,9 @@ def parse_reports(self):
         # Only add if we actually found something i,e it was PE data
         if len(parsed_data) > 0:
             self.inner_distance[f['s_name']] = parsed_data
+
+    # Filter to strip out ignored sample names
+    self.inner_distance = self.ignore_samples(self.inner_distance)
 
     if len(self.inner_distance) > 0:
 

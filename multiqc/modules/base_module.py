@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import io
+import fnmatch
 import logging
 import os
 import re
@@ -149,6 +150,20 @@ class BaseMultiqcModule(object):
                     s_name = s_name[len(chrs):]
         return s_name
 
+
+    def ignore_samples(self, data):
+        """ Strip out samples which match `sample_names_ignore` """
+        # Match ignore glob patterns
+        data = {
+            k:v for k,v in data.items()
+            if not any( fnmatch.fnmatch(k, sn) for sn in config.sample_names_ignore)
+        }
+        # Match ignore regexes
+        data = {
+            k:v for k,v in data.items()
+            if not any( re.match(sn, k) for sn in config.sample_names_ignore_re)
+        }
+        return data
 
     def general_stats_addcols(self, data, headers=None, namespace=None):
         """ Helper function to add to the General Statistics variable.

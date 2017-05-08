@@ -125,6 +125,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_bismark_bam2nuc(f)
             self.add_data_source(f, section='bam2nuc')
 
+        # Filters to strip out ignored sample names
+        for k in self.bismark_data:
+            self.bismark_data[k] = self.ignore_samples(self.bismark_data[k])
+        for k in self.bismark_mbias_data['meth']:
+            self.bismark_mbias_data['meth'][k] = self.ignore_samples(self.bismark_mbias_data['meth'][k])
+        for k in self.bismark_mbias_data['cov']:
+            self.bismark_mbias_data['cov'][k] = self.ignore_samples(self.bismark_mbias_data['cov'][k])
+
         num_parsed = len(self.bismark_data['alignment'])
         num_parsed += len(self.bismark_data['dedup'])
         num_parsed += len(self.bismark_data['methextract'])

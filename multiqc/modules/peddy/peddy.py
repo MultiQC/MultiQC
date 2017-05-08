@@ -53,6 +53,9 @@ class MultiqcModule(BaseMultiqcModule):
                         except KeyError:
                             self.peddy_data[s_name] = parsed_data[s_name]
 
+        # Filter to strip out ignored sample names
+        self.peddy_data = self.ignore_samples(self.peddy_data)
+
         if len(self.peddy_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

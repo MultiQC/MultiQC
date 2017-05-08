@@ -4,10 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import json
 import logging
-import os
-import re
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -29,6 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.prokka = dict()
         for f in self.find_log_files('prokka', filehandles=True):
             self.parse_prokka(f)
+
+        # Filter to strip out ignored sample names
+        self.prokka = self.ignore_samples(self.prokka)
 
         if len(self.prokka) == 0:
             log.debug("Could not find any Prokka data in {}".format(config.analysis_dir))

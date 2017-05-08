@@ -176,6 +176,21 @@ Note that the searched file paths will usually be relative to the working
 directory and can be highly variable, so you'll typically want to start patterns
 with a `*` to match any preceding directory structure.
 
+## Ignoring samples
+Some modules get sample names from the contents of the file and not the filename
+(for example, `stdout` logs can contain multiple samples). You can skip samples
+by their resolved sample names (after cleaning) with two config options:
+`sample_names_ignore` and `sample_names_ignore_re`. The first takes a list of
+strings to be used for glob pattern matching (same behaviour as the command line
+option `--ignore-samples`), the latter takes a list of regex patterns. For example:
+
+```yaml
+sample_names_ignore:
+    - 'SRR*'
+sample_names_ignore_re:
+    - '^SR{2}\d{7}_1$'
+```
+
 ## Large sample numbers
 MultiQC has been written with the intention of being used for any number of samples.
 This means that it _should_ work well with 6 samples or 6000. Very large sample numbers

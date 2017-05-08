@@ -5,7 +5,7 @@
 
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import beeswarm
@@ -26,6 +26,9 @@ class FlagstatReportMixin():
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f, section='flagstat')
                 self.samtools_flagstat[f['s_name']] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.samtools_flagstat = self.ignore_samples(self.samtools_flagstat)
 
         if len(self.samtools_flagstat) > 0:
 

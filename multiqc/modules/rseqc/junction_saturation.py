@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -46,6 +45,11 @@ def parse_reports(self):
                     self.junction_saturation_all[f['s_name']][v] = parsed['z'][k]
                     self.junction_saturation_known[f['s_name']][v] = parsed['y'][k]
                     self.junction_saturation_novel[f['s_name']][v] = parsed['w'][k]
+
+    # Filter to strip out ignored sample names
+    self.junction_saturation_all = self.ignore_samples(self.junction_saturation_all)
+    self.junction_saturation_known = self.ignore_samples(self.junction_saturation_known)
+    self.junction_saturation_novel = self.ignore_samples(self.junction_saturation_novel)
 
     if len(self.junction_saturation_all) > 0:
 

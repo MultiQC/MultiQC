@@ -5,7 +5,6 @@
 
 import logging
 from collections import OrderedDict
-from multiqc import config
 from multiqc.plots import beeswarm, bargraph
 
 # Initialise the logger
@@ -42,6 +41,9 @@ class StatsReportMixin():
                               .format(f['s_name']))
                 self.add_data_source(f, section='stats')
                 self.samtools_stats[f['s_name']] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.samtools_stats = self.ignore_samples(self.samtools_stats)
 
         if len(self.samtools_stats) > 0:
 

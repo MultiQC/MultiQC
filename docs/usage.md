@@ -33,6 +33,17 @@ multiqc . --ignore run_two/
 multiqc . --ignore */run_three/*/fastqc/*_R2.zip
 ```
 
+Some modules get sample names from the contents of the file and not the filename
+(for example, `stdout` logs can contain multiple samples). In this case, you can
+skip samples by name instead:
+```
+multiqc . --ignore-samples sample_3*
+```
+These strings are matched using glob logic (`*` and `?` are wildcards).
+
+All of these settings can be saved in a MultiQC config file so that you don't have
+to type them on the command line for every run.
+
 Finally, you can supply a file containing a list of file paths, one per row.
 MultiQC only search the listed files.
 ```

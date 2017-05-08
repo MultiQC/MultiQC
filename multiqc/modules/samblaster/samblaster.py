@@ -27,6 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.samblaster_data = dict()
         for f in self.find_log_files('samblaster', filehandles=True):
             self.parse_samblaster(f)
+
+        # Filter to strip out ignored sample names
+        self.samblaster_data = self.ignore_samples(self.samblaster_data)
+
         if len(self.samblaster_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning

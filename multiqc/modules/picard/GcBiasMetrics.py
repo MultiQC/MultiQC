@@ -2,12 +2,10 @@
 
 """ MultiQC submodule to parse output from Picard InsertSizeMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -85,6 +83,8 @@ def parse_reports(self):
                 log.debug("Removing {} as no data parsed".format(s_name))
 
 
+    # Filter to strip out ignored sample names
+    self.picard_GCbias_data = self.ignore_samples(self.picard_GCbias_data)
 
     if len(self.picard_GCbias_data) > 0:
 

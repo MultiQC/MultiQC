@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-import os
 from collections import OrderedDict
 import logging
 import re
@@ -30,6 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files('skewer', filehandles=True):
             self.parse_skewer_log(f)
+
+        # Filter to strip out ignored sample names
+        self.skewer_data = self.ignore_samples(self.skewer_data)
 
         if len(self.skewer_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))

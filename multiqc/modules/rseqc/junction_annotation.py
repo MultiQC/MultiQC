@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -61,6 +60,9 @@ def parse_reports(self):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='junction_annotation')
             self.junction_annotation_data[f['s_name']] = d
+
+    # Filter to strip out ignored sample names
+    self.junction_annotation_data = self.ignore_samples(self.junction_annotation_data)
 
     if len(self.junction_annotation_data) > 0:
 

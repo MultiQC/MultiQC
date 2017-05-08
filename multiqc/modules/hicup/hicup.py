@@ -29,6 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('hicup'):
             self.parse_hicup_logs(f)
 
+        # Filter to strip out ignored sample names
+        self.hicup_data = self.ignore_samples(self.hicup_data)
+
         if len(self.hicup_data) == 0:
             log.debug("Could not find any HiCUP data in {}".format(config.analysis_dir))
             raise UserWarning

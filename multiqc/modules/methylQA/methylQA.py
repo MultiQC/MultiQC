@@ -31,6 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('methylQA'):
             self.parse_methylqa_logs(f)
 
+        # Filter to strip out ignored sample names
+        self.methylqa_data = self.ignore_samples(self.methylqa_data)
+
         if len(self.methylqa_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning

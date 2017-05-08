@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -62,6 +61,9 @@ def parse_reports(self):
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name, section='RrbsSummaryMetrics')
             self.picard_rrbs_metrics[s_name] = parsed_data[s_name]
+
+    # Filter to strip out ignored sample names
+    self.picard_rrbs_metrics = self.ignore_samples(self.picard_rrbs_metrics)
 
     if len(self.picard_rrbs_metrics) > 0:
 

@@ -35,6 +35,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f)
                 self.preseq_data[f['s_name']] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.preseq_data = self.ignore_samples(self.preseq_data)
+
         if len(self.preseq_data) == 0:
             log.debug("Could not find any preseq data in {}".format(config.analysis_dir))
             raise UserWarning

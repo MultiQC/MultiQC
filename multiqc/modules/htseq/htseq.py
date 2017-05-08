@@ -32,6 +32,9 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 self.htseq_data[f['s_name']] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.htseq_data = self.ignore_samples(self.htseq_data)
+
         if len(self.htseq_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
