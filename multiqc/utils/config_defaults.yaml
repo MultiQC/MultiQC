@@ -20,6 +20,7 @@ custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
 simple_output: false
+profile: false
 template: 'default'
 pandoc_template: null
 read_count_multiplier: 0.000001

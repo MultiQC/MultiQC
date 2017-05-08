@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import base64
 import click
+import cProfile
 from distutils import version
 from distutils.dir_util import copy_tree
 import io
@@ -142,11 +143,15 @@ logger = config.logger
                     is_flag = True,
                     help = "Only show log warnings"
 )
+@click.option('--profile', 
+                    is_flag = True,
+                    help = "Generates profiling information."
+)
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module, exclude, outdir,
 ignore, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
-plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
+plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, profile, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -217,6 +222,8 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         config.plots_force_interactive = True
     if make_pdf:
         config.template = 'simple'
+    if profile:
+        config.profile = True
     config.kwargs = kwargs # Plugin command line options
 
     plugin_hooks.mqc_trigger('execution_start')
@@ -334,6 +341,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         pass # No subdirectory variable given
 
 
+    if config.profile:
+        pr=cProfile.Profile()
+        pr.enable()
+
     # Get the list of files to search
     report.get_filelist()
 
@@ -384,6 +395,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
                       ('='*60)+"\nModule {} raised an exception: {}".format(
                           this_module, traceback.format_exc()) + ('='*60))
             sys_exit_code = 1
+
+    if config.profile:
+        pr.disable()
+        pr.dump_stats(os.path.join(config.data_dir, "multiqc.cprof"))
 
     # Did we find anything?
     if len(report.modules_output) == 0:
