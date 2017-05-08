@@ -117,7 +117,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['Total length'] = {
@@ -126,7 +125,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'YlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000000
         }
         self.general_stats_addcols(self.quast_data, headers)
@@ -141,7 +139,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
 
@@ -151,7 +148,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['L50'] = {
@@ -160,7 +156,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '',
             'scale': 'GnYlRd',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['L75'] = {
@@ -169,7 +164,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '',
             'scale': 'GnYlRd',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['Largest contig'] = {
@@ -178,7 +172,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'YlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['Total length'] = {
@@ -187,46 +180,45 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'YlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000000
         }
         headers['# misassemblies'] = {
             'title': 'Misassemblies',
             'description': 'The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).',
             'scale': 'RdYlGn-rev',
-            'format': '{:.0f}'
+            'format': '{,:.0f}'
         }
         headers['# mismatches per 100 kbp'] = {
             'title': 'Mismatches/100kbp',
             'description': 'The number of mismatches per 100 kbp',
             'scale': 'YlOrRd',
-            'format': '{:.2f}',
+            'format': '{:,.2f}',
         }
         headers['# indels per 100 kbp'] = {
             'title': 'Indels/100kbp',
             'description': 'The number of indels per 100 kbp',
             'scale': 'YlOrRd',
-            'format': '{:.2f}',
+            'format': '{:,.2f}',
         }
         headers['# genes'] = {
             'title': 'Genes',
             'description': '# Genes',
             'scale': 'YlGnBu',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'shared_key': 'gene_count'
         }
         headers['# genes_partial'] = {
             'title': 'Genes (Partial)',
             'description': '# Genes (Partial)',
             'scale': 'YlGnBu',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'shared_key': 'gene_count'
         }
         headers['# predicted genes (unique)'] = {
             'title': 'Genes',
             'description': '# Predicted Genes (Unique)',
             'scale': 'YlGnBu',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'shared_key': 'gene_count'
         }
         headers['Genome fraction (%)'] = {
@@ -234,8 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'The total number of aligned bases in the reference, divided by the genome size.',
             'max': 100,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         config = {
             'id': 'quast_table',

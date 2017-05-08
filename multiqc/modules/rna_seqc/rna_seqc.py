@@ -96,8 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) * 100.0,
-            'format': '{:.1f}%'
+            'modify': lambda x: float(x) * 100.0
         }
         headers['Intronic Rate'] = {
             'title': '% Intronic',
@@ -106,15 +105,14 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) * 100.0,
-            'format': '{:.1f}%'
+            'modify': lambda x: float(x) * 100.0
         }
         headers['Genes Detected'] = {
             'title': '# Genes',
             'description': 'Number of genes detected',
             'min': 0,
             'scale': 'Bu',
-            'format': '{:.0f}'
+            'format': '{:,.0f}'
         }
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 

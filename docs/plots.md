@@ -344,7 +344,7 @@ single_header = {
     'min': None,                    # Maximum value in range, for bar / colour coding
     'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
     'colour': '<auto>',             # Colour for column grouping
-    'format': '{:.1f}',             # Output format() string
+    'format': '{:,.1f}',            # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
@@ -403,14 +403,12 @@ headers = OrderedDict()
 headers['aligned_percent'] = {
     'title': '% Aligned',
     'description': 'Percentage of reads that aligned',
-    'format': '{:.1f}%',
     'suffix': '%',
     'max': 100,
 }
 headers['aligned'] = {
     'title': '{} Aligned'.format(config.read_count_prefix),
     'description': 'Aligned Reads ({})'.format(config.read_count_desc),
-    'format': '{:.2f}',
     'shared_key': 'read_count',
     'modify': lambda x: x * config.read_count_multiplier
 }

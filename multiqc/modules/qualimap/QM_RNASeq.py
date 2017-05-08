@@ -142,7 +142,7 @@ def parse_reports(self):
     #### General Stats
     self.general_stats_headers['5_3_bias'] = {
         'title': "5'-3' bias",
-        'format': '{:.2f}',
+        'format': '{:,.2f}',
     }
     self.general_stats_headers['reads_aligned'] = {
         'title': '{} Aligned'.format(config.read_count_prefix),

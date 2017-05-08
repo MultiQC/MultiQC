@@ -115,8 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%'
+            'scale': 'RdYlGn'
         }
         headers['Assigned'] = {
             'title': '{} Assigned'.format(config.read_count_prefix),

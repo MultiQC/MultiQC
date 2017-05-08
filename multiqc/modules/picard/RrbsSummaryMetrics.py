@@ -77,7 +77,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.0f}%',
+            'format': '{:,.0f}',
             'scale': 'RdYlGn-rev',
             'modify': lambda x: 100 - self.multiply_hundred(x)
         }
@@ -87,7 +87,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.0f}%',
+            'format': '{:,.0f}',
             'scale': 'RdYlGn',
             'modify': lambda x: 100 - self.multiply_hundred(x)
         }

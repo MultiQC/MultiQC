@@ -347,7 +347,7 @@ def general_stats_headers (self):
         'min': 0,
         'suffix': '%',
         'scale': 'Set1',
-        'format': '{:.0f}%'
+        'format': '{:,.0f}'
     }
     self.general_stats_headers['median_insert_size'] = {
         'title': 'Insert Size',
@@ -355,7 +355,7 @@ def general_stats_headers (self):
         'min': 0,
         'suffix': 'bp',
         'scale': 'PuOr',
-        'format': '{:.0f}'
+        'format': '{:,.0f}'
     }
     for c in self.covs:
         self.general_stats_headers['{}_x_pc'.format(c)] = {
@@ -365,7 +365,6 @@ def general_stats_headers (self):
             'min': 0,
             'suffix': '%',
             'scale': 'RdYlGn',
-            'format': '{:.1f}%',
             'hidden': c in hidecovs
         }
     self.general_stats_headers['median_coverage'] = {
@@ -381,25 +380,24 @@ def general_stats_headers (self):
         'max': 100,
         'min': 0,
         'suffix': '%',
-        'scale': 'YlGn',
-        'format': '{:.1f}%'
+        'scale': 'YlGn'
     }
     self.general_stats_headers['mapped_reads'] = {
-        'title': 'Aligned',
-        'description': 'Number of mapped reads (millions)',
+        'title': '{} Aligned'.format(config.read_count_prefix),
+        'description': 'Number of mapped reads ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'RdYlGn',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
     self.general_stats_headers['total_reads'] = {
-        'title': 'Total reads',
-        'description': 'Number of reads (millions)',
+        'title': '{} Total reads'.format(config.read_count_prefix),
+        'description': 'Number of reads ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'Blues',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
 

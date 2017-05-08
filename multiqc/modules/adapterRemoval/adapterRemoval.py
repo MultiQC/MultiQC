@@ -230,7 +230,6 @@ class MultiqcModule(BaseMultiqcModule):
                 'min': 0,
                 'suffix': '%',
                 'scale': 'RdYlGn-rev',
-                'format': '{:.1f}%',
                 'shared_key': 'percent_aligned',
         }
         headers['aligned_total'] = {

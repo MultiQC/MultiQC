@@ -78,8 +78,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%'
+            'scale': 'RdYlGn'
         }
         for s_name in self.bam_stat_data:
             if s_name not in self.general_stats_data:

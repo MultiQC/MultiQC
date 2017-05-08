@@ -183,7 +183,8 @@ def comp_overlap_table(data):
         'namespace': 'GATK',
         'min': 0,
         'max': 100,
-        'format': '{:.2f}%',
+        'suffix': '%',
+        'format': '{:,.2f}',
         'scale': 'Blues',
     }
     headers['concordant_rate'] = {
@@ -192,7 +193,8 @@ def comp_overlap_table(data):
         'namespace': 'GATK',
         'min': 0,
         'max': 100,
-        'format': '{:.2f}%',
+        'suffix': '%',
+        'format': '{:,.2f}',
         'scale': 'Blues',
     }
     headers['eval_variants'] = {

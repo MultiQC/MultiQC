@@ -195,15 +195,14 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['uniquely_mapped'] = {
-            'title': 'M Aligned',
-            'description': 'Uniquely mapped reads (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'Uniquely mapped reads ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.star_data, headers)

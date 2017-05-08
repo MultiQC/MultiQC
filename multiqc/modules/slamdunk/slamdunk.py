@@ -7,6 +7,7 @@ import logging
 import re
 from collections import OrderedDict
 
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph, linegraph, scatter
 
@@ -323,40 +324,40 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['counted'] = {
-            'title': 'Counted',
-            'description': '# reads counted within 3\'UTRs',
+            'title': '{} Counted'.format(config.read_count_prefix),
+            'description': '# reads counted within 3\'UTRs ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['retained'] = {
-            'title': 'Retained',
-            'description': '# retained reads after filtering',
+            'title': '{} Retained'.format(config.read_count_prefix),
+            'description': '# retained reads after filtering ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['mapped'] = {
-            'title': 'Mapped',
-            'description': '# mapped reads',
+            'title': '{} Mapped'.format(config.read_count_prefix),
+            'description': '# mapped reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['sequenced'] = {
-            'title': 'Sequenced',
-            'description': '# sequenced reads',
+            'title': '{} Sequenced'.format(config.read_count_prefix),
+            'description': '# sequenced reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
 
         self.general_stats_addcols(self.slamdunk_data, headers)
@@ -367,55 +368,60 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['mapped'] = {
             'namespace': 'Slamdunk',
-            'title': 'Mapped',
-            'description': '# mapped reads',
+            'title': '{} Mapped'.format(config.read_count_prefix),
+            'description': '# mapped reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['multimapper'] = {
             'namespace': 'Slamdunk',
-            'title': 'Multimap-Filtered',
-            'description': '# multimap-filtered reads',
+            'title': '{} Multimap-Filtered'.format(config.read_count_prefix),
+            'description': '# multimap-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['nmfiltered'] = {
             'namespace': 'Slamdunk',
-            'title': 'NM-Filtered',
-            'description': '# NM-filtered reads',
+            'title': '{} NM-Filtered'.format(config.read_count_prefix),
+            'description': '# NM-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['idfiltered'] = {
             'namespace': 'Slamdunk',
-            'title': 'Identity-Filtered',
-            'description': '# identity-filtered reads',
+            'title': '{} Identity-Filtered'.format(config.read_count_prefix),
+            'description': '# identity-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['mqfiltered'] = {
             'namespace': 'Slamdunk',
-            'title': 'MQ-Filtered',
-            'description': '# MQ-filtered reads',
+            'title': '{} MQ-Filtered'.format(config.read_count_prefix),
+            'description': '# MQ-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
-        config = {
+        pconfig = {
             'id': 'slamdunk_filtering_table',
             'min': 0,
         }
@@ -424,7 +430,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Filter statistics',
             anchor = 'slamdunk_filtering',
             description = 'This table shows the number of reads filtered with each filter criterion during filtering phase of slamdunk.',
-            plot = table.plot(self.slamdunk_data, headers, config)
+            plot = table.plot(self.slamdunk_data, headers, pconfig)
         )
 
     def slamdunkOverallRatesPlot (self):

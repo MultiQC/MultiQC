@@ -120,8 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['reads_aligned'] = {
             'title': '{} Aligned'.format(config.read_count_prefix),

@@ -114,8 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Fold Coverage',
             'min': 0,
             'suffix': 'X',
-            'scale': 'YlGn',
-            'format': '{:.1f}X'
+            'scale': 'YlGn'
         }
         self.general_stats_addcols(self.methylqa_data, headers)
 

@@ -127,7 +127,7 @@ def parse_reports(self):
             'description': 'Median Insert Size, all read orientations (bp)',
             'min': 0,
             'suffix': 'bp',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'scale': 'GnBu',
         }
         self.general_stats_headers['summed_mean'] = {
@@ -135,7 +135,7 @@ def parse_reports(self):
             'description': 'Mean Insert Size, all read orientations (bp)',
             'min': 0,
             'suffix': 'bp',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'scale': 'GnBu',
             'hidden': False if missing_medians else True
         }

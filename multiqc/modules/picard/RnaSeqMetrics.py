@@ -102,7 +102,6 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.1f}%',
             'scale': 'Reds',
         }
         GenStatsHeaders['PCT_MRNA_BASES'] = {
@@ -111,7 +110,6 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.1f}%',
             'scale': 'Greens',
         }
         self.general_stats_addcols(self.picard_RnaSeqMetrics_data, GenStatsHeaders)

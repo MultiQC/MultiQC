@@ -112,8 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%',
+            'scale': 'YlGn'
         }
         headers['Deduplication_Read_Pairs_Uniques'] = {
             'title': '{} Unique'.format(config.read_count_prefix),
@@ -130,8 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'YlGn-rev',
-            'modify': lambda x: 100 - x,
-            'format': '{:.1f}%',
+            'modify': lambda x: 100 - x
         }
         headers['Valid_Pairs'] = {
             'title': '{} Valid'.format(config.read_count_prefix),
@@ -147,8 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%',
+            'scale': 'YlGn'
         }
         headers['Paired_Read_1'] = {
             'title': '{} Pairs Aligned'.format(config.read_count_prefix),
@@ -164,8 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%',
+            'scale': 'YlGn'
         }
         self.general_stats_addcols(self.hicup_data, headers, 'HiCUP')
 

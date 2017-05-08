@@ -107,8 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['aligned_not_multimapped_discordant'] = {
             'title': '{} Aligned'.format(config.read_count_prefix),

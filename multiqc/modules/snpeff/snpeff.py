@@ -143,12 +143,12 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Change rate',
             'scale': 'RdYlBu-rev',
             'min': 0,
-            'format': '{:.0f}'
+            'format': '{:,.0f}'
         }
         headers['Ts_Tv_ratio'] = {
             'title': 'Ts/Tv',
             'description': 'Transitions / Transversions ratio',
-            'format': '{:.3f}'
+            'format': '{:,.3f}'
         }
         headers['Number_of_variants_before_filter'] = {
             'title': 'M Variants',
@@ -156,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'PuRd',
             'modify': lambda x: x / 1000000,
             'min': 0,
-            'format': '{:.2f}'
+            'format': '{:,.2f}'
         }
         self.general_stats_addcols(self.snpeff_data, headers)
 

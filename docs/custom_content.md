@@ -166,7 +166,7 @@ custom_data:
                 max: 100
                 min: 0
                 scale: 'RdYlGn'
-                format: '{:.1f}%'
+                suffix: '%'
             - col_2:
                 min: 0
         data:

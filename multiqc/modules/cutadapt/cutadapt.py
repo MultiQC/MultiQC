@@ -161,8 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlBu-rev',
-            'format': '{:.1f}%'
+            'scale': 'RdYlBu-rev'
         }
         self.general_stats_addcols(self.cutadapt_data, headers)
 

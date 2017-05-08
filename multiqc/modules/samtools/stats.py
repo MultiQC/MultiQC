@@ -5,6 +5,7 @@
 
 import logging
 from collections import OrderedDict
+from multiqc import config
 from multiqc.plots import beeswarm, bargraph
 
 # Initialise the logger
@@ -59,22 +60,22 @@ class StatsReportMixin():
                 'max': 100,
                 'suffix': '%',
                 'scale': 'OrRd',
-                'format': '{:.2f}%',
+                'format': '{:,.2f}',
                 'modify': lambda x: x * 100.0
             }
             stats_headers['non-primary_alignments'] = {
-                'title': 'M Non-Primary',
-                'description': 'Non-primary alignments (millions)',
+                'title': '{} Non-Primary'.format(config.read_count_prefix),
+                'description': 'Non-primary alignments ({})'.format(config.read_count_desc),
                 'min': 0,
                 'scale': 'PuBu',
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
             stats_headers['reads_mapped'] = {
-                'title': 'M Reads Mapped',
-                'description': 'Reads Mapped in the bam file',
+                'title': '{} Reads Mapped'.format(config.read_count_prefix),
+                'description': 'Reads Mapped in the bam file ({})'.format(config.read_count_desc),
                 'min': 0,
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
             stats_headers['reads_mapped_percent'] = {
@@ -83,14 +84,13 @@ class StatsReportMixin():
                 'max': 100,
                 'min': 0,
                 'suffix': '%',
-                'scale': 'RdYlGn',
-                'format': '{:.1f}%'
+                'scale': 'RdYlGn'
             }
             stats_headers['raw_total_sequences'] = {
-                'title': 'M Total seqs',
-                'description': 'Total sequences in the bam file',
+                'title': '{} Total seqs'.format(config.read_count_prefix),
+                'description': 'Total sequences in the bam file ({})'.format(config.read_count_desc),
                 'min': 0,
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
             self.general_stats_addcols(self.samtools_stats, stats_headers, 'Samtools Stats')

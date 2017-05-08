@@ -26,6 +26,9 @@ kbd {
 .radio.input-sm input {
     margin: 2px 0 0 -20px;
 }
+.mqc_thousandSep {
+    padding: 0 2px;
+}
 
 /* Page Template */
 @media only screen and (min-width: 768px){
@@ -37,7 +40,7 @@ kbd {
         transition: margin-left 0.5s;
     }
     .mainpage.hidden-nav, .footer.hidden-nav { margin-left: 0; }
-    
+
     .side-nav-wrapper {
         position: fixed;
     }

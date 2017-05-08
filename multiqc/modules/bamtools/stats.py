@@ -72,8 +72,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'OrRd',
-            'format': '{:.1f}%'
+            'scale': 'OrRd'
         }
         self.general_stats_headers['mapped_reads_pct'] = {
             'title': '% Mapped',
@@ -81,8 +80,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%'
+            'scale': 'RdYlGn'
         }
         for s_name in self.bamtools_stats_data:
             if s_name not in self.general_stats_data:

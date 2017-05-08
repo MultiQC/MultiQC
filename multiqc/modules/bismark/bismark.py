@@ -259,8 +259,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'Greens',
-            'format': '{:.1f}%'
+            'scale': 'Greens'
         }
         headers['methextract']['percent_chg_meth'] = {
             'title': '% mCHG',
@@ -268,8 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'Oranges',
-            'format': '{:.1f}%'
+            'scale': 'Oranges'
         }
         headers['methextract']['percent_chh_meth'] = {
             'title': '% mCHH',
@@ -277,8 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'Oranges',
-            'format': '{:.1f}%'
+            'scale': 'Oranges'
         }
         headers['methextract']['total_c'] = {
             'title': "M C's",
@@ -293,7 +290,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'X',
             'scale': 'Greens',
-            'format': '{:.2f} X'
+            'format': '{:,.2f}'
         }
         headers['dedup']['dup_reads_percent'] = {
             'title': '% Dups',
@@ -302,7 +299,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'RdYlGn-rev',
-            'format': '{:.1f}%'
         }
         headers['dedup']['dedup_reads'] = {
             'title': '{} Unique'.format(config.read_count_prefix),
@@ -328,8 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%',
+            'scale': 'YlGn'
         }
 
         self.general_stats_addcols(self.bismark_data['methextract'], headers['methextract'])

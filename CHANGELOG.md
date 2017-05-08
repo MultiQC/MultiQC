@@ -89,6 +89,8 @@ To see what changes need to applied to your custom plugin code, please see the [
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
+* Config options `decimalPoint_format` and `thousandsSep_format` now apply to tables as well as plots
+  * By default, thosands will now be separated with a space and `.` used for decimal places.
 * Module sections tidied and refactored
   * New helper function `self.add_section()`
   * Sections hidden in nav if no title (no more need for the hacky `self.intro += `)

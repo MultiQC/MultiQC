@@ -145,14 +145,25 @@ def make_table (dt):
                         percentage = 0
 
                     try:
-                        val = header['format'].format(val)
+                        valstring = str(header['format'].format(val))
                     except ValueError:
                         try:
-                            val = header['format'].format(float(val))
+                            valstring = str(header['format'].format(float(val)))
                         except ValueError:
-                            val = val
+                            valstring = str(val)
                     except:
-                        val = val
+                        valstring = str(val)
+
+                    # This is horrible, but Python locale settings are worse
+                    if config.thousandsSep_format is None:
+                        config.thousandsSep_format = '<span class="mqc_thousandSep"></span>'
+                    if config.decimalPoint_format is None:
+                        config.decimalPoint_format = '.'
+                    valstring = valstring.replace('.', 'DECIMAL').replace(',', 'THOUSAND')
+                    valstring = valstring.replace('DECIMAL', config.decimalPoint_format).replace('THOUSAND', config.thousandsSep_format)
+
+                    # Percentage suffixes etc
+                    valstring += header.get('suffix', '')
 
                     # Build HTML
                     if not header['scale']:
@@ -165,7 +176,7 @@ def make_table (dt):
                         else:
                             col = ''
                         bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)
-                        val_html = '<span class="val">{}</span>'.format(val)
+                        val_html = '<span class="val">{}</span>'.format(valstring)
                         wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
 
                         if s_name not in t_rows:
@@ -191,7 +202,7 @@ def make_table (dt):
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
-        """
+        """.format(tid=table_id)
 
         # Configure Columns Button
         if len(t_headers) > 2:

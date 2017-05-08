@@ -305,7 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['pipeline_name'] = {'title': 'Pipeline Name'}
         headers['pipeline_start'] = {'title': 'Date Started', 'description': 'Date and time that pipeline was started (YYYY-MM-DD HH:SS)'}
         headers['genome'] = {'title': 'Genome ID', 'description': 'ID of reference genome used'}
-        headers['num_starting_files'] = {'title': '# Starting Files', 'format': '{:.0f}', 'description': 'Number of input files at start of pipeline run.'}
+        headers['num_starting_files'] = {'title': '# Starting Files', 'format': '{:,.0f}', 'description': 'Number of input files at start of pipeline run.'}
         table_config = {
             'namespace': 'Cluster Flow',
             'id': 'clusterflow-pipelines',

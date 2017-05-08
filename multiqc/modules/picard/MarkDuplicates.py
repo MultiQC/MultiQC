@@ -75,7 +75,6 @@ def parse_reports(self):
             'min': 0,
             'suffix': '%',
             'scale': 'OrRd',
-            'format': '{:.1f}%',
             'modify': lambda x: self.multiply_hundred(x)
         }
         for s_name in self.picard_dupMetrics_data:

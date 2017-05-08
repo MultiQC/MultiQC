@@ -288,7 +288,8 @@ $(function () {
             saveAs(blob, fname);
           } catch(e){
             $('#mqc_export_data_log').append("<p class=\"text-danger\">Error: Couldn't export data from <em>"+target+"</em>.</p>");
-            console.log("Couldn't export data from '"+target+"' - "+e);
+            console.log("Couldn't export data from '"+target);
+            console.error(e);
           }
         });
       } else { alert("Error - don't know what to export!"); }
