@@ -2,6 +2,8 @@
 # Default configurations for how modules can find their log files.
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
+adapterRemoval:
+    fn: '*.settings'
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true

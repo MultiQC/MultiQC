@@ -40,6 +40,8 @@ and more examples.
 To see what changes need to applied to your custom plugin code, please see the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
 
 ### Module updates:
+* [**Adapter Removal**](https://github.com/mikkelschubert/adapterremoval) - new module!
+  * AdapterRemoval v2 - rapid adapter trimming, identification, and read merging
 * [**BUSCO**](http://busco.ezlab.org/) - new module!
   * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
 * [**Cluster Flow**](http://clusterflow.io) - new module!
