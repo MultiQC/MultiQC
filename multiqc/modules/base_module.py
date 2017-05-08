@@ -153,17 +153,22 @@ class BaseMultiqcModule(object):
 
     def ignore_samples(self, data):
         """ Strip out samples which match `sample_names_ignore` """
-        # Match ignore glob patterns
-        data = {
-            k:v for k,v in data.items()
-            if not any( fnmatch.fnmatch(k, sn) for sn in config.sample_names_ignore)
-        }
-        # Match ignore regexes
-        data = {
-            k:v for k,v in data.items()
-            if not any( re.match(sn, k) for sn in config.sample_names_ignore_re)
-        }
-        return data
+        try:
+            if isinstance(data, OrderedDict):
+                newdata = OrderedDict()
+            elif isinstance(data, dict):
+                newdata = dict()
+            else:
+                return data
+            for k,v in data.items():
+                # Match ignore glob patterns
+                glob_match = any( fnmatch.fnmatch(k, sn) for sn in config.sample_names_ignore )
+                re_match = any( re.match(sn, k) for sn in config.sample_names_ignore_re )
+                if not glob_match and not re_match:
+                    newdata[k] = v
+            return newdata
+        except (TypeError, AttributeError):
+            return data
 
     def general_stats_addcols(self, data, headers=None, namespace=None):
         """ Helper function to add to the General Statistics variable.

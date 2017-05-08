@@ -151,6 +151,10 @@ def custom_module_classes():
                     log.error("Unexpected parsing error for {}".format(f['fn']), exc_info=True)
                     raise # testing
 
+    # Filter to strip out ignored sample names
+    for k in cust_mods:
+        cust_mods[k]['data'] = bm.ignore_samples(cust_mods[k]['data'])
+
     # Remove any configs that have no data
     remove_cids = [ k for k in cust_mods if len(cust_mods[k]['data']) == 0 ]
     for k in remove_cids:
