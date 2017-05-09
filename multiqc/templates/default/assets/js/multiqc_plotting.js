@@ -1407,6 +1407,8 @@ function plot_heatmap(target, ds){
       text: config['title'],
     },
     xAxis: {
+      endOnTick: false,
+      maxPadding: 0,
       categories: xcats,
       title: { enabled: true, text: config['xTitle'] },
       labels: {
@@ -1417,6 +1419,8 @@ function plot_heatmap(target, ds){
       }
     },
     yAxis: {
+      endOnTick: false,
+      maxPadding: 0,
       categories: ycats,
       reversed: true,
       opposite: true,
@@ -1453,6 +1457,7 @@ function plot_heatmap(target, ds){
       }
     },
     series: [{
+      turboThreshold: 0,
       borderWidth: config['borderWidth'],
       data: data,
       dataLabels: {
