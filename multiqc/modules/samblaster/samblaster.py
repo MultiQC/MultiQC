@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
             # including the read group will be written in the log
             match = re.search(rgtag_name_regex, l)
             if match:
-                s_name = match.group(1)
+                s_name = self.clean_s_name( match.group(1), f['root'])
 
             # try to find name from the input file name, if used
             match = re.search(input_file_regex, l)
@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
                 fname, ext = os.path.splitext(basefn)
                 # if it's stdin, then try bwa RG-tag instead
                 if fname != 'stdin':
-                    s_name = fname
+                    s_name = self.clean_s_name( fname, f['root'])
 
             match = re.search(dups_regex, l)
             if match:
@@ -99,8 +99,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data['n_nondups'] = data['n_tot'] - data['n_dups']
                 data['pct_dups'] = float(match.group(4))
 
-        if s_name is not None:
-            s_name = self.clean_s_name(s_name, f['root'])
+        if s_name is None:
+            s_name = f['s_name']
+
+        if len(data) > 0:
             if s_name in self.samblaster_data:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name)
