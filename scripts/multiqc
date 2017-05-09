@@ -274,23 +274,23 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
             config.output_fn_name = '{}.html'.format(config.output_fn_name)
 
         # Check that we're not going to overwrite anything before we run
-        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-        if not config.force:
-            if os.path.exists(config.output_fn):
-                logger.error("MultiQC Report '{}' already exists.".format(os.path.relpath(config.output_fn)))
-                logger.info("Use -f or --force to overwrite existing reports")
-                sys.exit(1)
-            if config.make_data_dir == True and os.path.exists(config.data_dir):
-                logger.error("Output directory '{}' already exists.".format(os.path.relpath(config.data_dir)))
-                logger.info("Use -f or --force to overwrite existing reports")
-                sys.exit(1)
-            if config.export_plots == True and os.path.exists(config.plots_dir_name):
-                logger.error("Plots directory '{}' already exists.".format(os.path.relpath(config.plots_dir_name)))
-                logger.info("Use -f or --force to overwrite existing reports")
-                sys.exit(1)
-        else:
-            logger.debug('Running in --force mode, will overwrite any existing reports.')
+        #config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        #config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        #if not config.force:
+        #    if os.path.exists(config.output_fn):
+        #        logger.error("MultiQC Report '{}' already exists.".format(os.path.relpath(config.output_fn)))
+        #        logger.info("Use -f or --force to overwrite existing reports")
+        #        sys.exit(1)
+        #    if config.make_data_dir == True and os.path.exists(config.data_dir):
+        #        logger.error("Output directory '{}' already exists.".format(os.path.relpath(config.data_dir)))
+        #        logger.info("Use -f or --force to overwrite existing reports")
+        #        sys.exit(1)
+        #    if config.export_plots == True and os.path.exists(config.plots_dir_name):
+        #        logger.error("Plots directory '{}' already exists.".format(os.path.relpath(config.plots_dir_name)))
+        #        logger.info("Use -f or --force to overwrite existing reports")
+        #        sys.exit(1)
+        #else:
+         #   logger.debug('Running in --force mode, will overwrite any existing reports.')
 
 
     # Print some status updates
@@ -434,15 +434,24 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         # Check for existing reports and remove if -f was specified
         # We repeat this check in case the output name has been altered since launch
         config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        import pdb
+        pdb.set_trace()
         if os.path.exists(config.output_fn):
             if config.force:
                 logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
                 os.remove(config.output_fn)
             else:
-                logger.error("MultiQC Report {} already exists.".format(config.output_fn))
+                output_name, file_ending = os.path.splitext(config.output_fn)
+                report_num = 0
                 logger.info("Use -f or --force to overwrite existing reports")
-                shutil.rmtree(tmp_dir)
-                sys.exit(1)
+                while os.path.exists(output_name):
+                    output_name.append("_{}".format(report_num))
+                    output_name.append(file_ending)
+                    logger.info("Found previous report named {} saving new report as {}".format(config.output_fn, output_name))
+                    report_num += 1
+
+                #shutil.rmtree(tmp_dir)
+                #sys.exit(1)
         # Make directories for report if not already existing
         if not os.path.exists(os.path.dirname(config.output_fn)):
             os.makedirs(os.path.dirname(config.output_fn))
