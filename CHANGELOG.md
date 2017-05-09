@@ -91,6 +91,10 @@ To see what changes need to applied to your custom plugin code, please see the [
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
 * Config options `decimalPoint_format` and `thousandsSep_format` now apply to tables as well as plots
   * By default, thosands will now be separated with a space and `.` used for decimal places.
+* Tables now have a maximum-height by default and scroll within this.
+  * Speeds up report rendering in the web browser and makes report less stupidly long with lots of samples
+  * Button beneath table toggles full length if you want a zoomed-out view
+  * Refactored and removed previous code to make the table header "float"
 * Module sections tidied and refactored
   * New helper function `self.add_section()`
   * Sections hidden in nav if no title (no more need for the hacky `self.intro += `)
@@ -120,6 +124,7 @@ To see what changes need to applied to your custom plugin code, please see the [
 * Creating multiple plots without a config dict now works (previously just gave grey boxes in report)
 * All changes are now tested on a Windows system, using [AppVeyor](https://ci.appveyor.com/project/ewels/multiqc/)
 * Fixed rare error where some reports could get empty General Statistics tables when no data present.
+* Fixed minor bug where config option `force: true` didn't work. Now you don't have to always specify `-f`!
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21

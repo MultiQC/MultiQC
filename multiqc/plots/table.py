@@ -235,7 +235,7 @@ def make_table (dt):
     # Build the table itself
     html += """
         <div id="{tid}_container" class="mqc_table_container">
-            <div class="table-responsive">
+            <div class="table-responsive mqc-table-responsive">
                 <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}">
         """.format( tid=table_id, title=table_title )
 
@@ -255,7 +255,10 @@ def make_table (dt):
         for k in t_headers:
             html += t_rows[s_name].get(k, empty_cells[k])
         html += '</tr>'
-    html += '</tbody></table></div></div>'
+    html += '</tbody></table></div>'
+    if len(t_rows) > 10:
+        html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
+    html += '</div>'
 
     # Build the bootstrap modal to customise columns and order
     if not config.simple_output:
