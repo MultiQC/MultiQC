@@ -150,27 +150,27 @@ class StatsReportMixin():
         """ Add key statistics to the General Stats table """
         stats_headers = OrderedDict()
         stats_headers['number_of_records'] = {
-            'title': 'Variations',
-            'description': 'Variations Total',
+            'title': 'Vars',
+            'description': 'Variations total',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['variations_hom'] = {
-            'title': 'Homozygous',
+            'title': 'Hom',
             'description': 'Variations homozygous',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['variations_het'] = {
-            'title': 'Heterozygous',
+            'title': 'Het',
             'description': 'Variations heterozygous',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['number_of_SNPs'] = {
-            'title': 'SNPs',
+            'title': 'SNP',
             'description': 'Variation SNPs',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['number_of_indels'] = {
-            'title': 'Indels',
+            'title': 'Indel',
             'description': 'Variation Insertions/Deletions',
             'min': 0, 'format': '{:,.0f}',
         }
@@ -180,8 +180,8 @@ class StatsReportMixin():
             'min': 0, 'format': '{:,.2f}',
         }
         stats_headers['number_of_MNPs'] = {
-            'title': 'MNPs',
-            'description': 'Variation Multinucleotide Polymorphisms',
+            'title': 'MNP',
+            'description': 'Variation multinucleotide polymorphisms',
             'min': 0, 'format': '{:,.0f}', "hidden": True,
         }
         self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')
