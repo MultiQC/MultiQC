@@ -427,6 +427,9 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if config.data_dir is not None:
         report.data_sources_tofile()
 
+    # Compress the report plot JSON data
+    report.plot_compressed_json = report.compress_json(report.plot_data)
+
     plugin_hooks.mqc_trigger('before_report_generation')
 
     # Make the final report path & data directories

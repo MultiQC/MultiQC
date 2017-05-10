@@ -2,6 +2,9 @@
 // HighCharts Plotting Code
 ////////////////////////////////////////////////
 
+// Global plot data variable
+mqc_plots = {};
+
 // Initialise the toolbox filters
 window.mqc_highlight_f_texts = [];
 window.mqc_highlight_f_cols = [];
@@ -16,6 +19,9 @@ window.HCDefaults = undefined;
 
 // Execute when page load has finished loading
 $(function () {
+
+  // Decompress the JSON plot data
+  mqc_plots = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
 
   // HighCharts Defaults
   window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});

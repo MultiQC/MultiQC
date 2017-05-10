@@ -3,7 +3,6 @@
 """ MultiQC functions to plot a heatmap """
 
 from __future__ import print_function
-import json
 import logging
 import random
 
@@ -62,18 +61,15 @@ def highcharts_heatmap (data, xcats, ycats, pconfig=None):
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-heatmap"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "heatmap", \n\
-            "data": {d}, \n\
-            "xcats": {x}, \n\
-            "ycats": {y}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(pdata), x=json.dumps(xcats), y=json.dumps(ycats), c=json.dumps(pconfig));
-
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': 'heatmap',
+        'data': pdata,
+        'xcats': xcats,
+        'ycats': ycats,
+        'config': pconfig
+    }
 
     return html
 

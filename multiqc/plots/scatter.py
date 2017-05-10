@@ -2,7 +2,6 @@
 
 """ MultiQC functions to plot a scatter plot """
 
-import json
 import logging
 import random
 
@@ -104,16 +103,13 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "scatter", \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': "scatter",
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 

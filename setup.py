@@ -48,13 +48,14 @@ setup(
     zip_safe = False,
     scripts = ['scripts/multiqc'],
     install_requires = [
-        'jinja2',
-        'simplejson',
-        'pyyaml',
         'click',
+        'future',
+        'jinja2',
         'matplotlib',
         'numpy',
-        'spectra'
+        'pyyaml',
+        'simplejson',
+        'spectra',
     ],
     entry_points = {
         'multiqc.modules.v1': [

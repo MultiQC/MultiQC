@@ -16,6 +16,7 @@ import re
 import yaml
 
 from multiqc import config
+from multiqc.utils import lzstring
 logger = config.logger
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
@@ -32,6 +33,7 @@ general_stats_data = list()
 general_stats_headers = list()
 general_stats_html = ''
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
+plot_data = dict()
 num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
@@ -230,4 +232,12 @@ def data_sources_tofile ():
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
 
+
+def compress_json(data):
+    """ Take a Python data object. Convert to JSON and compress using lzstring """
+    json_string = json.dumps(data).encode('utf-8', 'ignore').decode('utf-8')
+    # JSON.parse() doesn't handle `NaN`, but it does handle `null`.
+    json_string = json_string.replace('NaN', 'null');
+    x = lzstring.LZString()
+    return x.compressToBase64(json_string)
 

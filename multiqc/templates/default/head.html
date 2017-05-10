@@ -15,5 +15,8 @@ page contents, it's machine-readable tags for browsers and search engines.
 <meta name="author" content="MultiQC">
 <title>{{ config.title + ': ' if config.title != None }}MultiQC Report</title>
 
-<!-- early variable initialisation -->
-<script type="text/javascript">mqc_plots = {}; num_datasets_plot_limit = {{ config.num_datasets_plot_limit}};</script>
+<!-- JSON plot data -->
+<script type="text/javascript">
+mqc_compressed_plotdata = '{{ report.plot_compressed_json }}';
+num_datasets_plot_limit = {{ config.num_datasets_plot_limit}};
+</script>

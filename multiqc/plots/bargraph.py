@@ -6,7 +6,6 @@ from __future__ import print_function
 import base64
 from collections import OrderedDict
 import io
-import json
 import logging
 import math
 import os
@@ -216,19 +215,19 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
-    # Plot and javascript function
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div></div> \n\
-    </div> \n\
-    <script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "bar_graph", \n\
-            "samples": {s}, \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
+    # Plot HTML
+    html += """<div class="hc-plot-wrapper">
+        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
+    </div></div>""".format(id=pconfig['id']);
 
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': 'bar_graph',
+        'samples': plotsamples,
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 

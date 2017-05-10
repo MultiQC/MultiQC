@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import base64
 import io
-import json
 import logging
 import os
 import random
@@ -170,16 +169,13 @@ def highcharts_linegraph (plotdata, pconfig=None):
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "xy_line", \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': "xy_line",
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 
