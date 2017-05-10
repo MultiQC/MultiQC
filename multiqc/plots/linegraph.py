@@ -254,6 +254,7 @@ def matplotlib_linegraph (plotdata, pconfig=None):
                         fdata[d['name']][pconfig['categories'][i]] = x
                     except (KeyError, IndexError):
                         fdata[d['name']][str(i)] = x
+
         # Custom tsv output if the x axis varies
         if not sharedcats and config.data_format == 'tsv':
             fout = ''
