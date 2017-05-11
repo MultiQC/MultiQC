@@ -10,13 +10,13 @@ import click
 import fnmatch
 import io
 import json
+import lzstring
 import mimetypes
 import os
 import re
 import yaml
 
 from multiqc import config
-from multiqc.utils import lzstring
 logger = config.logger
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output

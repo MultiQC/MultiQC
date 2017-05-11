@@ -49,7 +49,8 @@ setup(
     scripts = ['scripts/multiqc'],
     install_requires = [
         'click',
-        'future',
+        'future>0.14.0',
+        'lzstring',
         'jinja2',
         'matplotlib',
         'numpy',
