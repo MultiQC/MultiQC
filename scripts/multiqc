@@ -138,6 +138,11 @@ logger = config.logger
                     type = click.Path(exists=True, readable=True),
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
+@click.option('--cl_config',
+                    type = str,
+                    multiple = True,
+                    help = "Specify MultiQC config YAML on the command line"
+)
 @click.option('-v', '--verbose',
                     count = True,
                     default = 0,
@@ -151,7 +156,7 @@ logger = config.logger
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module, exclude, outdir,
 ignore, ignore_samples, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
-plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
+plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -175,6 +180,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     # Load config files
     config.mqc_load_userconfig(config_file)
     plugin_hooks.mqc_trigger('config_loaded')
+
+    # Command-line config YAML
+    if len(cl_config) > 0:
+        config.mqc_cl_config(cl_config)
 
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)

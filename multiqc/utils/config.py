@@ -117,22 +117,7 @@ def mqc_load_config(yaml_config):
             with open(yaml_config) as f:
                 new_config = yaml.load(f)
                 logger.debug("Loading config settings from: {}".format(yaml_config))
-                for c, v in new_config.items():
-                    if c == 'sp':
-                        # Merge filename patterns instead of replacing
-                        sp.update(v)
-                        logger.debug("Added to filename patterns: {}".format(v))
-                    elif c == 'extra_fn_clean_exts':
-                        # Prepend to filename cleaning patterns instead of replacing
-                        fn_clean_exts[0:0] = v
-                        logger.debug("Added to filename clean extensions: {}".format(v))
-                    elif c == 'extra_fn_clean_trim':
-                        # Prepend to filename cleaning patterns instead of replacing
-                        fn_clean_trim[0:0] = v
-                        logger.debug("Added to filename clean trimmings: {}".format(v))
-                    else:
-                        logger.debug("New config '{}': {}".format(c, v))
-                        globals()[c] = v
+                mqc_add_config(new_config)
         except (IOError, AttributeError) as e:
             logger.debug("Config error: {}".format(e))
         except yaml.scanner.ScannerError as e:
@@ -140,4 +125,35 @@ def mqc_load_config(yaml_config):
             sys.exit(1)
     else:
         logger.debug("No MultiQC config found: {}".format(yaml_config))
+
+def mqc_cl_config(cl_config):
+    for clc_str in cl_config:
+        try:
+            parsed_clc = yaml.load(clc_str)
+            assert(isinstance(parsed_clc, dict))
+        except yaml.scanner.ScannerError as e:
+            logger.error("Could not parse command line config: {}\n{}".format(clc_str, e))
+        except AssertionError:
+            logger.error("Could not parse command line config: {}".format(clc_str))
+        else:
+            mqc_add_config(parsed_clc)
+
+def mqc_add_config(conf):
+    """ Add to the global config with given MultiQC config dict """
+    for c, v in conf.items():
+        if c == 'sp':
+            # Merge filename patterns instead of replacing
+            sp.update(v)
+            logger.debug("Added to filename patterns: {}".format(v))
+        elif c == 'extra_fn_clean_exts':
+            # Prepend to filename cleaning patterns instead of replacing
+            fn_clean_exts[0:0] = v
+            logger.debug("Added to filename clean extensions: {}".format(v))
+        elif c == 'extra_fn_clean_trim':
+            # Prepend to filename cleaning patterns instead of replacing
+            fn_clean_trim[0:0] = v
+            logger.debug("Added to filename clean trimmings: {}".format(v))
+        else:
+            logger.debug("New config '{}': {}".format(c, v))
+            globals()[c] = v
 

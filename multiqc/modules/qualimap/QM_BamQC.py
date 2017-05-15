@@ -336,7 +336,7 @@ def general_stats_headers (self):
         hidecovs = config.qualimap_config['general_stats_coverage_hidden']
         assert type(hidecovs) == list
         log.debug("Hiding Qualimap thresholds: {}".format(", ".join([i for i in hidecovs])))
-    except (AttributeError, TypeError, AssertionError):
+    except (AttributeError, TypeError, KeyError, AssertionError):
         hidecovs = [1, 5, 10, 50]
     hidecovs = [str(i) for i in hidecovs]
 
