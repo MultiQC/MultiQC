@@ -88,7 +88,8 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
         the installation script (python setup.py install)", file=sys.stderr)
     sys.exit(1)
 
-# Functions to load user config files. These are called by the main MultiQC script.
+##### Functions to load user config files. These are called by the main MultiQC script.
+# Note that config files are loaded in a specific order and values can overwrite each other.
 def mqc_load_userconfig(path=None):
     """ Overwrite config defaults with user config files """
 
@@ -140,6 +141,7 @@ def mqc_cl_config(cl_config):
 
 def mqc_add_config(conf):
     """ Add to the global config with given MultiQC config dict """
+    global fn_clean_exts, fn_clean_trim
     for c, v in conf.items():
         if c == 'sp':
             # Merge filename patterns instead of replacing
@@ -157,3 +159,29 @@ def mqc_add_config(conf):
             logger.debug("New config '{}': {}".format(c, v))
             globals()[c] = v
 
+#### Function to load file containinga list of alternative sample-name swaps
+# Essentially a fancy way of loading stuff into the sample_names_rename config var
+# As such, can also be done directly using a config file
+def load_sample_names(snames_file):
+    global sample_names_rename_buttons, sample_names_rename
+    num_cols = None
+    try:
+        with open(snames_file) as f:
+            logger.debug("Loading sample renaming config settings from: {}".format(snames_file))
+            for l in f:
+                s = l.strip().split("\t")
+                if len(s) > 1:
+                    # Check that we have consistent numbers of columns
+                    if num_cols is None:
+                        num_cols = len(s)
+                    elif num_cols != len(s):
+                        logger.warn("Inconsistent number of columns found in sample names file (skipping line): '{}'".format(l.strip()))
+                    else:
+                        # Parse the line
+                        if len(sample_names_rename_buttons) == 0:
+                            sample_names_rename_buttons = s
+                        else:
+                            sample_names_rename.append(s)
+    except (IOError, AttributeError) as e:
+        logger.error("Error loading sample names file: {}".format(e))
+    logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))

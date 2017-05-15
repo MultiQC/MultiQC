@@ -182,6 +182,13 @@ kbd {
   overflow: auto;
   margin-bottom: 15px;
 }
+#mqc_sname_switches_txt {
+  margin-bottom: 15px;
+}
+#mqc_sname_switches {
+  display: inline-block;
+  margin-left: 10px;
+}
 #mqc_header_hr {
     margin: 0;
 }

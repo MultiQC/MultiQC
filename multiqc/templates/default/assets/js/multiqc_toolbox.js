@@ -10,6 +10,33 @@ var mqc_colours = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff
 //////////////////////////////////////////////////////
 $(function () {
 
+  // Batch sample renaming buttons
+  $('.mqc_sname_switches').click(function(e){
+    e.preventDefault();
+    if($(this).hasClass('active')){
+      return false;
+    }
+    $('#mqc_sname_switches button').removeClass('active');
+    $(this).addClass('active');
+    // Clear previous bulk renaming entries
+    $('.mqc_sname_switches_li').remove();
+    // Build new renaming entries and apply
+    var j = $(this).data('index');
+    if(j == 0){
+      apply_mqc_renamesamples();
+    } else {
+      for(i=0; i<mqc_sample_names_rename.length; i++){
+        var ft = mqc_sample_names_rename[i][0];
+        var tt = mqc_sample_names_rename[i][j];
+        $('#mqc_renamesamples_filters').append('<li class="mqc_sname_switches_li"> \
+          <input class="f_text from_text" value="'+ft+'" /><small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+tt+'" /> \
+          <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
+        </li>');
+      }
+      apply_mqc_renamesamples();
+    }
+  });
+
   // Hide toolbox when clicking outside
   $(document).mouseup(function (e){
     if (!$(".mqc-toolbox").is(e.target) && $(".mqc-toolbox").has(e.target).length === 0){

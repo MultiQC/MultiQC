@@ -88,6 +88,10 @@ logger = config.logger
                     multiple = True,
                     help = "Ignore sample names (glob expression)"
 )
+@click.option('--sample-names', 'sample_names',
+                    type = click.Path(exists=True, readable=True),
+                    help = "File containing alternative sample names"
+)
 @click.option('-l', '--file-list',
                     is_flag = True,
                     help = "Supply a file containing a list of file paths to be searched, one per row"
@@ -155,7 +159,7 @@ logger = config.logger
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module, exclude, outdir,
-ignore, ignore_samples, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
+ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -233,6 +237,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         config.plots_force_interactive = True
     if make_pdf:
         config.template = 'simple'
+    if sample_names:
+        config.load_sample_names(sample_names)
     config.kwargs = kwargs # Plugin command line options
 
     plugin_hooks.mqc_trigger('execution_start')

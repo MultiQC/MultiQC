@@ -60,6 +60,16 @@ was generated and the button that launches the welcome tour.
   {% endif %}
 </div>
 
+{% if config.sample_names_rename_buttons | length > 0 %}
+<p id="mqc_sname_switches_txt">Change sample names:
+  <span class="btn-group btn-group-sm" role="group" id="mqc_sname_switches">
+    {% for sn_t in config.sample_names_rename_buttons %}
+      <button type="button" class="btn btn-primary mqc_sname_switches {% if loop.index == 1 %}active{% endif %}" data-index="{{ loop.index - 1 }}">{{ sn_t }}</button>
+    {%- endfor %}
+  </span>
+</p>
+{% endif %}
+
 <hr id="mqc_header_hr">
 
 <div class="alert alert-info alert-dismissible hidden-print" id="mqc_welcome" style="display: none;">
