@@ -19,8 +19,45 @@ back the x axis until one of the datasets shows 90% of its maximum y-value
 (unique molecules).
 
 To disable this feature and show all of the data, add the following to your
-MultiQC configuration:
+[MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
 ```yaml
 preseq:
     notrim: true
+```
+
+#### Using coverage instead of read counts
+
+Preseq reports its numbers as "Molecule counts". This isn't always very intuitive, 
+and it's often easier to talk about sequencing depth in terms of coverage.
+
+You can plot with approximate coverage on the axes instead by specifying the 
+reference genome or target size, and the read length in your 
+[MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+```yaml
+preseq:
+    genome_size: 3049315783
+    read_length: 300
+```
+These parameters make the script take every molecule count and divide it by 
+(genome_size / read_length).
+
+MultiQC comes with effective genome size presets for Human and Mouse, so you can 
+provide the genome build name instead, like this: `genome_size: hg38`. Only the
+following builds are supported: `hg19`, `hg38`, `mm10`.
+
+#### Plotting the "real" data
+
+To add externally calculated real read counts as points, create a file with 
+`preseq_real_counts` in the filename and place it with your analysis files. 
+It should be space or tab delimited with 2 or 3 columns (column 1 = sample name, 
+column 2 = real read count, optional column 3 = real unique read count). For example:
+```
+Sample_1 3638261 3638011
+Sample_2 1592394 1592133
+[...]
+```
+
+You can generate a line for such a file using samtools:
+```bash
+echo "Sample_1 "$(samtools view -c -F 4 Sample_1.bam)" "$(samtools view -c -F 1028 Sample_1.bam)
 ```
