@@ -6,6 +6,7 @@ config variables to be used across all other modules """
 from __future__ import print_function
 from datetime import datetime
 import inspect
+import collections
 import os
 import pkg_resources
 import random
@@ -157,7 +158,7 @@ def mqc_add_config(conf):
             logger.debug("Added to filename clean trimmings: {}".format(v))
         else:
             logger.debug("New config '{}': {}".format(c, v))
-            globals()[c] = v
+            update_dict(globals(), {c: v})
 
 #### Function to load file containinga list of alternative sample-name swaps
 # Essentially a fancy way of loading stuff into the sample_names_rename config var
@@ -185,3 +186,14 @@ def load_sample_names(snames_file):
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+
+def update_dict(d, u):
+    """ Recursively merges dict u into dict d
+    """
+    for k_, v_ in u.items():
+        if isinstance(v_, collections.Mapping):
+            r = update_dict(d.get(k_, {}), v_)
+            d[k_] = r
+        else:
+            d[k_] = u[k_]
+    return d
