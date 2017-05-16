@@ -115,6 +115,8 @@ To see what changes need to applied to your custom plugin code, please see the [
   * Content broken into `description`, `help` and `plot`, with automatic formatting
   * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
   * Changes should be backwards-compatible
+* Report plot data export code refactored
+  * Now doesn't export hidden samples (uses HighCharts [export-csv](https://github.com/highcharts/export-csv) plugin)
 * Handle error when `git` isn't installed on the system.
 * Refactored colouring of table cells
   * Was previously done in the browser using [chroma.js](http://gka.github.io/chroma.js/)
