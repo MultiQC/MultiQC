@@ -52,7 +52,7 @@ with open(searchp_fn) as f:
 
 # Other defaults that can't be set in YAML
 modules_dir = os.path.join(MULTIQC_DIR, 'modules')
-creation_date = datetime.now().strftime("%Y-%m-%d, %H:%m")
+creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
@@ -188,12 +188,11 @@ def load_sample_names(snames_file):
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
 
 def update_dict(d, u):
-    """ Recursively merges dict u into dict d
+    """ Recursively updates nested dict d from nested dict u
     """
-    for k_, v_ in u.items():
-        if isinstance(v_, collections.Mapping):
-            r = update_dict(d.get(k_, {}), v_)
-            d[k_] = r
+    for key, val in u.items():
+        if isinstance(val, collections.Mapping):
+            d[key] = update_dict(d.get(key, {}), val)
         else:
-            d[k_] = u[k_]
+            d[key] = u[key]
     return d
