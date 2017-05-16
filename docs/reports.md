@@ -187,7 +187,8 @@ zoomed for printing). The tick boxes below these settings allow you to
 download multiple plots in one go.
 
 Plots with multiple tabs will all be exported as files when using the
-Data tab. For images, whichever plot is currently visible will be exported.
+Data tab. For plots with multiple tags, the currently visible plot
+will be exported.
 
 > Note: You can also save static plot images when you run MultiQC.
 > See [Exporting Plots](http://multiqc.info/docs/#exporting-plots)

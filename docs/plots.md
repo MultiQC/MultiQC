@@ -710,4 +710,14 @@ $('#YOUR_PLOT_ID').on('mqc_original_chg_source', function(e, name){
     // A plot with original images has had a request to change the
     // original image source (eg. pressing Prev / Next)
 });
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_image', function(e, cfg){
+    // A trigger to export an image of the plot. cfg contains
+    // config variables for the requested image.
+});
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_data', function(e, cfg){
+    // A trigger to export a data file of the plot. cfg contains
+    // config variables for the requested data.
+});
 ```
