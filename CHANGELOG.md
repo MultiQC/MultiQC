@@ -58,6 +58,8 @@ To see what changes need to applied to your custom plugin code, please see the [
   * Fixed bug with display of indels when only one sample
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **FastQC**
+  * Data for the Sequence content plot can now be downloaded from reports as a JSON file.
 * **FastQ Screen**
   * Rewritten plotting method for high sample numbers plot (~ > 20 samples)
   * Now shows counts for single-species hits and bins all multi-species hits
