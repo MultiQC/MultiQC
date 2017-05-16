@@ -358,8 +358,9 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_content not found in FastQC reports')
             return None
 
-        html += '<div id="fastqc_per_base_sequence_content_plot"> \n\
+        html += '<div id="fastqc_per_base_sequence_content_plot_div"> \n\
             <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
+            <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button> \n\
             <div class="fastqc_seq_heatmap_key">\n\
                 Position: <span id="fastqc_seq_heatmap_key_pos">-</span>\n\
                 <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>\n\
@@ -368,7 +369,7 @@ class MultiqcModule(BaseMultiqcModule):
                 <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>\n\
             </div>\n\
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
-                <div id="fastqc_seq" class="hc-plot"> \n\
+                <div id="fastqc_per_base_sequence_content_plot" class="hc-plot has-custom-export"> \n\
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
                 </div> \n\
             </div> \n\

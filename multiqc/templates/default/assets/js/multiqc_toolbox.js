@@ -208,14 +208,17 @@ $(function () {
         $('#mqc_export_selectplots input:checked').each(function(){
           var fname = $(this).val();
           var hc = $('#'+fname).highcharts();
+          var cfg = {
+            type: ft,
+            filename: fname,
+            sourceWidth: f_width,
+            sourceHeight: f_height,
+            scale: f_scale
+          };
           if(hc !== undefined){
-            hc.exportChartLocal({
-              type: ft,
-              filename: fname,
-              sourceWidth: f_width,
-              sourceHeight: f_height,
-              scale: f_scale
-            });
+            hc.exportChartLocal(cfg);
+          } else if($('#'+fname).hasClass('has-custom-export')){
+            $('#'+fname).trigger('mqc_plotexport_image', cfg);
           } else {
             skipped_plots += 1;
           }
@@ -233,14 +236,22 @@ $(function () {
             var ft = $('#mqc_export_data_ft').val();
             var fname = target+'.'+ft;
             var sep = ft == 'tsv' ? "\t" : ',';
+            // Custom plot not in mqc_plots
+            if (mqc_plots[target] == undefined){
+              if($('#'+target).hasClass('has-custom-export')){
+                $('#'+target).trigger('mqc_plotexport_data', { 'target': target, 'ft': ft, 'fname': fname, 'sep': sep });
+              } else {
+                skipped_plots += 1;
+              }
+            }
             // If JSON then just dump everything
-            if(ft == 'json'){
+            else if(ft == 'json'){
               json_str = JSON.stringify(mqc_plots[target], null, 2);
               var blob = new Blob([json_str], {type: "text/plain;charset=utf-8"});
               saveAs(blob, fname);
             }
             // Beeswarm plots must be done manually
-            else if(mqc_plots[target] !== undefined && mqc_plots[target]['plot_type'] == 'beeswarm'){
+            else if(mqc_plots[target]['plot_type'] == 'beeswarm'){
               // Header line
               datastring = 'Sample';
               for(var j=0; j<mqc_plots[target]['categories'].length; j++){

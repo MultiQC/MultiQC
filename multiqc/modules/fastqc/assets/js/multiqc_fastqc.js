@@ -274,6 +274,29 @@ $(function () {
     /// SEQ CONTENT HEATMAP LISTENERS
     /////////
 
+    // Seq Content heatmap export button
+    $('#fastqc_per_base_sequence_content_export_btn').click(function(e){
+        e.preventDefault();
+        // Tick only this plot in the toolbox and slide out
+        $('#mqc_export_selectplots input').prop('checked', false);
+        $('#mqc_export_selectplots input[value="fastqc_per_base_sequence_content_plot"]').prop('checked', true);
+        mqc_toolbox_openclose('#mqc_exportplots', true);
+    });
+
+    // Export plot
+    $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_image', function(e, cfg){
+        alert("Apologies, it's not yet possible to export this plot.\nPlease take a screengrab or export the JSON data.");
+    });
+    $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_data', function(e, cfg){
+        if(cfg['ft'] == 'json'){
+            json_str = JSON.stringify(fastqc_seq_content_data, null, 2);
+            var blob = new Blob([json_str], {type: "text/plain;charset=utf-8"});
+            saveAs(blob, cfg['fname']);
+        } else {
+            alert('Apologies, this plot can only be exported as JSON currently.');
+        }
+    });
+
     // Seq Content heatmap mouse rollover
     $('#fastqc_seq_heatmap').mousemove(function(e) {
 
