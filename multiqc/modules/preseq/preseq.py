@@ -76,26 +76,28 @@ class MultiqcModule(BaseMultiqcModule):
             data[float(s[0])] = float(s[1])
 
         # Convert counts to coverage
+        read_length = float(getattr(config, 'preseq', {}).get('read_length', 0))
         genome_size = getattr(config, 'preseq', {}).get('genome_size')
         if genome_size is not None:
             try:
                 genome_size = float(genome_size)
             except ValueError:
-                genome_sizes = {'hg19': 2897310462,
-                                'hg38': 3049315783,
-                                'mm10': 2652783500}
-                if genome_size in genome_size:
-                    genome_size = genome_sizes[genome_size]
+                presets = {'hg19': 2897310462,
+                           'hg38': 3049315783,
+                           'mm10': 2652783500}
+                if genome_size in presets:
+                    genome_size = presets[genome_size]
                 else:
                     log.warn('The size for genome ' + genome_size + ' is unknown to MultiQC, please specify it '
-                             'explicitly or choose one of the following: ' + ', '.join(genome_sizes) +
+                             'explicitly or choose one of the following: ' + ', '.join(presets.keys()) +
                              '. Falling back to molecule counts.')
-        
-        read_length = float(getattr(config, 'preseq', {}).get('read_length', 0))
-        if genome_size and read_length:
-            self.counts_in_1x = genome_size / read_length
+                    genome_size = None
+        if genome_size:
             if using_bases:
                 self.counts_in_1x = genome_size
+            elif read_length:
+                self.counts_in_1x = genome_size / read_length
+        if self.counts_in_1x:
             data = {k / self.counts_in_1x: v / self.counts_in_1x for k, v in data.items()}
             self.axis_label = 'Coverage'
         return data
@@ -116,16 +118,15 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 for line in real_counts_file_raw.splitlines():
                     if not line.startswith('#'):
-                        line = line.strip()
-                        cols = line.split()  # Split on any whitespace
-                        for sn in [cols[0], "{}.preseq".format(cols[0]), "{}.bam".format(cols[0])]:
-                            if sn in self.preseq_data:
-                                if len(cols) >= 2:
-                                    if cols[1].isdigit():
-                                        real_counts_total[sn] = int(cols[1])
-                                if len(cols) >= 3:
-                                    if cols[2].isdigit():
-                                        real_counts_unique[sn] = int(cols[2])
+                        cols = line.strip().split()  # Split on any whitespace
+                        sn = self.clean_s_name(cols[0], None)
+                        if sn in self.preseq_data:
+                            if len(cols) >= 2:
+                                if cols[1].isdigit():
+                                    real_counts_total[sn] = int(cols[1])
+                            if len(cols) >= 3:
+                                if cols[2].isdigit():
+                                    real_counts_unique[sn] = int(cols[2])
             except IOError as e:
                 log.error("Error loading real counts file {}: {}".format(real_counts_file_name, str(e)))
             else:
@@ -150,11 +151,13 @@ class MultiqcModule(BaseMultiqcModule):
                 if sn in real_counts_total:
                     t_reads = float(real_counts_total[sn])
                     point = {
-                        'color': default_colors[si],
+                        'color': default_colors[si % len(default_colors)],
                         'showInLegend': False,
                         'marker': {
                             'enabled': True,
-                            'symbol': 'diamond'
+                            'symbol': 'diamond',
+                            'lineColor': 'black',
+                            'lineWidth': 1,
                         },
                     }
                     if sn in real_counts_unique:
@@ -162,8 +165,8 @@ class MultiqcModule(BaseMultiqcModule):
                         point['data'] = [[t_reads, u_reads]]
                         point['name'] = sn + ': actual read count vs. deduplicated read count (externally calculated)'
                         series.append(point)
-                        log.info("Found real counts for {} - Total: {}, Unique: {}"
-                                 .format(sn, t_reads, u_reads))
+                        log.debug("Found real counts for {} - Total: {}, Unique: {}"
+                                  .format(sn, t_reads, u_reads))
                     else:
                         xvalues = sorted(self.preseq_data[sn].keys())
                         yvalues = sorted(self.preseq_data[sn].values())
@@ -175,8 +178,8 @@ class MultiqcModule(BaseMultiqcModule):
                             point['data'] = [[t_reads, interp]]
                             point['name'] = sn + ': actual read count (externally calculated)'
                             series.append(point)
-                            log.info("Found real count for {} - Total: {:.2f} (preseq unique reads: {:.2f})"
-                                     .format(sn, t_reads, interp))
+                            log.debug("Found real count for {} - Total: {:.2f} (preseq unique reads: {:.2f})"
+                                      .format(sn, t_reads, interp))
         return series
 
 
@@ -202,31 +205,28 @@ class MultiqcModule(BaseMultiqcModule):
         elif real_counts_total:
             description += '<p>Points show externally calculated read counts on the curves.</p>'
 
+        max_y, sn = max((max(d.values()), s) for s, d in self.preseq_data.items())
         # Trim the data to not have a ridiculous x-axis (10Gbp anyone?)
         if getattr(config, 'preseq', {}).get('notrim', False) is not True:
-            ymax = min(max(d.values()) for d in self.preseq_data.values()) * 0.9
-            xmaxs = []
-            for sn, d in self.preseq_data.items():
-                xmax = 0
-                for x in sorted(list(d.keys())):
-                    xmax = max(xmax, x)
-                    if d[x] > ymax and x > real_counts_total.get(sn, 0) and x > real_counts_unique.get(sn, 0):
-                        break
-                xmaxs.append(xmax)
-            pconfig['xmax'] = min(xmaxs)
-            description += "<p>Note that the x axis is trimmed until one of the datasets \
-                shows 90% of its maximum y-value, to avoid ridiculous scales.</p>"
-        else:
-            ymax = max(max(d.values()) for d in self.preseq_data.values())
+            max_y *= 0.8
+            max_x = 0
+            for x in sorted(list(self.preseq_data[sn].keys())):
+                max_x = max(max_x, x)
+                if self.preseq_data[sn][x] > max_y and \
+                        x > real_counts_total.get(sn, 0) and x > real_counts_unique.get(sn, 0):
+                    break
+            pconfig['xmax'] = max_x
+            description += "<p>Note that the x axis is trimmed at the point where all the datasets \
+                show 80% of their maximum y-value, to avoid ridiculous scales.</p>"
             
-        pconfig['extra_series'].append({  # Plot perfect library as dashed line
-            'name': 'x = y',
-            'data': [[0, 0], [ymax, ymax]],
+        # Plot perfect library as dashed line
+        pconfig['extra_series'].append({
+            'name': 'x = y (a perfect library where each read is unique)',
+            'data': [[0, 0], [max_y, max_y]],
             'dashStyle': 'Dash',
             'lineWidth': 1,
             'color': '#000000',
             'marker': { 'enabled': False },
-            'enableMouseTracking': False,
             'showInLegend': False,
         })
 
