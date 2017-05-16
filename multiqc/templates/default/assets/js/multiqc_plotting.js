@@ -59,12 +59,21 @@ $(function () {
   });
 
   // Render plots on page load
-  $('.hc-plot:visible').each(function(){
+  $('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').each(function(){
     var target = $(this).attr('id');
     // Only one point per dataset, so multiply limit by arbitrary number.
     var max_num = num_datasets_plot_limit * 50;
-    plot_graph(target, undefined, max_num);
-  }).promise().done(function(){ $('.mqc_loading_warning').hide(); });
+    // Deferring each plot call prevents browser from locking up
+    setTimeout(function(){
+        plot_graph(target, undefined, max_num);
+        if($('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').length == 0){
+          $('.mqc_loading_warning').hide();
+        }
+    }, 50);
+  });
+  if($('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').length == 0){
+    $('.mqc_loading_warning').hide();
+  }
 
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
@@ -211,7 +220,7 @@ function plot_graph(target, ds, max_num){
         plot_xy_line_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Bar graphs
@@ -220,7 +229,7 @@ function plot_graph(target, ds, max_num){
         plot_stacked_bar_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Scatter plots
@@ -229,7 +238,7 @@ function plot_graph(target, ds, max_num){
         plot_scatter_plot(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Beeswarm graphs
@@ -238,7 +247,7 @@ function plot_graph(target, ds, max_num){
         plot_beeswarm_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Heatmap plots
@@ -247,7 +256,7 @@ function plot_graph(target, ds, max_num){
         plot_heatmap(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Not recognised

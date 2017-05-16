@@ -89,6 +89,9 @@ class BaseMultiqcModule(object):
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
 
+        # Sanitise anchor ID and check for duplicates
+        anchor = report.save_htmlid(anchor)
+
         # Format the content
         if autoformat:
             if len(description) > 0:

@@ -46,9 +46,14 @@ def highcharts_heatmap (data, xcats, ycats, pconfig=None):
         for j, val in enumerate(arr):
             pdata.append([j,i,val])
 
-    # Build the HTML for the page
+    # Get the plot ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
+    # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # The 'sort by highlights button'

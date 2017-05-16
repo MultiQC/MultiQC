@@ -52,6 +52,7 @@ def make_table (dt):
     """
 
     table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
+    table_id = report.save_htmlid(table_id)
     table_id = re.sub(r'\W+', '_', table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()

@@ -102,7 +102,10 @@ To see what changes need to applied to your custom plugin code, please see the [
   * Set `config.collapse_tables` to `False` to disable table maximum-heights
 * Bar graphs and heatmaps can now be zoomed in on
   * Interactive plots sometimes hide labels due to lack of space. These can now be zoomed in on to see specific samples in more detail.
-* New template called _sections_ for faster loading
+* Report plots now load sequentially instead of all at once
+  * Prevents the browser from locking up when large reports load
+* Report plot and section HTML IDs are now sanitised and checked for duplicates
+* New template available (called _sections_) which has faster loading
   * Only shows results from one module at a time
   * Makes big reports load in the browser much more quickly, but requires more clicking
   * Try it out by specifying `-t sections`

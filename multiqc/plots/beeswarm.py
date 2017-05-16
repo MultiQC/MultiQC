@@ -34,13 +34,16 @@ def plot (data, headers=None, pconfig=None):
 def make_plot(dt):
 
     bs_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
+
+    # Sanitise plot ID and check for duplicates
+    bs_id = report.save_htmlid(bs_id)
+
     categories = []
     s_names = []
     data = []
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
 
-            rid = header['rid']
             bcol = 'rgb({})'.format(header.get('colour', '204,204,204'))
 
             categories.append({

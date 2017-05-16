@@ -245,6 +245,10 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
     # Plot group ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):
@@ -253,7 +257,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
         except:
             name = k+1
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
-        pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
+        pid = report.save_htmlid(pid)
         pids.append(pid)
 
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \

@@ -75,9 +75,14 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
     if pconfig is None:
         pconfig = {}
 
-    # Build the HTML for the page
+    # Get the plot ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
+    # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets

@@ -141,9 +141,14 @@ def highcharts_linegraph (plotdata, pconfig=None):
     if pconfig is None:
         pconfig = {}
 
-    # Build the HTML for the page
+    # Get the plot ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
+    # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets
@@ -192,6 +197,7 @@ def matplotlib_linegraph (plotdata, pconfig=None):
     # Plot group ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):
@@ -200,7 +206,7 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         except:
             name = k+1
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
-        pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
+        pid = report.save_htmlid(pid)
         pids.append(pid)
 
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
@@ -367,7 +373,7 @@ def matplotlib_linegraph (plotdata, pconfig=None):
 
         # Tight layout - makes sure that legend fits in and stuff
         if len(pdata) <= 15:
-            lgd = axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+            axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
             plt.tight_layout(rect=[0,0.08,1,0.92])
         else:
             plt.tight_layout(rect=[0,0,1,0.92])

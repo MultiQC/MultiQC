@@ -34,6 +34,7 @@ general_stats_headers = list()
 general_stats_html = ''
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
 plot_data = dict()
+html_ids = list()
 num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
@@ -231,6 +232,32 @@ def data_sources_tofile ():
                         lines.append([mod, sec, s_name, source])
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
+
+def save_htmlid(html_id):
+    """ Take a HTML ID, sanitise for HTML, check for duplicates and save.
+    Returns sanitised, unique ID """
+    global html_ids
+
+    # Trailing whitespace
+    html_id = html_id.strip()
+
+    # Must begin with a letter
+    if re.match(r'^[a-zA-Z]', html_id) is None:
+        html_id = 'mqc-{}'.format(html_id)
+
+    # Replace illegal characters
+    html_id = re.sub('[^\w:.-]+', '-', html_id)
+
+    # Check for duplicates
+    i = 1
+    html_id_base = html_id
+    while html_id in html_ids:
+        html_id = '{}-{}'.format(html_id_base, i)
+        i += 1
+
+    # Remember and return
+    html_ids.append(html_id)
+    return html_id
 
 
 def compress_json(data):
