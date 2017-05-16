@@ -99,6 +99,13 @@ To see what changes need to applied to your custom plugin code, please see the [
   * Speeds up report rendering in the web browser and makes report less stupidly long with lots of samples
   * Button beneath table toggles full length if you want a zoomed-out view
   * Refactored and removed previous code to make the table header "float"
+  * Set `config.collapse_tables` to `False` to disable table maximum-heights
+* Bar graphs and heatmaps can now be zoomed in on
+  * Interactive plots sometimes hide labels due to lack of space. These can now be zoomed in on to see specific samples in more detail.
+* New template called _sections_ for faster loading
+  * Only shows results from one module at a time
+  * Makes big reports load in the browser much more quickly, but requires more clicking
+  * Try it out by specifying `-t sections`
 * Module sections tidied and refactored
   * New helper function `self.add_section()`
   * Sections hidden in nav if no title (no more need for the hacky `self.intro += `)

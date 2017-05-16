@@ -59,7 +59,7 @@ $(function () {
   });
 
   // Render plots on page load
-  $('.hc-plot').each(function(){
+  $('.hc-plot:visible').each(function(){
     var target = $(this).attr('id');
     // Only one point per dataset, so multiply limit by arbitrary number.
     var max_num = num_datasets_plot_limit * 50;
@@ -522,7 +522,8 @@ function plot_stacked_bar_graph(target, ds){
   // Make the highcharts plot
   Highcharts.chart(target, {
     chart: {
-      type: 'bar'
+      type: 'bar',
+      zoomType: 'x'
     },
     title: {
       text: config['title'],
@@ -1387,6 +1388,7 @@ function plot_heatmap(target, ds){
   Highcharts.chart(target, {
     chart: {
       type: 'heatmap',
+      zoomType: 'xy',
       height: config['square'] ? 500 : undefined,
       width: config['square'] ? 530 : undefined,
       marginTop: config['title'] ? 60 : 50

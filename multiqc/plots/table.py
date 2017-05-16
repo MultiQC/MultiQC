@@ -233,11 +233,12 @@ def make_table (dt):
         """.format(tid=table_id, nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
 
     # Build the table itself
+    collapse_class = 'mqc-table-collapse' if len(t_rows) > 10 and config.collapse_tables else ''
     html += """
         <div id="{tid}_container" class="mqc_table_container">
-            <div class="table-responsive mqc-table-responsive">
+            <div class="table-responsive mqc-table-responsive {cc}">
                 <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}">
-        """.format( tid=table_id, title=table_title )
+        """.format( tid=table_id, title=table_title, cc=collapse_class)
 
     # Build the header row
     col1_header = dt.pconfig.get('col1_header', 'Sample Name')
@@ -256,7 +257,7 @@ def make_table (dt):
             html += t_rows[s_name].get(k, empty_cells[k])
         html += '</tr>'
     html += '</tbody></table></div>'
-    if len(t_rows) > 10:
+    if len(t_rows) > 10 and config.collapse_tables:
         html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
     html += '</div>'
 

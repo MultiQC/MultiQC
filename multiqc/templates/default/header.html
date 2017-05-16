@@ -48,6 +48,8 @@ was generated and the button that launches the welcome tour.
 </div>
 {% endif %}
 
+<div class="alert alert-danger mqc_loading_warning"><span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..</div>
+
 <div id="analysis_dirs_wrapper">
   <p>Report generated on {{ config.creation_date }} based on data in:
   {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>

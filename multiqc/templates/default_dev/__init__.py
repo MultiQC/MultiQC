@@ -18,7 +18,6 @@ copy required files.
 
 """
 import os
-
 from multiqc.utils import config
 
 template_parent = 'default'

@@ -101,6 +101,7 @@ setup(
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
             'default_dev = multiqc.templates.default_dev',
+            'sections = multiqc.templates.sections',
             'simple = multiqc.templates.simple',
             'geo = multiqc.templates.geo',
         ],

@@ -620,8 +620,10 @@ input.form-control[type=color]{
 .mqc_table tbody tr td .wrapper .val {
     z-index: -1;
 }
-.mqc-table-responsive {
+.mqc-table-responsive.mqc-table-collapse {
     max-height: 400px;
+}
+.mqc-table-responsive {
     overflow: auto;
 }
 .table.mqc_table > thead > tr > th {
