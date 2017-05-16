@@ -51,7 +51,7 @@ setup(
         'click',
         'future>0.14.0',
         'lzstring',
-        'jinja2',
+        'jinja2>=2.9',
         'matplotlib',
         'numpy',
         'pyyaml',
