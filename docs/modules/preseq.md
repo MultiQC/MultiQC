@@ -41,8 +41,13 @@ These parameters make the script take every molecule count and divide it by
 (genome_size / read_length).
 
 MultiQC comes with effective genome size presets for Human and Mouse, so you can 
-provide the genome build name instead, like this: `genome_size: hg38`. Only the
-following builds are supported: `hg19`, `hg38`, `mm10`.
+provide the build name instead using the high-level configuration parameter:
+```yaml
+genome: hg38_genome
+preseq:
+    read_length: 300
+```
+The following options are supported: `hg19_genome`, `hg38_genome`, `mm10_genome`.
 
 #### Plotting externally calculated read counts
 
