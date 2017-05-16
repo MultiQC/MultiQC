@@ -161,6 +161,10 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
         pconfig = {}
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Counts / Percentages / Log Switches

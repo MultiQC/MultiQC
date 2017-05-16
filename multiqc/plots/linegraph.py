@@ -198,6 +198,9 @@ def matplotlib_linegraph (plotdata, pconfig=None):
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
 
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):

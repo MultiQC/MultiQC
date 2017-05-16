@@ -5,7 +5,6 @@
 from collections import defaultdict, OrderedDict
 import logging
 import random
-import re
 
 from multiqc.utils import config, report, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
@@ -53,7 +52,6 @@ def make_table (dt):
 
     table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
     table_id = report.save_htmlid(table_id)
-    table_id = re.sub(r'\W+', '_', table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = OrderedDict()
@@ -67,7 +65,7 @@ def make_table (dt):
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
 
-            rid = header['rid']
+            rid = report.save_htmlid(header['rid'])
 
             # Build the table header cell
             shared_key = ''
