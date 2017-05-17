@@ -82,9 +82,9 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 genome_size = float(genome_size)
             except ValueError:
-                presets = {'hg19': 2897310462,
-                           'hg38': 3049315783,
-                           'mm10': 2652783500}
+                presets = {'hg19_genome': 2897310462,
+                           'hg38_genome': 3049315783,
+                           'mm10_genome': 2652783500}
                 if genome_size in presets:
                     genome_size = presets[genome_size]
                 else:
