@@ -186,8 +186,15 @@ class MultiqcModule(BaseMultiqcModule):
     def preseq_length_trimmed_plot (self):
         """ Generate the preseq plot """
 
+        max_y, sn = max((max(d.values()), s) for s, d in self.preseq_data.items())
+        description = ''
+
+        # Plot config
         if self.counts_in_1x is not None:
-            tt_label = '<b>{point.x:,.2f}x total</b>: {point.y:,.2f}x unique'
+            if max_y > 10:
+                tt_label = '<b>{point.x:,.0f}x total</b>: {point.y:,.0f}x unique'
+            else:
+                tt_label = '<b>{point.x:,.2f}x total</b>: {point.y:,.2f}x unique'
             labelFormat = '{value}x'
         else:
             tt_label = '<b>{point.x:,.0f} total molecules</b>: {point.y:,.0f} unique molecules'
@@ -205,7 +212,6 @@ class MultiqcModule(BaseMultiqcModule):
             'xLabelFormat': labelFormat,
             'extra_series': []
         }
-        description = ''
 
         # Plot the real counts if we have them
         real_counts_total, real_counts_unique = self._read_real_counts()
@@ -215,7 +221,6 @@ class MultiqcModule(BaseMultiqcModule):
         elif real_counts_total:
             description += '<p>Points show externally calculated read counts on the curves.</p>'
 
-        max_y, sn = max((max(d.values()), s) for s, d in self.preseq_data.items())
         # Trim the data to not have a ridiculous x-axis (10Gbp anyone?)
         if getattr(config, 'preseq', {}).get('notrim', False) is not True:
             max_y *= 0.8
@@ -228,7 +233,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig['xmax'] = max_x
             description += "<p>Note that the x axis is trimmed at the point where all the datasets \
                 show 80% of their maximum y-value, to avoid ridiculous scales.</p>"
-            
+
         # Plot perfect library as dashed line
         pconfig['extra_series'].append({
             'name': 'x = y (a perfect library where each read is unique)',
