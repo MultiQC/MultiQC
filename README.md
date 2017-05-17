@@ -1,5 +1,7 @@
 <img src="multiqc/templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">
 
+[![Join the chat at https://gitter.im/ewels/MultiQC](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ewels/MultiQC?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ### Aggregate bioinformatics results across many samples into a single report.
 
 ##### Find [documentation](http://multiqc.info/docs) and [example reports](http://multiqc.info/examples/rna-seq/multiqc_report.html) at [http://multiqc.info](http://multiqc.info)
