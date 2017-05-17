@@ -57,7 +57,8 @@ reference genome. MultiQC comes with genome and transcriptome guides for Human
 and Mouse. You can use these in your reports by adding the following MultiQC
 config keys (see [Configuring MultiQC](http://multiqc.info/docs/#configuring-multiqc)):
 ```yaml
-genome: 'hg38_genome'
+fastqc_config:
+    fastqc_theoretical_gc: 'hg38_genome'
 ```
 Only one theoretical distribution can be plotted. The following guides are available:
 `hg38_genome`, `hg38_txome`, `mm10_genome`, `mm10_txome` (txome = transcriptome).

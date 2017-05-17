@@ -77,18 +77,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert counts to coverage
         read_length = float(getattr(config, 'preseq', {}).get('read_length', 0))
-        genome_size = float(getattr(config, 'preseq', {}).get('genome_size', 0))
-        build_name = getattr(config, 'genome', None)
-        if not genome_size and build_name:
-            presets = {'hg19_genome': 2897310462,
-                       'hg38_genome': 3049315783,
-                       'mm10_genome': 2652783500}
-            if build_name in presets:
-                genome_size = presets[build_name]
-            else:
-                log.warn('The size for ' + build_name + ' is unknown to MultiQC, please specify it '
-                         'explicitly or choose one of the following: ' + ', '.join(presets.keys()) +
-                         '. Falling back to molecule counts.')
+        genome_size = getattr(config, 'preseq', {}).get('genome_size')
+        if genome_size is not None:
+            try:
+                genome_size = float(genome_size)
+            except ValueError:
+                presets = {'hg19': 2897310462,
+                           'hg38': 3049315783,
+                           'mm10': 2652783500}
+                if genome_size in presets:
+                    genome_size = presets[genome_size]
+                else:
+                    log.warn('The size for genome ' + genome_size + ' is unknown to MultiQC, please specify it '
+                             'explicitly or choose one of the following: ' + ', '.join(presets.keys()) +
+                             '. Falling back to molecule counts.')
+                    genome_size = None
         if genome_size:
             if using_bases:
                 self.counts_in_1x = genome_size

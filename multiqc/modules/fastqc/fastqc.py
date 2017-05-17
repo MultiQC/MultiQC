@@ -433,8 +433,6 @@ class MultiqcModule(BaseMultiqcModule):
             theoretical_gc_name = f['fn']
         if theoretical_gc_raw is None:
             tgc = getattr(config, 'fastqc_config', {}).get('fastqc_theoretical_gc', None)
-            if tgc is None:
-                tgc = getattr(config, 'genome', None)
             if tgc is not None:
                 theoretical_gc_name = os.path.basename(tgc)
                 tgc_fn = 'fastqc_theoretical_gc_{}.txt'.format(tgc)
