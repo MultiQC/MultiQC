@@ -71,11 +71,11 @@ To see what changes need to applied to your custom plugin code, please see the [
   * New `WgsMetrics` Submodule!
   * `CollectGcBiasMetrics` module now prints summary statistics to `multiqc_data` if found. Thanks to @ahvigil
 * **Preseq**
-  * Now trims the x axis to the point that meets 90% of `min(unique molecules)`. 
+  * Now trims the x axis to the point that meets 90% of `min(unique molecules)`.
   	Hopefully prevents ridiculous x axes without sacrificing too much useful information.
-  * Allows to show estimated depth of coverage instead of less informative molecule counts 
+  * Allows to show estimated depth of coverage instead of less informative molecule counts
   	(see [details](http://multiqc.info/docs/#preseq)).
-  * Plots dots with extermally calculated real read counts (see [details](http://multiqc.info/docs/#preseq)).
+  * Plots dots with externally calculated real read counts (see [details](http://multiqc.info/docs/#preseq)).
 * **Qualimap**
   * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
   * BamQC module now doesn't crash if reports don't have genome gc distributions
