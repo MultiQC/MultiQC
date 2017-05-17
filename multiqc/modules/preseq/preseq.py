@@ -101,8 +101,8 @@ class MultiqcModule(BaseMultiqcModule):
             data = {k / self.counts_in_1x: v / self.counts_in_1x for k, v in data.items()}
             self.axis_label = 'Coverage'
         return data
-    
-    
+
+
     def _read_real_counts(self):
         real_counts_file_raw = None
         real_counts_file_name = None
@@ -139,8 +139,8 @@ class MultiqcModule(BaseMultiqcModule):
             for f, c in real_counts_unique.items():
                 real_counts_unique[f] = float(c) / self.counts_in_1x
         return real_counts_total, real_counts_unique
-    
-    
+
+
     def _real_counts_to_plot_series(self, real_counts_unique, real_counts_total):
         series = []
         if real_counts_total:
@@ -185,6 +185,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def preseq_length_trimmed_plot (self):
         """ Generate the preseq plot """
+
+        if self.counts_in_1x is not None:
+            tt_label = '<b>{point.x:,.2f}x total</b>: {point.y:,.2f}x unique'
+            labelFormat = '{value}x'
+        else:
+            tt_label = '<b>{point.x:,.0f} total molecules</b>: {point.y:,.0f} unique molecules'
+            labelFormat = None
+
         pconfig = {
             'id': 'preseq_plot',
             'title': 'Preseq complexity curve',
@@ -192,11 +200,13 @@ class MultiqcModule(BaseMultiqcModule):
             'xlab': 'Total {} (including duplicates)'.format(self.axis_label),
             'ymin': 0,
             'xmin': 0,
-            'tt_label': '<b>{point.x:,.0f} total</b>: {point.y:,.0f} unique',
+            'tt_label': tt_label,
+            'yLabelFormat': labelFormat,
+            'xLabelFormat': labelFormat,
             'extra_series': []
         }
         description = ''
-        
+
         # Plot the real counts if we have them
         real_counts_total, real_counts_unique = self._read_real_counts()
         pconfig['extra_series'].extend(self._real_counts_to_plot_series(real_counts_unique, real_counts_total))

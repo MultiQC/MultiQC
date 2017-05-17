@@ -374,6 +374,7 @@ function plot_xy_line_graph(target, ds){
       title: {
         text: config['xlab']
       },
+      labels: { format: config['xLabelFormat'] ? config['xLabelFormat']  : '{value}' },
       type: config['xLog'] ? 'logarithmic' : 'linear',
       categories: config['categories'],
       ceiling: config['xCeiling'],
@@ -389,6 +390,7 @@ function plot_xy_line_graph(target, ds){
       title: {
         text: config['ylab']
       },
+      labels: { format: config['yLabelFormat'] ? config['yLabelFormat'] : '{value}' },
       type: config['yLog'] ? 'logarithmic' : 'linear',
       ceiling: config['yCeiling'],
       floor: config['yFloor'],
@@ -548,6 +550,7 @@ function plot_stacked_bar_graph(target, ds){
       title: {
         text: config['ylab']
       },
+      labels: { format: config['yLabelFormat'] ? config['yLabelFormat'] : '{value}' },
       ceiling: config['yCeiling'],
       floor: config['yFloor'],
       minRange: config['yMinRange'],

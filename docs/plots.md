@@ -210,6 +210,8 @@ config = {
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     'yPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
     'xPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
+    'xLabelFormat': '{value}',   # Format string for the axis labels
+    'yLabelFormat': '{value}',   # Format string for the axis labels
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
