@@ -24,7 +24,7 @@ except Exception as e:
     # The lack of the library will be handled when plots are attempted
     print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
     print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
-    logger.exception(e)
+    print(e)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
