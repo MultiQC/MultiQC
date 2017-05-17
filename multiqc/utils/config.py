@@ -6,6 +6,7 @@ config variables to be used across all other modules """
 from __future__ import print_function
 from datetime import datetime
 import inspect
+import collections
 import os
 import pkg_resources
 import random
@@ -51,7 +52,7 @@ with open(searchp_fn) as f:
 
 # Other defaults that can't be set in YAML
 modules_dir = os.path.join(MULTIQC_DIR, 'modules')
-creation_date = datetime.now().strftime("%Y-%m-%d, %H:%m")
+creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
@@ -157,7 +158,7 @@ def mqc_add_config(conf):
             logger.debug("Added to filename clean trimmings: {}".format(v))
         else:
             logger.debug("New config '{}': {}".format(c, v))
-            globals()[c] = v
+            update_dict(globals(), {c: v})
 
 #### Function to load file containinga list of alternative sample-name swaps
 # Essentially a fancy way of loading stuff into the sample_names_rename config var
@@ -185,3 +186,13 @@ def load_sample_names(snames_file):
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+
+def update_dict(d, u):
+    """ Recursively updates nested dict d from nested dict u
+    """
+    for key, val in u.items():
+        if isinstance(val, collections.Mapping):
+            d[key] = update_dict(d.get(key, {}), val)
+        else:
+            d[key] = u[key]
+    return d
