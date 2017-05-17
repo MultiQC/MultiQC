@@ -1,7 +1,11 @@
 # MultiQC Version History
 
-## v1.0dev
-Version 1.0! Bumping the major version number for a couple of reasons:
+## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
+Version 1.0! This release has been a long time coming and brings with it some fairly
+major improvements in speed, report filesize and report performance. There's also
+a bunch of new modules, more options, features and a whole lot of bug fixes.
+
+The version number is being bumped up to 1.0 for a couple of reasons:
 
 1. MultiQC is now _(hopefully)_ relatively stable. A number of facilities and users
    are now using it in a production setting and it's published. It feels like it
