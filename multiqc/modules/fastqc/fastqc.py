@@ -344,8 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the epic HTML for the FastQC sequence content heatmap """
 
         html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
-                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p> \
-                 <p class="text-primary"><span class="glyphicon glyphicon-info-sign"></span> Click a heatmap row to see a line plot for that dataset.</p>'
+                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
 
         # Prep the data
         data = OrderedDict()
@@ -354,31 +353,43 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = {self.avg_bp_from_range(d['base']): d for d in self.fastqc_data[s_name]['per_base_sequence_content']}
             except KeyError:
                 pass
+            # Old versions of FastQC give counts instead of percentages
+            for b in data[s_name]:
+                tot = sum([data[s_name][b][base] for base in ['a','c','t','g']])
+                if tot == 100.0:
+                    break
+                else:
+                    for base in ['a','c','t','g']:
+                        data[s_name][b][base] = (float(data[s_name][b][base])/float(tot)) * 100.0
         if len(data) == 0:
             log.debug('sequence_content not found in FastQC reports')
             return None
 
-        html += '<div id="fastqc_per_base_sequence_content_plot_div"> \n\
-            <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
-            <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button> \n\
-            <div class="fastqc_seq_heatmap_key">\n\
-                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>\n\
-                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>\n\
-            </div>\n\
-            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
-                <div id="fastqc_per_base_sequence_content_plot" class="hc-plot has-custom-export"> \n\
-                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
-                </div> \n\
-            </div> \n\
-            <div class="clearfix"></div> \n\
-        </div> \n\
-        <script type="text/javascript"> \n\
-            fastqc_seq_content_data = {d};\n\
-            $(function () {{ fastqc_seq_content_heatmap(); }}); \n\
-        </script>'.format(d=json.dumps(data))
+        html += '''<div id="fastqc_per_base_sequence_content_plot_div">
+            <div class="alert alert-info">
+               <span class="glyphicon glyphicon-hand-up"></span>
+               Click a sample row to see a line plot for that dataset.
+            </div>
+            <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
+            <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
+            <div class="fastqc_seq_heatmap_key">
+                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
+                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
+            </div>
+            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
+                <div id="fastqc_per_base_sequence_content_plot" class="hc-plot has-custom-export">
+                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <script type="text/javascript">
+            fastqc_seq_content_data = {d};
+            $(function () {{ fastqc_seq_content_heatmap(); }});
+        </script>'''.format(d=json.dumps(data))
 
         self.add_section (
             name = 'Per Base Sequence Content',
