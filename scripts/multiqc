@@ -182,6 +182,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     log.init_log(logger, loglevel=loglevel)
 
     # Load config files
+    plugin_hooks.mqc_trigger('before_config')
     config.mqc_load_userconfig(config_file)
     plugin_hooks.mqc_trigger('config_loaded')
 
