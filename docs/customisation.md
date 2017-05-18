@@ -60,6 +60,44 @@ Then this will be displayed at the top of reports:
 
 Note that you can also specify a path to a config file using `-c`.
 
+## Bulk sample renaming
+Although it is possible to rename samples manually and in bulk using the
+[report toolbox](#renaming-samples), it's often desirable to embed such renaming patterns
+into the report so that they can be shared with others. For example, a typical case could be
+for a sequencing centre that has internal sample IDs and also user-supplied sample names.
+Or public sample identifiers such as SRA numbers as well as more meaningful names.
+
+It's possible to supply a file with one or more sets of sample names using the `--sample-names`
+command line option. This file should be a tab-delimited file with a header row (used for
+the report button labels) and then any number of renamed sample identifiers. For example:
+
+```
+MultiQC Names	Proper Names	AWESOME NAMES
+SRR1067503_1	Sample_1	MYBESTSAMP_1
+SRR1067505_1	Sample_2	MYBESTSAMP_2
+SRR1067510_1	Sample_3	MYBESTSAMP_3
+```
+
+If supplied, buttons will be generated at the top of the report with your labels.
+Clicking these will populate and apply the Toolbox renaming panel.
+
+> **NB:** Sample renaming works with partial substrings - these will be replaced!
+
+It's also possible to supply such renaming patterns within a config file (useful if you're
+already generating a config file for a run). In this case, you need to set the variables
+`sample_names_rename_buttons` and `sample_names_rename`. For example:
+
+```yaml
+sample_names_rename_buttons:
+    - "MultiQC Names"
+    - "Proper Names"
+    - "AWESOME NAMES"
+sample_names_rename:
+    - ["SRR1067503_1", "Sample_1", "MYBESTSAMP_1"]
+    - ["SRR1067505_1", "Sample_2", "MYBESTSAMP_2"]
+    - ["SRR1067510_1", "Sample_3", "MYBESTSAMP_3"]
+```
+
 ## Order of modules
 By default, modules are included in the report as in the order specified in `config.module_order`.
 Any modules found which aren't in this list are appended at the top of the report. To specify

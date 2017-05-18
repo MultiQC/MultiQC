@@ -26,14 +26,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse meta information. JSON win!
         self.salmon_meta = dict()
-        for f in self.find_log_files(config.sp['salmon']['meta']):
+        for f in self.find_log_files('salmon/meta'):
             # Get the s_name from the parent directory
             s_name = os.path.basename( os.path.dirname(f['root']) )
             s_name = self.clean_s_name(s_name, f['root'])
             self.salmon_meta[s_name] = json.loads(f['f'])
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
-        for f in self.find_log_files(config.sp['salmon']['fld']):
+        for f in self.find_log_files('salmon/fld'):
             # Get the s_name from the parent directory
             if os.path.basename(f['root']) == 'libParams':
                 s_name = os.path.basename( os.path.dirname(f['root']) )
@@ -46,6 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
                     self.salmon_fld[s_name] = parsed
+
+        # Filter to strip out ignored sample names
+        self.salmon_meta = self.ignore_samples(self.salmon_meta)
+        self.salmon_fld = self.ignore_samples(self.salmon_fld)
 
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
             log.debug("Could not find any Salmon data in {}".format(config.analysis_dir))
@@ -65,8 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['num_mapped'] = {
             'title': 'M Aligned',
@@ -79,7 +82,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.salmon_meta, headers)
 
         # Fragment length distribution plot
-        # Only one section, so add to the intro
         pconfig = {
             'smooth_points': 500,
             'id': 'salmon_plot',
@@ -90,6 +92,5 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
-
-        self.intro += linegraph.plot(self.salmon_fld, pconfig)
+        self.add_section( plot = linegraph.plot(self.salmon_fld, pconfig) )
 

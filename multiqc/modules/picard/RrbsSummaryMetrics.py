@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -20,7 +19,7 @@ def parse_reports(self):
     self.picard_rrbs_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['rrbs_metrics'], filehandles=True):
+    for f in self.find_log_files('picard/rrbs_metrics', filehandles=True):
         parsed_data = dict()
         s_name = None
         keys = None
@@ -63,6 +62,9 @@ def parse_reports(self):
             self.add_data_source(f, s_name, section='RrbsSummaryMetrics')
             self.picard_rrbs_metrics[s_name] = parsed_data[s_name]
 
+    # Filter to strip out ignored sample names
+    self.picard_rrbs_metrics = self.ignore_samples(self.picard_rrbs_metrics)
+
     if len(self.picard_rrbs_metrics) > 0:
 
         # Write parsed data to a file
@@ -75,7 +77,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.0f}%',
+            'format': '{:,.0f}',
             'scale': 'RdYlGn-rev',
             'modify': lambda x: 100 - self.multiply_hundred(x)
         }
@@ -85,7 +87,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.0f}%',
+            'format': '{:,.0f}',
             'scale': 'RdYlGn',
             'modify': lambda x: 100 - self.multiply_hundred(x)
         }
@@ -128,12 +130,11 @@ def parse_reports(self):
             ]
         }
 
-        self.sections.append({
-            'id': 'picard_rrbs_converted_bases',
-            'name': 'RRBS Converted Bases',
-            'anchor': 'picard-rrbssummary-convertedbases',
-            'content': bargraph.plot([pdata_cpg, pdata_noncpg], [keys, keys], pconfig)
-        })
+        self.add_section (
+            name = 'RRBS Converted Bases',
+            anchor = 'picard-rrbssummary-convertedbases',
+            plot = bargraph.plot([pdata_cpg, pdata_noncpg], [keys, keys], pconfig)
+        )
 
 
         # Make the bar plot of processed reads
@@ -164,12 +165,11 @@ def parse_reports(self):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        self.sections.append({
-            'id': 'picard_rrbs_readcounts',
-            'name': 'RRBS Read Counts',
-            'anchor': 'picard-rrbssummary-readcounts',
-            'content': bargraph.plot(pdata, keys, pconfig)
-        })
+        self.add_section (
+            name = 'RRBS Read Counts',
+            anchor = 'picard-rrbssummary-readcounts',
+            plot = bargraph.plot(pdata, keys, pconfig)
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_rrbs_metrics)

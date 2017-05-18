@@ -24,21 +24,28 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse metrics information.
         self.rna_seqc_metrics = dict()
-        for f in self.find_log_files(config.sp['rna_seqc']['metrics']):
+        for f in self.find_log_files('rna_seqc/metrics'):
             self.parse_metrics(f)
 
         # Parse normalised coverage information.
         self.rna_seqc_norm_high_cov = dict()
         self.rna_seqc_norm_medium_cov = dict()
         self.rna_seqc_norm_low_cov = dict()
-        for f in self.find_log_files(config.sp['rna_seqc']['coverage']):
+        for f in self.find_log_files('rna_seqc/coverage'):
             self.parse_coverage(f)
 
         # Parse correlation matrices
         self.rna_seqc_pearson = None
         self.rna_seqc_spearman = None
-        for f in self.find_log_files(config.sp['rna_seqc']['correlation']):
+        for f in self.find_log_files('rna_seqc/correlation'):
             self.parse_correlation(f)
+
+        # Filters to strip out ignored sample names
+        self.rna_seqc_metrics = self.ignore_samples(self.rna_seqc_metrics)
+        self.rna_seqc_norm_high_cov = self.ignore_samples(self.rna_seqc_norm_high_cov)
+        self.rna_seqc_norm_medium_cov = self.ignore_samples(self.rna_seqc_norm_medium_cov)
+        self.rna_seqc_norm_low_cov = self.ignore_samples(self.rna_seqc_norm_low_cov)
+        # TODO: self.rna_seqc_pearson and self.rna_seqc_spearman are trickier to filter
 
         num_found = max( len(self.rna_seqc_metrics), len(self.rna_seqc_norm_high_cov),
                          len(self.rna_seqc_norm_medium_cov), len(self.rna_seqc_norm_low_cov) )
@@ -54,7 +61,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
 
         self.rnaseqc_general_stats()
-        self.sections = list()
         self.plot_correlation_heatmap()
         self.strand_barplot()
         self.coverage_lineplot()
@@ -90,8 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) * 100.0,
-            'format': '{:.1f}%'
+            'modify': lambda x: float(x) * 100.0
         }
         headers['Intronic Rate'] = {
             'title': '% Intronic',
@@ -100,15 +105,14 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) * 100.0,
-            'format': '{:.1f}%'
+            'modify': lambda x: float(x) * 100.0
         }
         headers['Genes Detected'] = {
             'title': '# Genes',
             'description': 'Number of genes detected',
             'min': 0,
             'scale': 'Bu',
-            'format': '{:.0f}'
+            'format': '{:,.0f}'
         }
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 
@@ -127,12 +131,11 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
             'cpswitch_c_active': False
         }
-        self.sections.append({
-            'id': 'rna_seqc_strandedness',
-            'name': 'Strand Specificity',
-            'anchor': 'rna_seqc_strand_specificity',
-            'content': bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
-        })
+        self.add_section (
+            name = 'Strand Specificity',
+            anchor = 'rna_seqc_strand_specificity',
+            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+        )
 
 
     def parse_coverage (self, f):
@@ -174,15 +177,15 @@ class MultiqcModule(BaseMultiqcModule):
                 {'name': 'Low Expressed'}
             ]
         }
-        self.sections.append({
-            'name': 'Mean Coverage',
-            'anchor': 'rseqc-rna_seqc_mean_coverage',
-            'content': linegraph.plot( [
+        self.add_section (
+            name = 'Mean Coverage',
+            anchor = 'rseqc-rna_seqc_mean_coverage',
+            plot = linegraph.plot( [
                 self.rna_seqc_norm_high_cov,
                 self.rna_seqc_norm_medium_cov,
                 self.rna_seqc_norm_low_cov
                 ], pconfig)
-        })
+        )
 
     def parse_correlation(self, f):
         """ Parse RNA-SeQC correlation matrices """
@@ -216,8 +219,8 @@ class MultiqcModule(BaseMultiqcModule):
                 'id': 'rna_seqc_correlation_heatmap',
                 'title': 'RNA-SeQC: {} Sample Correlation'.format(corr_type)
             }
-            self.sections.append({
-                'name': '{} Correlation'.format(corr_type),
-                'anchor': 'rseqc-rna_seqc_correlation',
-                'content': heatmap.plot(data[1], data[0], data[0], pconfig)
-            })
+            self.add_section (
+                name = '{} Correlation'.format(corr_type),
+                anchor = 'rseqc-rna_seqc_correlation',
+                plot = heatmap.plot(data[1], data[0], data[0], pconfig)
+            )

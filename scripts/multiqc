@@ -83,6 +83,15 @@ logger = config.logger
                     multiple = True,
                     help = "Ignore analysis files (glob expression)"
 )
+@click.option('--ignore-samples', 'ignore_samples',
+                    type = str,
+                    multiple = True,
+                    help = "Ignore sample names (glob expression)"
+)
+@click.option('--sample-names', 'sample_names',
+                    type = click.Path(exists=True, readable=True),
+                    help = "File containing alternative sample names"
+)
 @click.option('-l', '--file-list',
                     is_flag = True,
                     help = "Supply a file containing a list of file paths to be searched, one per row"
@@ -133,6 +142,11 @@ logger = config.logger
                     type = click.Path(exists=True, readable=True),
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
+@click.option('--cl_config',
+                    type = str,
+                    multiple = True,
+                    help = "Specify MultiQC config YAML on the command line"
+)
 @click.option('-v', '--verbose',
                     count = True,
                     default = 0,
@@ -145,8 +159,8 @@ logger = config.logger
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module, exclude, outdir,
-ignore, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
-plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
+ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
+plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -168,8 +182,13 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     log.init_log(logger, loglevel=loglevel)
 
     # Load config files
+    plugin_hooks.mqc_trigger('before_config')
     config.mqc_load_userconfig(config_file)
     plugin_hooks.mqc_trigger('config_loaded')
+
+    # Command-line config YAML
+    if len(cl_config) > 0:
+        config.mqc_cl_config(cl_config)
 
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)
@@ -205,8 +224,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         config.make_data_dir = True
     if no_data_dir:
         config.make_data_dir = False
-    config.force = force
-    config.zip_data_dir = zip_data_dir
+    if force:
+        config.force = True
+    if zip_data_dir:
+        config.zip_data_dir = True
     if data_format is not None:
         config.data_format = data_format
     if export_plots:
@@ -217,6 +238,8 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         config.plots_force_interactive = True
     if make_pdf:
         config.template = 'simple'
+    if sample_names:
+        config.load_sample_names(sample_names)
     config.kwargs = kwargs # Plugin command line options
 
     plugin_hooks.mqc_trigger('execution_start')
@@ -232,12 +255,13 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     if file_list:
         if len(analysis_dir) > 1:
             raise ValueError("If --file-list is giving, analysis_dir should have only one plain text file.")
-        config.analysis_dir = ()
+        config.analysis_dir = []
         with (open(analysis_dir[0])) as in_handle:
             for line in in_handle:
                 if os.path.exists(line.strip()):
-                    config.analysis_dir += (os.path.abspath(line.strip()),)
-        if len(config.analysis_dir) == 0:
+                    path = os.path.abspath(line.strip())
+                    report.searchfiles.append([os.path.basename(path), os.path.dirname(path)])
+        if len(report.searchfiles) == 0:
             logger.error("No files were added from {} using --file-list option.".format(analysis_dir[0]))
             logger.error("Please, check that {} contains correct file paths.".format(analysis_dir[0]))
             raise ValueError("Any files to be searched.")
@@ -247,6 +271,9 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
         config.fn_ignore_files.extend(ignore)
         config.fn_ignore_dirs.extend(ignore)
         config.fn_ignore_paths.extend(ignore)
+    if len(ignore_samples) > 0:
+        logger.debug("Ignoring sample names that match: {}".format(", ".join(ignore_samples)))
+        config.sample_names_ignore.extend(ignore_samples)
     if filename == 'stdout':
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")
@@ -395,10 +422,11 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     plugin_hooks.mqc_trigger('after_modules')
 
     # Remove empty data sections from the General Stats table
-    for i, d in enumerate(report.general_stats_data[:]):
-        if len(d) == 0:
-            del report.general_stats_data[i]
-            del report.general_stats_headers[i]
+    empty_keys = [i for i, d in enumerate(report.general_stats_data[:]) if len(d) == 0]
+    empty_keys.sort(reverse=True)
+    for i in empty_keys:
+        del report.general_stats_data[i]
+        del report.general_stats_headers[i]
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0:
         pconfig = {
@@ -414,6 +442,10 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     # Write the report sources to disk
     if config.data_dir is not None:
         report.data_sources_tofile()
+
+    # Compress the report plot JSON data
+    logger.info("Compressing plot data")
+    report.plot_compressed_json = report.compress_json(report.plot_data)
 
     plugin_hooks.mqc_trigger('before_report_generation')
 
@@ -580,9 +612,29 @@ plots_flat, plots_interactive, make_pdf, config_file, verbose, quiet, **kwargs):
     sys.exit(sys_exit_code)
 
 
+def modify_usage_error(main_command):
+    ''' Function to modify the default click error handling.
+    Used here to tell the user about how to find additional help.
+    With thanks to this Stack Overflow answer: http://stackoverflow.com/a/43922088/713980
+    :param main_command: top-level group or command object constructed by click wrapper
+    :return: None
+    '''
+    def show(self, file=None):
+        if file is None:
+            file = click._compat.get_text_stderr()
+        color = None
+        if self.ctx is not None:
+            color = self.ctx.color
+            click.utils.echo(self.ctx.get_usage() + '\n', file=file, color=color)
+        click.utils.echo('Error: %s\n\nThis is MultiQC v{}\n\nFor more help, run \'multiqc --help\' or visit http://multiqc.info\n'.format(__version__) % self.format_message(), file=file, color=color)
+    click.exceptions.UsageError.show = show
+
 if __name__ == "__main__":
     # Add any extra plugin command line options
     for entry_point in pkg_resources.iter_entry_points('multiqc.cli_options.v1'):
         opt_func = entry_point.load()
         multiqc = opt_func(multiqc)
+    # Modify the default click error handling
+    modify_usage_error(multiqc)
+    # Call the main function
     multiqc()

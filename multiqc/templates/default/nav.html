@@ -24,7 +24,7 @@ The side navigation for the report.
     {% if config.title is not none %}
       <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
     {% endif %}
-    <p class="mqc_loading_warning">..plots loading..</p>
+    <p class="mqc_loading_warning">Loading report..</p>
     <ul class="mqc-nav collapse navbar-collapse">
       {% if not config.skip_generalstats %}
       <li>
@@ -35,11 +35,15 @@ The side navigation for the report.
       <li>
         <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
         <ul>
-        {% for s in m.sections -%}
-          <li>
-            <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
-          </li>
-        {%- endfor %}
+        {% if m.sections | length > 1 -%}
+          {% for s in m.sections -%}
+            {% if s['name'] is not none and s['name'] | length > 0 %}
+            <li>
+              <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
+            </li>
+            {% endif %}
+          {%- endfor %}
+        {% endif %}
         </ul>
       </li>
       {% endfor %}

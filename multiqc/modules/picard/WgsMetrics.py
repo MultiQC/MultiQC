@@ -23,7 +23,7 @@ def parse_reports(self):
     self.picard_wgsmetrics_samplestats = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['wgs_metrics'], filehandles=True):
+    for f in self.find_log_files('picard/wgs_metrics', filehandles=True):
         s_name = None
         in_hist = False
         for l in f['f']:
@@ -80,6 +80,9 @@ def parse_reports(self):
                 self.picard_wgsmetrics_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
 
+    # Filter to strip out ignored sample names
+    self.picard_wgsmetrics_data = self.ignore_samples(self.picard_wgsmetrics_data)
+
     if len(self.picard_wgsmetrics_data) > 0:
 
         # Write parsed data to a file
@@ -91,7 +94,6 @@ def parse_reports(self):
             'description': 'The median coverage in bases of the genome territory, after all filters are applied.',
             'min': 0,
             'suffix': 'X',
-            'format': '{:.1f}',
             'scale': 'GnBu',
         }
 
@@ -112,7 +114,7 @@ def parse_reports(self):
                 'max': 100,
                 'min': 0,
                 'suffix': '%',
-                'format': '{:.0f}%',
+                'format': '{:,.0f}',
                 'scale': 'RdYlGn',
                 'modify': lambda x: self.multiply_hundred(x)
             }
@@ -169,13 +171,13 @@ def parse_reports(self):
                     {'name': 'Counts Histogram', 'ylab': 'Coverage', 'ymax': maxval}
                 ]
             }
-            self.sections.append({
-                'name': 'WGS Coverage',
-                'anchor': 'picard-wgsmetrics-cov',
-                'content': '<p>The number of bases in the genome territory for each fold coverage. ' +
-                            'Note that final 1% of data is hidden to prevent very long tails.</p>' +
-                            linegraph.plot([data_percent, data], pconfig)
-            })
+            self.add_section (
+                name = 'WGS Coverage',
+                anchor = 'picard-wgsmetrics-cov',
+                description = 'The number of bases in the genome territory for each fold coverage. ' +
+                            'Note that final 1% of data is hidden to prevent very long tails.',
+                plot = linegraph.plot([data_percent, data], pconfig)
+            )
 
             # Bar plot of ignored bases
             pdata = dict()
@@ -205,14 +207,13 @@ def parse_reports(self):
                 'ymax': 100
             }
 
-            self.sections.append({
-                'id': 'picard_wgs_filtered_bases',
-                'name': 'WGS Filtered Bases',
-                'anchor': 'picard-wgsmetrics-bases',
-                'content': '<p>For more information about the filtered categories, see the '+
-                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.</p>' +
-                           bargraph.plot(pdata, keys, pconfig)
-            })
+            self.add_section (
+                name = 'WGS Filtered Bases',
+                anchor = 'picard-wgsmetrics-bases',
+                description = 'For more information about the filtered categories, see the '+
+                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.',
+                plot = bargraph.plot(pdata, keys, pconfig)
+            )
 
 
     # Return the number of detected samples to the parent module

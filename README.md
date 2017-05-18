@@ -28,16 +28,18 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
+
+
 |Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |-----------------------------|------------------------|---------------------------|----------------------|
-|[Cluster Flow][clusterflow]  | [Bismark][bismark]     | [Bamtools][bamtools]      | [methylQA][methylqa] |
-|[Cutadapt][cutadapt]         | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]       |
-|[FastQC][fastqc]             | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]     |
-|[FastQ Screen][fastq-screen] | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap] |
-|[Skewer][skewer]             | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]       |
-|[Trimmomatic][trimmomatic]   | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
-|                             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
-|                             | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
+|[Adapter Removal][adapterremoval] | [Bismark][bismark]| [Bamtools][bamtools]      | [methylQA][methylqa] |
+|[Cluster Flow][clusterflow]  | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]       |
+|[Cutadapt][cutadapt]         | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]     |
+|[FastQC][fastqc]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap] |
+|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]       |
+|[Skewer][skewer]             | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
+|[SortMeRNA][sortmerna]       | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
+|[Trimmomatic][trimmomatic]   | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
 |                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
 |                             |                        | [Subread featureCounts][featurecounts] |         |
 
@@ -91,7 +93,7 @@ or `json` instead).
 For more detailed instructions, run `multiqc -h` or see the
 [documentation](http://multiqc.info/docs/#running-multiqc).
 
-## Citation
+## Citation
 Please consider citing MultiQC if you use it in your analysis.
 
 > **MultiQC: Summarize analysis results for multiple tools and samples in a single report** <br/>
@@ -142,11 +144,13 @@ Code contributions from:
 [@HLWiencko](https://github.com/HLWiencko),
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@avilella](https://github.com/avilella),
-[@vladsaveliev](https://github.com/vladsaveliev)
-[@t-neumann](https://github.com/t-neumann)
-[@ahvigil](https://github.com/ahvigil)
+[@vladsaveliev](https://github.com/vladsaveliev),
+[@t-neumann](https://github.com/t-neumann),
+[@ahvigil](https://github.com/ahvigil),
+[@bschiffthaler](https://github.com/bschiffthaler)
 and many others. Thanks for your support!
 
+[adapterremoval]: http://multiqc.info/docs/#adapteremoval
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
 [bismark]:        http://multiqc.info/docs/#bismark
@@ -177,6 +181,7 @@ and many others. Thanks for your support!
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [skewer]:         http://multiqc.info/docs/#skewer
 [snpeff]:         http://multiqc.info/docs/#snpeff
+[sortmerna]:      http://multiqc.info/docs/#sortmerna
 [star]:           http://multiqc.info/docs/#star
 [samtools]:       http://multiqc.info/docs/#samtools
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic

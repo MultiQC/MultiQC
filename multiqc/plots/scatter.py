@@ -2,7 +2,6 @@
 
 """ MultiQC functions to plot a scatter plot """
 
-import json
 import logging
 import random
 
@@ -76,9 +75,14 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
     if pconfig is None:
         pconfig = {}
 
-    # Build the HTML for the page
+    # Get the plot ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
+    # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets
@@ -104,16 +108,13 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "scatter", \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': "scatter",
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 

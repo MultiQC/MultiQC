@@ -44,7 +44,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files(config.sp['bamtools']['stats']):
+    for f in self.find_log_files('bamtools/stats'):
         d = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
@@ -56,6 +56,9 @@ def parse_reports(self):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
             self.add_data_source(f, section='stats')
             self.bamtools_stats_data[f['s_name']] = d
+
+    # Filter to strip out ignored sample names
+    self.bamtools_stats_data = self.ignore_samples(self.bamtools_stats_data)
 
     if len(self.bamtools_stats_data) > 0:
 
@@ -69,8 +72,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'OrRd',
-            'format': '{:.1f}%'
+            'scale': 'OrRd'
         }
         self.general_stats_headers['mapped_reads_pct'] = {
             'title': '% Mapped',
@@ -78,8 +80,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%'
+            'scale': 'RdYlGn'
         }
         for s_name in self.bamtools_stats_data:
             if s_name not in self.general_stats_data:
@@ -87,7 +88,6 @@ def parse_reports(self):
             self.general_stats_data[s_name].update( self.bamtools_stats_data[s_name] )
 
         # Make dot plot of counts
-        pconfig = {}
         keys = OrderedDict()
         defaults = {
             'min': 0,
@@ -114,11 +114,11 @@ def parse_reports(self):
         keys['read_2'] = dict(num_defaults, **{'title': 'Read 2', 'description': 'Read 2 (millions)' });
         keys['singletons_pct'] = dict(defaults, **{'title': 'Singletons' })
 
-        self.sections.append({
-            'name': 'Bamtools Stats',
-            'anchor': 'bamtools-stats',
-            'content': beeswarm.plot(self.bamtools_stats_data, keys)
-        })
+        self.add_section (
+            name = 'Bamtools Stats',
+            anchor = 'bamtools-stats',
+            plot = beeswarm.plot(self.bamtools_stats_data, keys)
+        )
 
     # Return number of samples found
     return len(self.bamtools_stats_data)

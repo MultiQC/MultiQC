@@ -6,7 +6,6 @@ http://rseqc.sourceforge.net/#genebody-coverage-py """
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -24,7 +23,7 @@ def parse_reports(self):
     # and add these to the general stats table?
 
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['gene_body_coverage']):
+    for f in self.find_log_files('rseqc/gene_body_coverage'):
 
         # RSeQC >= v2.4
         if f['f'].startswith('Percentile'):
@@ -67,6 +66,9 @@ def parse_reports(self):
                 del self.gene_body_cov_hist_counts[f['s_name']]
                 log.warning("Empty geneBodyCoverage file found: {}".format(f['fn']))
 
+    # Filter to strip out ignored sample names
+    self.gene_body_cov_hist_counts = self.ignore_samples(self.gene_body_cov_hist_counts)
+
     if len(self.gene_body_cov_hist_counts) > 0:
 
         # Make a normalised percentage version of the data
@@ -90,15 +92,15 @@ def parse_reports(self):
                 {'name': 'Counts', 'ylab': 'Coverage'}
             ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>'
-        self.sections.append({
-            'name': 'Gene Body Coverage',
-            'anchor': 'rseqc-gene_body_coverage',
-            'content': "<p>"+p_link+" calculates read coverage over gene bodies." \
+        self.add_section (
+            name = 'Gene Body Coverage',
+            anchor = 'rseqc-gene_body_coverage',
+            description = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>' \
+                " calculates read coverage over gene bodies." \
                 " This is used to check if reads coverage is uniform and" \
-                " if there is any 5' or 3' bias.</p>" +
-                linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig)
-        })
+                " if there is any 5' or 3' bias.",
+            plot = linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig)
+        )
 
     # Return number of samples found
     return len(self.gene_body_cov_hist_counts)

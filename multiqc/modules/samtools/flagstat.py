@@ -5,7 +5,7 @@
 
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import beeswarm
@@ -19,13 +19,16 @@ class FlagstatReportMixin():
         """ Find Samtools flagstat logs and parse their data """
 
         self.samtools_flagstat = dict()
-        for f in self.find_log_files(config.sp['samtools']['flagstat']):
+        for f in self.find_log_files('samtools/flagstat'):
             parsed_data = parse_single_report(f['f'])
             if len(parsed_data) > 0:
                 if f['s_name'] in self.samtools_flagstat:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f, section='flagstat')
                 self.samtools_flagstat[f['s_name']] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.samtools_flagstat = self.ignore_samples(self.samtools_flagstat)
 
         if len(self.samtools_flagstat) > 0:
 
@@ -76,12 +79,12 @@ class FlagstatReportMixin():
                                                   dict(reads, title = 'Diff chr (mapQ >= 5)',
                                                               description = 'Mate mapped to different chromosome (mapQ >= 5)' )
 
-            self.sections.append({
-                'name': 'Samtools Flagstat',
-                'anchor': 'samtools-flagstat',
-                'content': '<p>This module parses the output from <code>samtools flagstat</code>. All numbers in millions.</p>' +
-                            beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
-            })
+            self.add_section (
+                name = 'Samtools Flagstat',
+                anchor = 'samtools-flagstat',
+                description = 'This module parses the output from <code>samtools flagstat</code>. All numbers in millions.',
+                plot = beeswarm.plot(self.samtools_flagstat, keys, {'id': 'samtools-flagstat-dp'})
+            )
 
         # Return the number of logs that were found
         return len(self.samtools_flagstat)

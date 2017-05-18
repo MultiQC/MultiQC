@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Tophat reports
         self.tophat_data = dict()
-        for f in self.find_log_files(config.sp['tophat']):
+        for f in self.find_log_files('tophat'):
             parsed_data = self.parse_tophat_log(f['f'])
             if parsed_data is not None:
                 if f['s_name'] == "align_summary.txt":
@@ -39,6 +39,9 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.tophat_data = self.ignore_samples(self.tophat_data)
 
         if len(self.tophat_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -53,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_general_stats_table()
 
         # Alignment Rate Plot
-        self.intro += self.tophat_alignment_plot()
+        self.tophat_alignment_plot()
 
 
     def parse_tophat_log (self, raw_data):
@@ -104,8 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['aligned_not_multimapped_discordant'] = {
             'title': '{} Aligned'.format(config.read_count_prefix),
@@ -135,4 +137,4 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.tophat_data, keys, config)
+        self.add_section( plot =  bargraph.plot(self.tophat_data, keys, config) )

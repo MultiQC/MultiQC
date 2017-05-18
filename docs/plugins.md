@@ -23,8 +23,9 @@ entry_points = {
         # 'my-new-option = myplugin.cli:new_option'
     # ],
     # 'multiqc.hooks.v1': [
-        # 'execution_start = myplugin.hooks:execution_start',
+        # 'before_config = myplugin.hooks:before_config',
         # 'config_loaded = myplugin.hooks:config_loaded',
+        # 'execution_start = myplugin.hooks:execution_start',
         # 'before_modules = myplugin.hooks:before_modules',
         # 'after_modules = myplugin.hooks:after_modules',
         # 'execution_finish = myplugin.hooks:execution_finish',

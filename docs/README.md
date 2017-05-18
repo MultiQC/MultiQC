@@ -8,11 +8,13 @@ Using MultiQC:
   Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:
+    Adapter Removal: modules/adapterRemoval.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     FastQC: modules/fastqc.md
     FastQ Screen: modules/fastq_screen.md
     Skewer: modules/skewer.md
+    SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
     Bismark: modules/bismark.md
@@ -56,7 +58,7 @@ Coding with MultiQC:
 
 # Welcome!
 
-## MultiQC v1.0dev Documentation
+## MultiQC v1.1dev Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number
@@ -85,7 +87,7 @@ These docs can be read in any of three ways:
  - On the MultiQC Website: http://multiqc.info
  - On GitHub: https://github.com/ewels/MultiQC/
  - As part of the distributed source code (in `/docs/`)
- 
+
 If you're curious how the website works, check out the
 [MultiQC website repository](https://github.com/ewels/MultiQC_website).
 

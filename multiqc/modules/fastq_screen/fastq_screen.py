@@ -29,13 +29,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any FastQ Screen reports
         self.fq_screen_data = dict()
         self.num_orgs = 0
-        for f in self.find_log_files(config.sp['fastq_screen'], filehandles=True):
+        for f in self.find_log_files('fastq_screen', filehandles=True):
             parsed_data = self.parse_fqscreen(f['f'])
             if parsed_data is not None:
                 if f['s_name'] in self.fq_screen_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f)
                 self.fq_screen_data[f['s_name']] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
 
         if len(self.fq_screen_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -46,10 +49,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
         if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
-            self.intro += self.fqscreen_plot()
+            self.add_section( content = self.fqscreen_plot() )
         # Use simpler plot that works with many samples
         else:
-            self.intro += self.fqscreen_simple_plot()
+            self.add_section( plot = self.fqscreen_simple_plot() )
 
         # Write the total counts and percentages to files
         self.write_data_file(self.parse_csv(), 'multiqc_fastq_screen')

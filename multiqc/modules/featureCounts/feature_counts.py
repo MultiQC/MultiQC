@@ -28,8 +28,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any featureCounts reports
         self.featurecounts_data = dict()
         self.featurecounts_keys = list()
-        for f in self.find_log_files(config.sp['featurecounts']):
+        for f in self.find_log_files('featurecounts'):
             self.parse_featurecounts_report(f)
+
+        # Filter to strip out ignored sample names
+        self.featurecounts_data = self.ignore_samples(self.featurecounts_data)
 
         if len(self.featurecounts_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -44,8 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.featurecounts_stats_table()
 
         # Assignment bar plot
-        # Only one section, so add to the intro
-        self.intro += self.featureCounts_chart()
+        self.add_section( plot = self.featureCounts_chart() )
 
 
     def parse_featurecounts_report (self, f):
@@ -113,8 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%'
+            'scale': 'RdYlGn'
         }
         headers['Assigned'] = {
             'title': '{} Assigned'.format(config.read_count_prefix),

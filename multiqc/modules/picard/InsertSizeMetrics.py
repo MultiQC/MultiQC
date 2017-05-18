@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -23,7 +22,7 @@ def parse_reports(self):
     self.picard_insertSize_samplestats = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['insertsize'], filehandles=True):
+    for f in self.find_log_files('picard/insertsize', filehandles=True):
         s_name = None
         in_hist = False
         for l in f['f']:
@@ -108,6 +107,9 @@ def parse_reports(self):
                 break
 
 
+    # Filter to strip out ignored sample names
+    self.picard_insertSize_data = self.ignore_samples(self.picard_insertSize_data)
+
     if len(self.picard_insertSize_data) > 0:
 
         # Write parsed data to a file
@@ -125,7 +127,7 @@ def parse_reports(self):
             'description': 'Median Insert Size, all read orientations (bp)',
             'min': 0,
             'suffix': 'bp',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'scale': 'GnBu',
         }
         self.general_stats_headers['summed_mean'] = {
@@ -133,7 +135,7 @@ def parse_reports(self):
             'description': 'Mean Insert Size, all read orientations (bp)',
             'min': 0,
             'suffix': 'bp',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'scale': 'GnBu',
             'hidden': False if missing_medians else True
         }
@@ -168,12 +170,12 @@ def parse_reports(self):
                     {'name': 'Percentages', 'ylab': 'Percentage of Counts'}
                 ]
             }
-            self.sections.append({
-                'name': 'Insert Size',
-                'anchor': 'picard-insertsize',
-                'content': '<p>Plot shows the number of reads at a given insert size. Reads with different orientations are summed.</p>' +
-                            linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig)
-            })
+            self.add_section (
+                name = 'Insert Size',
+                anchor = 'picard-insertsize',
+                description = 'Plot shows the number of reads at a given insert size. Reads with different orientations are summed.',
+                plot = linegraph.plot([self.picard_insertSize_histogram, data_percent], pconfig)
+            )
 
 
     # Return the number of detected samples to the parent module

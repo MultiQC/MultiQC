@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph, bargraph
 
 # Initialise the logger
@@ -22,7 +21,7 @@ def parse_reports(self):
     self.picard_RnaSeqMetrics_histogram = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['rnaseqmetrics'], filehandles=True):
+    for f in self.find_log_files('picard/rnaseqmetrics', filehandles=True):
         s_name = None
         in_hist = False
         for l in f['f']:
@@ -87,6 +86,9 @@ def parse_reports(self):
                 self.picard_RnaSeqMetrics_histogram.pop(s_name, None)
                 log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
 
+    # Filter to strip out ignored sample names
+    self.picard_RnaSeqMetrics_data = self.ignore_samples(self.picard_RnaSeqMetrics_data)
+
     if len(self.picard_RnaSeqMetrics_data) > 0:
 
         # Write parsed data to a file
@@ -100,7 +102,6 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.1f}%',
             'scale': 'Reds',
         }
         GenStatsHeaders['PCT_MRNA_BASES'] = {
@@ -109,7 +110,6 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.1f}%',
             'scale': 'Greens',
         }
         self.general_stats_addcols(self.picard_RnaSeqMetrics_data, GenStatsHeaders)
@@ -122,13 +122,12 @@ def parse_reports(self):
         bg_cats['INTERGENIC_BASES'] = { 'name': 'Intergenic' }
         bg_cats['RIBOSOMAL_BASES'] = { 'name': 'Ribosomal' }
         bg_cats['PF_NOT_ALIGNED_BASES'] = { 'name': 'PF not aligned' }
-        self.sections.append({
-            'id': 'picard_rna_assignment',
-            'name': 'RnaSeqMetrics Assignment',
-            'anchor': 'picard-rna-assignment',
-            'content': '<p>Number of bases in primary alignments that align to regions in the reference genome.</p>' +
-                        bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats)
-        })
+        self.add_section (
+            name = 'RnaSeqMetrics Assignment',
+            anchor = 'picard-rna-assignment',
+            description = 'Number of bases in primary alignments that align to regions in the reference genome.',
+            plot = bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats)
+        )
 
         # Section with histogram plot
         if len(self.picard_RnaSeqMetrics_histogram) > 0:
@@ -144,12 +143,11 @@ def parse_reports(self):
                 'tt_label': '<b>{point.x}%</b>: {point.y:.0f}',
                 'ymin': 0,
             }
-            self.sections.append({
-                'id': 'picard_gene_coverage',
-                'name': 'Gene Coverage',
-                'anchor': 'picard-rna-coverage',
-                'content': linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
-            })
+            self.add_section (
+                name = 'Gene Coverage',
+                anchor = 'picard-rna-coverage',
+                plot = linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig)
+            )
 
 
     # Return the number of detected samples to the parent module

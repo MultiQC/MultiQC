@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -26,7 +25,7 @@ def parse_reports(self):
     self.junction_saturation_novel_pct = dict()
 
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['junction_saturation']):
+    for f in self.find_log_files('rseqc/junction_saturation'):
         parsed = dict()
         for l in f['f'].splitlines():
             r = re.search(r"^([xyzw])=c\(([\d,]+)\)$", l)
@@ -46,6 +45,11 @@ def parse_reports(self):
                     self.junction_saturation_all[f['s_name']][v] = parsed['z'][k]
                     self.junction_saturation_known[f['s_name']][v] = parsed['y'][k]
                     self.junction_saturation_novel[f['s_name']][v] = parsed['w'][k]
+
+    # Filter to strip out ignored sample names
+    self.junction_saturation_all = self.ignore_samples(self.junction_saturation_all)
+    self.junction_saturation_known = self.ignore_samples(self.junction_saturation_known)
+    self.junction_saturation_novel = self.ignore_samples(self.junction_saturation_novel)
 
     if len(self.junction_saturation_all) > 0:
 
@@ -81,24 +85,25 @@ def parse_reports(self):
             'cursor': 'pointer',
             'click_func': plot_single()
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#junction-saturation-py" target="_blank">Junction Saturation</a>'
-        self.sections.append({
-            'name': 'Junction Saturation',
-            'anchor': 'rseqc-junction_saturation',
-            'content': "<p>"+p_link+" calculates percentage of known splicing junctions that are observed" \
-                " in each dataset. If sequencing depth is sufficient, all (annotated) splice junctions should" \
-                " be rediscovered, resulting in a curve that reaches a plateau. Missing low abundance splice" \
-                " junctions can affect downstream analysis. Counts are normalised to the total number of" \
-                " observed junctions.</p>" \
-                "<div class='alert alert-info' id='rseqc-junction_sat_single_hint'>" \
-                "<span class='glyphicon glyphicon-hand-up'></span> Click a line" \
-                " to see the data side by side (as in the original RSeQC plot).</div>" +
-                linegraph.plot([
+        self.add_section (
+            name = 'Junction Saturation',
+            anchor = 'rseqc-junction_saturation',
+            description = '''<a href="http://rseqc.sourceforge.net/#junction-saturation-py" target="_blank">Junction Saturation</a>
+                calculates percentage of known splicing junctions that are observed
+                in each dataset. If sequencing depth is sufficient, all (annotated) splice junctions should
+                be rediscovered, resulting in a curve that reaches a plateau. Missing low abundance splice
+                junctions can affect downstream analysis. Counts are normalised to the total number of
+                observed junctions.</p>
+                <div class="alert alert-info" id="rseqc-junction_sat_single_hint">
+                  <span class="glyphicon glyphicon-hand-up"></span>
+                  Click a line to see the data side by side (as in the original RSeQC plot).
+                </div><p>''',
+            plot = linegraph.plot([
                     self.junction_saturation_all_pct,
                     self.junction_saturation_known_pct,
                     self.junction_saturation_novel_pct
                 ], pconfig)
-        })
+        )
 
     # Return number of samples found
     return len(self.junction_saturation_all)
@@ -117,21 +122,34 @@ def plot_single():
             {'name': 'Known Junctions'},
             {'name': 'Novel Junctions'}
         ];
+        var k = 0;
         for (var i = 0; i < 3; i++) {
             var ds = mqc_plots['rseqc_junction_saturation_plot']['datasets'][i];
-            for (var k = 0; k < ds.length; k++){
+            for (k = 0; k < ds.length; k++){
                 if(ds[k]['name'] == this.series.name){
-                    data[i]['data'] = ds[k]['data'];
+                    data[i]['data'] = JSON.parse(JSON.stringify(ds[k]['data']));
                     break;
                 }
             }
         }
 
         // Create single plot div, and hide overview
-        var newplot = '<div id="rseqc_junction_saturation_single">'+
-            '<p><button class="btn btn-default" id="rseqc-junction_sat_single_return">'+
-            'Return to overview</button></p><div class="hc-plot-wrapper">'+
-            '<div class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';
+        var newplot = '<div id="rseqc_junction_saturation_single"> \
+            <div id="rseqc_junction_saturation_single_controls"> \
+              <button class="btn btn-primary btn-sm" id="rseqc-junction_sat_single_return"> \
+                Return to overview \
+              </button> \
+              <div class="btn-group btn-group-sm"> \
+                <button class="btn btn-default rseqc-junction_sat_single_prevnext" data-action="prev">&laquo; Prev</button> \
+                <button class="btn btn-default rseqc-junction_sat_single_prevnext" data-action="next">Next &raquo;</button> \
+              </div> \
+            </div> \
+            <div class="hc-plot-wrapper"> \
+              <div class="hc-plot hc-line-plot"> \
+                <small>loading..</small> \
+              </div> \
+            </div> \
+          </div>';
         var pwrapper = $('#rseqc_junction_saturation_plot').parent().parent();
         $(newplot).insertAfter(pwrapper).hide().slideDown();
         pwrapper.slideUp();
@@ -145,6 +163,29 @@ def plot_single():
           });
           pwrapper.slideDown();
           $('#rseqc-junction_sat_single_hint').slideDown();
+        });
+
+        // Listeners for previous / next plot
+        $('.rseqc-junction_sat_single_prevnext').click(function(e){
+          e.preventDefault();
+          if($(this).data('action') == 'prev'){
+            k--;
+            if(k < 0){
+              k = mqc_plots['rseqc_junction_saturation_plot']['datasets'][0].length - 1;
+            }
+          } else {
+            k++;
+            if(k >= mqc_plots['rseqc_junction_saturation_plot']['datasets'][0].length){
+              k = 0;
+            }
+          }
+          hc = $('#rseqc_junction_saturation_single .hc-plot').highcharts();
+          for (var i = 0; i < 3; i++) {
+              hc.series[i].setData(mqc_plots['rseqc_junction_saturation_plot']['datasets'][i][k]['data'], false);
+          }
+          var ptitle = mqc_plots['rseqc_junction_saturation_plot']['datasets'][0][k]['name'];
+          hc.setTitle({text: ptitle});
+          hc.redraw({ duration: 200 });
         });
 
         // Plot the single data

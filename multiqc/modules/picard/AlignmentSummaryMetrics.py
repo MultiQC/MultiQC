@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -20,7 +19,7 @@ def parse_reports(self):
     self.picard_alignment_metrics = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['alignment_metrics'], filehandles=True):
+    for f in self.find_log_files('picard/alignment_metrics', filehandles=True):
         parsed_data = dict()
         s_name = None
         keys = None
@@ -65,6 +64,9 @@ def parse_reports(self):
             self.add_data_source(f, s_name, section='AlignmentSummaryMetrics')
             self.picard_alignment_metrics[s_name] = parsed_data[s_name]
 
+    # Filter to strip out ignored sample names
+    self.picard_alignment_metrics = self.ignore_samples(self.picard_alignment_metrics)
+
     if len(self.picard_alignment_metrics) > 0:
 
         # Write parsed data to a file
@@ -77,7 +79,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'format': '{:.0f}%',
+            'format': '{:,.0f}',
             'scale': 'RdYlGn',
             'modify': lambda x: self.multiply_hundred(x)
         }
@@ -113,13 +115,12 @@ def parse_reports(self):
             'cpswitch_counts_label': 'Number of Reads',
         }
 
-        self.sections.append({
-            'id': 'picard_alignment_summary',
-            'name': 'Alignment Summary',
-            'anchor': 'picard-alignmentsummary',
-            'content': "<p>Plase note that Picard's read counts are divided by two for paired-end data.</p>"+
-                bargraph.plot(pdata, keys, pconfig)
-        })
+        self.add_section (
+            name = 'Alignment Summary',
+            anchor = 'picard-alignmentsummary',
+            description = "Plase note that Picard's read counts are divided by two for paired-end data.",
+            plot = bargraph.plot(pdata, keys, pconfig)
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_alignment_metrics)

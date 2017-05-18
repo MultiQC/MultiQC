@@ -2,12 +2,10 @@
 
 """ MultiQC submodule to parse output from Picard InsertSizeMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -22,7 +20,7 @@ def parse_reports(self):
     self.picard_GCbiasSummary_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['gcbias'], filehandles=True):
+    for f in self.find_log_files('picard/gcbias', filehandles=True):
         s_name = None
         gc_col = None
         cov_col = None
@@ -85,6 +83,8 @@ def parse_reports(self):
                 log.debug("Removing {} as no data parsed".format(s_name))
 
 
+    # Filter to strip out ignored sample names
+    self.picard_GCbias_data = self.ignore_samples(self.picard_GCbias_data)
 
     if len(self.picard_GCbias_data) > 0:
 
@@ -105,13 +105,13 @@ def parse_reports(self):
                 {'value': 1, 'color': '#999999', 'width': 2, 'dashStyle': 'LongDash'},
             ]
         }
-        self.sections.append({
-            'name': 'GC Coverage Bias',
-            'anchor': 'picard-gcbias',
-            'content': '<p>This plot shows bias in coverage across regions of the genome with varying GC content.'\
-                ' A perfect library would be a flat line at <code>y = 1</code>.</p>' +
-                linegraph.plot(self.picard_GCbias_data, pconfig)
-        })
+        self.add_section (
+            name = 'GC Coverage Bias',
+            anchor = 'picard-gcbias',
+            description = 'This plot shows bias in coverage across regions of the genome with varying GC content.'\
+                ' A perfect library would be a flat line at <code>y = 1</code>.',
+            plot = linegraph.plot(self.picard_GCbias_data, pconfig)
+        )
 
     if len(self.picard_GCbiasSummary_data) > 0:
         # Write parsed summary data to a file

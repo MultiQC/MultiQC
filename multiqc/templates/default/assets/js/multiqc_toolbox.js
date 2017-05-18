@@ -10,6 +10,33 @@ var mqc_colours = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff
 //////////////////////////////////////////////////////
 $(function () {
 
+  // Batch sample renaming buttons
+  $('.mqc_sname_switches').click(function(e){
+    e.preventDefault();
+    if($(this).hasClass('active')){
+      return false;
+    }
+    $('#mqc_sname_switches button').removeClass('active');
+    $(this).addClass('active');
+    // Clear previous bulk renaming entries
+    $('.mqc_sname_switches_li').remove();
+    // Build new renaming entries and apply
+    var j = $(this).data('index');
+    if(j == 0){
+      apply_mqc_renamesamples();
+    } else {
+      for(i=0; i<mqc_sample_names_rename.length; i++){
+        var ft = mqc_sample_names_rename[i][0];
+        var tt = mqc_sample_names_rename[i][j];
+        $('#mqc_renamesamples_filters').append('<li class="mqc_sname_switches_li"> \
+          <input class="f_text from_text" value="'+ft+'" /><small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+tt+'" /> \
+          <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
+        </li>');
+      }
+      apply_mqc_renamesamples();
+    }
+  });
+
   // Hide toolbox when clicking outside
   $(document).mouseup(function (e){
     if (!$(".mqc-toolbox").is(e.target) && $(".mqc-toolbox").has(e.target).length === 0){
@@ -170,23 +197,28 @@ $(function () {
     // Export the plots
     $('#mqc_exportplots').submit(function(e){
       e.preventDefault();
+      var skipped_plots = 0;
+      ////// EXPORT PLOT IMAGES
+      //////
       if($('#mqc_image_download').is(':visible')){
         var ft = $('#mqc_export_ft').val();
         var f_scale = parseInt($('#mqc_export_scaling').val());
         var f_width = parseInt($('#mqc_exp_width').val()) / f_scale;
         var f_height = parseInt($('#mqc_exp_height').val()) / f_scale;
-        var skipped_plots = 0;
         $('#mqc_export_selectplots input:checked').each(function(){
           var fname = $(this).val();
           var hc = $('#'+fname).highcharts();
+          var cfg = {
+            type: ft,
+            filename: fname,
+            sourceWidth: f_width,
+            sourceHeight: f_height,
+            scale: f_scale
+          };
           if(hc !== undefined){
-            hc.exportChartLocal({
-              type: ft,
-              filename: fname,
-              sourceWidth: f_width,
-              sourceHeight: f_height,
-              scale: f_scale
-            });
+            hc.exportChartLocal(cfg);
+          } else if($('#'+fname).hasClass('has-custom-export')){
+            $('#'+fname).trigger('mqc_plotexport_image', cfg);
           } else {
             skipped_plots += 1;
           }
@@ -194,103 +226,76 @@ $(function () {
         if(skipped_plots > 0){
           alert("Warning: "+skipped_plots+" plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work.");
         }
-      } else if($('#mqc_data_download').is(':visible')){
-        var ft = $('#mqc_export_data_ft').val();
-        $('#mqc_export_data_log').html('');
+      }
+      ////// EXPORT PLOT DATA
+      //////
+      else if($('#mqc_data_download').is(':visible')){
         $('#mqc_export_selectplots input:checked').each(function(){
           try {
             var target = $(this).val();
+            var ft = $('#mqc_export_data_ft').val();
             var fname = target+'.'+ft;
-            var data = mqc_plots[target]['datasets'];
-            if(ft == 'tsv' || ft == 'csv'){
-              var sep = ft == 'tsv' ? "\t" : ',';
-              datastring = '';
-              // Header line with bar graph sample names
-              if(mqc_plots[target]['plot_type'] == 'bar_graph'){
-                datastring += 'Category'+sep+mqc_plots[target]['samples'][0].join(sep)+"\n";
-              }
-              // Header line with line plot x values
-              if(mqc_plots[target]['plot_type'] == 'xy_line'){
-                datastring += 'Sample';
-                for(var j=0; j<data[0][0]['data'].length; j++){
-                  datastring += sep+data[0][0]['data'][j][0];
-                }
-                datastring += "\n";
-              }
-              // Header line for beeswarm
-              if(mqc_plots[target]['plot_type'] == 'beeswarm'){
-                datastring += 'Sample';
-                for(var j=0; j<mqc_plots[target]['categories'].length; j++){
-                  datastring += sep+mqc_plots[target]['categories'][j]['description'];
-                }
-                datastring += "\n";
-              }
-              // Header line for heatmap
-              if(mqc_plots[target]['plot_type'] == 'heatmap'){
-                datastring += 'x'+sep+mqc_plots[target]['xcats'].join(sep)+"\n";
-              }
-              // Beeswarm plots have crazy datastructures
-              if(mqc_plots[target]['plot_type'] == 'beeswarm'){
-                // This assumes that the same samples are in all rows
-                // TODO: Check and throw error if this isn't the case
-                var rows = Array();
-                for(var j=0; j<mqc_plots[target]['samples'][0].length; j++){
-                  rows[j]=Array(mqc_plots[target]['samples'][0][j]);
-                }
-                for(var j=0; j<mqc_plots[target]['datasets'].length; j++){
-                  for(var k=0; k<mqc_plots[target]['datasets'][j].length; k++){
-                    rows[k].push(mqc_plots[target]['datasets'][j][k]);
-                  }
-                }
-                for(var j=0; j<rows.length; j++){
-                  datastring += rows[j].join(sep)+"\n";
-                }
-              }
-              // Heatmaps also have crazy datastructures
-              else if(mqc_plots[target]['plot_type'] == 'heatmap'){
-                // First column - cat / sample name
-                datastring += mqc_plots[target]['ycats'][0];
-                var xidx = 0;
-                for(var n=0; n<mqc_plots[target]['data'].length; n++){
-                  // New line
-                  var x = mqc_plots[target]['data'][n][1];
-                  if(x > xidx){
-                    datastring += "\n"+mqc_plots[target]['ycats'][x];
-                    xidx = x;
-                  }
-                  // Data val
-                  datastring += sep+mqc_plots[target]['data'][n][2];
-                }
-                datastring += "\n";
+            var sep = ft == 'tsv' ? "\t" : ',';
+            // Custom plot not in mqc_plots
+            if (mqc_plots[target] == undefined){
+              if($('#'+target).hasClass('has-custom-export')){
+                $('#'+target).trigger('mqc_plotexport_data', { 'target': target, 'ft': ft, 'fname': fname, 'sep': sep });
               } else {
-                // Loop through each category (bar) or sample (line)
-                for(var i=0; i<data[0].length; i++){
-                  // First column - cat / sample name
-                  datastring += data[0][i]['name'];
-                  // line plots have x,y pairs - get just Y value
-                  if(mqc_plots[target]['plot_type'] == 'xy_line'){
-                    for(var j=0; j<data[0][i]['data'].length; j++){
-                      datastring += data[0][i]['data'][j][1]+sep;
-                    }
-                  } else {
-                    // Bar graphs have single values. Just join.
-                    datastring += sep+data[0][i]['data'].join(sep);
-                  }
-                  datastring += "\n";
+                skipped_plots += 1;
+              }
+            }
+            // If JSON then just dump everything
+            else if(ft == 'json'){
+              json_str = JSON.stringify(mqc_plots[target], null, 2);
+              var blob = new Blob([json_str], {type: "text/plain;charset=utf-8"});
+              saveAs(blob, fname);
+            }
+            // Beeswarm plots must be done manually
+            else if(mqc_plots[target]['plot_type'] == 'beeswarm'){
+              // Header line
+              datastring = 'Sample';
+              for(var j=0; j<mqc_plots[target]['categories'].length; j++){
+                datastring += sep+mqc_plots[target]['categories'][j]['description'];
+              }
+              datastring += "\n";
+              // This assumes that the same samples are in all rows
+              // TODO: Check and throw error if this isn't the case
+              var rows = Array();
+              for(var j=0; j<mqc_plots[target]['samples'][0].length; j++){
+                rows[j]=Array(mqc_plots[target]['samples'][0][j]);
+              }
+              for(var j=0; j<mqc_plots[target]['datasets'].length; j++){
+                for(var k=0; k<mqc_plots[target]['datasets'][j].length; k++){
+                  rows[k].push(mqc_plots[target]['datasets'][j][k]);
                 }
               }
-            } else if(ft == 'json'){
-              datastring = JSON.stringify(data);
-            } else {
-              datastring = JSON.stringify(data);
+              for(var j=0; j<rows.length; j++){
+                datastring += rows[j].join(sep)+"\n";
+              }
+              var blob = new Blob([datastring], {type: "text/plain;charset=utf-8"});
+              saveAs(blob, fname);
             }
-            var blob = new Blob([datastring], {type: "text/plain;charset=utf-8"});
-            saveAs(blob, fname);
+            // Normal plot - use HighCharts plugin to get the data from the plot
+            else if(ft == 'tsv' || ft == 'csv'){
+              var hc = $('#'+target).highcharts();
+              if(hc !== undefined){
+                hc.update({ exporting: { csv: { itemDelimiter: sep } } });
+                var blob = new Blob([hc.getCSV()], {type: "text/plain;charset=utf-8"});
+                saveAs(blob, fname);
+              } else {
+                skipped_plots += 1;
+              }
+            } else {
+              skipped_plots += 1;
+            }
           } catch(e){
-            $('#mqc_export_data_log').append("<p class=\"text-danger\">Error: Couldn't export data from <em>"+target+"</em>.</p>");
-            console.log("Couldn't export data from '"+target+"' - "+e);
+            console.error(e);
+            skipped_plots += 1;
           }
         });
+        if(skipped_plots > 0){
+          alert("Warning: Could not export data from "+skipped_plots+" plots.");
+        }
       } else { alert("Error - don't know what to export!"); }
     });
   } else {

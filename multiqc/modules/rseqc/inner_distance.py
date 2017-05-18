@@ -6,7 +6,6 @@ http://rseqc.sourceforge.net/#inner-distance-py """
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -21,7 +20,7 @@ def parse_reports(self):
     self.inner_distance_pct = dict()
 
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['inner_distance']):
+    for f in self.find_log_files('rseqc/inner_distance'):
         if f['s_name'] in self.inner_distance:
             log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
         self.add_data_source(f, section='inner_distance')
@@ -39,6 +38,9 @@ def parse_reports(self):
         # Only add if we actually found something i,e it was PE data
         if len(parsed_data) > 0:
             self.inner_distance[f['s_name']] = parsed_data
+
+    # Filter to strip out ignored sample names
+    self.inner_distance = self.ignore_samples(self.inner_distance)
 
     if len(self.inner_distance) > 0:
 
@@ -61,15 +63,15 @@ def parse_reports(self):
                 {'name': 'Percentages', 'ylab': 'Percentage'}
             ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#inner-distance-py" target="_blank">Inner Distance</a>'
-        self.sections.append({
-            'name': 'Inner Distance',
-            'anchor': 'rseqc-inner_distance',
-            'content': "<p>"+p_link+" calculates the inner distance" \
+        self.add_section (
+            name = 'Inner Distance',
+            anchor = 'rseqc-inner_distance',
+            description = '<a href="http://rseqc.sourceforge.net/#inner-distance-py" target="_blank">Inner Distance</a>' \
+                " calculates the inner distance" \
                 " (or insert size) between two paired RNA reads." \
-                " Note that this can be negative if fragments overlap.</p>" +
-                linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
-        })
+                " Note that this can be negative if fragments overlap.",
+            plot = linegraph.plot([self.inner_distance, self.inner_distance_pct], pconfig)
+        )
 
     # Return number of samples found
     return len(self.inner_distance)

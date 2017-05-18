@@ -35,8 +35,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any BUSCO reports
         self.busco_data = dict()
-        for f in self.find_log_files(config.sp['busco']):
+        for f in self.find_log_files('busco'):
             self.parse_busco_log(f)
+
+        # Filter to strip out ignored sample names
+        self.busco_data = self.ignore_samples(self.busco_data)
 
         if len(self.busco_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -48,14 +51,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.busco_data, 'multiqc_busco')
 
         # One Alignment Rate Plot per lineage
-        self.sections = list()
         lineages = set([ self.busco_data[s_name].get('lineage_dataset') for s_name in self.busco_data.keys() ])
         for lin in lineages:
-            self.sections.append({
-                'name': 'Lineage Assessment' if lin is None else 'Lineage: {}'.format(lin),
-                'anchor': 'busco-lineage-{}'.format(re.sub('\W+', '_', str(lin))),
-                'content': self.busco_plot(lin)
-            })
+            self.add_section (
+                name = 'Lineage Assessment' if lin is None else 'Lineage: {}'.format(lin),
+                anchor = 'busco-lineage-{}'.format(re.sub('\W+', '_', str(lin))),
+                plot = self.busco_plot(lin)
+            )
 
     def parse_busco_log(self, f):
         parsed_data = {}

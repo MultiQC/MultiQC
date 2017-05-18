@@ -42,6 +42,7 @@ plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100
 num_datasets_plot_limit: 50
+collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 decimalPoint_format: null
@@ -49,11 +50,15 @@ thousandsSep_format: null
 
 fn_ignore_dirs:
     - 'multiqc_data'
-fn_ignore_paths: []
+fn_ignore_paths:
+    - '*/work/??/??????????????????????????????' # Nextflow work directories - always same hash lengths
+sample_names_ignore: []
+sample_names_ignore_re: []
+sample_names_rename_buttons: []
+sample_names_rename: []
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false
-report_imgskips: false
 skip_generalstats: false
 data_format_extensions:
     tsv: 'txt'
@@ -63,6 +68,10 @@ export_plot_formats:
     - 'png'
     - 'svg'
     - 'pdf'
+
+# Custom Config settings
+custom_content:
+    order: []
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
@@ -156,7 +165,7 @@ module_order:
     - 'qualimap'
     - 'preseq'
     - 'quast'
-    - 'rna-seqc'
+    - 'rna_seqc'
     - 'rseqc'
     - 'busco'
     - 'goleft_indexcov'
@@ -182,9 +191,11 @@ module_order:
     - 'bowtie2'
     - 'bowtie1'
     # Pre-alignment QC
+    - 'adapterRemoval'
     - 'cutadapt'
     - 'trimmomatic'
     - 'skewer'
+    - 'sortmerna'
     - 'fastq_screen'
     - 'fastqc'
     - 'clusterflow'

@@ -26,8 +26,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Kallisto reports
         self.kallisto_data = dict()
-        for f in self.find_log_files(config.sp['kallisto'], filehandles=True):
+        for f in self.find_log_files('kallisto', filehandles=True):
             self.parse_kallisto_log(f)
+
+        # Filter to strip out ignored sample names
+        self.kallisto_data = self.ignore_samples(self.kallisto_data)
 
         if len(self.kallisto_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -42,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.kallisto_general_stats_table()
 
         # Alignment Rate Plot
-        self.intro += self.kallisto_alignment_plot()
+        self.add_section( plot = self.kallisto_alignment_plot() )
 
 
     def parse_kallisto_log(self, f):
@@ -90,8 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Estimated average fragment length',
             'min': 0,
             'suffix': 'bp',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}',
+            'scale': 'RdYlGn'
         }
         headers['percent_aligned'] = {
             'title': '% Aligned',
@@ -99,8 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['pseudoaligned_reads'] = {
             'title': '{} Aligned'.format(config.read_count_prefix),
