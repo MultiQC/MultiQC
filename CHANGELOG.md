@@ -1,7 +1,13 @@
 # MultiQC Version History
 
 ## v1.1dev
+
+### Module updates:
 _..nothing yet.._
+
+### Core MultiQC updates:
+* Base `clean_s_name` function now strips excess whitespace.
+* Reports show warning if JavaScript is disabled
 
 ## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
 Version 1.0! This release has been a long time coming and brings with it some fairly

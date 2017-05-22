@@ -48,7 +48,16 @@ was generated and the button that launches the welcome tour.
 </div>
 {% endif %}
 
-<div class="alert alert-danger mqc_loading_warning"><span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..</div>
+<noscript>
+  <div class="alert alert-danger">
+    <h4>JavaScript Disabled</h4>
+    <p>MultiQC reports use JavaScript for plots and toolbox functions. It looks like
+    you have JavaScript disabled in your web browser. Please note that many of the report
+    functions will not work as intended.</p>
+  </div>
+</noscript>
+
+<div class="alert alert-danger mqc_loading_warning" style="display:none;"><span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..</div>
 
 <div id="analysis_dirs_wrapper">
   <p>Report generated on {{ config.creation_date }} based on data in:

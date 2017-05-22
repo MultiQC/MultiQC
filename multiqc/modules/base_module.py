@@ -151,6 +151,10 @@ class BaseMultiqcModule(object):
                     s_name = s_name[:-len(chrs)]
                 if s_name.startswith(chrs):
                     s_name = s_name[len(chrs):]
+
+        # Remove trailing whitespace
+        s_name = s_name.strip()
+
         return s_name
 
 

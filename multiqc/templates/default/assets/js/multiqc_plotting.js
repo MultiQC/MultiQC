@@ -20,6 +20,9 @@ window.HCDefaults = undefined;
 // Execute when page load has finished loading
 $(function () {
 
+  // Show loading warning
+  $('.mqc_loading_warning').show();
+
   // Decompress the JSON plot data
   mqc_plots = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
 
