@@ -2,6 +2,9 @@
 // HighCharts Plotting Code
 ////////////////////////////////////////////////
 
+// Global plot data variable
+mqc_plots = {};
+
 // Initialise the toolbox filters
 window.mqc_highlight_f_texts = [];
 window.mqc_highlight_f_cols = [];
@@ -16,6 +19,12 @@ window.HCDefaults = undefined;
 
 // Execute when page load has finished loading
 $(function () {
+
+  // Show loading warning
+  $('.mqc_loading_warning').show();
+
+  // Decompress the JSON plot data
+  mqc_plots = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
 
   // HighCharts Defaults
   window.HCDefaults = $.extend(true, {}, Highcharts.getOptions(), {});
@@ -53,12 +62,21 @@ $(function () {
   });
 
   // Render plots on page load
-  $('.hc-plot').each(function(){
+  $('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').each(function(){
     var target = $(this).attr('id');
     // Only one point per dataset, so multiply limit by arbitrary number.
     var max_num = num_datasets_plot_limit * 50;
-    plot_graph(target, undefined, max_num);
-  }).promise().done(function(){ $('.mqc_loading_warning').hide(); });
+    // Deferring each plot call prevents browser from locking up
+    setTimeout(function(){
+        plot_graph(target, undefined, max_num);
+        if($('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').length == 0){
+          $('.mqc_loading_warning').hide();
+        }
+    }, 50);
+  });
+  if($('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').length == 0){
+    $('.mqc_loading_warning').hide();
+  }
 
   // Render a plot when clicked
   $('body').on('click', '.render_plot', function(e){
@@ -205,7 +223,7 @@ function plot_graph(target, ds, max_num){
         plot_xy_line_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Bar graphs
@@ -214,7 +232,7 @@ function plot_graph(target, ds, max_num){
         plot_stacked_bar_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Scatter plots
@@ -223,7 +241,7 @@ function plot_graph(target, ds, max_num){
         plot_scatter_plot(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Beeswarm graphs
@@ -232,7 +250,7 @@ function plot_graph(target, ds, max_num){
         plot_beeswarm_graph(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Heatmap plots
@@ -241,7 +259,7 @@ function plot_graph(target, ds, max_num){
         plot_heatmap(target, ds);
         $('#'+target).removeClass('not_rendered');
       } else {
-        $('#'+target).addClass('not_rendered').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
       }
     }
     // Not recognised
@@ -359,6 +377,7 @@ function plot_xy_line_graph(target, ds){
       title: {
         text: config['xlab']
       },
+      labels: { format: config['xLabelFormat'] ? config['xLabelFormat']  : '{value}' },
       type: config['xLog'] ? 'logarithmic' : 'linear',
       categories: config['categories'],
       ceiling: config['xCeiling'],
@@ -374,6 +393,7 @@ function plot_xy_line_graph(target, ds){
       title: {
         text: config['ylab']
       },
+      labels: { format: config['yLabelFormat'] ? config['yLabelFormat'] : '{value}' },
       type: config['yLog'] ? 'logarithmic' : 'linear',
       ceiling: config['yCeiling'],
       floor: config['yFloor'],
@@ -516,7 +536,8 @@ function plot_stacked_bar_graph(target, ds){
   // Make the highcharts plot
   Highcharts.chart(target, {
     chart: {
-      type: 'bar'
+      type: 'bar',
+      zoomType: 'x'
     },
     title: {
       text: config['title'],
@@ -532,6 +553,7 @@ function plot_stacked_bar_graph(target, ds){
       title: {
         text: config['ylab']
       },
+      labels: { format: config['yLabelFormat'] ? config['yLabelFormat'] : '{value}' },
       ceiling: config['yCeiling'],
       floor: config['yFloor'],
       minRange: config['yMinRange'],
@@ -1381,6 +1403,7 @@ function plot_heatmap(target, ds){
   Highcharts.chart(target, {
     chart: {
       type: 'heatmap',
+      zoomType: 'xy',
       height: config['square'] ? 500 : undefined,
       width: config['square'] ? 530 : undefined,
       marginTop: config['title'] ? 60 : 50
@@ -1407,6 +1430,8 @@ function plot_heatmap(target, ds){
       text: config['title'],
     },
     xAxis: {
+      endOnTick: false,
+      maxPadding: 0,
       categories: xcats,
       title: { enabled: true, text: config['xTitle'] },
       labels: {
@@ -1417,6 +1442,8 @@ function plot_heatmap(target, ds){
       }
     },
     yAxis: {
+      endOnTick: false,
+      maxPadding: 0,
       categories: ycats,
       reversed: true,
       opposite: true,
@@ -1453,6 +1480,7 @@ function plot_heatmap(target, ds){
       }
     },
     series: [{
+      turboThreshold: 0,
       borderWidth: config['borderWidth'],
       data: data,
       dataLabels: {

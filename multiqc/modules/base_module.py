@@ -89,6 +89,9 @@ class BaseMultiqcModule(object):
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
 
+        # Sanitise anchor ID and check for duplicates
+        anchor = report.save_htmlid(anchor)
+
         # Format the content
         if autoformat:
             if len(description) > 0:
@@ -148,6 +151,10 @@ class BaseMultiqcModule(object):
                     s_name = s_name[:-len(chrs)]
                 if s_name.startswith(chrs):
                     s_name = s_name[len(chrs):]
+
+        # Remove trailing whitespace
+        s_name = s_name.strip()
+
         return s_name
 
 

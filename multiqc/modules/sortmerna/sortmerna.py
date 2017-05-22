@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            'id': 'SortMeRNA detailed',
+            'id': 'sortmerna-detailed-plot',
             'title': 'SortMeRNA hits',
             'ylab': 'Reads'
         }

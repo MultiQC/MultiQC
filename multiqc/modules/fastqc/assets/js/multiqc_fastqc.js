@@ -274,6 +274,29 @@ $(function () {
     /// SEQ CONTENT HEATMAP LISTENERS
     /////////
 
+    // Seq Content heatmap export button
+    $('#fastqc_per_base_sequence_content_export_btn').click(function(e){
+        e.preventDefault();
+        // Tick only this plot in the toolbox and slide out
+        $('#mqc_export_selectplots input').prop('checked', false);
+        $('#mqc_export_selectplots input[value="fastqc_per_base_sequence_content_plot"]').prop('checked', true);
+        mqc_toolbox_openclose('#mqc_exportplots', true);
+    });
+
+    // Export plot
+    $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_image', function(e, cfg){
+        alert("Apologies, it's not yet possible to export this plot.\nPlease take a screengrab or export the JSON data.");
+    });
+    $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_data', function(e, cfg){
+        if(cfg['ft'] == 'json'){
+            json_str = JSON.stringify(fastqc_seq_content_data, null, 2);
+            var blob = new Blob([json_str], {type: "text/plain;charset=utf-8"});
+            saveAs(blob, cfg['fname']);
+        } else {
+            alert('Apologies, this plot can only be exported as JSON currently.');
+        }
+    });
+
     // Seq Content heatmap mouse rollover
     $('#fastqc_seq_heatmap').mousemove(function(e) {
 
@@ -290,7 +313,7 @@ $(function () {
         if(s_status == 'pass'){ s_status_class = 'label-success'; }
         if(s_status == 'warn'){ s_status_class = 'label-warning'; }
         if(s_status == 'fail'){ s_status_class = 'label-danger'; }
-        $('#fastqc_per_base_sequence_content_plot .s_name').html(s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
+        $('#fastqc_per_base_sequence_content_plot_div .s_name').html('<span class="glyphicon glyphicon-info-sign"></span> ' + s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
 
         // Show the sequence base percentages on the bar plots below
         // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
@@ -312,7 +335,7 @@ $(function () {
 
     // Remove sample name again when mouse leaves
     $('#fastqc_seq_heatmap').mouseout(function(e) {
-      $('#fastqc_per_base_sequence_content_plot .s_name').html('<em class="text-muted">rollover for sample name</em>');
+      $('#fastqc_per_base_sequence_content_plot_div .s_name').html('<span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name');
       $('#fastqc_seq_heatmap_key_pos').text('-');
       $('#fastqc_seq_heatmap_key_t span').text('-');
       $('#fastqc_seq_heatmap_key_c span').text('-');
@@ -333,21 +356,38 @@ $(function () {
         plot_single_seqcontent(s_name);
       }
     });
-    $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_prev', function(e){
+    $('#mqc-module-section-fastqc').on('click', '.fastqc_seqcontent_single_prevnext', function(e){
         e.preventDefault();
-        var idx = sample_names.indexOf(current_single_plot) - 1;
+        // Find next / prev sample name
+        var idx = sample_names.indexOf(current_single_plot);
+        if($(this).data('action') == 'next'){ idx++; }
+        else { idx--; }
         if(idx < 0){ idx = sample_names.length - 1; }
-        plot_single_seqcontent(sample_names[idx]);
-    });
-    $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_next', function(e){
-        e.preventDefault();
-        var idx = sample_names.indexOf(current_single_plot) + 1;
-        if(idx == sample_names.length){ idx = 0; }
-        plot_single_seqcontent(sample_names[idx]);
+        if(idx >= sample_names.length){ idx = 0; }
+        var s_name = sample_names[idx];
+        current_single_plot = s_name;
+        // Prep the new plot data
+        var plot_data = [[],[],[],[]];
+        var bases = Object.keys(fastqc_seq_content_data[s_name]).sort(function (a, b) {  return a - b;  });
+        for (i=0; i<bases.length; i++){
+          var base = fastqc_seq_content_data[s_name][bases[i]]['base'].toString().split('-');
+          base = parseFloat(base[0]);
+          plot_data[0].push([base, fastqc_seq_content_data[s_name][bases[i]]['t']]);
+          plot_data[1].push([base, fastqc_seq_content_data[s_name][bases[i]]['c']]);
+          plot_data[2].push([base, fastqc_seq_content_data[s_name][bases[i]]['a']]);
+          plot_data[3].push([base, fastqc_seq_content_data[s_name][bases[i]]['g']]);
+        }
+        // Update the chart
+        var hc = $('#fastqc_sequence_content_single').highcharts();
+        for (i=0; i<plot_data.length; i++){
+            hc.series[i].setData(plot_data[i], false);
+        }
+        hc.setTitle({text: s_name});
+        hc.redraw({ duration: 200 });
     });
     $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_back', function(e){
         e.preventDefault();
-        $('#fastqc_per_base_sequence_content_plot').slideDown();
+        $('#fastqc_per_base_sequence_content_plot_div').slideDown();
         $('#fastqc_sequence_content_single_wrapper').slideUp(function(){
           $(this).remove();
         });
@@ -386,14 +426,17 @@ function plot_single_seqcontent(s_name){
 
   // Create plot div if it doesn't exist, and hide overview
   if($('#fastqc_sequence_content_single_wrapper').length == 0) {
-    $('#fastqc_per_base_sequence_content_plot').slideUp();
+    $('#fastqc_per_base_sequence_content_plot_div').slideUp();
     var newplot = '<div id="fastqc_sequence_content_single_wrapper"> \
-    <div id="fastqc_sequence_content_single_controls"><div class="btn-group"> \
-      <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_prev">&laquo; Prev</button> \
-      <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_next">Next &raquo;</button> \
-    </div> <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button></div>\
+    <div id="fastqc_sequence_content_single_controls">\
+      <button class="btn btn-primary btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button> \
+      <div class="btn-group btn-group-sm"> \
+        <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="prev">&laquo; Prev</button> \
+        <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="next">Next &raquo;</button> \
+      </div>\
+    </div>\
     <div class="hc-plot-wrapper"><div id="fastqc_sequence_content_single" class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';
-    $(newplot).insertAfter('#fastqc_per_base_sequence_content_plot').hide().slideDown();
+    $(newplot).insertAfter('#fastqc_per_base_sequence_content_plot_div').hide().slideDown();
   }
 
   $('#fastqc_sequence_content_single').highcharts({
@@ -403,7 +446,7 @@ function plot_single_seqcontent(s_name){
     },
     colors: ['#dc0000', '#0000dc', '#00dc00', '#404040'],
     title: {
-      text: 'Per Base Sequence Content: '+s_name,
+      text: s_name,
       x: 30 // fudge to center over plot area rather than whole plot
     },
     xAxis: {
@@ -445,6 +488,10 @@ function plot_single_seqcontent(s_name){
         marker: { enabled: false },
       }
     },
+    exporting: { buttons: { contextButton: {
+      menuItems: window.HCDefaults.exporting.buttons.contextButton.menuItems,
+      onclick: window.HCDefaults.exporting.buttons.contextButton.onclick
+    } } },
     series: plot_data
   });
 }

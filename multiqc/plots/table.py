@@ -5,7 +5,6 @@
 from collections import defaultdict, OrderedDict
 import logging
 import random
-import re
 
 from multiqc.utils import config, report, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
@@ -52,7 +51,7 @@ def make_table (dt):
     """
 
     table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
-    table_id = re.sub(r'\W+', '_', table_id)
+    table_id = report.save_htmlid(table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = OrderedDict()
@@ -66,7 +65,7 @@ def make_table (dt):
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
 
-            rid = header['rid']
+            rid = report.save_htmlid(header['rid'])
 
             # Build the table header cell
             shared_key = ''
@@ -233,11 +232,12 @@ def make_table (dt):
         """.format(tid=table_id, nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
 
     # Build the table itself
+    collapse_class = 'mqc-table-collapse' if len(t_rows) > 10 and config.collapse_tables else ''
     html += """
         <div id="{tid}_container" class="mqc_table_container">
-            <div class="table-responsive">
+            <div class="table-responsive mqc-table-responsive {cc}">
                 <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}">
-        """.format( tid=table_id, title=table_title )
+        """.format( tid=table_id, title=table_title, cc=collapse_class)
 
     # Build the header row
     col1_header = dt.pconfig.get('col1_header', 'Sample Name')
@@ -255,7 +255,10 @@ def make_table (dt):
         for k in t_headers:
             html += t_rows[s_name].get(k, empty_cells[k])
         html += '</tr>'
-    html += '</tbody></table></div></div>'
+    html += '</tbody></table></div>'
+    if len(t_rows) > 10 and config.collapse_tables:
+        html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
+    html += '</div>'
 
     # Build the bootstrap modal to customise columns and order
     if not config.simple_output:

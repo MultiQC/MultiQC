@@ -407,6 +407,7 @@ headers['name'] = {
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
     'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
+    'suffix': None,                 # Suffix for value (eg. '%')
     'format': '{:,.1f}',            # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values

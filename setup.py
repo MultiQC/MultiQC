@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 
 from setuptools import setup, find_packages
 
-version = '1.0dev'
+version = '1.1dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -48,13 +48,15 @@ setup(
     zip_safe = False,
     scripts = ['scripts/multiqc'],
     install_requires = [
-        'jinja2',
-        'simplejson',
-        'pyyaml',
         'click',
+        'future>0.14.0',
+        'lzstring',
+        'jinja2>=2.9',
         'matplotlib',
         'numpy',
-        'spectra'
+        'pyyaml',
+        'simplejson',
+        'spectra',
     ],
     entry_points = {
         'multiqc.modules.v1': [
@@ -99,6 +101,7 @@ setup(
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
             'default_dev = multiqc.templates.default_dev',
+            'sections = multiqc.templates.sections',
             'simple = multiqc.templates.simple',
             'geo = multiqc.templates.geo',
         ],
@@ -106,8 +109,9 @@ setup(
             # 'my-new-option = myplugin.cli:new_option'
         # ],
         # 'multiqc.hooks.v1': [
-            # 'execution_start = myplugin.hooks:execution_start',
+            # 'before_config = myplugin.hooks:before_config',
             # 'config_loaded = myplugin.hooks:config_loaded',
+            # 'execution_start = myplugin.hooks:execution_start',
             # 'before_modules = myplugin.hooks:before_modules',
             # 'after_modules = myplugin.hooks:after_modules',
             # 'before_report_generation = myplugin.hooks:before_report_generation',

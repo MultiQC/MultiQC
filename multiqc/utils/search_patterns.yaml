@@ -108,6 +108,8 @@ preseq:
       max_filesize: 500000
     - contents: 'distinct_reads'
       max_filesize: 500000
+preseq/real_counts:
+    fn: '*preseq_real_counts*'
 prokka:
     contents: 'contigs:'
     num_lines: 2

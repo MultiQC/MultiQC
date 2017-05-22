@@ -6,7 +6,6 @@ from __future__ import print_function
 import base64
 from collections import OrderedDict
 import io
-import json
 import logging
 import math
 import os
@@ -26,7 +25,7 @@ except Exception as e:
     # The lack of the library will be handled when plots are attempted
     print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
     print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
-    logger.exception(e)
+    print(e)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -162,6 +161,10 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
         pconfig = {}
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Counts / Percentages / Log Switches
@@ -216,19 +219,19 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
-    # Plot and javascript function
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div></div> \n\
-    </div> \n\
-    <script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "bar_graph", \n\
-            "samples": {s}, \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], s=json.dumps(plotsamples), d=json.dumps(plotdata), c=json.dumps(pconfig));
+    # Plot HTML
+    html += """<div class="hc-plot-wrapper">
+        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
+    </div></div>""".format(id=pconfig['id']);
 
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': 'bar_graph',
+        'samples': plotsamples,
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 
@@ -246,6 +249,10 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
     # Plot group ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):
@@ -254,7 +261,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
         except:
             name = k+1
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
-        pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
+        pid = report.save_htmlid(pid)
         pids.append(pid)
 
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \

@@ -4,7 +4,6 @@
 
 from collections import defaultdict, OrderedDict
 import logging
-import random
 import re
 
 from multiqc.utils import config

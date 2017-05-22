@@ -42,6 +42,7 @@ plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100
 num_datasets_plot_limit: 50
+collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 decimalPoint_format: null
@@ -53,6 +54,8 @@ fn_ignore_paths:
     - '*/work/??/??????????????????????????????' # Nextflow work directories - always same hash lengths
 sample_names_ignore: []
 sample_names_ignore_re: []
+sample_names_rename_buttons: []
+sample_names_rename: []
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false

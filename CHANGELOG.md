@@ -1,7 +1,20 @@
 # MultiQC Version History
 
-## v1.0dev
-Version 1.0! Bumping the major version number for a couple of reasons:
+## v1.1dev
+
+### Module updates:
+_..nothing yet.._
+
+### Core MultiQC updates:
+* Base `clean_s_name` function now strips excess whitespace.
+* Reports show warning if JavaScript is disabled
+
+## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
+Version 1.0! This release has been a long time coming and brings with it some fairly
+major improvements in speed, report filesize and report performance. There's also
+a bunch of new modules, more options, features and a whole lot of bug fixes.
+
+The version number is being bumped up to 1.0 for a couple of reasons:
 
 1. MultiQC is now _(hopefully)_ relatively stable. A number of facilities and users
    are now using it in a production setting and it's published. It feels like it
@@ -58,6 +71,8 @@ To see what changes need to applied to your custom plugin code, please see the [
   * Fixed bug with display of indels when only one sample
 * **Cutadapt**
   * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **FastQC**
+  * Data for the Sequence content plot can now be downloaded from reports as a JSON file.
 * **FastQ Screen**
   * Rewritten plotting method for high sample numbers plot (~ > 20 samples)
   * Now shows counts for single-species hits and bins all multi-species hits
@@ -69,8 +84,11 @@ To see what changes need to applied to your custom plugin code, please see the [
   * New `WgsMetrics` Submodule!
   * `CollectGcBiasMetrics` module now prints summary statistics to `multiqc_data` if found. Thanks to @ahvigil
 * **Preseq**
-  * Now trims the x axis to the point that meets 80% of `max(unique molecules)`
-  * Hopefully prevents ridiculous x axes without sacrificing too much useful information.
+  * Now trims the x axis to the point that meets 90% of `min(unique molecules)`.
+  	Hopefully prevents ridiculous x axes without sacrificing too much useful information.
+  * Allows to show estimated depth of coverage instead of less informative molecule counts
+  	(see [details](http://multiqc.info/docs/#preseq)).
+  * Plots dots with externally calculated real read counts (see [details](http://multiqc.info/docs/#preseq)).
 * **Qualimap**
   * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
   * BamQC module now doesn't crash if reports don't have genome gc distributions
@@ -83,20 +101,40 @@ To see what changes need to applied to your custom plugin code, please see the [
 * Module file search has been rewritten (see above changes to configs)
   * Significant improvement in search speed (test dataset runs in approximately half the time)
   * More options for modules to find their logs, eg. filename and contents matching regexes (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
+* Report plot data is now compressed, significantly reducing report filesizes.
 * New `--ignore-samples` option to skip samples based on parsed sample name
   * Alternative to filtering by input filename, which doesn't always work
   * Also can use config vars `sample_names_ignore` (glob patterns) and `sample_names_ignore_re` (regex patterns).
+* New `--sample-names` command line option to give file with alternative sample names
+  * Allows one-click batch renaming in reports
+* New `--cl_config` option to supply MultiQC config YAML directly on the command line.
 * New config option to change numeric multiplier in General Stats
   * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
   * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
 * Config options `decimalPoint_format` and `thousandsSep_format` now apply to tables as well as plots
   * By default, thosands will now be separated with a space and `.` used for decimal places.
+* Tables now have a maximum-height by default and scroll within this.
+  * Speeds up report rendering in the web browser and makes report less stupidly long with lots of samples
+  * Button beneath table toggles full length if you want a zoomed-out view
+  * Refactored and removed previous code to make the table header "float"
+  * Set `config.collapse_tables` to `False` to disable table maximum-heights
+* Bar graphs and heatmaps can now be zoomed in on
+  * Interactive plots sometimes hide labels due to lack of space. These can now be zoomed in on to see specific samples in more detail.
+* Report plots now load sequentially instead of all at once
+  * Prevents the browser from locking up when large reports load
+* Report plot and section HTML IDs are now sanitised and checked for duplicates
+* New template available (called _sections_) which has faster loading
+  * Only shows results from one module at a time
+  * Makes big reports load in the browser much more quickly, but requires more clicking
+  * Try it out by specifying `-t sections`
 * Module sections tidied and refactored
   * New helper function `self.add_section()`
   * Sections hidden in nav if no title (no more need for the hacky `self.intro += `)
   * Content broken into `description`, `help` and `plot`, with automatic formatting
   * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
   * Changes should be backwards-compatible
+* Report plot data export code refactored
+  * Now doesn't export hidden samples (uses HighCharts [export-csv](https://github.com/highcharts/export-csv) plugin)
 * Handle error when `git` isn't installed on the system.
 * Refactored colouring of table cells
   * Was previously done in the browser using [chroma.js](http://gka.github.io/chroma.js/)
@@ -120,6 +158,7 @@ To see what changes need to applied to your custom plugin code, please see the [
 * Creating multiple plots without a config dict now works (previously just gave grey boxes in report)
 * All changes are now tested on a Windows system, using [AppVeyor](https://ci.appveyor.com/project/ewels/multiqc/)
 * Fixed rare error where some reports could get empty General Statistics tables when no data present.
+* Fixed minor bug where config option `force: true` didn't work. Now you don't have to always specify `-f`!
 
 
 ## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21

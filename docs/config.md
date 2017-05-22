@@ -11,7 +11,8 @@ it collects the configuration settings from the following places in this order
 4. File path set in environment variable `MULTIQC_CONFIG_PATH`
   * For example, define this in your `~/.bashrc` file and keep the file anywhere you like
 5. Config file in the current working directory: `multiqc_config.yaml`
-6. Command line options
+6. Command line config (`--cl_config`)
+7. Specific command line options (_e.g._ `--force`)
 
 You can find an example configuration file with the MultiQC source code, called
 [`multiqc_config.example.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
@@ -228,4 +229,20 @@ of samples. Hovering on a dot will highlight the same sample in other rows.
 
 By default, MultiQC starts using beeswarm plots when a table has 500 rows or more. This
 can be changed by setting the `max_table_rows` config option.
+
+## Command-line config
+Sometimes it's useful to specify a single small config option just once, where creating
+a config file for the occasion may be overkill. In these cases you can use the
+`--cl_config` option to supply additional config values on the command line.
+
+Config variables should be given as a YAML string. You will usually need to enclose
+this in quotes. If MultiQC is unable to understand your config you will get an error message
+saying `Could not parse command line config`.
+
+As an example, the following command configures the coverage levels to use for the
+Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap))_
+
+```bash
+multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
+```
 

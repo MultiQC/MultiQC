@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Cutadapt', anchor='cutadapt',
-        href='https://code.google.com/p/cutadapt/',
+        href='https://cutadapt.readthedocs.io/',
         info="is a tool to find and remove adapter sequences, primers, poly-A"\
          "tails and other types of unwanted sequence from your high-throughput"\
          " sequencing reads.")
