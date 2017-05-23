@@ -470,7 +470,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                     output_dir.append("_{}".format(report_num))
                     output_dir.append(file_ending)
                     config.data_dir_name = output_dir
-            os.makedirs(output_dir)
+            os.makedirs(config.data_dir_name)
             logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
 
             # Modules have run, so data directory should be complete by now. Move its contents.
