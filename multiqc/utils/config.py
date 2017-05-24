@@ -51,6 +51,7 @@ with open(searchp_fn) as f:
     sp = yaml.load(f)
 
 # Other defaults that can't be set in YAML
+data_tmp_dir = '/tmp' # will be overwritten by core script
 modules_dir = os.path.join(MULTIQC_DIR, 'modules')
 creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
