@@ -22,6 +22,12 @@ class StatsReportMixin():
           we treat each 'set' as a MultiQC sample, taking the first
           input filename for each set as the name.
         """
+        collapse_complementary = getattr(config, 'bcftools', {}).get('collapse_complementary_changes', False)
+        if collapse_complementary:
+            types = ['A>C', 'A>G', 'A>T', 'C>A', 'C>G', 'C>T']
+        else:
+            types = ['A>C', 'A>G', 'A>T', 'C>A', 'C>G', 'C>T',
+                     'G>A', 'G>C', 'G>T', 'T>A', 'T>C', 'T>G']
 
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
@@ -62,9 +68,17 @@ class StatsReportMixin():
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    field = 'substitution_type_{}'.format(s[2].strip())
+
+                    rc = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+                    change = s[2].strip()
+                    if change not in types:
+                        change = '>'.join(rc[n] for n in change.split('>'))
+
+                    field = 'substitution_type_{}'.format(change)
                     value = float(s[3].strip())
-                    self.bcftools_stats[s_name][field] = value
+                    if field not in self.bcftools_stats[s_name]:
+                        self.bcftools_stats[s_name][field] = 0
+                    self.bcftools_stats[s_name][field] += value
 
                 # Indel length distributions
                 if s[0] == "IDD" and len(s_names) > 0:
@@ -99,7 +113,6 @@ class StatsReportMixin():
             self.bcftools_stats_genstats_table()
 
             # Make bargraph plot of substitution types
-            types = ['A>C','A>G','A>T','C>A','C>G','C>T','G>A','G>C','G>T','T>A','T>C','T>G']
             keys = OrderedDict()
             for t in types:
                 keys['substitution_type_{}'.format(t)] = {'name': t}
