@@ -350,7 +350,7 @@ def general_stats_headers (self):
         'format': '{:,.0f}'
     }
     self.general_stats_headers['median_insert_size'] = {
-        'title': 'IS',
+        'title': 'Ins. size',
         'description': 'Median insert size',
         'min': 0,
         'suffix': 'bp',
