@@ -97,6 +97,7 @@ setup(
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
+            'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

@@ -6,7 +6,11 @@ from __future__ import print_function
 
 from collections import OrderedDict
 import logging
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import linegraph, bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
+
+
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -72,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
             cumulative = 0
             for count in sorted(d.keys(), reverse=True):
                 cumulative += d[count]
-                if cumulative / float(total_bases_by_sample[s_name]) > 0.05:
+                if total_bases_by_sample[s_name] > 0 and cumulative / float(total_bases_by_sample[s_name]) > 0.05:
                     max_x = max(max_x, count)
                     break
         self.jellyfish_max_x = max_x
@@ -120,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': xmin
         }
 
-        return plots.linegraph.plot(self.jellyfish_data, pconfig)
+        return linegraph.plot(self.jellyfish_data, pconfig)
 
 
 
