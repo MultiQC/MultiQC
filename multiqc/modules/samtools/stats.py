@@ -5,7 +5,8 @@
 
 import logging
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import beeswarm, bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ class StatsReportMixin():
         """ Find Samtools stats logs and parse their data """
 
         self.samtools_stats = dict()
-        for f in self.find_log_files(config.sp['samtools']['stats']):
+        for f in self.find_log_files('samtools/stats'):
             parsed_data = dict()
             for line in f['f'].splitlines():
                 if not line.startswith("SN"):
@@ -42,6 +43,9 @@ class StatsReportMixin():
                 self.add_data_source(f, section='stats')
                 self.samtools_stats[f['s_name']] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.samtools_stats = self.ignore_samples(self.samtools_stats)
+
         if len(self.samtools_stats) > 0:
 
             # Write parsed report data to a file
@@ -56,22 +60,22 @@ class StatsReportMixin():
                 'max': 100,
                 'suffix': '%',
                 'scale': 'OrRd',
-                'format': '{:.2f}%',
+                'format': '{:,.2f}',
                 'modify': lambda x: x * 100.0
             }
             stats_headers['non-primary_alignments'] = {
-                'title': 'M Non-Primary',
-                'description': 'Non-primary alignments (millions)',
+                'title': '{} Non-Primary'.format(config.read_count_prefix),
+                'description': 'Non-primary alignments ({})'.format(config.read_count_desc),
                 'min': 0,
                 'scale': 'PuBu',
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
             stats_headers['reads_mapped'] = {
-                'title': 'M Reads Mapped',
-                'description': 'Reads Mapped in the bam file',
+                'title': '{} Reads Mapped'.format(config.read_count_prefix),
+                'description': 'Reads Mapped in the bam file ({})'.format(config.read_count_desc),
                 'min': 0,
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
             stats_headers['reads_mapped_percent'] = {
@@ -80,20 +84,19 @@ class StatsReportMixin():
                 'max': 100,
                 'min': 0,
                 'suffix': '%',
-                'scale': 'RdYlGn',
-                'format': '{:.1f}%'
+                'scale': 'RdYlGn'
             }
             stats_headers['raw_total_sequences'] = {
-                'title': 'M Total seqs',
-                'description': 'Total sequences in the bam file',
+                'title': '{} Total seqs'.format(config.read_count_prefix),
+                'description': 'Total sequences in the bam file ({})'.format(config.read_count_desc),
                 'min': 0,
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
             self.general_stats_addcols(self.samtools_stats, stats_headers, 'Samtools Stats')
 
             # Make bargraph plot of mapped/unmapped reads
-            self.sections.append(alignment_section(self.samtools_stats))
+            self.alignment_section(self.samtools_stats)
 
             # Make dot plot of counts
             keys = OrderedDict()
@@ -125,36 +128,33 @@ class StatsReportMixin():
             keys['inward_oriented_pairs'] = dict(reads, **{'title': 'Inward pairs', 'description': 'Inward oriented pairs'})
             keys['outward_oriented_pairs'] = dict(reads, **{'title': 'Outward pairs', 'description': 'Outward oriented pairs'})
 
-            plot_html = plots.beeswarm.plot(self.samtools_stats, keys,
-                                            {'id': 'samtools-stats-dp'})
-            self.sections.append({
-                'name': 'Alignment metrics',
-                'anchor': 'samtools-stats',
-                'content': "<p>This module parses the output from <code>samtools stats</code>. All numbers in millions.</p> {}".format(plot_html)
-            })
+            self.add_section (
+                name = 'Alignment metrics',
+                anchor = 'samtools-stats',
+                description = "This module parses the output from <code>samtools stats</code>. All numbers in millions.",
+                plot = beeswarm.plot(self.samtools_stats, keys, {'id': 'samtools-stats-dp'})
+            )
 
         # Return the number of logs that were found
         return len(self.samtools_stats)
 
 
-def alignment_section(samples_data):
-    bedgraph_data = {}
-    for sample_id, data in samples_data.items():
-        expected_total = data['raw_total_sequences']
-        read_sum = (data['reads_mapped'] + data['reads_unmapped'])
-        if read_sum == expected_total:
-            bedgraph_data[sample_id] = data
-        else:
-            log.warn("sum of mapped/unmapped reads not matching total, "
-                     "skipping samtools plot for: {}".format(sample_id))
-    bargraph = alignment_chart(bedgraph_data)
-    section = {
-        'name': 'Percent Mapped',
-        'anchor': 'samtools-stats-alignment',
-        'content': ("<p>Alignment metrics from <code>samtools stats</code>;"
-                    " mapped vs. unmapped reads.</p> {}".format(bargraph))
-    }
-    return section
+    def alignment_section(self, samples_data):
+        bedgraph_data = {}
+        for sample_id, data in samples_data.items():
+            expected_total = data['raw_total_sequences']
+            read_sum = (data['reads_mapped'] + data['reads_unmapped'])
+            if read_sum == expected_total:
+                bedgraph_data[sample_id] = data
+            else:
+                log.warn("sum of mapped/unmapped reads not matching total, "
+                         "skipping samtools plot for: {}".format(sample_id))
+        self.add_section (
+            name = 'Percent Mapped',
+            anchor = 'samtools-stats-alignment',
+            description = "Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads.",
+            plot = alignment_chart(bedgraph_data)
+        )
 
 
 def alignment_chart(data):
@@ -170,4 +170,4 @@ def alignment_chart(data):
         'ylab': '# Reads',
         'cpswitch_counts_label': 'Number of Reads'
     }
-    return plots.bargraph.plot(data, keys, plot_conf)
+    return bargraph.plot(data, keys, plot_conf)

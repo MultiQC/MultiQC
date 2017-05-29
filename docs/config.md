@@ -8,8 +8,11 @@ it collects the configuration settings from the following places in this order
 2. System-wide config in `<installation_dir>/multiqc_config.yaml`
   * Manual installations only, not `pip` or `conda`
 3. User config in `~/.multiqc_config.yaml`
-4. Config file in the current working directory: `multiqc_config.yaml`
-5. Command line options
+4. File path set in environment variable `MULTIQC_CONFIG_PATH`
+  * For example, define this in your `~/.bashrc` file and keep the file anywhere you like
+5. Config file in the current working directory: `multiqc_config.yaml`
+6. Command line config (`--cl_config`)
+7. Specific command line options (_e.g._ `--force`)
 
 You can find an example configuration file with the MultiQC source code, called
 [`multiqc_config.example.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
@@ -174,6 +177,21 @@ Note that the searched file paths will usually be relative to the working
 directory and can be highly variable, so you'll typically want to start patterns
 with a `*` to match any preceding directory structure.
 
+## Ignoring samples
+Some modules get sample names from the contents of the file and not the filename
+(for example, `stdout` logs can contain multiple samples). You can skip samples
+by their resolved sample names (after cleaning) with two config options:
+`sample_names_ignore` and `sample_names_ignore_re`. The first takes a list of
+strings to be used for glob pattern matching (same behaviour as the command line
+option `--ignore-samples`), the latter takes a list of regex patterns. For example:
+
+```yaml
+sample_names_ignore:
+    - 'SRR*'
+sample_names_ignore_re:
+    - '^SR{2}\d{7}_1$'
+```
+
 ## Large sample numbers
 MultiQC has been written with the intention of being used for any number of samples.
 This means that it _should_ work well with 6 samples or 6000. Very large sample numbers
@@ -211,4 +229,20 @@ of samples. Hovering on a dot will highlight the same sample in other rows.
 
 By default, MultiQC starts using beeswarm plots when a table has 500 rows or more. This
 can be changed by setting the `max_table_rows` config option.
+
+## Command-line config
+Sometimes it's useful to specify a single small config option just once, where creating
+a config file for the occasion may be overkill. In these cases you can use the
+`--cl_config` option to supply additional config values on the command line.
+
+Config variables should be given as a YAML string. You will usually need to enclose
+this in quotes. If MultiQC is unable to understand your config you will get an error message
+saying `Could not parse command line config`.
+
+As an example, the following command configures the coverage levels to use for the
+Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap))_
+
+```bash
+multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
+```
 

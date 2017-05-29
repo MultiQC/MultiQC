@@ -7,14 +7,16 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """ Bowtie 1 module, parses stderr logs. """
-    
+
     def __init__(self):
 
         # Initialise the parent object
@@ -35,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             'bowtie.right_kept_reads.m2g_um_seg1.log',
             'bowtie.right_kept_reads.m2g_um_seg2.log'
         ]
-        for f in self.find_log_files(config.sp['bowtie']):
+        for f in self.find_log_files('bowtie'):
             if f['fn'] in fn_ignore:
                 log.debug('Skipping file because looks like tophat log: {}/{}'.format(f['root'], f['fn']))
                 continue
@@ -44,6 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug('Skipping file because looks like Bismark log: {}/{}'.format(f['root'], f['fn']))
                 continue
             self.parse_bowtie_logs(f)
+
+        # Filter to strip out ignored sample names
+        self.bowtie_data = self.ignore_samples(self.bowtie_data)
 
         if len(self.bowtie_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -59,8 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie_general_stats_table()
 
         # Alignment Rate Plot
-        # Only one section, so add to the intro
-        self.intro += self.bowtie_alignment_plot()
+        self.bowtie_alignment_plot()
 
 
     def parse_bowtie_logs(self, f):
@@ -82,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if fqmatch:
                     s_name = self.clean_s_name(fqmatch.group(1), f['root'])
                     log.debug("Found a bowtie command, updating sample name to '{}'".format(s_name))
-            
+
             # End of log, reset in case there is another in this file
             if 'Overall time:' in l:
                 if len(parsed_data) > 0:
@@ -92,12 +96,12 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bowtie_data[s_name] = parsed_data
                 s_name = f['s_name']
                 parsed_data = {}
-            
+
             for k, r in regexes.items():
                 match = re.search(r, l)
                 if match:
                     parsed_data[k] = float(match.group(1).replace(',', ''))
-        
+
         if len(parsed_data) > 0:
             if s_name in self.bowtie_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -108,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bowtie_general_stats_table(self):
         """ Take the parsed stats from the Bowtie report and add it to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['reads_aligned_percentage'] = {
             'title': '% Aligned',
@@ -116,28 +120,27 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['reads_aligned'] = {
-            'title': 'M Aligned',
-            'description': 'reads with at least one reported alignment (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'reads with at least one reported alignment ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.bowtie_data, headers)
 
     def bowtie_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['reads_aligned'] = { 'color': '#8bbc21', 'name': 'Aligned' }
         keys['multimapped'] =   { 'color': '#2f7ed8', 'name': 'Multimapped' }
         keys['not_aligned'] =   { 'color': '#0d233a', 'name': 'Not aligned' }
-        
+
         # Config for the plot
         config = {
             'id': 'bowtie1_alignment',
@@ -145,5 +148,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
-        return plots.bargraph.plot(self.bowtie_data, keys, config)
+
+        self.add_section( plot = bargraph.plot(self.bowtie_data, keys, config) )

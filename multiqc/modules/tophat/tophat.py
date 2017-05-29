@@ -8,7 +8,9 @@ import logging
 import os
 import re
 
-from multiqc import config, BaseMultiqcModule, plots
+from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,13 +21,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Tophat', anchor='tophat',
-        href="https://ccb.jhu.edu/software/tophat/", 
+        href="https://ccb.jhu.edu/software/tophat/",
         info="is a fast splice junction mapper for RNA-Seq reads. "\
         "It aligns RNA-Seq reads to mammalian-sized genomes.")
 
         # Find and load any Tophat reports
         self.tophat_data = dict()
-        for f in self.find_log_files(config.sp['tophat']):
+        for f in self.find_log_files('tophat'):
             parsed_data = self.parse_tophat_log(f['f'])
             if parsed_data is not None:
                 if f['s_name'] == "align_summary.txt":
@@ -37,6 +39,9 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.tophat_data = self.ignore_samples(self.tophat_data)
 
         if len(self.tophat_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -51,12 +56,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_general_stats_table()
 
         # Alignment Rate Plot
-        self.intro += self.tophat_alignment_plot()
+        self.tophat_alignment_plot()
 
 
     def parse_tophat_log (self, raw_data):
         """ Parse the Tophat alignment log file. """
-        
+
         if 'Aligned pairs' in raw_data:
             # Paired end data
             regexes = {
@@ -75,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'aligned_multimap': r"of these\s*:\s+(\d+)",
                 'overall_aligned_percent': r"([\d\.]+)% overall read mapping rate.",
             }
-            
+
         parsed_data = {}
         for k, r in regexes.items():
             r_search = re.search(r, raw_data, re.MULTILINE)
@@ -94,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
     def tophat_general_stats_table(self):
         """ Take the parsed stats from the Tophat report and add it to the
         basic stats table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['overall_aligned_percent'] = {
             'title': '% Aligned',
@@ -102,29 +107,28 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['aligned_not_multimapped_discordant'] = {
-            'title': 'M Aligned',
-            'description': 'Aligned reads, not multimapped or discordant (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'Aligned reads, not multimapped or discordant ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.tophat_data, headers)
 
     def tophat_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
-        
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['aligned_not_multimapped_discordant'] = { 'color': '#437bb1', 'name': 'Aligned' }
         keys['aligned_multimap'] =   { 'color': '#f7a35c', 'name': 'Multimapped' }
         keys['aligned_discordant'] = { 'color': '#e63491', 'name': 'Discordant mappings' }
         keys['unaligned_total'] =    { 'color': '#7f0000', 'name': 'Not aligned' }
-        
+
         # Config for the plot
         config = {
             'id': 'tophat_alignment',
@@ -132,5 +136,5 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
-        
-        return plots.bargraph.plot(self.tophat_data, keys, config)
+
+        self.add_section( plot =  bargraph.plot(self.tophat_data, keys, config) )

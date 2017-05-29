@@ -23,8 +23,9 @@ entry_points = {
         # 'my-new-option = myplugin.cli:new_option'
     # ],
     # 'multiqc.hooks.v1': [
-        # 'execution_start = myplugin.hooks:execution_start',
+        # 'before_config = myplugin.hooks:before_config',
         # 'config_loaded = myplugin.hooks:config_loaded',
+        # 'execution_start = myplugin.hooks:execution_start',
         # 'before_modules = myplugin.hooks:before_modules',
         # 'after_modules = myplugin.hooks:after_modules',
         # 'execution_finish = myplugin.hooks:execution_finish',
@@ -73,11 +74,11 @@ modname = python_mod.dirname.submodname:classname'
 ```
 
 Once this is done, everything else should be the same as described in the
-[writing modules](writing_modules.md) documentation.
+[writing modules](http://multiqc.info/docs/#writing-new-modules) documentation.
 
 ## Templates
 As above, though no need to specify a class name at the end. See the
-[writing templates](templates.md) documentation for further instructions.
+[writing templates](http://multiqc.info/docs/#writing-new-templates) documentation for further instructions.
 
 ## Command line options
 MultiQC handles command line interaction using the [click](http://click.pocoo.org/)

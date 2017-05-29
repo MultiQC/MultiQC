@@ -1,18 +1,199 @@
 # MultiQC Version History
 
-#### v0.9dev
-Module updates:
+## v1.1dev
+
+### Module updates:
+_..nothing yet.._
+
+### Core MultiQC updates:
+* Base `clean_s_name` function now strips excess whitespace.
+* Reports show warning if JavaScript is disabled
+
+## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
+Version 1.0! This release has been a long time coming and brings with it some fairly
+major improvements in speed, report filesize and report performance. There's also
+a bunch of new modules, more options, features and a whole lot of bug fixes.
+
+The version number is being bumped up to 1.0 for a couple of reasons:
+
+1. MultiQC is now _(hopefully)_ relatively stable. A number of facilities and users
+   are now using it in a production setting and it's published. It feels like it
+   probably deserves v1 status now somehow.
+2. This update brings some fairly major changes which will break backwards
+   compatibility for plugins. As such, semantic versioning suggests a change in
+   major version number.
+
+### Breaking Changes
+For most people, you shouldn't have any problems upgrading. There are two
+scenarios where you may need to make changes with this update:
+
+#### 1. You have custom file search patterns
+Search patterns have been flattened and may no longer have arbitrary depth.
+For example, you may need to change the following:
+```yaml
+fastqc:
+    data:
+        fn: 'fastqc_data.txt'
+    zip:
+        fn: '*_fastqc.zip'
+```
+to this:
+```yaml
+fastqc/data:
+    fn: 'fastqc_data.txt'
+fastqc/zip:
+    fn: '*_fastqc.zip'
+```
+See the [documentation](http://multiqc.info/docs/#step-1-find-log-files) for instructions on how to write the new file search syntax.
+
+See [`search_patterns.yaml`](multiqc/utils/search_patterns.yaml) for the new module search keys
+and more examples.
+
+####  2. You have custom plugins / modules / external code
+To see what changes need to applied to your custom plugin code, please see the [MultiQC docs](http://multiqc.info/docs/#v1.0-updates).
+
+### Module updates:
+* [**Adapter Removal**](https://github.com/mikkelschubert/adapterremoval) - new module!
+  * AdapterRemoval v2 - rapid adapter trimming, identification, and read merging
+* [**BUSCO**](http://busco.ezlab.org/) - new module!
+  * New module for the `BUSCO v2` tool, used for assessing genome assembly and annotation completeness.
+* [**Cluster Flow**](http://clusterflow.io) - new module!
+  * Cluster Flow is a workflow tool for bioinformatics pipelines. The new module parses executed tool commands.
+* [**RNA-SeQC**](http://archive.broadinstitute.org/cancer/cga/rna-seqc) - new module!
+  * New module to parse output from RNA-SeQC, a java program which computes a series
+    of quality control metrics for RNA-seq data.
+* [**goleft indexcov**](https://github.com/brentp/goleft/tree/master/indexcov) - new module! Thanks to @chapmanb and @brentp
+  * [goleft indexcov](https://github.com/brentp/goleft/tree/master/indexcov) uses the PED and ROC
+    data files to create diagnostic plots of coverage per sample, helping to identify sample gender and coverage issues.
+* [**SortMeRNA**](http://bioinfo.lifl.fr/RNA/sortmerna/) - new module! Written by @bschiffthaler
+  * New module for `SortMeRNA`, commonly used for removing rRNA contamination from datasets.
+* **Bcftools**
+  * Fixed bug with display of indels when only one sample
+* **Cutadapt**
+  * Now takes the filename if the sample name is `-` (stdin). Thanks to @tdido
+* **FastQC**
+  * Data for the Sequence content plot can now be downloaded from reports as a JSON file.
+* **FastQ Screen**
+  * Rewritten plotting method for high sample numbers plot (~ > 20 samples)
+  * Now shows counts for single-species hits and bins all multi-species hits
+  * Allows plot to show proper percentage view for each sample, much easier to interpret.
+* **HTSeq**
+  * Fix bug where header lines caused module to crash
+* **Picard**
+  * New `RrbsSummaryMetrics` Submodule!
+  * New `WgsMetrics` Submodule!
+  * `CollectGcBiasMetrics` module now prints summary statistics to `multiqc_data` if found. Thanks to @ahvigil
+* **Preseq**
+  * Now trims the x axis to the point that meets 90% of `min(unique molecules)`.
+  	Hopefully prevents ridiculous x axes without sacrificing too much useful information.
+  * Allows to show estimated depth of coverage instead of less informative molecule counts
+  	(see [details](http://multiqc.info/docs/#preseq)).
+  * Plots dots with externally calculated real read counts (see [details](http://multiqc.info/docs/#preseq)).
+* **Qualimap**
+  * RNASeq Transcript Profile now has correct axis units. Thanks to @roryk
+  * BamQC module now doesn't crash if reports don't have genome gc distributions
+* **RSeQC**
+  * Fixed Python3 error in Junction Saturation code
+  * Fixed JS error for Junction Saturation that made the single-sample combined plot only show _All Junctions_
+
+### Core MultiQC updates:
+* Change in module structure and import statements (see [details](http://multiqc.info/docs/#v1.0-updates)).
+* Module file search has been rewritten (see above changes to configs)
+  * Significant improvement in search speed (test dataset runs in approximately half the time)
+  * More options for modules to find their logs, eg. filename and contents matching regexes (see the [docs](http://multiqc.info/docs/#step-1-find-log-files))
+* Report plot data is now compressed, significantly reducing report filesizes.
+* New `--ignore-samples` option to skip samples based on parsed sample name
+  * Alternative to filtering by input filename, which doesn't always work
+  * Also can use config vars `sample_names_ignore` (glob patterns) and `sample_names_ignore_re` (regex patterns).
+* New `--sample-names` command line option to give file with alternative sample names
+  * Allows one-click batch renaming in reports
+* New `--cl_config` option to supply MultiQC config YAML directly on the command line.
+* New config option to change numeric multiplier in General Stats
+  * For example, if reports have few reads, can show `Thousands of Reads` instead of `Millions of Reads`
+  * Set config options `read_count_multiplier`, `read_count_prefix` and `read_count_desc`
+* Config options `decimalPoint_format` and `thousandsSep_format` now apply to tables as well as plots
+  * By default, thosands will now be separated with a space and `.` used for decimal places.
+* Tables now have a maximum-height by default and scroll within this.
+  * Speeds up report rendering in the web browser and makes report less stupidly long with lots of samples
+  * Button beneath table toggles full length if you want a zoomed-out view
+  * Refactored and removed previous code to make the table header "float"
+  * Set `config.collapse_tables` to `False` to disable table maximum-heights
+* Bar graphs and heatmaps can now be zoomed in on
+  * Interactive plots sometimes hide labels due to lack of space. These can now be zoomed in on to see specific samples in more detail.
+* Report plots now load sequentially instead of all at once
+  * Prevents the browser from locking up when large reports load
+* Report plot and section HTML IDs are now sanitised and checked for duplicates
+* New template available (called _sections_) which has faster loading
+  * Only shows results from one module at a time
+  * Makes big reports load in the browser much more quickly, but requires more clicking
+  * Try it out by specifying `-t sections`
+* Module sections tidied and refactored
+  * New helper function `self.add_section()`
+  * Sections hidden in nav if no title (no more need for the hacky `self.intro += `)
+  * Content broken into `description`, `help` and `plot`, with automatic formatting
+  * Empty module sections are now skipped in reports. No need to check if a plot function returns `None`!
+  * Changes should be backwards-compatible
+* Report plot data export code refactored
+  * Now doesn't export hidden samples (uses HighCharts [export-csv](https://github.com/highcharts/export-csv) plugin)
+* Handle error when `git` isn't installed on the system.
+* Refactored colouring of table cells
+  * Was previously done in the browser using [chroma.js](http://gka.github.io/chroma.js/)
+  * Now done at report generation time using the [spectra](https://pypi.python.org/pypi/spectra) package
+  * Should helpfully speed up report rendering time in the web browser, especially for large reports
+* Docs updates (thanks to @varemo)
+* Previously hidden log file `.multiqc.log` renamed to `multiqc.log` in `multiqc_data`
+* Added option to load MultiQC config file from a path specified in the environment variable `MULTIQC_CONFIG_PATH`
+* New table configuration options
+  * `sortRows: False` prevents table rows from being sorted alphabetically
+  * `col1_header` allows the default first column header to be changed from "Sample Name"
+* Tables no longer show _Configure Columns_ and _Plot_ buttons if they only have a single column
+* Custom content updates
+  * New `custom_content`/`order` config option to specify order of Custom Content sections
+  * Tables now use the header for the first column instead of always having `Sample Name`
+  * JSON + YAML tables now remember order of table columns
+  * Many minor bugfixes
+* Line graphs and scatter graphs axis limits
+  * If limits are specified, data exceeding this is no longer saved in report
+  * Visually identical, but can make report file sizes considerable smaller in some cases
+* Creating multiple plots without a config dict now works (previously just gave grey boxes in report)
+* All changes are now tested on a Windows system, using [AppVeyor](https://ci.appveyor.com/project/ewels/multiqc/)
+* Fixed rare error where some reports could get empty General Statistics tables when no data present.
+* Fixed minor bug where config option `force: true` didn't work. Now you don't have to always specify `-f`!
+
+
+## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
+A major new feature is released in v0.9 - support for _custom content_. This means
+that MultiQC can now easily include output from custom scripts within reports without
+the need for a new module or plugin. For more information, please see the
+[MultiQC documentation](http://multiqc.info/docs/#custom-content).
+
+#### Module updates:
+* [**HTSeq**](http://www-huber.embl.de/HTSeq/doc/count.html) - new module!
+  * New module for the `htseq-count` tool, often used in RNA-seq analysis.
 * [**Prokka**](http://www.vicbioinformatics.com/software.prokka.shtml) - new module!
   * Prokka is a software tool for the rapid annotation of prokaryotic genomes.
+* [**Slamdunk**](http://t-neumann.github.io/slamdunk/) - new module!
+  * Slamdunk is a software tool to analyze SLAMSeq data.
+* [**Peddy**](https://github.com/brentp/peddy) - new module!
+  * Peddy calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.
 * **Cutadapt**
   * Fixed bug in General Stats table number for old versions of cutadapt (pre v1.7)
   * Added support for _really_ old cutadapt logs (eg. v.1.2)
+* **FastQC**
+  * New plot showing total overrepresented sequence percentages.
+  * New option to parse a file containing a theoretical GC curve to display in the background.
+    * Human & Mouse Genome / Transcriptome curves bundled, or make your own using
+      [fastqcTheoreticalGC](https://github.com/mikelove/fastqcTheoreticalGC). See the
+      [MultiQC docs](http://multiqc.info/docs/#fastqc) for more information.
 * **featureCounts**
   * Added parsing checks and catch failures for when non-featureCounts files are picked up by accident
 * **GATK**
   * Fixed logger error in VariantEval module.
 * **Picard**
   * Fixed missing sample overwriting bug in `RnaSeqMetrics`
+  * New feature to customise coverage shown from `HsMetrics` in General Statistics table
+    see the [docs](http://multiqc.info/docs/#picard) for info).
+  * Fixed compatibility problem with output from `CollectMultipleMetrics` for `CollectAlignmentSummaryMetrics`
 * **Preseq**
   * Module now recognises output from `c_curve` mode.
 * **RSeQC**
@@ -25,23 +206,48 @@ Module updates:
   * Fixed swapped axis labels in the Variant Quality plot
 * **STAR**
   * Fixed crash when there are 0 unmapped reads.
+  * Sample name now taken from the directory name if no file prefix found.
 * **Qualimap BamQC**
   * Add a line for pre-calculated reference genome GC content
   * Plot cumulative coverage for values above 50x, align with the coverage histogram.
+  * New ability to customise coverage thresholds shown in General Statistics table
+    (see the [docs](http://multiqc.info/docs/#qualimap) for info).
 
-Core Updates:
+#### Core MultiQC updates:
+* Support for _custom content_ (see top of release notes).
+* New ninja report tool: make scatter plots of any two table columns!
+* Plot data now saved in `multiqc_data` when 'flat' image plots are created
+  * Allows you easily re-plot the data (eg. in Excel) for further downstream investigation
 * Added _'Apply'_ button to Highlight / Rename / Hide.
   * These tools can become slow with large reports. This means that you can enter several
     things without having to wait for the report to replot each change.
+* Report heatmaps can now be sorted by highlight
+* New config options `decimalPoint_format` and `thousandsSep_format`
+  * Allows you to change the default `1 234.56` number formatting for plots.
+* New config option `top_modules` allows you to specify modules that should come at the top of the report
 * Fixed bar plot bug where missing categories could shift data between samples
 * Report title now printed in the side navigation
 * Missing plot IDs added for easier plot exporting
 * Stopped giving warnings about skipping directories (now a debug message)
 * Added warnings in report about missing functionality for flat plots (exporting and toolbox)
 * Export button has contextual text for images / data
+* Fixed a bug where user config files were loaded twice
+* Fixed bug where module order was random if `--module` or `--exclude` was used.
+* Refactored code so that the order of modules can be changed in the user config
+* Beefed up code + docs in scatter plots back end and multiple bar plots.
+* Fixed a few back end nasties for Tables
+  * Shared-key columns are no longer forced to share colour schemes
+  * Fixed bug in lambda modified values when format string breaks
+  * Supplying just data with no header information now works as advertised
+* Improvements to back end code for bar plots
+  * New `tt_decimals` and `tt_suffix` options for bar plots
+  * Bar plots now support `yCeiling`, `yFloor` and `yMinRange`, as with line plots.
+  * New option `hide_zero_cats:False` to force legends to be shown even when all data is 0
+* General Stats _Showing x of y_ columns count is fixed on page load.
+* Big code whitespace cleanup
 
-#### [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
-Module updates:
+## [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
+#### Module updates:
 * [**GATK**](https://software.broadinstitute.org/gatk/) - new module!
   * Added support for VariantEval reports, only parsing a little of the information
     in there so far, but it's a start.
@@ -73,7 +279,7 @@ Module updates:
   * `flagstat` - new submodule! Written by @HLWiencko
   * `idxstats` - new submodule! This one by @ewels again
 
-Core updates:
+#### Core MultiQC updates:
 * New `--export`/`-p` option to generate static images plot in `multiqc_plots` (`.png`, `.svg` and `.pdf`)
   * Configurable with `export_plots`, `plots_dir_name` and `export_plot_formats` config options
   * `--flat` option no longer saves plots in `multiqc_data/multiqc_plots`
@@ -103,12 +309,13 @@ Core updates:
 * Fixed nasty bug in beeswarm dot plots where sample names were mixed up (#278)
 * Beeswarm header text is now more informative (sample count with more info on a tooltip)
 * Beeswarm plots now work when reports have > 1000 samples
+* Fixed some buggy behaviour in saving / loading report highlighting + renaming configs (#354)
 
 Many thanks to those at the [OpenBio Codefest 2016](https://www.open-bio.org/wiki/Codefest_2016)
 who worked on MultiQC projects.
 
-#### [v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
-Module updates:
+## [v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
+#### Module updates:
 * [**Kallisto**](https://pachterlab.github.io/kallisto/) - new module!
 * **Picard**
   * Code refactored to make maintenance and additions easier.
@@ -145,7 +352,7 @@ Module updates:
 * **MethylQA** now handles variable spacing in logs
 * **featureCounts** now splits columns on tabs instead of whitespace, can handle filenames with spaces
 
-Core updates:
+#### Core MultiQC updates:
 * **Galaxy**: MultiQC now available in Galax! Work by @devengineson / @yvanlebras / @cmonjeau
   * See it in the [Galaxy Toolshed](https://toolshed.g2.bx.psu.edu/view/engineson/multiqc/)
 * **Heatmap**: New plot type!
@@ -172,8 +379,8 @@ Core updates:
 * Numerous other small bugs.
 
 
-#### [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
-Module updates:
+## [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
+#### Module updates:
 * New [Salmon](http://combine-lab.github.io/salmon/) module.
 * New [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) module.
 * New [Bamtools stats](https://github.com/pezmaster31/bamtools) module.
@@ -183,7 +390,7 @@ Module updates:
 * Made cutadapt show counts by default instead of obs/exp
 * Added percentage view to Picard insert size plot
 
-Core updates:
+#### Core MultiQC updates:
 * Dynamic plots now update their labels properly when changing datasets and to percentages
 * Config files now loaded from working directory if present
 * Started new docs describing how each module works
@@ -206,8 +413,8 @@ Bugfixes:
 * Plots now properly change y axis limits and labels when changing datasets
 * Flat plots now have correct path in `default_dev` template
 
-#### [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
-Module updates:
+## [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
+#### Module updates:
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
 * New [Samtools stats](http://www.htslib.org/) module, written by @lpantano
@@ -215,7 +422,7 @@ Module updates:
 * New [SnpEff](http://snpeff.sourceforge.net/) module
 * New [methylQA](http://methylqa.sourceforge.net/) module
 
-Core updates:
+#### Core MultiQC updates:
 * New "Flat" image plots, rendered at run time with MatPlotLib
   * By default, will use image plots if > 50 samples (set in config as `plots_flat_numseries`)
   * Means that _very_ large numbers of samples can be viewed in reports. _eg._ single cell data.
@@ -234,7 +441,7 @@ Core updates:
 * Everything (including the data directory) is now created in a temporary directory and moved when MultiQC is complete.
 * A handful of performance updates for large analysis directories
 
-#### [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
+## [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
 * New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample
 * Export parsed data as tab-delimited text, `JSON` or `YAML` using the new `-k`/`--data-format` command line option
 * Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
@@ -251,7 +458,7 @@ Core updates:
 * Bugfix: MultiQC default_dev template now copies module assets properly
 * Bufgix: General Stats table floating header now resizes properly when page width changes
 
-#### [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
+## [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
 * All modules now load their log file search parameters from a config
   file, allowing you to overwrite them using your user config file
   * This is useful if your analysis pipeline renames program outputs
@@ -295,13 +502,13 @@ Core updates:
 * Bugfix for Qualimap RNA Seq reports with paired end data
 
 
-#### [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
+## [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
 * Hotfix patch to fix broken FastQC module (wasn't finding `.zip` files properly)
 * General Stats table colours now flat. Should improve browser speed.
 * Empty rows now hidden if appear due to column removal in general stats
 * FastQC Kmer plot removed until we have something better to show.
 
-#### [v0.3](https://github.com/ewels/MultiQC/releases/tag/v0.3) - 2015-11-04
+## [v0.3](https://github.com/ewels/MultiQC/releases/tag/v0.3) - 2015-11-04
 * Lots of lovely new documentation!
 * Child templates - easily customise specific parts of the default report template
 * Plugin hooks - allow other tools to execute custom code during MultiQC execution
@@ -335,7 +542,7 @@ Core updates:
 * Plots with highlighted and renamed samples now honour this when exporting to
   different file types.
 
-#### [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
+## [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
   functions now handle many more functions (plots, config, file import)
   * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
@@ -355,7 +562,7 @@ Core updates:
 * Bugfix: FastQC seq content heatmap highlighting
 * Many, many small bugfixes
 
-#### [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
+## [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
 * The first public release of MultiQC, after a month of development. Basic
 structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark, 
 STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching

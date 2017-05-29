@@ -7,7 +7,8 @@ import logging
 import os
 import re
 
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import table, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -56,12 +57,12 @@ DESC = {
 
 def parse_reports(self):
     """ Find Picard HsMetrics reports and parse their data """
-    
+
     # Set up vars
     self.picard_HsMetrics_data = dict()
-    
+
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['hsmetrics'], filehandles=True):
+    for f in self.find_log_files('picard/hsmetrics', filehandles=True):
         parsed_data = dict()
         s_name = None
         keys = None
@@ -71,14 +72,14 @@ def parse_reports(self):
                'picard.analysis.directed.CollectHsMetrics' in l and 'INPUT' in l:
                 s_name = None
                 keys = None
-                
+
                 # Pull sample name from input
                 fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])
                     parsed_data[s_name] = dict()
-            
+
             if s_name is not None:
                 if 'picard.analysis.directed.HsMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
@@ -97,7 +98,7 @@ def parse_reports(self):
                     else:
                         s_name = None
                         keys = None
-        
+
         # Remove empty dictionaries
         for s_name in list(parsed_data.keys()):
             for j in parsed_data[s_name].keys():
@@ -105,7 +106,7 @@ def parse_reports(self):
                     parsed_data[s_name].pop(j, None)
             if len(parsed_data[s_name]) == 0:
                 parsed_data.pop(s_name, None)
-        
+
         # Manipulate sample names if multiple baits found
         for s_name in parsed_data.keys():
             for j in parsed_data[s_name].keys():
@@ -116,54 +117,75 @@ def parse_reports(self):
                     log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], this_s_name))
                 self.add_data_source(f, this_s_name, section='HsMetrics')
                 self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
-    
-    
+
+
+    # Filter to strip out ignored sample names
+    self.picard_HsMetrics_data = self.ignore_samples(self.picard_HsMetrics_data)
+
     if len(self.picard_HsMetrics_data) > 0:
-        
+
         # Write parsed data to a file
         self.write_data_file(self.picard_HsMetrics_data, 'multiqc_picard_HsMetrics')
-        
+
         # Add to general stats table
         # Swap question marks with -1
         data = self.picard_HsMetrics_data
         for s_name in data:
             if data[s_name]['FOLD_ENRICHMENT'] == '?':
                 data[s_name]['FOLD_ENRICHMENT'] = -1
-                
+
         self.general_stats_headers['FOLD_ENRICHMENT'] = {
             'title': 'Fold Enrichment',
             'min': 0,
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'scale': 'Blues',
         }
-        self.general_stats_headers['PCT_TARGET_BASES_30X'] = {
-            'id': 'picard_target_bases_30X',
-            'title': 'Target Bases 30X',
-            'description': 'Percent of target bases with coverage &ge; 30X',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'format': '{:.0f}%',
-            'scale': 'RdYlGn',
-            'modify': lambda x: self.multiply_hundred(x)
-        }
+        try:
+            covs = config.picard_config['general_stats_target_coverage']
+            assert type(covs) == list
+            assert len(covs) > 0
+            covs = [str(i) for i in covs]
+            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
+        except (AttributeError, TypeError, AssertionError):
+            covs = ['30']
+        for c in covs:
+            self.general_stats_headers['PCT_TARGET_BASES_{}X'.format(c)] = {
+                'id': 'picard_target_bases_{}X'.format(c),
+                'title': 'Target Bases {}X'.format(c),
+                'description': 'Percent of target bases with coverage &ge; {}X'.format(c),
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'format': '{:,.0f}',
+                'scale': 'RdYlGn',
+                'modify': lambda x: self.multiply_hundred(x)
+            }
         for s_name in data:
             if s_name not in self.general_stats_data:
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( data[s_name] )
         data_table = _clean_table(data)
-        table_html = plots.table.plot(data_table, _get_headers(data_table))
-        if not isinstance(self.sections, list):
-            self.sections = list()
-        self.sections.append({
-                'name': 'HSMetrics',
-                'anchor': 'picard_hsmetrics',
-                'content': table_html})
-        self.sections.append(_add_target_bases(data))
-        penalty_html = _add_hs_penalty(data)
-        if penalty_html:
-            self.sections.append(penalty_html)
-    
+        self.add_section (
+                name = 'HSMetrics',
+                anchor = 'picard_hsmetrics',
+                plot = table.plot(data_table, _get_headers(data_table))
+        )
+        tbases = _add_target_bases(data)
+        self.add_section (
+            name = tbases['name'],
+            anchor = tbases['anchor'],
+            description = tbases['description'],
+            plot = tbases['plot']
+        )
+        hs_pen = _add_hs_penalty(data)
+        if hs_pen is not None:
+            self.add_section (
+                name = hs_pen['name'],
+                anchor = hs_pen['anchor'],
+                description = hs_pen['description'],
+                plot = hs_pen['plot']
+            )
+
     # Return the number of detected samples to the parent module
     return len(self.picard_HsMetrics_data)
 
@@ -197,9 +219,11 @@ def _get_headers(data):
                 'namespace': 'HsMetrics'
                 }
                 if h.find("READS") > -1:
-                    this.update({'shared_key': "read_count",
-                                 'modify': lambda x: x / 1000000.0})
-                    this['title'] = "M {0}".format(this['title'])
+                    this.update({
+                        'shared_key': "read_count",
+                        'modify': lambda x: x * config.read_count_multiplier
+                        })
+                    this['title'] = "{} {}".format(config.read_count_prefix, this['title'])
                 elif h.find("BASES") > -1:
                     this.update({'shared_key': 'bases_count',
                                  'modify': lambda x: x / 1000000.0})
@@ -210,7 +234,7 @@ def _get_headers(data):
     return OrderedDict(sorted(header.items(), key=lambda t: t[1]['title']))
 
 def _add_target_bases(data):
-    subtitle = "<p>The percentage of all target bases with at least <code>x</code> fold coverage.</p>"
+    subtitle = "The percentage of all target bases with at least <code>x</code> fold coverage."
     data_clean = defaultdict(dict)
     for s in data:
         for h in data[s]:
@@ -225,12 +249,15 @@ def _add_target_bases(data):
                 'ymin': 0,
                 'xmin': 0,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
-    return {'name': 'Target Region Coverage',
-    'anchor': 'picard_hsmetrics_target_bases',
-    'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
+    return {
+        'name': 'Target Region Coverage',
+        'anchor': 'picard_hsmetrics_target_bases',
+        'description': subtitle,
+        'plot' : linegraph.plot(data_clean, pconfig)
+    }
 
 def _add_hs_penalty(data):
-    subtitle = "<p>The \"hybrid selection penalty\" incurred to get 80% of target bases to a given coverage. Can be used with the formula <code>required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty</code>.</p>"
+    subtitle = "The \"hybrid selection penalty\" incurred to get 80% of target bases to a given coverage. Can be used with the formula <code>required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty</code>."
     data_clean = defaultdict(dict)
     any_non_zero = False
     for s in data:
@@ -248,10 +275,11 @@ def _add_hs_penalty(data):
                 'ymin': 0,
                 'xmin': 0,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
-    section =  {'name': 'HS penalty',
-    'anchor': 'picard_hsmetrics_hs_penalty',
-    'content': subtitle + plots.linegraph.plot(data_clean, pconfig)}
 
-    if not any_non_zero:
-        return None
-    return section
+    if any_non_zero:
+        return {
+            'name': 'HS penalty',
+            'anchor': 'picard_hsmetrics_hs_penalty',
+            'description': subtitle,
+            'plot': linegraph.plot(data_clean, pconfig)
+        }

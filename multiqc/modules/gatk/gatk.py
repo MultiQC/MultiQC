@@ -4,7 +4,8 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the GATK submodules
 # import varianteval
@@ -21,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule, VariantEvalMixin):
     the module output if logs are found. """
 
     def __init__(self):
-        
+
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name='GATK',  anchor='gatk', target='GATK',
@@ -30,7 +31,6 @@ class MultiqcModule(BaseMultiqcModule, VariantEvalMixin):
                   "primary focus on variant discovery and genotyping."))
 
         # Set up class objects to hold parsed data
-        self.sections = list()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
         n = dict()
@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule, VariantEvalMixin):
         n['varianteval'] = self.parse_gatk_varianteval()
         if n['varianteval'] > 0:
             log.info("Found {} VariantEval reports".format(n['varianteval']))
-        
+
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))

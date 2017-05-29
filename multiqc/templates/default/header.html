@@ -48,6 +48,17 @@ was generated and the button that launches the welcome tour.
 </div>
 {% endif %}
 
+<noscript>
+  <div class="alert alert-danger">
+    <h4>JavaScript Disabled</h4>
+    <p>MultiQC reports use JavaScript for plots and toolbox functions. It looks like
+    you have JavaScript disabled in your web browser. Please note that many of the report
+    functions will not work as intended.</p>
+  </div>
+</noscript>
+
+<div class="alert alert-danger mqc_loading_warning" style="display:none;"><span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..</div>
+
 <div id="analysis_dirs_wrapper">
   <p>Report generated on {{ config.creation_date }} based on data in:
   {% if config.analysis_dir | length == 1 %}<code class="mqc_analysis_path">{{ config.analysis_dir[0] }}</code>
@@ -59,6 +70,16 @@ was generated and the button that launches the welcome tour.
   </ul>
   {% endif %}
 </div>
+
+{% if config.sample_names_rename_buttons | length > 0 %}
+<p id="mqc_sname_switches_txt">Change sample names:
+  <span class="btn-group btn-group-sm" role="group" id="mqc_sname_switches">
+    {% for sn_t in config.sample_names_rename_buttons %}
+      <button type="button" class="btn btn-primary mqc_sname_switches {% if loop.index == 1 %}active{% endif %}" data-index="{{ loop.index - 1 }}">{{ sn_t }}</button>
+    {%- endfor %}
+  </span>
+</p>
+{% endif %}
 
 <hr id="mqc_header_hr">
 

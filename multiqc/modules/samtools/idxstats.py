@@ -4,9 +4,9 @@
 """ MultiQC submodule to parse output from Samtools idxstats """
 
 import logging
-import re
 from collections import OrderedDict, defaultdict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class IdxstatsReportMixin():
         """ Find Samtools idxstats logs and parse their data """
 
         self.samtools_idxstats = dict()
-        for f in self.find_log_files(config.sp['samtools']['idxstats']):
+        for f in self.find_log_files('samtools/idxstats'):
             parsed_data = parse_single_report(f['f'])
             if len(parsed_data) > 0:
                 if f['s_name'] in self.samtools_idxstats:
@@ -25,11 +25,14 @@ class IdxstatsReportMixin():
                 self.add_data_source(f, section='idxstats')
                 self.samtools_idxstats[f['s_name']] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.samtools_idxstats = self.ignore_samples(self.samtools_idxstats)
+
         if len(self.samtools_idxstats) > 0:
 
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.samtools_idxstats, 'multiqc_samtools_idxstats')
-            
+
             # Prep the data for the plots
             keys = list()
             pdata = dict()
@@ -99,7 +102,7 @@ class IdxstatsReportMixin():
                     except KeyError:
                         pdata[s_name][k] = 0
                         pdata_norm[s_name][k] = 0
-            
+
             # X/Y ratio plot
             if len(xy_counts) > 0:
                 xy_keys = OrderedDict()
@@ -113,13 +116,13 @@ class IdxstatsReportMixin():
                     'cpswitch_percent_label': 'Percent of X+Y Reads',
                     'cpswitch_c_active': False
                 }
-                self.sections.append({
-                    'name': 'XY counts',
-                    'anchor': 'samtools-idxstats-xy-counts',
-                    'content': plots.bargraph.plot(xy_counts, xy_keys, pconfig)
-                })
-                
-            
+                self.add_section (
+                    name = 'XY counts',
+                    anchor = 'samtools-idxstats-xy-counts',
+                    plot = bargraph.plot(xy_counts, xy_keys, pconfig)
+                )
+
+
             # Mapped reads per chr line plot
             pconfig = {
                 'id': 'samtools-idxstats-mapped-reads-plot',
@@ -133,14 +136,14 @@ class IdxstatsReportMixin():
                     {'name': 'Counts', 'ylab': '# mapped reads'}
                 ]
             }
-            self.sections.append({
-                'name': 'Mapped reads per contig',
-                'anchor': 'samtools-idxstats',
-                'content': '<p>The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
-                    'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.</p>'.format(cutoff*100) +
-                    plots.linegraph.plot([pdata_norm, pdata], pconfig)
-            })
-        
+            self.add_section (
+                name = 'Mapped reads per contig',
+                anchor = 'samtools-idxstats',
+                description = 'The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
+                    'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.'.format(cutoff*100),
+                plot = linegraph.plot([pdata_norm, pdata], pconfig)
+            )
+
         # Return the number of logs that were found
         return len(self.samtools_idxstats)
 
@@ -150,7 +153,7 @@ class IdxstatsReportMixin():
 
 def parse_single_report(f):
     """ Parse a samtools idxstats idxstats """
-    
+
     parsed_data = OrderedDict()
     for l in f.splitlines():
         s = l.split("\t")
@@ -159,4 +162,4 @@ def parse_single_report(f):
         except (IndexError, ValueError):
             pass
     return parsed_data
-    
+

@@ -1,20 +1,20 @@
 # Plotting Functions
 MultiQC plotting functions are held within `multiqc.plots` submodules.
-To use them, simply import this:
+To use them, simply import the modules you want, eg.:
 ```python
-from multiqc import plots
+from multiqc.plots import bargraph, linegraph
 ```
 
-Once you've done that, you should have access to the following plotting
+Once you've done that, you will have access to the corresponding plotting
 functions:
 
 ```python
-plots.bargraph.plot()
-plots.linegraph.plot()
-plots.scatter.plot()
-plots.table.plot()
-plots.beeswarm.plot()
-plots.heatmap.plot()
+bargraph.plot()
+linegraph.plot()
+scatter.plot()
+table.plot()
+beeswarm.plot()
+heatmap.plot()
 ```
 
 These have been designed to work in a similar manner to each other - you
@@ -23,16 +23,16 @@ and configuration options, and they return a string of HTML to add to the
 report. You can add this to the module introduction or sections as described
 above. For example:
 ```python
-self.sections.append({
-    'name': 'Module Section',
-    'anchor': 'mymod_section',
-    'content': plots.bargraph.plot(self.parsed_data, categories, pconfig)
-})
+self.add_section (
+    name = 'Module Section',
+    anchor = 'mymod_section',
+    plot = bargraph.plot(self.parsed_data, categories, pconfig)
+)
 ```
 
 ## Bar graphs
 Simple data can be plotted in bar graphs. Many MultiQC modules make use
-of stacked bar graphs. Here, the `plots.bargraph.plot()` function comes to
+of stacked bar graphs. Here, the `bargraph.plot()` function comes to
 the rescue. A basic example is as follows:
 ```python
 from multiqc import plots
@@ -46,7 +46,7 @@ data = {
         'aligned': 1275,
     }
 }
-html_content = plots.bargraph.plot(data)
+html_content = bargraph.plot(data)
 ```
 
 To specify the order of categories in the plot, you can supply a list of
@@ -54,7 +54,7 @@ dictionary keys. This can also be used to exclude a key from the plot.
 
 ```python
 cats = ['aligned', 'not_aligned']
-html_content = plots.bargraph.plot(data, cats)
+html_content = bargraph.plot(data, cats)
 ```
 
 If `cats` is given as a dict instead of a list, you can specify a nice name
@@ -85,18 +85,24 @@ config = {
     'logswitch': False,                     # Show the 'Log10' switch?
     'logswitch_active': False,              # Initial display with 'Log10' active?
     'logswitch_label': 'Log10',             # Label for 'Log10' button
+    'hide_zero_cats': True,                 # Hide categories where data for all samples is 0
     # Customising the plot
     'title': None,                          # Plot title
     'xlab': None,                           # X axis label
     'ylab': None,                           # Y axis label
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
+    'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
+    'yFloor': None,                         # Minimum value for automatic axis limit
+    'yMinRange': None,                      # Minimum range for axis
     'yDecimals': True,                      # Set to false to only show integer labels
     'ylab_format': None,                    # Format string for x axis labels. Defaults to {value}
     'stacking': 'normal',                   # Set to None to have category bars side by side
     'use_legend': True,                     # Show / hide the legend
     'click_func': None,                     # Javascript function to be called when a point is clicked
     'cursor': None,                         # CSS mouse cursor type.
+    'tt_decimals': 0,                       # Number of decimal places to use in the tooltip number
+    'tt_suffix': '',                        # Suffix to add after tooltip number
     'tt_percentages': True,                 # Show the percentages of each count in the tooltip
 }
 ```
@@ -104,23 +110,47 @@ config = {
 ### Switching datasets
 It's possible to have single plot with buttons to switch between different
 datasets. To do this, give a list of data objects (same formats as described
-above). Also add the following config options to supply names to the buttons
-and graph labels:
+above). Also add the following config options to supply names to the buttons:
+```python
+config = {
+    'data_labels': ['Reads', 'Bases']
+}
+```
+You can also customise the y-axis label and min/max values for each dataset:
 ```python
 config = {
     'data_labels': [
         {'name': 'Reads', 'ylab': 'Number of Reads'},
-        {'name': 'Frags', 'ylab': 'Percentage of Fragments', 'ymax':100}
+        {'name': 'Bases', 'ylab': 'Number of Base Pairs', 'ymax':100}
     ]
 }
 ```
 If supplying multiple datasets, you can also supply a list of category
-objects. Make sure that they are in the same order as the data. If not
-supplied, these will be guessed from the data keys. See the bismark module
-plots for an example of this in action.
+objects. Make sure that they are in the same order as the data.
+
+Categories should contain data keys, so if you're supplying a list of two datasets,
+you should supply a list of two sets of keys for the categories. MultiQC will try to
+guess categories from the data keys if categories are missing.
+
+For example, with two datasets supplied as above:
+```python
+cats = [
+    ['aligned_reads','unaligned_reads'],
+    ['aligned_base_pairs','unaligned_base_pairs'],
+]
+```
+Or with additional customisation such as name and colour:
+```python
+from collections import OrderedDict
+cats = [OrderedDict(), OrderedDict()]
+cats[0]['aligned_reads'] =        {'name': 'Aligned Reads',        'color': '#8bbc21'}
+cats[0]['unaligned_reads'] =      {'name': 'Unaligned Reads',      'color': '#f7a35c'}
+cats[1]['aligned_base_pairs'] =   {'name': 'Aligned Base Pairs',   'color': '#8bbc21'}
+cats[1]['unaligned_base_pairs'] = {'name': 'Unaligned Base Pairs', 'color': '#f7a35c'}
+```
 
 ### Interactive / Flat image plots
-Note that the `plots.bargraph.plot()` function can generate both interactive
+Note that the `bargraph.plot()` function can generate both interactive
 JavaScript (HighCharts) powered report plots _and_ flat image plots made using
 MatPlotLib. This choice is made within the function based on config variables
 such as number of dataseries and command line flags.
@@ -144,7 +174,7 @@ data = {
         '<x val 2>': '<y val 2>',
     }
 }
-html_content = plots.linegraph.plot(data)
+html_content = linegraph.plot(data)
 ```
 
 Additionally, a config dict can be supplied. The defaults are as follows:
@@ -180,13 +210,15 @@ config = {
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     'yPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
     'xPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
+    'xLabelFormat': '{value}',   # Format string for the axis labels
+    'yLabelFormat': '{value}',   # Format string for the axis labels
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
     'cursor': None               # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
     'reversedStacks': False      # Reverse the order of the category stacks. Defaults True for plots with Log10 option
 }
-html_content = plots.linegraph.plot(data, config)
+html_content = linegraph.plot(data, config)
 ```
 
 ### Switching datasets
@@ -208,26 +240,28 @@ plots for an example of this in action.
 
 ### Additional data series
 Sometimes, it's good to be able to specify specific data series manually.
-To do so, set `config['extra_series']` as a `list` of `dict`s. For example,
-the Preseq module does this to create the dotted `x = y` reference line:
+To do this, use `config['extra_series']`. For a single extra line this can
+be a dict (as below). For multiple lines, use a list of dicts. For multiple
+dataset plots, use a list of list of dicts.
+
+For example, to add a dotted `x = y` reference line:
 ```python
 from multiqc import plots
 config = {
-    'extra_series': [
-        {
-            'name': 'x = y',
-            'data': [[0, 0], [maxval, maxval]],
-            'dashStyle': 'Dash',
-            'lineWidth': 1,
-            'color': '#000000',
-            'marker': { 'enabled': False },
-            'enableMouseTracking': False,
-            'showInLegend': False,
-        }
-    ]
+    'extra_series': {
+        'name': 'x = y',
+        'data': [[0, 0], [max_x_val, max_y_val]],
+        'dashStyle': 'Dash',
+        'lineWidth': 1,
+        'color': '#000000',
+        'marker': { 'enabled': False },
+        'enableMouseTracking': False,
+        'showInLegend': False,
+    }
 }
-html_content = plots.linegraph.plot(data, config)
+html_content = linegraph.plot(data, config)
 ```
+
 
 
 ## Scatter Plots
@@ -238,17 +272,38 @@ not identical:
 ```python
 from multiqc import plots
 data = {
-    'sample 1': [{
+    'sample 1': {
         x: '<x val>',
         y: '<y val>'
-    }],
-    'sample 2': [{
+    },
+    'sample 2': {
         x: '<x val>',
         y: '<y val>'
-    }]
+    }
 }
-html_content = plots.scatter.plot(data)
+html_content = scatter.plot(data)
 ```
+
+If you want more than one data point per sample, you can supply a list of
+dictionaries instead. You can also optionally specify point colours and
+sample name suffixes (these are appended to the sample name):
+```python
+data = {
+    'sample 1': [
+        { x: '<x val>', y: '<y val>', color: '#a6cee3', name: 'Type 1' },
+        { x: '<x val>', y: '<y val>', color: '#1f78b4', name: 'Type 2' }
+    ],
+    'sample 2': [
+        { x: '<x val>', y: '<y val>', color: '#b2df8a', name: 'Type 1' },
+        { x: '<x val>', y: '<y val>', color: '#33a02c', name: 'Type 2' }
+    ]
+}
+```
+
+Remember that MultiQC reports can contain large numbers of samples, so this plot type
+is **not** suitable for large quantities of data - 20,000 genes might look good
+for one sample, but when someone runs MultiQC with 500 samples, it will crash
+the browser and be impossible to interpret.
 
 See the above docs about line plots for most config options. The scatter plot
 has a handful of unique ones in addition:
@@ -261,12 +316,6 @@ pconfig = {
     'square': False                 # Force the plot to stay square? (Maintain aspect ratio)
 }
 ```
-
-Note that multiple dicts with `x` and `y` values can be specified - these will
-share the same sample names. Please note that MultiQC reports can contain large
-numbers of samples, so this plot type is not suitable for large quantities of data
-(20,000 genes might look good for one sample, but when someone runs MultiQC with
-500 samples, it will crash / look horrible).
 
 ## Creating a table
 Tables should work just like the functions above (most like the bar
@@ -287,7 +336,7 @@ Finally, a the function accepts a third parameter, a config dictionary.
 This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 
-The default header keys and table config options are:
+The default header keys are:
 ```python
 single_header = {
     'namespace': '',                # Name for grouping in table
@@ -295,31 +344,33 @@ single_header = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
-    'scale': 'GnBu',                # Colour scale for colour coding
-    'colour': '<auto from palette>',# Colour for column grouping
-    'format': '{:.1f}',             # Output format() string
+    'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
+    'colour': '<auto>',             # Colour for column grouping
+    'suffix': None,                 # Suffix for value (eg. '%')
+    'format': '{:,.1f}',            # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
 }
+```
+A third parameter can be specified with settings for the whole table:
+```python
 table_config = {
+    'namespace': '',                         # Module / section that table is in. Prepends header descriptions.
     'id': '<random string>',                 # ID used for the table
     'table_title': '<table id>',             # Title of the table. Used in the column config modal
     'save_file': False,                      # Whether to save the table data to a file
     'raw_data_fn':'multiqc_<table_id>_table' # File basename to use for raw data file
+    'sortRows': True                         # Whether to sort rows alphabetically
+    'col1_header': 'Sample Name'             # The header used for the first column
     'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
-Finally, a third parameter can be specified with table settings.
-```python
-tconfig = {
-    'id': None,             # ID for the table in the HTML
-    'table_title': None,    # Title printed above the table
-    'save_file': False,     # Save the data in the table to a file in `multiqc_data`
-    'raw_data_fn': None,    # Filename to use if saving data file
-    'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
-}
-```
+Header keys such as `max`, `min` and `scale` can also be specified in the table config.
+These will then be applied to all columns.
+
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
+![color brewer](images/cbrewer_scales.png)
 
 A very basic example is shown below:
 ```python
@@ -333,7 +384,7 @@ data = {
         'not_aligned': 7328,
     }
 }
-table_html = plots.table.plot(data)
+table_html = table.plot(data)
 ```
 
 A more complicated version with ordered columns, defaults and column-specific
@@ -355,23 +406,21 @@ headers = OrderedDict()
 headers['aligned_percent'] = {
     'title': '% Aligned',
     'description': 'Percentage of reads that aligned',
-    'format': '{:.1f}%',
     'suffix': '%',
     'max': 100,
 }
 headers['aligned'] = {
-    'title': 'M Aligned',
-    'description': 'Aligned Reads (millions)',
-    'format': '{:.2f}',
+    'title': '{} Aligned'.format(config.read_count_prefix),
+    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
     'shared_key': 'read_count',
-    'modify': lambda x: x / 1000000
+    'modify': lambda x: x * config.read_count_multiplier
 }
 config = {
     'namespace': 'My Module',
     'min': 0,
     'scale': 'GnBu'
 }
-table_html = plots.table.plot(data, headers, config)
+table_html = table.plot(data, headers, config)
 ```
 
 ## Beeswarm plots (dot plots)
@@ -388,7 +437,7 @@ data = {
         'aligned': 1275,
     }
 }
-beeswarm_html = plots.beeswarm.plot(data)
+beeswarm_html = beeswarm.plot(data)
 ```
 The function also accepts the same headers and config parameters.
 
@@ -397,7 +446,7 @@ Heatmaps expect data in the structure of a list of lists. Then, a list
 of sample names for the x-axis, and optionally for the y-axis (defaults
 to the same as the x-axis).
 ```python
-plots.heatmap.plot(data, xcats, ycats, pconfig)
+heatmap.plot(data, xcats, ycats, pconfig)
 ```
 
 A simple example:
@@ -411,7 +460,7 @@ hmdata = [
     [0.3, 0.8, 0.7, 0.6, 0.9, 1],
 ]
 names = [ 'one', 'two', 'three', 'four', 'five', 'six' ]
-hm_html = plots.heatmap.plot(hmdata, names)
+hm_html = heatmap.plot(hmdata, names)
 ```
 
 Much like the other plots, you can change the way that the heatmap looks
@@ -467,7 +516,7 @@ helper functions to make your life easier.
 `plot_xy_line_graph (target, ds)`
 
 Plots a line graph with multiple series of (x,y) data pairs. Used by
-the [self.plot_xy_data()](CONTRIBUTING.md#selfplot_xy_data-data-config)
+the [linegraph.plot()](http://multiqc.info/docs/#line-graphs)
 python function.
 
 Data and configuration must be added to the document level
@@ -539,7 +588,7 @@ An example of the markup expected, with the function being called:
 `plot_stacked_bar_graph (target, ds)`
 
 Plots a bar graph with multiple series containing multiple categories.
-Used by the [self.plot_bargraph()](CONTRIBUTING.md#selfplot_bargraph-data-cats-config)
+Used by the [bargraph.plot()](http://multiqc.info/docs/#bar-graphs)
 python function.
 
 Data and configuration must be added to the document level
@@ -663,5 +712,15 @@ $('#YOUR_PLOT_ID').on('mqc_original_series_click', function(e, name){
 $('#YOUR_PLOT_ID').on('mqc_original_chg_source', function(e, name){
     // A plot with original images has had a request to change the
     // original image source (eg. pressing Prev / Next)
+});
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_image', function(e, cfg){
+    // A trigger to export an image of the plot. cfg contains
+    // config variables for the requested image.
+});
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_data', function(e, cfg){
+    // A trigger to export a data file of the plot. cfg contains
+    // config variables for the requested data.
 });
 ```

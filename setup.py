@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 
 from setuptools import setup, find_packages
 
-version = '0.9.dev0'
+version = '1.1dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -48,46 +48,60 @@ setup(
     zip_safe = False,
     scripts = ['scripts/multiqc'],
     install_requires = [
-        'jinja2',
-        'simplejson',
-        'pyyaml',
         'click',
-        'matplotlib'
+        'future>0.14.0',
+        'lzstring',
+        'jinja2>=2.9',
+        'matplotlib',
+        'numpy',
+        'pyyaml',
+        'simplejson',
+        'spectra',
     ],
     entry_points = {
         'multiqc.modules.v1': [
+            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
+            'busco = multiqc.modules.busco:MultiqcModule',
+            'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
+            'htseq = multiqc.modules.htseq:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
+            'peddy = multiqc.modules.peddy:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
+            'rna_seqc = multiqc.modules.rna_seqc:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
             'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
+            'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
-            'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
+            'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
             'default_dev = multiqc.templates.default_dev',
+            'sections = multiqc.templates.sections',
             'simple = multiqc.templates.simple',
             'geo = multiqc.templates.geo',
         ],
@@ -95,8 +109,9 @@ setup(
             # 'my-new-option = myplugin.cli:new_option'
         # ],
         # 'multiqc.hooks.v1': [
-            # 'execution_start = myplugin.hooks:execution_start',
+            # 'before_config = myplugin.hooks:before_config',
             # 'config_loaded = myplugin.hooks:config_loaded',
+            # 'execution_start = myplugin.hooks:execution_start',
             # 'before_modules = myplugin.hooks:before_modules',
             # 'after_modules = myplugin.hooks:after_modules',
             # 'before_report_generation = myplugin.hooks:before_report_generation',

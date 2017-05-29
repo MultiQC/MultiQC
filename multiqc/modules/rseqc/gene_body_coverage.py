@@ -6,7 +6,7 @@ http://rseqc.sourceforge.net/#genebody-coverage-py """
 from collections import OrderedDict
 import logging
 
-from multiqc import config, plots
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -14,17 +14,17 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find RSeQC gene_body_coverage reports and parse their data """
-    
+
     # Set up vars
     self.gene_body_cov_hist_counts = dict()
     self.gene_body_cov_hist_percent = dict()
-    
+
     # TODO - Do separate parsing step to find skewness values
     # and add these to the general stats table?
-    
+
     # Go through files and parse data
-    for f in self.find_log_files(config.sp['rseqc']['gene_body_coverage']):
-        
+    for f in self.find_log_files('rseqc/gene_body_coverage'):
+
         # RSeQC >= v2.4
         if f['f'].startswith('Percentile'):
             keys = []
@@ -44,8 +44,8 @@ def parse_reports(self):
                         self.gene_body_cov_hist_counts[s_name][int(keys[k])] = float(var)
             if nrows == 0:
                 log.warning("Empty geneBodyCoverage file found: {}".format(f['fn']))
-                
-        
+
+
         # RSeQC < v2.4
         elif f['f'].startswith('Total reads'):
             if f['s_name'].endswith('.geneBodyCoverage'):
@@ -65,16 +65,19 @@ def parse_reports(self):
             if nrows == 0:
                 del self.gene_body_cov_hist_counts[f['s_name']]
                 log.warning("Empty geneBodyCoverage file found: {}".format(f['fn']))
-    
+
+    # Filter to strip out ignored sample names
+    self.gene_body_cov_hist_counts = self.ignore_samples(self.gene_body_cov_hist_counts)
+
     if len(self.gene_body_cov_hist_counts) > 0:
-        
+
         # Make a normalised percentage version of the data
         for s_name in self.gene_body_cov_hist_counts:
             self.gene_body_cov_hist_percent[s_name] = OrderedDict()
             total = sum( self.gene_body_cov_hist_counts[s_name].values() )
             for k, v in self.gene_body_cov_hist_counts[s_name].items():
                 self.gene_body_cov_hist_percent[s_name][k] = (v/total)*100
-        
+
         # Add line graph to section
         pconfig = {
             'id': 'rseqc_gene_body_coverage_plot',
@@ -89,16 +92,16 @@ def parse_reports(self):
                 {'name': 'Counts', 'ylab': 'Coverage'}
             ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>'
-        self.sections.append({
-            'name': 'Gene Body Coverage',
-            'anchor': 'rseqc-gene_body_coverage',
-            'content': "<p>"+p_link+" calculates read coverage over gene bodies." \
+        self.add_section (
+            name = 'Gene Body Coverage',
+            anchor = 'rseqc-gene_body_coverage',
+            description = '<a href="http://rseqc.sourceforge.net/#genebody-coverage-py" target="_blank">Gene Body Coverage</a>' \
+                " calculates read coverage over gene bodies." \
                 " This is used to check if reads coverage is uniform and" \
-                " if there is any 5' or 3' bias.</p>" +
-                plots.linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig)
-        })
-    
+                " if there is any 5' or 3' bias.",
+            plot = linegraph.plot([self.gene_body_cov_hist_percent, self.gene_body_cov_hist_counts], pconfig)
+        )
+
     # Return number of samples found
     return len(self.gene_body_cov_hist_counts)
-    
+

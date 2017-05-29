@@ -9,7 +9,7 @@ multiqc .
 That's it! MultiQC will scan the specified directories and produce a report
 based on details found in any log files that it recognises.
 
-See [Using MultiQC Reports](reports.md) for more information about how
+See [Using MultiQC Reports](http://multiqc.info/docs/#using-multiqc-reports) for more information about how
 to use the generated report.
 
 For a description of all command line parameters, run `multiqc --help`.
@@ -32,6 +32,17 @@ multiqc . --ignore *_R2*
 multiqc . --ignore run_two/
 multiqc . --ignore */run_three/*/fastqc/*_R2.zip
 ```
+
+Some modules get sample names from the contents of the file and not the filename
+(for example, `stdout` logs can contain multiple samples). In this case, you can
+skip samples by name instead:
+```
+multiqc . --ignore-samples sample_3*
+```
+These strings are matched using glob logic (`*` and `?` are wildcards).
+
+All of these settings can be saved in a MultiQC config file so that you don't have
+to type them on the command line for every run.
 
 Finally, you can supply a file containing a list of file paths, one per row.
 MultiQC only search the listed files.
@@ -90,7 +101,7 @@ different styling by using the `-t`/`--template` option. The available templates
 are listed with `multiqc --help`.
 
 If you're interested in creating your own custom template, see the
-[writing new templates](templates.md) section.
+[writing new templates](http://multiqc.info/docs/#writing-new-templates) section.
 
 ## PDF Reports
 Whilst HTML is definitely the format of choice for MultiQC reports due to
@@ -144,7 +155,7 @@ To zip the data directory, use the `-z`/`--zip-data-dir` flag.
 In addition to the HTML report, it's also possible to get MultiQC to save
 plots as stand alone files. You can do this with the `-p`/`--export` command
 line flag. By default, plots will be saved in a directory called `multiqc_plots`
-as `.png`, `.svg` and `.pdf` files.
+as `.png`, `.svg` and `.pdf` files. Raw data for the plots are also saved to files.
 
 You can instruct MultiQC to always do this by setting the `export_plots` config
 option to `true`, though note that this will add a few seconds on to execution time.
@@ -156,7 +167,7 @@ Note that not all plot types are yet supported, so you may find some plots are
 missing.
 
 > Note: You can always save static image versions of plots from within
-> MultiQC reports, using the [Export toolbox](#export) in the side bar.
+> MultiQC reports, using the [Export toolbox](http://multiqc.info/docs/#export) in the side bar.
 
 ## Choosing which modules to run
 Sometimes, it's desirable to choose which MultiQC modules run. This could be

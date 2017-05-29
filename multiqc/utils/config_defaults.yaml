@@ -13,7 +13,7 @@
 title: null
 subtitle: null
 intro_text: null
-custom_message: null
+report_comment: null
 report_header_info: null
 config_file: null
 custom_logo: null
@@ -22,6 +22,9 @@ custom_logo_title: null
 simple_output: false
 template: 'default'
 pandoc_template: null
+read_count_multiplier: 0.000001
+read_count_prefix: 'M'
+read_count_desc: 'millions'
 output_fn_name: 'multiqc_report.html'
 data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
@@ -39,16 +42,23 @@ plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100
 num_datasets_plot_limit: 50
+collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
+decimalPoint_format: null
+thousandsSep_format: null
 
 fn_ignore_dirs:
     - 'multiqc_data'
-fn_ignore_paths: []
+fn_ignore_paths:
+    - '*/work/??/??????????????????????????????' # Nextflow work directories - always same hash lengths
+sample_names_ignore: []
+sample_names_ignore_re: []
+sample_names_rename_buttons: []
+sample_names_rename: []
 no_version_check: false
-log_filesize_limit: 5000000
+log_filesize_limit: 10000000
 report_readerrors: false
-report_imgskips: false
 skip_generalstats: false
 data_format_extensions:
     tsv: 'txt'
@@ -58,6 +68,10 @@ export_plot_formats:
     - 'png'
     - 'svg'
     - 'pdf'
+
+# Custom Config settings
+custom_content:
+    order: []
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
@@ -78,6 +92,7 @@ fn_clean_exts:
     - '.stderr'
     - '.out'
     - 'Log.final'
+    - 'ReadsPerGene'
     - '.flagstat'
     - '_star_aligned'
     - '_fastqc'
@@ -99,6 +114,9 @@ fn_clean_exts:
     - '.junctionSaturation_plot.r'
     - '.pos.DupRate.xls'
     - '.GC.xls'
+    - '_slamdunk'
+    - '_bismark'
+
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
@@ -109,6 +127,13 @@ fn_clean_trim:
     - '.r'
     - '_val'
     - '.idxstats'
+    - '_trimmed'
+    - '.csv'
+    - '.yaml'
+    - '.yml'
+    - '.json'
+    - '_mqc'
+    - 'short_summary_'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -125,19 +150,32 @@ fn_ignore_files:
     - '*.vcf'
     - '*.txt.gz'
 
-# Order that modules should appear in report. Try to list in order of analysis,
-# eg. FastQC is usually the first step, so should be last in this list.
+# Favourite modules that should appear at the top in preference
+# This is in addition to those below. These appear above _all_ other
+# modules (even those not present in the below list).
+top_modules: []
+
+# Order that modules should appear in report. Try to list in order of analysis.
 module_order:
-    # Post-alignment analysis results
-    - 'quast'
-    - 'snpeff'
+    # MultiQC general module for catching output from custom scripts
+    - 'custom_content'
+    # Post-alignment QC
+    - 'peddy'
+    - 'methylQA'
     - 'qualimap'
+    - 'preseq'
+    - 'quast'
+    - 'rna_seqc'
+    - 'rseqc'
+    - 'busco'
+    - 'goleft_indexcov'
+    # Post-alignment processing
+    - 'snpeff'
+    - 'gatk'
+    - 'htseq'
     - 'bcftools'
     - 'featureCounts'
-    - 'methylQA'
-    - 'rseqc'
     - 'picard'
-    - 'preseq'
     - 'prokka'
     - 'samblaster'
     - 'samtools'
@@ -148,13 +186,17 @@ module_order:
     - 'hicup'
     - 'salmon'
     - 'kallisto'
+    - 'slamdunk'
     - 'star'
     - 'tophat'
     - 'bowtie2'
     - 'bowtie1'
     # Pre-alignment QC
+    - 'adapterRemoval'
     - 'cutadapt'
     - 'trimmomatic'
     - 'skewer'
+    - 'sortmerna'
     - 'fastq_screen'
     - 'fastqc'
+    - 'clusterflow'

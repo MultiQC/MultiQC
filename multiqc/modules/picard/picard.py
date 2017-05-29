@@ -6,7 +6,8 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Picard submodules
 from . import MarkDuplicates
@@ -17,6 +18,8 @@ from . import HsMetrics
 from . import OxoGMetrics
 from . import RnaSeqMetrics
 from . import AlignmentSummaryMetrics
+from . import RrbsSummaryMetrics
+from . import WgsMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -34,18 +37,17 @@ class MultiqcModule(BaseMultiqcModule):
         href='http://broadinstitute.github.io/picard/',
         info="is a set of Java command line tools for manipulating high-"\
         "throughput sequencing data.")
-        
+
         # Set up class objects to hold parsed data
-        self.sections = list()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
         n = dict()
-        
+
         # Call submodule functions
         n['MarkDuplicates'] = MarkDuplicates.parse_reports(self)
         if n['MarkDuplicates'] > 0:
             log.info("Found {} MarkDuplicates reports".format(n['MarkDuplicates']))
-        
+
         n['InsertSizeMetrics'] = InsertSizeMetrics.parse_reports(self)
         if n['InsertSizeMetrics'] > 0:
             log.info("Found {} InsertSizeMetrics reports".format(n['InsertSizeMetrics']))
@@ -57,31 +59,39 @@ class MultiqcModule(BaseMultiqcModule):
         n['GcBiasMetrics'] = GcBiasMetrics.parse_reports(self)
         if n['GcBiasMetrics'] > 0:
             log.info("Found {} GcBiasMetrics reports".format(n['GcBiasMetrics']))
-        
+
         n['HsMetrics'] = HsMetrics.parse_reports(self)
         if n['HsMetrics'] > 0:
             log.info("Found {} HsMetrics reports".format(n['HsMetrics']))
-        
+
         n['OxoGMetrics'] = OxoGMetrics.parse_reports(self)
         if n['OxoGMetrics'] > 0:
             log.info("Found {} OxoGMetrics reports".format(n['OxoGMetrics']))
-            
+
         n['RnaSeqMetrics'] = RnaSeqMetrics.parse_reports(self)
         if n['RnaSeqMetrics'] > 0:
             log.info("Found {} RnaSeqMetrics reports".format(n['RnaSeqMetrics']))
-        
+
         n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
         if n['AlignmentMetrics'] > 0:
             log.info("Found {} AlignmentSummaryMetrics reports".format(n['AlignmentMetrics']))
-        
+
+        n['RrbsSummaryMetrics'] = RrbsSummaryMetrics.parse_reports(self)
+        if n['RrbsSummaryMetrics'] > 0:
+            log.info("Found {} RrbsSummaryMetrics reports".format(n['RrbsSummaryMetrics']))
+
+        n['WgsMetrics'] = WgsMetrics.parse_reports(self)
+        if n['WgsMetrics'] > 0:
+            log.info("Found {} WgsMetrics reports".format(n['WgsMetrics']))
+
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
-        
+
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
-    
+
     # Helper functions
     def multiply_hundred(self, val):
         try:

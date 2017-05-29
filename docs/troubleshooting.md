@@ -21,7 +21,7 @@ lists each source file used.
 
 To solve this, try running MultiQC with the `-d` and `-s` flags.
 The [Clashing sample names](http://multiqc.info/docs/#clashing-sample-names)
-section of the docs (`usage.md`) explains this in more detail.
+section of the docs explains this in more detail.
 
 ## No logs found for a tool
 In this case, you have run a bioinformatics tool and have some log files in
@@ -84,8 +84,7 @@ Problem solved! See more
 [here](https://www.continuum.io/blog/developer-blog/anaconda-25-release-now-mkl-optimizations).
 
 If you're not using Conda, try installing MultiQC with that instead. You
-can find instructions [here](http://multiqc.info/docs/#installing-with-conda)
-(`installation.md`).
+can find instructions [here](http://multiqc.info/docs/#installing-with-conda).
 
 ## Locale Error Messages
 A more obscure problem is an error from the MatPlotLib python library

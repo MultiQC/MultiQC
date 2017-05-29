@@ -4,9 +4,9 @@
 """ MultiQC submodule to parse output from GATK varianteval """
 
 import logging
-import re
 from collections import OrderedDict
-from multiqc import config, plots
+from multiqc import config
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class VariantEvalMixin():
         """ Find GATK varianteval logs and parse their data """
 
         self.gatk_varianteval = dict()
-        for f in self.find_log_files(config.sp['gatk']['varianteval'], filehandles=True):
+        for f in self.find_log_files('gatk/varianteval', filehandles=True):
             parsed_data = parse_single_report(f['f'])
             if len(parsed_data) > 0:
                 if f['s_name'] in self.gatk_varianteval:
@@ -25,11 +25,14 @@ class VariantEvalMixin():
                 self.add_data_source(f, section='varianteval')
                 self.gatk_varianteval[f['s_name']] = parsed_data
 
+        # Filter to strip out ignored sample names
+        self.gatk_varianteval = self.ignore_samples(self.gatk_varianteval)
+
         if len(self.gatk_varianteval) > 0:
 
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.gatk_varianteval, 'multiqc_gatk_varianteval')
-            
+
             # Get consensus TiTv references
             titv_ref = None
             for s_name in self.gatk_varianteval:
@@ -38,7 +41,7 @@ class VariantEvalMixin():
                 elif titv_ref != self.gatk_varianteval[s_name]['titv_reference']:
                     titv_ref = 'Multiple'
                     break
-            
+
             # General Stats Table
             varianteval_headers = dict()
             varianteval_headers['known_titv'] = {
@@ -56,29 +59,29 @@ class VariantEvalMixin():
                 'shared_key': 'titv_ratio'
             }
             self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, 'GATK VariantEval')
-            
+
             # Variant Counts plot
-            self.sections.append({
-                'name': 'Variant Counts',
-                'anchor': 'gatk-count-variants',
-                'content': count_variants_barplot(self.gatk_varianteval)
-            })
-            
+            self.add_section (
+                name = 'Variant Counts',
+                anchor = 'gatk-count-variants',
+                plot = count_variants_barplot(self.gatk_varianteval)
+            )
+
             # Compare Overlap Table
-            self.sections.append({
-                'name': 'Compare Overlap',
-                'anchor': 'gatk-compare-overlap',
-                'content': comp_overlap_table(self.gatk_varianteval)
-            })
-            
-        
+            self.add_section (
+                name = 'Compare Overlap',
+                anchor = 'gatk-compare-overlap',
+                plot = comp_overlap_table(self.gatk_varianteval)
+            )
+
+
         # Return the number of logs that were found
         return len(self.gatk_varianteval)
 
 
 def parse_single_report(f):
     """ Parse a gatk varianteval varianteval """
-    
+
     data = dict()
     in_CompOverlap = False
     in_CountVariants = False
@@ -146,7 +149,7 @@ def parse_single_report(f):
                             data['novel_titv'] = float(d['tiTvRatio'])
                     except KeyError:
                         in_TiTv = False
-    
+
     return data
 
 
@@ -161,14 +164,14 @@ def count_variants_barplot(data):
     keys['symbolic'] = {'name': 'Symbolic'}
     keys['mixed'] = {'name': 'Mixed'}
     keys['nocalls'] = {'name': 'No-calls'}
-    
+
     plot_conf = {
         'id': 'gatk_varianteval_variant_plot',
         'title': 'GATK VariantEval Variant Counts',
         'ylab': '# Variants',
         'cpswitch_counts_label': 'Number of Variants'
     }
-    return plots.bargraph.plot(data, keys, plot_conf)
+    return bargraph.plot(data, keys, plot_conf)
 
 
 def comp_overlap_table(data):
@@ -179,8 +182,9 @@ def comp_overlap_table(data):
         'description': 'Ratio of known variants found in the reference set.',
         'namespace': 'GATK',
         'min': 0,
-        'max': 1,
-        'format': '{:.2f}%',
+        'max': 100,
+        'suffix': '%',
+        'format': '{:,.2f}',
         'scale': 'Blues',
     }
     headers['concordant_rate'] = {
@@ -188,27 +192,31 @@ def comp_overlap_table(data):
         'description': 'Ratio of variants matching alleles in the reference set.',
         'namespace': 'GATK',
         'min': 0,
-        'max': 1,
-        'format': '{:.2f}%',
+        'max': 100,
+        'suffix': '%',
+        'format': '{:,.2f}',
         'scale': 'Blues',
     }
     headers['eval_variants'] = {
-        'title': 'Evaluated variants',
-        'description': 'Number of called variants.',
+        'title': 'M Evaluated variants',
+        'description': 'Number of called variants (millions)',
         'namespace': 'GATK',
-        'min': 0
+        'min': 0,
+        'modify': lambda x: float(x) / 1000000.0
     }
     headers['known_sites'] = {
-        'title': 'Known sites',
-        'description': 'Number of known variants.',
+        'title': 'M Known sites',
+        'description': 'Number of known variants (millions)',
         'namespace': 'GATK',
-        'min': 0
+        'min': 0,
+        'modify': lambda x: float(x) / 1000000.0
     }
     headers['novel_sites'] = {
-        'title': 'Novel sites',
-        'description': 'Number of novel variants.',
+        'title': 'M Novel sites',
+        'description': 'Number of novel variants (millions)',
         'namespace': 'GATK',
-        'min': 0
+        'min': 0,
+        'modify': lambda x: float(x) / 1000000.0
     }
-    table_html = plots.table.plot(data, headers, {'id': 'gatk_compare_overlap'})
+    table_html = table.plot(data, headers, {'id': 'gatk_compare_overlap', 'table_title': 'GATK - Compare Overlap'})
     return table_html
