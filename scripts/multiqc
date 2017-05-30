@@ -161,7 +161,6 @@ logger = config.logger
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
-
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -434,50 +433,40 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         # Check for existing reports and remove if -f was specified
         # We repeat this check in case the output name has been altered since launch
         config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-        if os.path.exists(config.output_fn):
+        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+	if os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
             if config.force:
                 logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
                 os.remove(config.output_fn)
-            else:
-                report_num = 0
+		logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+            	os.remove(config.data_dir)
+	    else:
+                report_num = 1 
                 logger.info("Use -f or --force to overwrite existing reports")
-                while os.path.exists(output_name):
-                    output_name, file_ending = os.path.splitext(config.output_fn)
-                    output_name.append("_{}".format(report_num))
-                    output_name.append(file_ending)
-                    report_num += 1
-                #We keep going until a new name is found, set the new name as the name to use. 
-                config.output_fn=output_name
-                #shutil.rmtree(tmp_dir)
-                #sys.exit(1)
+               	while os.path.exists(config.output_fn) or os.path.exists(config.output_fn):
+    			report_base, report_ext = os.path.splitext(config.output_fn_name)
+			dir_base, dir_ext = os.path.splitext(config.data_dir)
+    			config.output_fn = os.path.join(config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext) )
+    			config.data_dir = os.path.join(config.output_dir, "{}_{}{}".format(dir_base, report_num, dir_ext) )
+			report_num += 1
+			config.output_fn_name = os.path.basename(config.output_fn)
+			config.output_dir_name = os.path.basename(config.data_dir)
+                if report_num > 1: # Only print the warning if a new number was generated. 
+			logger.warning("Previous Multiqc report found, sawing new report as {}".format(config.output_fn_name))
+			logger.warning("Previous Multiqc data directiry found, sawing new data directory as {}".format(config.output_dir_name))
         # Make directories for report if not already existing
         if not os.path.exists(os.path.dirname(config.output_fn)):
             os.makedirs(os.path.dirname(config.output_fn))
-        logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+            logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+	if not os.path.exists(os.path.dirname(config.data_dir)):
+             os.makedirs(os.path.dirname(config.data_dir))
+             logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
 
-        # Now do the same for the data directory
-        if config.make_data_dir == False:
-            logger.info("Data        : None")
-        else:
-            config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-            if os.path.exists(config.data_dir):
-                if config.force:
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
-                    shutil.rmtree(config.data_dir)
-                else:
-                    data_num = 0
-                    output_dir = config.data_dir_name
-                    output_dir.append("_{}".format(report_num))
-                    output_dir.append(file_ending)
-                    config.data_dir_name = output_dir
-            os.makedirs(config.data_dir_name)
-            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
-
-            # Modules have run, so data directory should be complete by now. Move its contents.
-            for f in os.listdir(config.data_tmp_dir):
-                fn = os.path.join(config.data_tmp_dir, f)
-                logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
-                shutil.move(fn, config.data_dir)
+        # Modules have run, so data directory should be complete by now. Move its contents.
+        for f in os.listdir(config.data_tmp_dir):
+            fn = os.path.join(config.data_tmp_dir, f)
+            logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
+            shutil.move(fn, config.data_dir)
 
         # Finally, copy across the plots
         if config.export_plots:
