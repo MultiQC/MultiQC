@@ -341,7 +341,7 @@ def general_stats_headers (self):
     hidecovs = [str(i) for i in hidecovs]
 
     self.general_stats_headers['avg_gc'] = {
-        'title': 'GC',
+        'title': '% GC',
         'description': 'Mean GC content',
         'max': 100,
         'min': 0,
