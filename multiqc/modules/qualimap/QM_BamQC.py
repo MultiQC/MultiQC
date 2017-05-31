@@ -238,7 +238,7 @@ def report_sections(self):
         rates_within_threshs = dict()
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
             total = total_bases_by_sample[s_name]
-            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max_x + 1))
+            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max([int (c) for c in self.covs]) + 1))
             for c in self.covs:
                 if int(c) in rates_within_threshs[s_name]:
                     self.general_stats_data[s_name]['{}_x_pc'.format(c)] = rates_within_threshs[s_name][int(c)]
