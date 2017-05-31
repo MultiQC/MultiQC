@@ -65,7 +65,10 @@ class MultiqcModule(BaseMultiqcModule):
         nohits_pct = None
         for l in fh:
             if '#Reads in subset:' in l:
-                parsed_data['total_reads'] = int(l.split()[-1])
+                try:
+                    parsed_data['total_reads'] = int(l.split()[-1])
+                except ValueError:
+                    pass
             elif l.startswith('%Hit_no_libraries:'):
                 parsed_data['No hits'] = {'percentages': {'one_hit_one_library': float(l[19:]) }}
                 nohits_pct = float(l[19:])
