@@ -341,8 +341,8 @@ def general_stats_headers (self):
     hidecovs = [str(i) for i in hidecovs]
 
     self.general_stats_headers['avg_gc'] = {
-        'title': 'Avg. GC',
-        'description': 'Average GC content',
+        'title': 'GC',
+        'description': 'Mean GC content',
         'max': 100,
         'min': 0,
         'suffix': '%',
@@ -350,7 +350,7 @@ def general_stats_headers (self):
         'format': '{:,.0f}'
     }
     self.general_stats_headers['median_insert_size'] = {
-        'title': 'Insert Size',
+        'title': 'Ins. size',
         'description': 'Median insert size',
         'min': 0,
         'suffix': 'bp',

@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
                         },
                     }
                     if sn in real_counts_unique:
-                        u_reads = int(real_counts_unique[sn])
+                        u_reads = float(real_counts_unique[sn])
                         point['data'] = [[t_reads, u_reads]]
                         point['name'] = sn + ': actual read count vs. deduplicated read count (externally calculated)'
                         series.append(point)
@@ -191,14 +191,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plot config
         if self.counts_in_1x is not None:
-            if max_y > 10:
-                tt_label = '<b>{point.x:,.0f}x total</b>: {point.y:,.0f}x unique'
-            else:
-                tt_label = '<b>{point.x:,.2f}x total</b>: {point.y:,.2f}x unique'
-            labelFormat = '{value}x'
+            precision = '2'
+            if max_y > 30:   # no need to be so precise when the depth numbers are high
+                precision = '1'
+            if max_y > 300:  # when the depth are very high, decimal digits are excessive
+                precision = '0'
+            tt_label = '<b>{point.x:,.' + precision + 'f}x total</b>: {point.y:,.' + precision + 'f}x unique'
+            label_format = '{value}x'
         else:
             tt_label = '<b>{point.x:,.0f} total molecules</b>: {point.y:,.0f} unique molecules'
-            labelFormat = None
+            label_format = None
 
         pconfig = {
             'id': 'preseq_plot',
@@ -208,13 +210,15 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
             'xmin': 0,
             'tt_label': tt_label,
-            'yLabelFormat': labelFormat,
-            'xLabelFormat': labelFormat,
+            'yLabelFormat': label_format,
+            'xLabelFormat': label_format,
             'extra_series': []
         }
 
         # Plot the real counts if we have them
         real_counts_total, real_counts_unique = self._read_real_counts()
+        if real_counts_unique:
+            max_y = max(max_y, max(real_counts_unique.values()))
         pconfig['extra_series'].extend(self._real_counts_to_plot_series(real_counts_unique, real_counts_total))
         if real_counts_unique:
             description += '<p>Points show read count versus deduplicated read counts (externally calculated).</p>'
@@ -246,6 +250,8 @@ class MultiqcModule(BaseMultiqcModule):
         })
 
         self.add_section(
+            name = 'Complexity curve',
             description = description,
+            anchor = 'preseq-plot',
             plot = linegraph.plot(self.preseq_data, pconfig)
         )
