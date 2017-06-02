@@ -8,17 +8,6 @@ import logging
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
-# Import the RSeQC submodules
-from . import bam_stat
-from . import gene_body_coverage
-from . import inner_distance
-from . import junction_annotation
-from . import junction_saturation
-from . import read_gc
-from . import read_distribution
-from . import read_duplication
-from . import infer_experiment
-
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -41,43 +30,32 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_data = dict()
         n = dict()
 
+        # Get the list of submodules (can be customised)
+        rseqc_sections = getattr(config, 'rseqc_sections', [])
+        if len(rseqc_sections) == 0:
+            rseqc_sections = [
+                'read_distribution',
+                'gene_body_coverage',
+                'inner_distance',
+                'read_gc',
+                'read_duplication',
+                'junction_annotation',
+                'junction_saturation',
+                'infer_experiment',
+                'bam_stat'
+            ]
+
         # Call submodule functions
-        n['bam_stat'] = bam_stat.parse_reports(self)
-        if n['bam_stat'] > 0:
-            log.info("Found {} bam_stat reports".format(n['bam_stat']))
-
-        n['read_distribution'] = read_distribution.parse_reports(self)
-        if n['read_distribution'] > 0:
-            log.info("Found {} read_distribution reports".format(n['read_distribution']))
-
-        n['gene_body_coverage'] = gene_body_coverage.parse_reports(self)
-        if n['gene_body_coverage'] > 0:
-            log.info("Found {} gene_body_coverage reports".format(n['gene_body_coverage']))
-
-        n['inner_distance'] = inner_distance.parse_reports(self)
-        if n['inner_distance'] > 0:
-            log.info("Found {} inner_distance reports".format(n['inner_distance']))
-
-        n['junction_annotation'] = junction_annotation.parse_reports(self)
-        if n['junction_annotation'] > 0:
-            log.info("Found {} junction_annotation reports".format(n['junction_annotation']))
-
-        n['junction_saturation'] = junction_saturation.parse_reports(self)
-        if n['junction_saturation'] > 0:
-            log.info("Found {} junction_saturation reports".format(n['junction_saturation']))
-
-        n['read_gc'] = read_gc.parse_reports(self)
-        if n['read_gc'] > 0:
-            log.info("Found {} read_gc reports".format(n['read_gc']))
-
-        n['read_duplication'] = read_duplication.parse_reports(self)
-        if n['read_duplication'] > 0:
-            log.info("Found {} read_duplication reports".format(n['read_duplication']))
-
-        n['infer_experiment'] = infer_experiment.parse_reports(self)
-        if n['infer_experiment'] > 0:
-            log.info("Found {} infer_experiment reports".format(n['infer_experiment']))
-
+        for sm in rseqc_sections:
+            try:
+                # Import the submodule and call parse_reports()
+                #   Function returns number of parsed logs
+                module = __import__('multiqc.modules.rseqc.{}'.format(sm), fromlist=[''])
+                n[sm] = getattr(module, 'parse_reports')(self)
+                if n[sm] > 0:
+                    log.info("Found {} {} reports".format(n[sm], sm))
+            except (ImportError, AttributeError):
+                log.warn("Could not find RSeQC Section '{}'".format(sm))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

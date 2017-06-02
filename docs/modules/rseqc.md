@@ -23,3 +23,20 @@ Supported scripts:
 * `read_duplication`
 * `read_gc`
 
+You can choose to hide sections of RSeQC output and customise their order.
+To do this, add and customise the following to your MultiQC config file:
+
+```yaml
+rseqc_sections:
+    - read_distribution
+    - gene_body_coverage
+    - inner_distance
+    - read_gc
+    - read_duplication
+    - junction_annotation
+    - junction_saturation
+    - infer_experiment
+    - bam_stat
+```
+
+Change the order to rearrage sections or remove to hide them from the report.

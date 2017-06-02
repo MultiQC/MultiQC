@@ -11,6 +11,9 @@
   * Improved plots display (thanks to @vladsaveliev)
 * **Qualimap**
   * Only calculate bases over target coverage for values in General Statistics. Should give a speed increase for very high coverage datasets.
+* **RSeQC**
+  * Changed default order of sections
+  * Added config option to reorder and hide module report sections
 
 ### Core MultiQC updates:
 * Base `clean_s_name` function now strips excess whitespace.
