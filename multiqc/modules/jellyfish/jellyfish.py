@@ -58,32 +58,36 @@ class MultiqcModule(BaseMultiqcModule):
         self.sections.append({
             'name': 'Jellyfish plot for k-mers with coverage between 0 and {}'.format(self.jellyfish_max_x),
             'anchor': 'jellyfish_kmer_plot',
-            'content': self.frequencies_plot()
+            'content': self.frequencies_plot(xmax=self.jellyfish_max_x )
         })
         if self.detect_high_unique_kmers():
             self.sections.append({
                 'name': 'Jellyfish plot for k-mers with coverage between 3 and {}'.format(self.jellyfish_max_x),
                 'anchor': 'jellyfish_kmer_plot_no_low_freq',
-                'content': 'It has been detected that the number of unique k- mers is unexpectedly high. This is not a good sign (it means a lot of unique and most likely erroneus k-mers). This plot removes the k-mers occuring in single and double copy to allow a better visualisation of the plot.' + self.frequencies_plot(10)
+                'content': 'It has been detected that the number of unique k- mers is unexpectedly high. This is not a good sign (it means a lot of unique and most likely erroneus k-mers). This plot removes the k-mers occuring in single and double copy to allow a better visualisation of the plot.' + self.frequencies_plot(xmin=10)
             })
 
     def clean_jellyfish_data(self):
         """ Avoid to plot long flat tails by loosing 0,5% of the tail """
         max_x = 0
+
+        #find where the max is
+        
         total_bases_by_sample = dict()
-        for s_name, d in self.jellyfish_data_all.items():
-            total_bases_by_sample[s_name] = sum(d.values())
-            cumulative = 0
-            for count in sorted(d.keys(), reverse=True):
-                cumulative += d[count]
-                if total_bases_by_sample[s_name] > 0 and cumulative / float(total_bases_by_sample[s_name]) > 0.05:
-                    max_x = max(max_x, count)
-                    break
+        for s_name, data in self.jellyfish_data_all.items():
+            max_key = max(data, key=data.get)
+            if max_key < 100:
+                max_key = 200 # the maximum is below 100, we display anyway up to 200
+            else:
+                max_key = 2*max_key #in this case the area plotted is a function of the maximum x
+            max_x = max(max_x, max_key)
         self.jellyfish_max_x = max_x
         #create the container I am going to plot
         self.jellyfish_data = dict()
         for s_name, d in self.jellyfish_data_all.items():
             self.jellyfish_data[s_name] = dict([(i,d[i]) for i in range(max_x+1)])
+        import pdb
+        pdb.set_trace()
 
     def detect_high_unique_kmers(self):
         """ sometime there are a lot of unique kmers. This indicates a bad library but some time can be a property of the data it self  """
@@ -110,19 +114,19 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    def frequencies_plot(self, xmin=0):
+    def frequencies_plot(self, xmin=0, xmax=200):
         """ Generate the qualities plot """
-        
         pconfig = {
-            'smooth_points': 200,
             'id': 'Jellyfish_kmer_plot',
             'title': 'Jellyfish: K-mer plot',
             'ylab': 'Count',
             'xlab': 'Frequency',
             'xDecimals': False,
-            'ymin': 0,
             'xmin': xmin
         }
+        import pdb
+        pdb.set_trace()
+        
 
         return linegraph.plot(self.jellyfish_data, pconfig)
 
