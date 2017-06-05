@@ -30,7 +30,6 @@ class MultiqcModule(BaseMultiqcModule):
         #clean histogram to prevent long flat tail
         self.clean_jellyfish_data()
         
-        
         if len(self.jellyfish_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
@@ -44,36 +43,28 @@ class MultiqcModule(BaseMultiqcModule):
         count all the kmers (i.e., sequence of length k) that occur
         in the reads. In this way it is possible to know how many
         kmers occur 1,2,..., N times and represent this as a
-        plot. This plot tell us for each x, how many 25-mers
+        plot. This plot tell us for each x, how many k-mers
         (y-axis) are present in the dataset in exactly x-copies.
         In an ideal world (no errors in sequencing, no bias, no
-        repeating regions) this plot should be as close as
+        repeated regions) this plot should be as close as
         possible to a gaussian distribution. In reality we will
         always see a peak for x=1 (i.e., the errors) and another
         peak close to the expected coverage. If the genome is
         highly heterozygous a second peak at half of the coverage
         can be expected."""
         
+        
         self.sections = list()
         self.sections.append({
             'name': 'Jellyfish plot for k-mers with coverage between 0 and {}'.format(self.jellyfish_max_x),
             'anchor': 'jellyfish_kmer_plot',
-            'content': self.frequencies_plot(xmax=self.jellyfish_max_x )
+            'content': self.frequencies_plot()
         })
-        if self.detect_high_unique_kmers():
-            self.sections.append({
-                'name': 'Jellyfish plot for k-mers with coverage between 3 and {}'.format(self.jellyfish_max_x),
-                'anchor': 'jellyfish_kmer_plot_no_low_freq',
-                'content': 'It has been detected that the number of unique k- mers is unexpectedly high. This is not a good sign (it means a lot of unique and most likely erroneus k-mers). This plot removes the k-mers occuring in single and double copy to allow a better visualisation of the plot.' + self.frequencies_plot(xmin=10)
-            })
 
     def clean_jellyfish_data(self):
         """ Avoid to plot long flat tails by loosing 0,5% of the tail """
         max_x = 0
-
         #find where the max is
-        
-        total_bases_by_sample = dict()
         for s_name, data in self.jellyfish_data_all.items():
             max_key = max(data, key=data.get)
             if max_key < 100:
@@ -86,12 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.jellyfish_data = dict()
         for s_name, d in self.jellyfish_data_all.items():
             self.jellyfish_data[s_name] = dict([(i,d[i]) for i in range(max_x+1)])
-        import pdb
-        pdb.set_trace()
 
-    def detect_high_unique_kmers(self):
-        """ sometime there are a lot of unique kmers. This indicates a bad library but some time can be a property of the data it self  """
-        return True
 
     def parse_jellyfish_data(self, f):
         """ Go through the hist file and memorise it """
@@ -104,8 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             histogram[occurence] = occurence*count
         #delete last occurnece as it is the sum of all kmer occuring more often than it.
         del histogram[occurence]
-        
-
+        #sanity check
         if len(histogram) > 0:
             if f['s_name'] in self.jellyfish_data_all:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
@@ -114,20 +99,16 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    def frequencies_plot(self, xmin=0, xmax=200):
+    def frequencies_plot(self, xmin=0):
         """ Generate the qualities plot """
         pconfig = {
             'id': 'Jellyfish_kmer_plot',
             'title': 'Jellyfish: K-mer plot',
-            'ylab': 'Count',
-            'xlab': 'Frequency',
+            'ylab': 'Counts',
+            'xlab': 'k-mer frequency',
             'xDecimals': False,
             'xmin': xmin
         }
-        import pdb
-        pdb.set_trace()
-        
-
         return linegraph.plot(self.jellyfish_data, pconfig)
 
 
