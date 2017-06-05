@@ -22,6 +22,12 @@ class StatsReportMixin():
           we treat each 'set' as a MultiQC sample, taking the first
           input filename for each set as the name.
         """
+        collapse_complementary = getattr(config, 'bcftools', {}).get('collapse_complementary_changes', False)
+        if collapse_complementary:
+            types = ['A>C', 'A>G', 'A>T', 'C>A', 'C>G', 'C>T']
+        else:
+            types = ['A>C', 'A>G', 'A>T', 'C>A', 'C>G', 'C>T',
+                     'G>A', 'G>C', 'G>T', 'T>A', 'T>C', 'T>G']
 
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
@@ -62,9 +68,17 @@ class StatsReportMixin():
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    field = 'substitution_type_{}'.format(s[2].strip())
+
+                    rc = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+                    change = s[2].strip()
+                    if change not in types:
+                        change = '>'.join(rc[n] for n in change.split('>'))
+
+                    field = 'substitution_type_{}'.format(change)
                     value = float(s[3].strip())
-                    self.bcftools_stats[s_name][field] = value
+                    if field not in self.bcftools_stats[s_name]:
+                        self.bcftools_stats[s_name][field] = 0
+                    self.bcftools_stats[s_name][field] += value
 
                 # Indel length distributions
                 if s[0] == "IDD" and len(s_names) > 0:
@@ -99,7 +113,6 @@ class StatsReportMixin():
             self.bcftools_stats_genstats_table()
 
             # Make bargraph plot of substitution types
-            types = ['A>C','A>G','A>T','C>A','C>G','C>T','G>A','G>C','G>T','T>A','T>C','T>G']
             keys = OrderedDict()
             for t in types:
                 keys['substitution_type_{}'.format(t)] = {'name': t}
@@ -150,27 +163,27 @@ class StatsReportMixin():
         """ Add key statistics to the General Stats table """
         stats_headers = OrderedDict()
         stats_headers['number_of_records'] = {
-            'title': 'Variations',
-            'description': 'Variations Total',
+            'title': 'Vars',
+            'description': 'Variations total',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['variations_hom'] = {
-            'title': 'Homozygous',
+            'title': 'Hom',
             'description': 'Variations homozygous',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['variations_het'] = {
-            'title': 'Heterozygous',
+            'title': 'Het',
             'description': 'Variations heterozygous',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['number_of_SNPs'] = {
-            'title': 'SNPs',
+            'title': 'SNP',
             'description': 'Variation SNPs',
             'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['number_of_indels'] = {
-            'title': 'Indels',
+            'title': 'Indel',
             'description': 'Variation Insertions/Deletions',
             'min': 0, 'format': '{:,.0f}',
         }
@@ -180,8 +193,8 @@ class StatsReportMixin():
             'min': 0, 'format': '{:,.2f}',
         }
         stats_headers['number_of_MNPs'] = {
-            'title': 'MNPs',
-            'description': 'Variation Multinucleotide Polymorphisms',
+            'title': 'MNP',
+            'description': 'Variation multinucleotide polymorphisms',
             'min': 0, 'format': '{:,.0f}', "hidden": True,
         }
         self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')

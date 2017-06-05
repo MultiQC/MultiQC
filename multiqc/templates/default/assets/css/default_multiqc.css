@@ -621,7 +621,7 @@ input.form-control[type=color]{
     z-index: -1;
 }
 .mqc-table-responsive.mqc-table-collapse {
-    max-height: 400px;
+    max-height: 500px;
 }
 .mqc-table-responsive {
     overflow: auto;

@@ -3,7 +3,17 @@
 ## v1.1dev
 
 ### Module updates:
-_..nothing yet.._
+* **BCFtools**
+  * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
+* **Bismark**
+  * M-Bias plots no longer show read 2 for single-end data.
+* **Preseq**
+  * Improved plots display (thanks to @vladsaveliev)
+* **Qualimap**
+  * Only calculate bases over target coverage for values in General Statistics. Should give a speed increase for very high coverage datasets.
+* **RSeQC**
+  * Changed default order of sections
+  * Added config option to reorder and hide module report sections
 
 ### Core MultiQC updates:
 * Base `clean_s_name` function now strips excess whitespace.
