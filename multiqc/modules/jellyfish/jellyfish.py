@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
         info="JELLYFISH is a tool for fast, memory-efficient counting of k-mers in DNA.")
 
         self.jellyfish_data_all = dict()
-        for f in self.find_log_files(config.sp['jellyfish'], filehandles=True):
+        for f in self.find_log_files('jellyfish', filehandles=True):
             self.parse_jellyfish_data(f)
         
         #clean histogram to prevent long flat tail
