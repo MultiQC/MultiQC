@@ -12,11 +12,11 @@ MultiQC Modules:
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     FastQC: modules/fastqc.md
+    Jellyfish: modules/jellyfish.md
     FastQ Screen: modules/fastq_screen.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
-    Jellyfish: modules/jellyfish.md
   Aligners:
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
