@@ -19,9 +19,9 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='jellyfish', anchor='jellyfish',
+        super(MultiqcModule, self).__init__(name='Jellyfish', anchor='jellyfish',
         href="http://www.cbcb.umd.edu/software/jellyfish/",
-        info="JELLYFISH is a tool for fast, memory-efficient counting of k-mers in DNA.")
+        info="is a tool for fast, memory-efficient counting of k-mers in DNA.")
 
         self.jellyfish_data  = dict()
         self.jellyfish_max_x = 0
@@ -68,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
     def frequencies_plot(self, xmin=0, xmax=200):
         """ Generate the qualities plot """
         
-        description = 'A possible way to assess the complexity of a library even in absence of a reference sequence is to look at the kmer profile of the reads.\n \
+        help = 'A possible way to assess the complexity of a library even in absence of a reference sequence is to look at the kmer profile of the reads.\n \
                     The idea is to count all the kmers (i.e., sequence of length k) that occur  in the reads. In this way it is possible to know how many  kmers occur 1,2,.., N times and represent this as a plot. This plot tell us for each x, how many k-mers (y-axis) are present in the dataset in exactly x-copies. \n \
                     In an ideal world (no errors in sequencing, no bias, no  repeated regions) this plot should be as close as  possible to a gaussian distribution. In reality we will always see a peak for x=1 (i.e., the errors) and another peak close to the expected coverage. If the genome is highly heterozygous a second peak at half of the coverage can be expected.'
         
@@ -84,7 +84,8 @@ class MultiqcModule(BaseMultiqcModule):
         
         self.add_section(
             anchor = 'jellyfish_kmer_plot',
-            description = description,
+            description = 'Estimate library complexity and coverage from k-mer content.',
+            helptext = help,
             plot = linegraph.plot(self.jellyfish_data, pconfig)
         )
 
