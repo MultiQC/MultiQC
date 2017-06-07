@@ -61,7 +61,7 @@ htseq:
 hicup:
     fn: 'HiCUP_summary_report*'
 jellyfish:
-    fn: '*.hist'
+    fn: '*_jf.hist'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
