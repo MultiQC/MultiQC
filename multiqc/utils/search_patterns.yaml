@@ -60,6 +60,8 @@ htseq:
     contents: '__too_low_aQual'
 hicup:
     fn: 'HiCUP_summary_report*'
+jellyfish:
+    fn: '*_jf.hist'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true

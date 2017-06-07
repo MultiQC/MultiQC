@@ -12,6 +12,7 @@ MultiQC Modules:
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     FastQC: modules/fastqc.md
+    Jellyfish: modules/jellyfish.md
     FastQ Screen: modules/fastq_screen.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md

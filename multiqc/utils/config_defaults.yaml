@@ -180,6 +180,7 @@ module_order:
     - 'samblaster'
     - 'samtools'
     - 'bamtools'
+    - 'jellyfish'
     # Alignment tool stats
     - 'bismark'
     - 'hicup'

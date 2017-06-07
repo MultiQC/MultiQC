@@ -40,7 +40,7 @@ Currently, supported tools include:
 |[Skewer][skewer]             | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
 |[SortMeRNA][sortmerna]       | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
 |[Trimmomatic][trimmomatic]   | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
-|                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
+|[Jellyfish][jellyfish]       | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
 |                             |                        | [Subread featureCounts][featurecounts] |         |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -164,6 +164,7 @@ and many others. Thanks for your support!
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [gatk]:           http://multiqc.info/docs/#gatk
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
+[jellyfish]:      http://multiqc.info/docs/#jellyfish
 [hicup]:          http://multiqc.info/docs/#hicup
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto

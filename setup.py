@@ -61,6 +61,7 @@ setup(
     entry_points = {
         'multiqc.modules.v1': [
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
+            'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
@@ -69,12 +70,14 @@ setup(
             'busco = multiqc.modules.busco:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
-            'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'gatk = multiqc.modules.gatk:MultiqcModule',
+            'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
+            'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
@@ -95,8 +98,6 @@ setup(
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
-            'gatk = multiqc.modules.gatk:MultiqcModule',
-            'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
