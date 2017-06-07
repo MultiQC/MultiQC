@@ -3,6 +3,9 @@
 ## v1.1dev
 
 ### Module updates:
+* [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
+  * Histograms to estimate library complexity and coverage from k-mer content.
+  * Module written by @vezzi
 * **BCFtools**
   * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
 * **Bismark**
