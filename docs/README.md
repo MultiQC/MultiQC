@@ -50,10 +50,10 @@ MultiQC Modules:
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:
-  Writing new templates: templates.md
   Writing new modules: modules.md
   Plotting Functions: plots.md
   MultiQC Plugins: plugins.md
+  Writing new templates: templates.md
   Updating for compatibility: compatibility.md
 ---
 
