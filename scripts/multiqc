@@ -464,7 +464,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 os.makedirs(config.output_fn)
             
             logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
- if not os.path.exists(config.data_dir):
+        if not os.path.exists(config.data_dir):
              os.makedirs(config.data_dir)
              logger.info("Data      : {}".format(os.path.relpath(config.output_fn)))
 
