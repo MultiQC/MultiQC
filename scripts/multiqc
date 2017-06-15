@@ -465,8 +465,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             
             logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
         if not os.path.exists(config.data_dir):
-             os.makedirs(config.data_dir)
-             logger.info("Data      : {}".format(os.path.relpath(config.output_fn)))
+            os.makedirs(config.data_dir)
+            logger.info("Data      : {}".format(os.path.relpath(config.output_fn)))
 
         # Modules have run, so data directory should be complete by now. Move its contents.
         for f in os.listdir(config.data_tmp_dir):
