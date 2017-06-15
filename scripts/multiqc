@@ -434,32 +434,38 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         # We repeat this check in case the output name has been altered since launch
         config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-	if os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)):
+        if os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)):
             if config.force:
                 logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
                 os.remove(config.output_fn)
 	        logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
-                os.remove(config.data_dir)
+                shutil.rmtree(config.data_dir) 
             else:
                 report_num = 1 
                 logger.info("Use -f or --force to overwrite existing reports")
                 while os.path.exists(config.output_fn) or os.path.exists(config.output_fn):
                     report_base, report_ext = os.path.splitext(config.output_fn_name)
-                    dir_base, dir_ext = os.path.splitext(config.data_dir)
+                    dir_base = os.path.basename(config.data_dir)
                     config.output_fn = os.path.join(config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext) )
-                    config.data_dir = os.path.join(config.output_dir, "{}_{}{}".format(dir_base, report_num, dir_ext) )
+                    config.data_dir = os.path.join(config.output_dir, "{}_{}".format(dir_base, report_num) )
                     report_num += 1
-                    config.output_fn_name = os.path.basename(config.output_fn)
-                    config.output_dir_name = os.path.basename(config.data_dir)
+                config.output_fn_name = os.path.basename(config.output_fn)
+                config.output_dir_name = os.path.basename(config.data_dir)
                 if report_num > 1: # Only print the warning if a new number was generated. 
                     logger.warning("Previous Multiqc report found, sawing new report as {}".format(config.output_fn_name))
                     logger.warning("Previous Multiqc data directiry found, sawing new data directory as {}".format(config.output_dir_name))
         # Make directories for report if not already existing
         if not os.path.exists(config.output_fn):
-            os.makedirs(os.path.dirname(config.output_fn))
+            try:
+                os.makedirs(os.path.dirname(config.output_fn))
+            except:
+                pass
+            else:
+                os.makedirs(config.output_fn)
+            
             logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
 	if not os.path.exists(config.data_dir):
-             os.makedirs(os.path.dirname(config.data_dir))
+             os.makedirs(config.data_dir)
              logger.info("Data      : {}".format(os.path.relpath(config.output_fn)))
 
         # Modules have run, so data directory should be complete by now. Move its contents.
