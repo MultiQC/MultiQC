@@ -438,7 +438,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             if config.force:
                 logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
                 os.remove(config.output_fn)
-	        logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
                 shutil.rmtree(config.data_dir) 
             else:
                 report_num = 1 
@@ -464,7 +464,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 os.makedirs(config.output_fn)
             
             logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
-	if not os.path.exists(config.data_dir):
+if not os.path.exists(config.data_dir):
              os.makedirs(config.data_dir)
              logger.info("Data      : {}".format(os.path.relpath(config.output_fn)))
 
