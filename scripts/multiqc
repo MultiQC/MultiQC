@@ -527,8 +527,6 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # Use jinja2 to render the template and overwrite
     config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
     report_output = j_template.render(report=report, config=config)
-    import pdb
-    pdb.set_trace()
     if filename == 'stdout':
         print(report_output.encode('utf-8'), file = sys.stdout)
     else:
