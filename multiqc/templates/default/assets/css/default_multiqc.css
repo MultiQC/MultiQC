@@ -701,7 +701,6 @@ tbody .sorthandle {
 .mqc_table .rowheader {
     border-left: none;
 }
-
 .mqc_table tr, .mqc_table td {
     height: 100%;
 }
@@ -713,6 +712,7 @@ tbody .sorthandle {
     position: relative;
     height:100%;
     width:100%;
+    z-index: -10;
 }
 .mqc_table .bar {
     display: block;

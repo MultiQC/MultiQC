@@ -21,6 +21,8 @@
 ### Core MultiQC updates:
 * Base `clean_s_name` function now strips excess whitespace.
 * Reports show warning if JavaScript is disabled
+* Table headers now sort columns again after scrolling the table
+* Fixed buggy table header tooltips
 
 ## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
 Version 1.0! This release has been a long time coming and brings with it some fairly

@@ -38,6 +38,9 @@ $(function () {
       $(this).find('thead').css('transform', "translate(0,"+$(this).scrollTop()+"px)");
     });
 
+    // Table header-specific bootstrap tooltips
+    $('.mqc_table_tooltip').tooltip({ container: 'body' });
+
     // Expand tables to full height
     $('.mqc-table-expand').click(function(){
       if($(this).find('span').hasClass('glyphicon-chevron-down')){
