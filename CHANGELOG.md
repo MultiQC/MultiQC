@@ -10,6 +10,8 @@
   * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
 * **Bismark**
   * M-Bias plots no longer show read 2 for single-end data.
+* **FastQ Screen**
+  * Fixed edge-case bug where many-sample plot broke if total number of reads was less than the subsample number.
 * **Preseq**
   * Improved plots display (thanks to @vladsaveliev)
 * **Qualimap**
