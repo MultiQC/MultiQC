@@ -59,10 +59,10 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f['f']:
             s = l.split("\t")
             if s[0] in keys:
-                parsed_data[s[0][2:]] = int(s[1])
+                parsed_data[s[0][2:]] = int(s[-1])
             else:
                 try:
-                    assigned_counts += int(s[1])
+                    assigned_counts += int(s[-1])
                 except (ValueError, IndexError):
                     pass
         if len(parsed_data) > 0:
