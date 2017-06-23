@@ -12,6 +12,8 @@
   * M-Bias plots no longer show read 2 for single-end data.
 * **FastQ Screen**
   * Fixed edge-case bug where many-sample plot broke if total number of reads was less than the subsample number.
+* **HTSeq Counts**
+  * Fixed but so that module still works when `--additional-attr` is specified in v0.8 HTSeq above (thanks to @nalcala)
 * **Preseq**
   * Improved plots display (thanks to @vladsaveliev)
 * **Qualimap**
