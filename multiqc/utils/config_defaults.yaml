@@ -169,6 +169,7 @@ module_order:
     - 'rseqc'
     - 'busco'
     - 'goleft_indexcov'
+    - 'disambiguate'
     # Post-alignment processing
     - 'snpeff'
     - 'gatk'

@@ -70,6 +70,7 @@ setup(
             'busco = multiqc.modules.busco:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',

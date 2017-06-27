@@ -41,7 +41,7 @@ Currently, supported tools include:
 |[SortMeRNA][sortmerna]       | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
 |[Trimmomatic][trimmomatic]   | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
 |[Jellyfish][jellyfish]       | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
-|                             |                        | [Subread featureCounts][featurecounts] |         |
+|                             |                        | [Subread featureCounts][featurecounts] | [disambiguate][disambiguate]        |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -147,7 +147,8 @@ Code contributions from:
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@t-neumann](https://github.com/t-neumann),
 [@ahvigil](https://github.com/ahvigil),
-[@bschiffthaler](https://github.com/bschiffthaler)
+[@bschiffthaler](https://github.com/bschiffthaler),
+[@jrderuiter](https://github.com/jrderuiter)
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
@@ -159,6 +160,7 @@ and many others. Thanks for your support!
 [busco]:          http://multiqc.info/docs/#busco
 [clusterflow]:    http://multiqc.info/docs/#cluster-flow
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
+[disambiguate]:   http://multiqc.info/docs/#disambiguate
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
