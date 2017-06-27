@@ -83,34 +83,15 @@ class MultiqcModule(BaseMultiqcModule):
                                 for k, v in counts.items()}
                        for sample, counts in self.data.items()}
 
-        headers = OrderedDict()
-
-        headers['species_a'] = {
-            'title': '% Species a',
-            'description': 'Percentage of reads mapping to species a',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn'
-        }
-
-        headers['species_b'] = {
-            'title': '% Species b',
-            'description': 'Percentage of reads mapping to species b',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn'
-        }
-
-        headers['ambiguous'] = {
-            'title': '% Amb.',
-            'description': ('Percentage of ambiguous reads (which map'
-                            ' to both species a and b)'),
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn'
+        headers = {
+            'species_a': {
+                'title': '% Species a',
+                'description': 'Percentage of reads mapping to species a',
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'scale': 'YlGn'
+            }
         }
 
         self.general_stats_addcols(percentages, headers)
@@ -129,9 +110,13 @@ class MultiqcModule(BaseMultiqcModule):
         keys['species_b'] = {'color': '#b1084c', 'name': 'Species b'}
         keys['ambiguous'] = {'color': '#333333', 'name': 'Ambiguous'}
 
+        plot_config = {
+            'id': "disambiguated_alignments",
+            'title': "Disambiguated alignments",
+            'cpswitch_counts_label': "# Reads",
+            'ylab': "# Reads"
+        }
+
         self.add_section(
-            name='Percent ambiguous',
-            anchor='Percent ambiguous',
-            description='Disambiguation metrics, in number of reads.',
-            plot=bargraph.plot(self.data, keys)
+            plot=bargraph.plot(self.data, keys, plot_config)
         )
