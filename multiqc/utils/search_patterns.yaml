@@ -67,6 +67,8 @@ kallisto:
     shared: true
 methylQA:
     fn: '*.report'
+disambiguate:
+    contents_re: '.*unique species A pairs.*'
 peddy/summary_table:
     fn: '*.peddy.ped'
 peddy/het_check:

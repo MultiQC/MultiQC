@@ -6,6 +6,8 @@
 * [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
   * Histograms to estimate library complexity and coverage from k-mer content.
   * Module written by @vezzi
+* [**Disambuate**] - new module!
+  * Bargraph displaying the percentage of reads aligning to two different reference genomes.
 * **BCFtools**
   * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
 * **Bismark**
@@ -583,6 +585,6 @@ Bugfixes:
 
 ## [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
 * The first public release of MultiQC, after a month of development. Basic
-structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark, 
+structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark,
 STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching
 stability, though still under fairly heavy development.
