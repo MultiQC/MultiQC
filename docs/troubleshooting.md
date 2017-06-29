@@ -107,9 +107,10 @@ Python 3. That generates an error that looks like this:
 
 ```python
 # ..truncated traceback.. #
-File "/sw/miniconda3/lib/python3.6/site-packages/click/_unicodefun.py", line 118, in _verify_python3_env
-    'for mitigation steps.' + extra)
-RuntimeError: Click will abort further execution because Python 3 was configured to use ASCII as encoding for the environment.  Consult http://click.pocoo.org/python3/for mitigation steps.
+File "click/_unicodefun.py", line 118, in _verify_python3_env 'for mitigation steps.' + extra)
+
+RuntimeError: Click will abort further execution because Python 3 was configured to use ASCII
+as encoding for the environment.  Consult http://click.pocoo.org/python3/for mitigation steps.
 ```
 
 You can fix both of these problems by changing your system locale
