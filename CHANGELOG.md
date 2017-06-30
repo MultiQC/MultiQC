@@ -6,12 +6,14 @@
 * [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
   * Histograms to estimate library complexity and coverage from k-mer content.
   * Module written by @vezzi
-* [**Disambuate**] - new module!
+* [**Disambiguate**](https://github.com/AstraZeneca-NGS/disambiguate) - new module!
   * Bargraph displaying the percentage of reads aligning to two different reference genomes.
 * **BCFtools**
   * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
 * **Bismark**
   * M-Bias plots no longer show read 2 for single-end data.
+* **Custom Content**
+  * New option to print raw HTML content to the report.
 * **FastQ Screen**
   * Fixed edge-case bug where many-sample plot broke if total number of reads was less than the subsample number.
 * **HTSeq Counts**

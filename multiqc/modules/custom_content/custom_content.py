@@ -93,7 +93,10 @@ def custom_module_classes():
             if parsed_data is not None:
                 c_id = parsed_data.get('id', k)
                 if len(parsed_data.get('data', {})) > 0:
-                    cust_mods[c_id]['data'].update( parsed_data['data'] )
+                    if type(parsed_data['data']) == str:
+                        cust_mods[c_id]['data'] = parsed_data['data']
+                    else:
+                        cust_mods[c_id]['data'].update( parsed_data['data'] )
                     cust_mods[c_id]['config'].update ( { j:k for j,k in parsed_data.items() if j != 'data' } )
                 else:
                     log.warning("No data found in {}".format(f['fn']))
@@ -253,6 +256,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Beeswarm plot
         elif mod['config'].get('plot_type') == 'beeswarm':
             self.add_section( plot = beeswarm.plot(mod['data'], pconfig) )
+
+        # Raw HTML
+        elif mod['config'].get('plot_type') == 'html':
+            self.add_section( content = mod['data'] )
 
         # Not supplied
         elif mod['config'].get('plot_type') == None:
