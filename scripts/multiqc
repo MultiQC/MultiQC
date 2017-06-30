@@ -419,6 +419,25 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
 
+    # Sort the report sections if we have a config
+    if len(getattr(config, 'report_section_order', {})) > 0:
+        section_id_order = {}
+        idx = 10
+        for mod in reversed(report.modules_output):
+            section_id_order[mod.anchor] = idx
+            idx += 10
+        for anchor, ss in config.report_section_order.items():
+            if anchor not in section_id_order.keys():
+                continue
+            if ss.get('order') is not None:
+                section_id_order[anchor] = ss['order']
+            if ss.get('after') in section_id_order.keys():
+                section_id_order[anchor] = section_id_order[ss['after']] + 1
+            if ss.get('before') in section_id_order.keys():
+                section_id_order[anchor] = section_id_order[ss['before']] - 1
+        sorted_ids = sorted(section_id_order, key=section_id_order.get)
+        report.modules_output = [ mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i ]
+
     plugin_hooks.mqc_trigger('after_modules')
 
     # Remove empty data sections from the General Stats table

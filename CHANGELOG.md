@@ -27,8 +27,16 @@
   * Added config option to reorder and hide module report sections
 
 ### Core MultiQC updates:
+New features:
+
+* New option to customise the order of report sections
+  * This is in addition / alternative to changing the order of module execution
+  * Allows one module to have sections in multiple places (eg. Custom Content)
 * Base `clean_s_name` function now strips excess whitespace.
 * Reports show warning if JavaScript is disabled
+
+Bug Fixes:
+
 * Table headers now sort columns again after scrolling the table
 * Fixed buggy table header tooltips
 

@@ -110,6 +110,34 @@ top_modules:
     - 'fastqc'
 ```
 
+## Order of sections
+Sometimes it's desirable to customise the order of specific sections in a report, independent of
+module execution. For example, the `custom_content` module can generate multiple sections from
+different input files.
+
+To do this, follow a link in a report navigation to skip to the section you want to move (must
+be a major section header, not a subheading). Find the ID of that section by looking at the URL.
+For example, clicking on _FastQC_ changes the URL to `multiqc_report.html#fastqc` -  the ID is
+the text after (not including) the `#` symbol.
+
+Next, specify the `report_section_order` option in your MultiQC config file. Section in
+the report are given a number ranging from 10 (section at bottom of report), incrementing by +10
+for each section. You can change this number (eg. a very low number to always get at the bottom
+of the report or very high to always be at the top), or you can move a section to before or after
+another existing section (has no effect if the other named ID is not in the report).
+
+For example, add the following to your MultiQC config file:
+
+```yaml
+report_section_order:
+    section1:
+        order: -1000
+    section2:
+        before: 'othersection'
+    section3:
+        after: 'diffsection'
+```
+
 ## Customising tables
 Report tables such as the General Statistics table can get quite wide. To help with this,
 columns in the report can be hidden. Some MultiQC modules include columns which are hidden
