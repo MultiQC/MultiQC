@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
-        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
+        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat and not getattr(config, 'fastqscreen_simpleplot', False):
             self.add_section( content = self.fqscreen_plot() )
         # Use simpler plot that works with many samples
         else:
@@ -64,9 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         reads_processed = None
         nohits_pct = None
         for l in fh:
-            if '#Reads in subset:' in l:
-                parsed_data['total_reads'] = int(l.split()[-1])
-            elif l.startswith('%Hit_no_libraries:'):
+            if l.startswith('%Hit_no_libraries:'):
                 parsed_data['No hits'] = {'percentages': {'one_hit_one_library': float(l[19:]) }}
                 nohits_pct = float(l[19:])
             else:
@@ -86,6 +84,8 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
                     parsed_data[org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
                     parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
+                    # Can't use #Reads in subset as varies. #Reads_processed should be same for all orgs in a sample
+                    parsed_data['total_reads'] = int(fqs.group(2))
 
         if len(parsed_data) == 0:
             return None
@@ -103,6 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             totals[s] = OrderedDict()
             for org in self.fq_screen_data[s]:
                 if org == 'total_reads':
+                    totals[s]['total_reads'] = self.fq_screen_data[s][org]
                     continue
                 try:
                     k = "{} counts".format(org)

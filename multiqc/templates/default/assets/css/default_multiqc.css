@@ -621,7 +621,7 @@ input.form-control[type=color]{
     z-index: -1;
 }
 .mqc-table-responsive.mqc-table-collapse {
-    max-height: 400px;
+    max-height: 500px;
 }
 .mqc-table-responsive {
     overflow: auto;
@@ -701,7 +701,6 @@ tbody .sorthandle {
 .mqc_table .rowheader {
     border-left: none;
 }
-
 .mqc_table tr, .mqc_table td {
     height: 100%;
 }
@@ -713,6 +712,7 @@ tbody .sorthandle {
     position: relative;
     height:100%;
     width:100%;
+    z-index: -10;
 }
 .mqc_table .bar {
     display: block;

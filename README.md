@@ -32,16 +32,16 @@ Currently, supported tools include:
 
 |Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |-----------------------------|------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval] | [Bismark][bismark]| [Bamtools][bamtools]      | [methylQA][methylqa] |
-|[Cluster Flow][clusterflow]  | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Peddy][peddy]       |
-|[Cutadapt][cutadapt]         | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Preseq][preseq]     |
-|[FastQC][fastqc]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [Qualimap][qualimap] |
-|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Picard][picard]          | [QUAST][quast]       |
-|[Skewer][skewer]             | [Salmon][salmon]       | [Prokka][prokka]          | [RNA-SeQC][rna_seqc] |
-|[SortMeRNA][sortmerna]       | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [RSeQC][rseqc]       |
-|[Trimmomatic][trimmomatic]   | [STAR][star]           | [Samtools][samtools]      | [BUSCO][busco]       |
-|                             | [Tophat][tophat]       | [SnpEff][snpeff]          | [goleft][goleft]     |
-|                             |                        | [Subread featureCounts][featurecounts] |         |
+|[Adapter Removal][adapterremoval] | [Bismark][bismark]| [Bamtools][bamtools]      | [BUSCO][busco]       |
+|[Cluster Flow][clusterflow]  | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Disambiguate][disambiguate] |
+|[Cutadapt][cutadapt]         | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [goleft][goleft]     |
+|[FastQC][fastqc]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [methylQA][methylqa] |
+|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Picard][picard]          | [Peddy][peddy]       |
+|[Jellyfish][jellyfish]       | [Salmon][salmon]       | [Prokka][prokka]          | [Preseq][preseq]     |
+|[Skewer][skewer]             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [Qualimap][qualimap] |
+|[SortMeRNA][sortmerna]       | [STAR][star]           | [Samtools][samtools]      | [QUAST][quast]       |
+|[Trimmomatic][trimmomatic]   | [Tophat][tophat]       | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
+|                             |                        | [Subread featureCounts][featurecounts] | [RSeQC][rseqc] |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -147,7 +147,8 @@ Code contributions from:
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@t-neumann](https://github.com/t-neumann),
 [@ahvigil](https://github.com/ahvigil),
-[@bschiffthaler](https://github.com/bschiffthaler)
+[@bschiffthaler](https://github.com/bschiffthaler),
+[@jrderuiter](https://github.com/jrderuiter)
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
@@ -159,11 +160,13 @@ and many others. Thanks for your support!
 [busco]:          http://multiqc.info/docs/#busco
 [clusterflow]:    http://multiqc.info/docs/#cluster-flow
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
+[disambiguate]:   http://multiqc.info/docs/#disambiguate
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [gatk]:           http://multiqc.info/docs/#gatk
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
+[jellyfish]:      http://multiqc.info/docs/#jellyfish
 [hicup]:          http://multiqc.info/docs/#hicup
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto

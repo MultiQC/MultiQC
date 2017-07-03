@@ -84,7 +84,7 @@ def make_table (dt):
             data_attr = 'data-dmax="{}" data-dmin="{}" data-namespace="{}" {}' \
                 .format(header['dmax'], header['dmin'], header['namespace'], shared_key)
 
-            cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
+            cell_contents = '<span class="mqc_table_tooltip" title="{}: {}">{}</span>' \
                 .format(header['namespace'], header['description'], header['title'])
 
             t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>' \

@@ -12,6 +12,7 @@ MultiQC Modules:
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
     FastQC: modules/fastqc.md
+    Jellyfish: modules/jellyfish.md
     FastQ Screen: modules/fastq_screen.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
@@ -32,6 +33,7 @@ MultiQC Modules:
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
+    Disambiguate: modules/disambiguate.md
     HTSeq: modules/htseq.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md
@@ -49,10 +51,10 @@ MultiQC Modules:
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:
-  Writing new templates: templates.md
   Writing new modules: modules.md
   Plotting Functions: plots.md
   MultiQC Plugins: plugins.md
+  Writing new templates: templates.md
   Updating for compatibility: compatibility.md
 ---
 

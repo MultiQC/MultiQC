@@ -3,11 +3,42 @@
 ## v1.1dev
 
 ### Module updates:
-_..nothing yet.._
+* [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
+  * Histograms to estimate library complexity and coverage from k-mer content.
+  * Module written by @vezzi
+* [**Disambiguate**](https://github.com/AstraZeneca-NGS/disambiguate) - new module!
+  * Bargraph displaying the percentage of reads aligning to two different reference genomes.
+* **BCFtools**
+  * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
+* **Bismark**
+  * M-Bias plots no longer show read 2 for single-end data.
+* **Custom Content**
+  * New option to print raw HTML content to the report.
+* **FastQ Screen**
+  * Fixed edge-case bug where many-sample plot broke if total number of reads was less than the subsample number.
+* **HTSeq Counts**
+  * Fixed but so that module still works when `--additional-attr` is specified in v0.8 HTSeq above (thanks to @nalcala)
+* **Preseq**
+  * Improved plots display (thanks to @vladsaveliev)
+* **Qualimap**
+  * Only calculate bases over target coverage for values in General Statistics. Should give a speed increase for very high coverage datasets.
+* **RSeQC**
+  * Changed default order of sections
+  * Added config option to reorder and hide module report sections
 
 ### Core MultiQC updates:
+New features:
+
+* New option to customise the order of report sections
+  * This is in addition / alternative to changing the order of module execution
+  * Allows one module to have sections in multiple places (eg. Custom Content)
 * Base `clean_s_name` function now strips excess whitespace.
 * Reports show warning if JavaScript is disabled
+
+Bug Fixes:
+
+* Table headers now sort columns again after scrolling the table
+* Fixed buggy table header tooltips
 
 ## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
 Version 1.0! This release has been a long time coming and brings with it some fairly
@@ -564,6 +595,6 @@ Bugfixes:
 
 ## [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
 * The first public release of MultiQC, after a month of development. Basic
-structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark, 
+structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark,
 STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching
 stability, though still under fairly heavy development.
