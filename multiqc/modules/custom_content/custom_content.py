@@ -342,7 +342,7 @@ def _parse_txt(f, conf):
     d = []
     ncols = None
     for l in lines:
-        if not l.startswith('#'):
+        if l and not l.startswith('#'):
             sections = l.split(sep)
             d.append(sections)
             if ncols is None:
