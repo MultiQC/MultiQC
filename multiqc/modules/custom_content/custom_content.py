@@ -279,8 +279,9 @@ def _find_file_header(f):
     hconfig = None
     try:
         hconfig = yaml.load("\n".join(hlines))
-    except yaml.YAMLError:
-        log.debug("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
+    except yaml.YAMLError as e:
+        log.warn("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
+        log.debug(e)
     return hconfig
 
 def _guess_file_format(f):
