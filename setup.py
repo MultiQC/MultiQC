@@ -77,6 +77,7 @@ setup(
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
+            'hisat2 = multiqc.modules.hisat2:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',

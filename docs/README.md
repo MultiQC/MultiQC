@@ -22,6 +22,7 @@ MultiQC Modules:
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
     HiCUP: modules/hicup.md
+    HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
     STAR: modules/star.md
     Salmon: modules/salmon.md

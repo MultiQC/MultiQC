@@ -8,6 +8,9 @@
   * Module written by @vezzi
 * [**Disambiguate**](https://github.com/AstraZeneca-NGS/disambiguate) - new module!
   * Bargraph displaying the percentage of reads aligning to two different reference genomes.
+* [**HISAT2**](https://ccb.jhu.edu/software/hisat2/) - new module!
+  * New module for the HISAT2 aligner.
+  * Made possible by updates to HISAT2 logging by @infphilo (requires `--new-summary` HISAT2 flag).
 * **BCFtools**
   * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
 * **Bismark**

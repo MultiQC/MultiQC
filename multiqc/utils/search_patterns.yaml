@@ -60,6 +60,9 @@ htseq:
     contents: '__too_low_aQual'
 hicup:
     fn: 'HiCUP_summary_report*'
+hisat2:
+    contents: 'HISAT2 summary stats:'
+    shared: true
 jellyfish:
     fn: '*_jf.hist'
 kallisto:

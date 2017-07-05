@@ -36,12 +36,12 @@ Currently, supported tools include:
 |[Cluster Flow][clusterflow]  | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Disambiguate][disambiguate] |
 |[Cutadapt][cutadapt]         | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [goleft][goleft]     |
 |[FastQC][fastqc]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [methylQA][methylqa] |
-|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Picard][picard]          | [Peddy][peddy]       |
-|[Jellyfish][jellyfish]       | [Salmon][salmon]       | [Prokka][prokka]          | [Preseq][preseq]     |
-|[Skewer][skewer]             | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [Qualimap][qualimap] |
-|[SortMeRNA][sortmerna]       | [STAR][star]           | [Samtools][samtools]      | [QUAST][quast]       |
-|[Trimmomatic][trimmomatic]   | [Tophat][tophat]       | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
-|                             |                        | [Subread featureCounts][featurecounts] | [RSeQC][rseqc] |
+|[FastQ Screen][fastq-screen] | [HISAT2][hisat2]       | [Picard][picard]          | [Peddy][peddy]       |
+|[Jellyfish][jellyfish]       | [Kallisto][kallisto]   | [Prokka][prokka]          | [Preseq][preseq]     |
+|[Skewer][skewer]             | [Salmon][salmon]       | [Samblaster][samblaster]  | [Qualimap][qualimap] |
+|[SortMeRNA][sortmerna]       | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [QUAST][quast]       |
+|[Trimmomatic][trimmomatic]   | [STAR][star]           | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
+|                             | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RSeQC][rseqc] |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -168,6 +168,7 @@ and many others. Thanks for your support!
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
 [hicup]:          http://multiqc.info/docs/#hicup
+[hisat2]:         http://multiqc.info/docs/#hisat2
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [methylqa]:       http://multiqc.info/docs/#methylqa
