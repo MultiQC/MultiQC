@@ -99,6 +99,7 @@ setup(
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
+            'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
         ],

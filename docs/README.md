@@ -50,6 +50,7 @@ MultiQC Modules:
     Samtools: modules/samtools.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    THeTA2: modules/theta2.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:

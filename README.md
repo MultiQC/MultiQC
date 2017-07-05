@@ -42,7 +42,7 @@ Currently, supported tools include:
 |[SortMeRNA][sortmerna]       | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [Qualimap][qualimap] |
 |[Trimmomatic][trimmomatic]   | [STAR][star]           | [SnpEff][snpeff]          | [QUAST][quast]       |
 |                             | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RNA-SeQC][rna_seqc] |
-|                             |                        |                           | [RSeQC][rseqc]       |
+|                             |                        | [THetA2][theta2]          | [RSeQC][rseqc]       |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -190,6 +190,7 @@ and many others. Thanks for your support!
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
 [star]:           http://multiqc.info/docs/#star
 [samtools]:       http://multiqc.info/docs/#samtools
+[theta2]:         http://multiqc.info/docs/#theta2
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [tophat]:         http://multiqc.info/docs/#tophat
 

@@ -119,6 +119,7 @@ fn_clean_exts:
     - '.conpair'
     - '.concordance'
     - '.contamination'
+    - '.BEST.results'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.

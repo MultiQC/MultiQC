@@ -220,6 +220,8 @@ star:
     fn: '*Log.final.out'
 star_genecounts:
     fn: '*ReadsPerGene.out.tab'
+theta2:
+    fn: '*.BEST.results'
 tophat:
     fn: '*align_summary.txt'
 trimmomatic:
