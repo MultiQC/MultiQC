@@ -1,5 +1,5 @@
 ---
-Name: ngs-disambiguate
+Name: Disambiguate
 URL: https://github.com/AstraZeneca-NGS/disambiguate
 Description: >
     Disambiguation algorithm for reads aligned to two species (e.g. human and
