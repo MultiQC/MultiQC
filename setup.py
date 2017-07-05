@@ -69,6 +69,7 @@ setup(
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
+            'conpair = multiqc.modules.conpair:MultiqcModule',
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',

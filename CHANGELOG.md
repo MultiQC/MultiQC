@@ -3,14 +3,16 @@
 ## v1.1dev
 
 ### Module updates:
-* [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
-  * Histograms to estimate library complexity and coverage from k-mer content.
-  * Module written by @vezzi
+* [**Conpair**](https://github.com/nygenome/Conpair)
+  * Conpair: concordance and contamination estimator for tumor–normal pairs
 * [**Disambiguate**](https://github.com/AstraZeneca-NGS/disambiguate) - new module!
   * Bargraph displaying the percentage of reads aligning to two different reference genomes.
 * [**HISAT2**](https://ccb.jhu.edu/software/hisat2/) - new module!
   * New module for the HISAT2 aligner.
   * Made possible by updates to HISAT2 logging by @infphilo (requires `--new-summary` HISAT2 flag).
+* [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
+  * Histograms to estimate library complexity and coverage from k-mer content.
+  * Module written by @vezzi
 * **BCFtools**
   * Option to collapse complementary changes in substitutions plot, useful for non-strand specific experiments (thanks to @vladsaveliev)
 * **Bismark**

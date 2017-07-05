@@ -31,10 +31,11 @@ MultiQC Modules:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
     BUSCO: modules/busco.md
+    Conpair: modules/conpair.md
+    Disambiguate: modules/disambiguate.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
-    Disambiguate: modules/disambiguate.md
     HTSeq: modules/htseq.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md

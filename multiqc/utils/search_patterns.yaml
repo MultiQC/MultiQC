@@ -35,6 +35,12 @@ clusterflow/logs:
     shared: true
 clusterflow/runfiles:
     fn: '*.run'
+conpair/concordance:
+    contents: 'markers (coverage per marker threshold : '
+    num_lines: 3
+conpair/contamination:
+    contents: 'Tumor sample contamination level: '
+    num_lines: 3
 cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
