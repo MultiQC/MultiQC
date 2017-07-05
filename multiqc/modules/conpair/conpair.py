@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn'
         }
         headers['contamination_normal'] = {
-            'title': 'Normal Contamination',
+            'title': 'N Contamination',
             'description': 'Normal sample contamination level',
             'max': 100,
             'min': 0,
@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlBu-rev'
         }
         headers['contamination_tumor'] = {
-            'title': 'Tumor Contamination',
+            'title': 'T Contamination',
             'description': 'Tumor sample contamination level',
             'max': 100,
             'min': 0,
