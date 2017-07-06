@@ -36,13 +36,14 @@ Currently, supported tools include:
 |[BioBloom Tools][biobloomtools]|[Bowtie][bowtie-1]    | [Bcftools][bcftools]      | [Conpair][conpair]   |
 |[Cluster Flow][clusterflow]  | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Disambiguate][disambiguate] |
 |[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HTSeq][htseq]            | [goleft][goleft]     |
-|[FastQC][fastqc]             | [HISAT2][hisat2]       | [Picard][picard]          | [methylQA][methylqa] |
-|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Prokka][prokka]          | [Peddy][peddy]       |
-|[Flexbar][flexbar]           | [Salmon][salmon]       | [Samblaster][samblaster]  | [Preseq][preseq]     |
-|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [Qualimap][qualimap] |
-|[Skewer][skewer]             | [STAR][star]           | [SnpEff][snpeff]          | [QUAST][quast]       |
-|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RNA-SeQC][rna_seqc] |
-|[Trimmomatic][trimmomatic]   |                        | [THetA2][theta2]          | [RSeQC][rseqc]       |
+|[FastQC][fastqc]             | [HISAT2][hisat2]       | [MACS2][macs2]            | [methylQA][methylqa] |
+|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Picard][picard]          | [Peddy][peddy]       |
+|[Flexbar][flexbar]           | [Salmon][salmon]       | [Prokka][prokka]          | [Preseq][preseq]     |
+|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [Qualimap][qualimap] |
+|[Skewer][skewer]             | [STAR][star]           | [Samtools][samtools]      | [QUAST][quast]       |
+|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
+|[Trimmomatic][trimmomatic]   |                        | [Subread featureCounts][featurecounts] | [RSeQC][rseqc] |
+|                             |                        | [THetA2][theta2]          |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -175,6 +176,7 @@ and many others. Thanks for your support!
 [hisat2]:         http://multiqc.info/docs/#hisat2
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[macs2]:          http://multiqc.info/docs/#macs2
 [methylqa]:       http://multiqc.info/docs/#methylqa
 [peddy]:          http://multiqc.info/docs/#peddy
 [picard]:         http://multiqc.info/docs/#picard

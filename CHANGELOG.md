@@ -17,6 +17,8 @@
 * [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
   * Histograms to estimate library complexity and coverage from k-mer content.
   * Module written by @vezzi
+* [**MACS2**](https://github.com/taoliu/MACS) - new module!
+  * Summary of redundant rate from MACS2 peak calling.
 * [**THetA2**](http://compbio.cs.brown.edu/projects/theta/) - new module!
   * THeTA2 _(Tumor Heterogeneity Analysis)_ estimates tumour purity and clonal / subclonal copy number.
 * **BCFtools**

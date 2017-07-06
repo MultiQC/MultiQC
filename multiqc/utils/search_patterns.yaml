@@ -80,6 +80,8 @@ jellyfish:
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
+macs2:
+    fn: '*_peaks.xls'
 methylQA:
     fn: '*.report'
 disambiguate:

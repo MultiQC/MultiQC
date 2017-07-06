@@ -39,6 +39,7 @@ MultiQC Modules:
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
     HTSeq: modules/htseq.md
+    MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md

@@ -123,6 +123,7 @@ fn_clean_exts:
     - '.contamination'
     - '.BEST.results'
     - '_summary'
+    - '_peaks.xls'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
