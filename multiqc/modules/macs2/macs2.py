@@ -8,7 +8,6 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -79,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
                 match = re.search(r, l)
                 if match:
                     if k == 'name':
-                        s_name = match.group(1).strip()
+                        s_name = self.clean_s_name(match.group(1).strip(), f['root'])
                     else:
                         parsed_data[k] = float(match.group(1).strip())
             if not l.startswith('#') and l.strip():

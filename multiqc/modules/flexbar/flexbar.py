@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
                 match = re.search(r, l)
                 if match:
                     if k == 'output_filename':
-                        s_name = match.group(1)
+                        s_name = self.clean_s_name(match.group(1), f['root'])
                     else:
                         parsed_data[k] = int(match.group(1))
 

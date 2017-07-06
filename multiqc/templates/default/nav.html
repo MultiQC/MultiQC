@@ -32,6 +32,7 @@ The side navigation for the report.
       </li>
       {% endif -%}
       {% for m in report.modules_output %}
+      {% if m.sections | length > 0 %}
       <li>
         <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
         <ul>
@@ -46,6 +47,7 @@ The side navigation for the report.
         {% endif %}
         </ul>
       </li>
+      {% endif %}
       {% endfor %}
     </ul>
   </div>
