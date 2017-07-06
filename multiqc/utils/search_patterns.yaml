@@ -58,6 +58,9 @@ fastqc/theoretical_gc:
     fn: '*fastqc_theoretical_gc*'
 featurecounts:
     fn: '*.summary'
+flexbar:
+    contents: 'Flexbar - flexible barcode and adapter removal'
+    shared: true
 gatk/varianteval:
     contents: '#:GATKReport'
     shared: true

@@ -76,6 +76,7 @@ setup(
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',

@@ -9,6 +9,8 @@
   * Conpair: concordance and contamination estimator for tumor–normal pairs
 * [**Disambiguate**](https://github.com/AstraZeneca-NGS/disambiguate) - new module!
   * Bargraph displaying the percentage of reads aligning to two different reference genomes.
+* [**Flexbar**](https://github.com/seqan/flexbar) - new module!
+  * Flexbar is a tool for flexible barcode and adapter removal.
 * [**HISAT2**](https://ccb.jhu.edu/software/hisat2/) - new module!
   * New module for the HISAT2 aligner.
   * Made possible by updates to HISAT2 logging by @infphilo (requires `--new-summary` HISAT2 flag).

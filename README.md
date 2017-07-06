@@ -38,11 +38,11 @@ Currently, supported tools include:
 |[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HTSeq][htseq]            | [goleft][goleft]     |
 |[FastQC][fastqc]             | [HISAT2][hisat2]       | [Picard][picard]          | [methylQA][methylqa] |
 |[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Prokka][prokka]          | [Peddy][peddy]       |
-|[Jellyfish][jellyfish]       | [Salmon][salmon]       | [Samblaster][samblaster]  | [Preseq][preseq]     |
-|[Skewer][skewer]             | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [Qualimap][qualimap] |
-|[SortMeRNA][sortmerna]       | [STAR][star]           | [SnpEff][snpeff]          | [QUAST][quast]       |
-|[Trimmomatic][trimmomatic]   | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RNA-SeQC][rna_seqc] |
-|                             |                        | [THetA2][theta2]          | [RSeQC][rseqc]       |
+|[Flexbar](flexbar)           | [Salmon][salmon]       | [Samblaster][samblaster]  | [Preseq][preseq]     |
+|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [Qualimap][qualimap] |
+|[Skewer][skewer]             | [STAR][star]           | [SnpEff][snpeff]          | [QUAST][quast]       |
+|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RNA-SeQC][rna_seqc] |
+|[Trimmomatic][trimmomatic]   |                        | [THetA2][theta2]          | [RSeQC][rseqc]       |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -167,6 +167,7 @@ and many others. Thanks for your support!
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
+[flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
