@@ -155,7 +155,7 @@ and many others. Thanks for your support!
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
-[biobloomtools]:  http://multiqc.info/docs/#biobloomtools
+[biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1
 [bowtie-2]:       http://multiqc.info/docs/#bowtie-2

@@ -2,9 +2,8 @@
 Name: BioBloom Tools
 URL: https://github.com/bcgsc/biobloom/
 Description: >
-    BioBloom Tools creates filters for a genome reference and categorises
-    sequences. This is faster than alignment and can be used for pre-processing
-    and QC applications such as contamination detection.
+    BioBloom Tools assigns reads to different references using bloom filters.
+    This is faster than alignment and can be used for contamination detection.
 ---
 
 [BioBloom Tools](https://github.com/bcgsc/biobloom/) (BBT) provides the means
