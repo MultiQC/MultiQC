@@ -38,7 +38,7 @@ Currently, supported tools include:
 |[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HTSeq][htseq]            | [goleft][goleft]     |
 |[FastQC][fastqc]             | [HISAT2][hisat2]       | [Picard][picard]          | [methylQA][methylqa] |
 |[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Prokka][prokka]          | [Peddy][peddy]       |
-|[Flexbar](flexbar)           | [Salmon][salmon]       | [Samblaster][samblaster]  | [Preseq][preseq]     |
+|[Flexbar][flexbar]           | [Salmon][salmon]       | [Samblaster][samblaster]  | [Preseq][preseq]     |
 |[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [Qualimap][qualimap] |
 |[Skewer][skewer]             | [STAR][star]           | [SnpEff][snpeff]          | [QUAST][quast]       |
 |[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RNA-SeQC][rna_seqc] |
