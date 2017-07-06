@@ -14,7 +14,7 @@ The HOMER MultiQC module currently only parses output from the `findPeaks` tool.
 If you would like support to be added for other HOMER tools, please open a
 [new issue](https://github.com/ewels/MultiQC/issues/new) on the MultiQC GitHub page.
 
-### FindPeaks
+#### FindPeaks
 The HOMER findPeaks MultiQC module parses the summary statistics found at the top
 of HOMER peak files. Three key statistics are shown in the General Statistics table,
 all others are saved to `multiqc_data/multiqc_homer_findpeaks.txt`.
