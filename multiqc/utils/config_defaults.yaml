@@ -91,6 +91,8 @@ fn_clean_exts:
     - '.log'
     - '.stderr'
     - '.out'
+    - '.fa'
+    - '.fasta'
     - 'Log.final'
     - 'ReadsPerGene'
     - '.flagstat'

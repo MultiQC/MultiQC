@@ -35,14 +35,15 @@ Currently, supported tools include:
 |[Adapter Removal][adapterremoval]|[Bismark][bismark]  | [Bamtools][bamtools]      | [BUSCO][busco]       |
 |[BioBloom Tools][biobloomtools]|[Bowtie][bowtie-1]    | [Bcftools][bcftools]      | [Conpair][conpair]   |
 |[Cluster Flow][clusterflow]  | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Disambiguate][disambiguate] |
-|[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HTSeq][htseq]            | [goleft][goleft]     |
-|[FastQC][fastqc]             | [HISAT2][hisat2]       | [MACS2][macs2]            | [methylQA][methylqa] |
-|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Picard][picard]          | [Peddy][peddy]       |
-|[Flexbar][flexbar]           | [Salmon][salmon]       | [Prokka][prokka]          | [Preseq][preseq]     |
-|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Samblaster][samblaster]  | [Qualimap][qualimap] |
-|[Skewer][skewer]             | [STAR][star]           | [Samtools][samtools]      | [QUAST][quast]       |
-|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
-|[Trimmomatic][trimmomatic]   |                        | [Subread featureCounts][featurecounts] | [RSeQC][rseqc] |
+|[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HOMER][homer]            | [goleft][goleft]     |
+|[FastQC][fastqc]             | [HISAT2][hisat2]       | [HTSeq][htseq]            | [methylQA][methylqa] |
+|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [MACS2][macs2]            | [Peddy][peddy]       |
+|[Flexbar][flexbar]           | [Salmon][salmon]       | [Picard][picard]          | [Preseq][preseq]     |
+|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Prokka][prokka]          | [Qualimap][qualimap] |
+|[Skewer][skewer]             | [STAR][star]           | [Samblaster][samblaster]  | [QUAST][quast]       |
+|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [Samtools][samtools]      | [RNA-SeQC][rna_seqc] |
+|[Trimmomatic][trimmomatic]   |                        | [SnpEff][snpeff]          | [RSeQC][rseqc]       |
+|                             |                        | [Subread featureCounts][featurecounts] |         |
 |                             |                        | [THetA2][theta2]          |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -174,6 +175,7 @@ and many others. Thanks for your support!
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
 [hicup]:          http://multiqc.info/docs/#hicup
 [hisat2]:         http://multiqc.info/docs/#hisat2
+[homer]:          http://multiqc.info/docs/#homer
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [macs2]:          http://multiqc.info/docs/#macs2

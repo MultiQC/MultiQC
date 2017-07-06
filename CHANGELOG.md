@@ -14,6 +14,8 @@
 * [**HISAT2**](https://ccb.jhu.edu/software/hisat2/) - new module!
   * New module for the HISAT2 aligner.
   * Made possible by updates to HISAT2 logging by @infphilo (requires `--new-summary` HISAT2 flag).
+* [**HOMER**](http://homer.ucsd.edu/homer/) - new module!
+  * Support for summary statistics from the `findPeaks` tool.
 * [**Jellyfish**](http://www.cbcb.umd.edu/software/jellyfish/) - new module!
   * Histograms to estimate library complexity and coverage from k-mer content.
   * Module written by @vezzi

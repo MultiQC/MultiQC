@@ -75,6 +75,9 @@ hicup:
 hisat2:
     contents: 'HISAT2 summary stats:'
     shared: true
+homer/findpeaks:
+    contents: '# HOMER Peaks'
+    num_lines: 3
 jellyfish:
     fn: '*_jf.hist'
 kallisto:

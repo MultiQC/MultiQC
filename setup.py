@@ -81,6 +81,7 @@ setup(
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
+            'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
