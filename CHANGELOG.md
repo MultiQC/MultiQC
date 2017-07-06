@@ -3,7 +3,9 @@
 ## v1.1dev
 
 ### Module updates:
-* [**Conpair**](https://github.com/nygenome/Conpair)
+* [**BioBloom Tools**](https://github.com/bcgsc/biobloom) - new module!
+  * Create Bloom filters for a given reference and then to categorize sequences
+* [**Conpair**](https://github.com/nygenome/Conpair) - new module!
   * Conpair: concordance and contamination estimator for tumor–normal pairs
 * [**Disambiguate**](https://github.com/AstraZeneca-NGS/disambiguate) - new module!
   * Bargraph displaying the percentage of reads aligning to two different reference genomes.

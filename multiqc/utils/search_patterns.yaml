@@ -10,6 +10,9 @@ bamtools/stats:
 bcftools/stats:
     contents: 'This file was produced by bcftools stats'
     shared: true
+biobloomtools:
+    contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
+    num_lines: 2
 bismark/align:
     fn: '*_[SP]E_report.txt'
 bismark/dedup:

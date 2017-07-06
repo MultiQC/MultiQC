@@ -32,16 +32,16 @@ Currently, supported tools include:
 
 |Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |-----------------------------|------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval] | [Bismark][bismark]| [Bamtools][bamtools]      | [BUSCO][busco]       |
-|[Cluster Flow][clusterflow]  | [Bowtie][bowtie-1]     | [Bcftools][bcftools]      | [Conpair][conpair]   |
-|[Cutadapt][cutadapt]         | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Disambiguate][disambiguate] |
-|[FastQC][fastqc]             | [HiCUP][hicup]         | [HTSeq][htseq]            | [goleft][goleft]     |
-|[FastQ Screen][fastq-screen] | [HISAT2][hisat2]       | [Picard][picard]          | [methylQA][methylqa] |
-|[Jellyfish][jellyfish]       | [Kallisto][kallisto]   | [Prokka][prokka]          | [Peddy][peddy]       |
-|[Skewer][skewer]             | [Salmon][salmon]       | [Samblaster][samblaster]  | [Preseq][preseq]     |
-|[SortMeRNA][sortmerna]       | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [Qualimap][qualimap] |
-|[Trimmomatic][trimmomatic]   | [STAR][star]           | [SnpEff][snpeff]          | [QUAST][quast]       |
-|                             | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RNA-SeQC][rna_seqc] |
+|[Adapter Removal][adapterremoval]|[Bismark][bismark]  | [Bamtools][bamtools]      | [BUSCO][busco]       |
+|[BioBloom Tools][biobloomtools]|[Bowtie][bowtie-1]    | [Bcftools][bcftools]      | [Conpair][conpair]   |
+|[Cluster Flow][clusterflow]  | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Disambiguate][disambiguate] |
+|[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HTSeq][htseq]            | [goleft][goleft]     |
+|[FastQC][fastqc]             | [HISAT2][hisat2]       | [Picard][picard]          | [methylQA][methylqa] |
+|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [Prokka][prokka]          | [Peddy][peddy]       |
+|[Jellyfish][jellyfish]       | [Salmon][salmon]       | [Samblaster][samblaster]  | [Preseq][preseq]     |
+|[Skewer][skewer]             | [Slamdunk][slamdunk]   | [Samtools][samtools]      | [Qualimap][qualimap] |
+|[SortMeRNA][sortmerna]       | [STAR][star]           | [SnpEff][snpeff]          | [QUAST][quast]       |
+|[Trimmomatic][trimmomatic]   | [Tophat][tophat]       | [Subread featureCounts][featurecounts] | [RNA-SeQC][rna_seqc] |
 |                             |                        | [THetA2][theta2]          | [RSeQC][rseqc]       |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -155,6 +155,7 @@ and many others. Thanks for your support!
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
+[biobloomtools]:  http://multiqc.info/docs/#biobloomtools
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1
 [bowtie-2]:       http://multiqc.info/docs/#bowtie-2

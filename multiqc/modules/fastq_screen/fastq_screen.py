@@ -221,6 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
             data[s_name]['Multiple Genomes'] = self.fq_screen_data[s_name]['total_reads'] - sum_alignments
 
         pconfig = {
+            'id': 'fastq_screen',
             'title': 'FastQ Screen',
             'cpswitch_c_active': False
         }
