@@ -137,6 +137,9 @@ preseq/real_counts:
 prokka:
     contents: 'contigs:'
     num_lines: 2
+qorts:
+    contents: 'BENCHMARK_MinutesOnSamIteration'
+    num_lines: 100
 qualimap/bamqc/genome_results:
     fn: 'genome_results.txt'
 qualimap/bamqc/coverage:

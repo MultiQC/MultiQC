@@ -21,6 +21,8 @@
   * Module written by @vezzi
 * [**MACS2**](https://github.com/taoliu/MACS) - new module!
   * Summary of redundant rate from MACS2 peak calling.
+* [**QoRTs**](http://hartleys.github.io/QoRTs/) - new module!
+  * QoRTs is toolkit for analysis, QC and data management of RNA-Seq datasets.
 * [**THetA2**](http://compbio.cs.brown.edu/projects/theta/) - new module!
   * THeTA2 _(Tumor Heterogeneity Analysis)_ estimates tumour purity and clonal / subclonal copy number.
 * **BCFtools**

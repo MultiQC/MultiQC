@@ -39,11 +39,11 @@ Currently, supported tools include:
 |[FastQC][fastqc]             | [HISAT2][hisat2]       | [HTSeq][htseq]            | [methylQA][methylqa] |
 |[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [MACS2][macs2]            | [Peddy][peddy]       |
 |[Flexbar][flexbar]           | [Salmon][salmon]       | [Picard][picard]          | [Preseq][preseq]     |
-|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Prokka][prokka]          | [Qualimap][qualimap] |
-|[Skewer][skewer]             | [STAR][star]           | [Samblaster][samblaster]  | [QUAST][quast]       |
-|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [Samtools][samtools]      | [RNA-SeQC][rna_seqc] |
-|[Trimmomatic][trimmomatic]   |                        | [SnpEff][snpeff]          | [RSeQC][rseqc]       |
-|                             |                        | [Subread featureCounts][featurecounts] |         |
+|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Prokka][prokka]          | [QoRTs][qorts]       |
+|[Skewer][skewer]             | [STAR][star]           | [Samblaster][samblaster]  | [Qualimap][qualimap] |
+|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [Samtools][samtools]      | [QUAST][quast]       |
+|[Trimmomatic][trimmomatic]   |                        | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
+|                             |                        | [Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
 |                             |                        | [THetA2][theta2]          |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -184,6 +184,7 @@ and many others. Thanks for your support!
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq
 [prokka]:         http://multiqc.info/docs/#prokka
+[qorts]:          http://multiqc.info/docs/#qorts
 [qualimap]:       http://multiqc.info/docs/#qualimap
 [quast]:          http://multiqc.info/docs/#quast
 [rna_seqc]:       http://multiqc.info/docs/#rna_seqc
