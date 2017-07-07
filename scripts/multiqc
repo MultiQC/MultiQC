@@ -9,6 +9,7 @@ import base64
 import click
 from distutils import version
 from distutils.dir_util import copy_tree
+import errno
 import io
 import jinja2
 import os
@@ -362,6 +363,11 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                     copy_to = os.path.join(tmp_dir, to)
                     os.makedirs(os.path.dirname(copy_to))
                     shutil.copyfile(path, copy_to)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    pass
+                else:
+                    raise
             except AttributeError:
                 pass
             try:
@@ -369,6 +375,11 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                     copy_to = os.path.join(tmp_dir, to)
                     os.makedirs(os.path.dirname(copy_to))
                     shutil.copyfile(path, copy_to)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    pass
+                else:
+                    raise
             except AttributeError:
                 pass
 

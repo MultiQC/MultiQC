@@ -17,7 +17,7 @@ class BaseMultiqcModule(object):
 
     def __init__(self, name='base', anchor='base', target=None, href=None, info=None, extra=None):
         self.name = name
-        self.anchor = anchor
+        self.anchor = report.save_htmlid(anchor)
         if info is None:
             info = ''
         if extra is None:
