@@ -46,6 +46,10 @@
 ### Core MultiQC updates:
 New features:
 
+* If a report already exists, execution is no longer halted.
+  * `_1` is appended to the filename, iterating if this also exists.
+  * `-f`/`--force` still overwrites existing reports as before
+  * Feature written by [@Hammarn](https://github.com/Hammarn)
 * New option to customise the order of report sections
   * This is in addition / alternative to changing the order of module execution
   * Allows one module to have sections in multiple places (eg. Custom Content)
