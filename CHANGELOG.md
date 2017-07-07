@@ -35,6 +35,8 @@
   * Fixed edge-case bug where many-sample plot broke if total number of reads was less than the subsample number.
 * **HTSeq Counts**
   * Fixed but so that module still works when `--additional-attr` is specified in v0.8 HTSeq above (thanks to @nalcala)
+* **Picard CollectInsertSize**
+  * Fixed bug that could make the General Statistics _Median Insert Size_ value incorrect.
 * **Preseq**
   * Improved plots display (thanks to @vladsaveliev)
 * **Qualimap**
@@ -60,6 +62,7 @@ Bug Fixes:
 
 * Table headers now sort columns again after scrolling the table
 * Fixed buggy table header tooltips
+* Line graphs don't smooth lines if not needed (number of points < maximum number allowed)
 
 ## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
 Version 1.0! This release has been a long time coming and brings with it some fairly

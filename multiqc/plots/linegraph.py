@@ -428,6 +428,12 @@ def smooth_line_data(data, numpoints, sumcounts=True):
     """
     smoothed = {}
     for s_name, d in data.items():
+
+        # Check that we need to smooth this data
+        if len(d) <= numpoints:
+            smoothed[s_name] = d
+            continue
+
         smoothed[s_name] = OrderedDict();
         p = 0
         binsize = len(d) / numpoints
