@@ -289,26 +289,6 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         if not config.output_fn_name.endswith('.html'):
             config.output_fn_name = '{}.html'.format(config.output_fn_name)
 
-        # Check that we're not going to overwrite anything before we run
-        config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-        if not config.force:
-            if os.path.exists(config.output_fn):
-                logger.error("MultiQC Report '{}' already exists.".format(os.path.relpath(config.output_fn)))
-                logger.info("Use -f or --force to overwrite existing reports")
-                sys.exit(1)
-            if config.make_data_dir == True and os.path.exists(config.data_dir):
-                logger.error("Output directory '{}' already exists.".format(os.path.relpath(config.data_dir)))
-                logger.info("Use -f or --force to overwrite existing reports")
-                sys.exit(1)
-            if config.export_plots == True and os.path.exists(config.plots_dir_name):
-                logger.error("Plots directory '{}' already exists.".format(os.path.relpath(config.plots_dir_name)))
-                logger.info("Use -f or --force to overwrite existing reports")
-                sys.exit(1)
-        else:
-            logger.debug('Running in --force mode, will overwrite any existing reports.')
-
-
     # Print some status updates
     if config.title is not None:
         logger.info("Report title: {}".format(config.title))
@@ -461,7 +441,6 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # Write the report sources to disk
     if config.data_dir is not None:
         report.data_sources_tofile()
-
     # Compress the report plot JSON data
     logger.info("Compressing plot data")
     report.plot_compressed_json = report.compress_json(report.plot_data)
@@ -473,38 +452,40 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         # Check for existing reports and remove if -f was specified
         # We repeat this check in case the output name has been altered since launch
         config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-        if os.path.exists(config.output_fn):
+        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        if os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)):
             if config.force:
                 logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
                 os.remove(config.output_fn)
+                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                shutil.rmtree(config.data_dir) 
             else:
-                logger.error("MultiQC Report {} already exists.".format(config.output_fn))
+                report_num = 1 
                 logger.info("Use -f or --force to overwrite existing reports")
-                shutil.rmtree(tmp_dir)
-                sys.exit(1)
+                #Set up the base names of the report and the data dir
+                report_base, report_ext = os.path.splitext(config.output_fn_name)
+                dir_base = os.path.basename(config.data_dir)
+                
+                while os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
+                    config.output_fn = os.path.join(config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext) )
+                    config.data_dir = os.path.join(config.output_dir, "{}_{}".format(dir_base, report_num) )
+                    report_num += 1
+                
+                config.output_fn_name = os.path.basename(config.output_fn)
+                config.data_dir_name = os.path.basename(config.data_dir)
+                if report_num > 1: # Only print the warning if a new number was generated. 
+                    logger.warning("Previous Multiqc report found, sawing new report as {}".format(config.output_fn_name))
+                    logger.warning("Previous Multiqc data directory found, sawing new data directory as {}".format(config.data_dir))
         # Make directories for report if not already existing
-        if not os.path.exists(os.path.dirname(config.output_fn)):
-            os.makedirs(os.path.dirname(config.output_fn))
-        logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
-
-        # Now do the same for the data directory
-        if config.make_data_dir == False:
-            logger.info("Data        : None")
-        else:
-            config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-            if os.path.exists(config.data_dir):
-                if config.force:
-                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
-                    shutil.rmtree(config.data_dir)
-                else:
-                    logger.error("Output directory {} already exists.".format(config.data_dir))
-                    logger.info("Use -f or --force to overwrite existing reports")
-                    shutil.rmtree(tmp_dir)
-                    sys.exit(1)
+        if not os.path.exists(config.output_dir):
             os.makedirs(config.data_dir)
-            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+            logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+        if not os.path.exists(config.data_dir):
+            os.makedirs(config.data_dir)
+            logger.info("Data      : {}".format(os.path.relpath(config.output_fn)))
 
-            # Modules have run, so data directory should be complete by now. Move its contents.
+        # Modules have run, so data directory should be complete by now. Move its contents.
+        if config.make_data_dir == True:
             for f in os.listdir(config.data_tmp_dir):
                 fn = os.path.join(config.data_tmp_dir, f)
                 logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
@@ -647,6 +628,7 @@ def modify_usage_error(main_command):
             click.utils.echo(self.ctx.get_usage() + '\n', file=file, color=color)
         click.utils.echo('Error: %s\n\nThis is MultiQC v{}\n\nFor more help, run \'multiqc --help\' or visit http://multiqc.info\n'.format(__version__) % self.format_message(), file=file, color=color)
     click.exceptions.UsageError.show = show
+
 
 if __name__ == "__main__":
     # Add any extra plugin command line options
