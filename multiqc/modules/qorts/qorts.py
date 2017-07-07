@@ -8,7 +8,7 @@ import re
 import logging
 
 from multiqc import config
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -44,6 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Make plots
         self.qorts_splice_loci_barplot()
         self.qorts_splice_events_barplot()
+        self.qorts_genebodycoverage_plot()
 
     def parse_qorts(self, f):
         s_names = None
@@ -84,7 +85,10 @@ class MultiqcModule(BaseMultiqcModule):
             'hide_zero_cats': False
         }
 
-        self.add_section( plot = bargraph.plot(self.qorts_data, cats, pconfig) )
+        self.add_section(
+            name = "Splice Loci",
+            plot = bargraph.plot(self.qorts_data, cats, pconfig)
+        )
 
     def qorts_splice_events_barplot (self):
         """ Make the HighCharts HTML to plot the qorts splice events """
@@ -110,4 +114,40 @@ class MultiqcModule(BaseMultiqcModule):
             'hide_zero_cats': False
         }
 
-        self.add_section( plot = bargraph.plot(self.qorts_data, cats, pconfig) )
+        self.add_section(
+            name = "Splice Events",
+            plot = bargraph.plot(self.qorts_data, cats, pconfig)
+        )
+
+    def qorts_genebodycoverage_plot (self):
+        """ Make a beeswarm plot of the GeneBodyCoverage values """
+
+        keys = [
+            'GeneBodyCoverage_Overall_Mean',
+            'GeneBodyCoverage_Overall_Median',
+            'GeneBodyCoverage_LowExpress_Mean',
+            'GeneBodyCoverage_LowExpress_Median',
+            'GeneBodyCoverage_UMQuartile_Mean',
+            'GeneBodyCoverage_UMQuartile_Median'
+        ]
+        cats = OrderedDict()
+        for k in keys:
+            name = k.replace('GeneBodyCoverage_', '')
+            name = name.replace('_', ' ')
+            name = re.sub("([a-z])([A-Z])","\g<1> \g<2>",name)
+            cats[k] = {
+                'title': name,
+                'min': 0,
+                'max': 1,
+            }
+
+        # Config for the plot
+        pconfig = {
+            'id': 'qorts_gene_body_coverage',
+            'title': 'QoRTs: Gene Body Coverage'
+        }
+
+        self.add_section(
+            name = 'Gene Body Coverage',
+            plot = beeswarm.plot(self.qorts_data, cats, pconfig)
+        )
