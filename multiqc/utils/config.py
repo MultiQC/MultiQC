@@ -133,12 +133,17 @@ def mqc_cl_config(cl_config):
     for clc_str in cl_config:
         try:
             parsed_clc = yaml.load(clc_str)
+            # something:var fails as it needs a space. Fix this (a common mistake)
+            if isinstance(parsed_clc, str) and ':' in clc_str:
+                clc_str = ': '.join(clc_str.split(':'))
+                parsed_clc = yaml.load(clc_str)
             assert(isinstance(parsed_clc, dict))
         except yaml.scanner.ScannerError as e:
             logger.error("Could not parse command line config: {}\n{}".format(clc_str, e))
         except AssertionError:
             logger.error("Could not parse command line config: {}".format(clc_str))
         else:
+            logger.debug("Found command line config: {}".format(parsed_clc))
             mqc_add_config(parsed_clc)
 
 def mqc_add_config(conf):
