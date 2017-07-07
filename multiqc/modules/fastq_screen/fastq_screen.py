@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
                 thisdata = list()
                 if len(categories) > 0:
                     getCats = False
-                for org in self.fq_screen_data[s]:
+                for org in sorted(self.fq_screen_data[s]):
                     if org == 'total_reads':
                         continue
                     try:
