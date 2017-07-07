@@ -97,8 +97,18 @@ class MultiqcModule(BaseMultiqcModule):
         # Assumes organism name only consists of two words,
         # i.e. 'Genusname speciesname', and that the remaining
         # text on the organism line is the sample name.
-        organism = " ".join(first_line.strip().split(":", 1)[1].split()[:2])
-        s_name = " ".join(first_line.split()[3:])
+        try:
+            organism = " ".join(first_line.strip().split(":", 1)[1].split()[:2])
+            s_name = self.clean_s_name(" ".join(first_line.split()[3:]), f['root'])
+        except KeyError:
+            organism = first_line.strip().split(":", 1)[1]
+            s_name = f['s_name']
+        # Don't try to guess sample name if requested in the config
+        if getattr(config, 'prokka_fn_snames', False):
+            s_name = f['s_name']
+
+        if s_name in self.prokka:
+            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         self.prokka[s_name] = dict()
         self.prokka[s_name]['organism'] = organism
         self.prokka[s_name]['contigs'] = int(contigs_line.split(":")[1])
