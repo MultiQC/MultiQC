@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['N50'] = {
             'title': 'N50 (Kbp)',
-            'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
+            'description': 'N50 is the contig length such that using longer or equal length contigs produces 50% of the bases of the assembly (kilo base pairs)',
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
@@ -144,7 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers['N75'] = {
             'title': 'N75 (Kbp)',
-            'description': 'N75 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
+            'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly (kilo base pairs)',
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['L50'] = {
             'title': 'L50 (k)',
-            'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising half the total assembly length.',
+            'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.',
             'min': 0,
             'suffix': '',
             'scale': 'GnYlRd',
@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['L75'] = {
             'title': 'L75 (k)',
-            'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising three quarters of the total assembly length.',
+            'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.',
             'min': 0,
             'suffix': '',
             'scale': 'GnYlRd',
