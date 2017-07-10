@@ -301,26 +301,26 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # Prep module configs
     config.top_modules = [ m if type(m) is dict else {m:{}} for m in config.top_modules ]
     config.module_order = [ m if type(m) is dict else {m:{}} for m in config.module_order ]
-    mod_keys = [ m.keys()[0] for m in config.module_order ]
+    mod_keys = [ list(m.keys())[0] for m in config.module_order ]
 
     # Get the list of modules we want to run, in the order that we want them
-    run_modules = [ m for m in config.top_modules if m.keys()[0] in config.avail_modules.keys() ]
+    run_modules = [ m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys() ]
     run_modules.extend( [ {m:{}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules ] )
-    run_modules.extend( [ m for m in config.module_order if m.keys()[0] in config.avail_modules.keys() and m.keys()[0] not in [rm.keys()[0] for rm in run_modules] ] )
+    run_modules.extend( [ m for m in config.module_order if list(m.keys())[0] in config.avail_modules.keys() and list(m.keys())[0] not in [list(rm.keys())[0] for rm in run_modules] ] )
 
     if module:
-        run_modules = [ m for m in run_modules if m.keys()[0] in module ]
+        run_modules = [ m for m in run_modules if list(m.keys())[0] in module ]
         logger.info('Only using modules {}'.format(', '.join(module)))
     elif exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
             config.skip_generalstats = True
             exclude = tuple(x for x in exclude if x != 'general_stats')
-        run_modules = [m for m in run_modules if m.keys()[0] not in exclude]
+        run_modules = [m for m in run_modules if list(m.keys())[0] not in exclude]
     if len(run_modules) == 0:
         logger.critical('No analysis modules specified!')
         sys.exit(1)
-    logger.debug("Analysing modules: {}".format(', '.join([ m.keys()[0] for m in run_modules ])))
+    logger.debug("Analysing modules: {}".format(', '.join([ list(m.keys())[0] for m in run_modules ])))
 
     # Create the temporary working directories
     tmp_dir = tempfile.mkdtemp()
@@ -355,8 +355,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     sys_exit_code = 0
     for mod_dict in run_modules:
         try:
-            this_module = mod_dict.keys()[0]
-            mod_cust_config = mod_dict.values()[0]
+            this_module = list(mod_dict.keys())[0]
+            mod_cust_config = list(mod_dict.values())[0]
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config # feels bad doing this, but seems to work
             output = mod()
