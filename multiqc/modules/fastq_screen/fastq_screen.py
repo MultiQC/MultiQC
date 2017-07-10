@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
-        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat and not getattr(config, 'fastqscreen_simpleplot', False):
+        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat and not getattr(config, 'fastqscreen_simpleplot', True):
             self.add_section( content = self.fqscreen_plot() )
         # Use simpler plot that works with many samples
         else:
@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
                 thisdata = list()
                 if len(categories) > 0:
                     getCats = False
-                for org in self.fq_screen_data[s]:
+                for org in sorted(self.fq_screen_data[s]):
                     if org == 'total_reads':
                         continue
                     try:
