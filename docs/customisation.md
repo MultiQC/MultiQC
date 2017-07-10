@@ -102,7 +102,7 @@ sample_names_rename:
 By default, modules are included in the report as in the order specified in `config.module_order`.
 Any modules found which aren't in this list are appended at the top of the report.
 
-#### Top modules
+#### Top modules
 To specify certain modules that should always come at the top of the report, you can configure
 `config.top_modules` in your MultiQC configuration file. For example, to always have the FastQC
 module at the top of reports, add the following to your `~/.multiqc_config.yaml` file:
@@ -112,7 +112,7 @@ top_modules:
     - 'fastqc'
 ```
 
-#### Running modules multiple times
+#### Running modules multiple times
 A module can be specified multiple times in either `config.module_order` or `config.top_modules`,
 causing it to be run multiple times. By itself you'll just get two identical report sections.
 However, you can also supply configuration options to the modules as follows:
