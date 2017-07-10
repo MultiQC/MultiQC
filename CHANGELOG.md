@@ -54,7 +54,11 @@ New features:
   * `_1` is appended to the filename, iterating if this also exists.
   * `-f`/`--force` still overwrites existing reports as before
   * Feature written by [@Hammarn](https://github.com/Hammarn)
-* New option to customise the order of report sections
+* New ability to run modules multiple times in a single report
+  * Each run can be given different configuration options, including filters for input files
+  * For example, have FastQC after trimming as well as FastQC before trimming.
+  * See the relevant [documentation](http://multiqc.info/docs/#order-of-modules) for more instructions.
+* New option to customise the order of report _sections_
   * This is in addition / alternative to changing the order of module execution
   * Allows one module to have sections in multiple places (eg. Custom Content)
 * Base `clean_s_name` function now strips excess whitespace.

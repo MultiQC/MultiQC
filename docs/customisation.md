@@ -100,15 +100,66 @@ sample_names_rename:
 
 ## Order of modules
 By default, modules are included in the report as in the order specified in `config.module_order`.
-Any modules found which aren't in this list are appended at the top of the report. To specify
-certain modules that should always come at the top of the report, you can configure `config.top_modules`
-in your MultiQC configuration file. For example, to always have the FastQC module at the top
-of reports, add the following to your `~/.multiqc_config.yaml` file:
+Any modules found which aren't in this list are appended at the top of the report.
+
+### `top_modules`
+To specify certain modules that should always come at the top of the report, you can configure
+`config.top_modules` in your MultiQC configuration file. For example, to always have the FastQC
+module at the top of reports, add the following to your `~/.multiqc_config.yaml` file:
 
 ```yaml
 top_modules:
     - 'fastqc'
 ```
+
+### Running modules multiple times
+A module can be specified multiple times in either `config.module_order` or `config.top_modules`,
+causing it to be run multiple times. By itself you'll just get two identical report sections.
+However, you can also supply configuration options to the modules as follows:
+
+```yaml
+module_order:
+    - moduleName:
+        name: 'Module (filtered)'
+        info: 'This section shows the module with different files'
+        path_filters:
+            - '*_special.txt'
+            - '*_others.txt'
+```
+These overwrite the defaults that are hardcoded in the module code. `path_filters` is the
+exception, which filters the file searches for a given list of glob filename patterns.
+The available options are:
+
+* `name`: Section name
+* `anchor`: Section report ID
+* `target`: Intro link text
+* `href`: Intro link URL
+* `info`: Intro text
+* `extra`: Additional HTML after intro.
+
+For example, to run the FastQC module twice, before and after adapter trimming, you could
+use the following config:
+
+```yaml
+top_modules:
+    - star
+    - fastqc:
+        name: 'FastQC (trimmed)'
+        info: 'This section of the report shows FastQC results after adapter trimming.'
+        target: ''
+        path_filters:
+            - '*_1_trimmed_fastqc.zip'
+    - cutadapt
+    - fastqc:
+        name: 'FastQC (raw)'
+        path_filters:
+            - '*_1_fastqc.zip'
+```
+
+Note that if you change the `name` then you will get multiples of columns in the
+_General Statistics_ table. If unchanged, the topmost module may overwrite output from
+the first iteration.
+
 
 ## Order of sections
 Sometimes it's desirable to customise the order of specific sections in a report, independent of
