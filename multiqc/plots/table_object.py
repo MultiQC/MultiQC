@@ -86,6 +86,9 @@ class datatable (object):
                 headers[idx][k]['hidden']      = headers[idx][k].get('hidden', pconfig.get('hidden', None))
                 headers[idx][k]['max']         = headers[idx][k].get('max', pconfig.get('max', None))
                 headers[idx][k]['min']         = headers[idx][k].get('min', pconfig.get('min', None))
+                headers[idx][k]['ceiling']     = headers[idx][k].get('ceiling', pconfig.get('ceiling', None))
+                headers[idx][k]['floor']       = headers[idx][k].get('floor', pconfig.get('floor', None))
+                headers[idx][k]['minRange']    = headers[idx][k].get('minRange', pconfig.get('minRange', None))
                 headers[idx][k]['shared_key']  = headers[idx][k].get('shared_key', pconfig.get('shared_key', None))
                 headers[idx][k]['modify']      = headers[idx][k].get('modify', pconfig.get('modify', None))
 
@@ -132,6 +135,15 @@ class datatable (object):
                             val = samp[k] # couldn't convert to float - keep as a string
                         except KeyError:
                             pass # missing data - skip
+                    # Limit auto-generated scales with floor, ceiling and minRange.
+                    if headers[idx][k]['ceiling'] is not None and headers[idx][k]['max'] is None:
+                        headers[idx][k]['dmax'] = min(headers[idx][k]['dmax'], float(headers[idx][k]['ceiling']))
+                    if headers[idx][k]['floor'] is not None and headers[idx][k]['min'] is None:
+                        headers[idx][k]['dmin'] = max(headers[idx][k]['dmin'], float(headers[idx][k]['floor']))
+                    if headers[idx][k]['minRange'] is not None:
+                        drange = headers[idx][k]['dmax'] - headers[idx][k]['dmin']
+                        if drange < float(headers[idx][k]['minRange']):
+                            headers[idx][k]['dmax'] = headers[idx][k]['dmin'] + float(headers[idx][k]['minRange'])
 
         # Collect settings for shared keys
         shared_keys = defaultdict(lambda: dict())

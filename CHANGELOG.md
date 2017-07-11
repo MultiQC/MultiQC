@@ -62,6 +62,7 @@ New features:
   * This is in addition / alternative to changing the order of module execution
   * Allows one module to have sections in multiple places (eg. Custom Content)
 * Base `clean_s_name` function now strips excess whitespace.
+* Tables have new column options `floor`, `ceiling` and `minRange`.
 * Reports show warning if JavaScript is disabled
 
 Bug Fixes:

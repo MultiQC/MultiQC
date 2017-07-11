@@ -344,6 +344,9 @@ single_header = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
+    'ceiling': None,                # Maximum value for automatic bar limit
+    'floor': None,                  # Minimum value for automatic bar limit
+    'minRange': None,               # Minimum range for automatic bar
     'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
     'colour': '<auto>',             # Colour for column grouping
     'suffix': None,                 # Suffix for value (eg. '%')
