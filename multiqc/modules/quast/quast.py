@@ -239,30 +239,34 @@ class MultiqcModule(BaseMultiqcModule):
         """ Make a bar plot showing the number and length of contigs for each assembly """
 
         # Prep the data
+        import re
         data = dict()
+        categories = []
         for s_name, d in self.quast_data.items():
-            try:
-                p = dict()
-                p['>= 50000 bp'] = d['# contigs (>= 50000 bp)']
-                p['25000-50000 bp'] = d['# contigs (>= 25000 bp)'] - d['# contigs (>= 50000 bp)']
-                p['10000-25000 bp'] = d['# contigs (>= 10000 bp)'] - d['# contigs (>= 25000 bp)']
-                p['5000-10000 bp'] = d['# contigs (>= 5000 bp)'] - d['# contigs (>= 10000 bp)']
-                p['1000-5000 bp'] = d['# contigs (>= 1000 bp)'] - d['# contigs (>= 5000 bp)']
-                p['0-1000 bp'] = d['# contigs (>= 0 bp)'] - d['# contigs (>= 1000 bp)']
-                assert sum(p.values()) == d['# contigs (>= 0 bp)']
-                data[s_name] = p
-            except AssertionError:
-                log.warning("Contig counts didn't add up properly for {}".format(s_name))
+            nums_by_t = dict()
+            for k, v in d.items():
+                m = re.match('# contigs \(>= (\d+) bp\)', k)
+                if m:
+                    nums_by_t[int(m.groups()[0])] = v
 
-        # Define the order of the categories, small to big
-        cats = [
-            '0-1000 bp',
-            '1000-5000 bp',
-            '5000-10000 bp',
-            '10000-25000 bp',
-            '25000-50000 bp',
-            '>= 50000 bp',
-        ]
+            tresholds = sorted(nums_by_t.keys(), reverse=True)
+            p = dict()
+            cats = []
+            for i, t in enumerate(tresholds):
+                if i == 0:
+                    c = '>= ' + str(t) + ' bp'
+                    cats.append(c)
+                    p[c] = nums_by_t[t]
+                else:
+                    c = str(t) + '-' + str(tresholds[i - 1]) + ' bp'
+                    cats.append(c)
+                    p[c] = nums_by_t[t] - nums_by_t[tresholds[i - 1]]
+            if not categories:
+                categories = cats
+            elif set(cats) != set(categories):
+                log.warning("Different contig threshold categories for samples, skip plotting barplot".format(s_name))
+                continue
+            data[s_name] = p
 
         pconfig = {
             'id': 'quast_num_contigs',
@@ -271,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
             'yDecimals': False
         }
 
-        return bargraph.plot(data, cats, pconfig)
+        return bargraph.plot(data, categories, pconfig)
 
     def quast_predicted_genes_barplot(self):
         """
