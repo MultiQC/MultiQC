@@ -54,6 +54,17 @@ class MultiqcModule(BaseMultiqcModule):
         self.flexbar_barplot()
 
     def parse_flexbar(self, f):
+
+        def _save_data(parsed_data):
+            if len(parsed_data) > 0:
+                # Calculate removed_bases
+                if 'processed_bases' in parsed_data and 'remaining_bases' in parsed_data:
+                    parsed_data['removed_bases'] = parsed_data['processed_bases'] - parsed_data['remaining_bases']
+                    parsed_data['removed_bases_pct'] = (float(parsed_data['removed_bases']) / float(parsed_data['processed_bases']) ) * 100.0
+                if s_name in self.flexbar_data:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.flexbar_data[s_name] = parsed_data
+
         regexes = {
             'output_filename': r"Read file:\s+(.+)$",
             'processed_reads': r"Processed reads\s+(\d+)",
@@ -78,16 +89,12 @@ class MultiqcModule(BaseMultiqcModule):
 
             # End of log output. Save and reset in case of more logs.
             if 'Flexbar completed' in l:
-                if len(parsed_data) > 0:
-                    # Calculate removed_bases
-                    if 'processed_bases' in parsed_data and 'remaining_bases' in parsed_data:
-                        parsed_data['removed_bases'] = parsed_data['processed_bases'] - parsed_data['remaining_bases']
-                        parsed_data['removed_bases_pct'] = (float(parsed_data['removed_bases']) / float(parsed_data['processed_bases']) ) * 100.0
-                    if s_name in self.flexbar_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                    self.flexbar_data[s_name] = parsed_data
+                _save_data(parsed_data)
                 s_name = f['s_name']
                 parsed_data = dict()
+
+        # Pick up any partial logs
+        _save_data(parsed_data)
 
     def flexbar_barplot (self):
         """ Make the HighCharts HTML to plot the flexbar rates """
