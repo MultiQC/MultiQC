@@ -43,6 +43,8 @@
   * Improved plots display (thanks to @vladsaveliev)
 * **Qualimap**
   * Only calculate bases over target coverage for values in General Statistics. Should give a speed increase for very high coverage datasets.
+* **QUAST**
+  * Module is now compatible with runs from [MetaQUAST](http://quast.sourceforge.net/metaquast) (thanks to @vladsaveliev)
 * **RSeQC**
   * Changed default order of sections
   * Added config option to reorder and hide module report sections
