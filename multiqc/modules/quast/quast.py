@@ -239,7 +239,6 @@ class MultiqcModule(BaseMultiqcModule):
         """ Make a bar plot showing the number and length of contigs for each assembly """
 
         # Prep the data
-        import re
         data = dict()
         categories = []
         for s_name, d in self.quast_data.items():
