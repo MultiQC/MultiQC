@@ -35,6 +35,7 @@
   * Fixed edge-case bug where many-sample plot broke if total number of reads was less than the subsample number.
   * Fixed incorrect logic of config option `fastqscreen_simpleplot` (thanks to @daler)
   * Organisms now alphabetically sorted in fancy plot so that order is nonrandom (thanks to @daler)
+  * Fixed bug where `%No Hits` was missed in logs from recent versions of FastQ Screen.
 * **HTSeq Counts**
   * Fixed but so that module still works when `--additional-attr` is specified in v0.8 HTSeq above (thanks to @nalcala)
 * **Picard CollectInsertSize**
