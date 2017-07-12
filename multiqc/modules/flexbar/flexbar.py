@@ -41,12 +41,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Add drop rate to the general stats table
         headers = {}
         headers['removed_bases_pct'] = {
-            'title': '% Trimmed',
+            'title': '% bp Trimmed',
             'description': '% Total Base Pairs removed',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlBu-rev'
+            'scale': 'YlOrRd'
         }
         self.general_stats_addcols(self.flexbar_data, headers)
 
@@ -62,8 +62,8 @@ class MultiqcModule(BaseMultiqcModule):
             'finally_skipped_short_reads': r"finally skipped short reads\s+(\d+)",
             'discarded_reads_overall': r"Discarded reads overall\s+(\d+)",
             'remaining_reads': r"Remaining reads\s+(\d+)",
-            'processed_bases': r"Processed bases\s+(\d+)",
-            'remaining_bases': r"Remaining bases\s+(\d+)",
+            'processed_bases': r"Processed bases:?\s+(\d+)",
+            'remaining_bases': r"Remaining bases:?\s+(\d+)",
         }
         s_name = f['s_name']
         parsed_data = dict()
@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_data[k] = int(match.group(1))
 
             # End of log output. Save and reset in case of more logs.
-            if 'Flexbar completed adapter removal.' in l:
+            if 'Flexbar completed' in l:
                 if len(parsed_data) > 0:
                     # Calculate removed_bases
                     if 'processed_bases' in parsed_data and 'remaining_bases' in parsed_data:
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'flexbar_plot',
-            'title': 'Flexbar',
+            'title': 'Flexbar: Processed Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False
