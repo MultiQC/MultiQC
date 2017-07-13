@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
 version = pkg_resources.get_distribution("multiqc").version
+short_version = pkg_resources.get_distribution("multiqc").version
 script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None

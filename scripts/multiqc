@@ -24,7 +24,7 @@ import traceback
 try:
     from urllib.request import urlopen #py3
 except ImportError:
-    from urllib import urlopen #py2
+    from urllib2 import urlopen #py2
     # Use UTF-8 encoding by default
     reload(sys)
     sys.setdefaultencoding('utf8')
@@ -198,12 +198,14 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
-            response = urlopen('http://multiqc.info/version.php?v={}'.format(__version__), timeout=5)
+            response = urlopen('http://multiqc.info/version.php?v={}'.format(config.short_version), timeout=5)
             remote_version = response.read().decode('utf-8').strip()
-            if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', __version__)):
+            if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', config.short_version)):
                 logger.warn('MultiQC Version {} now available!'.format(remote_version))
-        except:
-            logger.debug('Could not connect to multiqc.info for version check')
+            else:
+                logger.debug('Latest MultiQC version is {}'.format(remote_version))
+        except Exception as e:
+            logger.debug('Could not connect to multiqc.info for version check: {}'.format(e))
 
     # Set up key variables (overwrite config vars from command line)
     if template is not None:
