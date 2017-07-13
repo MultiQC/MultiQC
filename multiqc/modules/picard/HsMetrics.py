@@ -74,9 +74,9 @@ def parse_reports(self):
                 keys = None
 
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[?([^\]\s]+)\]?", l)
+                fn_search = re.search(r"INPUT=(\[?[^\s]+\]?)", l)
                 if fn_search:
-                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = os.path.basename(fn_search.group(1).strip('[]'))
                     s_name = self.clean_s_name(s_name, f['root'])
                     parsed_data[s_name] = dict()
 
