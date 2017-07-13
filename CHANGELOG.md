@@ -38,8 +38,9 @@
   * Fixed bug where `%No Hits` was missed in logs from recent versions of FastQ Screen.
 * **HTSeq Counts**
   * Fixed but so that module still works when `--additional-attr` is specified in v0.8 HTSeq above (thanks to @nalcala)
-* **Picard CollectInsertSize**
-  * Fixed bug that could make the General Statistics _Median Insert Size_ value incorrect.
+* **Picard**
+  * CollectInsertSize: Fixed bug that could make the General Statistics _Median Insert Size_ value incorrect.
+  * Fixed error in sample name regex that left trailing `]` characters and was generally broken (thanks to @jyh1 for spotting this)
 * **Preseq**
   * Improved plots display (thanks to @vladsaveliev)
 * **Qualimap**

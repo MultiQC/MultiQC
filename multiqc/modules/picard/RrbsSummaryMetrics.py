@@ -29,7 +29,7 @@ def parse_reports(self):
                 s_name = None
                 keys = None
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
+                fn_search = re.search("INPUT=\[?([^\]\s]+)\]?", l)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = self.clean_s_name(s_name, f['root'])

@@ -27,7 +27,7 @@ def read_sample_name(line_iter, clean_fn):
             new_line = new_line.strip()
             if 'BaseDistributionByCycle' in new_line and 'INPUT' in new_line:
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", new_line)
+                fn_search = re.search("INPUT=\[?([^\]\s]+)\]?", new_line)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1))
                     s_name = clean_fn(s_name)
