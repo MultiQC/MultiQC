@@ -68,6 +68,7 @@ New features:
 * Base `clean_s_name` function now strips excess whitespace.
 * Tables have new column options `floor`, `ceiling` and `minRange`.
 * Reports show warning if JavaScript is disabled
+* Config option `custom_logo` now works with file paths relative to config file directory and cwd.
 
 Bug Fixes:
 

@@ -121,7 +121,7 @@ def mqc_load_config(yaml_config):
             with open(yaml_config) as f:
                 new_config = yaml.load(f)
                 logger.debug("Loading config settings from: {}".format(yaml_config))
-                mqc_add_config(new_config)
+                mqc_add_config(new_config, yaml_config)
         except (IOError, AttributeError) as e:
             logger.debug("Config error: {}".format(e))
         except yaml.scanner.ScannerError as e:
@@ -147,7 +147,7 @@ def mqc_cl_config(cl_config):
             logger.debug("Found command line config: {}".format(parsed_clc))
             mqc_add_config(parsed_clc)
 
-def mqc_add_config(conf):
+def mqc_add_config(conf, conf_path=None):
     """ Add to the global config with given MultiQC config dict """
     global fn_clean_exts, fn_clean_trim
     for c, v in conf.items():
@@ -163,6 +163,18 @@ def mqc_add_config(conf):
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_trim[0:0] = v
             logger.debug("Added to filename clean trimmings: {}".format(v))
+        elif c in ['custom_logo']:
+            # Resolve file paths - absolute or cwd, or relative to config file
+            fpath = v
+            if os.path.exists(v):
+                fpath = os.path.abspath(v)
+            elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), v)):
+                fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), v))
+            else:
+                logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
+                continue
+            logger.debug("New config '{}': {}".format(c, fpath))
+            update_dict(globals(), {c: fpath})
         else:
             logger.debug("New config '{}': {}".format(c, v))
             update_dict(globals(), {c: v})
