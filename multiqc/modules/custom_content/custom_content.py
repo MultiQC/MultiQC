@@ -218,6 +218,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self, c_id, mod):
 
         modname = mod['config'].get('section_name', c_id.replace('_', ' ').title())
+        if modname == '' or modname is None:
+            modname = 'Custom Content'
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
@@ -279,10 +281,14 @@ def _find_file_header(f):
     hconfig = None
     try:
         hconfig = yaml.load("\n".join(hlines))
+        assert( type(hconfig) == dict)
     except yaml.YAMLError as e:
         log.warn("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
         log.debug(e)
-    return hconfig
+    except AssertionError:
+        log.debug("Custom Content comment file header looked wrong: {}".format(hconfig))
+    else:
+        return hconfig
 
 def _guess_file_format(f):
     """
@@ -387,7 +393,7 @@ def _parse_txt(f, conf):
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get('plot_type') is None:
             allfloats = True
-            for r in d:
+            for r in d[1:]:
                 for v in r[1:]:
                     allfloats = allfloats and type(v) == float
             if allfloats:
