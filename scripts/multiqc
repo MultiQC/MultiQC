@@ -141,6 +141,7 @@ logger = config.logger
 )
 @click.option('-c', '--config', 'config_file',
                     type = click.Path(exists=True, readable=True),
+                    multiple=True,
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
 @click.option('--cl_config',

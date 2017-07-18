@@ -93,7 +93,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 
 ##### Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
-def mqc_load_userconfig(path=None):
+def mqc_load_userconfig(paths=()):
     """ Overwrite config defaults with user config files """
 
     # Load and parse installation config file if we find it
@@ -110,8 +110,8 @@ def mqc_load_userconfig(path=None):
     mqc_load_config('multiqc_config.yaml')
 
     # Custom command line config
-    if path is not None:
-        mqc_load_config(path)
+    for p in paths:
+        mqc_load_config(p)
 
 
 def mqc_load_config(yaml_config):

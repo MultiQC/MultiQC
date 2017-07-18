@@ -2,7 +2,9 @@
 
 ## MultiQC v1.2dev
 
-_..nothing yet.._
+#### Bug Fixes:
+* Specifying multiple config files with `-c`/`--config` now works as expected
+    * Previously this would only read the last specified
 
 ---
 
