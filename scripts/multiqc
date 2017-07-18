@@ -602,7 +602,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # Try to create a PDF if requestted
     if make_pdf:
         try:
-            pdf_fn_name = config.output_fn_name.replace('.html', '.pdf')
+            pdf_fn_name = config.output_fn.replace('.html', '.pdf')
             pandoc_call = [
                 'pandoc',
                 '--standalone',
