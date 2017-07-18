@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## v1.1dev
+## [MultiQC v1.1](https://github.com/ewels/MultiQC/releases/tag/v1.1) - 2017-07-18
 
 #### New Modules:
 
@@ -80,7 +80,9 @@
 * Line graphs don't smooth lines if not needed (number of points < maximum number allowed)
 * PDF output now respects custom output directory.
 
-## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
+---
+
+## [MultiQC v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
 Version 1.0! This release has been a long time coming and brings with it some fairly
 major improvements in speed, report filesize and report performance. There's also
 a bunch of new modules, more options, features and a whole lot of bug fixes.
@@ -238,7 +240,9 @@ To see what changes need to applied to your custom plugin code, please see the [
 * Fixed minor bug where config option `force: true` didn't work. Now you don't have to always specify `-f`!
 
 
-## [v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
+---
+
+## [MultiQC v0.9](https://github.com/ewels/MultiQC/releases/tag/v0.9) - 2016-12-21
 A major new feature is released in v0.9 - support for _custom content_. This means
 that MultiQC can now easily include output from custom scripts within reports without
 the need for a new module or plugin. For more information, please see the
@@ -327,7 +331,9 @@ the need for a new module or plugin. For more information, please see the
 * General Stats _Showing x of y_ columns count is fixed on page load.
 * Big code whitespace cleanup
 
-## [v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
+---
+
+## [MultiQC v0.8](https://github.com/ewels/MultiQC/releases/tag/v0.8) - 2016-09-26
 
 #### New Modules:
 
@@ -400,7 +406,9 @@ the need for a new module or plugin. For more information, please see the
 Many thanks to those at the [OpenBio Codefest 2016](https://www.open-bio.org/wiki/Codefest_2016)
 who worked on MultiQC projects.
 
-## [v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
+---
+
+## [MultiQC v0.7](https://github.com/ewels/MultiQC/releases/tag/v0.7) - 2016-07-04
 #### Module updates:
 * [**Kallisto**](https://pachterlab.github.io/kallisto/) - new module!
 * **Picard**
@@ -465,7 +473,9 @@ who worked on MultiQC projects.
 * Numerous other small bugs.
 
 
-## [v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
+---
+
+## [MultiQC v0.6](https://github.com/ewels/MultiQC/releases/tag/v0.6) - 2016-04-29
 #### Module updates:
 * New [Salmon](http://combine-lab.github.io/salmon/) module.
 * New [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic) module.
@@ -499,7 +509,9 @@ Bugfixes:
 * Plots now properly change y axis limits and labels when changing datasets
 * Flat plots now have correct path in `default_dev` template
 
-## [v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
+---
+
+## [MultiQC v0.5](https://github.com/ewels/MultiQC/releases/tag/v0.5) - 2016-03-29
 #### Module updates:
 * New [Skewer](https://github.com/relipmoc/skewer) module, written by @dakl
 * New [Samblaster](https://github.com/GregoryFaust/samblaster) module, written by @dakl
@@ -527,7 +539,9 @@ Bugfixes:
 * Everything (including the data directory) is now created in a temporary directory and moved when MultiQC is complete.
 * A handful of performance updates for large analysis directories
 
-## [v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
+---
+
+## [MultiQC v0.4](https://github.com/ewels/MultiQC/releases/tag/v0.4) - 2016-02-16
 * New `multiqc_sources.txt` which identifies the paths used to collect all report data for each sample
 * Export parsed data as tab-delimited text, `JSON` or `YAML` using the new `-k`/`--data-format` command line option
 * Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
@@ -544,7 +558,9 @@ Bugfixes:
 * Bugfix: MultiQC default_dev template now copies module assets properly
 * Bufgix: General Stats table floating header now resizes properly when page width changes
 
-## [v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
+---
+
+## [MultiQC v0.3.2](https://github.com/ewels/MultiQC/releases/tag/v0.3.2) - 2016-02-08
 * All modules now load their log file search parameters from a config
   file, allowing you to overwrite them using your user config file
     * This is useful if your analysis pipeline renames program outputs
@@ -588,13 +604,17 @@ Bugfixes:
 * Bugfix for Qualimap RNA Seq reports with paired end data
 
 
-## [v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
+---
+
+## [MultiQC v0.3.1](https://github.com/ewels/MultiQC/releases/tag/v0.3.1) - 2015-11-04
 * Hotfix patch to fix broken FastQC module (wasn't finding `.zip` files properly)
 * General Stats table colours now flat. Should improve browser speed.
 * Empty rows now hidden if appear due to column removal in general stats
 * FastQC Kmer plot removed until we have something better to show.
 
-## [v0.3](https://github.com/ewels/MultiQC/releases/tag/v0.3) - 2015-11-04
+---
+
+## [MultiQC v0.3](https://github.com/ewels/MultiQC/releases/tag/v0.3) - 2015-11-04
 * Lots of lovely new documentation!
 * Child templates - easily customise specific parts of the default report template
 * Plugin hooks - allow other tools to execute custom code during MultiQC execution
@@ -628,7 +648,9 @@ Bugfixes:
 * Plots with highlighted and renamed samples now honour this when exporting to
   different file types.
 
-## [v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
+---
+
+## [MultiQC v0.2](https://github.com/ewels/MultiQC/releases/tag/v0.2) - 2015-09-18
 * Code restructuring for nearly all modules. Common base module
   functions now handle many more functions (plots, config, file import)
     * See the [contributing notes](https://github.com/ewels/MultiQC/blob/master/CONTRIBUTING.md)
@@ -648,7 +670,9 @@ Bugfixes:
 * Bugfix: FastQC seq content heatmap highlighting
 * Many, many small bugfixes
 
-## [v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
+---
+
+## [MultiQC v0.1](https://github.com/ewels/MultiQC/releases/tag/v0.1) - 2015-09-01
 * The first public release of MultiQC, after a month of development. Basic
 structure in place and modules for FastQC, FastQ Screen, Cutadapt, Bismark,
 STAR, Bowtie, Subread featureCounts and Picard MarkDuplicates. Approaching
