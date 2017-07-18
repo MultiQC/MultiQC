@@ -46,7 +46,9 @@ your error log here
 * **Tool homepage:**
     * [eg. http://www.github/me/mytool]
 * **Complete log file output:**
-    * [drag and drop or submit as a PR to https://github.com/ewels/MultiQC_TestData]
+    * [drag and drop a file, or submit as a PR to https://github.com/ewels/MultiQC_TestData]
+    <!-- NB: Please don't just paste contents. GitHub can alter whitespace and formatting.
+    Instead, please attach a file by dragging and dropping onto the issue. -->
     <!-- NB: If the file is many MBs then it's fine to truncate,
     though please leave a few lines of data in so that it's clear what the format is -->
 * **Log filename pattern:**
