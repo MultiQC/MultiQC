@@ -83,6 +83,9 @@ jellyfish:
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
+leehom:
+    contents: 'Adapter dimers/chimeras'
+    shared: true
 macs2:
     fn: '*_peaks.xls'
 methylQA:

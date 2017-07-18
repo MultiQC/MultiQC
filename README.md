@@ -36,14 +36,14 @@ Currently, supported tools include:
 |[BioBloom Tools][biobloomtools]|[Bowtie][bowtie-1]    | [Bcftools][bcftools]      | [Conpair][conpair]   |
 |[Cluster Flow][clusterflow]  | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Disambiguate][disambiguate] |
 |[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HOMER][homer]            | [goleft][goleft]     |
-|[FastQC][fastqc]             | [HISAT2][hisat2]       | [HTSeq][htseq]            | [methylQA][methylqa] |
-|[FastQ Screen][fastq-screen] | [Kallisto][kallisto]   | [MACS2][macs2]            | [Peddy][peddy]       |
-|[Flexbar][flexbar]           | [Salmon][salmon]       | [Picard][picard]          | [Preseq][preseq]     |
-|[Jellyfish][jellyfish]       | [Slamdunk][slamdunk]   | [Prokka][prokka]          | [QoRTs][qorts]       |
-|[Skewer][skewer]             | [STAR][star]           | [Samblaster][samblaster]  | [Qualimap][qualimap] |
-|[SortMeRNA][sortmerna]       | [Tophat][tophat]       | [Samtools][samtools]      | [QUAST][quast]       |
-|[Trimmomatic][trimmomatic]   |                        | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
-|                             |                        | [Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
+|[leeHom][leehom]             | [HISAT2][hisat2]       | [HTSeq][htseq]            | [methylQA][methylqa] |
+|[FastQC][fastqc]             | [Kallisto][kallisto]   | [MACS2][macs2]            | [Peddy][peddy]       |
+|[FastQ Screen][fastq-screen] | [Salmon][salmon]       | [Picard][picard]          | [Preseq][preseq]     |
+|[Flexbar][flexbar]           | [Slamdunk][slamdunk]   | [Prokka][prokka]          | [QoRTs][qorts]       |
+|[Jellyfish][jellyfish]       | [STAR][star]           | [Samblaster][samblaster]  | [Qualimap][qualimap] |
+|[Skewer][skewer]             | [Tophat][tophat]       | [Samtools][samtools]      | [QUAST][quast]       |
+|[SortMeRNA][sortmerna]       |                        | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
+|[Trimmomatic][trimmomatic]   |                        | [Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
 |                             |                        | [THetA2][theta2]          |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -178,6 +178,7 @@ and many others. Thanks for your support!
 [homer]:          http://multiqc.info/docs/#homer
 [htseq]:          http://multiqc.info/docs/#htseq
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[leehom]:         http://multiqc.info/docs/#leehom
 [macs2]:          http://multiqc.info/docs/#macs2
 [methylqa]:       http://multiqc.info/docs/#methylqa
 [peddy]:          http://multiqc.info/docs/#peddy

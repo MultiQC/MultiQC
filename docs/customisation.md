@@ -193,7 +193,7 @@ report_section_order:
         after: 'diffsection'
 ```
 
-## Customising tables
+## Customising tables
 Report tables such as the General Statistics table can get quite wide. To help with this,
 columns in the report can be hidden. Some MultiQC modules include columns which are hidden
 by default, others may be uninteresting to some users.

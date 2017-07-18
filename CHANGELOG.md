@@ -2,6 +2,10 @@
 
 ## MultiQC v1.2dev
 
+#### New Modules:
+* [**leeHom**](https://github.com/grenaud/leeHom)
+    * leeHom is a program for the Bayesian reconstruction of ancient DNA
+
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
     * Previously this would only read the last specified

@@ -217,6 +217,7 @@ module_order:
     - 'bowtie2'
     - 'bowtie1'
     # Pre-alignment QC
+    - 'leehom'
     - 'adapterRemoval'
     - 'cutadapt'
     - 'flexbar'

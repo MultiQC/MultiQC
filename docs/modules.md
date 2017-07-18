@@ -122,7 +122,7 @@ if it appears in the MultiQC logs at the appropriate time...
 Note that the `__init__` variables are used to create the header, URL link,
 analysis module credits and description in the report.
 
-### Logging
+### Logging
 Last thing - MultiQC modules have a standardised way of producing output,
 so you shouldn't really use `print()` statements for your `Hello World` ;)
 

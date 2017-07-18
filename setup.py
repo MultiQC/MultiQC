@@ -60,17 +60,17 @@ setup(
     ],
     entry_points = {
         'multiqc.modules.v1': [
-            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
-            'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
+            'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
+            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
@@ -85,6 +85,7 @@ setup(
             'htseq = multiqc.modules.htseq:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
+            'leehom = multiqc.modules.leehom:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
@@ -102,8 +103,8 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
-            'star = multiqc.modules.star:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
+            'star = multiqc.modules.star:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
