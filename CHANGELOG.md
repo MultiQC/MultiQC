@@ -65,7 +65,6 @@ New features:
 * New option to customise the order of report _sections_
   * This is in addition / alternative to changing the order of module execution
   * Allows one module to have sections in multiple places (eg. Custom Content)
-* Base `clean_s_name` function now strips excess whitespace.
 * Tables have new column options `floor`, `ceiling` and `minRange`.
 * Reports show warning if JavaScript is disabled
 * Config option `custom_logo` now works with file paths relative to config file directory and cwd.
@@ -74,7 +73,9 @@ Bug Fixes:
 
 * Table headers now sort columns again after scrolling the table
 * Fixed buggy table header tooltips
+* Base `clean_s_name` function now strips excess whitespace.
 * Line graphs don't smooth lines if not needed (number of points < maximum number allowed)
+* PDF output now respects custom output directory.
 
 ## [v1.0](https://github.com/ewels/MultiQC/releases/tag/v1.0) - 2017-05-17
 Version 1.0! This release has been a long time coming and brings with it some fairly
