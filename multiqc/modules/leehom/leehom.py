@@ -76,8 +76,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
         headers['merged_trimming'] = {
-            'title': '{} Merged'.format(config.read_count_prefix),
+            'title': '{} Merged (Trimming)'.format(config.read_count_prefix),
             'description': 'Merged clusters from trimming ({})'.format(config.read_count_desc),
+            'min': 0,
+            'scale': 'PuRd',
+            'modify': lambda x: x * config.read_count_multiplier,
+            'shared_key': 'read_count'
+        }
+        headers['merged_overlap'] = {
+            'title': '{} Merged (Overlap)'.format(config.read_count_prefix),
+            'description': 'Merged clusters from overlapping reads ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
             'modify': lambda x: x * config.read_count_multiplier,
