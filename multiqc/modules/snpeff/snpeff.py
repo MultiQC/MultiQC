@@ -38,8 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.snpeff_data) == 0:
             log.debug("Could not find any data in {}".format(
-                config.analysis_dir)
-            )
+                config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.snpeff_data)))
