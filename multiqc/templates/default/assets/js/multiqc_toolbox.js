@@ -496,6 +496,15 @@ function mqc_toolbox_confirmapply(){
   }
 }
 
+function validate_regexp(pattern) {
+  try {
+    new RegExp(pattern, 'g');
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
 //////////////////////////////////////////////////////
 // HIGHLIGHT SAMPLES
 //////////////////////////////////////////////////////
@@ -504,24 +513,31 @@ function apply_mqc_highlights(){
   // Collect the filters into an array
   var f_texts = [];
   var f_cols = [];
-  var regex_mode = false;
-  if($('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on')){
-    regex_mode = true;
-  }
-  $('#mqc_col_filters li .f_text').each(function(){
-    var val = $(this).val();
-    if (f_texts.indexOf(val) < 0) {
-      f_texts.push($(this).val());
-      f_cols.push($(this).css('color'));
-    } else {
-      f_cols[f_texts.indexOf(val)] = $(this).css('color');
+  var regex_mode = $('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on');
+
+  $('#mqc_col_filters li').each(function() {
+    var inputElement = $(this).find('.f_text');
+    var pattern = inputElement.val();
+
+    // Validate RegExp
+    $(this).removeClass('bg-danger');
+    if (regex_mode && !validate_regexp(pattern)) {
+      $(this).addClass('bg-danger');
+      return;
     }
 
+    // Only add pattern if it hasn't already been added
+    if (f_texts.indexOf(pattern) < 0) {
+      f_texts.push(pattern);
+      f_cols.push(inputElement.css('color'));
+    } else {
+      f_cols[f_texts.indexOf(pattern)] = inputElement.css('color');
+    }
   });
 
   // Apply a 'background' highlight to remove default colouring first
   // Also highlight toolbox drawer icon
-  if(f_texts.length > 0 && f_texts.indexOf('') < 0){
+  if (f_texts.length > 0 && f_texts.indexOf('') < 0) {
     f_texts.unshift('');
     f_cols.unshift('#cccccc');
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass('in_use');
@@ -549,15 +565,14 @@ function apply_mqc_renamesamples () {
   var f_texts = $('#mqc_renamesamples_filters > li').each(function () {
     var from_text = $(this).find(".from_text").val()
     var to_text = $(this).find(".to_text").val()
-    if (regex_mode) {
-      try {
-        new RegExp(from_text, 'g');
-        $(this).removeClass('bg-danger')
-      } catch (error) {
-        $(this).addClass('bg-danger')
-        return
-      }
+    
+    // Validate RegExp
+    $(this).removeClass('bg-danger')
+    if (regex_mode && !validate_regexp(from_text)) {
+      $(this).addClass('bg-danger')
+      return
     }
+
     valid_from_texts.push(from_text)
     valid_to_texts.push(to_text)
   })
@@ -587,13 +602,19 @@ function apply_mqc_renamesamples () {
 function apply_mqc_hidesamples(){
   // Collect the filters into an array
   var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
+  var regex_mode = $('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on');
   var f_texts = [];
-  var regex_mode = false;
-  if($('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on')){
-    regex_mode = true;
-  }
-  $('#mqc_hidesamples_filters li .f_text').each(function(){
-    f_texts.push($(this).val());
+  $('#mqc_hidesamples_filters li').each(function() {
+    var pattern = $(this).find('.f_text').val()
+
+    // Validate RegExp
+    $(this).removeClass('bg-danger')
+    if (regex_mode && !validate_regexp(pattern)) {
+      $(this).addClass('bg-danger')
+      return
+    }
+
+    f_texts.push(pattern);
   });
 
   // If something was hidden, highlight the toolbox icon
