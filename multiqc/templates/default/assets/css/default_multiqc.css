@@ -613,6 +613,7 @@ input.form-control[type=color]{
     font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
 }
 
+
 /* MultiQC tables */
 .table tr td {
     font-size:0.9em;
