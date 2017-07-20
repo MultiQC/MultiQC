@@ -166,3 +166,14 @@ class datatable (object):
         self.data = data
         self.headers = headers
         self.pconfig = pconfig
+
+    def get_headers_in_order(self):
+        """Gets the headers in the order they want to be displayed.
+           Returns a list of triplets: (idx, key, header_info)
+        """
+        res = list()
+        #Initial refactoring - just traverse them in the order we have them
+        for idx, hs in enumerate(self.headers):
+            for k, header in hs.items():
+                res.append((idx, k, header))
+        return res
