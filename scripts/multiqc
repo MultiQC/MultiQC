@@ -79,6 +79,11 @@ logger = config.logger
                     type = click.Choice(config.avail_templates),
                     help = "Report template to use."
 )
+@click.option( '--tag', 'module_tag',
+                    type = str, 
+                    multiple = True,
+                    help = "Use only module withing in this group of modules, eg. RNA"
+)
 @click.option('-x', '--ignore',
                     type = str,
                     multiple = True,
@@ -160,7 +165,7 @@ logger = config.logger
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module, exclude, outdir,
+def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -244,6 +249,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         config.template = 'simple'
     if sample_names:
         config.load_sample_names(sample_names)
+    if module_tag is not None:
+        config.module_tag = module_tag
     config.kwargs = kwargs # Plugin command line options
 
     plugin_hooks.mqc_trigger('execution_start')
@@ -306,6 +313,16 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     config.module_order = [ m if type(m) is dict else {m:{}} for m in config.module_order ]
     mod_keys = [ list(m.keys())[0] for m in config.module_order ]
 
+    #Get the avaiable tags to decide which modules to run.
+    modules_from_tags = set()
+    if module_tag is not None:
+        tags = module_tag 
+        for m in config.module_order:
+            module_name = list(m.keys())[0] # only one name in each dict
+            for tag in tags:
+                if tag == m[module_name].get('module_tag'):
+                    modules_from_tags.add(module_name)
+    
     # Get the list of modules we want to run, in the order that we want them
     run_modules = [ m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys() ]
     run_modules.extend( [ {m:{}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules ] )
@@ -314,6 +331,9 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     if module:
         run_modules = [ m for m in run_modules if list(m.keys())[0] in module ]
         logger.info('Only using modules {}'.format(', '.join(module)))
+    elif modules_from_tags:
+        run_modules = [ m for m in run_modules if list(m.keys())[0] in modules_from_tags ]
+        logger.info('Only using module group {} which contains {}'.format((', '.join( module_tag)),(', '.join(modules_from_tags))))
     elif exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
