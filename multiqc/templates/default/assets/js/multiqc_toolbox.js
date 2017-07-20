@@ -338,6 +338,16 @@ $(function () {
       }
     }
   });
+  // Set current config as default
+  $('.mqc_config_set_default').click(function(e){
+    e.preventDefault();
+    var name = $('#mqc_loadconfig_form select').val().trim();
+    if(name == ''){
+      alert('Error - no saved settings selected.');
+    } else {
+        mqc_save_config(name, false, true);
+    }
+  });
 
   // Filter text is changed
   $('.mqc_filters').on('blur', 'li input', function(){
@@ -574,7 +584,7 @@ function apply_mqc_hidesamples(){
 //////////////////////////////////////////////////////
 
 // Save the current configuration setup
-function mqc_save_config(name, clear){
+function mqc_save_config(name, clear, as_default){
   if(name === undefined){ return false; }
   var config = {};
 
@@ -598,15 +608,26 @@ function mqc_save_config(name, clear){
       if(prev_config !== null && prev_config !== undefined){
         prev_config = JSON.parse(prev_config);
       } else {
-        prev_config  = {};
+        prev_config = {};
+        as_default = true;
       }
 
       // Update config obj with current config
       if(clear == true){
         delete prev_config[name];
+        // TODO: If deleted config was default, move default to possible remaining config
       } else {
         prev_config[name] = config;
         prev_config[name]['last_updated'] = Date();
+        if (as_default) {
+          for (var c in prev_config) {
+            if (prev_config.hasOwnProperty(c)) {
+              prev_config[c]['default'] = false;
+            }
+          }
+        }
+        prev_config[name]['default'] = as_default;
+        if (as_default) console.log('Set new default config!');
       }
       localStorage.setItem("mqc_config", JSON.stringify(prev_config));
 
@@ -640,12 +661,18 @@ function mqc_save_config(name, clear){
 // LOAD TOOLBOX SAVE NAMES
 //////////////////////////////////////////////////////
 function populate_mqc_saveselect(){
+  var default_config = '';
   try {
     var local_config = localStorage.getItem("mqc_config");
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
       for (var name in local_config){
         $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
+        if (local_config[name]['default']) {
+          console.log('Loaded default config!');
+          load_mqc_config(name);
+          default_config = name;
+        }
       }
     }
   } catch(e){
@@ -658,7 +685,7 @@ function populate_mqc_saveselect(){
       '<a href="https://www.google.se/search?q=Block+third-party+cookies+and+site+data" target="_blank">change this browser setting</a>'+
       ' to save MultiQC report configs.</p>');
   }
-  $('#mqc_loadconfig_form select').val('');
+  $('#mqc_loadconfig_form select').val(default_config);
 }
 
 //////////////////////////////////////////////////////
