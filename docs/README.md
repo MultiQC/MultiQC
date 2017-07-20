@@ -9,6 +9,7 @@ Using MultiQC:
 MultiQC Modules:
   Pre-alignment:
     Adapter Removal: modules/adapterRemoval.md
+    Bcl2fastq: modules/bcl2fastq.md
     BioBloom Tools: modules/biobloomtools.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
