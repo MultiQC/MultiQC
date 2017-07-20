@@ -79,6 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
             - tRNA
             - miscRNA
             - signal peptides
+            - CRISPR arrays
 
             This barplot shows you the distribution of these different types of features found in each contig.
             '''
@@ -189,7 +190,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Number of annotated sig_peptide',
                 'format': '{:i}',
         }
-
+        headers['repeat_region'] = {
+                'title': '# CRISPR arrays',
+                'description': 'Number of annotated CRSIPR arrays',
+                'format': '{:i}',
+        }
         table_config = {
             'namespace': 'prokka',
             'min': 0,
@@ -208,6 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['tmRNA'] =         { 'name': 'tmRNA' }
         keys['misc_RNA'] =      { 'name': 'misc RNA' }
         keys['sig_peptide'] =   { 'name': 'Signal peptides' }
+        keys['repeat_region'] = { 'name': 'CRISPR array'}
 
         plot_config = {
             'id': 'prokka_plot',
