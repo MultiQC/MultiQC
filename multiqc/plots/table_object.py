@@ -108,7 +108,7 @@ class datatable (object):
 
                 # Also overwite placement if set in config
                 try:
-                    headers[idx][k]['placement'] = float(config.table_columns_placement[ headers[idx][k]'namespace'] ][k])
+                    headers[idx][k]['placement'] = float(config.table_columns_placement[ headers[idx][k]['namespace'] ][k])
                 except (KeyError, ValueError):
                     pass
 
