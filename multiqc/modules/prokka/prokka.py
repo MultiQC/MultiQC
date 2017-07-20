@@ -69,7 +69,22 @@ class MultiqcModule(BaseMultiqcModule):
         if getattr(config, 'prokka_table', False):
             self.add_section( plot = self.prokka_table() )
         if getattr(config, 'prokka_barplot', True):
-            self.add_section( plot = self.prokka_barplot() )
+            descr_plot = "This barplot shows the distribution of different types of features found in each contig."
+            helptext = '''
+            `Prokka` can detect different features:
+
+            - CDS
+            - rRNA
+            - tmRNA
+            - tRNA
+            - miscRNA
+            - signal peptides
+
+            This barplot shows you the distribution of these different types of features found in each contig.
+            '''
+            self.add_section(plot=self.prokka_barplot(),
+                             helptext=helptext,
+                             description=descr_plot)
 
 
     def parse_prokka(self, f):
