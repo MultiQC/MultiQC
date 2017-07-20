@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
 version = pkg_resources.get_distribution("multiqc").version
+short_version = pkg_resources.get_distribution("multiqc").version
 script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
@@ -92,7 +93,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 
 ##### Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
-def mqc_load_userconfig(path=None):
+def mqc_load_userconfig(paths=()):
     """ Overwrite config defaults with user config files """
 
     # Load and parse installation config file if we find it
@@ -109,8 +110,8 @@ def mqc_load_userconfig(path=None):
     mqc_load_config('multiqc_config.yaml')
 
     # Custom command line config
-    if path is not None:
-        mqc_load_config(path)
+    for p in paths:
+        mqc_load_config(p)
 
 
 def mqc_load_config(yaml_config):
@@ -120,7 +121,7 @@ def mqc_load_config(yaml_config):
             with open(yaml_config) as f:
                 new_config = yaml.load(f)
                 logger.debug("Loading config settings from: {}".format(yaml_config))
-                mqc_add_config(new_config)
+                mqc_add_config(new_config, yaml_config)
         except (IOError, AttributeError) as e:
             logger.debug("Config error: {}".format(e))
         except yaml.scanner.ScannerError as e:
@@ -133,15 +134,20 @@ def mqc_cl_config(cl_config):
     for clc_str in cl_config:
         try:
             parsed_clc = yaml.load(clc_str)
+            # something:var fails as it needs a space. Fix this (a common mistake)
+            if isinstance(parsed_clc, str) and ':' in clc_str:
+                clc_str = ': '.join(clc_str.split(':'))
+                parsed_clc = yaml.load(clc_str)
             assert(isinstance(parsed_clc, dict))
         except yaml.scanner.ScannerError as e:
             logger.error("Could not parse command line config: {}\n{}".format(clc_str, e))
         except AssertionError:
             logger.error("Could not parse command line config: {}".format(clc_str))
         else:
+            logger.debug("Found command line config: {}".format(parsed_clc))
             mqc_add_config(parsed_clc)
 
-def mqc_add_config(conf):
+def mqc_add_config(conf, conf_path=None):
     """ Add to the global config with given MultiQC config dict """
     global fn_clean_exts, fn_clean_trim
     for c, v in conf.items():
@@ -157,6 +163,18 @@ def mqc_add_config(conf):
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_trim[0:0] = v
             logger.debug("Added to filename clean trimmings: {}".format(v))
+        elif c in ['custom_logo']:
+            # Resolve file paths - absolute or cwd, or relative to config file
+            fpath = v
+            if os.path.exists(v):
+                fpath = os.path.abspath(v)
+            elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), v)):
+                fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), v))
+            else:
+                logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
+                continue
+            logger.debug("New config '{}': {}".format(c, fpath))
+            update_dict(globals(), {c: fpath})
         else:
             logger.debug("New config '{}': {}".format(c, v))
             update_dict(globals(), {c: v})

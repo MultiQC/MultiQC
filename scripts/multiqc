@@ -9,6 +9,7 @@ import base64
 import click
 from distutils import version
 from distutils.dir_util import copy_tree
+import errno
 import io
 import jinja2
 import os
@@ -23,7 +24,7 @@ import traceback
 try:
     from urllib.request import urlopen #py3
 except ImportError:
-    from urllib import urlopen #py2
+    from urllib2 import urlopen #py2
     # Use UTF-8 encoding by default
     reload(sys)
     sys.setdefaultencoding('utf8')
@@ -140,6 +141,7 @@ logger = config.logger
 )
 @click.option('-c', '--config', 'config_file',
                     type = click.Path(exists=True, readable=True),
+                    multiple=True,
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
 @click.option('--cl_config',
@@ -197,12 +199,14 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
-            response = urlopen('http://multiqc.info/version.php?v={}'.format(__version__), timeout=5)
+            response = urlopen('http://multiqc.info/version.php?v={}'.format(config.short_version), timeout=5)
             remote_version = response.read().decode('utf-8').strip()
-            if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', __version__)):
+            if version.StrictVersion(re.sub('[^0-9\.]','', remote_version)) > version.StrictVersion(re.sub('[^0-9\.]','', config.short_version)):
                 logger.warn('MultiQC Version {} now available!'.format(remote_version))
-        except:
-            logger.debug('Could not connect to multiqc.info for version check')
+            else:
+                logger.debug('Latest MultiQC version is {}'.format(remote_version))
+        except Exception as e:
+            logger.debug('Could not connect to multiqc.info for version check: {}'.format(e))
 
     # Set up key variables (overwrite config vars from command line)
     if template is not None:
@@ -278,7 +282,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")
     else:
-        if title is not None and filename == config.output_fn_name:
+        if title is not None and filename is None:
             filename = re.sub('[^\w\.-]', '', re.sub('[-\s]+', '-', title) ).strip()
             filename += '_multiqc_report'
         if filename is not None:
@@ -297,24 +301,29 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     for d in config.analysis_dir:
         logger.info("Searching '{}'".format(d))
 
+    # Prep module configs
+    config.top_modules = [ m if type(m) is dict else {m:{}} for m in config.top_modules ]
+    config.module_order = [ m if type(m) is dict else {m:{}} for m in config.module_order ]
+    mod_keys = [ list(m.keys())[0] for m in config.module_order ]
+
     # Get the list of modules we want to run, in the order that we want them
-    run_modules = [ m for m in config.top_modules if m in config.avail_modules.keys() ]
-    run_modules.extend( [ m for m in config.avail_modules.keys() if m not in config.module_order and m not in run_modules ] )
-    run_modules.extend( [ m for m in config.module_order if m in config.avail_modules.keys() and m not in run_modules ] )
+    run_modules = [ m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys() ]
+    run_modules.extend( [ {m:{}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules ] )
+    run_modules.extend( [ m for m in config.module_order if list(m.keys())[0] in config.avail_modules.keys() and list(m.keys())[0] not in [list(rm.keys())[0] for rm in run_modules] ] )
 
     if module:
-        run_modules = [m for m in run_modules if m in module]
+        run_modules = [ m for m in run_modules if list(m.keys())[0] in module ]
         logger.info('Only using modules {}'.format(', '.join(module)))
     elif exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
             config.skip_generalstats = True
             exclude = tuple(x for x in exclude if x != 'general_stats')
-        run_modules = [m for m in run_modules if m not in exclude]
+        run_modules = [m for m in run_modules if list(m.keys())[0] not in exclude]
     if len(run_modules) == 0:
         logger.critical('No analysis modules specified!')
         sys.exit(1)
-    logger.debug("Analysing modules: {}".format(', '.join(run_modules)))
+    logger.debug("Analysing modules: {}".format(', '.join([ list(m.keys())[0] for m in run_modules ])))
 
     # Create the temporary working directories
     tmp_dir = tempfile.mkdtemp()
@@ -347,9 +356,12 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     plugin_hooks.mqc_trigger('before_modules')
     report.modules_output = list()
     sys_exit_code = 0
-    for this_module in run_modules:
+    for mod_dict in run_modules:
         try:
+            this_module = list(mod_dict.keys())[0]
+            mod_cust_config = list(mod_dict.values())[0]
             mod = config.avail_modules[this_module].load()
+            mod.mod_cust_config = mod_cust_config # feels bad doing this, but seems to work
             output = mod()
             if type(output) != list:
                 output = [output]
@@ -362,6 +374,11 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                     copy_to = os.path.join(tmp_dir, to)
                     os.makedirs(os.path.dirname(copy_to))
                     shutil.copyfile(path, copy_to)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    pass
+                else:
+                    raise
             except AttributeError:
                 pass
             try:
@@ -369,6 +386,11 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                     copy_to = os.path.join(tmp_dir, to)
                     os.makedirs(os.path.dirname(copy_to))
                     shutil.copyfile(path, copy_to)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    pass
+                else:
+                    raise
             except AttributeError:
                 pass
 
@@ -449,43 +471,46 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
 
     # Make the final report path & data directories
     if filename != 'stdout':
-        # Check for existing reports and remove if -f was specified
-        # We repeat this check in case the output name has been altered since launch
         config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        # Check for existing reports and remove if -f was specified
         if os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)):
             if config.force:
-                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
-                os.remove(config.output_fn)
-                logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
-                shutil.rmtree(config.data_dir) 
+                if os.path.exists(config.output_fn):
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
+                    os.remove(config.output_fn)
+                if config.make_data_dir and os.path.exists(config.data_dir):
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
+                    shutil.rmtree(config.data_dir)
             else:
-                report_num = 1 
-                logger.info("Use -f or --force to overwrite existing reports")
-                #Set up the base names of the report and the data dir
+                # Set up the base names of the report and the data dir
+                report_num = 1
                 report_base, report_ext = os.path.splitext(config.output_fn_name)
                 dir_base = os.path.basename(config.data_dir)
-                
-                while os.path.exists(config.output_fn) or os.path.exists(config.data_dir):
+
+                # Iterate through appended numbers until we find one that's free
+                while os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)):
                     config.output_fn = os.path.join(config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext) )
                     config.data_dir = os.path.join(config.output_dir, "{}_{}".format(dir_base, report_num) )
                     report_num += 1
-                
+
                 config.output_fn_name = os.path.basename(config.output_fn)
                 config.data_dir_name = os.path.basename(config.data_dir)
-                if report_num > 1: # Only print the warning if a new number was generated. 
-                    logger.warning("Previous Multiqc report found, sawing new report as {}".format(config.output_fn_name))
-                    logger.warning("Previous Multiqc data directory found, sawing new data directory as {}".format(config.data_dir))
-        # Make directories for report if not already existing
-        if not os.path.exists(config.output_dir):
-            os.makedirs(config.data_dir)
-            logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
-        if not os.path.exists(config.data_dir):
-            os.makedirs(config.data_dir)
-            logger.info("Data      : {}".format(os.path.relpath(config.output_fn)))
+                logger.warning("Previous MultiQC output found! Adjusting filenames..")
+                logger.warning("Use -f or --force to overwrite existing reports instead")
 
-        # Modules have run, so data directory should be complete by now. Move its contents.
-        if config.make_data_dir == True:
+        # Make directories for report if needed
+        if not os.path.exists(os.path.dirname(config.output_fn)):
+            os.makedirs(os.path.dirname(config.output_fn))
+        logger.info("Report      : {}".format(os.path.relpath(config.output_fn)))
+
+        if config.make_data_dir == False:
+            logger.info("Data        : None")
+        else:
+            # Make directories for data_dir
+            logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
+            os.makedirs(config.data_dir)
+            # Modules have run, so data directory should be complete by now. Move its contents.
             for f in os.listdir(config.data_tmp_dir):
                 fn = os.path.join(config.data_tmp_dir, f)
                 logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
@@ -526,14 +551,17 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
 
     # Function to include file contents in Jinja template
     def include_file(name, fdir=tmp_dir, b64=False):
-        if fdir is None:
-            fdir = ''
-        if b64:
-            with io.open (os.path.join(fdir, name), "rb") as f:
-                return base64.b64encode(f.read()).decode('utf-8')
-        else:
-            with io.open (os.path.join(fdir, name), "r", encoding='utf-8') as f:
-                return f.read()
+        try:
+            if fdir is None:
+                fdir = ''
+            if b64:
+                with io.open (os.path.join(fdir, name), "rb") as f:
+                    return base64.b64encode(f.read()).decode('utf-8')
+            else:
+                with io.open (os.path.join(fdir, name), "r", encoding='utf-8') as f:
+                    return f.read()
+        except (OSError, IOError) as e:
+            logger.error("Could not include file '{}': {}".format(name, e))
 
     # Load the report template
     try:
@@ -575,7 +603,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # Try to create a PDF if requestted
     if make_pdf:
         try:
-            pdf_fn_name = config.output_fn_name.replace('.html', '.pdf')
+            pdf_fn_name = config.output_fn.replace('.html', '.pdf')
             pandoc_call = [
                 'pandoc',
                 '--standalone',

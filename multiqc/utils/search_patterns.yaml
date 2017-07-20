@@ -10,6 +10,9 @@ bamtools/stats:
 bcftools/stats:
     contents: 'This file was produced by bcftools stats'
     shared: true
+biobloomtools:
+    contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
+    num_lines: 2
 bismark/align:
     fn: '*_[SP]E_report.txt'
 bismark/dedup:
@@ -35,6 +38,12 @@ clusterflow/logs:
     shared: true
 clusterflow/runfiles:
     fn: '*.run'
+conpair/concordance:
+    contents: 'markers (coverage per marker threshold : '
+    num_lines: 3
+conpair/contamination:
+    contents: 'Tumor sample contamination level: '
+    num_lines: 3
 cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
@@ -49,6 +58,9 @@ fastqc/theoretical_gc:
     fn: '*fastqc_theoretical_gc*'
 featurecounts:
     fn: '*.summary'
+flexbar:
+    contents: 'Flexbar - flexible barcode and adapter removal'
+    shared: true
 gatk/varianteval:
     contents: '#:GATKReport'
     shared: true
@@ -60,11 +72,22 @@ htseq:
     contents: '__too_low_aQual'
 hicup:
     fn: 'HiCUP_summary_report*'
+hisat2:
+    contents: 'HISAT2 summary stats:'
+    shared: true
+homer/findpeaks:
+    contents: '# HOMER Peaks'
+    num_lines: 3
 jellyfish:
     fn: '*_jf.hist'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
+leehom:
+    contents: 'Adapter dimers/chimeras'
+    shared: true
+macs2:
+    fn: '*_peaks.xls'
 methylQA:
     fn: '*.report'
 disambiguate:
@@ -117,6 +140,9 @@ preseq/real_counts:
 prokka:
     contents: 'contigs:'
     num_lines: 2
+qorts:
+    contents: 'BENCHMARK_MinutesOnSamIteration'
+    num_lines: 100
 qualimap/bamqc/genome_results:
     fn: 'genome_results.txt'
 qualimap/bamqc/coverage:
@@ -211,6 +237,8 @@ star:
     fn: '*Log.final.out'
 star_genecounts:
     fn: '*ReadsPerGene.out.tab'
+theta2:
+    fn: '*.BEST.results'
 tophat:
     fn: '*align_summary.txt'
 trimmomatic:

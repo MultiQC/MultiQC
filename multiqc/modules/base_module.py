@@ -16,8 +16,16 @@ logger = logging.getLogger(__name__)
 class BaseMultiqcModule(object):
 
     def __init__(self, name='base', anchor='base', target=None, href=None, info=None, extra=None):
-        self.name = name
-        self.anchor = anchor
+
+        # Custom options from user config that can overwrite module values
+        mod_cust_config = getattr(self, 'mod_cust_config', {})
+        self.name = mod_cust_config.get('name', name)
+        self.anchor = report.save_htmlid( mod_cust_config.get('anchor', anchor) )
+        target = mod_cust_config.get('target', target)
+        href = mod_cust_config.get('href', href)
+        info = mod_cust_config.get('info', info)
+        extra = mod_cust_config.get('extra', extra)
+
         if info is None:
             info = ''
         if extra is None:
@@ -42,6 +50,10 @@ class BaseMultiqcModule(object):
                  As yield is used, the results can be iterated over without loading all files at once
         """
 
+        # Pick up path filters if specified.
+        # Allows modules to be called multiple times with different sets of files
+        path_filters = getattr(self, 'mod_cust_config', {}).get('path_filters')
+
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
             report.files[self.name] = list()
@@ -59,6 +71,13 @@ class BaseMultiqcModule(object):
             return
 
         for f in report.files[sp_key]:
+
+            # If path_filters is given, skip unless match
+            if path_filters is not None and len(path_filters) > 0:
+                if not all([ fnmatch.fnmatch(f['fn'], pf) for pf in path_filters ]):
+                    logger.debug("{} - Skipping '{}' as didn't match module path filters".format(sp_key, f['fn']))
+                    continue
+
             # Make a sample name from the filename
             f['s_name'] = self.clean_s_name(f['fn'], f['root'])
             if filehandles or filecontents:

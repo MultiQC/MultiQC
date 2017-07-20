@@ -9,11 +9,14 @@ Using MultiQC:
 MultiQC Modules:
   Pre-alignment:
     Adapter Removal: modules/adapterRemoval.md
+    BioBloom Tools: modules/biobloomtools.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
-    FastQC: modules/fastqc.md
-    Jellyfish: modules/jellyfish.md
     FastQ Screen: modules/fastq_screen.md
+    FastQC: modules/fastqc.md
+    Flexbar: modules/flexbar.md
+    Jellyfish: modules/jellyfish.md
+    leeHom: modules/leehom.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
@@ -22,24 +25,29 @@ MultiQC Modules:
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
     HiCUP: modules/hicup.md
+    HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
-    STAR: modules/star.md
     Salmon: modules/salmon.md
+    STAR: modules/star.md
     TopHat: modules/tophat.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
     BUSCO: modules/busco.md
+    Conpair: modules/conpair.md
+    Disambiguate: modules/disambiguate.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
-    Disambiguate: modules/disambiguate.md
+    HOMER: modules/homer.md
     HTSeq: modules/htseq.md
+    MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
     Prokka: modules/prokka.md
+    QoRTs: modules/qorts.md
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
     RNA-SeQC: modules/rna_seqc.md
@@ -48,6 +56,7 @@ MultiQC Modules:
     Samtools: modules/samtools.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    THeTA2: modules/theta2.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:
@@ -60,7 +69,7 @@ Coding with MultiQC:
 
 # Welcome!
 
-## MultiQC v1.1dev Documentation
+## MultiQC v1.2dev Documentation
 
 MultiQC is a tool to aggregate bioinformatics results across many samples
 into a single report. It's written in Python and contains modules for a number

@@ -50,6 +50,11 @@ thousandsSep_format: null
 
 fn_ignore_dirs:
     - 'multiqc_data'
+    - 'icarus_viewers'       # quast
+    - 'runs_per_reference'   # quast
+    - 'not_aligned'          # quast
+    - 'contigs_reports'      # quast
+
 fn_ignore_paths:
     - '*/work/??/??????????????????????????????' # Nextflow work directories - always same hash lengths
 sample_names_ignore: []
@@ -91,6 +96,8 @@ fn_clean_exts:
     - '.log'
     - '.stderr'
     - '.out'
+    - '.fa'
+    - '.fasta'
     - 'Log.final'
     - 'ReadsPerGene'
     - '.flagstat'
@@ -100,6 +107,8 @@ fn_clean_exts:
     - '.counts'
     - '_counts'
     - '.txt'
+    - '.tsv'
+    - '.csv'
     - '.aligned'
     - 'Aligned'
     - '.merge'
@@ -116,6 +125,12 @@ fn_clean_exts:
     - '.GC.xls'
     - '_slamdunk'
     - '_bismark'
+    - '.conpair'
+    - '.concordance'
+    - '.contamination'
+    - '.BEST.results'
+    - '_summary'
+    - '_peaks.xls'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -145,10 +160,13 @@ fn_ignore_files:
     - '*.fastq.gz'
     - '*.fq'
     - '*.fastq'
+    - '*.fa'
     - '*.gtf'
     - '*.bed'
     - '*.vcf'
     - '*.txt.gz'
+    - '*.pdf'
+    - '*.html'
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -160,17 +178,22 @@ module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
     # Post-alignment QC
+    - 'conpair'
     - 'peddy'
     - 'methylQA'
     - 'qualimap'
     - 'preseq'
     - 'quast'
+    - 'qorts'
     - 'rna_seqc'
     - 'rseqc'
     - 'busco'
     - 'goleft_indexcov'
     - 'disambiguate'
     # Post-alignment processing
+    - 'homer'
+    - 'macs2'
+    - 'theta2'
     - 'snpeff'
     - 'gatk'
     - 'htseq'
@@ -189,15 +212,19 @@ module_order:
     - 'kallisto'
     - 'slamdunk'
     - 'star'
+    - 'hisat2'
     - 'tophat'
     - 'bowtie2'
     - 'bowtie1'
     # Pre-alignment QC
+    - 'leehom'
     - 'adapterRemoval'
     - 'cutadapt'
+    - 'flexbar'
     - 'trimmomatic'
     - 'skewer'
     - 'sortmerna'
+    - 'biobloomtools'
     - 'fastq_screen'
     - 'fastqc'
     - 'clusterflow'

@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.fq_screen_data = dict()
         self.num_orgs = 0
         for f in self.find_log_files('fastq_screen', filehandles=True):
-            parsed_data = self.parse_fqscreen(f['f'])
+            parsed_data = self.parse_fqscreen(f)
             if parsed_data is not None:
                 if f['s_name'] in self.fq_screen_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
@@ -58,15 +58,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.parse_csv(), 'multiqc_fastq_screen')
 
 
-    def parse_fqscreen(self, fh):
+    def parse_fqscreen(self, f):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = OrderedDict()
         reads_processed = None
         nohits_pct = None
-        for l in fh:
-            if l.startswith('%Hit_no_libraries:'):
-                parsed_data['No hits'] = {'percentages': {'one_hit_one_library': float(l[19:]) }}
-                nohits_pct = float(l[19:])
+        for l in f['f']:
+            if l.startswith('%Hit_no_genomes:') or l.startswith('%Hit_no_libraries:'):
+                nohits_pct = float(l.split(':', 1)[1])
+                parsed_data['No hits'] = {'percentages': {'one_hit_one_library': nohits_pct }}
             else:
                 fqs = re.search(r"^(\S+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
                 if fqs:
@@ -93,6 +93,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Calculate no hits counts
         if reads_processed and nohits_pct:
             parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(reads_processed)) }
+        else:
+            log.warn("Couldn't find number of reads with no hits for '{}'".format(f['s_name']))
 
         self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data
@@ -139,7 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
                 thisdata = list()
                 if len(categories) > 0:
                     getCats = False
-                for org in self.fq_screen_data[s]:
+                for org in sorted(self.fq_screen_data[s]):
                     if org == 'total_reads':
                         continue
                     try:
@@ -221,6 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
             data[s_name]['Multiple Genomes'] = self.fq_screen_data[s_name]['total_reads'] - sum_alignments
 
         pconfig = {
+            'id': 'fastq_screen',
             'title': 'FastQ Screen',
             'cpswitch_c_active': False
         }
