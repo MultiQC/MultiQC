@@ -1,4 +1,7 @@
 from multiqc.modules.base_module import BaseMultiqcModule
+import logging
+
+log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
