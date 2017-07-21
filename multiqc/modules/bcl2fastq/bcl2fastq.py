@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             for conversionResult in content["ConversionResults"]:
                 lane = conversionResult["LaneNumber"]
                 if lane in run_data:
-                    log.debug("Duplicate lane found! Overwriting: {}".format(uniqLaneName))
+                    log.debug("Duplicate runId/lane combination found! Overwriting: {} - {}".format(runId, lane))
                 run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
                 for demuxResult in conversionResult["DemuxResults"]:
                     sample = demuxResult["SampleName"]
