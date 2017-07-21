@@ -61,69 +61,69 @@ extra_fn_clean_trim:
 File name cleaning can also take strings to remove (instead of removing with truncation).
 Also regex strings can be supplied to match patterns and remove or keep matching substrings.
 
-- **default** - `truncate`
-    
-    If you just supply a string, the default behavior is similar to "trim". The filename will be truncated beginning with the matching string.
+#### `truncate` (default)
 
-    ```yaml
-    extra_fn_clean_exts:
-        - '.fastq'
-    ```
+If you just supply a string, the default behavior is similar to "trim". The filename will be truncated beginning with the matching string.
 
-    This rule would produce the following sample names:
+```yaml
+extra_fn_clean_exts:
+    - '.fastq'
+```
 
-    ```
-    mysample.fastq.gz  ->  mysample
-    thirdsample.fastq_aligned.sam.gz  ->  thirdsample
-    ```
+This rule would produce the following sample names:
 
-- `remove` (formerly `replace`)
+```
+mysample.fastq.gz  ->  mysample
+thirdsample.fastq_aligned.sam.gz  ->  thirdsample
+```
 
-    The `remove` type allows you to remove the exact match from the filename.
+#### `remove` (formerly `replace`)
 
-    ```yaml
-    extra_fn_clean_exts:
-        - type: remove
-          pattern: .sorted
-    ```
+The `remove` type allows you to remove the exact match from the filename.
 
-    This rule would produce the following sample names:
+```yaml
+extra_fn_clean_exts:
+    - type: remove
+      pattern: .sorted
+```
 
-    ```
-    secondsample.sorted.deduplicated  ->  secondsample.deduplicated
-    ```
+This rule would produce the following sample names:
 
-- `regex`
+```
+secondsample.sorted.deduplicated  ->  secondsample.deduplicated
+```
 
-    You can also remove a substring with a regular expression. Here's a [good resource](https://regex101.com/) to interactively try it out.
+#### `regex`
 
-    ```yaml
-    extra_fn_clean_exts:
-        - type: regex
-          pattern: '^processed.'
-    ```
+You can also remove a substring with a regular expression. Here's a [good resource](https://regex101.com/) to interactively try it out.
 
-    This rule would produce the following sample names:
+```yaml
+extra_fn_clean_exts:
+    - type: regex
+      pattern: '^processed.'
+```
 
-    ```
-    processed.thirdsample.processed  ->  thirdsample.processed
-    ```
+This rule would produce the following sample names:
 
-- `regex_keep`
+```
+processed.thirdsample.processed  ->  thirdsample.processed
+```
 
-    If you'd rather like to _keep_ the match of a regular expression you can use the `regex_keep` type. This simplifies things if you can e.g. directly target samples names.
+#### `regex_keep`
 
-    ```yaml
-    extra_fn_clean_exts:
-        - type: regex_keep
-          pattern: '[A-Z]{3}[1-9]{2}'
-    ```
+If you'd rather like to _keep_ the match of a regular expression you can use the `regex_keep` type. This simplifies things if you can e.g. directly target samples names.
 
-    This rule would produce the following sample names:
+```yaml
+extra_fn_clean_exts:
+    - type: regex_keep
+      pattern: '[A-Z]{3}[1-9]{2}'
+```
 
-    ```
-    merged.recalibrated.XZY97.alignment.bam  ->  XZY97
-    ```
+This rule would produce the following sample names:
+
+```
+merged.recalibrated.XZY97.alignment.bam  ->  XZY97
+```
 
 ### Clashing sample names
 This process of cleaning sample names can sometimes result in exact duplicates.
