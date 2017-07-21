@@ -44,3 +44,4 @@ test_script:
   - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\data -f -v --flat -e star -x ngi -s -z'
   - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\data -m star -o %APPVEYOR_BUILD_FOLDER%\MultiQC_TestData-master\tests\multiqc_report_dev -t default_dev -k json'
   - 'python %APPVEYOR_BUILD_FOLDER%\scripts\multiqc -f empty_dir'
+  - 'python -m unittest discover'
