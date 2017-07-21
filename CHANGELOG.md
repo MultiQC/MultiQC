@@ -31,6 +31,8 @@ Many thanks to those involved! Lots of different work was added, including:
 * Bug fixes and refactoring of report configuration saving / loading
     * Discovered and fixed a bug where a report config could only be loaded once
     * Work by [@DennisSchwartz](https://github.com/DennisSchwartz)
+* Table column row headers (sample names) can now be numeric-only.
+    * Work by [@iimog](https://github.com/iimog)
 * **Prokka**
     * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
 
