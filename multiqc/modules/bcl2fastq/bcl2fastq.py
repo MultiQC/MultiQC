@@ -31,14 +31,13 @@ class MultiqcModule(BaseMultiqcModule):
                         self.bcl2fastq_bylane[lane]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
                         self.bcl2fastq_bysample[sample]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
 
-        log.info(self.bcl2fastq_bylane)
-        log.info(self.bcl2fastq_bysample)
-
         # Filter to strip out ignored sample names
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
         self.bcl2fastq_bysample = self.ignore_samples(self.bcl2fastq_bysample)
 
         self.add_general_stats()
+        self.write_data_file({str(k): self.bcl2fastq_bylane[k] for k in self.bcl2fastq_bylane.keys()}, 'multiqc_bcl2fastq_bylane')
+        self.write_data_file(self.bcl2fastq_bysample, 'multiqc_bcl2fastq_bysample')
 
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
             log.debug("Could not find any bcl2fastq data in {}".format(config.analysis_dir))
