@@ -48,8 +48,16 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'bcl2fastq by lane',
             anchor = 'bcl2fastq-bylane',
             description = 'Number of reads per lane (with number of perfect index reads)',
-            help = "Perfect index reads are those that do not have a single mismatch. All samples of a lane are combinned. Undetermined reads are ignored.",
+#            help = "Perfect index reads are those that do not have a single mismatch. All samples of a lane are combinned. Undetermined reads are ignored.",
             plot = bargraph.plot({key: {"imperfect": self.bcl2fastq_bylane[key]["total"]-self.bcl2fastq_bylane[key]["perfectIndex"], "perfect": self.bcl2fastq_bylane[key]["perfectIndex"]} for key in self.bcl2fastq_bylane.keys()})
+        )
+
+        self.add_section (
+            name = 'bcl2fastq by sample',
+            anchor = 'bcl2fastq-bysample',
+            description = 'Number of reads per sample (with number of perfect index reads)',
+#            help = "Perfect index reads are those that do not have a single mismatch. All samples are aggregated across lanes combinned. Undetermined reads are ignored.",
+            plot = bargraph.plot({key: {"imperfect": self.bcl2fastq_bysample[key]["total"]-self.bcl2fastq_bysample[key]["perfectIndex"], "perfect": self.bcl2fastq_bysample[key]["perfectIndex"]} for key in self.bcl2fastq_bysample.keys()})
         )
 
     def add_general_stats(self):
