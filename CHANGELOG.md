@@ -33,7 +33,13 @@ Many thanks to those involved! Lots of different work was added, including:
     * Work by [@DennisSchwartz](https://github.com/DennisSchwartz)
 * Table column row headers (sample names) can now be numeric-only.
     * Work by [@iimog](https://github.com/iimog)
-* Added option `regex_keep` to clean filenames by keeping the matching part of a pattern
+* Improved sample name cleaning functionality
+    * Added option `regex_keep` to clean filenames by _keeping_ the matching part of a pattern
+    * Work by [@robinandeer](https://github.com/robinandeer)
+* Handle error when invalid regexes are given in reports
+    * Now have a nice toast error warning you and the invalid regexes are highlighted
+    * Previously this just crashed the whole report without any warning
+    * Work by [@robinandeer](https://github.com/robinandeer)
 * **Prokka**
     * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
 
