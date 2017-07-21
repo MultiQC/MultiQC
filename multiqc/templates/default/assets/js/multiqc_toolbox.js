@@ -69,7 +69,7 @@ $(function () {
     e.preventDefault();
     var f_text = $('#mqc_colour_filter').val().trim();
     var f_col = $('#mqc_colour_filter_color').val().trim();
-    $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+    $('#mqc_col_filters').append('<li style="color:'+f_col+';" id="'+hashCode(f_text+f_col)+'"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" tabindex="'+(mqc_colours_idx)+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
     $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
     $('#mqc_colour_filter').val('');
     mqc_colours_idx += 1;
@@ -438,6 +438,21 @@ $(function () {
 });
 
 //////////////////////////////////////////////////////
+// UTILITY FUNCTIONS
+//////////////////////////////////////////////////////
+function hashCode(str) {
+  var hash = 0;
+  if (str.length == 0) return hash;
+  for (i = 0; i < str.length; i++) {
+      char = str.charCodeAt(i);
+      hash = ((hash<<5)-hash)+char;
+      hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+
+//////////////////////////////////////////////////////
 // GENERAL TOOLBOX FUNCTIONS
 //////////////////////////////////////////////////////
 function mqc_toolbox_openclose (target, open){
@@ -503,13 +518,19 @@ function apply_mqc_highlights(){
     regex_mode = true;
   }
   $('#mqc_col_filters li .f_text').each(function(){
-    f_texts.push($(this).val());
-    f_cols.push($(this).css('color'));
+    var val = $(this).val();
+    if (f_texts.indexOf(val) < 0) {
+      f_texts.push($(this).val());
+      f_cols.push($(this).css('color'));
+    } else {
+      f_cols[f_texts.indexOf(val)] = $(this).css('color');
+    }
+
   });
 
   // Apply a 'background' highlight to remove default colouring first
   // Also highlight toolbox drawer icon
-  if(f_texts.length > 0){
+  if(f_texts.length > 0 && f_texts.indexOf('') < 0){
     f_texts.unshift('');
     f_cols.unshift('#cccccc');
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass('in_use');
@@ -745,6 +766,8 @@ function load_mqc_config(name){
     }
   }
   if(notEmptyObj(config['rename_from_texts']) && notEmptyObj(config['rename_to_texts'])){
+    window.mqc_rename_f_texts = [];
+    window.mqc_rename_t_texts = [];
     $.each(config['rename_from_texts'], function(idx, from_text){
       var to_text = config['rename_to_texts'][idx];
       if(from_text.length == 0){ return true; }
@@ -766,9 +789,12 @@ function load_mqc_config(name){
     }
   }
   if(notEmptyObj(config['highlights_f_texts']) && notEmptyObj(config['highlights_f_cols'])){
+    window.mqc_highlight_f_texts = [];
+    window.mqc_highlight_f_cols = [];
     $.each(config['highlights_f_texts'], function(idx, f_text){
       var f_col = config['highlights_f_cols'][idx];
-      $('#mqc_col_filters').append('<li style="color:'+f_col+';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      $('#'+hashCode(f_text+f_col)).remove();
+      $('#mqc_col_filters').append('<li style="color:'+f_col+';" id="'+hashCode(f_text+f_col)+'"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
       window.mqc_highlight_f_texts.push(f_text);
       window.mqc_highlight_f_cols.push(f_col);
       mqc_colours_idx += 1;
@@ -792,6 +818,7 @@ function load_mqc_config(name){
     }
   }
   if(notEmptyObj(config['hidesamples_f_texts'])){
+    window.mqc_hide_f_texts = [];
     $.each(config['hidesamples_f_texts'], function(idx, f_text){
       if(f_text.length == 0){ return true; }
       $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+f_text+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
