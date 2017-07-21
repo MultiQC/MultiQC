@@ -7,8 +7,10 @@ from collections import OrderedDict
 import io
 import fnmatch
 import logging
+import markdown
 import os
 import re
+import textwrap
 
 from multiqc.utils import report, config, util_functions
 logger = logging.getLogger(__name__)
@@ -96,7 +98,7 @@ class BaseMultiqcModule(object):
             else:
                 yield f
 
-    def add_section(self, name=None, anchor=None, description='', helptext='', plot='', content='', autoformat=True):
+    def add_section(self, name=None, anchor=None, description='', helptext='', plot='', content='', autoformat=True, autoformat_type='markdown'):
         """ Add a section to the module report output """
 
         # Default anchor
@@ -114,11 +116,17 @@ class BaseMultiqcModule(object):
         # Format the content
         if autoformat:
             if len(description) > 0:
-                description = '<p class="mqc-section-description">{}</p>'.format(description)
+                description = textwrap.dedent(description)
+                if autoformat_type == 'markdown':
+                    description = markdown.markdown(description)
             if len(helptext) > 0:
-                helptext = '<p class="mqc-section-helptext">{}</p>'.format(helptext)
+                helptext = textwrap.dedent(helptext)
+                if autoformat_type == 'markdown':
+                    helptext = markdown.markdown(helptext)
             if len(plot) > 0:
-                plot = '<div class="mqc-section-plot">{}</div>'.format(plot)
+                plot = textwrap.dedent(plot)
+                if autoformat_type == 'markdown':
+                    plot = markdown.markdown(plot)
 
         self.sections.append({
             'name': name,
@@ -126,7 +134,8 @@ class BaseMultiqcModule(object):
             'description': description,
             'helptext': helptext,
             'plot': plot,
-            'content': description + helptext + plot + content
+            'content': content,
+            'print_section': any([ n is not None and len(n) > 0 for n in [description, helptext, plot, content] ])
         })
 
     def clean_s_name(self, s_name, root):

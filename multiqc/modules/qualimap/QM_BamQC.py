@@ -249,6 +249,7 @@ def report_sections(self):
         self.add_section (
             name = 'Coverage histogram',
             anchor = 'qualimap-coverage-histogram',
+            description = 'Distribution of the number of locations in the reference genome with a given depth of coverage.',
             plot = linegraph.plot(self.qualimap_bamqc_coverage_hist, {
                 'id': 'qualimap_coverage_histogram',
                 'title': 'Coverage histogram',
@@ -265,6 +266,7 @@ def report_sections(self):
         self.add_section (
             name = 'Cumulative coverage genome fraction',
             anchor = 'qualimap-cumulative-genome-fraction-coverage',
+            description = 'Percentage of the reference genome with at least the given depth of coverage.',
             plot = linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
                 'title': 'Genome fraction covered by at least X reads',
@@ -284,6 +286,7 @@ def report_sections(self):
         self.add_section (
             name = 'Insert size histogram',
             anchor = 'qualimap-insert-size-histogram',
+            description = 'Distribution of estimated insert sizes of mapped reads.',
             plot = linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
                 'id': 'qualimap_insert_size',
                 'title': 'Insert size histogram',
@@ -306,7 +309,10 @@ def report_sections(self):
                 'lineWidth': 1,
                 'color': ['#000000', '#E89191'][i % 2],
             })
-        desc = ''
+        if len(self.qualimap_bamqc_gc_content_dist) == 1:
+            desc = 'The solid line represents the distribution of GC content of mapped reads for the sample.'
+        else:
+            desc = 'Each solid line represents the distribution of GC content of mapped reads for a given sample.'
         lg_config = {
             'id': 'qualimap_gc_content',
             'title': 'GC content distribution',
@@ -318,10 +324,10 @@ def report_sections(self):
             'tt_label': '<b>{point.x}%</b>: {point.y:.3f}'
         }
         if len(extra_series) == 1:
-            desc += 'The dotted line represents a pre-calculated GC destribution for the reference genome.'
+            desc += ' The dotted line represents a pre-calculated GC distribution for the reference genome.'
             lg_config['extra_series'] = extra_series
         elif len(extra_series) > 1:
-            desc += 'The dotted lines represent pre-calculated GC destributions for the reference genomes.'
+            desc += ' Each dotted line represents a pre-calculated GC distribution for a specific reference genome.'
             lg_config['extra_series'] = extra_series
 
         self.add_section (
