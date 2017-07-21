@@ -1,5 +1,15 @@
+#!/usr/bin/env python
+
+""" MultiQC module to parse output from vcftools """
+
+from __future__ import print_function
+import logging
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from .relatedness import Relatedness2Mixin
+
+# Initialise the logger
+log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin):
@@ -11,4 +21,9 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin):
             info='is a program for working with and reporting on VCF files'
         )
 
-        self.parse_relatedness2()
+        n = dict()
+        n['relatedness2'] = self.parse_relatedness2()
+
+        if sum(n.values()) == 0:
+            log.debug('Could not find any reports in %s', config.analysis_dir)
+            raise UserWarning

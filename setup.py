@@ -109,7 +109,7 @@ setup(
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
-            'vcfstats = multiqc.modules.vcftools:MultiqcModule'
+            'vcftools = multiqc.modules.vcftools:MultiqcModule'
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

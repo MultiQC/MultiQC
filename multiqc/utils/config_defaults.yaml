@@ -206,6 +206,7 @@ module_order:
     - 'samtools'
     - 'bamtools'
     - 'jellyfish'
+    - 'vcftools'
     # Alignment tool stats
     - 'bismark'
     - 'hicup'
