@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
                 run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
                 for demuxResult in conversionResult["DemuxResults"]:
                     sample = demuxResult["SampleName"]
-                    run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0}
+                    run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0, "filename": myfile['root']+"/"+myfile["fn"]}
                     run_data[lane]["total"] += demuxResult["NumberReads"]
                     run_data[lane]["samples"][sample]["total"] += demuxResult["NumberReads"]
                     for indexMetric in demuxResult["IndexMetrics"]:
@@ -39,6 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.bcl2fastq_bylane = dict()
         self.bcl2fastq_bysample = dict()
+        self.source_files = dict()
         for runId in self.bcl2fastq_data.keys():
             for lane in self.bcl2fastq_data[runId].keys():
                 uniqLaneName = str(runId) + " - " + str(lane)
@@ -53,10 +54,18 @@ class MultiqcModule(BaseMultiqcModule):
                         self.bcl2fastq_bysample[uniqSampleName] = {"total": 0, "perfectIndex": 0}
                     self.bcl2fastq_bysample[uniqSampleName]["total"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
                     self.bcl2fastq_bysample[uniqSampleName]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
+                    if sample != "undetermined":
+                        if not uniqSampleName in self.source_files:
+                            self.source_files[uniqSampleName] = []
+                        self.source_files[uniqSampleName].append(self.bcl2fastq_data[runId][lane]["samples"][sample]["filename"])
 
         # Filter to strip out ignored sample names
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
         self.bcl2fastq_bysample = self.ignore_samples(self.bcl2fastq_bysample)
+
+        # Print source files
+        for s in self.source_files.keys():
+            self.add_data_source(s_name=s, source=",".join(list(set(self.source_files[s]))), module='bcl2fastq', section='bcl2fastq-bysample')
 
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
             log.debug("Could not find any bcl2fastq data in {}".format(config.analysis_dir))
