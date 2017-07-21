@@ -635,7 +635,6 @@ function mqc_save_config(name, clear, as_default){
         prev_config = JSON.parse(prev_config);
       } else {
         prev_config = {};
-        as_default = true;
       }
 
       // Update config obj with current config
@@ -703,6 +702,11 @@ function mqc_clear_default_config() {
       setTimeout(function () {
         $('#mqc-cleared-success').slideUp(function () { $(this).remove(); });
       }, 5000);
+    var name = $('#mqc_loadconfig_form select option:contains("default")').text();
+    console.log(name);
+    $('#mqc_loadconfig_form select option:contains("default")').remove();
+    name = name.replace(' [default]', '');
+    $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
     });
   } catch (e) {
     console.log('Could not access localStorage');
@@ -719,12 +723,13 @@ function populate_mqc_saveselect(){
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
       for (var name in local_config){
-        $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
         if (local_config[name]['default']) {
           console.log('Loaded default config!');
           load_mqc_config(name);
           default_config = name;
+          name = name+' [default]';
         }
+        $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
       }
     }
   } catch(e){
@@ -737,7 +742,6 @@ function populate_mqc_saveselect(){
       '<a href="https://www.google.se/search?q=Block+third-party+cookies+and+site+data" target="_blank">change this browser setting</a>'+
       ' to save MultiQC report configs.</p>');
   }
-  $('#mqc_loadconfig_form select').val(default_config);
 }
 
 //////////////////////////////////////////////////////
