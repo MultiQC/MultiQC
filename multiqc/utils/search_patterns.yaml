@@ -11,7 +11,8 @@ bcftools/stats:
     contents: 'This file was produced by bcftools stats'
     shared: true
 bcl2fastq:
-    fn: 'Big_Stats.json'
+    - fn: '*.json'
+      contents: 'DemuxResults'
 biobloomtools:
     contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
     num_lines: 2
