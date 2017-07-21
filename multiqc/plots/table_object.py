@@ -91,6 +91,7 @@ class datatable (object):
                 headers[idx][k]['minRange']    = headers[idx][k].get('minRange', pconfig.get('minRange', None))
                 headers[idx][k]['shared_key']  = headers[idx][k].get('shared_key', pconfig.get('shared_key', None))
                 headers[idx][k]['modify']      = headers[idx][k].get('modify', pconfig.get('modify', None))
+                headers[idx][k]['placement']   = float( headers[idx][k].get('placement', 1000) )
 
                 if headers[idx][k]['colour'] is None:
                     cidx = idx
@@ -103,6 +104,12 @@ class datatable (object):
                     # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
                     headers[idx][k]['hidden'] = not config.table_columns_visible[ headers[idx][k]['namespace'] ][k]
                 except KeyError:
+                    pass
+
+                # Also overwite placement if set in config
+                try:
+                    headers[idx][k]['placement'] = float(config.table_columns_placement[ headers[idx][k]['namespace'] ][k])
+                except (KeyError, ValueError):
                     pass
 
                 # Work out max and min value if not given
@@ -154,15 +161,38 @@ class datatable (object):
                     shared_keys[sk]['dmax']  = max(headers[idx][k]['dmax'], shared_keys[sk].get('dmax', headers[idx][k]['dmax']))
                     shared_keys[sk]['dmin']  = max(headers[idx][k]['dmin'], shared_keys[sk].get('dmin', headers[idx][k]['dmin']))
 
-        # Overwrite shared key settings
+        # Overwrite shared key settings and at the same time assign to buckets for sorting
+        # Within each section of headers, sort explicitly by 'title' if the dict
+        # is not already ordered, so the final ordering is by:
+        # placement > section > explicit_ordering > title
+        # Of course, the user can shuffle these manually.
+        self.headers_in_order = defaultdict(list)
+
         for idx, hs in enumerate(headers):
-            for k in hs.keys():
+            keys_in_section = hs.keys()
+            if type(hs) is not OrderedDict:
+                keys_in_section = sorted(keys_in_section, key=lambda k: headers[idx][k]['title'])
+
+            for k in keys_in_section:
                 sk = headers[idx][k]['shared_key']
                 if sk is not None:
                     headers[idx][k]['dmax'] = shared_keys[sk]['dmax']
                     headers[idx][k]['dmin'] = shared_keys[sk]['dmin']
 
+                self.headers_in_order[headers[idx][k]['placement']].append((idx, k))
+
         # Assign to class
         self.data = data
         self.headers = headers
         self.pconfig = pconfig
+
+    def get_headers_in_order(self):
+        """Gets the headers in the order they want to be displayed.
+           Returns a list of triplets: (idx, key, header_info)
+        """
+        res = list()
+        #Scan through self.headers_in_order and just bolt on the actual header info
+        for bucket in sorted(self.headers_in_order):
+            for idx, k in self.headers_in_order[bucket]:
+                res.append( (idx, k, self.headers[idx][k]) )
+        return res

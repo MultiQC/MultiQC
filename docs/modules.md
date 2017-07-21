@@ -411,7 +411,8 @@ headers['name'] = {
     'format': '{:,.1f}',            # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
-    'hidden': False                 # Set to True to hide the column on page load
+    'hidden': False,                # Set to True to hide the column on page load
+    'placement' : 1000.0,           # Alter the default ordering of coumns in the table
 }
 ```
 * `namespace`
@@ -434,6 +435,10 @@ headers['name'] = {
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
+* `placement`
+  * If you feel that the results from your module should appear at the left side
+    of the table set this value less than 1000. Or to move the column right, set
+    it greater than 1000. This value can be any float.
 
 The typical use for the `modify` string is to divide large numbers such as read counts,
 to make them easier to interpret. If handling read counts, there are three config variables
