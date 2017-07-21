@@ -321,7 +321,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             module_name = list(m.keys())[0] # only one name in each dict
             for tag in tags:
                 for t in m[module_name].get('module_tag', []):
-                    if tag == t:
+                    if tag.lower() == t.lower():
                         modules_from_tags.add(module_name)
     
     # Get the list of modules we want to run, in the order that we want them
