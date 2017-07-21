@@ -214,6 +214,22 @@ table_columns_visible:
 Note that you can set these to `True` to show columns that would otherwise be hidden
 by default.
 
+In the same way, you can force a column to appear at the start or end of the table, or
+indeed impose a custom ordering on all the columns, by setting the `table_columns_placement`.
+High values push columns to the right hand side of the table and low to the left. The default
+value is 1000. For example:
+
+```yaml
+table_columns_placement:
+    Samtools:
+        reads_mapped: 900
+        properly_paired: 1010
+        secondary: 1020
+```
+
+In this case, since the default placement weighting is `1000`, the `reads_mapped` will end up as the
+leftmost column and the other two will and up as the final columns on the right of the table.
+
 ## Number base (multiplier)
 To make numbers in the General Statistics table easier to read and compare quickly,
 MultiQC sometimes divides them by one million (typically read counts). If your
