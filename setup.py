@@ -64,6 +64,7 @@ setup(
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
+            'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
