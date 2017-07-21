@@ -35,13 +35,18 @@ class MultiqcModule(BaseMultiqcModule):
                     for indexMetric in demuxResult["IndexMetrics"]:
                         run_data[lane]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
                         run_data[lane]["samples"][sample]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
+                run_data[lane]["samples"]["undetermined"] = {"total": conversionResult["Undetermined"]["NumberReads"], "perfectIndex": 0}
 
         self.bcl2fastq_bylane = dict()
         self.bcl2fastq_bysample = dict()
         for runId in self.bcl2fastq_data.keys():
             for lane in self.bcl2fastq_data[runId].keys():
                 uniqLaneName = str(runId) + " - " + str(lane)
-                self.bcl2fastq_bylane[uniqLaneName] = {"total": self.bcl2fastq_data[runId][lane]["total"], "perfectIndex": self.bcl2fastq_data[runId][lane]["perfectIndex"]}
+                self.bcl2fastq_bylane[uniqLaneName] = {
+                "total": self.bcl2fastq_data[runId][lane]["total"],
+                "perfectIndex": self.bcl2fastq_data[runId][lane]["perfectIndex"],
+                "undetermined": self.bcl2fastq_data[runId][lane]["samples"]["undetermined"]["total"]
+                }
                 for sample in self.bcl2fastq_data[runId][lane]["samples"].keys():
                     uniqSampleName = str(runId) + " - " + str(sample)
                     if not uniqSampleName in self.bcl2fastq_bysample:
