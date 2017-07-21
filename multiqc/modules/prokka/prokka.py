@@ -69,7 +69,23 @@ class MultiqcModule(BaseMultiqcModule):
         if getattr(config, 'prokka_table', False):
             self.add_section( plot = self.prokka_table() )
         if getattr(config, 'prokka_barplot', True):
-            self.add_section( plot = self.prokka_barplot() )
+            descr_plot = "This barplot shows the distribution of different types of features found in each contig."
+            helptext = '''
+            `Prokka` can detect different features:
+
+            - CDS
+            - rRNA
+            - tmRNA
+            - tRNA
+            - miscRNA
+            - signal peptides
+            - CRISPR arrays
+
+            This barplot shows you the distribution of these different types of features found in each contig.
+            '''
+            self.add_section(plot=self.prokka_barplot(),
+                             helptext=helptext,
+                             description=descr_plot)
 
 
     def parse_prokka(self, f):
@@ -174,7 +190,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Number of annotated sig_peptide',
                 'format': '{:i}',
         }
-
+        headers['repeat_region'] = {
+                'title': '# CRISPR arrays',
+                'description': 'Number of annotated CRSIPR arrays',
+                'format': '{:i}',
+        }
         table_config = {
             'namespace': 'prokka',
             'min': 0,
@@ -193,6 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['tmRNA'] =         { 'name': 'tmRNA' }
         keys['misc_RNA'] =      { 'name': 'misc RNA' }
         keys['sig_peptide'] =   { 'name': 'Signal peptides' }
+        keys['repeat_region'] = { 'name': 'CRISPR array'}
 
         plot_config = {
             'id': 'prokka_plot',

@@ -17,3 +17,4 @@ script:
   - multiqc data -f -v --flat -e star -x ngi -s -z
   - multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
   - multiqc -f empty_dir
+  - python -m unittest discover
