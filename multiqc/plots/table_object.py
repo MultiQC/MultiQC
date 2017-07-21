@@ -55,6 +55,8 @@ class datatable (object):
             keys = [str(k) for k in keys]
             for k in list(headers[idx].keys()):
                 headers[idx][str(k)] = headers[idx].pop(k)
+            # Ensure that all sample names are strings as well
+            data[idx] = {str(k):v for k,v in data[idx].items()}
             for s_name in data[idx].keys():
                 for k in list(data[idx][s_name].keys()):
                     data[idx][s_name][str(k)] = data[idx][s_name].pop(k)
