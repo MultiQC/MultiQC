@@ -149,4 +149,20 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        self.add_section( plot = bargraph.plot(self.bowtie_data, keys, config) )
+        self.add_section(
+            description = (
+                "The stacked bar plot shows types of alignments and the number"
+                "of reads for each alignments."
+            ),
+            helptext = (
+                "There are 3 possible types of alignment:"
+                "<ul>"
+                "<li><b>Aligned</b>: Read has only one "
+                "occurence in the reference genome.</li>"
+                "<li><b>Multimapped</b>: Read has multiple "
+                "occurence.</li>"
+                "<li><b>Not aligned</b>: Read has no occurence.</li>"
+                "</ul>"
+            ),
+            plot = bargraph.plot(self.bowtie_data, keys, config) 
+        )

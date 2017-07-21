@@ -42,7 +42,8 @@ class FlagstatReportMixin():
                 'description': 'Reads Mapped in the bam file ({})'.format(config.read_count_desc),
                 'min': 0,
                 'modify': lambda x: x * config.read_count_multiplier,
-                'shared_key': 'read_count'
+                'shared_key': 'read_count',
+                'placement' : 100.0
             }
             self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, 'Samtools Flagstat')
 

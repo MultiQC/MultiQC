@@ -53,6 +53,7 @@ setup(
         'lzstring',
         'jinja2>=2.9',
         'matplotlib',
+        'markdown',
         'numpy',
         'pyyaml',
         'simplejson',

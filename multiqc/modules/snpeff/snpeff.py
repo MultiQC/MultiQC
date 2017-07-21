@@ -21,8 +21,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='SnpEff', anchor='snpeff',
             href="http://snpeff.sourceforge.net/",
-            info=" is a genetic variant annotation and effect prediction toolbox. " \
-                 "It annotates and predicts the effects of variants on genes (such as amino acid changes). ")
+            info=" is a genetic variant annotation and effect prediction "
+                 "toolbox. It annotates and predicts the effects of variants "
+                 "on genes (such as amino acid changes). "
+        )
 
         self.snpeff_data = dict()
         self.snpeff_section_totals = dict()
@@ -35,7 +37,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.snpeff_data = self.ignore_samples(self.snpeff_data)
 
         if len(self.snpeff_data) == 0:
-            log.debug("Could not find any data in {}".format(config.analysis_dir))
+            log.debug("Could not find any data in {}".format(
+                config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.snpeff_data)))
@@ -49,22 +52,65 @@ class MultiqcModule(BaseMultiqcModule):
         # Report sections
         self.add_section (
             name = 'Variants by Genomic Region',
+            description = (
+                "The stacked bar plot shows locations of detected variants in"
+                " the genome and the number of variants for each location."
+            ),
+            helptext = (
+                "The upstream and downstream interval size to detect these "
+                "genomic regions is 5000bp by default."
+            ),
             anchor = 'snpeff-genomic-regions',
             plot = self.count_genomic_region_plot()
         )
         self.add_section (
             name = 'Variant Effects by Impact',
+            description = (
+                "The stacked bar plot shows the putative impact of detected "
+                "variants and the number of variants for each impact."
+            ),
+            helptext = (
+                "There are four levels of impacts predicted by SnpEff:"
+                "<ul>"
+                "<li><b>High</b>: High impact (like stop codon)</li>"
+                "<li><b>Moderate</b>: Middle impact (like same type of amino "
+                "acid substitution)</li>"
+                "<li><b>Low</b>: Low impact (ie silence mutation)</li>"
+                "<li><b>Modifier</b>: No impact</li>"
+                "</ul>"
+            ),
             anchor = 'snpeff-effects-impact',
             plot = self.effects_impact_plot()
         )
         self.add_section (
             name = 'Variant Effects by Class',
+            description = (
+                "The stacked bar plot shows the effect of variants at protein "
+                "level and the number of variants for each effect type."
+            ),
+            helptext = (
+                "This plot shows the effect of variants on the translation of "
+                "the mRNA as protein. There are three possible cases:"
+                "<ul>"
+                "<li><b>Silent</b>: The amino acid does not change.</li>"
+                "<li><b>Missense</b>: The amino acid is different.</li>"
+                "<li><b>Nonsense</b>: The variant generates a stop codon.</li>"
+                "</ul>"
+            ),
             anchor = 'snpeff-functional-class',
             plot = self.effects_function_plot()
         )
         if len(self.snpeff_qualities) > 0:
             self.add_section (
                 name = 'Variant Qualities',
+                description = (
+                    "The line plot shows the quantity as function of the "
+                    "variant quality score."
+                ),
+                helptext = (
+                    "The quality score corresponds to the QUAL column of the "
+                    "VCF file. This score is set by the variant caller."
+                ),
                 anchor = 'snpeff-qualities',
                 plot = self.qualities_plot()
             )
@@ -75,8 +121,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         keys = {
             '# Summary table': [
-                'Genome', 'Number_of_variants_before_filter', 'Number_of_known_variants',
-                'Number_of_effects', 'Genome_total_length', 'Change_rate'
+                'Genome', 'Number_of_variants_before_filter',
+                'Number_of_known_variants', 'Number_of_effects',
+                'Genome_total_length', 'Change_rate'
             ],
             '# Effects by impact': [ 'HIGH', 'LOW', 'MODERATE', 'MODIFIER' ],
             '# Effects by functional class': [ 'MISSENSE', 'NONSENSE', 'SILENT', 'Missense_Silent_ratio' ],

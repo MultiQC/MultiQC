@@ -46,6 +46,7 @@ num_datasets_plot_limit: 50
 collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
+table_columns_placement: {}
 decimalPoint_format: null
 thousandsSep_format: null
 

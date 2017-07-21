@@ -13,11 +13,24 @@ the output from each module and print it in sections.
     <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
     {{ m.intro if m.intro }}
     {% for s in m.sections %}
-      {% if s['content'] is not none and s['content'] | length > 0 %}
+      {% if s['print_section'] %}
         <div class="mqc-section mqc-section-{{ m.anchor }}">
+          {% if s['helptext'] is not none %}
+            <button class="btn btn-default btn-sm pull-right" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+              <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+              Help
+            </button>
+          {% endif %}
           {% if s['name'] is not none and s['name'] | length > 0 %}
             <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
           {% endif %}
+          {% if s['description'] is not none %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
+          {% if s['helptext'] is not none %}
+            <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
+              <div class="well">{{ s['helptext'] }}</div>
+            </div>
+          {% endif %}
+          {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
           {{ s['content'] if s['content'] }}
           {{ '<hr>' if not loop.last }}
         </div>

@@ -119,6 +119,7 @@ def parse_reports(self):
         self.add_section (
             name = 'Genomic origin of reads',
             anchor = 'qualimap-reads-genomic-origin',
+            description = 'Classification of mapped reads as originating in exonic, intronic or intergenic regions. These can be displayed as either the number or percentage of mapped reads.',
             plot = bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
         )
 
@@ -126,6 +127,7 @@ def parse_reports(self):
         self.add_section (
             name = 'Gene Coverage Profile',
             anchor = 'qualimap-genome-fraction-coverage',
+            description = 'Mean distribution of coverage depth across the length of all mapped transcripts.',
             plot = linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
