@@ -1,6 +1,7 @@
 from multiqc.modules.base_module import BaseMultiqcModule
 import logging
 import json
+from collections import OrderedDict
 from multiqc import config
 
 log = logging.getLogger(__name__)
@@ -37,6 +38,21 @@ class MultiqcModule(BaseMultiqcModule):
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
         self.bcl2fastq_bysample = self.ignore_samples(self.bcl2fastq_bysample)
 
+        self.add_general_stats()
+
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
             log.debug("Could not find any bcl2fastq data in {}".format(config.analysis_dir))
             raise UserWarning
+
+    def add_general_stats(self):
+        headers = OrderedDict()
+        headers['total'] = {
+            'title': 'Total Reads',
+            'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing',
+            'scale': 'RdYlGn-rev'
+        }
+        headers['perfectIndex'] = {
+            'title': 'Perfect Index Reads',
+            'description': 'Number of reads with perfect index (0 mismatches), summed over all indices for a sample',
+        }
+        self.general_stats_addcols(self.bcl2fastq_bysample, headers)
