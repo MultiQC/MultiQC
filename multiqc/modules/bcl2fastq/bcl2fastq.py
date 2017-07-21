@@ -19,36 +19,35 @@ class MultiqcModule(BaseMultiqcModule):
         for myfile in self.find_log_files('bcl2fastq'):
             content = json.loads(myfile["f"])
             runId = content["RunId"]
-            run_data = {'by_lane': dict(), 'by_sample': dict()}
-            if runId in self.bcl2fastq_data:
-                log.debug("Duplicate RunId found! Overwriting: {}".format(runId))
-            self.bcl2fastq_data[runId] = run_data
+            if not runId in self.bcl2fastq_data:
+                self.bcl2fastq_data[runId] = dict()
+            run_data = self.bcl2fastq_data[runId]
             for conversionResult in content["ConversionResults"]:
                 lane = conversionResult["LaneNumber"]
-                run_data["by_lane"][lane] = {"total": 0, "perfectIndex": 0}
+                if lane in run_data:
+                    log.debug("Duplicate lane found! Overwriting: {}".format(uniqLaneName))
+                run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
                 for demuxResult in conversionResult["DemuxResults"]:
                     sample = demuxResult["SampleName"]
-                    if not sample in run_data["by_sample"]:
-                        run_data["by_sample"][sample] = {"total": 0, "perfectIndex": 0}
-                    run_data["by_lane"][lane]["total"] += demuxResult["NumberReads"]
-                    run_data["by_sample"][sample]["total"] += demuxResult["NumberReads"]
+                    run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0}
+                    run_data[lane]["total"] += demuxResult["NumberReads"]
+                    run_data[lane]["samples"][sample]["total"] += demuxResult["NumberReads"]
                     for indexMetric in demuxResult["IndexMetrics"]:
-                        run_data["by_lane"][lane]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
-                        run_data["by_sample"][sample]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
+                        run_data[lane]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
+                        run_data[lane]["samples"][sample]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
 
         self.bcl2fastq_bylane = dict()
         self.bcl2fastq_bysample = dict()
         for runId in self.bcl2fastq_data.keys():
-            for lane in self.bcl2fastq_data[runId]["by_lane"].keys():
+            for lane in self.bcl2fastq_data[runId].keys():
                 uniqLaneName = str(runId) + " - " + str(lane)
-                if uniqLaneName in self.bcl2fastq_bylane:
-                    log.debug("Duplicate lane found! Overwriting: {}".format(uniqLaneName))
-                self.bcl2fastq_bylane[uniqLaneName] = self.bcl2fastq_data[runId]["by_lane"][lane]
-            for sample in self.bcl2fastq_data[runId]["by_sample"].keys():
-                uniqSampleName = str(runId) + " - " + str(sample)
-                if uniqSampleName in self.bcl2fastq_bysample:
-                    log.debug("Duplicate sample found! Overwriting: {}".format(uniqSampleName))
-                self.bcl2fastq_bysample[uniqSampleName] = self.bcl2fastq_data[runId]["by_sample"][sample]
+                self.bcl2fastq_bylane[uniqLaneName] = {"total": self.bcl2fastq_data[runId][lane]["total"], "perfectIndex": self.bcl2fastq_data[runId][lane]["perfectIndex"]}
+                for sample in self.bcl2fastq_data[runId][lane]["samples"].keys():
+                    uniqSampleName = str(runId) + " - " + str(sample)
+                    if not uniqSampleName in self.bcl2fastq_bysample:
+                        self.bcl2fastq_bysample[uniqSampleName] = {"total": 0, "perfectIndex": 0}
+                    self.bcl2fastq_bysample[uniqSampleName]["total"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
+                    self.bcl2fastq_bysample[uniqSampleName]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
 
         # Filter to strip out ignored sample names
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
