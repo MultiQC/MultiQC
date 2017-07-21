@@ -155,6 +155,7 @@ Code contributions from:
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
+[afterqc]: http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
 [biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
