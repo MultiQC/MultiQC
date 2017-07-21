@@ -45,14 +45,19 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
     def add_general_stats(self):
+        data = {key: {"total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(100*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"])} for key in self.bcl2fastq_bysample.keys()}
         headers = OrderedDict()
         headers['total'] = {
             'title': 'Total Reads',
             'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing',
-            'scale': 'RdYlGn-rev'
+            'scale': 'Blues'
         }
-        headers['perfectIndex'] = {
-            'title': 'Perfect Index Reads',
-            'description': 'Number of reads with perfect index (0 mismatches), summed over all indices for a sample',
+        headers['perfectPercent'] = {
+            'title': 'Perfect Index Read Percentage',
+            'description': 'Percent of reads with perfect index (0 mismatches)',
+            'max': 100,
+            'min': 0,
+            'scale': 'RdYlGn',
+            'suffix': '%'
         }
-        self.general_stats_addcols(self.bcl2fastq_bysample, headers)
+        self.general_stats_addcols(data, headers)
