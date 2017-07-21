@@ -42,8 +42,10 @@ Many thanks to those involved! Lots of different work was added, including:
     * Work by [@robinandeer](https://github.com/robinandeer)
 * **Prokka**
     * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
-* **AfterQC**
-    * Added parsing of the `AfterQC json file` data from AfterQC when available ([@raonyguimaraes](https://github.com/raonyguimaraes))
+
+* [**AfterQC**](https://github.com/OpenGene/AfterQC) - New module!
+    * Added parsing of the _AfterQC_ json file data, with a plot of filtered reads.
+    * Work by [@raonyguimaraes](https://github.com/raonyguimaraes)
 
 #### New Modules:
 * [**leeHom**](https://github.com/grenaud/leeHom)
