@@ -501,6 +501,12 @@ function validate_regexp(pattern) {
     new RegExp(pattern, 'g');
     return true
   } catch (error) {
+    $.toast({
+      text: 'RegExp pattern invalid: ' + pattern,
+      icon: 'error',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
     return false
   }
 }
