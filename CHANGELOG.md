@@ -17,6 +17,16 @@ Many thanks to those involved! Lots of different work was added, including:
         * [@tabwalsh](https://github.com/tabwalsh)
         * [@ddesvillechabrol](https://github.com/tabwalsh)
         * [@asetGem](https://github.com/asetGem)
+* Back-end configuration options to specify the order of table columns
+    * Modules and user configs can set priorities for columns to customise where they are displayed
+    * Work by [@tbooth](https://github.com/tbooth)
+* Added framework for proper unit testing
+    * Previous start on unit tests tidied up, new blank template and tests for the `clean_sample_name` functionality.
+    * Added to Travis and Appveyor for continuous integration testing.
+    * Work by [@tbooth](https://github.com/tbooth)
+* Bug fixes and refactoring of report configuration saving / loading
+    * Discovered and fixed a bug where a report config could only be loaded once
+    * Work by [@DennisSchwartz](https://github.com/DennisSchwartz)
 * **Prokka**
     * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
 
