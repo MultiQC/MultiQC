@@ -25,17 +25,21 @@ MultiQC typically generates sample names by taking the input or log file name,
 and 'cleaning' it. To do this, it uses the `fn_clean_exts` settings and looks
 for any matches. If it finds any matches, everything to the right is removed.
 For example, consider the following config:
+
 ```yaml
 fn_clean_exts:
     - '.gz'
     - '.fastq'
 ```
+
 This would make the following sample names:
+
 ```
 mysample.fastq.gz  ->  mysample
 secondsample.fastq.gz_trimming_log.txt  ->  secondsample
 thirdsample.fastq_aligned.sam.gz  ->  thirdsample
 ```
+
 There is also a config list called `fn_clean_trim` which just removes
 strings if they are present at the start or end of the sample name.
 
@@ -53,24 +57,73 @@ extra_fn_clean_trim:
 ```
 
 ### Other search types
-File name cleaning can also take strings to remove (instead of removing with truncation).
-Also regex strings can be supplied to match patterns and remove strings.
 
-Consider the following:
-```yaml
-extra_fn_clean_exts:
-    - '.fastq'
-    - type: 'replace'
-      pattern: '.sorted'
-    - type: 'regex'
-      pattern: '^processed.'
-```
-This would make the following sample names:
-```
-mysample.fastq.gz  ->  mysample
-secondsample.sorted.deduplicated.fastq.gz_processed.txt  ->  secondsample.deduplicated
-processed.thirdsample.fastq_aligned.sam.gz  ->  thirdsample
-```
+File name cleaning can also take strings to remove (instead of removing with truncation).
+Also regex strings can be supplied to match patterns and remove or keep matching substrings.
+
+- **default** - `truncate`
+    
+    If you just supply a string, the default behavior is similar to "trim". The filename will be truncated beginning with the matching string.
+
+    ```yaml
+    extra_fn_clean_exts:
+        - '.fastq'
+    ```
+
+    This rule would produce the following sample names:
+
+    ```
+    mysample.fastq.gz  ->  mysample
+    thirdsample.fastq_aligned.sam.gz  ->  thirdsample
+    ```
+
+- `remove` (formerly `replace`)
+
+    The `remove` type allows you to remove the exact match from the filename.
+
+    ```yaml
+    extra_fn_clean_exts:
+        - type: remove
+          pattern: .sorted
+    ```
+
+    This rule would produce the following sample names:
+
+    ```
+    secondsample.sorted.deduplicated  ->  secondsample.deduplicated
+    ```
+
+- `regex`
+
+    You can also remove a substring with a regular expression. Here's a [good resource](https://regex101.com/) to interactively try it out.
+
+    ```yaml
+    extra_fn_clean_exts:
+        - type: regex
+          pattern: '^processed.'
+    ```
+
+    This rule would produce the following sample names:
+
+    ```
+    processed.thirdsample.processed  ->  thirdsample.processed
+    ```
+
+- `regex_keep`
+
+    If you'd rather like to _keep_ the match of a regular expression you can use the `regex_keep` type. This simplifies things if you can e.g. directly target samples names.
+
+    ```yaml
+    extra_fn_clean_exts:
+        - type: regex_keep
+          pattern: '[A-Z]{3}[1-9]{2}'
+    ```
+
+    This rule would produce the following sample names:
+
+    ```
+    merged.recalibrated.XZY97.alignment.bam  ->  XZY97
+    ```
 
 ### Clashing sample names
 This process of cleaning sample names can sometimes result in exact duplicates.

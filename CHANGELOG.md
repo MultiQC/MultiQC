@@ -33,6 +33,7 @@ Many thanks to those involved! Lots of different work was added, including:
     * Work by [@DennisSchwartz](https://github.com/DennisSchwartz)
 * Table column row headers (sample names) can now be numeric-only.
     * Work by [@iimog](https://github.com/iimog)
+* Added option `regex_keep` to clean filenames by keeping the matching part of a pattern
 * **Prokka**
     * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
 

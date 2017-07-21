@@ -167,7 +167,9 @@ class BaseMultiqcModule(object):
                     ext = {'type': 'truncate', 'pattern': ext}
                 if ext['type'] == 'truncate':
                     s_name = os.path.basename(s_name.split(ext['pattern'], 1)[0])
-                elif ext['type'] == 'replace':
+                elif ext['type'] in ('remove', 'replace'):
+                    if ext['type'] == 'replace':
+                        logger.warning("use 'remove' instead of 'replace' (deprecated)")
                     s_name = s_name.replace(ext['pattern'], '')
                 elif ext['type'] == 'regex':
                     s_name = re.sub(ext['pattern'], '', s_name)
