@@ -62,6 +62,7 @@ setup(
     entry_points = {
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
+            'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
