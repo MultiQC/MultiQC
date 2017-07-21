@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         for conversionResult in content["ConversionResults"]:
             lane = conversionResult["LaneNumber"]
             if lane in run_data:
-                log.debug("Duplicate runId/lane combination found! Overwriting: {} - {}".format(runId, lane))
+                log.debug("Duplicate runId/lane combination found! Overwriting: {}".format(self.prepend_runid(runId, lane)))
             run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
             for demuxResult in conversionResult["DemuxResults"]:
                 sample = demuxResult["SampleName"]
@@ -85,14 +85,14 @@ class MultiqcModule(BaseMultiqcModule):
     def split_data_by_lane_and_sample(self):
         for runId in self.bcl2fastq_data.keys():
             for lane in self.bcl2fastq_data[runId].keys():
-                uniqLaneName = str(runId) + " - " + str(lane)
+                uniqLaneName = self.prepend_runid(runId, lane)
                 self.bcl2fastq_bylane[uniqLaneName] = {
                 "total": self.bcl2fastq_data[runId][lane]["total"],
                 "perfectIndex": self.bcl2fastq_data[runId][lane]["perfectIndex"],
                 "undetermined": self.bcl2fastq_data[runId][lane]["samples"]["undetermined"]["total"]
                 }
                 for sample in self.bcl2fastq_data[runId][lane]["samples"].keys():
-                    uniqSampleName = str(runId) + " - " + str(sample)
+                    uniqSampleName = self.prepend_runid(runId, sample)
                     if not uniqSampleName in self.bcl2fastq_bysample:
                         self.bcl2fastq_bysample[uniqSampleName] = {"total": 0, "perfectIndex": 0}
                     self.bcl2fastq_bysample[uniqSampleName]["total"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
@@ -119,3 +119,6 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%'
         }
         self.general_stats_addcols(data, headers)
+
+    def prepend_runid(self, runId, rest):
+        return str(runId)+" - "+str(rest)
