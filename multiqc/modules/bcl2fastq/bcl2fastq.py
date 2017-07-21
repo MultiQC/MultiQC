@@ -3,6 +3,7 @@ import logging
 import json
 from collections import OrderedDict
 from multiqc import config
+from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
@@ -35,13 +36,21 @@ class MultiqcModule(BaseMultiqcModule):
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
         self.bcl2fastq_bysample = self.ignore_samples(self.bcl2fastq_bysample)
 
+        if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
+            log.debug("Could not find any bcl2fastq data in {}".format(config.analysis_dir))
+            raise UserWarning
+
         self.add_general_stats()
         self.write_data_file({str(k): self.bcl2fastq_bylane[k] for k in self.bcl2fastq_bylane.keys()}, 'multiqc_bcl2fastq_bylane')
         self.write_data_file(self.bcl2fastq_bysample, 'multiqc_bcl2fastq_bysample')
 
-        if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
-            log.debug("Could not find any bcl2fastq data in {}".format(config.analysis_dir))
-            raise UserWarning
+        self.add_section (
+            name = 'bcl2fastq by lane',
+            anchor = 'bcl2fastq-bylane',
+            description = 'Number of reads per lane (with number of perfect index reads)',
+            help = "Perfect index reads are those that do not have a single mismatch. All samples of a lane are combinned. Undetermined reads are ignored.",
+            plot = bargraph.plot({key: {"imperfect": self.bcl2fastq_bylane[key]["total"]-self.bcl2fastq_bylane[key]["perfectIndex"], "perfect": self.bcl2fastq_bylane[key]["perfectIndex"]} for key in self.bcl2fastq_bylane.keys()})
+        )
 
     def add_general_stats(self):
         data = {key: {"total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(100*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"])} for key in self.bcl2fastq_bysample.keys()}
