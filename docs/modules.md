@@ -500,7 +500,7 @@ self.add_section (
     name = 'First Module Section',
     anchor = 'mymod-first',
     description = 'My amazing module output, from the first section',
-    help = "If you're not sure how to interpret the data, we can help!",
+    helptext = "If you're not sure how to interpret the data, we can help!",
     plot = bargraph.plot(data)
 )
 self.add_section (
