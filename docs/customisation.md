@@ -215,8 +215,9 @@ Note that you can set these to `True` to show columns that would otherwise be hi
 by default.
 
 In the same way, you can force a column to appear at the start or end of the table, or
-indeed impose a custom ordering on all the columns, by setting the table_columns_placement
-values like so:
+indeed impose a custom ordering on all the columns, by setting the `table_columns_placement`.
+High values push columns to the right hand side of the table and low to the left. The default
+value is 1000. For example:
 
 ```yaml
 table_columns_placement:
@@ -226,7 +227,7 @@ table_columns_placement:
         secondary: 1020
 ```
 
-In this case, since the default placement weithting is 1000, the 'reads_mapped' will end up as the
+In this case, since the default placement weighting is `1000`, the `reads_mapped` will end up as the
 leftmost column and the other two will and up as the final columns on the right of the table.
 
 ## Number base (multiplier)
