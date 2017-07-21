@@ -348,6 +348,11 @@ $(function () {
         mqc_save_config(name, false, true);
     }
   });
+    // Clear current config default
+  $('.mqc_config_clear_default').click(function(e){
+    e.preventDefault();
+    mqc_clear_default_config();
+  });
 
   // Filter text is changed
   $('.mqc_filters').on('blur', 'li input', function(){
@@ -615,7 +620,6 @@ function mqc_save_config(name, clear, as_default){
       // Update config obj with current config
       if(clear == true){
         delete prev_config[name];
-        // TODO: If deleted config was default, move default to possible remaining config
       } else {
         prev_config[name] = config;
         prev_config[name]['last_updated'] = Date();
@@ -645,8 +649,10 @@ function mqc_save_config(name, clear, as_default){
         }, 5000);
       });
     } else {
-      // Add to load select box and select it
-      $('#mqc_loadconfig_form select').prepend('<option>'+name+'</option>').val(name);
+      // Remove from load select box
+      $("#mqc_loadconfig_form select option:contains('"+name+"')").remove();
+      // Add new name to load select box and select it
+      $('#mqc_loadconfig_form select').prepend('<option>'+name+(as_default?' [default]':'')+'</option>').val(name+(as_default?' [default]':''));
       // Success message
       $('<p class="text-success" id="mqc-save-success">Settings saved.</p>').hide().insertBefore($('#mqc_saveconfig_form')).slideDown(function(){
         setTimeout(function(){
@@ -655,6 +661,31 @@ function mqc_save_config(name, clear, as_default){
       });
     }
   } catch(e){ console.log('Error updating localstorage: '+e); }
+}
+
+// Clear current default configuration
+function mqc_clear_default_config() {
+  try {
+    var config = localStorage.getItem("mqc_config");
+    if (!config) {
+      return;
+    } else {
+      config = JSON.parse(config);
+    }
+    for (var c in config) {
+      if (config.hasOwnProperty(c)) {
+        config[c]['default'] = false;
+      }
+    }
+    localStorage.setItem("mqc_config", JSON.stringify(config));
+    $('<p class="text-danger" id="mqc-cleared-success">Unset default.</p>').hide().insertBefore($('#mqc_loadconfig_form .actions')).slideDown(function () {
+      setTimeout(function () {
+        $('#mqc-cleared-success').slideUp(function () { $(this).remove(); });
+      }, 5000);
+    });
+  } catch (e) {
+    console.log('Could not access localStorage');
+  }
 }
 
 //////////////////////////////////////////////////////
