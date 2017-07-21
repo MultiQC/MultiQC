@@ -9,6 +9,7 @@ Many thanks to those involved! Lots of different work was added, including:
 * New module help text
     * Lots of additional help text was written to make MultiQC report plots easier to interpret.
     * Updated modules:
+        * Bowtie
         * Bowtie 2
         * Prokka
         * Qualimap
@@ -17,6 +18,9 @@ Many thanks to those involved! Lots of different work was added, including:
         * [@tabwalsh](https://github.com/tabwalsh)
         * [@ddesvillechabrol](https://github.com/tabwalsh)
         * [@asetGem](https://github.com/asetGem)
+* New `--tags` and `--view_tags` command line options
+    * Modules can now be given tags (keywords) and filtered by those. So running `--tags RNA` will only run MultiQC modules related to RNA analysis.
+    * Work by [@Hammarn](https://github.com/Hammarn)
 * Back-end configuration options to specify the order of table columns
     * Modules and user configs can set priorities for columns to customise where they are displayed
     * Work by [@tbooth](https://github.com/tbooth)
@@ -37,6 +41,7 @@ Many thanks to those involved! Lots of different work was added, including:
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
     * Previously this would only read the last specified
+* HTML ID cleanup now properly cleans strings so that they work with jQuery as expected.
 
 ---
 
