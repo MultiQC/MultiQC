@@ -244,3 +244,5 @@ tophat:
 trimmomatic:
     contents: 'Trimmomatic'
     shared: true
+vcftools/relatedness2:
+    fn: '*.relatedness2'
