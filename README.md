@@ -16,7 +16,7 @@
 MultiQC is a tool to create a single report with interactive plots
 for multiple bioinformatics analyses across many samples.
 
-MultiQC is written in Python (tested with v2.7 / v3.4 / v3.5). It is
+MultiQC is written in Python (tested with v2.7, 3.4, 3.5 and 3.6). It is
 available on the [Python Package Index](https://pypi.python.org/pypi/multiqc/)
 and through conda using [Bioconda](http://bioconda.github.io/).
 
