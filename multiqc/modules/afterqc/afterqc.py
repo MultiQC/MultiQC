@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any Afterqc reports
         self.afterqc_data = dict()
         for f in self.find_log_files('afterqc', filehandles=True):
-            self.parse_afterqc_logs(f)
+            self.parse_afterqc_log(f)
 
         # Filter to strip out ignored sample names
         self.afterqc_data = self.ignore_samples(self.afterqc_data)
@@ -54,15 +54,22 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.after_qc_bad_reads_chart()
         )
 
-    def parse_afterqc_logs(self, f):
+    def parse_afterqc_log(self, f):
         """ Parse the JSON output from AfterQC and save the summary statistics """
-        parsed_json = json.load(f['f'])
+        try:
+            parsed_json = json.load(f['f'])
+        except:
+            log.warn("Could not parse AfterQC JSON: '{}'".format(f['fn']))
+            return None
         s_name = f['s_name']
         self.add_data_source(f, s_name)
         self.afterqc_data[s_name] = {}
-        for k in parsed_json['summary']:
+        for k in parsed_json.get('summary', {}):
             self.afterqc_data[s_name][k] = float(parsed_json['summary'][k])
-        self.afterqc_data[s_name]['pct_good_bases'] = (self.afterqc_data[s_name]['good_bases'] / self.afterqc_data[s_name]['total_bases']) * 100.0
+        try:
+            self.afterqc_data[s_name]['pct_good_bases'] = (self.afterqc_data[s_name]['good_bases'] / self.afterqc_data[s_name]['total_bases']) * 100.0
+        except KeyError:
+            pass
 
     def afterqc_general_stats_table(self):
         """ Take the parsed stats from the Afterqc report and add it to the
