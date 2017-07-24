@@ -6,7 +6,7 @@ from __future__ import print_function
 import logging
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from .relatedness import Relatedness2Mixin
+from .relatedness2 import Relatedness2Mixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin):
             name='VCFTools',
             anchor='vcftools',
             href='https://vcftools.github.io',
-            info='is a program for working with and reporting on VCF files'
+            info='is a program for working with and reporting on VCF files.'
         )
 
         n = dict()

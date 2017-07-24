@@ -33,6 +33,9 @@ Many thanks to those involved! Lots of different work was added, including:
 #### New Modules:
 * [**leeHom**](https://github.com/grenaud/leeHom)
     * leeHom is a program for the Bayesian reconstruction of ancient DNA
+* [**vcftools**](https://vcftools.github.io)
+    * Added initial support for vcftools relatedness2
+    * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
 
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected

@@ -15,16 +15,17 @@ class Relatedness2Mixin():
     def parse_relatedness2(self):
         matrices = {}
         for f in self.find_log_files('vcftools/relatedness2', filehandles=True):
-            m = _RelatednessMatrix(f)
-            if m.matrix and m.x_labels and m.y_labels:
+            m = _Relatedness2Matrix(f)
+            if m.data and m.x_labels and m.y_labels:
                 matrices[f['s_name']] = m
 
         matrices = self.ignore_samples(matrices)
-        log.info('Found %s relatedness2 files', len(matrices))
+        log.info('Found %s valid relatedness2 matrices', len(matrices))
 
         helptext = '''
         RELATEDNESS_PHI gives a relatedness score between two samples. A higher score indicates a higher degree of
-        relatedness, up to a maximum of 0.5.
+        relatedness, up to a maximum of 0.5. Samples are sorted alphabetically on each axis, and specific IDs can be
+        found in the graph with the Highlight tab.
         '''
 
         for name, m in matrices.items():
@@ -34,19 +35,19 @@ class Relatedness2Mixin():
                 description='Heatmap of RELATEDNESS_PHI values from the output of vcftools relatedness2.',
                 helptext=helptext,
                 plot=heatmap.plot(
-                    m.matrix,
+                    m.data,
                     xcats=m.x_labels,
                     ycats=m.y_labels,
-                    pconfig={'square': True, 'decimalPlaces': 3}
+                    pconfig={'square': True, 'decimalPlaces': 7}
                 )
             )
 
         return len(matrices)
 
 
-class _RelatednessMatrix():
+class _Relatedness2Matrix():
     def __init__(self, relatedness_file):
-        self.matrix = []
+        self.data = []
         self.x_labels = set()
         self.y_labels = set()
 
@@ -61,10 +62,12 @@ class _RelatednessMatrix():
 
             rels[line['INDV1']][line['INDV2']] = float(line['RELATEDNESS_PHI'])
 
+        # impose alphabetical order and avoid json serialisation errors in utils.report
         self.x_labels = sorted(self.x_labels)
         self.y_labels = sorted(self.y_labels)
+
         for x in self.x_labels:
             line = []
             for y in self.y_labels:
                 line.append(rels[x][y])
-            self.matrix.append(line)
+            self.data.append(line)
