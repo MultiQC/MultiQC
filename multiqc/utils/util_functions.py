@@ -76,7 +76,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 rows = [ "\t".join(h) ]
                 for sn in sorted(data.keys()):
                     # Make a list starting with the sample name, then each field in order of the header cols
-                    l = [sn] + [ str(data[sn].get(k, '')) for k in h[1:] ]
+                    l = [str(sn)] + [ str(data[sn].get(k, '')) for k in h[1:] ]
                     rows.append( "\t".join(l) )
 
                 body = '\n'.join(rows)

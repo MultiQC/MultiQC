@@ -16,7 +16,7 @@
 MultiQC is a tool to create a single report with interactive plots
 for multiple bioinformatics analyses across many samples.
 
-MultiQC is written in Python (tested with v2.7 / v3.4 / v3.5). It is
+MultiQC is written in Python (tested with v2.7, 3.4, 3.5 and 3.6). It is
 available on the [Python Package Index](https://pypi.python.org/pypi/multiqc/)
 and through conda using [Bioconda](http://bioconda.github.io/).
 
@@ -30,21 +30,21 @@ Currently, supported tools include:
 
 
 
-|Read QC & pre-processing     | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
-|-----------------------------|------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval]|[Bismark][bismark]  | [Bamtools][bamtools]      | [BUSCO][busco]       |
-|[BioBloom Tools][biobloomtools]|[Bowtie][bowtie-1]    | [Bcftools][bcftools]      | [Conpair][conpair]   |
-|[Cluster Flow][clusterflow]  | [Bowtie 2][bowtie-2]   | [GATK][gatk]              | [Disambiguate][disambiguate] |
-|[Cutadapt][cutadapt]         | [HiCUP][hicup]         | [HOMER][homer]            | [goleft][goleft]     |
-|[leeHom][leehom]             | [HISAT2][hisat2]       | [HTSeq][htseq]            | [methylQA][methylqa] |
-|[FastQC][fastqc]             | [Kallisto][kallisto]   | [MACS2][macs2]            | [Peddy][peddy]       |
-|[FastQ Screen][fastq-screen] | [Salmon][salmon]       | [Picard][picard]          | [Preseq][preseq]     |
-|[Flexbar][flexbar]           | [Slamdunk][slamdunk]   | [Prokka][prokka]          | [QoRTs][qorts]       |
-|[Jellyfish][jellyfish]       | [STAR][star]           | [Samblaster][samblaster]  | [Qualimap][qualimap] |
-|[Skewer][skewer]             | [Tophat][tophat]       | [Samtools][samtools]      | [QUAST][quast]       |
-|[SortMeRNA][sortmerna]       |                        | [SnpEff][snpeff]          | [RNA-SeQC][rna_seqc] |
-|[Trimmomatic][trimmomatic]   |                        | [Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|                             |                        | [THetA2][theta2]          | [VCFTools][vcftools] |
+|Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
+|---------------------------------|------------------------|---------------------------|----------------------|
+|[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]       |[BUSCO][busco]        |
+|[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
+|[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]    |[GATK][gatk]               |[Disambiguate][disambiguate]|
+|[Cluster Flow][clusterflow]      |[HiCUP][hicup]          |[HOMER][homer]             |[goleft][goleft]      |
+|[Cutadapt][cutadapt]             |[HISAT2][hisat2]        |[HTSeq][htseq]             |[methylQA][methylqa]  |
+|[leeHom][leehom]                 |[Kallisto][kallisto]    |[MACS2][macs2]             |[Peddy][peddy]        |
+|[FastQC][fastqc]                 |[Salmon][salmon]        |[Picard][picard]           |[Preseq][preseq]      |
+|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]    |[Prokka][prokka]           |[QoRTs][qorts]        |
+|[Flexbar][flexbar]               |[STAR][star]            |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
+|[Jellyfish][jellyfish]           |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
+|[Skewer][skewer]                 |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
+|[SortMeRNA][sortmerna]           |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
+|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           | [VCFTools][vcftools] |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -155,6 +155,7 @@ Code contributions from:
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
+[afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
 [biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
@@ -201,4 +202,4 @@ and many others. Thanks for your support!
 [theta2]:         http://multiqc.info/docs/#theta2
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [tophat]:         http://multiqc.info/docs/#tophat
-
+[vcftools]:       http://multiqc.info/docs/#vcftools
