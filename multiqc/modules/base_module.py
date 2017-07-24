@@ -123,10 +123,10 @@ class BaseMultiqcModule(object):
                 helptext = textwrap.dedent(helptext)
                 if autoformat_type == 'markdown':
                     helptext = markdown.markdown(helptext)
-            if len(plot) > 0:
-                plot = textwrap.dedent(plot)
-                if autoformat_type == 'markdown':
-                    plot = markdown.markdown(plot)
+
+        # Strip excess whitespace
+        description = description.strip()
+        helptext = helptext.strip()
 
         self.sections.append({
             'name': name,
