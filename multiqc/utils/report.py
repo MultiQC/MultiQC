@@ -246,7 +246,7 @@ def save_htmlid(html_id):
         html_id = 'mqc-{}'.format(html_id)
 
     # Replace illegal characters
-    html_id = re.sub('[^a-zA-Z0-9]+', '-', html_id)
+    html_id = re.sub('[^a-zA-Z0-9_-]+', '-', html_id)
 
     # Check for duplicates
     i = 1
