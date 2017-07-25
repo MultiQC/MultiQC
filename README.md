@@ -44,7 +44,7 @@ Currently, supported tools include:
 |[Jellyfish][jellyfish]           |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
 |[Skewer][skewer]                 |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
 |[SortMeRNA][sortmerna]           |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           |                      |
+|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           | [VCFTools][vcftools] |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -155,7 +155,7 @@ Code contributions from:
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
-[afterqc]: http://multiqc.info/docs/#afterqc
+[afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
 [biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
@@ -202,4 +202,4 @@ and many others. Thanks for your support!
 [theta2]:         http://multiqc.info/docs/#theta2
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [tophat]:         http://multiqc.info/docs/#tophat
-
+[vcftools]:       http://multiqc.info/docs/#vcftools

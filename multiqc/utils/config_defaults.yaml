@@ -187,171 +187,175 @@ module_order:
             - DNA
     - peddy:
         module_tag:
-            - DNA 
+            - DNA
     - methylQA:
         module_tag:
             - Methylation
-            - DNA 
+            - DNA
     - qualimap:
         module_tag:
             - DNA
-            - RNA 
+            - RNA
     - preseq:
-        module_tag: 
+        module_tag:
             - DNA
-            - RNA 
+            - RNA
     - quast:
         module_tag:
             - DNA
             - Metagenomics
-            - Denovo 
+            - Denovo
     - qorts:
-        module_tag: 
+        module_tag:
             - RNA
     - rna_seqc:
-        module_tag: 
+        module_tag:
             - RNA
     - rseqc:
-        module_tag: 
+        module_tag:
             - RNA
     - busco:
-        module_tag: 
-            - Denovo 
+        module_tag:
+            - Denovo
     - goleft_indexcov:
-        module_tag: 
+        module_tag:
             - DNA
     - disambiguate:
-        module_tag: 
+        module_tag:
             - RNA
     # Post-alignment processing
     - homer:
-        module_tag: 
+        module_tag:
             - RNA
             - DNA
             - chip
     - macs2:
-        module_tag: 
+        module_tag:
             - chip
     - theta2:
         module_tag:
             - DNA
             - cancer
     - snpeff:
-        module_tag: 
+        module_tag:
             - DNA
     - gatk:
-        module_tag: 
+        module_tag:
             - DNA
     - htseq:
-        module_tag: 
+        module_tag:
             - DNA
             - RNA
     - bcftools:
-        module_tag: 
+        module_tag:
             - DNA
     - featureCounts:
-        module_tag: 
+        module_tag:
             - DNA
             - RNA
     - picard:
-        module_tag: 
+        module_tag:
             - DNA
             - RNA
     - prokka:
         module_tag:
             - prokarytotic
-            - Denovo 
+            - Denovo
     - samblaster:
-        module_tag: 
+        module_tag:
             - DNA
             - RNA
     - samtools:
-        module_tag: 
+        module_tag:
             - DNA
             - RNA
     - bamtools:
-        module_tag: 
+        module_tag:
             - DNA
             - RNA
     - jellyfish:
-        module_tag: 
+        module_tag:
             - DNA
+    - vcftools:
+        module_tag:
+            - DNA
+
     # Alignment tool stats
     - bismark:
         module_tag:
             - DNA
-            - methylation 
+            - methylation
     - hicup:
         module_tag:
-            - hi-c  
+            - hi-c
     - salmon:
-        module_tag: 
+        module_tag:
             - RNA
     - kallisto:
-        module_tag: 
+        module_tag:
             - RNA
     - slamdunk:
         module_tag:
-            - slam 
+            - slam
     - star:
-        module_tag: 
+        module_tag:
             - RNA
     - hisat2:
-        module_tag: 
+        module_tag:
             - RNA
     - tophat:
-        module_tag: 
+        module_tag:
             - RNA
     - bowtie2:
-        module_tag: 
+        module_tag:
             - RNA
     - bowtie1:
-        module_tag: 
+        module_tag:
             - RNA
-        
+
     # Pre-alignment QC
     - leehom:
         module_tag:
             - RNA
-            - DNA 
+            - DNA
     - adapterRemoval:
-        module_tag: 
-            - RNA
-            - DNA 
-    - cutadapt:
-        module_tag: 
-            - RNA
-            - DNA 
-    - flexbar:
-        module_tag: 
-            - RNA
-            - DNA 
-    - trimmomatic:
-        module_tag: 
-            - RNA
-            - DNA 
-    - skewer:
-        module_tag: 
-            - RNA
-            - DNA 
-    - sortmerna:
-        module_tag: 
-            - RNA
-            - DNA 
-    - biobloomtools:
-        module_tag: 
-            - RNA
-            - DNA 
-    - fastq_screen:
-        module_tag: 
-            - RNA
-            - DNA 
-    - fastqc:
-        module_tag: 
-            - RNA
-            - DNA 
-    - clusterflow:
-        module_tag: 
+        module_tag:
             - RNA
             - DNA
-            - methylation 
+    - cutadapt:
+        module_tag:
+            - RNA
+            - DNA
+    - flexbar:
+        module_tag:
+            - RNA
+            - DNA
+    - trimmomatic:
+        module_tag:
+            - RNA
+            - DNA
+    - skewer:
+        module_tag:
+            - RNA
+            - DNA
+    - sortmerna:
+        module_tag:
+            - RNA
+            - DNA
+    - biobloomtools:
+        module_tag:
+            - RNA
+            - DNA
+    - fastq_screen:
+        module_tag:
+            - RNA
+            - DNA
+    - fastqc:
+        module_tag:
+            - RNA
+            - DNA
+    - clusterflow:
+        module_tag:
+            - RNA
+            - DNA
+            - methylation
