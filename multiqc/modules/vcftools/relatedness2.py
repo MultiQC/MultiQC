@@ -23,22 +23,22 @@ class Relatedness2Mixin():
         log.info('Found %s valid relatedness2 matrices', len(matrices))
 
         helptext = '''
-        RELATEDNESS_PHI gives a relatedness score between two samples. A higher score indicates a higher degree of
+        `RELATEDNESS_PHI` gives a relatedness score between two samples. A higher score indicates a higher degree of
         relatedness, up to a maximum of 0.5. Samples are sorted alphabetically on each axis, and specific IDs can be
         found in the graph with the Highlight tab.
         '''
 
         for name, m in matrices.items():
             self.add_section(
-                name='Vcftools relatedness2 ' + name,
-                anchor='vcftools_relatedness2_' + name,
-                description='Heatmap of RELATEDNESS_PHI values from the output of vcftools relatedness2.',
-                helptext=helptext,
-                plot=heatmap.plot(
+                name = 'Vcftools relatedness2',
+                anchor = 'vcftools_relatedness2',
+                description = "**Input:** `{}`.\n\n Heatmap of `RELATEDNESS_PHI` values from the output of vcftools relatedness2.".format(name),
+                helptext = helptext,
+                plot = heatmap.plot(
                     m.data,
-                    xcats=m.x_labels,
-                    ycats=m.y_labels,
-                    pconfig={'square': True, 'decimalPlaces': 7}
+                    xcats = m.x_labels,
+                    ycats = m.y_labels,
+                    pconfig = {'square': True, 'decimalPlaces': 7}
                 )
             )
 

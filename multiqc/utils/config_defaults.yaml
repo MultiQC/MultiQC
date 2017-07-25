@@ -133,6 +133,7 @@ fn_clean_exts:
     - '.BEST.results'
     - '_summary'
     - '_peaks.xls'
+    - '.relatedness'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
