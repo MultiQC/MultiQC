@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 def parse_reports(self):
     """ Find Qualimap RNASeq reports and parse their data """
 
-    sp = config.sp['qualimap']['rnaseq']
     self.qualimap_rnaseq_genome_results = dict()
     regexes = {
         'reads_aligned': r"read(?:s| pairs) aligned\s*=\s*([\d,]+)",
@@ -31,7 +30,7 @@ def parse_reports(self):
         'reads_aligned_intergenic': r"intergenic\s*=\s*([\d,]+)",
         'reads_aligned_overlapping_exon': r"overlapping exon\s*=\s*([\d,]+)",
     }
-    for f in self.find_log_files(sp['rnaseq_results']):
+    for f in self.find_log_files('qualimap/rnaseq/rnaseq_results'):
         d = dict()
 
         # Get the sample name
@@ -78,7 +77,7 @@ def parse_reports(self):
 
     #### Coverage profile
     self.qualimap_rnaseq_cov_hist = dict()
-    for f in self.find_log_files(sp['coverage'], filehandles=True):
+    for f in self.find_log_files('qualimap/rnaseq/coverage', filehandles=True):
         s_name = self.get_s_name(f)
         d = dict()
         for l in f['f']:
@@ -99,6 +98,10 @@ def parse_reports(self):
         self.qualimap_rnaseq_cov_hist[s_name] = d
         self.add_data_source(f, s_name=s_name, section='rna_coverage_histogram')
 
+    # Filter to strip out ignored sample names
+    self.qualimap_rnaseq_genome_results = self.ignore_samples(self.qualimap_rnaseq_genome_results)
+    self.qualimap_rnaseq_cov_hist = self.ignore_samples(self.qualimap_rnaseq_cov_hist)
+
     #### Plots
 
     # Genomic Origin Bar Graph
@@ -113,17 +116,19 @@ def parse_reports(self):
             'title': 'Genomic Origin',
             'cpswitch_c_active': False
         }
-        self.sections.append({
-            'name': 'Genomic origin of reads',
-            'anchor': 'qualimap-reads-genomic-origin',
-            'content': bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
-        })
+        self.add_section (
+            name = 'Genomic origin of reads',
+            anchor = 'qualimap-reads-genomic-origin',
+            description = 'Classification of mapped reads as originating in exonic, intronic or intergenic regions. These can be displayed as either the number or percentage of mapped reads.',
+            plot = bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
+        )
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
-        self.sections.append({
-            'name': 'Gene Coverage Profile',
-            'anchor': 'qualimap-genome-fraction-coverage',
-            'content': linegraph.plot(self.qualimap_rnaseq_cov_hist, {
+        self.add_section (
+            name = 'Gene Coverage Profile',
+            anchor = 'qualimap-genome-fraction-coverage',
+            description = 'Mean distribution of coverage depth across the length of all mapped transcripts.',
+            plot = linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
@@ -133,21 +138,21 @@ def parse_reports(self):
                 'xmax': 100,
                 'tt_label': '<b>{point.x} bp</b>: {point.y:.0f}%',
             })
-        })
+        )
 
 
     #### General Stats
     self.general_stats_headers['5_3_bias'] = {
         'title': "5'-3' bias",
-        'format': '{:.2f}',
+        'format': '{:,.2f}',
     }
     self.general_stats_headers['reads_aligned'] = {
-        'title': 'M Aligned',
-        'description': 'Reads Aligned (millions)',
+        'title': '{} Aligned'.format(config.read_count_prefix),
+        'description': 'Reads Aligned ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'RdBu',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier
     }
 
     # Return the number of reports we found

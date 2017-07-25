@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 
 from setuptools import setup, find_packages
 
-version = '1.0dev'
+version = '1.2dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -48,37 +48,53 @@ setup(
     zip_safe = False,
     scripts = ['scripts/multiqc'],
     install_requires = [
-        'jinja2',
-        'simplejson',
-        'pyyaml',
         'click',
+        'future>0.14.0',
+        'lzstring',
+        'jinja2>=2.9',
         'matplotlib',
+        'markdown',
         'numpy',
-        'spectra'
+        'pyyaml',
+        'simplejson',
+        'spectra',
     ],
     entry_points = {
         'multiqc.modules.v1': [
-            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
+            'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
+            'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
+            'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
-            'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
+            'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
+            'conpair = multiqc.modules.conpair:MultiqcModule',
+            'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
-            'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
+            'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'flexbar = multiqc.modules.flexbar:MultiqcModule',
+            'gatk = multiqc.modules.gatk:MultiqcModule',
+            'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
+            'hisat2 = multiqc.modules.hisat2:MultiqcModule',
+            'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
+            'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
+            'leehom = multiqc.modules.leehom:MultiqcModule',
+            'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
+            'qorts = multiqc.modules.qorts:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
             'rna_seqc = multiqc.modules.rna_seqc:MultiqcModule',
@@ -89,14 +105,16 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
+            'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
-            'gatk = multiqc.modules.gatk:MultiqcModule',
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
             'default_dev = multiqc.templates.default_dev',
+            'sections = multiqc.templates.sections',
             'simple = multiqc.templates.simple',
             'geo = multiqc.templates.geo',
         ],
@@ -104,8 +122,9 @@ setup(
             # 'my-new-option = myplugin.cli:new_option'
         # ],
         # 'multiqc.hooks.v1': [
-            # 'execution_start = myplugin.hooks:execution_start',
+            # 'before_config = myplugin.hooks:before_config',
             # 'config_loaded = myplugin.hooks:config_loaded',
+            # 'execution_start = myplugin.hooks:execution_start',
             # 'before_modules = myplugin.hooks:before_modules',
             # 'after_modules = myplugin.hooks:after_modules',
             # 'before_report_generation = myplugin.hooks:before_report_generation',

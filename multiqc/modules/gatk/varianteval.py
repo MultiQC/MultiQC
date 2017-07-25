@@ -17,13 +17,16 @@ class VariantEvalMixin():
         """ Find GATK varianteval logs and parse their data """
 
         self.gatk_varianteval = dict()
-        for f in self.find_log_files(config.sp['gatk']['varianteval'], filehandles=True):
+        for f in self.find_log_files('gatk/varianteval', filehandles=True):
             parsed_data = parse_single_report(f['f'])
             if len(parsed_data) > 0:
                 if f['s_name'] in self.gatk_varianteval:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f, section='varianteval')
                 self.gatk_varianteval[f['s_name']] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.gatk_varianteval = self.ignore_samples(self.gatk_varianteval)
 
         if len(self.gatk_varianteval) > 0:
 
@@ -58,18 +61,18 @@ class VariantEvalMixin():
             self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, 'GATK VariantEval')
 
             # Variant Counts plot
-            self.sections.append({
-                'name': 'Variant Counts',
-                'anchor': 'gatk-count-variants',
-                'content': count_variants_barplot(self.gatk_varianteval)
-            })
+            self.add_section (
+                name = 'Variant Counts',
+                anchor = 'gatk-count-variants',
+                plot = count_variants_barplot(self.gatk_varianteval)
+            )
 
             # Compare Overlap Table
-            self.sections.append({
-                'name': 'Compare Overlap',
-                'anchor': 'gatk-compare-overlap',
-                'content': comp_overlap_table(self.gatk_varianteval)
-            })
+            self.add_section (
+                name = 'Compare Overlap',
+                anchor = 'gatk-compare-overlap',
+                plot = comp_overlap_table(self.gatk_varianteval)
+            )
 
 
         # Return the number of logs that were found
@@ -180,7 +183,8 @@ def comp_overlap_table(data):
         'namespace': 'GATK',
         'min': 0,
         'max': 100,
-        'format': '{:.2f}%',
+        'suffix': '%',
+        'format': '{:,.2f}',
         'scale': 'Blues',
     }
     headers['concordant_rate'] = {
@@ -189,7 +193,8 @@ def comp_overlap_table(data):
         'namespace': 'GATK',
         'min': 0,
         'max': 100,
-        'format': '{:.2f}%',
+        'suffix': '%',
+        'format': '{:,.2f}',
         'scale': 'Blues',
     }
     headers['eval_variants'] = {

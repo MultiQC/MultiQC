@@ -5,7 +5,6 @@
 from collections import defaultdict, OrderedDict
 import logging
 import random
-import re
 
 from multiqc.utils import config, report, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
@@ -13,12 +12,16 @@ logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-def plot (data, headers=[], pconfig={}):
+def plot (data, headers=None, pconfig=None):
     """ Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param headers: list of optional dicts with column config in key:value pairs.
     :return: HTML ready to be inserted into the page
     """
+    if headers is None:
+        headers = []
+    if pconfig is None:
+        pconfig = {}
 
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
@@ -48,7 +51,7 @@ def make_table (dt):
     """
 
     table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
-    table_id = re.sub(r'\W+', '_', table_id)
+    table_id = report.save_htmlid(table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = OrderedDict()
@@ -59,120 +62,130 @@ def make_table (dt):
     if table_title is None:
         table_title = table_id.replace("_", " ").title()
 
-    for idx, hs in enumerate(dt.headers):
-        for k, header in hs.items():
+    for idx, k, header in dt.get_headers_in_order():
 
-            rid = header['rid']
+        rid = report.save_htmlid(header['rid'])
 
-            # Build the table header cell
-            shared_key = ''
-            if header.get('shared_key', None) is not None:
-                shared_key = ' data-shared-key={}'.format(header['shared_key'])
+        # Build the table header cell
+        shared_key = ''
+        if header.get('shared_key', None) is not None:
+            shared_key = ' data-shared-key={}'.format(header['shared_key'])
 
-            hide = ''
-            muted = ''
-            checked = ' checked="checked"'
-            if header.get('hidden', False) is True:
-                hide = 'hidden'
-                muted = ' text-muted'
-                checked = ''
-                hidden_cols += 1
+        hide = ''
+        muted = ''
+        checked = ' checked="checked"'
+        if header.get('hidden', False) is True:
+            hide = 'hidden'
+            muted = ' text-muted'
+            checked = ''
+            hidden_cols += 1
 
-            data_attr = 'data-dmax="{}" data-dmin="{}" data-namespace="{}" {}' \
-                .format(header['dmax'], header['dmin'], header['namespace'], shared_key)
+        data_attr = 'data-dmax="{}" data-dmin="{}" data-namespace="{}" {}' \
+            .format(header['dmax'], header['dmin'], header['namespace'], shared_key)
 
-            cell_contents = '<span data-toggle="tooltip" title="{}: {}">{}</span>' \
-                .format(header['namespace'], header['description'], header['title'])
+        cell_contents = '<span class="mqc_table_tooltip" title="{}: {}">{}</span>' \
+            .format(header['namespace'], header['description'], header['title'])
 
-            t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>' \
-                .format(rid=rid, h=hide, da=data_attr, c=cell_contents)
+        t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>' \
+            .format(rid=rid, h=hide, da=data_attr, c=cell_contents)
 
-            empty_cells[rid] = '<td class="data-coloured {rid} {h}"></td>'.format(rid=rid, h=hide)
+        empty_cells[rid] = '<td class="data-coloured {rid} {h}"></td>'.format(rid=rid, h=hide)
 
-            # Build the modal table row
-            t_modal_headers[rid] = """
-            <tr class="{rid}{muted}" style="background-color: rgba({col}, 0.15);">
-              <td class="sorthandle ui-sortable-handle">||</span></td>
-              <td style="text-align:center;">
-                <input class="mqc_table_col_visible" type="checkbox" {checked} value="{rid}" data-target="#{tid}">
-              </td>
-              <td>{name}</td>
-              <td>{title}</td>
-              <td>{desc}</td>
-              <td>{col_id}</td>
-              <td>{sk}</td>
-            </tr>""".format(
-                    rid = rid,
-                    muted = muted,
-                    checked = checked,
-                    tid = table_id,
-                    col = header['colour'],
-                    name = header['namespace'],
-                    title = header['title'],
-                    desc = header['description'],
-                    col_id = '<code>{}</code>'.format(k),
-                    sk = header.get('shared_key', '')
-                )
+        # Build the modal table row
+        t_modal_headers[rid] = """
+        <tr class="{rid}{muted}" style="background-color: rgba({col}, 0.15);">
+          <td class="sorthandle ui-sortable-handle">||</span></td>
+          <td style="text-align:center;">
+            <input class="mqc_table_col_visible" type="checkbox" {checked} value="{rid}" data-target="#{tid}">
+          </td>
+          <td>{name}</td>
+          <td>{title}</td>
+          <td>{desc}</td>
+          <td>{col_id}</td>
+          <td>{sk}</td>
+        </tr>""".format(
+                rid = rid,
+                muted = muted,
+                checked = checked,
+                tid = table_id,
+                col = header['colour'],
+                name = header['namespace'],
+                title = header['title'],
+                desc = header['description'],
+                col_id = '<code>{}</code>'.format(k),
+                sk = header.get('shared_key', '')
+            )
 
-            # Make a colour scale
-            if header['scale'] == False:
-                c_scale = None
-            else:
-                c_scale = mqc_colour.mqc_colour_scale(header['scale'], header['dmin'], header['dmax'])
+        # Make a colour scale
+        if header['scale'] == False:
+            c_scale = None
+        else:
+            c_scale = mqc_colour.mqc_colour_scale(header['scale'], header['dmin'], header['dmax'])
 
-            # Add the data table cells
-            for (s_name, samp) in dt.data[idx].items():
-                if k in samp:
-                    val = samp[k]
-                    # truncate '12345_' random prefix from rid
-                    kname = '{}_{}'.format(header['namespace'], rid.split('_',1)[1])
-                    dt.raw_vals[s_name][kname] = val
+        # Add the data table cells
+        for (s_name, samp) in dt.data[idx].items():
+            if k in samp:
+                val = samp[k]
+                # truncate '12345_' random prefix from rid
+                kname = '{}_{}'.format(header['namespace'], rid.split('_',1)[1])
+                dt.raw_vals[s_name][kname] = val
 
-                    if 'modify' in header and callable(header['modify']):
-                        val = header['modify'](val)
+                if 'modify' in header and callable(header['modify']):
+                    val = header['modify'](val)
 
+                try:
+                    dmin = header['dmin']
+                    dmax = header['dmax']
+                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
+                    percentage = min(percentage, 100)
+                    percentage = max(percentage, 0)
+                except (ZeroDivisionError,ValueError):
+                    percentage = 0
+
+                try:
+                    valstring = str(header['format'].format(val))
+                except ValueError:
                     try:
-                        dmin = header['dmin']
-                        dmax = header['dmax']
-                        percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
-                        percentage = min(percentage, 100)
-                        percentage = max(percentage, 0)
-                    except (ZeroDivisionError,ValueError):
-                        percentage = 0
-
-                    try:
-                        val = header['format'].format(val)
+                        valstring = str(header['format'].format(float(val)))
                     except ValueError:
-                        try:
-                            val = header['format'].format(float(val))
-                        except ValueError:
-                            val = val
-                    except:
-                        val = val
+                        valstring = str(val)
+                except:
+                    valstring = str(val)
 
-                    # Build HTML
-                    if not header['scale']:
-                        if s_name not in t_rows:
-                            t_rows[s_name] = dict()
-                        t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
+                # This is horrible, but Python locale settings are worse
+                if config.thousandsSep_format is None:
+                    config.thousandsSep_format = '<span class="mqc_thousandSep"></span>'
+                if config.decimalPoint_format is None:
+                    config.decimalPoint_format = '.'
+                valstring = valstring.replace('.', 'DECIMAL').replace(',', 'THOUSAND')
+                valstring = valstring.replace('DECIMAL', config.decimalPoint_format).replace('THOUSAND', config.thousandsSep_format)
+
+                # Percentage suffixes etc
+                valstring += header.get('suffix', '')
+
+                # Build HTML
+                if not header['scale']:
+                    if s_name not in t_rows:
+                        t_rows[s_name] = dict()
+                    t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
+                else:
+                    if c_scale is not None:
+                        col = ' background-color:{};'.format(c_scale.get_colour(val))
                     else:
-                        if c_scale is not None:
-                            col = ' background-color:{};'.format(c_scale.get_colour(val))
-                        else:
-                            col = ''
-                        bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)
-                        val_html = '<span class="val">{}</span>'.format(val)
-                        wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
+                        col = ''
+                    bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)
+                    val_html = '<span class="val">{}</span>'.format(valstring)
+                    wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
 
-                        if s_name not in t_rows:
-                            t_rows[s_name] = dict()
-                        t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
+                    if s_name not in t_rows:
+                        t_rows[s_name] = dict()
+                    t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
 
-            # Remove header if we don't have any filled cells for it
-            if sum([len(rows) for rows in t_rows.values()]) == 0:
-                t_headers.pop(rid, None)
-                t_modal_headers.pop(rid, None)
-                logger.debug('Removing header {} from general stats table, as no data'.format(k))
+        # Remove header if we don't have any filled cells for it
+        if sum([len(rows) for rows in t_rows.values()]) == 0:
+            t_headers.pop(rid, None)
+            t_modal_headers.pop(rid, None)
+            logger.debug('Removing header {} from general stats table, as no data'.format(k))
 
     #
     # Put everything together
@@ -187,7 +200,7 @@ def make_table (dt):
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
-        """
+        """.format(tid=table_id)
 
         # Configure Columns Button
         if len(t_headers) > 2:
@@ -218,11 +231,12 @@ def make_table (dt):
         """.format(tid=table_id, nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
 
     # Build the table itself
+    collapse_class = 'mqc-table-collapse' if len(t_rows) > 10 and config.collapse_tables else ''
     html += """
         <div id="{tid}_container" class="mqc_table_container">
-            <div class="table-responsive">
+            <div class="table-responsive mqc-table-responsive {cc}">
                 <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}">
-        """.format( tid=table_id, title=table_title )
+        """.format( tid=table_id, title=table_title, cc=collapse_class)
 
     # Build the header row
     col1_header = dt.pconfig.get('col1_header', 'Sample Name')
@@ -240,7 +254,10 @@ def make_table (dt):
         for k in t_headers:
             html += t_rows[s_name].get(k, empty_cells[k])
         html += '</tr>'
-    html += '</tbody></table></div></div>'
+    html += '</tbody></table></div>'
+    if len(t_rows) > 10 and config.collapse_tables:
+        html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
+    html += '</div>'
 
     # Build the bootstrap modal to customise columns and order
     if not config.simple_output:

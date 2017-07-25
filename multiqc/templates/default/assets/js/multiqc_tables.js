@@ -32,73 +32,24 @@ $(function () {
       }, 2000);
     });
 
-    ///////////////////
-    // Floating table headers
-
-    // Sort table when frozen header clicked
-    $('.mqc_table_container').on('click', '.mqc_table_clone thead tr th', function(){
-      var c_idx = $(this).index();
-      var sortDir = $(this).hasClass('headerSortUp') ? 0 : 1;
-      $(this).closest('.mqc_table_container').find('.mqc_table').trigger('sorton', [[[ c_idx, sortDir ]]]);
-      $(this).closest('thead').find('tr th').removeClass('headerSortDown headerSortUp');
-      $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
+    // Make table headers fixed when table body scrolls (use CSS transforms)
+    // http://stackoverflow.com/a/25902860/713980
+    $('.mqc-table-responsive').scroll(function() {
+      $(this).find('thead').css('transform', "translate(0,"+$(this).scrollTop()+"px)");
     });
 
-    // Create / destroy floating header on scrolling
-    var mqc_table_HeadHeight = 30;
-    $(window).scroll(function(){
-      var wTop = $(window).scrollTop();
-      $('.mqc_table_container').each(function(){
+    // Table header-specific bootstrap tooltips
+    $('.mqc_table_tooltip').tooltip({ container: 'body' });
 
-        var container = $(this).attr('id');
-        var table = $(this).find('.mqc_table').attr('id');
-        var height = $(this).find('.mqc_table').height();
-        var offset = $(this).find('.mqc_table').offset().top;
-
-        var clone_id = table + '_clone';
-        var top = offset - wTop;
-        var visible = top + height;
-        if(top < 0 && visible > 0 ){
-          ctw = $('#'+clone_id+'Wrapper');
-          if(ctw.length == 0){
-            // Make a copy of the table
-            var table = $('#'+table);
-            var tableDiv = table.find('.table-responsive');
-            ct = table.clone();
-            ct.attr('id', clone_id).addClass('mqc_table_clone').width(table.width());
-            // Hide everything except the header. Scroll it sideways if needed.
-            ct.css({visibility:'hidden', 'margin-left': -tableDiv.scrollLeft()});
-            ct.find('thead').css({visibility:'visible'});
-            // Wrap it and add to the container with position: fixed
-            ctw = $('<div id="'+clone_id+'Wrapper" class="mqc_table_cloneWrapper" />').append(ct);
-            ctw.css({'position':'fixed', 'top':0, 'height': mqc_table_HeadHeight, 'width': tableDiv.width()});
-            $('#'+container).append(ctw);
-          }
-          // Nicely scroll out of the way instead of dissapearing
-          if(visible < mqc_table_HeadHeight * 2){
-            $('#'+clone_id+'Wrapper').css('top', visible - (mqc_table_HeadHeight * 2) );
-          } else {
-            $('#'+clone_id+'Wrapper').css('top', 0);
-          }
-        } else {
-          // Not needed - remove it (avoids printing errors etc)
-          $('#'+clone_id+'Wrapper').remove();
-        }
-      });
-    });
-    // Resize width of floating header if page changes
-    $(window).on('resize', function(){
-      $('.mqc_table_container').each(function(){
-        var tabDivWidth = $(this).find('.mqc_table .table-responsive').width();
-        var tabWidth = $(this).find('.mqc_table').width();
-        $(this).find('.mqc_table_cloneWrapper').width(tabDivWidth);
-        $(this).find('.mqc_table_clone').width(tabWidth);
-      });
-    });
-    // Scroll left and right in the responsive container
-    $('.table-responsive').scroll(function(){
-      var clone = $(this).closest('.mqc_table_container').find('.mqc_table_clone');
-      clone.css('margin-left', -$(this).scrollLeft());
+    // Expand tables to full height
+    $('.mqc-table-expand').click(function(){
+      if($(this).find('span').hasClass('glyphicon-chevron-down')){
+        $(this).parent().find('.mqc-table-responsive').css('max-height', 'none');
+        $(this).find('span').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+      } else {
+        $(this).parent().find('.mqc-table-responsive').css('max-height', '400px');
+        $(this).find('span').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-down');
+      }
     });
 
     /////// COLUMN CONFIG

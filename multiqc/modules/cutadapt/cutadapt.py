@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Cutadapt', anchor='cutadapt',
-        href='https://code.google.com/p/cutadapt/',
+        href='https://cutadapt.readthedocs.io/',
         info="is a tool to find and remove adapter sequences, primers, poly-A"\
          "tails and other types of unwanted sequence from your high-throughput"\
          " sequencing reads.")
@@ -36,8 +36,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_exp = dict()
         self.cutadapt_length_obsexp = dict()
 
-        for f in self.find_log_files(config.sp['cutadapt'], filehandles=True):
+        for f in self.find_log_files('cutadapt', filehandles=True):
             self.parse_cutadapt_logs(f)
+
+        # Filter to strip out ignored sample names
+        self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
 
         if len(self.cutadapt_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -52,8 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_general_stats_table()
 
         # Trimming Length Profiles
-        # Only one section, so add to the intro
-        self.intro += self.cutadapt_length_trimmed_plot()
+        self.cutadapt_length_trimmed_plot()
 
 
     def parse_cutadapt_logs(self, f):
@@ -159,19 +161,19 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlBu-rev',
-            'format': '{:.1f}%'
+            'scale': 'RdYlBu-rev'
         }
         self.general_stats_addcols(self.cutadapt_data, headers)
 
 
     def cutadapt_length_trimmed_plot (self):
         """ Generate the trimming length plot """
-        html = '<p>This plot shows the number of reads with certain lengths of adapter trimmed. \n\
+
+        description = 'This plot shows the number of reads with certain lengths of adapter trimmed. \n\
         Obs/Exp shows the raw counts divided by the number expected due to sequencing errors. A defined peak \n\
         may be related to adapter length. See the \n\
         <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
-        for more information on how these numbers are generated.</p>'
+        for more information on how these numbers are generated.'
 
         pconfig = {
             'id': 'cutadapt_plot',
@@ -185,6 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                             {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
         }
 
-        html += linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
-
-        return html
+        self.add_section(
+            description = description,
+            plot = linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+        )

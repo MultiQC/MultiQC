@@ -8,7 +8,6 @@ from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Samtools submodules
-from . import stats
 from .stats import StatsReportMixin
 
 # Initialise the logger
@@ -31,7 +30,6 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
             info=(" contains utilities for variant calling and manipulating VCFs and BCFs."))
 
         # Set up class objects to hold parsed data
-        self.sections = list()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
         n = dict()

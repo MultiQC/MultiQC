@@ -21,8 +21,36 @@ All plot types can be generated using custom content - see the
 for examples of how data should be structured.
 
 # Configuration
-Data should typically be submitted alongside some configuration, to specify how
-MultiQC should parse and display the data. All of these configuration parameters
+## Order of sections
+If you have multiple different Custom Content sections, their order will be random
+and may vary between runs. To avoid this, you can specify an order in your MultiQC
+config as follows:
+
+```yaml
+custom_content:
+  order:
+    - first_cc_section
+    - second_cc_section
+```
+
+Each section name should be the ID assigned to that section. You can explicitly set
+this (see below), or the Custom Content module will automatically assign an ID.
+To find out what your custom content section ID is, generate a report and click
+the side navigation to your section. The browser URL should update and show something
+that looks like this:
+
+```
+multiqc_report.html#my_cc_section
+```
+
+The section ID is the part after the `#` (`my_cc_section` in the above section).
+
+Note that any Custom Content sections found that are _not_ specified in the config
+will be placed at the top of the report.
+
+## Section configuration
+See below for how these config options can be specified (either within the data file
+or in a MultiQC config file). All of these configuration parameters
 are optional, and MultiQC will do its best to guess sensible defaults if they are
 not specified.
 
@@ -138,7 +166,7 @@ custom_data:
                 max: 100
                 min: 0
                 scale: 'RdYlGn'
-                format: '{:.1f}%'
+                suffix: '%'
             - col_2:
                 min: 0
         data:
@@ -233,19 +261,17 @@ should be parsed.
 
 As described in the above [_Data as part of MultiQC config_](#data-as-part-of-multiqc-config) section,
 this configuration should be held within a section called `custom_data` with a section-specific id.
-The only difference is that no `data` subsection should be present and the `sp` key _must_ be present.
+The only difference is that no `data` subsection is given and a search pattern for the given id must
+be supplied.
 
-The `sp` key tells MultiQC how to find files. This should have `fn` and/or `contents` under it, as
-described in the [Module search patterns](http://multiqc.info/docs/#module-search-patterns) section
-of the docs.
+Search patterns are added [as with any other module](http://multiqc.info/docs/#module-search-patterns).
+Ensure that the search pattern key is the same as your `custom_data` section ID.
 
 For example:
 ```yaml
 # Other MultiQC config stuff here
 custom_data:
     example_files:
-        sp:
-            fn: 'example_files_*'
         file_format: 'tsv'
         section_name: 'Coverage Decay'
         description: 'This plot comes from files acommpanied by a mutliqc_config.yaml file for configuration'
@@ -256,6 +282,9 @@ custom_data:
             ylab: 'X Coverage'
             ymax: 100
             ymin: 0
+sp:
+    example_files:
+        fn: 'example_files_*'
 ```
 A data file within the MultiQC search directories could then simply look like this:
 

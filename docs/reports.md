@@ -179,17 +179,25 @@ _(Note that plots will tell you how many samples have been hidden)_
 ![hide samples](images/toolbox_hide_samples.png)
 
 ### Export
-This tool enables you to configure the size and characteristics of exported
-plots, as well as allowing you to download some or all of the graphs with a
-single click. Width and Height set the output size of the images, scale sets
+This panel allows you to download MultiQC plots as images or as raw data.
+You can configure the size and characteristics of exported plot images:
+Width and Height set the output size of the images, scale sets
 how "zoomed-in" they should look (typically you want the plot to be more
-zoomed for printing). See [above](http://multiqc.info/docs/#exporting-plots) for more information
-about this panel.
+zoomed for printing). The tick boxes below these settings allow you to
+download multiple plots in one go.
+
+Plots with multiple tabs will all be exported as files when using the
+Data tab. For plots with multiple tags, the currently visible plot
+will be exported.
+
+> Note: You can also save static plot images when you run MultiQC.
+> See [Exporting Plots](http://multiqc.info/docs/#exporting-plots)
+> for more information.
 
 ### Save Settings
 To avoid having to re-enter the same toolbox setup repeatedly, you can
 save your settings using the 'Save Settings' panel. Just pick a name
-and click save. To load, choose your set of settings and press load 
+and click save. To load, choose your set of settings and press load
 (or delete). Loaded settings are applied on top of current settings.
 All configs are saved in browser local storage - they do not travel
 with the report and may not work in older browsers.

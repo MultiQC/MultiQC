@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             'bowtie.right_kept_reads.m2g_um_seg1.log',
             'bowtie.right_kept_reads.m2g_um_seg2.log'
         ]
-        for f in self.find_log_files(config.sp['bowtie']):
+        for f in self.find_log_files('bowtie'):
             if f['fn'] in fn_ignore:
                 log.debug('Skipping file because looks like tophat log: {}/{}'.format(f['root'], f['fn']))
                 continue
@@ -46,6 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug('Skipping file because looks like Bismark log: {}/{}'.format(f['root'], f['fn']))
                 continue
             self.parse_bowtie_logs(f)
+
+        # Filter to strip out ignored sample names
+        self.bowtie_data = self.ignore_samples(self.bowtie_data)
 
         if len(self.bowtie_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -61,8 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie_general_stats_table()
 
         # Alignment Rate Plot
-        # Only one section, so add to the intro
-        self.intro += self.bowtie_alignment_plot()
+        self.bowtie_alignment_plot()
 
 
     def parse_bowtie_logs(self, f):
@@ -118,15 +120,14 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['reads_aligned'] = {
-            'title': 'M Aligned',
-            'description': 'reads with at least one reported alignment (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'reads with at least one reported alignment ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.bowtie_data, headers)
@@ -148,4 +149,20 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.bowtie_data, keys, config)
+        self.add_section(
+            description = (
+                "The stacked bar plot shows types of alignments and the number"
+                "of reads for each alignments."
+            ),
+            helptext = (
+                "There are 3 possible types of alignment:"
+                "<ul>"
+                "<li><b>Aligned</b>: Read has only one "
+                "occurence in the reference genome.</li>"
+                "<li><b>Multimapped</b>: Read has multiple "
+                "occurence.</li>"
+                "<li><b>Not aligned</b>: Read has no occurence.</li>"
+                "</ul>"
+            ),
+            plot = bargraph.plot(self.bowtie_data, keys, config) 
+        )
