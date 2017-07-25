@@ -12,6 +12,7 @@ from distutils.dir_util import copy_tree
 import errno
 import io
 import jinja2
+import json
 import os
 import pkg_resources
 import re
@@ -31,7 +32,7 @@ except ImportError:
 
 from multiqc import __version__
 from multiqc.plots import table
-from multiqc.utils import report, plugin_hooks, config, log
+from multiqc.utils import report, plugin_hooks, util_functions, config, log
 logger = config.logger
 
 @click.command(
@@ -512,6 +513,27 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     logger.info("Compressing plot data")
     report.plot_compressed_json = report.compress_json(report.plot_data)
 
+    # Dump entire data structure if requested
+    # Approach is to exclude data rather than explicitly listing the data we want
+    # This is so that we export anything unexpected from plugins / other sources
+    dump_ignore_vars = ['plot_compressed_json', 'general_stats_html', 'html_ids', 'num_hc_plots', 'num_mpl_plots']
+    if config.data_dump_file or config.data_dump_post:
+        exported_data = list()
+        for k, v in report.__dict__.iteritems():
+            if not (k.startswith('__') or k.startswith('_')) and k not in dump_ignore_vars:
+                try:
+                    json.dumps({k: v}, ensure_ascii=False)
+                    exported_data.append({k: v})
+                except TypeError:
+                    pass
+        if config.data_dump_file:
+            util_functions.write_data_file(exported_data, 'multiqc_data', False, 'json')
+        if config.data_dump_post:
+            import requests
+            r = requests.post(config.data_dump_post, data = {'data': exported_data})
+            print(r.status_code)
+            print(r.json())
+
     plugin_hooks.mqc_trigger('before_report_generation')
 
     # Make the final report path & data directories
@@ -561,7 +583,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
                 shutil.move(fn, config.data_dir)
 
-        # Finally, copy across the plots
+        # Copy across the static plot images if requested
         if config.export_plots:
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
             if os.path.exists(config.plots_dir):
@@ -645,7 +667,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         shutil.make_archive(config.data_dir, 'zip', config.data_dir)
         shutil.rmtree(config.data_dir)
 
-    # Try to create a PDF if requestted
+    # Try to create a PDF if requested
     if make_pdf:
         try:
             pdf_fn_name = config.output_fn.replace('.html', '.pdf')
