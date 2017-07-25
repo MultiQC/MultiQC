@@ -14,15 +14,23 @@ the output from each module and print it in sections.
     {{ m.intro if m.intro }}
     {% for s in m.sections %}
       {% if s['print_section'] %}
+        {% if (s['name'] is none or s['name'] | length == 0) and s['helptext'] is not none and s['helptext'] | length > 0 %}
+          <button class="btn btn-default btn-sm pull-right" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+            <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+            Help
+          </button>
+        {% endif %}
         <div class="mqc-section mqc-section-{{ m.anchor }}">
-          {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
-            <button class="btn btn-default btn-sm pull-right" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-              <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-              Help
-            </button>
-          {% endif %}
           {% if s['name'] is not none and s['name'] | length > 0 %}
-            <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
+            <h3 id="{{ s['anchor'] }}">
+                {{ s['name'] }}
+                {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
+                  <button class="btn btn-default btn-sm pull-right" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+                    <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                    Help
+                  </button>
+                {% endif %}
+            </h3>
           {% endif %}
           {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
           {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
