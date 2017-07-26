@@ -12,7 +12,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='bcl2fastq', anchor='bcl2fastq',
         href="https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html",
-        info="bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.")
+        info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.")
 
         # Gather data from all json files
         self.bcl2fastq_data = dict()
