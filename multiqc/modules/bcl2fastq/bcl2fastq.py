@@ -106,9 +106,12 @@ class MultiqcModule(BaseMultiqcModule):
         data = {key: {"total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(100*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"])} for key in self.bcl2fastq_bysample.keys()}
         headers = OrderedDict()
         headers['total'] = {
-            'title': 'Total Reads',
-            'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing',
-            'scale': 'Blues'
+            'title': '{} Total Reads'.format(config.read_count_prefix),
+            'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})'.format(config.read_count_desc),
+            'min': 0,
+            'scale': 'Blues',
+            'modify': lambda x: x * config.read_count_multiplier,
+            'shared_key': 'read_count'
         }
         headers['perfectPercent'] = {
             'title': 'Perfect Index Read Percentage',
