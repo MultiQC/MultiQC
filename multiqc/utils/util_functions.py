@@ -57,7 +57,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
         # Save file
         with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
             if data_format == 'json':
-                jsonstr = json.dumps(data, indent=4, ensure_ascii=False)
+                jsonstr = json.dumps(data, indent=4, skipkeys=True, ensure_ascii=False)
                 print( jsonstr.encode('utf-8', 'ignore').decode('utf-8'), file=f)
             elif data_format == 'yaml':
                 yaml.dump(data, f, default_flow_style=False)

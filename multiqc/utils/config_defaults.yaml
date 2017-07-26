@@ -39,8 +39,9 @@ file_list: false
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: false
-data_dump_post: false
-data_dump_post_timeout: 10
+megaqc_url: false
+megaqc_access_token: null
+megaqc_timeout: 10
 export_plots: false
 plots_force_flat: false
 plots_force_interactive: false

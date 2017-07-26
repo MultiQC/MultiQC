@@ -514,31 +514,65 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     logger.info("Compressing plot data")
     report.plot_compressed_json = report.compress_json(report.plot_data)
 
-    # Dump entire data structure if requested
-    # Approach is to exclude data rather than explicitly listing the data we want
-    # This is so that we export anything unexpected from plugins / other sources
-    dump_ignore_vars = ['plot_compressed_json', 'general_stats_html', 'html_ids', 'num_hc_plots', 'num_mpl_plots']
-    if config.data_dump_file or config.data_dump_post:
-        exported_data = list()
-        for k, v in report.__dict__.iteritems():
-            if not (k.startswith('__') or k.startswith('_')) and k not in dump_ignore_vars:
+    # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
+    if config.data_dump_file or config.megaqc_url:
+        exported_data = dict()
+        export_vars = {
+            'report': [
+                'data_sources',
+                'general_stats_data',
+                'general_stats_headers',
+                'modules_output',
+                'multiqc_command',
+                'plot_data',
+                'saved_raw_data',
+                'searchfiles',
+            ],
+            'config': [
+                'analysis_dir',
+                'creation_date',
+                'git_hash',
+                'intro_text',
+                'MULTIQC_DIR',
+                'report_comment',
+                'report_header_info',
+                'report_id',
+                'script_path',
+                'short_version',
+                'subtitle',
+                'title',
+                'version',
+            ]
+        }
+        for s in export_vars:
+            for k in export_vars[s]:
                 try:
-                    json.dumps({k: v}, ensure_ascii=False)
-                    exported_data.append({k: v})
-                except TypeError:
-                    pass
+                    if s == 'config':
+                        d = {'{}_{}'.format(s, k): getattr(config, k)}
+                    elif s == 'report':
+                        d = {'{}_{}'.format(s, k): getattr(report, k)}
+                    json.dumps(d, skipkeys=True, ensure_ascii=False) # Test that exporting to JSON works
+                    exported_data.update(d)
+                except (TypeError, KeyError, AttributeError):
+                    logger.warn("Couldn't export data key '{}.{}'".format(s, k))
         if config.data_dump_file:
             util_functions.write_data_file(exported_data, 'multiqc_data', False, 'json')
-        if config.data_dump_post:
-            headers = {'user-agent': 'multiqc/{}'.format(config.short_version)}
+        if config.megaqc_url:
+            headers = {
+                'user-agent': 'multiqc/{}'.format(config.short_version),
+                'access_token': config.megaqc_access_token,
+                # 'Content-Type': 'application/json'
+            }
             post_data = {'data': json.dumps(exported_data, ensure_ascii=False)}
             try:
-                r = requests.post(config.data_dump_post, headers=headers, data=post_data, timeout=config.data_dump_post_timeout)
+                r = requests.post(config.megaqc_url, headers=headers, data=post_data, timeout=config.megaqc_timeout)
             except requests.exceptions.ConnectTimeout:
-                logger.warn("Timed out waiting for response when sending MultiQC POST data to {}".format(config.data_dump_post))
+                logger.warn("Timed out when sending MultiQC POST data to {}".format(config.megaqc_url))
+            except requests.exceptions.ConnectionError:
+                logger.warn("Couldn't connect to MegaQC URL {}".format(config.megaqc_url))
             else:
-                print(r.status_code)
                 print(json.dumps(r.json(), indent=4))
+                print("Status Code: {}".format(r.status_code))
 
     plugin_hooks.mqc_trigger('before_report_generation')
 
