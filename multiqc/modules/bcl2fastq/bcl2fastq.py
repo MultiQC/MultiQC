@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'bcl2fastq-bylane',
             description = 'Number of reads per lane (with number of perfect index reads)',
             helptext = "Perfect index reads are those that do not have a single mismatch. All samples of a lane are combinned. Undetermined reads are treated as a third category. To avoid conflicts the runId is prepended.",
-            plot = bargraph.plot({key: {"imperfect": self.bcl2fastq_bylane[key]["total"]-self.bcl2fastq_bylane[key]["perfectIndex"], "perfect": self.bcl2fastq_bylane[key]["perfectIndex"], "undetermined": self.bcl2fastq_bylane[key]["undetermined"]} for key in self.bcl2fastq_bylane.keys()})
+            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bylane))
         )
 
         # Add section for counts by sample
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'bcl2fastq-bysample',
             description = 'Number of reads per sample (with number of perfect index reads)',
             helptext = "Perfect index reads are those that do not have a single mismatch. All samples are aggregated across lanes combinned. Undetermined reads are ignored. Undetermined reads are treated as a separate sample. To avoid conflicts the runId is prepended.",
-            plot = bargraph.plot({key: {"imperfect": self.bcl2fastq_bysample[key]["total"]-self.bcl2fastq_bysample[key]["perfectIndex"], "perfect": self.bcl2fastq_bysample[key]["perfectIndex"]} for key in self.bcl2fastq_bysample.keys()})
+            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bysample))
         )
 
     def parse_file_as_json(self, myfile):
@@ -122,3 +122,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def prepend_runid(self, runId, rest):
         return str(runId)+" - "+str(rest)
+
+    def get_bar_data_from_counts(self, counts):
+        bar_data = {}
+        for key, value in counts.items():
+            bar_data[key] = {
+                "perfect": value["perfectIndex"],
+                "imperfect": value["total"] - value["perfectIndex"],
+            }
+            if "undetermined" in value:
+                bar_data[key]["undetermined"] = value["undetermined"]
+        return bar_data
