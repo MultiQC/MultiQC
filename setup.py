@@ -62,6 +62,7 @@ setup(
     entry_points = {
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
+            'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
@@ -110,6 +111,7 @@ setup(
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
+            'vcftools = multiqc.modules.vcftools:MultiqcModule'
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',
