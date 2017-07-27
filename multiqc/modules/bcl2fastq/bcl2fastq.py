@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.bcl2fastq_data[runId] = dict()
         run_data = self.bcl2fastq_data[runId]
         for conversionResult in content["ConversionResults"]:
-            lane = conversionResult["LaneNumber"]
+            lane = 'L{}'.format(conversionResult["LaneNumber"])
             if lane in run_data:
                 log.debug("Duplicate runId/lane combination found! Overwriting: {}".format(self.prepend_runid(runId, lane)))
             run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
