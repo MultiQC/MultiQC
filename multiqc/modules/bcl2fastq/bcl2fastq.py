@@ -1,5 +1,6 @@
 from multiqc.modules.base_module import BaseMultiqcModule
 import logging
+import os
 import json
 from collections import OrderedDict
 from multiqc import config
@@ -81,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
             for demuxResult in conversionResult["DemuxResults"]:
                 sample = demuxResult["SampleName"]
-                run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0, "filename": myfile['root']+"/"+myfile["fn"]}
+                run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0, "filename": os.path.join(myfile['root'],myfile["fn"])}
                 run_data[lane]["total"] += demuxResult["NumberReads"]
                 run_data[lane]["samples"][sample]["total"] += demuxResult["NumberReads"]
                 for indexMetric in demuxResult["IndexMetrics"]:
