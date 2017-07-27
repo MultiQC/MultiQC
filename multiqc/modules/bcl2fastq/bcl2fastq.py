@@ -111,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.source_files[uniqSampleName].append(self.bcl2fastq_data[runId][lane]["samples"][sample]["filename"])
 
     def add_general_stats(self):
-        data = {key: {"total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(100*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"])} for key in self.bcl2fastq_bysample.keys()}
+        data = {key: {"total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(float(100.0*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"]))} for key in self.bcl2fastq_bysample.keys()}
         headers = OrderedDict()
         headers['total'] = {
             'title': '{} Total Reads'.format(config.read_count_prefix),
