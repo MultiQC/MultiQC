@@ -351,6 +351,7 @@ $(function () {
     if(name == ''){
       alert('Error - no saved settings selected.');
     } else {
+        load_mqc_config(name);
         mqc_save_config(name, false, true);
     }
   });
@@ -750,11 +751,10 @@ function mqc_clear_default_config() {
       setTimeout(function () {
         $('#mqc-cleared-success').slideUp(function () { $(this).remove(); });
       }, 5000);
-    var name = $('#mqc_loadconfig_form select option:contains("default")').text();
-    console.log(name);
-    $('#mqc_loadconfig_form select option:contains("default")').remove();
-    name = name.replace(' [default]', '');
-    $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
+      var name = $('#mqc_loadconfig_form select option:contains("default")').text();
+      $('#mqc_loadconfig_form select option:contains("default")').remove();
+      name = name.replace(' [default]', '');
+      $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
     });
   } catch (e) {
     console.log('Could not access localStorage');
@@ -770,14 +770,22 @@ function populate_mqc_saveselect(){
     var local_config = localStorage.getItem("mqc_config");
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
+      default_name = false;
       for (var name in local_config){
         if (local_config[name]['default']) {
           console.log('Loaded default config!');
           load_mqc_config(name);
           default_config = name;
           name = name+' [default]';
+          default_name = name;
         }
         $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
+      }
+      // Set the selected select option
+      if(default_name !== false){
+        $('#mqc_loadconfig_form select option:contains("'+default_name+'")').prop('selected',true);
+      } else {
+        $('#mqc_loadconfig_form select option:first').prop('selected',true);
       }
     }
   } catch(e){

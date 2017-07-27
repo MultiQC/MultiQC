@@ -432,8 +432,14 @@ function plot_stacked_bar_graph(target, ds){
   if(mqc_plots[target] === undefined || mqc_plots[target]['plot_type'] !== 'bar_graph'){
     return false;
   }
-  var config = mqc_plots[target]['config'];
   if(ds === undefined){ ds = 0; }
+
+  // Make a clone of the everything, so that we can mess with it,
+  // while keeping the original data in tact
+  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
+  var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
+  var config = JSON.parse(JSON.stringify(mqc_plots[target]['config']));
+
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
   if (config['ytype'] === undefined){ config['ytype'] = 'linear'; }
   if (config['reversedStacks'] === undefined){ config['reversedStacks'] = false; }
@@ -442,11 +448,7 @@ function plot_stacked_bar_graph(target, ds){
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else { if(config['cursor'] === undefined){ config['cursor'] = 'pointer'; } }
   if (config['tt_percentages'] === undefined){ config['tt_percentages'] = true; }
-
-  // Make a clone of the data, so that we can mess with it,
-  // while keeping the original data in tact
-  var data = JSON.parse(JSON.stringify(mqc_plots[target]['datasets'][ds]));
-  var cats = JSON.parse(JSON.stringify(mqc_plots[target]['samples'][ds]));
+  if (config['borderWidth'] === undefined){ config['borderWidth'] = 0; }
 
   if (config['ytype'] == 'logarithmic'){
     if(config['ymin'] == 0 || config['ymin'] == undefined){
@@ -488,9 +490,8 @@ function plot_stacked_bar_graph(target, ds){
       });
     });
     // Bump the borderWidth to make the highlights more obvious
-    if(config['borderWidth'] === undefined){ config['borderWidth'] = 2; }
+    if(config['borderWidth'] <= 2){ config['borderWidth'] = 2; }
   }
-  if(config['borderWidth'] === undefined){ config['borderWidth'] = 0; }
 
   // Hide samples
   $('#'+target).closest('.mqc_hcplot_plotgroup').parent().find('.samples-hidden-warning').remove();
