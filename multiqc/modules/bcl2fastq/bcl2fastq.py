@@ -70,6 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             content = json.loads(myfile["f"])
         except ValueError:
+            log.warn('Could not parse file as json: {}'.format(myfile["fn"]))
             return
         runId = content["RunId"]
         if not runId in self.bcl2fastq_data:
