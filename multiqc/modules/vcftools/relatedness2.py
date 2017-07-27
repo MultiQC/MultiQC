@@ -20,7 +20,11 @@ class Relatedness2Mixin():
                 matrices[f['s_name']] = m
 
         matrices = self.ignore_samples(matrices)
-        log.info('Found %s valid relatedness2 matrices', len(matrices))
+
+        if len(matrices) == 0:
+            return 0
+
+        log.info('Found {} valid relatedness2 matrices'.format(len(matrices)))
 
         helptext = '''
         `RELATEDNESS_PHI` gives a relatedness score between two samples. A higher score indicates a higher degree of
