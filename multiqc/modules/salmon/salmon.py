@@ -54,10 +54,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
             log.debug("Could not find any Salmon data in {}".format(config.analysis_dir))
             raise UserWarning
-
         if len(self.salmon_meta) > 0:
             log.info("Found {} meta reports".format(len(self.salmon_meta)))
             self.write_data_file(self.salmon_meta, 'multiqc_salmon')
+            self.add_software_version({'salmon':self.salmon_meta[s_name]['salmon_version']}) 
         if len(self.salmon_fld) > 0:
             log.info("Found {} fragment length distributions".format(len(self.salmon_fld)))
 

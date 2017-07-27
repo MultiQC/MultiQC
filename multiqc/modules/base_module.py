@@ -259,6 +259,11 @@ class BaseMultiqcModule(object):
         except AttributeError:
             logger.warning('Tried to add data source for {}, but was missing fields data'.format(self.name))
 
+    def add_software_version(self, data ):
+        """Takes sotware version info from the muodules and makes a table at the bottom at the report
+        with the verison of all the software that could be found."""
+        report.software_versions.append(data)  #handle variable - list append a dictionary to the list 
+
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Saves raw data to a dictionary for downstream use, then redirects

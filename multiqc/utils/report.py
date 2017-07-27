@@ -38,6 +38,7 @@ html_ids = list()
 num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
+software_versions = list()
 
 # Make a dict of discovered files for each seach key
 searchfiles = list()
