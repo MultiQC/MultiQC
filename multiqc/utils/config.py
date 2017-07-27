@@ -163,7 +163,7 @@ def mqc_add_config(conf, conf_path=None):
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_trim[0:0] = v
             logger.debug("Added to filename clean trimmings: {}".format(v))
-        elif c in ['custom_logo']:
+        elif c in ['custom_logo'] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
             if os.path.exists(v):

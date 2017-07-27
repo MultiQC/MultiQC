@@ -60,6 +60,8 @@ Many thanks to those involved! Lots of different work was added, including:
 * Specifying multiple config files with `-c`/`--config` now works as expected
     * Previously this would only read the last specified
 * HTML ID cleanup now properly cleans strings so that they work with jQuery as expected.
+* Made bar graph sample highlighting work properly again
+* Config `custom_logo` paths can now be relative to the config file (or absolute as before)
 
 ---
 
