@@ -51,6 +51,8 @@ Many thanks to those involved! Lots of different work was added, including:
     * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
 
 #### New Modules:
+* [**bcl2fastq**](https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html)
+    * bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis
 * [**leeHom**](https://github.com/grenaud/leeHom)
     * leeHom is a program for the Bayesian reconstruction of ancient DNA
 

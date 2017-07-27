@@ -34,17 +34,18 @@ Currently, supported tools include:
 |---------------------------------|------------------------|---------------------------|----------------------|
 |[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]       |[BUSCO][busco]        |
 |[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
-|[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]    |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[Cluster Flow][clusterflow]      |[HiCUP][hicup]          |[HOMER][homer]             |[goleft][goleft]      |
-|[Cutadapt][cutadapt]             |[HISAT2][hisat2]        |[HTSeq][htseq]             |[methylQA][methylqa]  |
-|[leeHom][leehom]                 |[Kallisto][kallisto]    |[MACS2][macs2]             |[Peddy][peddy]        |
-|[FastQC][fastqc]                 |[Salmon][salmon]        |[Picard][picard]           |[Preseq][preseq]      |
-|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]    |[Prokka][prokka]           |[QoRTs][qorts]        |
-|[Flexbar][flexbar]               |[STAR][star]            |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
-|[Jellyfish][jellyfish]           |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
-|[Skewer][skewer]                 |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
-|[SortMeRNA][sortmerna]           |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           | [VCFTools][vcftools] |
+|[Bcl2fastq][bcl2fastq]           |[Bowtie 2][bowtie-2]    |[GATK][gatk]               |[Disambiguate][disambiguate]|
+|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HOMER][homer]             |[goleft][goleft]      |
+|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[HTSeq][htseq]             |[methylQA][methylqa]  |
+|[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[MACS2][macs2]             |[Peddy][peddy]        |
+|[leeHom][leehom]                 |[Salmon][salmon]        |[Picard][picard]           |[Preseq][preseq]      |
+|[FastQC][fastqc]                 |[Slamdunk][slamdunk]    |[Prokka][prokka]           |[QoRTs][qorts]        |
+|[FastQ Screen][fastq-screen]     |[STAR][star]            |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
+|[Flexbar][flexbar]               |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
+|[Jellyfish][jellyfish]           |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
+|[Skewer][skewer]                 |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
+|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]           | [VCFTools][vcftools] |
+|[Trimmomatic][trimmomatic]       |                        |                           |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -152,12 +153,14 @@ Code contributions from:
 [@ahvigil](https://github.com/ahvigil),
 [@bschiffthaler](https://github.com/bschiffthaler),
 [@jrderuiter](https://github.com/jrderuiter)
+[@iimog](https://github.com/iimog)
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
 [afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
+[bcl2fastq]:      http://multiqc.info/docs/#bcl2fastq
 [biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1

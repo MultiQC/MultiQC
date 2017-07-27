@@ -360,3 +360,8 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - bcl2fastq:
+        module_tag:
+            - RNA
+            - DNA
+            - methylation
