@@ -408,6 +408,12 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             mod = config.avail_modules[this_module].load()
             mod.mod_cust_config = mod_cust_config # feels bad doing this, but seems to work
             output = mod()
+            # Some modules prefer not to load all the data in the constructor
+            # since this makes them resistant to unit testing. In this case, gather()
+            try:
+                output.gather()
+            except AttributeError:
+                pass
             if type(output) != list:
                 output = [output]
             for m in output:

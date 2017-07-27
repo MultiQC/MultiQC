@@ -14,15 +14,18 @@ class MultiqcModule(BaseMultiqcModule):
         href="https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html",
         info="bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.")
 
-        # Gather data from all json files
         self.bcl2fastq_data = dict()
+
+        self.bcl2fastq_bylane = dict()
+        self.bcl2fastq_bysample = dict()
+        self.source_files = dict()
+
+    def gather(self):
+        # Gather data from all json files
         for myfile in self.find_log_files('bcl2fastq'):
             self.parse_file_as_json(myfile)
 
         # Collect counts by lane and sample (+source_files)
-        self.bcl2fastq_bylane = dict()
-        self.bcl2fastq_bysample = dict()
-        self.source_files = dict()
         self.split_data_by_lane_and_sample()
 
         # Filter to strip out ignored sample names
