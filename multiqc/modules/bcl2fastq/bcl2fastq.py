@@ -44,21 +44,25 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.bcl2fastq_bysample, 'multiqc_bcl2fastq_bysample')
 
         # Add section for counts by lane
+        cats = OrderedDict()
+        cats["perfect"] = {'name': 'Perfect Index Reads'}
+        cats["imperfect"] = {'name': 'Mismatched Index Reads'}
+        cats["undetermined"] = {'name': 'Undetermined Reads'}
         self.add_section (
-            name = 'bcl2fastq by lane',
+            name = 'Clusters by lane',
             anchor = 'bcl2fastq-bylane',
             description = 'Number of reads per lane (with number of perfect index reads)',
-            helptext = "Perfect index reads are those that do not have a single mismatch. All samples of a lane are combinned. Undetermined reads are treated as a third category. To avoid conflicts the runId is prepended.",
-            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bylane))
+            helptext = "Perfect index reads are those that do not have a single mismatch. All samples of a lane are combined. Undetermined reads are treated as a third category. To avoid conflicts the run ID is prepended.",
+            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bylane), cats)
         )
 
         # Add section for counts by sample
         self.add_section (
-            name = 'bcl2fastq by sample',
+            name = 'Clusters by sample',
             anchor = 'bcl2fastq-bysample',
             description = 'Number of reads per sample (with number of perfect index reads)',
             helptext = "Perfect index reads are those that do not have a single mismatch. All samples are aggregated across lanes combinned. Undetermined reads are ignored. Undetermined reads are treated as a separate sample. To avoid conflicts the runId is prepended.",
-            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bysample))
+            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bysample), cats)
         )
 
     def parse_file_as_json(self, myfile):
