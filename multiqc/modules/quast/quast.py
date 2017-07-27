@@ -55,8 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Number of Contigs',
             anchor = 'quast-contigs',
-            description = """<p>This plot shows the number of contigs found for each assembly, broken
-                    down by length.</p> """,
+            description = """This plot shows the number of contigs found for each assembly, broken
+                    down by length.""",
             plot = self.quast_contigs_barplot()
         )
         # Number of genes plot
@@ -65,8 +65,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = 'Number of Predicted Genes',
                 anchor = 'quast-genes',
-                description = """<p>This plot shows the number of predicted genes found for each
-                          assembly, broken down by length.</p>""",
+                description = """This plot shows the number of predicted genes found for each
+                          assembly, broken down by length.""",
                 plot = ng_pdata
             )
 

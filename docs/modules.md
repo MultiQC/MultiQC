@@ -354,7 +354,7 @@ are as shown:
 self.add_data_source(f=None, s_name=None, source=None, module=None, section=None)
 ```
 
-## Step 4 - Adding to the general statistics table
+## Step 3 - Adding to the general statistics table
 Now that you have your parsed data, you can start inserting it into the
 MultiQC report. At the top of ever report is the 'General Statistics'
 table. This contains metrics from all modules, allowing cross-module
@@ -458,7 +458,7 @@ A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
 the function and uses this. However, sometimes it can be useful to overwrite this.
 
-## Step 5 - Writing data to a file
+## Step 4 - Writing data to a file
 In addition to printing data to the General Stats, MultiQC modules typically
 also write to text-files to allow people to easily use the data in downstream
 applications. This also gives the opportunity to output additional data that
@@ -491,7 +491,7 @@ be a tab-separated file (default), `JSON` or `YAML`.
 Note that any keys with more than 2 levels of nesting will be ignored
 when being written to tab-separated files.
 
-## Step 6 - Create report sections
+## Step 5 - Create report sections
 Great! It's time to start creating sections of the report with more information.
 To do this, use the `self.add_section()` helper function:
 
@@ -515,7 +515,7 @@ self.add_section (
 These will automatically be labelled and linked in the navigation (unless
 the module has only one section or `name` is not specified).
 
-## Step 7 - Plot some data
+## Step 6 - Plot some data
 Ok, you have some data, now the fun bit - visualising it! Each of the plot
 types is described in the _Plotting Functions_ section of the docs.
 

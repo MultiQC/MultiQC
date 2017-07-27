@@ -83,24 +83,30 @@ $(function () {
 
   // Rename samples
   var mqc_renamesamples_idx = 300;
-  $('#mqc_renamesamples_form').submit(function(e){
-    e.preventDefault();
+  $('#mqc_renamesamples_form').submit(function (event) {
+    event.preventDefault();
+
     var from_text = $('#mqc_renamesamples_from').val().trim();
     var to_text = $('#mqc_renamesamples_to').val().trim();
-    if(from_text.length == 0){
+
+    if (from_text.length == 0) {
       alert('Error - "From" text must not be blank.');
       return false;
     }
+
     var li = '<li><input class="f_text from_text" value="'+from_text+'" tabindex="'+(mqc_renamesamples_idx)+'" />'
     li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" tabindex="'+(mqc_renamesamples_idx+1)+'" />'
     li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
     $('#mqc_renamesamples_filters').append(li);
     $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+
+    // Reset form
     $('#mqc_renamesamples_from').val('');
     $('#mqc_renamesamples_to').val('');
     mqc_renamesamples_idx += 2;
     $('#mqc_renamesamples_form input:first').focus();
   });
+
   $('#mqc_rename_apply').click(function(e){
     apply_mqc_renamesamples();
     $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
@@ -490,6 +496,21 @@ function mqc_toolbox_confirmapply(){
   }
 }
 
+function validate_regexp(pattern) {
+  try {
+    new RegExp(pattern, 'g');
+    return true
+  } catch (error) {
+    $.toast({
+      text: 'RegExp pattern invalid: ' + pattern,
+      icon: 'error',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
+    return false
+  }
+}
+
 //////////////////////////////////////////////////////
 // HIGHLIGHT SAMPLES
 //////////////////////////////////////////////////////
@@ -498,24 +519,31 @@ function apply_mqc_highlights(){
   // Collect the filters into an array
   var f_texts = [];
   var f_cols = [];
-  var regex_mode = false;
-  if($('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on')){
-    regex_mode = true;
-  }
-  $('#mqc_col_filters li .f_text').each(function(){
-    var val = $(this).val();
-    if (f_texts.indexOf(val) < 0) {
-      f_texts.push($(this).val());
-      f_cols.push($(this).css('color'));
-    } else {
-      f_cols[f_texts.indexOf(val)] = $(this).css('color');
+  var regex_mode = $('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on');
+
+  $('#mqc_col_filters li').each(function() {
+    var inputElement = $(this).find('.f_text');
+    var pattern = inputElement.val();
+
+    // Validate RegExp
+    $(this).removeClass('bg-danger');
+    if (regex_mode && !validate_regexp(pattern)) {
+      $(this).addClass('bg-danger');
+      return;
     }
 
+    // Only add pattern if it hasn't already been added
+    if (f_texts.indexOf(pattern) < 0) {
+      f_texts.push(pattern);
+      f_cols.push(inputElement.css('color'));
+    } else {
+      f_cols[f_texts.indexOf(pattern)] = inputElement.css('color');
+    }
   });
 
   // Apply a 'background' highlight to remove default colouring first
   // Also highlight toolbox drawer icon
-  if(f_texts.length > 0 && f_texts.indexOf('') < 0){
+  if (f_texts.length > 0 && f_texts.indexOf('') < 0) {
     f_texts.unshift('');
     f_cols.unshift('#cccccc');
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass('in_use');
@@ -535,29 +563,43 @@ function apply_mqc_highlights(){
 // RENAME SAMPLES
 //////////////////////////////////////////////////////
 
-function apply_mqc_renamesamples(){
-
+function apply_mqc_renamesamples () {
+  var valid_from_texts = []
+  var valid_to_texts = []
+  var regex_mode = $('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on')
   // Collect filters
-  var f_texts = [];
-  var t_texts = [];
-  var regex_mode = false;
-  $('#mqc_renamesamples_filters .from_text').each(function(){ f_texts.push($(this).val()); });
-  $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
-  if($('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on')){ regex_mode = true; }
+  var f_texts = $('#mqc_renamesamples_filters > li').each(function () {
+    var from_text = $(this).find(".from_text").val()
+    var to_text = $(this).find(".to_text").val()
+    
+    // Validate RegExp
+    $(this).removeClass('bg-danger')
+    if (regex_mode && !validate_regexp(from_text)) {
+      $(this).addClass('bg-danger')
+      return
+    }
+
+    valid_from_texts.push(from_text)
+    valid_to_texts.push(to_text)
+  })
 
   // If something was renamed, highlight the toolbox icon
-  if(f_texts.length > 0){
+  if (valid_from_texts.length > 0) {
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').removeClass('in_use');
   }
 
-  window.mqc_rename_f_texts = f_texts;
-  window.mqc_rename_t_texts = t_texts;
+  window.mqc_rename_f_texts = valid_from_texts;
+  window.mqc_rename_t_texts = valid_to_texts;
   window.mqc_rename_regex_mode = regex_mode;
 
   // Fire off a custom jQuery event for other javascript chunks to tie into
-  $(document).trigger('mqc_renamesamples', [f_texts, t_texts, regex_mode]);
+  $(document).trigger('mqc_renamesamples', [
+    window.mqc_rename_f_texts,
+    window.mqc_rename_t_texts,
+    regex_mode
+  ]);
 }
 
 //////////////////////////////////////////////////////
@@ -566,13 +608,19 @@ function apply_mqc_renamesamples(){
 function apply_mqc_hidesamples(){
   // Collect the filters into an array
   var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
+  var regex_mode = $('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on');
   var f_texts = [];
-  var regex_mode = false;
-  if($('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on')){
-    regex_mode = true;
-  }
-  $('#mqc_hidesamples_filters li .f_text').each(function(){
-    f_texts.push($(this).val());
+  $('#mqc_hidesamples_filters li').each(function() {
+    var pattern = $(this).find('.f_text').val()
+
+    // Validate RegExp
+    $(this).removeClass('bg-danger')
+    if (regex_mode && !validate_regexp(pattern)) {
+      $(this).addClass('bg-danger')
+      return
+    }
+
+    f_texts.push(pattern);
   });
 
   // If something was hidden, highlight the toolbox icon
