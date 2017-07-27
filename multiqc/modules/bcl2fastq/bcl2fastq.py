@@ -66,7 +66,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def parse_file_as_json(self, myfile):
-        content = json.loads(myfile["f"])
+        try:
+            content = json.loads(myfile["f"])
+        except ValueError:
+            return
         runId = content["RunId"]
         if not runId in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()
