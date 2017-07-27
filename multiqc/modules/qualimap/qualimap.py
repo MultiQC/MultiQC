@@ -31,8 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         from . import QM_BamQC
         from . import QM_RNASeq
 
-        # Set up class objects to hold parsed data
-        self.sections = list()
+        # Set up class objects to hold parsed data()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = defaultdict(lambda: dict())
         n = dict()

@@ -2,12 +2,10 @@
 
 """ MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics """
 
-from collections import OrderedDict
 import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -29,9 +27,9 @@ def read_sample_name(line_iter, clean_fn):
             new_line = new_line.strip()
             if 'BaseDistributionByCycle' in new_line and 'INPUT' in new_line:
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", new_line)
+                fn_search = re.search(r"INPUT=(\[?[^\s]+\]?)", new_line)
                 if fn_search:
-                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = os.path.basename(fn_search.group(1).strip('[]'))
                     s_name = clean_fn(s_name)
                     return s_name
     except StopIteration:
@@ -91,10 +89,7 @@ def parse_reports(self):
     self.picard_baseDistributionByCycle_samplestats = dict()
 
     # Go through logs and find Metrics
-    base_dist_files = self.find_log_files(
-        config.sp['picard']['basedistributionbycycle'],
-        filehandles=True
-    )
+    base_dist_files = self.find_log_files('picard/basedistributionbycycle', filehandles=True)
 
     for f in base_dist_files:
         try:
@@ -167,6 +162,9 @@ def parse_reports(self):
         v['mean_pct_g'] = v['sum_pct_g'] / v['cycle_count']
         v['mean_pct_t'] = v['sum_pct_t'] / v['cycle_count']
 
+    # Filter to strip out ignored sample names
+    self.picard_baseDistributionByCycle_data = self.ignore_samples(self.picard_baseDistributionByCycle_data)
+
     if len(self.picard_baseDistributionByCycle_data) > 0:
 
         # Write parsed data to a file
@@ -200,12 +198,12 @@ def parse_reports(self):
             for lg, index in zip(linegraph_data, range(5)):
                 lg[s_name] = reformat_items(index)
 
-        self.sections.append({
-            'name': 'Base Distribution',
-            'anchor': 'picard-base-distribution-by-cycle',
-            'content': '<p>Plot shows the distribution of bases by cycle.</p>' +
-                         linegraph.plot(linegraph_data, pconfig)
-        })
+        self.add_section (
+            name = 'Base Distribution',
+            anchor = 'picard-base-distribution-by-cycle',
+            description = 'Plot shows the distribution of bases by cycle.',
+            plot = linegraph.plot(linegraph_data, pconfig)
+        )
 
 
     # Return the number of detected samples to the parent module

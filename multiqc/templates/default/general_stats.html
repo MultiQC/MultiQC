@@ -7,7 +7,7 @@ This block generates the General Statistics table at the top of the report.
 #}
 
 {% if not config.skip_generalstats: %}
-<div id="general_stats">
+<div id="general_stats" class="mqc-module-section">
   <h2>General Statistics</h2>
   {{ report.general_stats_html }}
 </div>

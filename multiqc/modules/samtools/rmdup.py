@@ -5,7 +5,6 @@
 import logging
 import re
 from collections import OrderedDict
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -18,7 +17,7 @@ class RmdupReportMixin():
         """ Find Samtools rmdup logs and parse their data """
 
         self.samtools_rmdup = dict()
-        for f in self.find_log_files(config.sp['samtools']['rmdup'], filehandles=True):
+        for f in self.find_log_files('samtools/rmdup', filehandles=True):
             # Example below:
             # [bam_rmdupse_core] 26602816 / 103563641 = 0.2569 in library '   '
             dups_regex = "\[bam_rmdups?e?_core\] (\d+) / (\d+) = (\d+\.\d+) in library '(.*)'"
@@ -38,6 +37,9 @@ class RmdupReportMixin():
                     self.samtools_rmdup[s_name]['n_unique'] = int(match.group(2)) - int(match.group(1))
                     self.samtools_rmdup[s_name]['pct_dups'] = float(match.group(3))*100
 
+        # Filter to strip out ignored sample names
+        self.samtools_rmdup = self.ignore_samples(self.samtools_rmdup)
+
         if len(self.samtools_rmdup) > 0:
             # Write parsed report data to a file
             self.write_data_file(self.samtools_rmdup, 'multiqc_samtools_rmdup')
@@ -51,11 +53,11 @@ class RmdupReportMixin():
                 'title': 'Samtools rmdup: Duplicate alignments',
                 'yDecimals': False
             }
-            self.sections.append({
-                'name': 'Duplicates removed',
-                'anchor': 'samtools-rmdup',
-                'content': bargraph.plot(self.samtools_rmdup, keys, pconfig)
-            })
+            self.add_section (
+                name = 'Duplicates removed',
+                anchor = 'samtools-rmdup',
+                plot = bargraph.plot(self.samtools_rmdup, keys, pconfig)
+            )
 
             # Add a column to the General Stats table
             # General Stats Table
@@ -66,8 +68,7 @@ class RmdupReportMixin():
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
-                'scale': 'OrRd',
-                'format': '{:.1f}%'
+                'scale': 'OrRd'
             }
             self.general_stats_addcols(self.samtools_rmdup, stats_headers, 'Samtools rmdup')
 

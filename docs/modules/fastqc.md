@@ -37,15 +37,15 @@ read in memory and `fastqc_data.txt` parsed.
 > that they will share a sample name with data that has already been parsed.
 
 You can customise the patterns used for finding these files in your
-MultiQC config using the following base - see the docs for more
-details..
+MultiQC config (see [Module search patterns](#module-search-patterns)).
+The below code shows the default file patterns:
+
 ```yaml
 sp:
-    fastqc:
-        data:
-            fn: 'fastqc_data.txt'
-        zip:
-            fn: '_fastqc.zip'
+    fastqc/data:
+        fn: 'fastqc_data.txt'
+    fastqc/zip:
+        fn: '*_fastqc.zip'
 ```
 
 > **Note:** Sample names are discovered by parsing the line beginning
@@ -82,7 +82,16 @@ written by [Mike Love](https://github.com/mikelove).
 Please see the [package readme](https://github.com/mikelove/fastqcTheoreticalGC)
 for more details.
 
-If you want to always use your custom file for MultiQC reports without having to
+Result files from this package are searched for with the following search pattern
+(can be customised as described above):
+
+```yaml
+sp:
+    fastqc/theoretical_gc:
+        fn: '*fastqc_theoretical_gc*'
+```
+
+If you want to always use a specific custom file for MultiQC reports without having to
 add it to the analysis directory, add the full file path to the same MultiQC config
 variable described above:
 ```yaml

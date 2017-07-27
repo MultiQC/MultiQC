@@ -13,7 +13,7 @@
 title: null
 subtitle: null
 intro_text: null
-custom_message: null
+report_comment: null
 report_header_info: null
 config_file: null
 custom_logo: null
@@ -22,10 +22,14 @@ custom_logo_title: null
 simple_output: false
 template: 'default'
 pandoc_template: null
+read_count_multiplier: 0.000001
+read_count_prefix: 'M'
+read_count_desc: 'millions'
 output_fn_name: 'multiqc_report.html'
 data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
 data_format: 'tsv'
+module_tag: []
 
 force: false
 prepend_dirs: false
@@ -39,18 +43,29 @@ plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100
 num_datasets_plot_limit: 50
+collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
+table_columns_placement: {}
 decimalPoint_format: null
 thousandsSep_format: null
 
 fn_ignore_dirs:
     - 'multiqc_data'
-fn_ignore_paths: []
+    - 'icarus_viewers'       # quast
+    - 'runs_per_reference'   # quast
+    - 'not_aligned'          # quast
+    - 'contigs_reports'      # quast
+
+fn_ignore_paths:
+    - '*/work/??/??????????????????????????????' # Nextflow work directories - always same hash lengths
+sample_names_ignore: []
+sample_names_ignore_re: []
+sample_names_rename_buttons: []
+sample_names_rename: []
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false
-report_imgskips: false
 skip_generalstats: false
 data_format_extensions:
     tsv: 'txt'
@@ -60,6 +75,10 @@ export_plot_formats:
     - 'png'
     - 'svg'
     - 'pdf'
+
+# Custom Config settings
+custom_content:
+    order: []
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
@@ -79,6 +98,8 @@ fn_clean_exts:
     - '.log'
     - '.stderr'
     - '.out'
+    - '.fa'
+    - '.fasta'
     - 'Log.final'
     - 'ReadsPerGene'
     - '.flagstat'
@@ -88,6 +109,8 @@ fn_clean_exts:
     - '.counts'
     - '_counts'
     - '.txt'
+    - '.tsv'
+    - '.csv'
     - '.aligned'
     - 'Aligned'
     - '.merge'
@@ -104,6 +127,13 @@ fn_clean_exts:
     - '.GC.xls'
     - '_slamdunk'
     - '_bismark'
+    - '.conpair'
+    - '.concordance'
+    - '.contamination'
+    - '.BEST.results'
+    - '_summary'
+    - '_peaks.xls'
+    - '.relatedness'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -121,6 +151,7 @@ fn_clean_trim:
     - '.yml'
     - '.json'
     - '_mqc'
+    - 'short_summary_'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -132,49 +163,205 @@ fn_ignore_files:
     - '*.fastq.gz'
     - '*.fq'
     - '*.fastq'
+    - '*.fa'
     - '*.gtf'
     - '*.bed'
     - '*.vcf'
     - '*.txt.gz'
+    - '*.pdf'
+    - '*.html'
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
 # modules (even those not present in the below list).
 top_modules: []
 
-# Order that modules should appear in report. Try to list in order of analysis,
-# eg. FastQC is usually the first step, so should be last in this list.
+# Order that modules should appear in report. Try to list in order of analysis.
 module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
-    # Post-alignment analysis results
-    - 'peddy'
-    - 'quast'
-    - 'snpeff'
-    - 'qualimap'
-    - 'bcftools'
-    - 'featureCounts'
-    - 'methylQA'
-    - 'rseqc'
-    - 'picard'
-    - 'preseq'
-    - 'prokka'
-    - 'samblaster'
-    - 'samtools'
-    - 'bamtools'
+    # Post-alignment QC
+    - conpair:
+        module_tag:
+            - WGS
+            - cancer
+            - DNA
+    - peddy:
+        module_tag:
+            - DNA
+    - methylQA:
+        module_tag:
+            - Methylation
+            - DNA
+    - qualimap:
+        module_tag:
+            - DNA
+            - RNA
+    - preseq:
+        module_tag:
+            - DNA
+            - RNA
+    - quast:
+        module_tag:
+            - DNA
+            - Metagenomics
+            - Denovo
+    - qorts:
+        module_tag:
+            - RNA
+    - rna_seqc:
+        module_tag:
+            - RNA
+    - rseqc:
+        module_tag:
+            - RNA
+    - busco:
+        module_tag:
+            - Denovo
+    - goleft_indexcov:
+        module_tag:
+            - DNA
+    - disambiguate:
+        module_tag:
+            - RNA
+    # Post-alignment processing
+    - homer:
+        module_tag:
+            - RNA
+            - DNA
+            - chip
+    - macs2:
+        module_tag:
+            - chip
+    - theta2:
+        module_tag:
+            - DNA
+            - cancer
+    - snpeff:
+        module_tag:
+            - DNA
+    - gatk:
+        module_tag:
+            - DNA
+    - htseq:
+        module_tag:
+            - DNA
+            - RNA
+    - bcftools:
+        module_tag:
+            - DNA
+    - featureCounts:
+        module_tag:
+            - DNA
+            - RNA
+    - picard:
+        module_tag:
+            - DNA
+            - RNA
+    - prokka:
+        module_tag:
+            - prokarytotic
+            - Denovo
+    - samblaster:
+        module_tag:
+            - DNA
+            - RNA
+    - samtools:
+        module_tag:
+            - DNA
+            - RNA
+    - bamtools:
+        module_tag:
+            - DNA
+            - RNA
+    - jellyfish:
+        module_tag:
+            - DNA
+    - vcftools:
+        module_tag:
+            - DNA
+
     # Alignment tool stats
-    - 'bismark'
-    - 'hicup'
-    - 'salmon'
-    - 'kallisto'
-    - 'slamdunk'
-    - 'star'
-    - 'tophat'
-    - 'bowtie2'
-    - 'bowtie1'
+    - bismark:
+        module_tag:
+            - DNA
+            - methylation
+    - hicup:
+        module_tag:
+            - hi-c
+    - salmon:
+        module_tag:
+            - RNA
+    - kallisto:
+        module_tag:
+            - RNA
+    - slamdunk:
+        module_tag:
+            - slam
+    - star:
+        module_tag:
+            - RNA
+    - hisat2:
+        module_tag:
+            - RNA
+    - tophat:
+        module_tag:
+            - RNA
+    - bowtie2:
+        module_tag:
+            - RNA
+    - bowtie1:
+        module_tag:
+            - RNA
+
     # Pre-alignment QC
-    - 'cutadapt'
-    - 'trimmomatic'
-    - 'skewer'
-    - 'fastq_screen'
-    - 'fastqc'
+    - leehom:
+        module_tag:
+            - RNA
+            - DNA
+    - adapterRemoval:
+        module_tag:
+            - RNA
+            - DNA
+    - cutadapt:
+        module_tag:
+            - RNA
+            - DNA
+    - flexbar:
+        module_tag:
+            - RNA
+            - DNA
+    - trimmomatic:
+        module_tag:
+            - RNA
+            - DNA
+    - skewer:
+        module_tag:
+            - RNA
+            - DNA
+    - sortmerna:
+        module_tag:
+            - RNA
+            - DNA
+    - biobloomtools:
+        module_tag:
+            - RNA
+            - DNA
+    - fastq_screen:
+        module_tag:
+            - RNA
+            - DNA
+    - fastqc:
+        module_tag:
+            - RNA
+            - DNA
+    - clusterflow:
+        module_tag:
+            - RNA
+            - DNA
+            - methylation
+    - bcl2fastq:
+        module_tag:
+            - RNA
+            - DNA
+            - methylation

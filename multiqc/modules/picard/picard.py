@@ -18,6 +18,8 @@ from . import HsMetrics
 from . import OxoGMetrics
 from . import RnaSeqMetrics
 from . import AlignmentSummaryMetrics
+from . import RrbsSummaryMetrics
+from . import WgsMetrics
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -37,7 +39,6 @@ class MultiqcModule(BaseMultiqcModule):
         "throughput sequencing data.")
 
         # Set up class objects to hold parsed data
-        self.sections = list()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
         n = dict()
@@ -74,6 +75,14 @@ class MultiqcModule(BaseMultiqcModule):
         n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
         if n['AlignmentMetrics'] > 0:
             log.info("Found {} AlignmentSummaryMetrics reports".format(n['AlignmentMetrics']))
+
+        n['RrbsSummaryMetrics'] = RrbsSummaryMetrics.parse_reports(self)
+        if n['RrbsSummaryMetrics'] > 0:
+            log.info("Found {} RrbsSummaryMetrics reports".format(n['RrbsSummaryMetrics']))
+
+        n['WgsMetrics'] = WgsMetrics.parse_reports(self)
+        if n['WgsMetrics'] > 0:
+            log.info("Found {} WgsMetrics reports".format(n['WgsMetrics']))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

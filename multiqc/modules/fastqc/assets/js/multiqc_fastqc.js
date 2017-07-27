@@ -18,7 +18,7 @@ current_single_plot = undefined;
 
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
-    
+
     // Get sample names, rename and skip hidden samples
     sample_names = [];
     sample_statuses = [];
@@ -37,7 +37,7 @@ function fastqc_seq_content_heatmap() {
         });
         sample_statuses[s_name] = t_status;
         p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
-        
+
         var hide_sample = false;
         for (i = 0; i < window.mqc_hide_f_texts.length; i++) {
             var f_text = window.mqc_hide_f_texts[i];
@@ -68,7 +68,7 @@ function fastqc_seq_content_heatmap() {
         </div>');
     }
     if(num_samples == 0){ return; }
-    
+
     // Convert the CSS percentage size into pixels
     c_width = $('#fastqc_seq_heatmap').parent().width() - 5; // -5 for status bar
     c_height = $('#fastqc_seq_heatmap').parent().height() - 2; // -2 for bottom line padding
@@ -103,7 +103,7 @@ function fastqc_seq_content_heatmap() {
         });
         ypos = 0;
         $.each(sample_names, function(idx, s_name){
-          
+
             // Add a 5px wide bar indicating either status or Highlight
             var status = sample_statuses[s_name];
             var s_col = '#999999';
@@ -118,7 +118,7 @@ function fastqc_seq_content_heatmap() {
             });
             ctx.fillStyle = s_col;
             ctx.fillRect (0, ypos+1, 5, s_height-2);
-            
+
             // Plot the squares for the heatmap
             var s = p_data[s_name];
             var xpos = 6;
@@ -135,10 +135,10 @@ function fastqc_seq_content_heatmap() {
                     v['c'] = (v['c']/t)*100;
                     v['g'] = (v['g']/t)*100;
                 }
-                var r = (v['t'] / 100)*255;
-                var g = (v['a'] / 100)*255;
-                var b = (v['c'] / 100)*255;
-                ctx.fillStyle = chroma(r,g,b).css();
+                var r = Math.round((v['t'] / 100)*255);
+                var g = Math.round((v['a'] / 100)*255);
+                var b = Math.round((v['c'] / 100)*255);
+                ctx.fillStyle = 'rgb('+r+','+g+','+b+')';
                 // width+1 to avoid vertical white line gaps.
                 ctx.fillRect (xpos, ypos, this_width+1, s_height);
                 xpos += this_width;
@@ -179,7 +179,7 @@ $(function () {
         </div>';
         $(pid).append(p_bar);
     });
-    
+
     // Create popovers on click
     $('.mqc-section-fastqc .fastqc_passfail_progress .progress-bar').mouseover(function(){
         // Does this element already have a popover?
@@ -219,7 +219,7 @@ $(function () {
             </div>'
         }).popover('show');
     });
-    
+
     // Listener for Status higlight click
     $('.mqc-section-fastqc .fastqc_passfail_progress').on('click', '.fastqc-status-highlight', function(e){
         e.preventDefault();
@@ -241,7 +241,7 @@ $(function () {
         // Hide the popover
         $(this).closest('.popover').popover('hide');
     });
-    
+
     // Listener for Status hide others click
     $('.mqc-section-fastqc .fastqc_passfail_progress').on('click', '.fastqc-status-hideothers', function(e){
         e.preventDefault();
@@ -269,14 +269,37 @@ $(function () {
         // Hide the popover
         $(this).closest('.popover').popover('hide');
     });
-    
+
     /////////
     /// SEQ CONTENT HEATMAP LISTENERS
     /////////
-    
+
+    // Seq Content heatmap export button
+    $('#fastqc_per_base_sequence_content_export_btn').click(function(e){
+        e.preventDefault();
+        // Tick only this plot in the toolbox and slide out
+        $('#mqc_export_selectplots input').prop('checked', false);
+        $('#mqc_export_selectplots input[value="fastqc_per_base_sequence_content_plot"]').prop('checked', true);
+        mqc_toolbox_openclose('#mqc_exportplots', true);
+    });
+
+    // Export plot
+    $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_image', function(e, cfg){
+        alert("Apologies, it's not yet possible to export this plot.\nPlease take a screengrab or export the JSON data.");
+    });
+    $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_data', function(e, cfg){
+        if(cfg['ft'] == 'json'){
+            json_str = JSON.stringify(fastqc_seq_content_data, null, 2);
+            var blob = new Blob([json_str], {type: "text/plain;charset=utf-8"});
+            saveAs(blob, cfg['fname']);
+        } else {
+            alert('Apologies, this plot can only be exported as JSON currently.');
+        }
+    });
+
     // Seq Content heatmap mouse rollover
     $('#fastqc_seq_heatmap').mousemove(function(e) {
-        
+
         // Replace the heading above the heatmap
         var pos = findPos(this);
         var x = e.pageX - pos.x;
@@ -290,8 +313,8 @@ $(function () {
         if(s_status == 'pass'){ s_status_class = 'label-success'; }
         if(s_status == 'warn'){ s_status_class = 'label-warning'; }
         if(s_status == 'fail'){ s_status_class = 'label-danger'; }
-        $('#fastqc_per_base_sequence_content_plot .s_name').html(s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
-        
+        $('#fastqc_per_base_sequence_content_plot_div .s_name').html('<span class="glyphicon glyphicon-info-sign"></span> ' + s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
+
         // Show the sequence base percentages on the bar plots below
         // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
         var ctx = this.getContext('2d');
@@ -304,22 +327,22 @@ $(function () {
         $('#fastqc_seq_heatmap_key_c span').text(seq_c.toFixed(0)+'%');
         $('#fastqc_seq_heatmap_key_a span').text(seq_a.toFixed(0)+'%');
         $('#fastqc_seq_heatmap_key_g span').text(seq_g.toFixed(0)+'%');
-        
+
         // Get base pair position from x pos
         var this_bp = Math.floor((x/c_width)*max_bp);
         $('#fastqc_seq_heatmap_key_pos').text(this_bp+' bp');
     });
-    
+
     // Remove sample name again when mouse leaves
     $('#fastqc_seq_heatmap').mouseout(function(e) {
-      $('#fastqc_per_base_sequence_content_plot .s_name').html('<em class="text-muted">rollover for sample name</em>');
+      $('#fastqc_per_base_sequence_content_plot_div .s_name').html('<span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name');
       $('#fastqc_seq_heatmap_key_pos').text('-');
       $('#fastqc_seq_heatmap_key_t span').text('-');
       $('#fastqc_seq_heatmap_key_c span').text('-');
       $('#fastqc_seq_heatmap_key_a span').text('-');
       $('#fastqc_seq_heatmap_key_g span').text('-');
     });
-    
+
     // Click sample
     $('#fastqc_seq_heatmap').click(function(e) {
       e.preventDefault();
@@ -333,26 +356,43 @@ $(function () {
         plot_single_seqcontent(s_name);
       }
     });
-    $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_prev', function(e){
+    $('#mqc-module-section-fastqc').on('click', '.fastqc_seqcontent_single_prevnext', function(e){
         e.preventDefault();
-        var idx = sample_names.indexOf(current_single_plot) - 1;
+        // Find next / prev sample name
+        var idx = sample_names.indexOf(current_single_plot);
+        if($(this).data('action') == 'next'){ idx++; }
+        else { idx--; }
         if(idx < 0){ idx = sample_names.length - 1; }
-        plot_single_seqcontent(sample_names[idx]);
-    });
-    $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_next', function(e){
-        e.preventDefault();
-        var idx = sample_names.indexOf(current_single_plot) + 1;
-        if(idx == sample_names.length){ idx = 0; }
-        plot_single_seqcontent(sample_names[idx]);
+        if(idx >= sample_names.length){ idx = 0; }
+        var s_name = sample_names[idx];
+        current_single_plot = s_name;
+        // Prep the new plot data
+        var plot_data = [[],[],[],[]];
+        var bases = Object.keys(fastqc_seq_content_data[s_name]).sort(function (a, b) {  return a - b;  });
+        for (i=0; i<bases.length; i++){
+          var base = fastqc_seq_content_data[s_name][bases[i]]['base'].toString().split('-');
+          base = parseFloat(base[0]);
+          plot_data[0].push([base, fastqc_seq_content_data[s_name][bases[i]]['t']]);
+          plot_data[1].push([base, fastqc_seq_content_data[s_name][bases[i]]['c']]);
+          plot_data[2].push([base, fastqc_seq_content_data[s_name][bases[i]]['a']]);
+          plot_data[3].push([base, fastqc_seq_content_data[s_name][bases[i]]['g']]);
+        }
+        // Update the chart
+        var hc = $('#fastqc_sequence_content_single').highcharts();
+        for (i=0; i<plot_data.length; i++){
+            hc.series[i].setData(plot_data[i], false);
+        }
+        hc.setTitle({text: s_name});
+        hc.redraw({ duration: 200 });
     });
     $('#mqc-module-section-fastqc').on('click', '#fastqc_sequence_content_single_back', function(e){
         e.preventDefault();
-        $('#fastqc_per_base_sequence_content_plot').slideDown();
+        $('#fastqc_per_base_sequence_content_plot_div').slideDown();
         $('#fastqc_sequence_content_single_wrapper').slideUp(function(){
           $(this).remove();
         });
     });
-      
+
     // Highlight the custom heatmap
     $(document).on('mqc_highlights mqc_hidesamples mqc_renamesamples mqc_plotresize', function(e){
         fastqc_seq_content_heatmap();
@@ -373,7 +413,9 @@ function plot_single_seqcontent(s_name){
     {'name': '% A', 'data':[]},
     {'name': '% G', 'data':[]}
   ];
-  for (var d in data){
+  var bases = Object.keys(data).sort(function (a, b) {  return a - b;  });
+  for (i=0; i<bases.length; i++){
+    var d = bases[i];
     var base = data[d]['base'].toString().split('-');
     base = parseFloat(base[0]);
     plot_data[0]['data'].push([base, data[d]['t']]);
@@ -381,17 +423,20 @@ function plot_single_seqcontent(s_name){
     plot_data[2]['data'].push([base, data[d]['a']]);
     plot_data[3]['data'].push([base, data[d]['g']]);
   }
-  
+
   // Create plot div if it doesn't exist, and hide overview
   if($('#fastqc_sequence_content_single_wrapper').length == 0) {
-    $('#fastqc_per_base_sequence_content_plot').slideUp();
+    $('#fastqc_per_base_sequence_content_plot_div').slideUp();
     var newplot = '<div id="fastqc_sequence_content_single_wrapper"> \
-    <div id="fastqc_sequence_content_single_controls"><div class="btn-group"> \
-      <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_prev">&laquo; Prev</button> \
-      <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_next">Next &raquo;</button> \
-    </div> <button class="btn btn-default btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button></div>\
+    <div id="fastqc_sequence_content_single_controls">\
+      <button class="btn btn-primary btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button> \
+      <div class="btn-group btn-group-sm"> \
+        <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="prev">&laquo; Prev</button> \
+        <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="next">Next &raquo;</button> \
+      </div>\
+    </div>\
     <div class="hc-plot-wrapper"><div id="fastqc_sequence_content_single" class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';
-    $(newplot).insertAfter('#fastqc_per_base_sequence_content_plot').hide().slideDown();
+    $(newplot).insertAfter('#fastqc_per_base_sequence_content_plot_div').hide().slideDown();
   }
 
   $('#fastqc_sequence_content_single').highcharts({
@@ -401,7 +446,7 @@ function plot_single_seqcontent(s_name){
     },
     colors: ['#dc0000', '#0000dc', '#00dc00', '#404040'],
     title: {
-      text: 'Per Base Sequence Content: '+s_name,
+      text: s_name,
       x: 30 // fudge to center over plot area rather than whole plot
     },
     xAxis: {
@@ -443,6 +488,10 @@ function plot_single_seqcontent(s_name){
         marker: { enabled: false },
       }
     },
+    exporting: { buttons: { contextButton: {
+      menuItems: window.HCDefaults.exporting.buttons.contextButton.menuItems,
+      onclick: window.HCDefaults.exporting.buttons.contextButton.onclick
+    } } },
     series: plot_data
   });
 }

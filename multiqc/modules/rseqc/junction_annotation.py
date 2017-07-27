@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -31,7 +30,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files(config.sp['rseqc']['junction_annotation']):
+    for f in self.find_log_files('rseqc/junction_annotation'):
         d = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
@@ -62,6 +61,9 @@ def parse_reports(self):
             self.add_data_source(f, section='junction_annotation')
             self.junction_annotation_data[f['s_name']] = d
 
+    # Filter to strip out ignored sample names
+    self.junction_annotation_data = self.ignore_samples(self.junction_annotation_data)
+
     if len(self.junction_annotation_data) > 0:
 
         # Write to file
@@ -83,15 +85,15 @@ def parse_reports(self):
             'cpswitch_c_active': False,
             'data_labels': [ 'Junctions', 'Events' ]
         }
-        p_link = '<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>'
-        self.sections.append({
-            'name': 'Junction Annotation',
-            'anchor': 'rseqc_junction_annotation',
-            'content': "<p>"+p_link+" compares detected splice junctions to" \
+        self.add_section (
+            name = 'Junction Annotation',
+            anchor = 'rseqc_junction_annotation',
+            description = '<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>' \
+                " compares detected splice junctions to" \
                 " a reference gene model. An RNA read can be spliced 2" \
-                " or more times, each time is called a splicing event.</p>" +
-                bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
-        })
+                " or more times, each time is called a splicing event.",
+            plot = bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig)
+        )
 
     # Return number of samples found
     return len(self.junction_annotation_data)

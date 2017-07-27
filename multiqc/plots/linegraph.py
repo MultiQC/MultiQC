@@ -6,7 +6,6 @@ from __future__ import division, print_function, absolute_import
 from collections import OrderedDict
 import base64
 import io
-import json
 import logging
 import os
 import sys
@@ -26,7 +25,7 @@ except Exception as e:
     # The lack of the library will be handled when plots are attempted
     print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
     print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
-    logger.exception(e)
+    print(e)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
@@ -37,12 +36,16 @@ def get_template_mod():
         _template_mod = config.avail_templates[config.template].load()
     return _template_mod
 
-def plot (data, pconfig={}):
+def plot (data, pconfig=None):
     """ Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
+    # Why not just set {} as a default argument? See:
+    # http://python-guide-pt-br.readthedocs.io/en/latest/writing/gotchas/
+    if pconfig is None:
+        pconfig = {}
 
     # Given one dataset - turn it into a list
     if type(data) is not list:
@@ -72,6 +75,16 @@ def plot (data, pconfig={}):
                     maxval = max(maxval, d[s][k])
             else:
                 for k in sorted(d[s].keys()):
+                    if k is not None:
+                        if 'xmax' in pconfig and float(k) > float(pconfig['xmax']):
+                            continue
+                        if 'xmin' in pconfig and float(k) < float(pconfig['xmin']):
+                            continue
+                    if d[s][k] is not None:
+                        if 'ymax' in pconfig and float(d[s][k]) > float(pconfig['ymax']):
+                            continue
+                        if 'ymin' in pconfig and float(d[s][k]) < float(pconfig['ymin']):
+                            continue
                     pairs.append([k, d[s][k]])
                     try:
                         maxval = max(maxval, d[s][k])
@@ -81,7 +94,8 @@ def plot (data, pconfig={}):
                 this_series = { 'name': s, 'data': pairs }
                 try:
                     this_series['color'] = pconfig['colors'][s]
-                except: pass
+                except:
+                    pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
 
@@ -96,7 +110,7 @@ def plot (data, pconfig={}):
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except KeyError:
+    except (KeyError, IndexError):
         pass
 
     # Make a plot - template custom, or interactive or flat
@@ -119,15 +133,22 @@ def plot (data, pconfig={}):
 
 
 
-def highcharts_linegraph (plotdata, pconfig={}):
+def highcharts_linegraph (plotdata, pconfig=None):
     """
     Build the HTML needed for a HighCharts line graph. Should be
     called by linegraph.plot(), which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
+
+    # Get the plot ID
+    if pconfig.get('id') is None:
+        pconfig['id'] = 'mqc_hcplot_{}'.format(id(pconfig))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Build the HTML for the page
-    if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_{}'.format(get_uid)
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets
@@ -158,29 +179,31 @@ def highcharts_linegraph (plotdata, pconfig={}):
         </div></div>
         '''.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '''<script type="text/javascript">
-        mqc_plots["{id}"] = {{
-            "plot_type": "xy_line",
-            "datasets": {d},
-            "config": {c}
-        }}
-        </script>
-        '''.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
+    report.plot_data[pconfig['id']] = {
+        'plot_type': "xy_line",
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 
 
-def matplotlib_linegraph (plotdata, pconfig={}):
+def matplotlib_linegraph (plotdata, pconfig=None):
     """
     Plot a line graph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by
     plot_bargraph, which properly formats the input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Plot group ID
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_mplplot_{}'.format(get_uid())
+        pconfig['id'] = 'mqc_mplplot_{}'.format(id(pconfig))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):
@@ -189,7 +212,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         except:
             name = k+1
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
-        pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
+        pid = report.save_htmlid(pid)
         pids.append(pid)
 
     html = '''
@@ -242,6 +265,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                         fdata[d['name']][pconfig['categories'][i]] = x
                     except (KeyError, IndexError):
                         fdata[d['name']][str(i)] = x
+
         # Custom tsv output if the x axis varies
         if not sharedcats and config.data_format == 'tsv':
             fout = ''
@@ -422,7 +446,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
         # Save to a file and link <img>
         else:
-            plot_relpath = os.path.join(config.data_dir_name, 'multiqc_plots', '{}.png'.format(pid))
+            plot_relpath = os.path.join(config.plots_dir_name, 'png', '{}.png'.format(pid))
             html += ('<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'
                     ).format(pid, hidediv, plot_relpath)
 
@@ -442,6 +466,12 @@ def smooth_line_data(data, numpoints, sumcounts=True):
     """
     smoothed = {}
     for s_name, d in data.items():
+
+        # Check that we need to smooth this data
+        if len(d) <= numpoints:
+            smoothed[s_name] = d
+            continue
+
         smoothed[s_name] = OrderedDict();
         p = 0
         binsize = len(d) / numpoints

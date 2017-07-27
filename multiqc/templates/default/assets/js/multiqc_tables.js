@@ -32,120 +32,24 @@ $(function () {
       }, 2000);
     });
 
-    ///////////////////
-    // Floating table headers
-
-    // Sort table when frozen header clicked
-    $('.mqc_table_container').on('click', '.mqc_table_clone thead tr th', function(){
-      var c_idx = $(this).index();
-      var sortDir = $(this).hasClass('headerSortUp') ? 0 : 1;
-      $(this).closest('.mqc_table_container').find('.mqc_table').trigger('sorton', [[[ c_idx, sortDir ]]]);
-      $(this).closest('thead').find('tr th').removeClass('headerSortDown headerSortUp');
-      $(this).addClass(sortDir ? 'headerSortUp' : 'headerSortDown');
+    // Make table headers fixed when table body scrolls (use CSS transforms)
+    // http://stackoverflow.com/a/25902860/713980
+    $('.mqc-table-responsive').scroll(function() {
+      $(this).find('thead').css('transform', "translate(0,"+$(this).scrollTop()+"px)");
     });
 
-    // Create / destroy floating header on scrolling
-    var mqc_table_HeadHeight = 30;
-    $(window).scroll(function(){
-      var wTop = $(window).scrollTop();
-      $('.mqc_table_container').each(function(){
+    // Table header-specific bootstrap tooltips
+    $('.mqc_table_tooltip').tooltip({ container: 'body' });
 
-        var container = $(this).attr('id');
-        var table = $(this).find('.mqc_table').attr('id');
-        var height = $(this).find('.mqc_table').height();
-        var offset = $(this).find('.mqc_table').offset().top;
-
-        var clone_id = table + '_clone';
-        var top = offset - wTop;
-        var visible = top + height;
-        if(top < 0 && visible > 0 ){
-          ctw = $('#'+clone_id+'Wrapper');
-          if(ctw.length == 0){
-            // Make a copy of the table
-            var table = $('#'+table);
-            var tableDiv = table.find('.table-responsive');
-            ct = table.clone();
-            ct.attr('id', clone_id).addClass('mqc_table_clone').width(table.width());
-            // Hide everything except the header. Scroll it sideways if needed.
-            ct.css({visibility:'hidden', 'margin-left': -tableDiv.scrollLeft()});
-            ct.find('thead').css({visibility:'visible'});
-            // Wrap it and add to the container with position: fixed
-            ctw = $('<div id="'+clone_id+'Wrapper" class="mqc_table_cloneWrapper" />').append(ct);
-            ctw.css({'position':'fixed', 'top':0, 'height': mqc_table_HeadHeight, 'width': tableDiv.width()});
-            $('#'+container).append(ctw);
-          }
-          // Nicely scroll out of the way instead of dissapearing
-          if(visible < mqc_table_HeadHeight * 2){
-            $('#'+clone_id+'Wrapper').css('top', visible - (mqc_table_HeadHeight * 2) );
-          } else {
-            $('#'+clone_id+'Wrapper').css('top', 0);
-          }
-        } else {
-          // Not needed - remove it (avoids printing errors etc)
-          $('#'+clone_id+'Wrapper').remove();
-        }
-      });
-    });
-    // Resize width of floating header if page changes
-    $(window).on('resize', function(){
-      $('.mqc_table_container').each(function(){
-        var tabDivWidth = $(this).find('.mqc_table .table-responsive').width();
-        var tabWidth = $(this).find('.mqc_table').width();
-        $(this).find('.mqc_table_cloneWrapper').width(tabDivWidth);
-        $(this).find('.mqc_table_clone').width(tabWidth);
-      });
-    });
-    // Scroll left and right in the responsive container
-    $('.table-responsive').scroll(function(){
-      var clone = $(this).closest('.mqc_table_container').find('.mqc_table_clone');
-      clone.css('margin-left', -$(this).scrollLeft());
-    });
-
-    // Colour code table cells using chroma.js
-    $('.mqc_table').each(function(){
-      var table = $(this);
-      table.find('thead th').each(function(idx){
-        if($(this).hasClass('chroma-col')){
-
-          // Get the colour scheme if set
-          var colscheme_rev = false;
-          var colscheme = $(this).data('chroma-scale');
-          if(colscheme.substr(colscheme.length - 4) == '-rev'){
-            colscheme_rev = true;
-            colscheme = colscheme.substr(0, colscheme.length - 4);
-          }
-          if(colscheme === undefined || brewer_scales.indexOf(colscheme) == -1){
-            colscheme = 'GnBu';
-          }
-
-          // Get the max and min values from data attributes
-          var maxval = $(this).data('chroma-max');
-          var minval = $(this).data('chroma-min');
-          if(isNaN(minval) || isNaN(maxval)){
-            console.log('Could not find max or min value for '+$(this).text()+': ['+[minval, maxval]+']')
-            return true; // Skip to next loop
-          }
-
-          // Go through table cells again, adding colour
-          var i = 0;
-          var scale = chroma.scale(colscheme).domain([minval, maxval]);
-          if(colscheme_rev){
-            scale = chroma.scale(colscheme).domain([maxval, minval]);
-          }
-          table.find('tr td:nth-of-type('+idx+')').each(function(){
-            var val = parseFloat($(this).text());
-            var rgb = scale(val).rgb(); //.luminance(0.7).css();
-            for (i in rgb){
-              rgb[i] = 255+(rgb[i]-255)*0.3;
-              if(rgb[i] > 255){ rgb[i] = 255; }
-              if(rgb[i] < 0){ rgb[i] = 0; }
-            }
-            var col = chroma.rgb(rgb).hex();
-            $(this).find('.wrapper .bar').css('background-color', col);
-          });
-
-        }
-      });
+    // Expand tables to full height
+    $('.mqc-table-expand').click(function(){
+      if($(this).find('span').hasClass('glyphicon-chevron-down')){
+        $(this).parent().find('.mqc-table-responsive').css('max-height', 'none');
+        $(this).find('span').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+      } else {
+        $(this).parent().find('.mqc-table-responsive').css('max-height', '400px');
+        $(this).find('span').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-down');
+      }
     });
 
     /////// COLUMN CONFIG
@@ -344,22 +248,27 @@ $(function () {
     var col2 = $('#tableScatter_col2').val().replace('header_', '');
     var col1_name = $('#tableScatter_col1 option:selected').text();
     var col2_name = $('#tableScatter_col2 option:selected').text();
-    var col1_max = parseFloat($(tid+' thead th#header_'+col1).data('chroma-max'));
-    var col1_min = parseFloat($(tid+' thead th#header_'+col1).data('chroma-min'));
-    var col2_max = parseFloat($(tid+' thead th#header_'+col2).data('chroma-max'));
-    var col2_min = parseFloat($(tid+' thead th#header_'+col2).data('chroma-min'));
+    var col1_max = parseFloat($(tid+' thead th#header_'+col1).data('dmax'));
+    var col1_min = parseFloat($(tid+' thead th#header_'+col1).data('dmin'));
+    var col2_max = parseFloat($(tid+' thead th#header_'+col2).data('dmax'));
+    var col2_min = parseFloat($(tid+' thead th#header_'+col2).data('dmin'));
     if(isNaN(col1_max)){ col1_max = undefined; }
     if(isNaN(col1_min)){ col1_min = undefined; }
     if(isNaN(col2_max)){ col2_max = undefined; }
     if(isNaN(col2_min)){ col2_min = undefined; }
     if(col1 != '' && col2 != ''){
       $('#tableScatterPlot').html('<small>loading..</small>');
+      if ($(tid).attr('data-title')) {
+        plot_title = $(tid).attr('data-title');
+      } else {
+        plot_title = tid.replace(/^#/, '').replace(/_/g, ' ');
+      }
       // Get the data values
       mqc_plots['tableScatterPlot'] = {
         'plot_type': 'scatter',
         'config': {
           'id': 'tableScatter_'+tid,
-          'title': tid,
+          'title': plot_title,
           'xlab': col1_name,
           'ylab': col2_name,
           'xmin': col1_min,

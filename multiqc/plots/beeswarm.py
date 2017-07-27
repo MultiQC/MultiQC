@@ -3,7 +3,6 @@ from __future__ import print_function, division, absolute_import
 
 """ MultiQC functions to plot a beeswarm group """
 
-import json
 import logging
 import os
 
@@ -14,7 +13,8 @@ from multiqc.plots import table_object
 
 logger = logging.getLogger(__name__)
 
-def plot (data, headers=[], pconfig={}):
+
+def plot (data, headers=None, pconfig=None):
     """ Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
     :param headers: A list of Dicts / OrderedDicts with information
@@ -22,6 +22,10 @@ def plot (data, headers=[], pconfig={}):
                     max values etc.
     :return: HTML string
     """
+    if headers is None:
+        headers = []
+    if pconfig is None:
+        pconfig = {}
 
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
@@ -31,14 +35,17 @@ def plot (data, headers=[], pconfig={}):
 
 def make_plot(dt):
 
-    bs_id = dt.pconfig.get( 'id', 'table_{}'.format(get_uid()) )
+    bs_id = dt.pconfig.get( 'id', 'table_{}'.format(id(dt)) )
+
+    # Sanitise plot ID and check for duplicates
+    bs_id = report.save_htmlid(bs_id)
+
     categories = []
     s_names = []
     data = []
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
 
-            rid = header['rid']
             bcol = 'rgb({})'.format(header.get('colour', '204,204,204'))
 
             categories.append({
@@ -69,17 +76,17 @@ def make_plot(dt):
             data.append(thisdata)
             s_names.append(these_snames)
 
-    # Plot and javascript function
-    html = '''<div class="hc-plot-wrapper"><div id="{bid}" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div></div>
-        <script type="text/javascript">
-        mqc_plots["{bid}"] = {{
-            "plot_type": "beeswarm",
-            "samples": {s},
-            "datasets": {d},
-            "categories": {c}
-        }}
-        </script>
-        '''.format(bid=bs_id, s=json.dumps(s_names), d=json.dumps(data), c=json.dumps(categories))
+    # Plot HTML
+    html = """<div class="hc-plot-wrapper">
+        <div id="{bid}" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div>
+    </div>""".format(bid=bs_id)
+
+    report.plot_data[bs_id] = {
+        'plot_type': 'beeswarm',
+        'samples': s_names,
+        'datasets': data,
+        'categories': categories
+    }
 
     return html
 

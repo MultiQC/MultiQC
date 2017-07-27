@@ -16,8 +16,6 @@ log = logging.getLogger(__name__)
 def parse_reports(self):
     """ Find Qualimap BamQC reports and parse their data """
 
-    sp = config.sp['qualimap']['bamqc']
-
     try:
         covs = config.qualimap_config['general_stats_coverage']
         assert type(covs) == list
@@ -32,24 +30,28 @@ def parse_reports(self):
 
     # General stats - genome_results.txt
     self.qualimap_bamqc_genome_results = dict()
-    for f in self.find_log_files(sp['genome_results']):
+    for f in self.find_log_files('qualimap/bamqc/genome_results'):
         parse_genome_results(self, f)
+    self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
 
     # Coverage - coverage_histogram.txt
     self.qualimap_bamqc_coverage_hist = dict()
-    for f in self.find_log_files(sp['coverage'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/coverage', filehandles=True):
         parse_coverage(self, f)
+    self.qualimap_bamqc_coverage_hist = self.ignore_samples(self.qualimap_bamqc_coverage_hist)
 
     # Insert size - insert_size_histogram.txt
     self.qualimap_bamqc_insert_size_hist = dict()
-    for f in self.find_log_files(sp['insert_size'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/insert_size', filehandles=True):
         parse_insert_size(self, f)
+    self.qualimap_bamqc_insert_size_hist = self.ignore_samples(self.qualimap_bamqc_insert_size_hist)
 
     # GC distribution - mapped_reads_gc-content_distribution.txt
     self.qualimap_bamqc_gc_content_dist = dict()
     self.qualimap_bamqc_gc_by_species = dict()  # {'HUMAN': data_dict, 'MOUSE': data_dict}
-    for f in self.find_log_files(sp['gc_dist'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/gc_dist', filehandles=True):
         parse_gc_dist(self, f)
+    self.qualimap_bamqc_gc_by_species = self.ignore_samples(self.qualimap_bamqc_gc_by_species)
 
     # Make the plots for the report
     report_sections(self)
@@ -236,7 +238,7 @@ def report_sections(self):
         rates_within_threshs = dict()
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
             total = total_bases_by_sample[s_name]
-            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max_x + 1))
+            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max([int (c) for c in self.covs]) + 1))
             for c in self.covs:
                 if int(c) in rates_within_threshs[s_name]:
                     self.general_stats_data[s_name]['{}_x_pc'.format(c)] = rates_within_threshs[s_name][int(c)]
@@ -244,10 +246,11 @@ def report_sections(self):
                     self.general_stats_data[s_name]['{}_x_pc'.format(c)] = 0
 
         # Section 1 - BamQC Coverage Histogram
-        self.sections.append({
-            'name': 'Coverage histogram',
-            'anchor': 'qualimap-coverage-histogram',
-            'content': linegraph.plot(self.qualimap_bamqc_coverage_hist, {
+        self.add_section (
+            name = 'Coverage histogram',
+            anchor = 'qualimap-coverage-histogram',
+            description = 'Distribution of the number of locations in the reference genome with a given depth of coverage.',
+            plot = linegraph.plot(self.qualimap_bamqc_coverage_hist, {
                 'id': 'qualimap_coverage_histogram',
                 'title': 'Coverage histogram',
                 'ylab': 'Genome bin counts',
@@ -258,12 +261,13 @@ def report_sections(self):
                 'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y}',
             })
-        })
+        )
         # Section 2 - BamQC cumulative coverage genome fraction
-        self.sections.append({
-            'name': 'Cumulative coverage genome fraction',
-            'anchor': 'qualimap-cumulative-genome-fraction-coverage',
-            'content': linegraph.plot(rates_within_threshs, {
+        self.add_section (
+            name = 'Cumulative coverage genome fraction',
+            anchor = 'qualimap-cumulative-genome-fraction-coverage',
+            description = 'Percentage of the reference genome with at least the given depth of coverage.',
+            plot = linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
                 'title': 'Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',
@@ -275,14 +279,15 @@ def report_sections(self):
                 'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
             })
-        })
+        )
 
     # Section 3 - Insert size histogram
     if len(self.qualimap_bamqc_insert_size_hist) > 0:
-        self.sections.append({
-            'name': 'Insert size histogram',
-            'anchor': 'qualimap-insert-size-histogram',
-            'content': linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
+        self.add_section (
+            name = 'Insert size histogram',
+            anchor = 'qualimap-insert-size-histogram',
+            description = 'Distribution of estimated insert sizes of mapped reads.',
+            plot = linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
                 'id': 'qualimap_insert_size',
                 'title': 'Insert size histogram',
                 'ylab': 'Fraction of reads',
@@ -291,7 +296,7 @@ def report_sections(self):
                 'xmin': 0,
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             })
-        })
+        )
 
     # Section 4 - GC-content distribution
     if len(self.qualimap_bamqc_gc_content_dist) > 0:
@@ -304,53 +309,59 @@ def report_sections(self):
                 'lineWidth': 1,
                 'color': ['#000000', '#E89191'][i % 2],
             })
-        content = ''
+        if len(self.qualimap_bamqc_gc_content_dist) == 1:
+            desc = 'The solid line represents the distribution of GC content of mapped reads for the sample.'
+        else:
+            desc = 'Each solid line represents the distribution of GC content of mapped reads for a given sample.'
+        lg_config = {
+            'id': 'qualimap_gc_content',
+            'title': 'GC content distribution',
+            'ylab': 'Fraction of reads',
+            'xlab': 'GC content (%)',
+            'ymin': 0,
+            'xmin': 0,
+            'xmax': 100,
+            'tt_label': '<b>{point.x}%</b>: {point.y:.3f}'
+        }
         if len(extra_series) == 1:
-            content += '<p>The dotted line represents a pre-calculated GC destribution for the reference genome.</p>'
+            desc += ' The dotted line represents a pre-calculated GC distribution for the reference genome.'
+            lg_config['extra_series'] = extra_series
         elif len(extra_series) > 1:
-            content += '<p>The dotted lines represent pre-calculated GC destributions for the reference genomes.</p>'
+            desc += ' Each dotted line represents a pre-calculated GC distribution for a specific reference genome.'
+            lg_config['extra_series'] = extra_series
 
-        self.sections.append({
-            'name': 'GC content distribution',
-            'anchor': 'qualimap-gc-distribution',
-            'content': content + linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
-                'id': 'qualimap_gc_content',
-                'title': 'GC content distribution',
-                'ylab': 'Fraction of reads',
-                'xlab': 'GC content (%)',
-                'ymin': 0,
-                'xmin': 0,
-                'xmax': 100,
-                'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
-                'extra_series': extra_series,
-            })
-        })
+        self.add_section (
+            name = 'GC content distribution',
+            anchor = 'qualimap-gc-distribution',
+            description = desc,
+            plot = linegraph.plot(self.qualimap_bamqc_gc_content_dist, lg_config)
+        )
 
 def general_stats_headers (self):
     try:
         hidecovs = config.qualimap_config['general_stats_coverage_hidden']
         assert type(hidecovs) == list
         log.debug("Hiding Qualimap thresholds: {}".format(", ".join([i for i in hidecovs])))
-    except (AttributeError, TypeError, AssertionError):
+    except (AttributeError, TypeError, KeyError, AssertionError):
         hidecovs = [1, 5, 10, 50]
     hidecovs = [str(i) for i in hidecovs]
 
     self.general_stats_headers['avg_gc'] = {
-        'title': 'Avg. GC',
-        'description': 'Average GC content',
+        'title': '% GC',
+        'description': 'Mean GC content',
         'max': 100,
         'min': 0,
         'suffix': '%',
         'scale': 'Set1',
-        'format': '{:.0f}%'
+        'format': '{:,.0f}'
     }
     self.general_stats_headers['median_insert_size'] = {
-        'title': 'Insert Size',
+        'title': 'Ins. size',
         'description': 'Median insert size',
         'min': 0,
         'suffix': 'bp',
         'scale': 'PuOr',
-        'format': '{:.0f}'
+        'format': '{:,.0f}'
     }
     for c in self.covs:
         self.general_stats_headers['{}_x_pc'.format(c)] = {
@@ -360,7 +371,6 @@ def general_stats_headers (self):
             'min': 0,
             'suffix': '%',
             'scale': 'RdYlGn',
-            'format': '{:.1f}%',
             'hidden': c in hidecovs
         }
     self.general_stats_headers['median_coverage'] = {
@@ -376,25 +386,24 @@ def general_stats_headers (self):
         'max': 100,
         'min': 0,
         'suffix': '%',
-        'scale': 'YlGn',
-        'format': '{:.1f}%'
+        'scale': 'YlGn'
     }
     self.general_stats_headers['mapped_reads'] = {
-        'title': 'Aligned',
-        'description': 'Number of mapped reads (millions)',
+        'title': '{} Aligned'.format(config.read_count_prefix),
+        'description': 'Number of mapped reads ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'RdYlGn',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
     self.general_stats_headers['total_reads'] = {
-        'title': 'Total reads',
-        'description': 'Number of reads (millions)',
+        'title': '{} Total reads'.format(config.read_count_prefix),
+        'description': 'Number of reads ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'Blues',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
 

@@ -23,11 +23,11 @@ and configuration options, and they return a string of HTML to add to the
 report. You can add this to the module introduction or sections as described
 above. For example:
 ```python
-self.sections.append({
-    'name': 'Module Section',
-    'anchor': 'mymod_section',
-    'content': bargraph.plot(self.parsed_data, categories, pconfig)
-})
+self.add_section (
+    name = 'Module Section',
+    anchor = 'mymod_section',
+    plot = bargraph.plot(self.parsed_data, categories, pconfig)
+)
 ```
 
 ## Bar graphs
@@ -210,6 +210,8 @@ config = {
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     'yPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
     'xPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
+    'xLabelFormat': '{value}',   # Format string for the axis labels
+    'yLabelFormat': '{value}',   # Format string for the axis labels
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
@@ -334,7 +336,7 @@ Finally, a the function accepts a third parameter, a config dictionary.
 This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 
-The default header keys and table config options are:
+The default header keys are:
 ```python
 single_header = {
     'namespace': '',                # Name for grouping in table
@@ -342,31 +344,36 @@ single_header = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
-    'scale': 'GnBu',                # Colour scale for colour coding
-    'colour': '<auto from palette>',# Colour for column grouping
-    'format': '{:.1f}',             # Output format() string
+    'ceiling': None,                # Maximum value for automatic bar limit
+    'floor': None,                  # Minimum value for automatic bar limit
+    'minRange': None,               # Minimum range for automatic bar
+    'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
+    'colour': '<auto>',             # Colour for column grouping
+    'suffix': None,                 # Suffix for value (eg. '%')
+    'format': '{:,.1f}',            # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
 }
+```
+A third parameter can be specified with settings for the whole table:
+```python
 table_config = {
+    'namespace': '',                         # Module / section that table is in. Prepends header descriptions.
     'id': '<random string>',                 # ID used for the table
     'table_title': '<table id>',             # Title of the table. Used in the column config modal
     'save_file': False,                      # Whether to save the table data to a file
     'raw_data_fn':'multiqc_<table_id>_table' # File basename to use for raw data file
+    'sortRows': True                         # Whether to sort rows alphabetically
+    'col1_header': 'Sample Name'             # The header used for the first column
     'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
-Finally, a third parameter can be specified with table settings.
-```python
-tconfig = {
-    'id': None,             # ID for the table in the HTML
-    'table_title': None,    # Title printed above the table
-    'save_file': False,     # Save the data in the table to a file in `multiqc_data`
-    'raw_data_fn': None,    # Filename to use if saving data file
-    'no_beeswarm': False    # Force a table to always be plotted (beeswarm by default if many rows)
-}
-```
+Header keys such as `max`, `min` and `scale` can also be specified in the table config.
+These will then be applied to all columns.
+
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
+![color brewer](images/cbrewer_scales.png)
 
 A very basic example is shown below:
 ```python
@@ -402,16 +409,14 @@ headers = OrderedDict()
 headers['aligned_percent'] = {
     'title': '% Aligned',
     'description': 'Percentage of reads that aligned',
-    'format': '{:.1f}%',
     'suffix': '%',
     'max': 100,
 }
 headers['aligned'] = {
-    'title': 'M Aligned',
-    'description': 'Aligned Reads (millions)',
-    'format': '{:.2f}',
+    'title': '{} Aligned'.format(config.read_count_prefix),
+    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
     'shared_key': 'read_count',
-    'modify': lambda x: x / 1000000
+    'modify': lambda x: x * config.read_count_multiplier
 }
 config = {
     'namespace': 'My Module',
@@ -710,5 +715,15 @@ $('#YOUR_PLOT_ID').on('mqc_original_series_click', function(e, name){
 $('#YOUR_PLOT_ID').on('mqc_original_chg_source', function(e, name){
     // A plot with original images has had a request to change the
     // original image source (eg. pressing Prev / Next)
+});
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_image', function(e, cfg){
+    // A trigger to export an image of the plot. cfg contains
+    // config variables for the requested image.
+});
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_data', function(e, cfg){
+    // A trigger to export a data file of the plot. cfg contains
+    // config variables for the requested data.
 });
 ```

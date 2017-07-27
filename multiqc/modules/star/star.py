@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any STAR reports
         self.star_data = dict()
-        for f in self.find_log_files(config.sp['star']):
+        for f in self.find_log_files('star'):
             parsed_data = self.parse_star_report(f['f'])
             if parsed_data is not None:
                 s_name = f['s_name']
@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.star_genecounts_unstranded = dict()
         self.star_genecounts_first_strand = dict()
         self.star_genecounts_second_strand = dict()
-        for f in self.find_log_files(config.sp['star_genecounts'], filehandles=True):
+        for f in self.find_log_files('star_genecounts', filehandles=True):
             parsed_data = self.parse_star_genecount_report(f)
             if parsed_data is not None:
                 s_name = f['s_name']
@@ -53,6 +53,12 @@ class MultiqcModule(BaseMultiqcModule):
                 self.star_genecounts_unstranded[s_name] = parsed_data['unstranded']
                 self.star_genecounts_first_strand[s_name] = parsed_data['first_strand']
                 self.star_genecounts_second_strand[s_name] = parsed_data['second_strand']
+
+        # Filter to strip out ignored sample names
+        self.star_data = self.ignore_samples(self.star_data)
+        self.star_genecounts_unstranded = self.ignore_samples(self.star_genecounts_unstranded)
+        self.star_genecounts_first_strand = self.ignore_samples(self.star_genecounts_first_strand)
+        self.star_genecounts_second_strand = self.ignore_samples(self.star_genecounts_second_strand)
 
         if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -66,8 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
 
-        self.sections = list()
-
         if len(self.star_data) > 0:
 
             # Write parsed report data to a file
@@ -76,25 +80,22 @@ class MultiqcModule(BaseMultiqcModule):
             # Basic Stats Table
             self.star_stats_table()
 
-            if len(self.star_genecounts_unstranded) == 0:
-                # Alignment bar plot - only one section, so add to the module intro
-                self.intro += self.star_alignment_chart()
-            else:
-                self.sections.append({
-                    'name': 'Alignment Scores',
-                    'anchor': 'star_alignments',
-                    'content': self.star_alignment_chart()
-                })
+            # Alignment bar plot
+            self.add_section (
+                name = 'Alignment Scores',
+                anchor = 'star_alignments',
+                plot = self.star_alignment_chart()
+            )
 
         if len(self.star_genecounts_unstranded) > 0:
-            self.sections.append({
-                'name': 'Gene Counts',
-                'anchor': 'star_geneCounts',
-                'content': "<p>Statistics from results generated using <code>--quantMode GeneCounts</code>. " +
+            self.add_section (
+                name = 'Gene Counts',
+                anchor = 'star_geneCounts',
+                description = "Statistics from results generated using <code>--quantMode GeneCounts</code>. " +
                            "The three tabs show counts for unstranded RNA-seq, counts for the 1st read strand " +
-                           "aligned with RNA and counts for the 2nd read strand aligned with RNA.</p>"
-                           + self.star_genecount_chart()
-            })
+                           "aligned with RNA and counts for the 2nd read strand aligned with RNA.",
+                plot = self.star_genecount_chart()
+            )
 
 
     def parse_star_report (self, raw_data):
@@ -194,15 +195,14 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         headers['uniquely_mapped'] = {
-            'title': 'M Aligned',
-            'description': 'Uniquely mapped reads (millions)',
+            'title': '{} Aligned'.format(config.read_count_prefix),
+            'description': 'Uniquely mapped reads ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(self.star_data, headers)

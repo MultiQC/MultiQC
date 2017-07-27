@@ -13,7 +13,7 @@ from multiqc.utils import config
 
 logger = logging.getLogger(__name__)
 
-def plot (data, xcats, ycats=None, pconfig={}):
+def plot (data, xcats, ycats=None, pconfig=None):
     """ Plot a 2D heatmap.
     :param data: List of lists, each a representing a row of values.
     :param xcats: Labels for x axis
@@ -21,6 +21,9 @@ def plot (data, xcats, ycats=None, pconfig={}):
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
+
+    if pconfig is None:
+        pconfig = {}
 
     if ycats is None:
         ycats = xcats
@@ -30,11 +33,13 @@ def plot (data, xcats, ycats=None, pconfig={}):
 
 
 
-def highcharts_heatmap (data, xcats, ycats, pconfig={}):
+def highcharts_heatmap (data, xcats, ycats, pconfig=None):
     """
     Build the HTML needed for a HighCharts line graph. Should be
     called by plot_xy_data, which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Reformat the data for highcharts
     pdata = []
@@ -42,9 +47,14 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
         for j, val in enumerate(arr):
             pdata.append([j,i,val])
 
-    # Build the HTML for the page
+    # Get the plot ID
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_{}'.format(get_uid())
+        pconfig['id'] = 'mqc_hcplot_{}'.format(id(pconfig))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
+    # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # The 'sort by highlights button'
@@ -61,17 +71,14 @@ def highcharts_heatmap (data, xcats, ycats, pconfig={}):
         </div></div>
         '''.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '''<script type="text/javascript">
-        mqc_plots["{id}"] = {{
-            "plot_type": "heatmap",
-            "data": {d},
-            "xcats": {x},
-            "ycats": {y},
-            "config": {c}
-            }}
-        </script>
-        '''.format(id=pconfig['id'], d=json.dumps(pdata), x=json.dumps(xcats), y=json.dumps(ycats), c=json.dumps(pconfig));
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': 'heatmap',
+        'data': pdata,
+        'xcats': xcats,
+        'ycats': ycats,
+        'config': pconfig
+    }
 
     return html
 

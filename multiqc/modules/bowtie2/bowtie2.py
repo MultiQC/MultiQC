@@ -29,13 +29,16 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie2_data = dict()
         self.num_se = 0
         self.num_pe = 0
-        for f in self.find_log_files(config.sp['bowtie2'], filehandles=True):
+        for f in self.find_log_files('bowtie2', filehandles=True):
             # Check that this isn't actually Bismark using bowtie
             if f['f'].read().find('bisulfite', 0) < 0:
                 f['f'].seek(0)
                 self.parse_bowtie2_logs(f)
             else:
                 log.debug('Skipping "{}" as looks like a bismark log file (contains word "bisulfite")'.format(f['fn']))
+
+        # Filter to strip out ignored sample names
+        self.bowtie2_data = self.ignore_samples(self.bowtie2_data)
 
         if len(self.bowtie2_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -51,8 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie2_general_stats_table()
 
         # Alignment Rate Plot
-        # Only one section, so add to the intro
-        self.intro += self.bowtie2_alignment_plot()
+        self.bowtie2_alignment_plot()
 
 
     def parse_bowtie2_logs(self, f):
@@ -203,8 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         self.general_stats_addcols(self.bowtie2_data, headers)
 
@@ -214,8 +215,12 @@ class MultiqcModule(BaseMultiqcModule):
         half_warning = ''
         for s_name in self.bowtie2_data:
             if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_none_halved' in self.bowtie2_data[s_name]:
-                half_warning = '<p><em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em></p>'
+                half_warning = '<em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em>'
 
+        description_text = (
+            "The stacked bar plot shows types of alignments and the number of "
+            "reads for each alignments."
+        )
 
         # Config for the plot
         config = {
@@ -224,7 +229,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Two plots, don't mix SE with PE
-        se_plot = ''
         if self.num_se > 0:
             sekeys = OrderedDict()
             sekeys['unpaired_aligned_one'] = { 'color': '#20568f', 'name': 'SE mapped uniquely' }
@@ -232,13 +236,25 @@ class MultiqcModule(BaseMultiqcModule):
             sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
             config['id'] = 'bowtie2_se_plot'
             config['title'] = 'Bowtie 2 SE Alignment Scores'
-            se_plot = bargraph.plot(self.bowtie2_data, sekeys, config)
+            self.add_section(
+                description = description_text,
+                helptext = (
+                    "There are 3 possible types of alignment:"
+                    "<ul>"
+                    "<li><b>SE Mapped uniquely</b>: Read has only one "
+                    "occurence in the reference genome.</li>"
+                    "<li><b>SE Multimapped</b>: Read has multiple "
+                    "occurence.</li>"
+                    "<li><b>SE No aligned</b>: Read has no occurence.</li>"
+                    "</ul>"
+                ),
+                plot = bargraph.plot(self.bowtie2_data, sekeys, config)
+            )
 
-        pe_plot = ''
         if self.num_pe > 0:
             pekeys = OrderedDict()
             pekeys['paired_aligned_one'] = { 'color': '#20568f', 'name': 'PE mapped uniquely' }
-            pekeys['paired_aligned_discord_one'] = { 'color': '#5c94ca', 'name': 'PE mapped discordantly uniquely 1 time' }
+            pekeys['paired_aligned_discord_one'] = { 'color': '#5c94ca', 'name': 'PE mapped discordantly uniquely' }
             pekeys['paired_aligned_mate_one_halved'] = { 'color': '#95ceff', 'name': 'PE one mate mapped uniquely' }
             pekeys['paired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'PE multimapped' }
             pekeys['paired_aligned_discord_multi'] = { 'color': '#dce333', 'name': 'PE discordantly multimapped' }
@@ -246,8 +262,24 @@ class MultiqcModule(BaseMultiqcModule):
             pekeys['paired_aligned_mate_none_halved'] = { 'color': '#981919', 'name': 'PE neither mate aligned' }
             config['id'] = 'bowtie2_pe_plot'
             config['title'] = 'Bowtie 2 PE Alignment Scores'
-            if se_plot != '':
-                pe_plot = '<hr>'
-            pe_plot += bargraph.plot(self.bowtie2_data, pekeys, config)
-
-        return half_warning + se_plot + pe_plot
+            self.add_section(
+                description = "<br>".join([description_text,half_warning]),
+                helptext = (
+                    "There are 6 possible types of alignment:"
+                    "<ul>"
+                    "<li><b>PE mapped uniquely</b>: Pair has only one "
+                    "occurence in the reference genome.</li>"
+                    "<li><b>PE mapped discordantly uniquely</b>: Pair has "
+                    "only one occurence but not in proper pair.</li>"
+                    "<li><b>PE one mate mapped uniquely</b>: One read of a "
+                    "pair has one occurence.</li>"
+                    "<li><b>PE multimapped</b>: Pair has multiple "
+                    "occurence.</li>"
+                    "<li><b>PE one mate multimapped</b>: One read of a "
+                    "pair has multiple occurence.</li>"
+                    "<li><b>PE neither mate aligned</b>: Pair has no "
+                    "occurence.</li>"
+                    "</ul>"
+                ),
+                plot = bargraph.plot(self.bowtie2_data, pekeys, config)
+            )

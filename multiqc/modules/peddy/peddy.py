@@ -16,8 +16,6 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     Peddy module class, parses stderr logs.
-    Also understands logs saved by Trim Galore!
-    (which contain peddy logs)
     """
 
     def __init__(self):
@@ -33,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.peddy_length_exp = dict()
         self.peddy_length_obsexp = dict()
 
-        for f in self.find_log_files(config.sp['peddy']['summary_table']):
+        for f in self.find_log_files('peddy/summary_table'):
             parsed_data = self.parse_peddy_summary(f)
             if parsed_data is not None:
                 for s_name in parsed_data:
@@ -44,7 +42,8 @@ class MultiqcModule(BaseMultiqcModule):
                         self.peddy_data[s_name] = parsed_data[s_name]
 
         for pattern in ['het_check', 'ped_check', 'sex_check']:
-            for f in self.find_log_files(config.sp['peddy'][pattern]):
+            sp_key = 'peddy/{}'.format(pattern)
+            for f in self.find_log_files(sp_key):
                 parsed_data = self.parse_peddy_csv(f)
                 if parsed_data is not None:
                     for s_name in parsed_data:
@@ -53,6 +52,9 @@ class MultiqcModule(BaseMultiqcModule):
                             self.peddy_data[s_name].update(parsed_data[s_name])
                         except KeyError:
                             self.peddy_data[s_name] = parsed_data[s_name]
+
+        # Filter to strip out ignored sample names
+        self.peddy_data = self.ignore_samples(self.peddy_data)
 
         if len(self.peddy_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -66,25 +68,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.peddy_general_stats_table()
 
-        self.sections = list()
-
         # PCA plot
-        pca_plot = self.peddy_pca_plot()
-        if pca_plot is not None:
-            self.sections.append({
-                'name': 'PCA Plot',
-                'anchor': 'peddy-pca-plot',
-                'content': pca_plot
-            })
+        self.peddy_pca_plot()
 
         # Relatedness plot
-        relatedplot = self.peddy_relatedness_plot()
-        if relatedplot is not None:
-            self.sections.append({
-                'name': 'Relatedness',
-                'anchor': 'peddy-relatedness-plot',
-                'content': relatedplot
-            })
+        self.peddy_relatedness_plot()
 
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
@@ -179,7 +167,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if len(data) > 0:
-            return scatter.plot(data, pconfig)
+            self.add_section (
+                name = 'PCA Plot',
+                anchor = 'peddy-pca-plot',
+                plot = scatter.plot(data, pconfig)
+            )
 
     def peddy_relatedness_plot(self):
         data = dict()
@@ -205,7 +197,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if len(data) > 0:
-            return """<p>Shared allele rates between sample pairs. Points are coloured by degree of relatedness:
-            <span style="color: #6DA4CA;">less than 0.25</span>,
-            <span style="color: #FAA051;">0.25 - 0.5</span>,
-            <span style="color: #2B9F2B;">greather than 0.5</span>.</p>"""+scatter.plot(data, pconfig)
+            self.add_section (
+                name = 'Relatedness',
+                anchor = 'peddy-relatedness-plot',
+                description = """Shared allele rates between sample pairs. Points are coloured by degree of relatedness:
+                <span style="color: #6DA4CA;">less than 0.25</span>,
+                <span style="color: #FAA051;">0.25 - 0.5</span>,
+                <span style="color: #2B9F2B;">greather than 0.5</span>.""",
+                plot = scatter.plot(data, pconfig)
+            )

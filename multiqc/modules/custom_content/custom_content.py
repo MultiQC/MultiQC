@@ -10,6 +10,7 @@ import os
 import yaml
 
 from multiqc import config
+from multiqc.utils import report
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
 
@@ -28,11 +29,10 @@ def custom_module_classes():
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mods = defaultdict(lambda: defaultdict(lambda: dict()))
+    cust_mods = defaultdict(lambda: defaultdict(lambda: OrderedDict()))
 
     # Dictionary to hold search patterns - start with those defined in the config
-    search_patterns = OrderedDict()
-    search_patterns['core_sp'] = config.sp['custom_content']
+    search_patterns = ['custom_content']
 
     # First - find files using patterns described in the config
     config_data = getattr(config, 'custom_data', {})
@@ -48,32 +48,55 @@ def custom_module_classes():
         if 'data' in f:
             cust_mods[c_id]['data'].update( f['data'] )
             cust_mods[c_id]['config'].update( { k:v for k, v in f.items() if k is not 'data' } )
+            cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
             continue
 
-        # File name patterns supplied in config
-        if 'sp' in f:
+        # Custom Content ID has search patterns in the config
+        if c_id in report.files:
             cust_mods[c_id]['config'] = f
-            search_patterns[c_id] = f['sp']
-        else:
-            log.debug("Search pattern not found for custom module: {}".format(c_id))
+            cust_mods[c_id]['config']['id'] = cust_mods[c_id]['config'].get('id', c_id)
+            search_patterns.append(c_id)
+            continue
+
+        # We should have had something by now
+        log.warn("Found section '{}' in config for under custom_data, but no data or search patterns.".format(c_id))
 
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
-    for k, sp in search_patterns.items():
-        for f in bm.find_log_files(sp):
+    for k in search_patterns:
+        for f in bm.find_log_files(k):
 
             f_extension = os.path.splitext(f['fn'])[1]
 
             # YAML and JSON files are the easiest
             parsed_data = None
             if f_extension == '.yaml' or f_extension == '.yml':
-                parsed_data = yaml.load(f['f'])
+                try:
+                    # Parsing as OrderedDict is slightly messier with YAML
+                    # http://stackoverflow.com/a/21048064/713980
+                    def dict_constructor(loader, node):
+                        return OrderedDict(loader.construct_pairs(node))
+                    yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
+                    parsed_data = yaml.load(f['f'])
+                except Exception as e:
+                    log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
+                    log.warning("YAML error: {}".format(e))
+                    break
             elif f_extension == '.json':
-                parsed_data = json.loads(f['f'])
+                try:
+                    # Use OrderedDict for objects so that column order is honoured
+                    parsed_data = json.loads(f['f'], object_pairs_hook=OrderedDict)
+                except Exception as e:
+                    log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
+                    log.warning("JSON error: {}".format(e))
+                    break
             if parsed_data is not None:
                 c_id = parsed_data.get('id', k)
                 if len(parsed_data.get('data', {})) > 0:
-                    cust_mods[c_id]['data'].update( parsed_data['data'] )
+                    if type(parsed_data['data']) == str:
+                        cust_mods[c_id]['data'] = parsed_data['data']
+                    else:
+                        cust_mods[c_id]['data'].update( parsed_data['data'] )
                     cust_mods[c_id]['config'].update ( { j:k for j,k in parsed_data.items() if j != 'data' } )
                 else:
                     log.warning("No data found in {}".format(f['fn']))
@@ -85,19 +108,22 @@ def custom_module_classes():
                 s_name = None
                 if m_config is not None:
                     c_id = m_config.get('id', k)
-                    cust_mods[c_id]['config'].update( m_config )
-                    m_config = cust_mods[c_id]['config']
+                    # Update the base config with anything parsed from the file
+                    b_config = cust_mods.get(c_id, {}).get('config', {})
+                    b_config.update( m_config )
+                    # Now set the module config to the merged dict
+                    m_config = dict(b_config)
                     s_name = m_config.get('sample_name')
                 else:
                     c_id = k
-                    m_config = dict()
+                    m_config = cust_mods.get(c_id, {}).get('config', {})
 
                 # Guess sample name if not given
                 if s_name is None:
                     s_name = bm.clean_s_name(f['s_name'], f['root'])
 
                 # Guess c_id if no information known
-                if k == 'core_sp':
+                if k == 'custom_content':
                     c_id = s_name
 
                 # Add information about the file to the config dict
@@ -127,6 +153,10 @@ def custom_module_classes():
                 except (IndexError, AttributeError, TypeError):
                     log.error("Unexpected parsing error for {}".format(f['fn']), exc_info=True)
                     raise # testing
+
+    # Filter to strip out ignored sample names
+    for k in cust_mods:
+        cust_mods[k]['data'] = bm.ignore_samples(cust_mods[k]['data'])
 
     # Remove any configs that have no data
     remove_cids = [ k for k in cust_mods if len(cust_mods[k]['data']) == 0 ]
@@ -174,7 +204,12 @@ def custom_module_classes():
             parsed_modules.append( MultiqcModule(k, mod) )
             log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
 
-    return parsed_modules
+    # Sort sections if we have a config option for order
+    mod_order = getattr(config, 'custom_content', {}).get('order', [])
+    sorted_modules = [m for m in parsed_modules if m.anchor not in mod_order ]
+    sorted_modules.extend([m for k in mod_order for m in parsed_modules if m.anchor == k ])
+
+    return sorted_modules
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -183,6 +218,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self, c_id, mod):
 
         modname = mod['config'].get('section_name', c_id.replace('_', ' ').title())
+        if modname == '' or modname is None:
+            modname = 'Custom Content'
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
@@ -198,27 +235,33 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table
         if mod['config'].get('plot_type') == 'table':
-            self.intro += table.plot(mod['data'], None, pconfig)
+            pconfig['sortRows'] = pconfig.get('sortRows', False)
+            headers = mod['config'].get('headers')
+            self.add_section( plot = table.plot(mod['data'], headers, pconfig) )
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
-            self.intro += bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig)
+            self.add_section( plot = bargraph.plot(mod['data'], mod['config'].get('categories'), pconfig) )
 
         # Line plot
         elif mod['config'].get('plot_type') == 'linegraph':
-            self.intro += linegraph.plot(mod['data'], pconfig)
+            self.add_section( plot = linegraph.plot(mod['data'], pconfig) )
 
         # Scatter plot
         elif mod['config'].get('plot_type') == 'scatter':
-            self.intro += scatter.plot(mod['data'], pconfig)
+            self.add_section( plot = scatter.plot(mod['data'], pconfig) )
 
         # Heatmap
         elif mod['config'].get('plot_type') == 'heatmap':
-            self.intro += heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig)
+            self.add_section( plot = heatmap.plot(mod['data'], mod['config'].get('xcats'), mod['config'].get('ycats'), pconfig) )
 
         # Beeswarm plot
         elif mod['config'].get('plot_type') == 'beeswarm':
-            self.intro += beeswarm.plot(mod['data'], pconfig)
+            self.add_section( plot = beeswarm.plot(mod['data'], pconfig) )
+
+        # Raw HTML
+        elif mod['config'].get('plot_type') == 'html':
+            self.add_section( content = mod['data'] )
 
         # Not supplied
         elif mod['config'].get('plot_type') == None:
@@ -238,9 +281,14 @@ def _find_file_header(f):
     hconfig = None
     try:
         hconfig = yaml.load("\n".join(hlines))
-    except yaml.YAMLError:
-        log.debug("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
-    return hconfig
+        assert( type(hconfig) == dict)
+    except yaml.YAMLError as e:
+        log.warn("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
+        log.debug(e)
+    except AssertionError:
+        log.debug("Custom Content comment file header looked wrong: {}".format(hconfig))
+    else:
+        return hconfig
 
 def _guess_file_format(f):
     """
@@ -300,7 +348,7 @@ def _parse_txt(f, conf):
     d = []
     ncols = None
     for l in lines:
-        if not l.startswith('#'):
+        if l and not l.startswith('#'):
             sections = l.split(sep)
             d.append(sections)
             if ncols is None:
@@ -334,30 +382,39 @@ def _parse_txt(f, conf):
         data = [s[1:] for s in d[1:]]
         return (data, conf)
 
-    # Header row
-    if first_row_str == len(d[0]):
-        data = dict()
+    # Header row of strings, or configured as table
+    if first_row_str == len(d[0]) or conf.get('plot_type') == 'table':
+        data = OrderedDict()
         for s in d[1:]:
             data[s[0]] = OrderedDict()
             for i, v in enumerate(s[1:]):
-                cat = d[0][i+1]
+                cat = str(d[0][i+1])
                 data[s[0]][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get('plot_type') is None:
             allfloats = True
-            for v in d[1][1:]:
-                allfloats = allfloats and type(v) == float
+            for r in d[1:]:
+                for v in r[1:]:
+                    allfloats = allfloats and type(v) == float
             if allfloats:
                 conf['plot_type'] = 'bargraph'
             else:
                 conf['plot_type'] = 'table'
-        if conf.get('plot_type') is 'bargraph' or conf.get('plot_type') is 'table':
+        # Set table col_1 header
+        if conf.get('plot_type') == 'table' and d[0][0].strip() != '':
+            conf['pconfig'] = conf.get('pconfig', {})
+            conf['pconfig']['col1_header'] = d[0][0].strip()
+        # Return parsed data
+        if conf.get('plot_type') == 'bargraph' or conf.get('plot_type') == 'table':
             return (data, conf)
+        else:
+            data = OrderedDict() # reset
 
-    # Scatter plot: No header row, str : num : num
+    # Scatter plot: First row is  str : num : num
     if (conf.get('plot_type') is None and len(d[0]) == 3 and
         type(d[0][0]) != float and type(d[0][1]) == float and type(d[0][2]) == float):
         conf['plot_type'] = 'scatter'
+
     if conf.get('plot_type') == 'scatter':
         data = dict()
         for s in d:
@@ -370,14 +427,15 @@ def _parse_txt(f, conf):
                 pass
         return (data, conf)
 
-    # Single sample line / bar graph
+    # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
-        # Line graph: No header row, num : num
+        # Line graph - num : num
         if (conf.get('plot_type') is None and type(d[0][0]) == float and type(d[0][1]) == float):
             conf['plot_type'] = 'linegraph'
-        # Bar graph: No header row, str : num
+        # Bar graph - str : num
         if (conf.get('plot_type') is None and type(d[0][0]) != float and type(d[0][1]) == float):
             conf['plot_type'] = 'bargraph'
+
         # Data structure is the same
         if (conf.get('plot_type') == 'linegraph' or conf.get('plot_type') == 'bargraph'):
             # Set section id based on directory if not known
@@ -391,6 +449,7 @@ def _parse_txt(f, conf):
     # Multi-sample line graph: No header row, str : lots of num columns
     if conf.get('plot_type') is None and len(d[0]) > 4 and all_numeric:
         conf['plot_type'] = 'linegraph'
+
     if conf.get('plot_type') == 'linegraph':
         data = dict()
         # Use 1..n range for x values
@@ -402,6 +461,8 @@ def _parse_txt(f, conf):
         return (data, conf)
 
     # Got to the end and haven't returned. It's a mystery, capn'!
+    log.debug("Not able to figure out a plot type for '{}' ".format(f['fn']) +
+      "plot type = {}, all numeric = {}, first row str = {}".format( conf.get('plot_type'), all_numeric, first_row_str ))
     return (None, conf)
 
 
