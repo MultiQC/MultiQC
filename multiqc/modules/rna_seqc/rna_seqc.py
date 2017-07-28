@@ -61,6 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
 
         self.rnaseqc_general_stats()
+        self.transcript_associated_plot()
         self.plot_correlation_heatmap()
         self.strand_barplot()
         self.coverage_lineplot()
@@ -107,6 +108,15 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'YlGn',
             'modify': lambda x: float(x) * 100.0
         }
+        headers['Expression Profiling Efficiency'] = {
+            'title': '% Expression Efficiency',
+            'description': 'Expression Profiling Efficiency',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdBu',
+            'modify': lambda x: float(x) * 100.0
+        }
         headers['Genes Detected'] = {
             'title': '# Genes',
             'description': 'Number of genes detected',
@@ -114,7 +124,49 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'Bu',
             'format': '{:,.0f}'
         }
+
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
+
+    def transcript_associated_plot (self):
+        """ Plot a bargraph showing the Transcripts-associated reads  """
+        # Plot bar graph of groups
+        keys = [ 'Exonic Rate', 'Intronic Rate', 'Intergenic Rate' ]
+        # Config for the plot
+        pconfig = {
+            'id': 'rna_seqc_position_plot',
+            'title': 'RNA-SeQC: Transcripts-associated reads',
+            'ylab': '% Reads',
+            'cpswitch_counts_label': '# Ratio',
+            'cpswitch_percent_label': '% Reads',
+            'ymin': 0,
+            'cpswitch_c_active': False
+        }
+        self.add_section (
+            name = 'Transcripts-associated reads',
+            anchor = 'Transcript_associated',
+            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+        )
+
+
+    def strand_barplot(self):
+        """ Plot a bargraph showing the strandedness of alignments """
+        # Plot bar graph of groups
+        keys = [ 'End 1 Sense', 'End 1 Antisense', 'End 2 Sense', 'End 2 Antisense' ]
+        # Config for the plot
+        pconfig = {
+            'id': 'rna_seqc_strandedness_plot',
+            'title': 'RNA-SeQC: Strand Specificity',
+            'ylab': '% Reads',
+            'cpswitch_counts_label': '# Reads',
+            'cpswitch_percent_label': '% Reads',
+            'ymin': 0,
+            'cpswitch_c_active': False
+        }
+        self.add_section (
+            name = 'Strand Specificity',
+            anchor = 'rna_seqc_strand_specificity',
+            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+        )
 
 
     def strand_barplot(self):
