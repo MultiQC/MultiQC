@@ -119,9 +119,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 
     def transcript_associated_plot (self):
-        """ Plot a bargraph showing the Transcripts-associated reads  """
+        """ Plot a bargraph showing the Transcript-associated reads  """
+
         # Plot bar graph of groups
-        keys = [ 'Exonic Rate', 'Intronic Rate', 'Intergenic Rate' ]
+        keys = OrderedDict()
+        keys['Exonic Rate'] = { 'name': 'Exonic', 'color': '#2f7ed8' }
+        keys['Intronic Rate'] = { 'name': 'Intronic', 'color': '#8bbc21' }
+        keys['Intergenic Rate'] = { 'name': 'Intergenic', 'color': '#0d233a'}
+
         # Config for the plot
         pconfig = {
             'id': 'rna_seqc_position_plot',
@@ -252,8 +257,5 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = '{} Correlation'.format(corr_type),
                 anchor = 'rseqc-rna_seqc_correlation',
-                helptext = 'Spearman Correlation Coefficient of the data to the reference expression profile provided. '
-                           '(Will only be calculated and displayed on this page if a correlation comparison file is '
-                           'provided at runtime.)',
                 plot = heatmap.plot(data[1], data[0], data[0], pconfig)
             )
