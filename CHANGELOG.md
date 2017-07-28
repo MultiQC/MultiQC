@@ -65,6 +65,7 @@ Many thanks to those involved! Lots of different work was added, including:
 * Report doesn't keep annoyingly telling you that toolbox changes haven't been applied
     * Now uses more subtle _toasts_ and only when you close the toolbox (not every click).
 * Switching report toolbox options to regex mode now enables the _Apply_ button as it should.
+* Sorting table columns with certain suffixes (eg. `13X`) no works properly (numerically)
 
 ---
 
