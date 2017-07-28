@@ -90,22 +90,13 @@ class MultiqcModule(BaseMultiqcModule):
         Add alignment rate to the general stats table
         """
         headers = OrderedDict()
-        headers['Exonic Rate'] = {
-            'title': '% Exonic',
-            'description': 'Exonic rate: fraction mapping within exons.',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn',
-            'modify': lambda x: float(x) * 100.0
-        }
         headers['Expression Profiling Efficiency'] = {
             'title': '% Expression Efficiency',
             'description': 'Expression Profiling Efficiency: Ratio of exon reads to total reads',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdBu',
+            'scale': 'YlGn',
             'modify': lambda x: float(x) * 100.0
         }
         headers['Genes Detected'] = {
@@ -131,9 +122,11 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'rna_seqc_position_plot',
             'title': 'RNA-SeQC: Transcript-associated reads',
-            'ylab': '% Reads',
+            'ylab': 'Ratio of Reads',
             'cpswitch': False,
+            'ymax': 1,
             'ymin': 0,
+            'tt_decimals': 3,
             'cpswitch_c_active': False
         }
         self.add_section (
@@ -213,8 +206,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Gene Body Coverage',
             anchor = 'rseqc-rna_seqc_mean_coverage',
-            helptext = 'The metrics are calculated across the transcripts that were determined to have the highest '
-                       'expression levels',
+            helptext = 'The metrics are calculated across the transcripts with tiered expression levels.',
             plot = linegraph.plot( [
                 self.rna_seqc_norm_high_cov,
                 self.rna_seqc_norm_medium_cov,
