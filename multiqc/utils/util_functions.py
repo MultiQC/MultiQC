@@ -54,10 +54,20 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
             data_format = config.data_format
         fn = '{}.{}'.format(fn, config.data_format_extensions[data_format])
 
+        # JSON encoder class to handle lambda functions
+        class MQCJSONEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if callable(obj):
+                    try:
+                        return obj(1)
+                    except:
+                        return None
+                return json.JSONEncoder.default(self, obj)
+
         # Save file
         with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
             if data_format == 'json':
-                jsonstr = json.dumps(data, indent=4, skipkeys=True, ensure_ascii=False)
+                jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
                 print( jsonstr.encode('utf-8', 'ignore').decode('utf-8'), file=f)
             elif data_format == 'yaml':
                 yaml.dump(data, f, default_flow_style=False)

@@ -522,18 +522,15 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 'data_sources',
                 'general_stats_data',
                 'general_stats_headers',
-                'modules_output',
                 'multiqc_command',
                 'plot_data',
                 'saved_raw_data',
-                'searchfiles',
             ],
             'config': [
                 'analysis_dir',
                 'creation_date',
                 'git_hash',
                 'intro_text',
-                'MULTIQC_DIR',
                 'report_comment',
                 'report_header_info',
                 'report_id',
@@ -544,6 +541,15 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 'version',
             ]
         }
+        # Custom encoder to handle lambda functions
+        class MQCJSONEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if callable(obj):
+                    try:
+                        return obj(1)
+                    except:
+                        return None
+                return json.JSONEncoder.default(self, obj)
         for s in export_vars:
             for k in export_vars[s]:
                 try:
@@ -551,7 +557,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                         d = {'{}_{}'.format(s, k): getattr(config, k)}
                     elif s == 'report':
                         d = {'{}_{}'.format(s, k): getattr(report, k)}
-                    json.dumps(d, skipkeys=True, ensure_ascii=False) # Test that exporting to JSON works
+                    json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False) # Test that exporting to JSON works
                     exported_data.update(d)
                 except (TypeError, KeyError, AttributeError):
                     logger.warn("Couldn't export data key '{}.{}'".format(s, k))
@@ -561,9 +567,9 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             headers = {
                 'user-agent': 'multiqc/{}'.format(config.short_version),
                 'access_token': config.megaqc_access_token,
-                # 'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
             }
-            post_data = {'data': json.dumps(exported_data, ensure_ascii=False)}
+            post_data = {'data': json.dumps(exported_data, cls=MQCJSONEncoder, ensure_ascii=False)}
             try:
                 r = requests.post(config.megaqc_url, headers=headers, data=post_data, timeout=config.megaqc_timeout)
             except requests.exceptions.ConnectTimeout:
