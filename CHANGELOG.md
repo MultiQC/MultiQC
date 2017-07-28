@@ -62,6 +62,9 @@ Many thanks to those involved! Lots of different work was added, including:
 * HTML ID cleanup now properly cleans strings so that they work with jQuery as expected.
 * Made bar graph sample highlighting work properly again
 * Config `custom_logo` paths can now be relative to the config file (or absolute as before)
+* Report doesn't keep annoyingly telling you that toolbox changes haven't been applied
+    * Now uses more subtle _toasts_ and only when you close the toolbox (not every click).
+* Switching report toolbox options to regex mode now enables the _Apply_ button as it should.
 
 ---
 

@@ -40,13 +40,17 @@ $(function () {
   // Hide toolbox when clicking outside
   $(document).mouseup(function (e){
     if (!$(".mqc-toolbox").is(e.target) && $(".mqc-toolbox").has(e.target).length === 0){
-      mqc_toolbox_openclose(undefined, false);
+      if($('.mqc-toolbox').hasClass('active')){
+        mqc_toolbox_openclose(undefined, false);
+      }
     }
   });
 
   // Hide toolbox when a modal is shown
   $('.modal').on('show.bs.modal', function(e){
-    mqc_toolbox_openclose(undefined, false);
+    if($('.mqc-toolbox').hasClass('active')){
+      mqc_toolbox_openclose(undefined, false);
+    }
   });
 
   // Listener to re-plot graphs if config loaded
@@ -77,8 +81,9 @@ $(function () {
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
   });
   $('#mqc_cols_apply').click(function(e){
-    apply_mqc_highlights();
-    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    if(apply_mqc_highlights()){
+      $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    }
   });
 
   // Rename samples
@@ -108,8 +113,9 @@ $(function () {
   });
 
   $('#mqc_rename_apply').click(function(e){
-    apply_mqc_renamesamples();
-    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    if(apply_mqc_renamesamples()){
+      $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    }
   });
 
   // Bulk rename samples
@@ -154,8 +160,9 @@ $(function () {
     $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
   });
   $('#mqc_hide_apply').click(function(e){
-    apply_mqc_hidesamples();
-    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    if(apply_mqc_hidesamples()){
+      $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    }
   });
 
   // EXPORTING PLOTS
@@ -411,9 +418,15 @@ $(function () {
     } else {
       rswitch.removeClass('on').addClass('off').text('off');
     }
-    if($(this).parent().attr('id') == 'mqc_cols'){ $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
-    if($(this).parent().attr('id') == 'mqc_renamesamples'){ $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
-    if($(this).parent().attr('id') == 'mqc_hidesamples'){ $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if($(this).data('target') == 'mqc_cols'){
+      $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+    }
+    if($(this).data('target') == 'mqc_renamesamples'){
+      $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+    }
+    if($(this).data('target') == 'mqc_hidesamples'){
+      $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+    }
   });
 
   /////////////////////////
@@ -496,19 +509,31 @@ function mqc_toolbox_openclose (target, open){
 function mqc_toolbox_confirmapply(){
   // Check if there's anything waiting to be applied
   if($('#mqc_cols_apply').is(':enabled') && $('#mqc_cols').is(':visible')){
-    if(confirm('Apply highlights?')){
-      $('#mqc_cols_apply').trigger('click');
-    }
+    $.toast({
+      heading: 'Highlights Not Applied',
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      icon: 'warning',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
   }
   if($('#mqc_rename_apply').is(':enabled') && $('#mqc_renamesamples').is(':visible')){
-    if(confirm('Apply rename patterns?')){
-      $('#mqc_rename_apply').trigger('click');
-    }
+    $.toast({
+      heading: 'Rename Patterns Not Applied',
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      icon: 'warning',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
   }
   if($('#mqc_hide_apply').is(':enabled') && $('#mqc_hidesamples').is(':visible')){
-    if(confirm('Hide samples?')){
-      $('#mqc_hide_apply').trigger('click');
-    }
+    $.toast({
+      heading: 'Hide Samples Not Applied',
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      icon: 'warning',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
   }
 }
 
@@ -518,7 +543,9 @@ function validate_regexp(pattern) {
     return true
   } catch (error) {
     $.toast({
-      text: 'RegExp pattern invalid: ' + pattern,
+      heading: 'Invalid Regular Expression!',
+      text: "Apologies, your regular expression pattern is invalid: <code>"+pattern+"</code><br><br>"+
+            'For more help and testing, try it out at <a href="https://regex101.com/" target="_blank">regex101.com</a>.',
       icon: 'error',
       position: 'bottom-right',
       hideAfter: 5000
@@ -536,16 +563,15 @@ function apply_mqc_highlights(){
   var f_texts = [];
   var f_cols = [];
   var regex_mode = $('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on');
-
+  var num_errors = 0;
   $('#mqc_col_filters li').each(function() {
     var inputElement = $(this).find('.f_text');
     var pattern = inputElement.val();
-
     // Validate RegExp
     $(this).removeClass('bg-danger');
     if (regex_mode && !validate_regexp(pattern)) {
       $(this).addClass('bg-danger');
-      return;
+      num_errors++;
     }
 
     // Only add pattern if it hasn't already been added
@@ -556,6 +582,9 @@ function apply_mqc_highlights(){
       f_cols[f_texts.indexOf(pattern)] = inputElement.css('color');
     }
   });
+  if(num_errors > 0){
+    return false;
+  }
 
   // Apply a 'background' highlight to remove default colouring first
   // Also highlight toolbox drawer icon
@@ -573,6 +602,8 @@ function apply_mqc_highlights(){
 
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
+
+  return true;
 }
 
 //////////////////////////////////////////////////////
@@ -580,24 +611,26 @@ function apply_mqc_highlights(){
 //////////////////////////////////////////////////////
 
 function apply_mqc_renamesamples () {
-  var valid_from_texts = []
-  var valid_to_texts = []
-  var regex_mode = $('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on')
+  var valid_from_texts = [];
+  var valid_to_texts = [];
+  var regex_mode = $('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on');
+  var num_errors = 0;
   // Collect filters
   var f_texts = $('#mqc_renamesamples_filters > li').each(function () {
-    var from_text = $(this).find(".from_text").val()
-    var to_text = $(this).find(".to_text").val()
-    
+    var from_text = $(this).find(".from_text").val();
+    var to_text = $(this).find(".to_text").val();
     // Validate RegExp
     $(this).removeClass('bg-danger')
     if (regex_mode && !validate_regexp(from_text)) {
-      $(this).addClass('bg-danger')
-      return
+      $(this).addClass('bg-danger');
+      num_errors++;
     }
-
-    valid_from_texts.push(from_text)
-    valid_to_texts.push(to_text)
-  })
+    valid_from_texts.push(from_text);
+    valid_to_texts.push(to_text);
+  });
+  if(num_errors > 0){
+    return false;
+  }
 
   // If something was renamed, highlight the toolbox icon
   if (valid_from_texts.length > 0) {
@@ -616,6 +649,8 @@ function apply_mqc_renamesamples () {
     window.mqc_rename_t_texts,
     regex_mode
   ]);
+
+  return true;
 }
 
 //////////////////////////////////////////////////////
@@ -626,18 +661,20 @@ function apply_mqc_hidesamples(){
   var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
   var regex_mode = $('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on');
   var f_texts = [];
+  var num_errors = 0;
   $('#mqc_hidesamples_filters li').each(function() {
-    var pattern = $(this).find('.f_text').val()
-
+    var pattern = $(this).find('.f_text').val();
     // Validate RegExp
     $(this).removeClass('bg-danger')
     if (regex_mode && !validate_regexp(pattern)) {
-      $(this).addClass('bg-danger')
-      return
+      $(this).addClass('bg-danger');
+      num_errors++;
     }
-
     f_texts.push(pattern);
   });
+  if(num_errors > 0){
+    return false;
+  }
 
   // If something was hidden, highlight the toolbox icon
   if(f_texts.length > 0){
@@ -652,6 +689,8 @@ function apply_mqc_hidesamples(){
 
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
+
+  return true;
 }
 
 //////////////////////////////////////////////////////
