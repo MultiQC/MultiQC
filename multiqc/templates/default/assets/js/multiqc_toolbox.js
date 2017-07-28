@@ -40,13 +40,17 @@ $(function () {
   // Hide toolbox when clicking outside
   $(document).mouseup(function (e){
     if (!$(".mqc-toolbox").is(e.target) && $(".mqc-toolbox").has(e.target).length === 0){
-      mqc_toolbox_openclose(undefined, false);
+      if($('.mqc-toolbox').hasClass('active')){
+        mqc_toolbox_openclose(undefined, false);
+      }
     }
   });
 
   // Hide toolbox when a modal is shown
   $('.modal').on('show.bs.modal', function(e){
-    mqc_toolbox_openclose(undefined, false);
+    if($('.mqc-toolbox').hasClass('active')){
+      mqc_toolbox_openclose(undefined, false);
+    }
   });
 
   // Listener to re-plot graphs if config loaded
@@ -77,33 +81,41 @@ $(function () {
     $('#mqc_colour_filter_color').val(mqc_colours[mqc_colours_idx]);
   });
   $('#mqc_cols_apply').click(function(e){
-    apply_mqc_highlights();
-    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    if(apply_mqc_highlights()){
+      $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    }
   });
 
   // Rename samples
   var mqc_renamesamples_idx = 300;
-  $('#mqc_renamesamples_form').submit(function(e){
-    e.preventDefault();
+  $('#mqc_renamesamples_form').submit(function (event) {
+    event.preventDefault();
+
     var from_text = $('#mqc_renamesamples_from').val().trim();
     var to_text = $('#mqc_renamesamples_to').val().trim();
-    if(from_text.length == 0){
+
+    if (from_text.length == 0) {
       alert('Error - "From" text must not be blank.');
       return false;
     }
+
     var li = '<li><input class="f_text from_text" value="'+from_text+'" tabindex="'+(mqc_renamesamples_idx)+'" />'
     li += '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+to_text+'" tabindex="'+(mqc_renamesamples_idx+1)+'" />'
     li += '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
     $('#mqc_renamesamples_filters').append(li);
     $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+
+    // Reset form
     $('#mqc_renamesamples_from').val('');
     $('#mqc_renamesamples_to').val('');
     mqc_renamesamples_idx += 2;
     $('#mqc_renamesamples_form input:first').focus();
   });
+
   $('#mqc_rename_apply').click(function(e){
-    apply_mqc_renamesamples();
-    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    if(apply_mqc_renamesamples()){
+      $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    }
   });
 
   // Bulk rename samples
@@ -148,8 +160,9 @@ $(function () {
     $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
   });
   $('#mqc_hide_apply').click(function(e){
-    apply_mqc_hidesamples();
-    $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    if(apply_mqc_hidesamples()){
+      $(this).attr('disabled', true).removeClass('btn-primary').addClass('btn-default');
+    }
   });
 
   // EXPORTING PLOTS
@@ -338,6 +351,22 @@ $(function () {
       }
     }
   });
+  // Set current config as default
+  $('.mqc_config_set_default').click(function(e){
+    e.preventDefault();
+    var name = $('#mqc_loadconfig_form select').val().trim();
+    if(name == ''){
+      alert('Error - no saved settings selected.');
+    } else {
+        load_mqc_config(name);
+        mqc_save_config(name, false, true);
+    }
+  });
+    // Clear current config default
+  $('.mqc_config_clear_default').click(function(e){
+    e.preventDefault();
+    mqc_clear_default_config();
+  });
 
   // Filter text is changed
   $('.mqc_filters').on('blur', 'li input', function(){
@@ -389,9 +418,15 @@ $(function () {
     } else {
       rswitch.removeClass('on').addClass('off').text('off');
     }
-    if($(this).parent().attr('id') == 'mqc_cols'){ $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
-    if($(this).parent().attr('id') == 'mqc_renamesamples'){ $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
-    if($(this).parent().attr('id') == 'mqc_hidesamples'){ $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary'); }
+    if($(this).data('target') == 'mqc_cols'){
+      $('#mqc_cols_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+    }
+    if($(this).data('target') == 'mqc_renamesamples'){
+      $('#mqc_rename_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+    }
+    if($(this).data('target') == 'mqc_hidesamples'){
+      $('#mqc_hide_apply').attr('disabled', false).removeClass('btn-default').addClass('btn-primary');
+    }
   });
 
   /////////////////////////
@@ -474,19 +509,48 @@ function mqc_toolbox_openclose (target, open){
 function mqc_toolbox_confirmapply(){
   // Check if there's anything waiting to be applied
   if($('#mqc_cols_apply').is(':enabled') && $('#mqc_cols').is(':visible')){
-    if(confirm('Apply highlights?')){
-      $('#mqc_cols_apply').trigger('click');
-    }
+    $.toast({
+      heading: 'Highlights Not Applied',
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      icon: 'warning',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
   }
   if($('#mqc_rename_apply').is(':enabled') && $('#mqc_renamesamples').is(':visible')){
-    if(confirm('Apply rename patterns?')){
-      $('#mqc_rename_apply').trigger('click');
-    }
+    $.toast({
+      heading: 'Rename Patterns Not Applied',
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      icon: 'warning',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
   }
   if($('#mqc_hide_apply').is(':enabled') && $('#mqc_hidesamples').is(':visible')){
-    if(confirm('Hide samples?')){
-      $('#mqc_hide_apply').trigger('click');
-    }
+    $.toast({
+      heading: 'Hide Samples Not Applied',
+      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      icon: 'warning',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
+  }
+}
+
+function validate_regexp(pattern) {
+  try {
+    new RegExp(pattern, 'g');
+    return true
+  } catch (error) {
+    $.toast({
+      heading: 'Invalid Regular Expression!',
+      text: "Apologies, your regular expression pattern is invalid: <code>"+pattern+"</code><br><br>"+
+            'For more help and testing, try it out at <a href="https://regex101.com/" target="_blank">regex101.com</a>.',
+      icon: 'error',
+      position: 'bottom-right',
+      hideAfter: 5000
+    });
+    return false
   }
 }
 
@@ -498,24 +562,33 @@ function apply_mqc_highlights(){
   // Collect the filters into an array
   var f_texts = [];
   var f_cols = [];
-  var regex_mode = false;
-  if($('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on')){
-    regex_mode = true;
-  }
-  $('#mqc_col_filters li .f_text').each(function(){
-    var val = $(this).val();
-    if (f_texts.indexOf(val) < 0) {
-      f_texts.push($(this).val());
-      f_cols.push($(this).css('color'));
-    } else {
-      f_cols[f_texts.indexOf(val)] = $(this).css('color');
+  var regex_mode = $('#mqc_cols .mqc_regex_mode .re_mode').hasClass('on');
+  var num_errors = 0;
+  $('#mqc_col_filters li').each(function() {
+    var inputElement = $(this).find('.f_text');
+    var pattern = inputElement.val();
+    // Validate RegExp
+    $(this).removeClass('bg-danger');
+    if (regex_mode && !validate_regexp(pattern)) {
+      $(this).addClass('bg-danger');
+      num_errors++;
     }
 
+    // Only add pattern if it hasn't already been added
+    if (f_texts.indexOf(pattern) < 0) {
+      f_texts.push(pattern);
+      f_cols.push(inputElement.css('color'));
+    } else {
+      f_cols[f_texts.indexOf(pattern)] = inputElement.css('color');
+    }
   });
+  if(num_errors > 0){
+    return false;
+  }
 
   // Apply a 'background' highlight to remove default colouring first
   // Also highlight toolbox drawer icon
-  if(f_texts.length > 0 && f_texts.indexOf('') < 0){
+  if (f_texts.length > 0 && f_texts.indexOf('') < 0) {
     f_texts.unshift('');
     f_cols.unshift('#cccccc');
     $('.mqc-toolbox-buttons a[href="#mqc_cols"]').addClass('in_use');
@@ -529,35 +602,55 @@ function apply_mqc_highlights(){
 
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_highlights', [f_texts, f_cols, regex_mode]);
+
+  return true;
 }
 
 //////////////////////////////////////////////////////
 // RENAME SAMPLES
 //////////////////////////////////////////////////////
 
-function apply_mqc_renamesamples(){
-
+function apply_mqc_renamesamples () {
+  var valid_from_texts = [];
+  var valid_to_texts = [];
+  var regex_mode = $('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on');
+  var num_errors = 0;
   // Collect filters
-  var f_texts = [];
-  var t_texts = [];
-  var regex_mode = false;
-  $('#mqc_renamesamples_filters .from_text').each(function(){ f_texts.push($(this).val()); });
-  $('#mqc_renamesamples_filters .to_text').each(function(){ t_texts.push($(this).val()); });
-  if($('#mqc_renamesamples .mqc_regex_mode .re_mode').hasClass('on')){ regex_mode = true; }
+  var f_texts = $('#mqc_renamesamples_filters > li').each(function () {
+    var from_text = $(this).find(".from_text").val();
+    var to_text = $(this).find(".to_text").val();
+    // Validate RegExp
+    $(this).removeClass('bg-danger')
+    if (regex_mode && !validate_regexp(from_text)) {
+      $(this).addClass('bg-danger');
+      num_errors++;
+    }
+    valid_from_texts.push(from_text);
+    valid_to_texts.push(to_text);
+  });
+  if(num_errors > 0){
+    return false;
+  }
 
   // If something was renamed, highlight the toolbox icon
-  if(f_texts.length > 0){
+  if (valid_from_texts.length > 0) {
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').addClass('in_use');
   } else {
     $('.mqc-toolbox-buttons a[href="#mqc_renamesamples"]').removeClass('in_use');
   }
 
-  window.mqc_rename_f_texts = f_texts;
-  window.mqc_rename_t_texts = t_texts;
+  window.mqc_rename_f_texts = valid_from_texts;
+  window.mqc_rename_t_texts = valid_to_texts;
   window.mqc_rename_regex_mode = regex_mode;
 
   // Fire off a custom jQuery event for other javascript chunks to tie into
-  $(document).trigger('mqc_renamesamples', [f_texts, t_texts, regex_mode]);
+  $(document).trigger('mqc_renamesamples', [
+    window.mqc_rename_f_texts,
+    window.mqc_rename_t_texts,
+    regex_mode
+  ]);
+
+  return true;
 }
 
 //////////////////////////////////////////////////////
@@ -566,14 +659,22 @@ function apply_mqc_renamesamples(){
 function apply_mqc_hidesamples(){
   // Collect the filters into an array
   var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
+  var regex_mode = $('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on');
   var f_texts = [];
-  var regex_mode = false;
-  if($('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on')){
-    regex_mode = true;
-  }
-  $('#mqc_hidesamples_filters li .f_text').each(function(){
-    f_texts.push($(this).val());
+  var num_errors = 0;
+  $('#mqc_hidesamples_filters li').each(function() {
+    var pattern = $(this).find('.f_text').val();
+    // Validate RegExp
+    $(this).removeClass('bg-danger')
+    if (regex_mode && !validate_regexp(pattern)) {
+      $(this).addClass('bg-danger');
+      num_errors++;
+    }
+    f_texts.push(pattern);
   });
+  if(num_errors > 0){
+    return false;
+  }
 
   // If something was hidden, highlight the toolbox icon
   if(f_texts.length > 0){
@@ -588,6 +689,8 @@ function apply_mqc_hidesamples(){
 
   // Fire off a custom jQuery event for other javascript chunks to tie into
   $(document).trigger('mqc_hidesamples', [f_texts, regex_mode]);
+
+  return true;
 }
 
 //////////////////////////////////////////////////////
@@ -595,7 +698,7 @@ function apply_mqc_hidesamples(){
 //////////////////////////////////////////////////////
 
 // Save the current configuration setup
-function mqc_save_config(name, clear){
+function mqc_save_config(name, clear, as_default){
   if(name === undefined){ return false; }
   var config = {};
 
@@ -619,7 +722,7 @@ function mqc_save_config(name, clear){
       if(prev_config !== null && prev_config !== undefined){
         prev_config = JSON.parse(prev_config);
       } else {
-        prev_config  = {};
+        prev_config = {};
       }
 
       // Update config obj with current config
@@ -628,6 +731,15 @@ function mqc_save_config(name, clear){
       } else {
         prev_config[name] = config;
         prev_config[name]['last_updated'] = Date();
+        if (as_default) {
+          for (var c in prev_config) {
+            if (prev_config.hasOwnProperty(c)) {
+              prev_config[c]['default'] = false;
+            }
+          }
+        }
+        prev_config[name]['default'] = as_default;
+        if (as_default) console.log('Set new default config!');
       }
       localStorage.setItem("mqc_config", JSON.stringify(prev_config));
 
@@ -645,8 +757,10 @@ function mqc_save_config(name, clear){
         }, 5000);
       });
     } else {
-      // Add to load select box and select it
-      $('#mqc_loadconfig_form select').prepend('<option>'+name+'</option>').val(name);
+      // Remove from load select box
+      $("#mqc_loadconfig_form select option:contains('"+name+"')").remove();
+      // Add new name to load select box and select it
+      $('#mqc_loadconfig_form select').prepend('<option>'+name+(as_default?' [default]':'')+'</option>').val(name+(as_default?' [default]':''));
       // Success message
       $('<p class="text-success" id="mqc-save-success">Settings saved.</p>').hide().insertBefore($('#mqc_saveconfig_form')).slideDown(function(){
         setTimeout(function(){
@@ -657,16 +771,60 @@ function mqc_save_config(name, clear){
   } catch(e){ console.log('Error updating localstorage: '+e); }
 }
 
+// Clear current default configuration
+function mqc_clear_default_config() {
+  try {
+    var config = localStorage.getItem("mqc_config");
+    if (!config) {
+      return;
+    } else {
+      config = JSON.parse(config);
+    }
+    for (var c in config) {
+      if (config.hasOwnProperty(c)) {
+        config[c]['default'] = false;
+      }
+    }
+    localStorage.setItem("mqc_config", JSON.stringify(config));
+    $('<p class="text-danger" id="mqc-cleared-success">Unset default.</p>').hide().insertBefore($('#mqc_loadconfig_form .actions')).slideDown(function () {
+      setTimeout(function () {
+        $('#mqc-cleared-success').slideUp(function () { $(this).remove(); });
+      }, 5000);
+      var name = $('#mqc_loadconfig_form select option:contains("default")').text();
+      $('#mqc_loadconfig_form select option:contains("default")').remove();
+      name = name.replace(' [default]', '');
+      $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
+    });
+  } catch (e) {
+    console.log('Could not access localStorage');
+  }
+}
+
 //////////////////////////////////////////////////////
 // LOAD TOOLBOX SAVE NAMES
 //////////////////////////////////////////////////////
 function populate_mqc_saveselect(){
+  var default_config = '';
   try {
     var local_config = localStorage.getItem("mqc_config");
     if(local_config !== null && local_config !== undefined){
       local_config = JSON.parse(local_config);
+      default_name = false;
       for (var name in local_config){
+        if (local_config[name]['default']) {
+          console.log('Loaded default config!');
+          load_mqc_config(name);
+          default_config = name;
+          name = name+' [default]';
+          default_name = name;
+        }
         $('#mqc_loadconfig_form select').append('<option>'+name+'</option>').val(name);
+      }
+      // Set the selected select option
+      if(default_name !== false){
+        $('#mqc_loadconfig_form select option:contains("'+default_name+'")').prop('selected',true);
+      } else {
+        $('#mqc_loadconfig_form select option:first').prop('selected',true);
       }
     }
   } catch(e){
@@ -679,7 +837,6 @@ function populate_mqc_saveselect(){
       '<a href="https://www.google.se/search?q=Block+third-party+cookies+and+site+data" target="_blank">change this browser setting</a>'+
       ' to save MultiQC report configs.</p>');
   }
-  $('#mqc_loadconfig_form select').val('');
 }
 
 //////////////////////////////////////////////////////

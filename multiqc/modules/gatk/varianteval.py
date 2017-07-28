@@ -5,7 +5,6 @@
 
 import logging
 from collections import OrderedDict
-from multiqc import config
 from multiqc.plots import bargraph, table
 
 # Initialise the logger

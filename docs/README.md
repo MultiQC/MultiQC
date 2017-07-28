@@ -9,6 +9,8 @@ Using MultiQC:
 MultiQC Modules:
   Pre-alignment:
     Adapter Removal: modules/adapterRemoval.md
+    AfterQC: modules/afterqc.md
+    Bcl2fastq: modules/bcl2fastq.md
     BioBloom Tools: modules/biobloomtools.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
@@ -57,6 +59,7 @@ MultiQC Modules:
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     THeTA2: modules/theta2.md
+    VCFTools: modules/vcftools.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:

@@ -123,10 +123,10 @@ class BaseMultiqcModule(object):
                 helptext = textwrap.dedent(helptext)
                 if autoformat_type == 'markdown':
                     helptext = markdown.markdown(helptext)
-            if len(plot) > 0:
-                plot = textwrap.dedent(plot)
-                if autoformat_type == 'markdown':
-                    plot = markdown.markdown(plot)
+
+        # Strip excess whitespace
+        description = description.strip()
+        helptext = helptext.strip()
 
         self.sections.append({
             'name': name,
@@ -164,13 +164,19 @@ class BaseMultiqcModule(object):
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
                 if type(ext) is str:
-                    ext = {'type':'truncate', 'pattern':ext}
+                    ext = {'type': 'truncate', 'pattern': ext}
                 if ext['type'] == 'truncate':
-                    s_name = os.path.basename(s_name.split(ext['pattern'] ,1)[0])
-                elif ext['type'] == 'replace':
+                    s_name = os.path.basename(s_name.split(ext['pattern'], 1)[0])
+                elif ext['type'] in ('remove', 'replace'):
+                    if ext['type'] == 'replace':
+                        logger.warning("use 'config.fn_clean_sample_names.remove' instead "
+                                       "of 'config.fn_clean_sample_names.replace' [deprecated]")
                     s_name = s_name.replace(ext['pattern'], '')
                 elif ext['type'] == 'regex':
                     s_name = re.sub(ext['pattern'], '', s_name)
+                elif ext['type'] == 'regex_keep':
+                    match = re.search(ext['pattern'], s_name)
+                    s_name = match.group() if match else s_name
                 else:
                     logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext['type']))
             # Trim off characters at the end of names
@@ -184,7 +190,6 @@ class BaseMultiqcModule(object):
         s_name = s_name.strip()
 
         return s_name
-
 
     def ignore_samples(self, data):
         """ Strip out samples which match `sample_names_ignore` """

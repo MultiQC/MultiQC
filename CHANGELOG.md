@@ -9,6 +9,7 @@ Many thanks to those involved! Lots of different work was added, including:
 * New module help text
     * Lots of additional help text was written to make MultiQC report plots easier to interpret.
     * Updated modules:
+        * Bowtie
         * Bowtie 2
         * Prokka
         * Qualimap
@@ -17,6 +18,9 @@ Many thanks to those involved! Lots of different work was added, including:
         * [@tabwalsh](https://github.com/tabwalsh)
         * [@ddesvillechabrol](https://github.com/tabwalsh)
         * [@asetGem](https://github.com/asetGem)
+* New `--tags` and `--view_tags` command line options
+    * Modules can now be given tags (keywords) and filtered by those. So running `--tags RNA` will only run MultiQC modules related to RNA analysis.
+    * Work by [@Hammarn](https://github.com/Hammarn)
 * Back-end configuration options to specify the order of table columns
     * Modules and user configs can set priorities for columns to customise where they are displayed
     * Work by [@tbooth](https://github.com/tbooth)
@@ -27,16 +31,41 @@ Many thanks to those involved! Lots of different work was added, including:
 * Bug fixes and refactoring of report configuration saving / loading
     * Discovered and fixed a bug where a report config could only be loaded once
     * Work by [@DennisSchwartz](https://github.com/DennisSchwartz)
+* Table column row headers (sample names) can now be numeric-only.
+    * Work by [@iimog](https://github.com/iimog)
+* Improved sample name cleaning functionality
+    * Added option `regex_keep` to clean filenames by _keeping_ the matching part of a pattern
+    * Work by [@robinandeer](https://github.com/robinandeer)
+* Handle error when invalid regexes are given in reports
+    * Now have a nice toast error warning you and the invalid regexes are highlighted
+    * Previously this just crashed the whole report without any warning
+    * Work by [@robinandeer](https://github.com/robinandeer)
 * **Prokka**
     * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
 
+* [**AfterQC**](https://github.com/OpenGene/AfterQC) - New module!
+    * Added parsing of the _AfterQC_ json file data, with a plot of filtered reads.
+    * Work by [@raonyguimaraes](https://github.com/raonyguimaraes)
+* [**VCFTools**](https://vcftools.github.io)
+    * Added initial support for VCFTools `relatedness2`
+    * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
+
 #### New Modules:
+* [**bcl2fastq**](https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html)
+    * bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis
 * [**leeHom**](https://github.com/grenaud/leeHom)
     * leeHom is a program for the Bayesian reconstruction of ancient DNA
 
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
     * Previously this would only read the last specified
+* HTML ID cleanup now properly cleans strings so that they work with jQuery as expected.
+* Made bar graph sample highlighting work properly again
+* Config `custom_logo` paths can now be relative to the config file (or absolute as before)
+* Report doesn't keep annoyingly telling you that toolbox changes haven't been applied
+    * Now uses more subtle _toasts_ and only when you close the toolbox (not every click).
+* Switching report toolbox options to regex mode now enables the _Apply_ button as it should.
+* Sorting table columns with certain suffixes (eg. `13X`) no works properly (numerically)
 
 ---
 

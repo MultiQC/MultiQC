@@ -4,12 +4,19 @@
 
 adapterRemoval:
     fn: '*.settings'
+afterqc:
+    fn: '*.json'
+    contents: 'allow_mismatch_in_poly'
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true
 bcftools/stats:
     contents: 'This file was produced by bcftools stats'
     shared: true
+bcl2fastq:
+    - fn: 'Stats.json'
+      contents: 'DemuxResults'
+    - num_lines: 300
 biobloomtools:
     contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
     num_lines: 2
@@ -244,3 +251,5 @@ tophat:
 trimmomatic:
     contents: 'Trimmomatic'
     shared: true
+vcftools/relatedness2:
+    fn: '*.relatedness2'

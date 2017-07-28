@@ -80,9 +80,13 @@ logger = config.logger
                     help = "Report template to use."
 )
 @click.option( '--tag', 'module_tag',
-                    type = str, 
+                    type = str,
                     multiple = True,
-                    help = "Use only module withing in this group of modules, eg. RNA"
+                    help = "Use only modules which tagged with this keyword, eg. RNA"
+)
+@click.option( '--view_tags',
+                    is_flag = True,
+                    help = "View the available tags and which modules they load"
 )
 @click.option('-x', '--ignore',
                     type = str,
@@ -165,7 +169,7 @@ logger = config.logger
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
+def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, view_tags, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -212,6 +216,26 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 logger.debug('Latest MultiQC version is {}'.format(remote_version))
         except Exception as e:
             logger.debug('Could not connect to multiqc.info for version check: {}'.format(e))
+
+    # View available tags and modules and exit
+    if view_tags:
+        avail_tags = dict()
+        print("\nMultiQC Available module tag groups:\n")
+        for mod_dict in config.module_order:
+            if type(mod_dict) is dict:
+                mod_key = list(mod_dict.keys())[0]
+                mod = mod_dict[mod_key]
+                if 'module_tag' in mod:
+                    tags = mod['module_tag'] if type(mod['module_tag']) is list else list(mod['module_tag'])
+                    for t in tags:
+                        if t not in avail_tags:
+                            avail_tags[t] = []
+                        avail_tags[t].append(mod_key)
+        for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
+            print (" - {}:".format(t))
+            for ttgs in avail_tags[t]:
+                print ("   - {}".format(ttgs))
+        sys.exit(0)
 
     # Set up key variables (overwrite config vars from command line)
     if template is not None:
@@ -316,14 +340,14 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     #Get the avaiable tags to decide which modules to run.
     modules_from_tags = set()
     if config.module_tag is not None:
-        tags = config.module_tag 
+        tags = config.module_tag
         for m in config.module_order:
             module_name = list(m.keys())[0] # only one name in each dict
             for tag in tags:
                 for t in m[module_name].get('module_tag', []):
                     if tag.lower() == t.lower():
                         modules_from_tags.add(module_name)
-    
+
     # Get the list of modules we want to run, in the order that we want them
     run_modules = [ m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys() ]
     run_modules.extend( [ {m:{}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules ] )
@@ -334,7 +358,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         logger.info('Only using modules {}'.format(', '.join(module)))
     elif modules_from_tags:
         run_modules = [ m for m in run_modules if list(m.keys())[0] in modules_from_tags ]
-        logger.info('Only using module group {} which contains {}'.format((', '.join( module_tag)),(', '.join(modules_from_tags))))
+        logger.info("Only using modules with '{}' tag".format(', '.join(module_tag)))
     elif exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
