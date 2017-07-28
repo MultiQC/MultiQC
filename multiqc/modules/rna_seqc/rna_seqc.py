@@ -160,7 +160,8 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Strand Specificity',
             anchor = 'rna_seqc_strand_specificity',
             helptext = 'End 1/2 Sense are the number of End 1 or 2 reads that were sequenced in the sense direction. '
-                       'Similarly, End 1/2 Antisense are the number of End 1 or 2 reads that were sequenced in the antisense direction',
+                       'Similarly, End 1/2 Antisense are the number of End 1 or 2 reads that were sequenced in the '
+                       'antisense direction',
             plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
         )
 
@@ -207,7 +208,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Gene Body Coverage',
             anchor = 'rseqc-rna_seqc_mean_coverage',
-            helptext = 'The metrics are calculated across the transcripts that were determined to have the highest expression levels',
+            helptext = 'The metrics are calculated across the transcripts that were determined to have the highest '
+                       'expression levels',
             plot = linegraph.plot( [
                 self.rna_seqc_norm_high_cov,
                 self.rna_seqc_norm_medium_cov,

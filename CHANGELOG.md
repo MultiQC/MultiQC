@@ -63,6 +63,11 @@ Many thanks to those involved! Lots of different work was added, including:
 * Made bar graph sample highlighting work properly again
 * Config `custom_logo` paths can now be relative to the config file (or absolute as before)
 
+#### Module updates:
+* **rna-seqc**
+    * Add new transcript-associated reads plot.
+
+    
 ---
 
 ## [MultiQC v1.1](https://github.com/ewels/MultiQC/releases/tag/v1.1) - 2017-07-18
