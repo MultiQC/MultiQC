@@ -61,6 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
 
         self.rnaseqc_general_stats()
+        self.transcript_associated_plot()
         self.plot_correlation_heatmap()
         self.strand_barplot()
         self.coverage_lineplot()
@@ -91,30 +92,59 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['Exonic Rate'] = {
             'title': '% Exonic',
-            'description': 'Exonic rate',
+            'description': 'Exonic rate: fraction mapping within exons.',
             'max': 100,
             'min': 0,
             'suffix': '%',
             'scale': 'YlGn',
             'modify': lambda x: float(x) * 100.0
         }
-        headers['Intronic Rate'] = {
-            'title': '% Intronic',
-            'description': 'Intronic rate',
+        headers['Expression Profiling Efficiency'] = {
+            'title': '% Expression Efficiency',
+            'description': 'Expression Profiling Efficiency: Ratio of exon reads to total reads',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
+            'scale': 'RdBu',
             'modify': lambda x: float(x) * 100.0
         }
         headers['Genes Detected'] = {
             'title': '# Genes',
-            'description': 'Number of genes detected',
+            'description': 'Number of genes detected with at least 5 reads.',
             'min': 0,
             'scale': 'Bu',
             'format': '{:,.0f}'
         }
+
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
+
+    def transcript_associated_plot (self):
+        """ Plot a bargraph showing the Transcript-associated reads  """
+
+        # Plot bar graph of groups
+        keys = OrderedDict()
+        keys['Exonic Rate'] = { 'name': 'Exonic', 'color': '#2f7ed8' }
+        keys['Intronic Rate'] = { 'name': 'Intronic', 'color': '#8bbc21' }
+        keys['Intergenic Rate'] = { 'name': 'Intergenic', 'color': '#0d233a'}
+
+        # Config for the plot
+        pconfig = {
+            'id': 'rna_seqc_position_plot',
+            'title': 'RNA-SeQC: Transcript-associated reads',
+            'ylab': '% Reads',
+            'cpswitch': False,
+            'ymin': 0,
+            'cpswitch_c_active': False
+        }
+        self.add_section (
+            name = 'Transcript-associated reads',
+            anchor = 'Transcript_associated',
+            helptext = 'All of the above rates are per mapped read. Exonic Rate is the fraction mapping within exons. '
+                       'Intronic Rate is the fraction mapping within introns. '
+                       'Intergenic Rate is the fraction mapping in the genomic space between genes. ',
+            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
+        )
+
 
 
     def strand_barplot(self):
@@ -134,6 +164,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Strand Specificity',
             anchor = 'rna_seqc_strand_specificity',
+            helptext = 'End 1/2 Sense are the number of End 1 or 2 reads that were sequenced in the sense direction. '
+                       'Similarly, End 1/2 Antisense are the number of End 1 or 2 reads that were sequenced in the '
+                       'antisense direction',
             plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
         )
 
@@ -165,7 +198,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add line graph to section
         pconfig = {
             'id': 'rna_seqc_mean_coverage_plot',
-            'title': 'RNA-SeQC: Mean Coverage',
+            'title': 'RNA-SeQC: Gene Body Coverage',
             'ylab': '% Coverage',
             'xlab': "Gene Body Percentile (5' -> 3')",
             'xmin': 0,
@@ -178,8 +211,10 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
         self.add_section (
-            name = 'Mean Coverage',
+            name = 'Gene Body Coverage',
             anchor = 'rseqc-rna_seqc_mean_coverage',
+            helptext = 'The metrics are calculated across the transcripts that were determined to have the highest '
+                       'expression levels',
             plot = linegraph.plot( [
                 self.rna_seqc_norm_high_cov,
                 self.rna_seqc_norm_medium_cov,

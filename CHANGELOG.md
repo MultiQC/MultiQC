@@ -67,6 +67,11 @@ Many thanks to those involved! Lots of different work was added, including:
 * Switching report toolbox options to regex mode now enables the _Apply_ button as it should.
 * Sorting table columns with certain suffixes (eg. `13X`) no works properly (numerically)
 
+#### Module updates:
+* **rna-seqc**
+    * Add new transcript-associated reads plot.
+
+
 ---
 
 ## [MultiQC v1.1](https://github.com/ewels/MultiQC/releases/tag/v1.1) - 2017-07-18
