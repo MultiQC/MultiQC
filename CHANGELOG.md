@@ -67,7 +67,7 @@ Many thanks to those involved! Lots of different work was added, including:
 * **rna-seqc**
     * Add new transcript-associated reads plot.
 
-    
+
 ---
 
 ## [MultiQC v1.1](https://github.com/ewels/MultiQC/releases/tag/v1.1) - 2017-07-18
