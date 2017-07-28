@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import re
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
@@ -41,6 +42,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         parsed_data = None
+	self.software_version = set()
+
         for f in self.find_log_files('adapterRemoval', filehandles=True):
             self.s_name = f['s_name']
             try:
@@ -67,6 +70,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.adapter_removal_retained_chart()
         self.adapter_removal_length_dist_plot()
+       
+	# Write the software version
+	self.add_software_version({'AdapterRemoval' : self.software_version}) 
 
     def parse_settings_file(self, f):
 
@@ -80,13 +86,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         settings_data = {'header': []}
-
         block_title = None
         for i, line in enumerate(f['f']):
 
             line = line.rstrip('\n')
             if line == '':
                 continue
+            
+	    if line.startswith('AdapterRemoval ver. '):
+                self.software_version.add((line.split()[2]))
 
             if not block_title:
                 block_title = 'header'
@@ -102,12 +110,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # set data for further working
         self.set_result_data(settings_data)
-
+        
         return self.result_data
 
     def set_result_data(self, settings_data):
         # set read and collapsed type
         self.set_ar_type(settings_data['Length distribution'])
+
 
         # set result_data
         self.set_trim_stat(settings_data['Trimming statistics'])
@@ -131,6 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
     def set_trim_stat(self, trim_data):
+
         required = ['total', 'unaligned', 'aligned', 'discarded_m1', 'singleton_m1', 'retained', 'discarded_m2', 'singleton_m2',
                     'full-length_cp', 'truncated_cp']
         data_pattern = {'total': 0,

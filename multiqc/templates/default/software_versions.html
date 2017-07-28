@@ -6,13 +6,16 @@ This handles the rendering of the software versions table at the ed of the repor
 
 #}
 
-  <div id="Software versions">
-    <h2> Software versions</h2>
-      <ul>
-        <li>{% for m in report.sofware_versions %}</li>
-              {% for name, version in m.items() %}
-                <li>{{name}}</li>
-                {% endfor %}
-             {% endfor %}
-      </ul>
-  </div>
+{% if report.software_versions and report.software_versions | length > 0 %}
+<hr>
+<div id="software_versions" class="mqc-module-section">
+  <h2>Software versions</h2>
+  <ul>
+    {% for m in report.software_versions %}
+      {% for name, version in m.items() %}
+        <li><strong>{{name}}</strong>: <code>{{version|join(", ")}}</code></li>
+      {% endfor %}
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}

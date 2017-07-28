@@ -24,6 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
         href='http://combine-lab.github.io/salmon/',
         info="is a tool for quantifying the expression of transcripts using RNA-seq data.")
 
+        self.software_version = set()
         # Parse meta information. JSON win!
         self.salmon_meta = dict()
         for f in self.find_log_files('salmon/meta'):
@@ -57,7 +58,8 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.salmon_meta) > 0:
             log.info("Found {} meta reports".format(len(self.salmon_meta)))
             self.write_data_file(self.salmon_meta, 'multiqc_salmon')
-            self.add_software_version({'salmon':self.salmon_meta[s_name]['salmon_version']}) 
+            self.software_version.add(self.salmon_meta[s_name]['salmon_version'])
+            self.add_software_version({'salmon': self.software_version})
         if len(self.salmon_fld) > 0:
             log.info("Found {} fragment length distributions".format(len(self.salmon_fld)))
 

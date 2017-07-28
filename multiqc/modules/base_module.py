@@ -264,7 +264,6 @@ class BaseMultiqcModule(object):
         with the verison of all the software that could be found."""
         report.software_versions.append(data)  #handle variable - list append a dictionary to the list 
 
-
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """ Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory """
