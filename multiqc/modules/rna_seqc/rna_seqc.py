@@ -92,16 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['Exonic Rate'] = {
             'title': '% Exonic',
-            'description': 'Exonic rate',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn',
-            'modify': lambda x: float(x) * 100.0
-        }
-        headers['Intronic Rate'] = {
-            'title': '% Intronic',
-            'description': 'Intronic rate',
+            'description': 'Exonic rate: fraction mapping within exons.',
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -110,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Expression Profiling Efficiency'] = {
             'title': '% Expression Efficiency',
-            'description': 'Expression Profiling Efficiency',
+            'description': 'Expression Profiling Efficiency: Ratio of exon reads to total reads',
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -119,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Genes Detected'] = {
             'title': '# Genes',
-            'description': 'Number of genes detected',
+            'description': 'Number of genes detected with at least 5 reads.',
             'min': 0,
             'scale': 'Bu',
             'format': '{:,.0f}'
@@ -134,18 +125,21 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'rna_seqc_position_plot',
-            'title': 'RNA-SeQC: Transcripts-associated reads',
+            'title': 'RNA-SeQC: Transcript-associated reads',
             'ylab': '% Reads',
-            'cpswitch_counts_label': '# Ratio',
-            'cpswitch_percent_label': '% Reads',
+            'cpswitch': False,
             'ymin': 0,
             'cpswitch_c_active': False
         }
         self.add_section (
-            name = 'Transcripts-associated reads',
+            name = 'Transcript-associated reads',
             anchor = 'Transcript_associated',
+            helptext = 'All of the above rates are per mapped read. Exonic Rate is the fraction mapping within exons. '
+                       'Intronic Rate is the fraction mapping within introns. '
+                       'Intergenic Rate is the fraction mapping in the genomic space between genes. ',
             plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
         )
+
 
 
     def strand_barplot(self):
@@ -165,27 +159,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Strand Specificity',
             anchor = 'rna_seqc_strand_specificity',
-            plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
-        )
-
-
-    def strand_barplot(self):
-        """ Plot a bargraph showing the strandedness of alignments """
-        # Plot bar graph of groups
-        keys = [ 'End 1 Sense', 'End 1 Antisense', 'End 2 Sense', 'End 2 Antisense' ]
-        # Config for the plot
-        pconfig = {
-            'id': 'rna_seqc_strandedness_plot',
-            'title': 'RNA-SeQC: Strand Specificity',
-            'ylab': '% Reads',
-            'cpswitch_counts_label': '# Reads',
-            'cpswitch_percent_label': '% Reads',
-            'ymin': 0,
-            'cpswitch_c_active': False
-        }
-        self.add_section (
-            name = 'Strand Specificity',
-            anchor = 'rna_seqc_strand_specificity',
+            helptext = 'End 1/2 Sense are the number of End 1 or 2 reads that were sequenced in the sense direction. '
+                       'Similarly, End 1/2 Antisense are the number of End 1 or 2 reads that were sequenced in the antisense direction',
             plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
         )
 
@@ -217,7 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add line graph to section
         pconfig = {
             'id': 'rna_seqc_mean_coverage_plot',
-            'title': 'RNA-SeQC: Mean Coverage',
+            'title': 'RNA-SeQC: Gene Body Coverage',
             'ylab': '% Coverage',
             'xlab': "Gene Body Percentile (5' -> 3')",
             'xmin': 0,
@@ -230,8 +205,9 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
         self.add_section (
-            name = 'Mean Coverage',
+            name = 'Gene Body Coverage',
             anchor = 'rseqc-rna_seqc_mean_coverage',
+            helptext = 'The metrics are calculated across the transcripts that were determined to have the highest expression levels',
             plot = linegraph.plot( [
                 self.rna_seqc_norm_high_cov,
                 self.rna_seqc_norm_medium_cov,
@@ -274,5 +250,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = '{} Correlation'.format(corr_type),
                 anchor = 'rseqc-rna_seqc_correlation',
+                helptext = 'Spearman Correlation Coefficient of the data to the reference expression profile provided. '
+                           '(Will only be calculated and displayed on this page if a correlation comparison file is '
+                           'provided at runtime.)',
                 plot = heatmap.plot(data[1], data[0], data[0], pconfig)
             )
