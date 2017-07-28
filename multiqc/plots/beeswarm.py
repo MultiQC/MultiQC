@@ -38,6 +38,7 @@ def make_plot(dt):
     bs_id = dt.pconfig.get( 'id', 'table_{}'.format(id(dt)) )
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     bs_id = report.save_htmlid(bs_id)
 
     categories = []

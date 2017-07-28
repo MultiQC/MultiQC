@@ -146,6 +146,7 @@ def highcharts_linegraph (plotdata, pconfig=None):
         pconfig['id'] = 'mqc_hcplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Build the HTML for the page
@@ -202,6 +203,7 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         pconfig['id'] = 'mqc_mplplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Individual plot IDs

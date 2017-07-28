@@ -159,9 +159,10 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
     if pconfig is None:
         pconfig = {}
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_{}'.format(id(pconfig))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(id(plotdata,pconfig))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -248,6 +249,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
         pconfig['id'] = 'mqc_mplplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Individual plot IDs

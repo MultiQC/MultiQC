@@ -349,28 +349,32 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                         modules_from_tags.add(module_name)
 
     # Get the list of modules we want to run, in the order that we want them
+    # config.run_modules gives us an OrderedDict to fill in
     run_modules = config.run_modules
-    run_modules.extend( [ m for m in config.top_modules if m in config.avail_modules.keys() ] )
-    run_modules.extend( [ m for m in config.avail_modules.keys() if m not in config.module_order and m not in run_modules ] )
-    run_modules.extend( [ m for m in config.module_order if m in config.avail_modules.keys() and m not in run_modules ] )
+    run_modules.update( [ (n, c) for m in config.top_modules for n, c in m.items() if n in config.avail_modules ] )
+    run_modules.update( [ (n, {}) for n in config.avail_modules if n not in mod_keys and n not in run_modules ] )
+    run_modules.update( [ (n, c) for m in config.module_order for n, c in m.items() if n in config.avail_modules and n not in run_modules ] )
 
     if module:
-        #In-place list modification with [:] to edit config.run_modules
-        run_modules[:] = [m for m in run_modules if m in module]
-        logger.info('Only using modules {}'.format(', '.join(module)))
+        #Pare down config.run_modules
+        for m in list(run_modules):
+            if m not in module: del(run_modules[m])
+        logger.info('Only using modules {}'.format(', '.join(run_modules)))
     elif modules_from_tags:
-        run_modules = [ m for m in run_modules if list(m.keys())[0] in modules_from_tags ]
+        for m in list(run_modules):
+            if m not in modules_from_tags: del(run_modules[m])
         logger.info("Only using modules with '{}' tag".format(', '.join(module_tag)))
     elif exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
             config.skip_generalstats = True
             exclude = tuple(x for x in exclude if x != 'general_stats')
-        run_modules[:] = [m for m in run_modules if m not in exclude]
-    if len(run_modules) == 0:
+        for m in list(run_modules):
+            if m in exclude: del(run_modules[m])
+    if not run_modules:
         logger.critical('No analysis modules specified!')
         sys.exit(1)
-    logger.debug("Analysing modules: {}".format(', '.join([ list(m.keys())[0] for m in run_modules ])))
+    logger.debug("Analysing modules: {}".format( ', '.join(list(run_modules)) ))
 
     # Create the temporary working directories
     tmp_dir = tempfile.mkdtemp()
@@ -404,15 +408,14 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     # config.run_modules.
     plugin_hooks.mqc_trigger('before_modules')
     sys_exit_code = 0
-    for mod_dict in run_modules:
+    for mod_name, mod_cust_config in run_modules.items():
         try:
-            this_module = list(mod_dict.keys())[0]
-            mod_cust_config = list(mod_dict.values())[0]
-            mod = config.avail_modules[this_module].load()
+            mod = config.avail_modules[mod_name].load()
             mod.mod_cust_config = mod_cust_config # feels bad doing this, but seems to work
             output = mod()
             # Some modules prefer not to load all the data in the constructor
             # since this makes them resistant to unit testing. In this case, gather()
+            # Note that we're looking at a better alternative that includes the above hack too.
             try:
                 output.gather()
             except AttributeError:
@@ -459,12 +462,12 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             sys.exit(1)
         except:
             # Flag the error, but carry on
-            logger.error("Oops! The '{}' MultiQC module broke... \n".format(this_module) + \
+            logger.error("Oops! The '{}' MultiQC module broke... \n".format(mod_name) + \
                       (' '*20)+"Please copy the following traceback and report it at " + \
                       "https://github.com/ewels/MultiQC/issues \n" + \
                       (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
                       ('='*60)+"\nModule {} raised an exception: {}".format(
-                          this_module, traceback.format_exc()) + ('='*60))
+                          mod_name, traceback.format_exc()) + ('='*60))
             sys_exit_code = 1
 
     # Did we find anything?

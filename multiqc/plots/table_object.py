@@ -170,11 +170,7 @@ class datatable (object):
         # Within each section of headers, sort explicitly by 'title' if the dict
         # is not already ordered, so the final ordering is by:
         # placement > section > explicit_ordering > title
-<<<<<<< HEAD
         # Of course, the user can shuffle these manually in the browser but the settings don't currently stick.
-=======
-        # Of course, the user can shuffle these manually.
->>>>>>> origin/master
         self.headers_in_order = defaultdict(list)
 
         for idx, hs in enumerate(headers):
@@ -197,15 +193,7 @@ class datatable (object):
 
     def get_headers_in_order(self):
         """Gets the headers in the order they want to be displayed.
-<<<<<<< HEAD
            Returns an iterable of triplets: (idx, key, header_info)
-        """
-        #Scan through self.headers_in_order and just bolt on the actual header info
-        for bucket in sorted(self.headers_in_order):
-            for idx, k in self.headers_in_order[bucket]:
-                yield idx, k, self.headers[idx][k]
-=======
-           Returns a list of triplets: (idx, key, header_info)
         """
         res = list()
         #Scan through self.headers_in_order and just bolt on the actual header info
@@ -213,4 +201,3 @@ class datatable (object):
             for idx, k in self.headers_in_order[bucket]:
                 res.append( (idx, k, self.headers[idx][k]) )
         return res
->>>>>>> origin/master

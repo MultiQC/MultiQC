@@ -258,6 +258,8 @@ def count_mpl_plots():
         for s in vars(m).get('sections', []):
             found += str(s.get('content')).count('<div class="mqc_mplplot"')
 
+    return found
+
 def save_htmlid(html_id):
     """ Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID """

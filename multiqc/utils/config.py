@@ -86,7 +86,7 @@ if not sp:
 
 # run_modules defined here so it can be shared between the main script and plugin
 # hooks.
-run_modules = []
+run_modules = collections.OrderedDict()
 
 ##### Available templates
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']

@@ -9,7 +9,7 @@ import re
 
 from . import get_uid
 
-from multiqc.utils import config, report, util_functions, mqc_colour
+from multiqc.utils import config, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
 logger = logging.getLogger(__name__)
 
@@ -53,6 +53,8 @@ def make_table (dt):
     """
 
     table_id = dt.pconfig.get('id', 'table_{}'.format(id(dt)) )
+
+    from multiqc.utils import report
     table_id = report.save_htmlid(table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()

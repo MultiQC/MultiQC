@@ -78,6 +78,7 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
         pconfig['id'] = 'mqc_hcplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Build the HTML for the page
