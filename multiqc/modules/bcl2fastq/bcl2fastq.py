@@ -103,15 +103,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "undetermined": self.bcl2fastq_data[runId][lane]["samples"]["undetermined"]["total"]
                 }
                 for sample in self.bcl2fastq_data[runId][lane]["samples"].keys():
-                    uniqSampleName = self.prepend_runid(runId, sample)
-                    if not uniqSampleName in self.bcl2fastq_bysample:
-                        self.bcl2fastq_bysample[uniqSampleName] = {"total": 0, "perfectIndex": 0}
-                    self.bcl2fastq_bysample[uniqSampleName]["total"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
-                    self.bcl2fastq_bysample[uniqSampleName]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
+                    if not sample in self.bcl2fastq_bysample:
+                        self.bcl2fastq_bysample[sample] = {"total": 0, "perfectIndex": 0}
+                    self.bcl2fastq_bysample[sample]["total"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
+                    self.bcl2fastq_bysample[sample]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
                     if sample != "undetermined":
-                        if not uniqSampleName in self.source_files:
-                            self.source_files[uniqSampleName] = []
-                        self.source_files[uniqSampleName].append(self.bcl2fastq_data[runId][lane]["samples"][sample]["filename"])
+                        if not sample in self.source_files:
+                            self.source_files[sample] = []
+                        self.source_files[sample].append(self.bcl2fastq_data[runId][lane]["samples"][sample]["filename"])
 
     def add_general_stats(self):
         data = {key: {"total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(float(100.0*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"]))} for key in self.bcl2fastq_bysample.keys()}
