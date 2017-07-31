@@ -80,18 +80,24 @@ class MultiqcModule(BaseMultiqcModule):
             lane = 'L{}'.format(conversionResult["LaneNumber"])
             if lane in run_data:
                 log.debug("Duplicate runId/lane combination found! Overwriting: {}".format(self.prepend_runid(runId, lane)))
-            run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
+            run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict(), "yieldQ30": 0}
             for demuxResult in conversionResult["DemuxResults"]:
                 sample = demuxResult["SampleName"]
                 if sample in run_data[lane]["samples"]:
                     log.debug("Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(self.prepend_runid(runId, lane),sample))
-                run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0, "filename": os.path.join(myfile['root'],myfile["fn"])}
+                run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0, "filename": os.path.join(myfile['root'],myfile["fn"]), "yieldQ30": 0}
                 run_data[lane]["total"] += demuxResult["NumberReads"]
                 run_data[lane]["samples"][sample]["total"] += demuxResult["NumberReads"]
                 for indexMetric in demuxResult["IndexMetrics"]:
                     run_data[lane]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
                     run_data[lane]["samples"][sample]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
-            run_data[lane]["samples"]["undetermined"] = {"total": conversionResult["Undetermined"]["NumberReads"], "perfectIndex": 0}
+                for readMetric in demuxResult["ReadMetrics"]:
+                    run_data[lane]["yieldQ30"] += readMetric["YieldQ30"]
+                    run_data[lane]["samples"][sample]["yieldQ30"] += readMetric["YieldQ30"]
+            undeterminedYieldQ30 = 0
+            for readMetric in conversionResult["Undetermined"]["ReadMetrics"]:
+                undeterminedYieldQ30 += readMetric["YieldQ30"]
+            run_data[lane]["samples"]["undetermined"] = {"total": conversionResult["Undetermined"]["NumberReads"], "perfectIndex": 0, "yieldQ30": undeterminedYieldQ30}
 
     def split_data_by_lane_and_sample(self):
         for runId in self.bcl2fastq_data.keys():
@@ -100,20 +106,22 @@ class MultiqcModule(BaseMultiqcModule):
                 self.bcl2fastq_bylane[uniqLaneName] = {
                 "total": self.bcl2fastq_data[runId][lane]["total"],
                 "perfectIndex": self.bcl2fastq_data[runId][lane]["perfectIndex"],
-                "undetermined": self.bcl2fastq_data[runId][lane]["samples"]["undetermined"]["total"]
+                "undetermined": self.bcl2fastq_data[runId][lane]["samples"]["undetermined"]["total"],
+                "yieldQ30": self.bcl2fastq_data[runId][lane]["yieldQ30"]
                 }
                 for sample in self.bcl2fastq_data[runId][lane]["samples"].keys():
                     if not sample in self.bcl2fastq_bysample:
-                        self.bcl2fastq_bysample[sample] = {"total": 0, "perfectIndex": 0}
+                        self.bcl2fastq_bysample[sample] = {"total": 0, "perfectIndex": 0, "yieldQ30": 0}
                     self.bcl2fastq_bysample[sample]["total"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
                     self.bcl2fastq_bysample[sample]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
+                    self.bcl2fastq_bysample[sample]["yieldQ30"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["yieldQ30"]
                     if sample != "undetermined":
                         if not sample in self.source_files:
                             self.source_files[sample] = []
                         self.source_files[sample].append(self.bcl2fastq_data[runId][lane]["samples"][sample]["filename"])
 
     def add_general_stats(self):
-        data = {key: {"total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(float(100.0*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"]))} for key in self.bcl2fastq_bysample.keys()}
+        data = {key: {"yieldQ30": self.bcl2fastq_bysample[key]["yieldQ30"], "total": self.bcl2fastq_bysample[key]["total"], "perfectPercent": '{0:.1f}'.format(float(100.0*self.bcl2fastq_bysample[key]["perfectIndex"]/self.bcl2fastq_bysample[key]["total"]))} for key in self.bcl2fastq_bysample.keys()}
         headers = OrderedDict()
         headers['total'] = {
             'title': '{} Total Reads'.format(config.read_count_prefix),
@@ -130,6 +138,12 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'RdYlGn',
             'suffix': '%'
+        }
+        headers['yieldQ30'] = {
+            'title': 'Yield Q30',
+            'description': 'Number of bases with a Phred score of 30 or higher',
+            'min': 0,
+            'scale': 'Greens'
         }
         self.general_stats_addcols(data, headers)
 
