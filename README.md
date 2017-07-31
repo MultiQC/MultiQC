@@ -152,8 +152,8 @@ Code contributions from:
 [@t-neumann](https://github.com/t-neumann),
 [@ahvigil](https://github.com/ahvigil),
 [@bschiffthaler](https://github.com/bschiffthaler),
-[@jrderuiter](https://github.com/jrderuiter)
-[@iimog](https://github.com/iimog)
+[@jrderuiter](https://github.com/jrderuiter),
+[@iimog](https://github.com/iimog),
 [@rlegendre](https://github.com/rlegendre)
 and many others. Thanks for your support!
 
