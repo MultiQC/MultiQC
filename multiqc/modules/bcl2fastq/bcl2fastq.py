@@ -83,6 +83,8 @@ class MultiqcModule(BaseMultiqcModule):
             run_data[lane] = {"total": 0, "perfectIndex": 0, "samples": dict()}
             for demuxResult in conversionResult["DemuxResults"]:
                 sample = demuxResult["SampleName"]
+                if sample in run_data[lane]["samples"]:
+                    log.debug("Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(self.prepend_runid(runId, lane),sample))
                 run_data[lane]["samples"][sample] = {"total": 0, "perfectIndex": 0, "filename": os.path.join(myfile['root'],myfile["fn"])}
                 run_data[lane]["total"] += demuxResult["NumberReads"]
                 run_data[lane]["samples"][sample]["total"] += demuxResult["NumberReads"]
