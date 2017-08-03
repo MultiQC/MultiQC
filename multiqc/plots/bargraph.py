@@ -159,7 +159,7 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
     if pconfig is None:
         pconfig = {}
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_{}'.format(id(plotdata,pconfig))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(id(plotdata))
 
     # Sanitise plot ID and check for duplicates
     from multiqc.utils import report
