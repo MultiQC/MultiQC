@@ -327,6 +327,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - atropos:
+        module_tag:
+            - RNA
+            - DNA
     - flexbar:
         module_tag:
             - RNA
