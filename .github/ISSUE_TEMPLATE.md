@@ -21,13 +21,15 @@ Phil
 **Description of bug:**
 [eg. When I run MultiQC it breaks horribly]
 
-**Error log:**
+**MultiQC Error log:**
 ```
-your error log here
+your MultiQC error log here
 ```
 
 * **File that triggers the error:**
-    * [please drag and drop here]
+    * [please drag and drop an input file that I can use to replicate the error here]
+* **MultiQC Version:**
+    * [eg. MultiQC v1.1]
 * **Operating System:**
     * [eg. macOS Sierra 10.12.5]
 * **Python Version:**
