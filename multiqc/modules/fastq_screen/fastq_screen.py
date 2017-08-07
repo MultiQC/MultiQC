@@ -228,7 +228,9 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]['Multiple Genomes'] = self.fq_screen_data[s_name]['total_reads'] - sum_alignments
 
         # Strip empty dicts
-        data = [data[s_name] for s_name in data if len(data[s_name]) > 0]
+        for s_name in list(data.keys()):
+            if len(data[s_name]) == 0:
+                del data[s_name]
 
         pconfig = {
             'id': 'fastq_screen',
