@@ -68,6 +68,8 @@ Many thanks to those involved! Lots of different work was added, including:
 * Sorting table columns with certain suffixes (eg. `13X`) no works properly (numerically)
 
 #### Module updates:
+* **FastQ Screen**
+    * Gracefully handle missing data from very old FastQ Screen versions.
 * **rna-seqc**
     * Add new transcript-associated reads plot.
 
