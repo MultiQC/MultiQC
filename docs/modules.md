@@ -442,7 +442,7 @@ headers['name'] = {
 
 The typical use for the `modify` string is to divide large numbers such as read counts,
 to make them easier to interpret. If handling read counts, there are three config variables
-that should be used to allow users to change the multiplier: `read_count_multiplier`,
+that should be used to allow users to change the multiplier for read counts: `read_count_multiplier`,
 `read_count_prefix` and `read_count_desc`. For example:
 
 ```python
@@ -450,6 +450,9 @@ that should be used to allow users to change the multiplier: `read_count_multipl
 'description': 'Number of reads ({})'.format(config.read_count_desc),
 'modify': lambda x: x * config.read_count_multiplier,
 ```
+
+Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
+`base_count_desc`.
 
 The colour scales are from [ColorBrewer2](http://colorbrewer2.org/) and are named as follows:
 ![color brewer](images/cbrewer_scales.png)
