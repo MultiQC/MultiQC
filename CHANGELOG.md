@@ -59,6 +59,15 @@ Many thanks to those involved! Lots of different work was added, including:
     * Added initial support for VCFTools `relatedness2`
     * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
 
+#### Module updates:
+* **FastQ Screen**
+    * Gracefully handle missing data from very old FastQ Screen versions.
+* **rna-seqc**
+    * Add new transcript-associated reads plot.
+
+### New MultiQC Features:
+* New config option `section_comments` allows you to add custom comments above specific sections in the report
+
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
     * Previously this would only read the last specified
@@ -69,13 +78,6 @@ Many thanks to those involved! Lots of different work was added, including:
     * Now uses more subtle _toasts_ and only when you close the toolbox (not every click).
 * Switching report toolbox options to regex mode now enables the _Apply_ button as it should.
 * Sorting table columns with certain suffixes (eg. `13X`) no works properly (numerically)
-
-#### Module updates:
-* **FastQ Screen**
-    * Gracefully handle missing data from very old FastQ Screen versions.
-* **rna-seqc**
-    * Add new transcript-associated reads plot.
-
 
 ---
 
