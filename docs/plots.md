@@ -35,7 +35,7 @@ Simple data can be plotted in bar graphs. Many MultiQC modules make use
 of stacked bar graphs. Here, the `bargraph.plot()` function comes to
 the rescue. A basic example is as follows:
 ```python
-from multiqc import plots
+from multiqc.plots import bargraph
 data = {
     'sample 1': {
         'aligned': 23542,
