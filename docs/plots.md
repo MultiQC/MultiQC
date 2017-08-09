@@ -163,7 +163,7 @@ you spot something that's missing in the flat image plots, let me know.
 This base function works much like the above, but for two-dimensional
 data, to produce line graphs. It expects a dictionary in the following format:
 ```python
-from multiqc import plots
+from multiqc.plots import linegraph
 data = {
     'sample 1': {
         '<x val 1>': '<y val 1>',
@@ -179,7 +179,7 @@ html_content = linegraph.plot(data)
 
 Additionally, a config dict can be supplied. The defaults are as follows:
 ```python
-from multiqc import plots
+from multiqc.plots import linegraph
 config = {
     # Building the plot
     'smooth_points': None,       # Supply a number to limit number of points / smooth data
@@ -246,7 +246,7 @@ dataset plots, use a list of list of dicts.
 
 For example, to add a dotted `x = y` reference line:
 ```python
-from multiqc import plots
+from multiqc.plots import linegraph
 config = {
     'extra_series': {
         'name': 'x = y',
@@ -270,7 +270,7 @@ config options are shared between the two. The data structure is similar but
 not identical:
 
 ```python
-from multiqc import plots
+from multiqc.plots import scatter
 data = {
     'sample 1': {
         x: '<x val>',
