@@ -246,6 +246,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         config.report_comment = report_comment
     config.prepend_dirs = dirs
     if dirs_depth is not None:
+        config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
     config.analysis_dir = analysis_dir
     if outdir is not None:

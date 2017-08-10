@@ -67,6 +67,7 @@ Many thanks to those involved! Lots of different work was added, including:
 
 ### New MultiQC Features:
 * New config option `section_comments` allows you to add custom comments above specific sections in the report
+* Command line option `--dirs-depth` now sets `-d` to `True` (so now works even if `-d` isn't also specified).
 
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
