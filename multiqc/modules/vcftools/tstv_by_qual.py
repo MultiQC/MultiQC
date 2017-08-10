@@ -18,7 +18,7 @@ class TsTvByQualMixin():
         self.vcftools_tstv_by_qual = dict()
         for f in self.find_log_files('vcftools/tstv_by_qual', filehandles=True):
             d = {}
-            for line in f['f'].readlines()[1:]: # don't add the header line
+            for line in f['f'].readlines()[1:]: # don't add the header line (first row)
                 key = float(line.split()[0]) # taking the first column (QUAL_THRESHOLD) as key
                 val = float(line.split()[6]) # taking Ts/Tv_GT_QUAL_THRESHOLD as value
                 d[key] = val
@@ -39,7 +39,7 @@ class TsTvByQualMixin():
 
         helptext = '''
         `TSTV-BY-QUAL` summarizes the transition to transversion ratio as a function of SNP quality threshold.
-        Note: multi-allelic SNPs and INDELs are ignored (see Vcftools's --TsTv-by-qual).
+        Note: only using bi-allelic SNPs (see Vcftools's `--TsTv-by-qual`).
         '''
 
         self.add_section(
