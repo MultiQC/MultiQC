@@ -31,7 +31,7 @@ class TsTvByCountMixin():
             return 0
 
         pconfig = {
-            'id': 'vcftools_tstv_by_count_plot',
+            'id': 'vcftools_tstv_by_count',
             'title': 'TsTv by Count',
             'ylab': 'TsTv Ratio',
             'xlab': 'Alternative Allele Count'
@@ -43,8 +43,8 @@ class TsTvByCountMixin():
         '''
 
         self.add_section(
-            name = 'Vcftools TsTv-by-Count',
-            anchor = 'vcftools_tstv_by_count',
+            name = 'TsTv by Count',
+            anchor = 'vcftools-tstv-by-count',
             description = "Plot of `TSTV-BY-COUNT` - the transition to transversion ratio as a function of alternative allele count from the output of vcftools TsTv-by-count.",
             helptext = helptext,
             plot = linegraph.plot(self.vcftools_tstv_by_count,pconfig)

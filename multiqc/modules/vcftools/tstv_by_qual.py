@@ -31,7 +31,7 @@ class TsTvByQualMixin():
             return 0
 
         pconfig = {
-            'id': 'vcftools_tstv_by_qual_plot',
+            'id': 'vcftools_tstv_by_qual',
             'title': 'TsTv by Qual',
             'ylab': 'TsTv Ratio',
             'xlab': 'SNP Quality Threshold'
@@ -43,8 +43,8 @@ class TsTvByQualMixin():
         '''
 
         self.add_section(
-            name = 'Vcftools TsTv-by-Qual',
-            anchor = 'vcftools_tstv_by_qual',
+            name = 'TsTv by Qual',
+            anchor = 'vcftools-tstv-by-qual',
             description = "Plot of `TSTV-BY-QUAL` - the transition to transversion ratio as a function of SNP quality from the output of vcftools TsTv-by-qual.",
             helptext = helptext,
             plot = linegraph.plot(self.vcftools_tstv_by_qual,pconfig)

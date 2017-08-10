@@ -10,12 +10,15 @@ This module parses the outputs from VCFTools' various commands:
 * `relatedness2`
   * Plots a heatmap of pairwise sample relatedness.
   * Not to be confused with the similarly-named command `relatedness`
-* `TsTv-by-qual`
-  * Plots the transition to transversion ratio as a function of SNP 
-    quality threshold (using only bi-allelic SNPs).
 * `TsTv-by-count`
   * Plots the transition to transversion ratio as a function of 
     alternative allele count (using only bi-allelic SNPs).
+* `TsTv-by-qual`
+  * Plots the transition to transversion ratio as a function of SNP 
+    quality threshold (using only bi-allelic SNPs).
+* `TsTv-summary`
+  * Plots a bargraph of the summary counts of each type of transition and 
+    transversion SNPs. 
 
 ### To do
 VCFTools has a number of outputs not yet supported in MultiQC which

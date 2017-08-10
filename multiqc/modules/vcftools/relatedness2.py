@@ -34,8 +34,8 @@ class Relatedness2Mixin():
 
         for name, m in matrices.items():
             self.add_section(
-                name = 'Vcftools relatedness2',
-                anchor = 'vcftools_relatedness2',
+                name = 'Relatedness2',
+                anchor = 'vcftools-relatedness2',
                 description = "**Input:** `{}`.\n\n Heatmap of `RELATEDNESS_PHI` values from the output of vcftools relatedness2.".format(name),
                 helptext = helptext,
                 plot = heatmap.plot(
