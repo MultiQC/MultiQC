@@ -13,6 +13,9 @@ This module parses the outputs from VCFTools' various commands:
 * `TsTv-by-qual`
   * Plots the transition to transversion ratio as a function of SNP 
     quality threshold (using only bi-allelic SNPs).
+* `TsTv-by-count`
+  * Plots the transition to transversion ratio as a function of 
+    alternative allele count (using only bi-allelic SNPs).
 
 ### To do
 VCFTools has a number of outputs not yet supported in MultiQC which
