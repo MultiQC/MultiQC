@@ -57,6 +57,7 @@ Many thanks to those involved! Lots of different work was added, including:
     * leeHom is a program for the Bayesian reconstruction of ancient DNA
 * [**VCFTools**](https://vcftools.github.io)
     * Added initial support for VCFTools `relatedness2`
+    * Added support for VCFTools `TsTv-by-count` `TsTv-by-qual` `TsTv-summary`
     * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
 
 #### Module updates:
