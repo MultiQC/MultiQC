@@ -173,12 +173,16 @@ def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_commen
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
+
         It searches a given directory for analysis logs and compiles a HTML report.
         It's a general use tool, perfect for summarising the output from numerous
         bioinformatics tools.
+
         To run, supply with one or more directory to scan for analysis results.
         To run here, use 'multiqc .'
+
         See http://multiqc.info for more details.
+
         Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
@@ -242,6 +246,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         config.report_comment = report_comment
     config.prepend_dirs = dirs
     if dirs_depth is not None:
+        config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
     config.analysis_dir = analysis_dir
     if outdir is not None:
@@ -707,4 +712,4 @@ if __name__ == "__main__":
     # Modify the default click error handling
     modify_usage_error(multiqc)
     # Call the main function
-multiqc()
+    multiqc()
