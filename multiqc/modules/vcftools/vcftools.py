@@ -7,12 +7,13 @@ import logging
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from .relatedness2 import Relatedness2Mixin
+from .tstv_by_qual import TsTvByQualMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin):
+class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByQualMixin):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name='VCFTools',
@@ -23,6 +24,10 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin):
 
         n = dict()
         n['relatedness2'] = self.parse_relatedness2()
+        
+        n['tstv_by_qual'] = self.parse_tstv_by_qual()
+        if n['tstv_by_qual'] > 0:
+            log.info("Found {} TsTv.qual reports".format(n['tstv_by_qual']))
 
         if sum(n.values()) == 0:
             log.debug('Could not find any reports in %s', config.analysis_dir)
