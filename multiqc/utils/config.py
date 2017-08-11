@@ -9,7 +9,6 @@ import inspect
 import collections
 import os
 import pkg_resources
-import random
 import subprocess
 import sys
 import yaml
@@ -58,7 +57,6 @@ creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
-report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']

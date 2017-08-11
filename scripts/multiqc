@@ -533,7 +533,6 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 'intro_text',
                 'report_comment',
                 'report_header_info',
-                'report_id',
                 'script_path',
                 'short_version',
                 'subtitle',
@@ -565,11 +564,12 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             util_functions.write_data_file(exported_data, 'multiqc_data', False, 'json')
         if config.megaqc_url:
             headers = {
-                'user-agent': 'multiqc/{}'.format(config.short_version),
                 'access_token': config.megaqc_access_token,
                 'Content-Type': 'application/json'
             }
-            post_data = {'data': json.dumps(exported_data, cls=MQCJSONEncoder, ensure_ascii=False)}
+            # post_data = json.dumps({'data': exported_data}, cls=MQCJSONEncoder, ensure_ascii=False)
+            post_data = json.dumps(exported_data, cls=MQCJSONEncoder, ensure_ascii=False)
+            logger.info("Sending JSON data to MegaQC at '{}'".format(config.megaqc_url))
             try:
                 r = requests.post(config.megaqc_url, headers=headers, data=post_data, timeout=config.megaqc_timeout)
             except requests.exceptions.ConnectTimeout:
@@ -577,7 +577,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             except requests.exceptions.ConnectionError:
                 logger.warn("Couldn't connect to MegaQC URL {}".format(config.megaqc_url))
             else:
-                print(json.dumps(r.json(), indent=4))
+                print(r.text)
                 print("Status Code: {}".format(r.status_code))
 
     plugin_hooks.mqc_trigger('before_report_generation')
