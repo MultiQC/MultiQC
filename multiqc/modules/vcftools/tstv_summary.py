@@ -22,7 +22,6 @@ class TsTvSummaryMixin():
                 key = line.split()[0] # taking the first column (MODEL) as key
                 val = int(line.split()[1]) # taking the second column (COUNT) as value
                 d[key] = val
-            print(d)
             self.vcftools_tstv_summary[f['s_name']] = d
 
         # Filter out ignored sample names
