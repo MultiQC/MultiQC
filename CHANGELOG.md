@@ -72,6 +72,8 @@ Many thanks to those involved! Lots of different work was added, including:
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
     * Previously this would only read the last specified
+* Fixed table rendering bug that affected Chrome v60 and IE7-11
+    * Table cell background bars weren't showing up. Updated CSS to get around this rendering error.
 * HTML ID cleanup now properly cleans strings so that they work with jQuery as expected.
 * Made bar graph sample highlighting work properly again
 * Config `custom_logo` paths can now be relative to the config file (or absolute as before)

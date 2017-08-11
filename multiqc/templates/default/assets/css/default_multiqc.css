@@ -617,6 +617,7 @@ input.form-control[type=color]{
 /* MultiQC tables */
 .table tr td {
     font-size:0.9em;
+    height: 30px;
 }
 .mqc_table tbody tr td .wrapper .val {
     z-index: -1;
