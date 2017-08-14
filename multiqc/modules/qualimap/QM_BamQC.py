@@ -382,8 +382,8 @@ def report_sections(self):
         extracts the insert size from the `TLEN` field of the leftmost read
         (see the <a href="http://qualimap.bioinfo.cipf.es/doc_html/index.html"
         target="_blank">Qualimap 2 documentation</a>), where the `TLEN` (or
-        ‘observed Template LENgth’) field contains ‘the number of bases from the
-        leftmost mapped base to the rightmost mapped base’
+        'observed Template LENgth') field contains 'the number of bases from the
+        leftmost mapped base to the rightmost mapped base'
         (<a href="https://samtools.github.io/hts-specs/" target="_blank">SAM
         format specification</a>). Note that because it is defined in terms of
         alignment to a reference sequence, the value of the `TLEN` field may
