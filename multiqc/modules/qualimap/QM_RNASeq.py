@@ -116,18 +116,75 @@ def parse_reports(self):
             'title': 'Genomic Origin',
             'cpswitch_c_active': False
         }
+        genomic_origin_helptext = '''
+        There are currently three main approaches to map reads to transcripts in an
+        RNA-seq experiment: mapping reads to a reference genome to identify expressed
+        transcripts that are annotated (and discover those that are unknown), mapping
+        reads to a reference transcriptome, and <i>de novo</i> assembly of transcript
+        sequences (<a href="https://doi.org/10.1186/s13059-016-0881-8"
+        target="_blank">Conesa et al. 2016</a>).
+
+        For RNA-seq QC analysis, QualiMap can be used to assess alignments produced by
+        the first of these approaches. For input, it requires a GTF annotation file
+        along with a reference genome, which can be used to reconstruct the exon
+        structure of known transcripts. This allows mapped reads to be grouped by
+        whether they originate in an exonic region (for QualiMap, this may include
+        5&#8242; and 3&#8242; UTR regions as well as protein-coding exons), an intron,
+        or an intergenic region (see the <a href="http://qualimap.bioinfo.cipf.es/doc_html/index.html"
+        target="_blank">Qualimap 2 documentation</a>).
+
+        The inferred genomic origins of RNA-seq reads are presented here as a bar graph
+        showing either the number or percentage of mapped reads in each read dataset
+        that have been assigned to each type of genomic region. This graph can be used
+        to assess the proportion of useful reads in an RNA-seq experiment. That
+        proportion can be reduced by the presence of intron sequences, especially if
+        depletion of ribosomal RNA was used during sample preparation (<a href="https://doi.org/10.1038/nrg3642"
+        target="_blank">Sims et al. 2014</a>). It can also be reduced by off-target
+        transcripts, which are detected in greater numbers at the sequencing depths
+        needed to detect poorly-expressed transcripts (<a href="https://doi.org/10.1101/gr.124321.111"
+        target="_blank">Tarazona et al. 2011</a>).'''
         self.add_section (
             name = 'Genomic origin of reads',
             anchor = 'qualimap-reads-genomic-origin',
             description = 'Classification of mapped reads as originating in exonic, intronic or intergenic regions. These can be displayed as either the number or percentage of mapped reads.',
+            helptext = genomic_origin_helptext,
             plot = bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig)
         )
 
     if len(self.qualimap_rnaseq_cov_hist) > 0:
+        coverage_profile_helptext = '''
+        There are currently three main approaches to map reads to transcripts in an
+        RNA-seq experiment: mapping reads to a reference genome to identify expressed
+        transcripts that are annotated (and discover those that are unknown), mapping
+        reads to a reference transcriptome, and <i>de novo</i> assembly of transcript
+        sequences (<a href="https://doi.org/10.1186/s13059-016-0881-8"
+        target="_blank">Conesa et al. 2016</a>).
+
+        For RNA-seq QC analysis, QualiMap can be used to assess alignments produced by
+        the first of these approaches. For input, it requires a GTF annotation file
+        along with a reference genome, which can be used to reconstruct the exon
+        structure of known transcripts. QualiMap uses this information to calculate the
+        depth of coverage along the length of each annotated transcript. For a set of
+        reads mapped to a transcript, the depth of coverage at a given base position is
+        the number of high-quality reads that map to the transcript at that position
+        (<a href="https://doi.org/10.1038/nrg3642" target="_blank">Sims et al. 2014</a>).
+
+        QualiMap calculates coverage depth at every base position of each annotated
+        transcript. To enable meaningful comparison between transcripts, base positions
+        are rescaled to relative positions expressed as percentage distance along each
+        transcript (*0%, 1%, &#8230;, 99%*). For the set of transcripts with at least
+        one mapped read, QualiMap plots the cumulative mapped-read depth (y-axis) at
+        each relative transcript position (x-axis). This plot shows the gene coverage
+        profile across all mapped transcripts for each read dataset. It provides a
+        visual way to assess positional biases, such as an accumulation of mapped reads
+        at the 3&#8242; end of transcripts, which may indicate poor RNA quality in the
+        original sample (<a href="https://doi.org/10.1186/s13059-016-0881-8"
+        target="_blank">Conesa et al. 2016</a>).'''
         self.add_section (
             name = 'Gene Coverage Profile',
             anchor = 'qualimap-genome-fraction-coverage',
             description = 'Mean distribution of coverage depth across the length of all mapped transcripts.',
+            helptext = coverage_profile_helptext,
             plot = linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'id': 'qualimap_gene_coverage_profile',
                 'title': 'Coverage Profile Along Genes (total)',
