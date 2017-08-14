@@ -63,13 +63,15 @@ def multiqc_api_post(exported_data):
     if config.megaqc_access_token is not None:
         headers['access_token'] = config.megaqc_access_token
     post_data = json.dumps({'data': exported_data}, cls=MQCJSONEncoder, ensure_ascii=False)
-    log.debug("Sending JSON data to MegaQC at '{}'".format(config.megaqc_url))
+    log.info("Sending data to MegaQC")
     try:
         r = requests.post(config.megaqc_url, headers=headers, data=post_data, timeout=config.megaqc_timeout)
-    except requests.exceptions.ConnectTimeout:
-        log.warn("Timed out when sending MultiQC POST data to {}".format(config.megaqc_url))
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as e:
+        log.warn("Timed out when sending data: {}".format(e))
     except requests.exceptions.ConnectionError:
         log.warn("Couldn't connect to MegaQC URL {}".format(config.megaqc_url))
+    except Exception as e:
+        log.warn("Error sending data: {}".format(e))
     else:
         try:
             api_r = json.loads(r.text)

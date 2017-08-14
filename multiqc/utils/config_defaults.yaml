@@ -44,7 +44,7 @@ zip_data_dir: false
 data_dump_file: false
 megaqc_url: false
 megaqc_access_token: null
-megaqc_timeout: 10
+megaqc_timeout: 30
 export_plots: false
 plots_force_flat: false
 plots_force_interactive: false
@@ -140,6 +140,7 @@ fn_clean_exts:
     - '.contamination'
     - '.BEST.results'
     - '_summary'
+    - '.summary'
     - '_peaks.xls'
     - '.relatedness'
 
