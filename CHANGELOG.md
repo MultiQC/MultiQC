@@ -68,6 +68,9 @@ Many thanks to those involved! Lots of different work was added, including:
 ### New MultiQC Features:
 * New config option `section_comments` allows you to add custom comments above specific sections in the report
 * Command line option `--dirs-depth` now sets `-d` to `True` (so now works even if `-d` isn't also specified).
+* New config option `config.data_dump_file` to export as much data as possible to `multiqc_data/multiqc_data.json`
+* New code to send exported JSON data to a a web server
+    * This is in preparation for the upcoming MegaQC project. Stay tuned!
 
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
