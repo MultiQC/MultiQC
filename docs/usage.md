@@ -53,7 +53,7 @@ multiqc --file-list my_file_list.txt
 ## Renaming reports
 The report is called `multiqc_report.html` by default. Tab-delimited data files
 are created in `multiqc_data/`, containing additional information.
-You can use a custom name for the report with the `-n`/`--name` parameter, or instruct
+You can use a custom name for the report with the `-n`/`--filename` parameter, or instruct
 MultiQC to create them in a subdirectory using the `-o`/`-outdir` parameter.
 
 Note that different MultiQC templates may have different defaults.
