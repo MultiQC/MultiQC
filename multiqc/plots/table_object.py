@@ -7,8 +7,6 @@ from collections import defaultdict, OrderedDict
 import logging
 import re
 
-from . import get_uid
-
 from multiqc.utils import config
 
 logger = logging.getLogger(__name__)

@@ -5,7 +5,6 @@ from __future__ import division, print_function, absolute_import
 
 from collections import defaultdict, OrderedDict
 import logging
-import re
 
 from multiqc.utils import config, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
