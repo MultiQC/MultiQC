@@ -41,6 +41,11 @@ class BaseMultiqcModule(object):
         self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
         self.sections = list()
 
+    def gather():
+        """This will be called after module init.  You can choose to use it or not.
+        """
+        pass
+
     def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
         Return matches log files of interest.

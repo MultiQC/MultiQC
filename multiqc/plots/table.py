@@ -7,8 +7,6 @@ from collections import defaultdict, OrderedDict
 import logging
 import re
 
-from . import get_uid
-
 from multiqc.utils import config, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
 logger = logging.getLogger(__name__)
@@ -121,7 +119,7 @@ def make_table (dt):
             )
 
         # Make a colour scale
-        if header['scale'] == False:
+        if header.get('scale', False) == False:
             c_scale = None
         else:
             c_scale = mqc_colour.mqc_colour_scale(header['scale'], header['dmin'], header['dmax'])
@@ -168,7 +166,7 @@ def make_table (dt):
                 valstring += header.get('suffix', '')
 
                 # Build HTML
-                if not header['scale']:
+                if not header.get('scale'):
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
                     t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)

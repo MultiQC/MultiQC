@@ -416,10 +416,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             # Some modules prefer not to load all the data in the constructor
             # since this makes them resistant to unit testing. In this case, gather()
             # Note that we're looking at a better alternative that includes the above hack too.
-            try:
-                output.gather()
-            except AttributeError:
-                pass
+            output.gather()
             if type(output) != list:
                 output = [output]
             for m in output:
