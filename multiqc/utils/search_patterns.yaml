@@ -128,6 +128,9 @@ picard/markdups:
 picard/oxogmetrics:
     contents: 'picard.analysis.CollectOxoGMetrics'
     shared: true
+picard/pcr_metrics:
+    contents: 'picard.analysis.directed.TargetedPcrMetrics'
+    shared: true
 picard/rnaseqmetrics:
     contents_re: '.*picard\.analysis\.Collect[Rr]na[Ss]eq[Mm]etrics.*'
     shared: true

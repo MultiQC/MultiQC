@@ -10,15 +10,16 @@ from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Picard submodules
-from . import MarkDuplicates
-from . import InsertSizeMetrics
+from . import AlignmentSummaryMetrics
 from . import BaseDistributionByCycleMetrics
 from . import GcBiasMetrics
 from . import HsMetrics
+from . import InsertSizeMetrics
+from . import MarkDuplicates
 from . import OxoGMetrics
 from . import RnaSeqMetrics
-from . import AlignmentSummaryMetrics
 from . import RrbsSummaryMetrics
+from . import TargetedPcrMetrics
 from . import WgsMetrics
 
 # Initialise the logger
@@ -44,13 +45,9 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
-        n['MarkDuplicates'] = MarkDuplicates.parse_reports(self)
-        if n['MarkDuplicates'] > 0:
-            log.info("Found {} MarkDuplicates reports".format(n['MarkDuplicates']))
-
-        n['InsertSizeMetrics'] = InsertSizeMetrics.parse_reports(self)
-        if n['InsertSizeMetrics'] > 0:
-            log.info("Found {} InsertSizeMetrics reports".format(n['InsertSizeMetrics']))
+        n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
+        if n['AlignmentMetrics'] > 0:
+            log.info("Found {} AlignmentSummaryMetrics reports".format(n['AlignmentMetrics']))
 
         n['BaseDistributionByCycleMetrics'] = BaseDistributionByCycleMetrics.parse_reports(self)
         if n['BaseDistributionByCycleMetrics'] > 0:
@@ -64,6 +61,14 @@ class MultiqcModule(BaseMultiqcModule):
         if n['HsMetrics'] > 0:
             log.info("Found {} HsMetrics reports".format(n['HsMetrics']))
 
+        n['InsertSizeMetrics'] = InsertSizeMetrics.parse_reports(self)
+        if n['InsertSizeMetrics'] > 0:
+            log.info("Found {} InsertSizeMetrics reports".format(n['InsertSizeMetrics']))
+
+        n['MarkDuplicates'] = MarkDuplicates.parse_reports(self)
+        if n['MarkDuplicates'] > 0:
+            log.info("Found {} MarkDuplicates reports".format(n['MarkDuplicates']))
+
         n['OxoGMetrics'] = OxoGMetrics.parse_reports(self)
         if n['OxoGMetrics'] > 0:
             log.info("Found {} OxoGMetrics reports".format(n['OxoGMetrics']))
@@ -72,13 +77,13 @@ class MultiqcModule(BaseMultiqcModule):
         if n['RnaSeqMetrics'] > 0:
             log.info("Found {} RnaSeqMetrics reports".format(n['RnaSeqMetrics']))
 
-        n['AlignmentMetrics'] = AlignmentSummaryMetrics.parse_reports(self)
-        if n['AlignmentMetrics'] > 0:
-            log.info("Found {} AlignmentSummaryMetrics reports".format(n['AlignmentMetrics']))
-
         n['RrbsSummaryMetrics'] = RrbsSummaryMetrics.parse_reports(self)
         if n['RrbsSummaryMetrics'] > 0:
             log.info("Found {} RrbsSummaryMetrics reports".format(n['RrbsSummaryMetrics']))
+
+        n['TargetedPcrMetrics'] = TargetedPcrMetrics.parse_reports(self)
+        if n['TargetedPcrMetrics'] > 0:
+            log.info("Found {} TargetedPcrMetrics reports".format(n['TargetedPcrMetrics']))
 
         n['WgsMetrics'] = WgsMetrics.parse_reports(self)
         if n['WgsMetrics'] > 0:

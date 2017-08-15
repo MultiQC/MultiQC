@@ -62,8 +62,10 @@ Many thanks to those involved! Lots of different work was added, including:
 #### Module updates:
 * **FastQ Screen**
     * Gracefully handle missing data from very old FastQ Screen versions.
-* **rna-seqc**
+* **RNA-SeQC**
     * Add new transcript-associated reads plot.
+* **Picard**
+    * New submodule to handle output from _TargetedPcrMetrics_
 
 ### New MultiQC Features:
 * New config option `section_comments` allows you to add custom comments above specific sections in the report
