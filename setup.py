@@ -56,6 +56,7 @@ setup(
         'markdown',
         'numpy',
         'pyyaml',
+        'requests',
         'simplejson',
         'spectra',
     ],

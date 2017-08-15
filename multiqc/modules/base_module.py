@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class BaseMultiqcModule(object):
 
-    def __init__(self, name='base', anchor='base', target=None, href=None, info=None, extra=None):
+    def __init__(self, name='base', anchor='base', target=None, href=None, info=None, comment=None, extra=None, autoformat=True, autoformat_type='markdown'):
 
         # Custom options from user config that can overwrite module values
         mod_cust_config = getattr(self, 'mod_cust_config', {})
@@ -26,7 +26,12 @@ class BaseMultiqcModule(object):
         target = mod_cust_config.get('target', target)
         href = mod_cust_config.get('href', href)
         info = mod_cust_config.get('info', info)
+        self.comment = mod_cust_config.get('comment', comment)
         extra = mod_cust_config.get('extra', extra)
+
+        # See if we have a user comment in the config
+        if self.anchor in config.section_comments:
+            self.comment = config.section_comments[self.anchor]
 
         if info is None:
             info = ''
@@ -39,6 +44,14 @@ class BaseMultiqcModule(object):
         else:
             mname = target
         self.intro = '<p>{} {}</p>{}'.format( mname, info, extra )
+
+        # Format the markdown strings
+        if autoformat:
+            if self.comment is not None:
+                self.comment = textwrap.dedent(self.comment)
+                if autoformat_type == 'markdown':
+                    self.comment = markdown.markdown(self.comment)
+
         self.sections = list()
 
     def gather():
@@ -103,7 +116,7 @@ class BaseMultiqcModule(object):
             else:
                 yield f
 
-    def add_section(self, name=None, anchor=None, description='', helptext='', plot='', content='', autoformat=True, autoformat_type='markdown'):
+    def add_section(self, name=None, anchor=None, description='', comment='', helptext='', plot='', content='', autoformat=True, autoformat_type='markdown'):
         """ Add a section to the module report output """
 
         # Default anchor
@@ -118,12 +131,20 @@ class BaseMultiqcModule(object):
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
 
+        # See if we have a user comment in the config
+        if anchor in config.section_comments:
+            comment = config.section_comments[anchor]
+
         # Format the content
         if autoformat:
             if len(description) > 0:
                 description = textwrap.dedent(description)
                 if autoformat_type == 'markdown':
                     description = markdown.markdown(description)
+            if len(comment) > 0:
+                comment = textwrap.dedent(comment)
+                if autoformat_type == 'markdown':
+                    comment = markdown.markdown(comment)
             if len(helptext) > 0:
                 helptext = textwrap.dedent(helptext)
                 if autoformat_type == 'markdown':
@@ -131,16 +152,18 @@ class BaseMultiqcModule(object):
 
         # Strip excess whitespace
         description = description.strip()
+        comment = comment.strip()
         helptext = helptext.strip()
 
         self.sections.append({
             'name': name,
             'anchor': anchor,
             'description': description,
+            'comment': comment,
             'helptext': helptext,
             'plot': plot,
             'content': content,
-            'print_section': any([ n is not None and len(n) > 0 for n in [description, helptext, plot, content] ])
+            'print_section': any([ n is not None and len(n) > 0 for n in [description, comment, helptext, plot, content] ])
         })
 
     def clean_s_name(self, s_name, root):

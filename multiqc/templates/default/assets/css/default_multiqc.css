@@ -173,7 +173,7 @@ kbd {
 #page_title img {
     max-width: 260px;
 }
-.report_comment {
+.report_comment, .mqc-section-comment {
     border-left: 5px solid #8eb9dd;
     background-color: #e8f1f8;
 }
@@ -617,6 +617,7 @@ input.form-control[type=color]{
 /* MultiQC tables */
 .table tr td {
     font-size:0.9em;
+    height: 30px;
 }
 .mqc_table tbody tr td .wrapper .val {
     z-index: -1;

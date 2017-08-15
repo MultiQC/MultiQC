@@ -31,7 +31,7 @@ except ImportError:
 
 from multiqc import __version__
 from multiqc.plots import table
-from multiqc.utils import report, plugin_hooks, config, log
+from multiqc.utils import report, plugin_hooks, megaqc, util_functions, config, log
 logger = config.logger
 
 @click.command(
@@ -246,6 +246,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         config.report_comment = report_comment
     config.prepend_dirs = dirs
     if dirs_depth is not None:
+        config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
     config.analysis_dir = analysis_dir
     if outdir is not None:
@@ -521,6 +522,14 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     logger.info("Compressing plot data")
     report.plot_compressed_json = report.compress_json(report.plot_data)
 
+    # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
+    if config.data_dump_file or config.megaqc_url:
+        multiqc_json_dump = megaqc.multiqc_dump_json(report)
+        if config.data_dump_file:
+            util_functions.write_data_file(multiqc_json_dump, 'multiqc_data', False, 'json')
+        if config.megaqc_url:
+            megaqc.multiqc_api_post(multiqc_json_dump)
+
     plugin_hooks.mqc_trigger('before_report_generation')
 
     # Make the final report path & data directories
@@ -570,7 +579,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
                 shutil.move(fn, config.data_dir)
 
-        # Finally, copy across the plots
+        # Copy across the static plot images if requested
         if config.export_plots:
             config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
             if os.path.exists(config.plots_dir):
@@ -657,7 +666,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         shutil.make_archive(config.data_dir, 'zip', config.data_dir)
         shutil.rmtree(config.data_dir)
 
-    # Try to create a PDF if requestted
+    # Try to create a PDF if requested
     if make_pdf:
         try:
             pdf_fn_name = config.output_fn.replace('.html', '.pdf')

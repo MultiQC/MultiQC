@@ -9,7 +9,6 @@ import inspect
 import collections
 import os
 import pkg_resources
-import random
 import subprocess
 import sys
 import yaml
@@ -55,7 +54,6 @@ creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
-report_id = 'mqc_report_{}'.format(''.join(random.sample('abcdefghijklmnopqrstuvwxyz0123456789', 20)))
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
@@ -182,7 +180,7 @@ def mqc_add_config(conf, conf_path=None):
             # Prepend to filename cleaning patterns instead of replacing
             fn_clean_trim[0:0] = v
             logger.debug("Added to filename clean trimmings: {}".format(v))
-        elif c in ['custom_logo']:
+        elif c in ['custom_logo'] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
             if os.path.exists(v):

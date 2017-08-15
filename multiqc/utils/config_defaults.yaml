@@ -25,6 +25,9 @@ pandoc_template: null
 read_count_multiplier: 0.000001
 read_count_prefix: 'M'
 read_count_desc: 'millions'
+base_count_multiplier: 0.000001
+base_count_prefix: 'Mb'
+base_count_desc: 'millions'
 output_fn_name: 'multiqc_report.html'
 data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
@@ -38,6 +41,10 @@ prepend_dirs_sep: ' | '
 file_list: false
 make_data_dir: true
 zip_data_dir: false
+data_dump_file: false
+megaqc_url: false
+megaqc_access_token: null
+megaqc_timeout: 30
 export_plots: false
 plots_force_flat: false
 plots_force_interactive: false
@@ -49,6 +56,7 @@ table_columns_visible: {}
 table_columns_placement: {}
 decimalPoint_format: null
 thousandsSep_format: null
+section_comments: {}
 
 fn_ignore_dirs:
     - 'multiqc_data'
@@ -132,6 +140,7 @@ fn_clean_exts:
     - '.contamination'
     - '.BEST.results'
     - '_summary'
+    - '.summary'
     - '_peaks.xls'
     - '.relatedness'
 

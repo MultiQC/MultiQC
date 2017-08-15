@@ -210,7 +210,11 @@ class MultiqcModule(BaseMultiqcModule):
             for org in self.fq_screen_data[s_name]:
                 if org == 'total_reads':
                     continue
-                data[s_name][org] = self.fq_screen_data[s_name][org]['counts']['one_hit_one_library']
+                try:
+                    data[s_name][org] = self.fq_screen_data[s_name][org]['counts']['one_hit_one_library']
+                except KeyError:
+                    log.error("No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results.".format(org, s_name))
+                    continue
                 try:
                     data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['multiple_hits_one_library']
                 except KeyError:
@@ -220,7 +224,13 @@ class MultiqcModule(BaseMultiqcModule):
                     cats[org] = { 'name': org }
 
             # Calculate hits in multiple genomes
-            data[s_name]['Multiple Genomes'] = self.fq_screen_data[s_name]['total_reads'] - sum_alignments
+            if 'total_reads' in self.fq_screen_data[s_name]:
+                data[s_name]['Multiple Genomes'] = self.fq_screen_data[s_name]['total_reads'] - sum_alignments
+
+        # Strip empty dicts
+        for s_name in list(data.keys()):
+            if len(data[s_name]) == 0:
+                del data[s_name]
 
         pconfig = {
             'id': 'fastq_screen',

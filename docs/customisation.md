@@ -98,6 +98,20 @@ sample_names_rename:
     - ["SRR1067510_1", "Sample_3", "MYBESTSAMP_3"]
 ```
 
+## Module and section comments
+Sometimes you may want to add a custom comment above specific sections in the report. You can
+do this with the config option `section_comments` as follows:
+
+```yaml
+section_comments:
+    featurecounts: 'This comment is for a module header, but should still work'
+    star_alignments: 'This new way of commenting above sections is **awesome**!'
+```
+
+Comments can be written in Markdown. The `section_comments` keys should correspond to the HTML IDs
+of the report section. You can find these by clicking on a navigation link in the report and seeing
+the `#section_id` at the end of the browser URL.
+
 ## Order of modules
 By default, modules are included in the report as in the order specified in `config.module_order`.
 Any modules found which aren't in this list are appended at the top of the report.
@@ -249,6 +263,13 @@ So, to show thousands of reads instead of millions, change these to:
 read_count_multiplier: 0.001
 read_count_prefix: 'K'
 read_count_desc: 'thousands'
+```
+
+The same options are also available for numbers of base pairs:
+```yaml
+base_count_multiplier: 0.000001
+base_count_prefix: 'Mb'
+base_count_desc: 'millions'
 ```
 
 

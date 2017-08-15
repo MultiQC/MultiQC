@@ -32,7 +32,7 @@ Currently, supported tools include:
 |Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |---------------------------------|------------------------|---------------------------|----------------------|
 |[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]       |[BUSCO][busco]        |
-|[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]       |[Conpair][conpair]   |
+|[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
 |[Bcl2fastq][bcl2fastq]           |[Bowtie 2][bowtie-2]    |[GATK][gatk]               |[Disambiguate][disambiguate]|
 |[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HOMER][homer]             |[goleft][goleft]      |
 |[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[HTSeq][htseq]             |[methylQA][methylqa]  |
@@ -151,15 +151,16 @@ Code contributions from:
 [@t-neumann](https://github.com/t-neumann),
 [@ahvigil](https://github.com/ahvigil),
 [@bschiffthaler](https://github.com/bschiffthaler),
-[@jrderuiter](https://github.com/jrderuiter)
-[@iimog](https://github.com/iimog)
+[@jrderuiter](https://github.com/jrderuiter),
+[@iimog](https://github.com/iimog),
+[@rlegendre](https://github.com/rlegendre)
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
 [afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
-[bcl2fastq]:       http://multiqc.info/docs/#bcl2fastq
+[bcl2fastq]:      http://multiqc.info/docs/#bcl2fastq
 [biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1

@@ -225,9 +225,9 @@ def _get_headers(data):
                         })
                     this['title'] = "{} {}".format(config.read_count_prefix, this['title'])
                 elif h.find("BASES") > -1:
-                    this.update({'shared_key': 'bases_count',
-                                 'modify': lambda x: x / 1000000.0})
-                    this['title'] = "Mb {0}".format(this['title'])
+                    this.update({'shared_key': 'base_count',
+                                 'modify': lambda x: x * config.base_count_multiplier})
+                    this['title'] = "{} {}".format(config.read_count_prefix, this['title'])
                 if h in ["BAIT_TERRITORY", "TOTAL_READS", "TARGET_TERRITORY", "AT_DROPOUT", "GC_DROPOUT"]:
                     this.update({'hidden': True})
                 header.update({h : this})

@@ -14,7 +14,10 @@ $(function () {
   if($('.mqc_table').length > 0){
 
     // Enable tablesorter on MultiQC tables
-    $('.mqc_table').tablesorter({sortInitialOrder: 'desc'});
+    var strip_non_numeric = function(node){
+      return node.innerText.replace(/[^\d.-]/g, '');
+    }
+    $('.mqc_table').tablesorter({sortInitialOrder: 'desc', textExtraction: strip_non_numeric});
 
     // Update tablesorter if samples renamed
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){

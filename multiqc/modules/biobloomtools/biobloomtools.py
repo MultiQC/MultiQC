@@ -4,9 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import json
 import logging
-import re
 
 from multiqc import config
 from multiqc.plots import bargraph

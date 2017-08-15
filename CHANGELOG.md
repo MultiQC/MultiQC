@@ -43,23 +43,49 @@ Many thanks to those involved! Lots of different work was added, including:
 * **Prokka**
     * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
 
+
+
+#### New Modules:
 * [**AfterQC**](https://github.com/OpenGene/AfterQC) - New module!
     * Added parsing of the _AfterQC_ json file data, with a plot of filtered reads.
     * Work by [@raonyguimaraes](https://github.com/raonyguimaraes)
+* [**bcl2fastq**](https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html)
+    * bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis
+    * New module parses JSON output from recent versions and summarises some key statistics from the demultiplexing process.
+    * Work by [@iimog](https://github.com/iimog) (with a little help from [@tbooth](https://github.com/tbooth) and [@ewels](https://github.com/ewels))
+* [**leeHom**](https://github.com/grenaud/leeHom)
+    * leeHom is a program for the Bayesian reconstruction of ancient DNA
 * [**VCFTools**](https://vcftools.github.io)
     * Added initial support for VCFTools `relatedness2`
     * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
 
-#### New Modules:
-* [**bcl2fastq**](https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html)
-    * bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis
-* [**leeHom**](https://github.com/grenaud/leeHom)
-    * leeHom is a program for the Bayesian reconstruction of ancient DNA
+#### Module updates:
+* **FastQ Screen**
+    * Gracefully handle missing data from very old FastQ Screen versions.
+* **RNA-SeQC**
+    * Add new transcript-associated reads plot.
+* **Picard**
+    * New submodule to handle output from _TargetedPcrMetrics_
+
+### New MultiQC Features:
+* New config option `section_comments` allows you to add custom comments above specific sections in the report
+* Command line option `--dirs-depth` now sets `-d` to `True` (so now works even if `-d` isn't also specified).
+* New config option `config.data_dump_file` to export as much data as possible to `multiqc_data/multiqc_data.json`
+* New code to send exported JSON data to a a web server
+    * This is in preparation for the upcoming MegaQC project. Stay tuned!
 
 #### Bug Fixes:
 * Specifying multiple config files with `-c`/`--config` now works as expected
     * Previously this would only read the last specified
+* Fixed table rendering bug that affected Chrome v60 and IE7-11
+    * Table cell background bars weren't showing up. Updated CSS to get around this rendering error.
 * HTML ID cleanup now properly cleans strings so that they work with jQuery as expected.
+* Made bar graph sample highlighting work properly again
+* Config `custom_logo` paths can now be relative to the config file (or absolute as before)
+* Report doesn't keep annoyingly telling you that toolbox changes haven't been applied
+    * Now uses more subtle _toasts_ and only when you close the toolbox (not every click).
+* Switching report toolbox options to regex mode now enables the _Apply_ button as it should.
+* Sorting table columns with certain suffixes (eg. `13X`) no works properly (numerically)
 
 ---
 
