@@ -38,6 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.fastqc_data = dict()
 
+    def gather(self):
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files('fastqc/data'):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
