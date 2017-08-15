@@ -34,12 +34,19 @@ class TsTvByQualMixin():
             'id': 'vcftools_tstv_by_qual',
             'title': 'TsTv by Qual',
             'ylab': 'TsTv Ratio',
-            'xlab': 'SNP Quality Threshold'
+            'xlab': 'SNP Quality Threshold',
+            'xmin': 0,
+            'ymin': 0,
+            'smooth_points': 400, # this limits huge filesizes and prevents browser crashing
+            'smooth_points_sumcounts': False
         }
 
         helptext = '''
-        `TSTV-BY-QUAL` summarizes the transition to transversion ratio as a function of SNP quality threshold.
-        Note: only using bi-allelic SNPs (see Vcftools's `--TsTv-by-qual`).
+        `Transition` is a purine-to-purine or pyrimidine-to-pyrimidine point mutations.
+        `Transversion` is a purine-to-pyrimidine or pyrimidine-to-purine point mutation. 
+        `Quality` here is the Phred-scaled quality score as given in the QUAL column of VCF.
+        Note: only bi-allelic SNPs are used (multi-allelic sites and INDELs are skipped.) 
+        Refer to Vcftools's manual (https://vcftools.github.io/man_latest.html) on `--TsTv-by-qual`
         '''
 
         self.add_section(

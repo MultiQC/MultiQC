@@ -32,31 +32,18 @@ class TsTvSummaryMixin():
 
         # Specifying the categories of the bargraph
         keys = OrderedDict()
-        keys['AC'] = { 'name': 'AC' }
-        keys['AG'] = { 'name': 'AG' }
-        keys['AT'] = { 'name': 'AT' }
-        keys['CG'] = { 'name': 'CG' }
-        keys['CT'] = { 'name': 'CT' }
-        keys['GT'] = { 'name': 'GT' }
-        keys['Ts'] = { 'name': 'Ts' }
-        keys['Tv'] = { 'name': 'Tv' }
+        keys = ['AC', 'AG', 'AT', 'CG', 'CT', 'GT', 'Ts', 'Tv']
 
         pconfig = {
             'id': 'vcftools_tstv_summary',
             'title': 'TsTv Summary',
             'ylab': 'Counts',
-            'xlab': 'Data Sets'
         }
-
-        helptext = '''
-        `TSTV-SUMMARY` summarizes different types of transitions and transversions by count (see Vcftools's `--TsTv-summary`).
-        '''
 
         self.add_section(
             name = 'TsTv Summary',
             anchor = 'vcftools-tstv-summary',
             description = "Plot of `TSTV-SUMMARY` - count of different types of transition and transversion SNPs.",
-            helptext = helptext,
             plot = bargraph.plot(self.vcftools_tstv_summary,keys,pconfig)
         )
 

@@ -34,12 +34,19 @@ class TsTvByCountMixin():
             'id': 'vcftools_tstv_by_count',
             'title': 'TsTv by Count',
             'ylab': 'TsTv Ratio',
-            'xlab': 'Alternative Allele Count'
+            'xlab': 'Alternative Allele Count',
+            'xmin': 0,
+            'ymin': 0,
+            'smooth_points': 400, # this limits huge filesizes and prevents browser crashing
+            'smooth_points_sumcounts': False
         }
 
         helptext = '''
-        `TSTV-BY-COUNT` summarizes the transition to transversion ratio as a function of alternative allele count.
-        Note: only using bi-allelic SNPs (see Vcftools's `--TsTv-by-count`).
+        `Transition` is a purine-to-purine or pyrimidine-to-pyrimidine point mutations.
+        `Transversion` is a purine-to-pyrimidine or pyrimidine-to-purine point mutation. 
+        `Alternative allele count` is the number of alternative alleles at the site.
+        Note: only bi-allelic SNPs are used (multi-allelic sites and INDELs are skipped.) 
+        Refer to Vcftools's manual (https://vcftools.github.io/man_latest.html) on `--TsTv-by-count`
         '''
 
         self.add_section(
