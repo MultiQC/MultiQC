@@ -69,7 +69,7 @@ flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
     shared: true
 gatk/varianteval:
-    contents: '#:GATKReport'
+    contents: '#:GATKTable:TiTvVariantEvaluator'
     shared: true
 goleft_indexcov/roc:
     fn: '*-indexcov.roc'
