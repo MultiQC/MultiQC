@@ -54,7 +54,7 @@ class BaseMultiqcModule(object):
 
         self.sections = list()
 
-    def gather():
+    def gather(self):
         """This will be called after module init.  You can choose to use it or not.
         """
         pass
