@@ -256,3 +256,9 @@ trimmomatic:
     shared: true
 vcftools/relatedness2:
     fn: '*.relatedness2'
+vcftools/tstv_by_count:
+    fn: '*.TsTv.count'
+vcftools/tstv_by_qual:
+    fn: '*.TsTv.qual'
+vcftools/tstv_summary:
+    fn: '*.TsTv.summary'
