@@ -1,5 +1,8 @@
 # MultiQC Version History
 
+## MultiQC v1.3dev
+_..nothing yet.._
+
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
 
 #### CodeFest 2017 Contributions
