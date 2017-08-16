@@ -12,7 +12,7 @@ of taking on projects of any size.
 
 Supported tools: `VariantEval`
 
-### VariantEval
+#### VariantEval
 [VariantEval](https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php)
 is a general-purpose tool for variant evaluation. It gives information about percentage of
 variants in dbSNP, genotype concordance, Ti/Tv ratios and a lot more.
