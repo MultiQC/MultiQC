@@ -1,49 +1,10 @@
 # MultiQC Version History
 
-## MultiQC v1.2dev
+## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
 
-### CodeFest 2017 Contributions
+#### CodeFest 2017 Contributions
 We had a fantastic group effort on MultiQC at the [2017 BOSC CodeFest](https://www.open-bio.org/wiki/Codefest_2017).
-Many thanks to those involved! Lots of different work was added, including:
-
-* New module help text
-    * Lots of additional help text was written to make MultiQC report plots easier to interpret.
-    * Updated modules:
-        * Bowtie
-        * Bowtie 2
-        * Prokka
-        * Qualimap
-        * SnpEff
-    * Elite team of help-writers:
-        * [@tabwalsh](https://github.com/tabwalsh)
-        * [@ddesvillechabrol](https://github.com/tabwalsh)
-        * [@asetGem](https://github.com/asetGem)
-* New `--tags` and `--view_tags` command line options
-    * Modules can now be given tags (keywords) and filtered by those. So running `--tags RNA` will only run MultiQC modules related to RNA analysis.
-    * Work by [@Hammarn](https://github.com/Hammarn)
-* Back-end configuration options to specify the order of table columns
-    * Modules and user configs can set priorities for columns to customise where they are displayed
-    * Work by [@tbooth](https://github.com/tbooth)
-* Added framework for proper unit testing
-    * Previous start on unit tests tidied up, new blank template and tests for the `clean_sample_name` functionality.
-    * Added to Travis and Appveyor for continuous integration testing.
-    * Work by [@tbooth](https://github.com/tbooth)
-* Bug fixes and refactoring of report configuration saving / loading
-    * Discovered and fixed a bug where a report config could only be loaded once
-    * Work by [@DennisSchwartz](https://github.com/DennisSchwartz)
-* Table column row headers (sample names) can now be numeric-only.
-    * Work by [@iimog](https://github.com/iimog)
-* Improved sample name cleaning functionality
-    * Added option `regex_keep` to clean filenames by _keeping_ the matching part of a pattern
-    * Work by [@robinandeer](https://github.com/robinandeer)
-* Handle error when invalid regexes are given in reports
-    * Now have a nice toast error warning you and the invalid regexes are highlighted
-    * Previously this just crashed the whole report without any warning
-    * Work by [@robinandeer](https://github.com/robinandeer)
-* **Prokka**
-    * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
-
-
+Many thanks to those involved!
 
 #### New Modules:
 * [**AfterQC**](https://github.com/OpenGene/AfterQC) - New module!
@@ -66,10 +27,49 @@ Many thanks to those involved! Lots of different work was added, including:
 * **RNA-SeQC**
     * Add new transcript-associated reads plot.
 * **Picard**
-    * New submodule to handle output from _TargetedPcrMetrics_
+    * New submodule to handle output from `TargetedPcrMetrics`
+* **Prokka**
+    * Added parsing of the `# CRISPR arrays` data from Prokka when available ([@asetGem](https://github.com/asetGem))
+* **Qualimap**
+    * Some code refactoring to radically improve performance and run times, especially with high coverage datasets.
+    * Fixed bug where _Cumulative coverage genome fraction_ plot could be truncated.
 
-### New MultiQC Features:
+#### New MultiQC Features:
+* New module help text
+    * Lots of additional help text was written to make MultiQC report plots easier to interpret.
+    * Updated modules:
+        * Bowtie
+        * Bowtie 2
+        * Prokka
+        * Qualimap
+        * SnpEff
+    * Elite team of help-writers:
+        * [@tabwalsh](https://github.com/tabwalsh)
+        * [@ddesvillechabrol](https://github.com/tabwalsh)
+        * [@asetGem](https://github.com/asetGem)
 * New config option `section_comments` allows you to add custom comments above specific sections in the report
+* New `--tags` and `--view_tags` command line options
+    * Modules can now be given tags (keywords) and filtered by those. So running `--tags RNA` will only run MultiQC modules related to RNA analysis.
+    * Work by [@Hammarn](https://github.com/Hammarn)
+* Back-end configuration options to specify the order of table columns
+    * Modules and user configs can set priorities for columns to customise where they are displayed
+    * Work by [@tbooth](https://github.com/tbooth)
+* Added framework for proper unit testing
+    * Previous start on unit tests tidied up, new blank template and tests for the `clean_sample_name` functionality.
+    * Added to Travis and Appveyor for continuous integration testing.
+    * Work by [@tbooth](https://github.com/tbooth)
+* Bug fixes and refactoring of report configuration saving / loading
+    * Discovered and fixed a bug where a report config could only be loaded once
+    * Work by [@DennisSchwartz](https://github.com/DennisSchwartz)
+* Table column row headers (sample names) can now be numeric-only.
+    * Work by [@iimog](https://github.com/iimog)
+* Improved sample name cleaning functionality
+    * Added option `regex_keep` to clean filenames by _keeping_ the matching part of a pattern
+    * Work by [@robinandeer](https://github.com/robinandeer)
+* Handle error when invalid regexes are given in reports
+    * Now have a nice toast error warning you and the invalid regexes are highlighted
+    * Previously this just crashed the whole report without any warning
+    * Work by [@robinandeer](https://github.com/robinandeer)
 * Command line option `--dirs-depth` now sets `-d` to `True` (so now works even if `-d` isn't also specified).
 * New config option `config.data_dump_file` to export as much data as possible to `multiqc_data/multiqc_data.json`
 * New code to send exported JSON data to a a web server
@@ -87,6 +87,7 @@ Many thanks to those involved! Lots of different work was added, including:
     * Now uses more subtle _toasts_ and only when you close the toolbox (not every click).
 * Switching report toolbox options to regex mode now enables the _Apply_ button as it should.
 * Sorting table columns with certain suffixes (eg. `13X`) no works properly (numerically)
+* Fixed minor bug in line plot data smoothing (now works with unsorted keys)
 
 ---
 

@@ -338,7 +338,7 @@ def report_sections(self):
         dataset, which can be used to gauge, for example, the likely effect of a
         minimum depth filter on the fraction of a genome available for analysis.'''
         self.add_section (
-            name = 'Cumulative coverage genome fraction',
+            name = 'Cumulative genome coverage',
             anchor = 'qualimap-cumulative-genome-fraction-coverage',
             description = 'Percentage of the reference genome with at least the given depth of coverage.',
             helptext = genome_fraction_helptext,
