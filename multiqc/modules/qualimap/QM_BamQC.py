@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 import logging
+import math
 import re
 from collections import OrderedDict
 
@@ -238,7 +239,15 @@ def report_sections(self):
         rates_within_threshs = dict()
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
             total = total_bases_by_sample[s_name]
-            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max([int (c) for c in self.covs]) + 1))
+            # Make a range of depths that isn't stupidly huge for high coverage expts
+            depth_range = range(0, max_x + 1, math.ceil(float(max_x)/400.0))
+            # Check that we have our specified coverages in the list
+            for c in self.covs:
+                if int(c) not in depth_range:
+                    depth_range.append(int(c))
+            # Calculate the coverage rates for this range of coverages
+            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, depth_range)
+            # Add requested coverage levels to the General Statistics table
             for c in self.covs:
                 if int(c) in rates_within_threshs[s_name]:
                     self.general_stats_data[s_name]['{}_x_pc'.format(c)] = rates_within_threshs[s_name][int(c)]
@@ -534,16 +543,19 @@ def general_stats_headers (self):
         'hidden': True
     }
 
-
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
     bases_within_threshs = OrderedDict((depth, 0) for depth in depth_thresholds)
     rates_within_threshs = OrderedDict((depth, None) for depth in depth_thresholds)
 
-    for depth, bases in bases_by_depth.items():
-        for t in depth_thresholds:
-            if depth >= t:
-                bases_within_threshs[t] += bases
-    for t in depth_thresholds:
+    dt = sorted(depth_thresholds, reverse=True)
+    c = 0
+    for depth in sorted(bases_by_depth.keys(), reverse=True):
+        while depth < dt[c]:
+            c += 1
+            bases_within_threshs[dt[c]] = bases_within_threshs[dt[c - 1]]
+        if depth >= dt[c]:
+            bases_within_threshs[dt[c]] += bases_by_depth[depth]
+    for t in dt:
         bs = bases_within_threshs[t]
         if total_size > 0:
             rate = 100.0 * bases_within_threshs[t] / total_size
