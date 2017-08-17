@@ -58,6 +58,12 @@ def get_filelist(run_module_names):
         files[key] = list()
         if not isinstance(sps, list):
             sps = [sps]
+
+        # Warn if we have any unrecognised search pattern keys
+        unrecognised_keys = [y for x in sps for y in x.keys() if y not in ['fn', 'fn_re', 'contents', 'contents_re', 'num_lines', 'shared', 'max_filesize']]
+        if len(unrecognised_keys) > 0:
+            logger.warn("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
+
         # Split search patterns according to speed of execution.
         if any([x for x in sps if 'contents_re' in x]):
             if any([x for x in sps if 'num_lines' in x]):
