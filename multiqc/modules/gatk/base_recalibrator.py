@@ -25,9 +25,8 @@ class BaseRecalibratorMixin():
         samples_kept = set()
         self.gatk_base_recalibrator = {table_name: {} for table_name in
                                        report_table_headers.values()}
-
         for f in self.find_log_files('gatk/base_recalibrator', filehandles=True):
-            parsed_data = self.parse_report(f['f'], report_table_headers)
+            parsed_data = self.parse_report(f['f'].readlines(), report_table_headers)
             if len(parsed_data) > 0:
                 if f['s_name'] in samples_kept:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
@@ -48,29 +47,40 @@ class BaseRecalibratorMixin():
         if n_reports_found > 0:
             log.info("Found {} BaseRecalibrator reports".format(n_reports_found))
 
-            # Reported vs empirical quality scores
-            self.add_section(
-                name='Observed Quality Scores',
-                plot=quality_score_vs_no_of_observations(self.gatk_base_recalibrator)
-            )
+            self.add_quality_score_vs_no_of_observations_section()
 
         return n_reports_found
 
+    def add_quality_score_vs_no_of_observations_section(self):
+        """ Add a section for the quality score vs number of observations line plot """
 
-def quality_score_vs_no_of_observations(report):
-    """ Return HTML for the quality score vs number of observations line plot """
+        sample_tables = self.gatk_base_recalibrator['quality_quantization_map']
+        sample_data = {
+            sample: {int(x): int(y) for x, y in zip(table['QualityScore'], table['Count'])}
+            for sample, table in sample_tables.items()
+        }
 
-    sample_tables = report['quality_quantization_map']
-    sample_data = {
-        sample: {int(x): int(y) for x, y in zip(table['QualityScore'], table['Count'])}
-        for sample, table in sample_tables.items()
-    }
-    return linegraph.plot(
-        sample_data,
-        pconfig={
-            'xlab': 'Observed Quality Score',
-            'ylab': 'Count',
-            'yDecimals': False,
-            'xDecimals': False,
-            'tt_label': '{point.x}: {point.y:.0f}'
-        })
+        plot = linegraph.plot(
+            sample_data,
+            pconfig={
+                'xlab': 'Observed Quality Score',
+                'ylab': 'Count',
+                'yDecimals': False,
+                'xDecimals': False,
+                'tt_label': '{point.x}: {point.y:.0f}'
+            })
+
+        # Reported vs empirical quality scores
+        self.add_section(
+            name='Observed Quality Scores',
+            description=(
+                'This plot shows the distribution of base quality scores in each sample before and '
+                'after base quality score recalibration (BQSR). Applying BQSR should broaden the '
+                'distribution of base quality scores.'
+            ),
+            helptext= (
+                'For more information see <a href=https://gatkforums.broadinstitute.org/gatk/discussion/44/base-quality-score-recalibration-bqsr>'
+                'the Broad\'s description of BQSR</a>.'
+            ),
+            plot=plot,
+        )

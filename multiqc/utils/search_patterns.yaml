@@ -72,7 +72,7 @@ gatk/varianteval:
     contents: '#:GATKTable:TiTvVariantEvaluator'
     shared: true
 gatk/base_recalibrator:
-    contents: '#:GATKTable:Arguments:Recalibration argument collection values used in this run'
+    contents: '#:GATKTable:Arguments:Recalibration'
     num_lines: 3
 goleft_indexcov/roc:
     fn: '*-indexcov.roc'

@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
-    def parse_report(self, f, table_names):
+    def parse_report(self, lines, table_names):
         """ Parse a GATK report https://software.broadinstitute.org/gatk/documentation/article.php?id=1244
 
         Only GATTable entries are parsed.  Tables are returned as a dict of tables.
@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
         correspond to column values.
 
         Args:
-            f (file handle): a file handle to a GATK report.
+            lines (file handle): an iterable over the lines of a GATK report.
             table_names (dict): a dict with keys that are GATK report table names
                 (e.g. "#:GATKTable:Quantized:Quality quantization map"), and values that are the
                 keys in the returned dict.
@@ -74,24 +74,25 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
             }
         """
 
-        data = dict()
-        while True:
-            line = f.readline()
-            if line == '':
-                break
+        report = dict()
+
+        lines = (l for l in lines)
+        for line in lines:
             line = line.rstrip()
             if line in table_names.keys():
-                data[table_names[line]] = self.parse_gatk_report_table(f)
-        return data
+                report[table_names[line]] = self.parse_gatk_report_table(lines)
+        return report
 
-    def parse_gatk_report_table(self, f):
-        headers = f.readline().rstrip().split()
-        data = OrderedDict([(h, []) for h in headers])
-        while True:
-            line = f.readline()
+    def parse_gatk_report_table(self, lines):
+        headers = next(lines).rstrip().split()
+        table = OrderedDict([(h, []) for h in headers])
+        for line in lines:
             line = line.rstrip()
+
+            # testing to see if we have reached the end of a table in a GATKReport
             if line == '':
                 break
+
             for index, value in enumerate(line.split()):
-                data[headers[index]].append(value)
-        return data
+                table[headers[index]].append(value)
+        return table
