@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """ MultiQC module to parse output from GATK """
 from __future__ import print_function
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 import logging
 
 from multiqc import config
@@ -34,15 +34,14 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
-        n = dict()
 
         # Call submodule functions
-        n['varianteval'] = self.parse_gatk_varianteval()
-        if n['varianteval'] > 0:
-            log.info("Found {} VariantEval reports".format(n['varianteval']))
+        n_reports_found = 0
+        n_reports_found += self.parse_gatk_base_recalibrator()
+        n_reports_found += self.parse_gatk_varianteval()
 
         # Exit if we didn't find anything
-        if sum(n.values()) == 0:
+        if n_reports_found == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
@@ -86,8 +85,8 @@ class MultiqcModule(BaseMultiqcModule, BaseRecalibratorMixin, VariantEvalMixin):
         return data
 
     def parse_gatk_report_table(self, f):
-        data = defaultdict(list)
         headers = f.readline().rstrip().split()
+        data = OrderedDict([(h, []) for h in headers])
         while True:
             line = f.readline()
             line = line.rstrip()

@@ -27,7 +27,9 @@ class VariantEvalMixin():
         # Filter to strip out ignored sample names
         self.gatk_varianteval = self.ignore_samples(self.gatk_varianteval)
 
-        if len(self.gatk_varianteval) > 0:
+        n_reports_found = len(self.gatk_varianteval)
+        if n_reports_found > 0:
+            log.info("Found {} VariantEval reports".format(n_reports_found))
 
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.gatk_varianteval, 'multiqc_gatk_varianteval')
@@ -73,9 +75,7 @@ class VariantEvalMixin():
                 plot = comp_overlap_table(self.gatk_varianteval)
             )
 
-
-        # Return the number of logs that were found
-        return len(self.gatk_varianteval)
+        return n_reports_found
 
 
 def parse_single_report(f):
