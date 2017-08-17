@@ -17,6 +17,10 @@ string beginning with the name of your module, anything you like after the first
     * For example, if using `-m star` to only use the STAR module, all other file searches now skipped
 * File search now warns if an unrecognised search type is given
 
+#### Bug Fixes
+* Minor `default_dev` directory creation bug squashed
+
+
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
 
 #### CodeFest 2017 Contributions
