@@ -60,6 +60,7 @@ setup(
         'simplejson',
         'spectra',
         'networkx==1.*',
+        'enum34',
     ],
     entry_points = {
         'multiqc.modules.v1': [
