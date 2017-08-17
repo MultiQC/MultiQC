@@ -15,33 +15,38 @@ class BaseRecalibratorMixin():
     def parse_gatk_base_recalibrator(self):
         """ Find GATK BaseRecalibrator logs and parse their data """
 
-        self.gatk_base_recalibrator = dict()
+        report_table_headers = {
+            '#:GATKTable:Arguments:Recalibration argument collection values used in this run': 'arguments',
+            '#:GATKTable:Quantized:Quality quantization map': 'quality_quantization_map',
+            '#:GATKTable:RecalTable0:': 'recal_table_0',
+            '#:GATKTable:RecalTable1:': 'recal_table_1',
+            '#:GATKTable:RecalTable2:': 'recal_table_2',
+        }
+        samples_kept = set()
+        self.gatk_base_recalibrator = {table_name: {} for table_name in
+                                       report_table_headers.values()}
+
         for f in self.find_log_files('gatk/base_recalibrator', filehandles=True):
-            parsed_data = self.parse_report(
-                f['f'],
-                {
-                    '#:GATKTable:Arguments:Recalibration argument collection values used in this run': 'arguments',
-                    '#:GATKTable:Quantized:Quality quantization map': 'quality_quantization_map',
-                    '#:GATKTable:RecalTable0:': 'recal_table_0',
-                    '#:GATKTable:RecalTable1:': 'recal_table_1',
-                    '#:GATKTable:RecalTable2:': 'recal_table_2',
-                }
-            )
+            parsed_data = self.parse_report(f['f'], report_table_headers)
             if len(parsed_data) > 0:
-                if f['s_name'] in self.gatk_base_recalibrator:
+                if f['s_name'] in samples_kept:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+                samples_kept.add(f['s_name'])
+
                 self.add_data_source(f, section='base_recalibrator')
-                self.gatk_base_recalibrator[f['s_name']] = parsed_data
+                for table_name, sample_tables in parsed_data.items():
+                    self.gatk_base_recalibrator[table_name][f['s_name']] = sample_tables
 
         # Filter to strip out ignored sample names
-        self.gatk_base_recalibrator = self.ignore_samples(self.gatk_base_recalibrator)
+        self.gatk_base_recalibrator = {
+            table_name: self.ignore_samples(sample_tables)
+            for table_name, sample_tables
+            in self.gatk_base_recalibrator.items()
+        }
 
-        n_reports_found = len(self.gatk_base_recalibrator)
+        n_reports_found = len(samples_kept)
         if n_reports_found > 0:
             log.info("Found {} BaseRecalibrator reports".format(n_reports_found))
-
-            # Write parsed report data to a file (restructure first)
-            self.write_data_file(self.gatk_base_recalibrator, 'multiqc_gatk_base_recalibrator')
 
             # Reported vs empirical quality scores
             self.add_section(
@@ -52,14 +57,14 @@ class BaseRecalibratorMixin():
         return n_reports_found
 
 
-def quality_score_vs_no_of_observations(data):
+def quality_score_vs_no_of_observations(report):
     """ Return HTML for the quality score vs number of observations line plot """
 
-    sample_data = {}
-    for sample, report in data.items():
-        table = report['quality_quantization_map']
-        xy = {int(x): int(y) for x, y in zip(table['QualityScore'], table['Count'])}
-        sample_data[sample] = xy
+    sample_tables = report['quality_quantization_map']
+    sample_data = {
+        sample: {int(x): int(y) for x, y in zip(table['QualityScore'], table['Count'])}
+        for sample, table in sample_tables.items()
+    }
     return linegraph.plot(
         sample_data,
         pconfig={
