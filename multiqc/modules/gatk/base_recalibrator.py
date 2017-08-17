@@ -36,24 +36,36 @@ class BaseRecalibratorMixin():
         # Filter to strip out ignored sample names
         self.gatk_base_recalibrator = self.ignore_samples(self.gatk_base_recalibrator)
 
-        if len(self.gatk_base_recalibrator) > 0:
+        n_reports_found = len(self.gatk_base_recalibrator)
+        if n_reports_found > 0:
+            log.info("Found {} BaseRecalibrator reports".format(n_reports_found))
+
             # Write parsed report data to a file (restructure first)
             self.write_data_file(self.gatk_base_recalibrator, 'multiqc_gatk_base_recalibrator')
 
             # Reported vs empirical quality scores
             self.add_section(
-                name='Reported vs Empirical Quality Scores',
-                anchor='gatk-reported-vs-empirical-quality-scores',
+                name='Observed Quality Scores',
                 plot=quality_score_vs_no_of_observations(self.gatk_base_recalibrator)
             )
 
-        # Return the number of logs that were found
-        return len(self.gatk_base_recalibrator)
+        return n_reports_found
 
 
 def quality_score_vs_no_of_observations(data):
     """ Return HTML for the quality score vs number of observations line plot """
 
-    table = data['quality_quantization_map']
-    xy = {x: y for x, y in zip(table['QualityScore'], table['Count'])}
-    return linegraph.plot({'sample_1': xy})
+    sample_data = {}
+    for sample, report in data.items():
+        table = report['quality_quantization_map']
+        xy = {int(x): int(y) for x, y in zip(table['QualityScore'], table['Count'])}
+        sample_data[sample] = xy
+    return linegraph.plot(
+        sample_data,
+        pconfig={
+            'xlab': 'Observed Quality Score',
+            'ylab': 'Count',
+            'yDecimals': False,
+            'xDecimals': False,
+            'tt_label': '{point.x}: {point.y:.0f}'
+        })
