@@ -514,6 +514,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     logger.info("Compressing plot data")
     report.plot_compressed_json = report.compress_json(report.plot_data)
 
+    plugin_hooks.mqc_trigger('before_report_generation')
+
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
     if config.data_dump_file or config.megaqc_url:
         multiqc_json_dump = megaqc.multiqc_dump_json(report)
@@ -521,8 +523,6 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             util_functions.write_data_file(multiqc_json_dump, 'multiqc_data', False, 'json')
         if config.megaqc_url:
             megaqc.multiqc_api_post(multiqc_json_dump)
-
-    plugin_hooks.mqc_trigger('before_report_generation')
 
     # Make the final report path & data directories
     if filename != 'stdout':
