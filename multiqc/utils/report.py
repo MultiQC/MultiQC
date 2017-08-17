@@ -42,14 +42,19 @@ saved_raw_data = dict()
 # Make a dict of discovered files for each seach key
 searchfiles = list()
 files = dict()
-def get_filelist():
+def get_filelist(run_module_names):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
     """
     # Prep search patterns
     spatterns = [{},{},{},{},{},{},{}]
+    ignored_patterns = []
     for key, sps in config.sp.items():
+        mod_name = key.split('/', 1)[0]
+        if mod_name.lower() not in [m.lower() for m in run_module_names]:
+            ignored_patterns.append(key)
+            continue
         files[key] = list()
         if not isinstance(sps, list):
             sps = [sps]
@@ -70,6 +75,9 @@ def get_filelist():
                 spatterns[3][key] = sps
         else:
             spatterns[0][key] = sps
+
+    if len(ignored_patterns) > 0:
+        logger.debug("Ignored search patterns as didn't match running modules: {}".format(', '.join(ignored_patterns)))
 
     def add_file(fn, root):
         """

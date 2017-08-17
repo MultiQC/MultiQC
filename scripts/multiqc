@@ -369,7 +369,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     if len(run_modules) == 0:
         logger.critical('No analysis modules specified!')
         sys.exit(1)
-    logger.debug("Analysing modules: {}".format(', '.join([ list(m.keys())[0] for m in run_modules ])))
+    run_module_names = [ list(m.keys())[0] for m in run_modules ]
+    logger.debug("Analysing modules: {}".format(', '.join(run_module_names)))
 
     # Create the temporary working directories
     tmp_dir = tempfile.mkdtemp()
@@ -396,7 +397,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
 
 
     # Get the list of files to search
-    report.get_filelist()
+    report.get_filelist(run_module_names)
 
     # Run the modules!
     plugin_hooks.mqc_trigger('before_modules')

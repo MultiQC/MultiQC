@@ -30,7 +30,7 @@ bismark/m_bias:
     fn: '*M-bias.txt'
 bismark/bam2nuc:
     fn: '*.nucleotide_stats.txt'
-bowtie:
+bowtie1:
     contents: '# reads processed:'
     shared: true
 bowtie2:
@@ -245,7 +245,7 @@ sortmerna:
     shared: true
 star:
     fn: '*Log.final.out'
-star_genecounts:
+star/genecounts:
     fn: '*ReadsPerGene.out.tab'
 theta2:
     fn: '*.BEST.results'

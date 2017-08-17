@@ -157,8 +157,20 @@ First, add your default patterns to:
 MULTIQC_ROOT/multiqc/utils/search_patterns.yaml
 ```
 
-Each search has a yaml key (typically the name of your module), with one
-or more search criteria. The following keys can be used:
+Each search has a yaml key, with one or more search criteria.
+
+The yaml key must begin with the name of your module. If you have multiple
+search patterns for a single module, follow the module name with a forward
+slash and then any string. For example, see the `fastqc` module search patterns:
+
+```yaml
+fastqc/data:
+    fn: 'fastqc_data.txt'
+fastqc/zip:
+    fn: '_fastqc.zip'
+```
+
+The following search criteria sub-keys can then be used:
 
 * `fn`
   * A glob filename pattern, used with the Python [`fnmatch`](https://docs.python.org/2/library/fnmatch.html) function
@@ -186,16 +198,6 @@ mymod:
     fn: '_myprogram.txt'
 myothermod:
     contents: 'This is myprogram v1.3'
-```
-
-Note that if you want to find multiple different log files for a single module,
-the convention is to use the module name and a forward slash separator _(this changed
-in the v1.0 release and the slashes help backwards-compatibility)_:
-```yaml
-fastqc/data:
-    fn: 'fastqc_data.txt'
-fastqc/zip:
-    fn: '_fastqc.zip'
 ```
 
 You can also supply a list of different patterns for a single log file type if needed.

@@ -1,7 +1,20 @@
 # MultiQC Version History
 
 ## MultiQC v1.3dev
-_..nothing yet.._
+
+#### Breaking changes
+Note that any users with custom search patterns for the `bowtie` or `star` will
+need to update their config files: The `bowtie` search key is now `bowtie1`,
+`star_genecounts` is now `star/genecounts`.
+
+For users with custom modules - search patterns _must_ now conform to the search
+pattern naming convention: `modulename` or `modulename/anything` (the search pattern
+string beginning with the name of your module, anything you like after the first `/`).
+
+#### New MultiQC Features:
+* File search refactored to only search for running modules
+    * Makes search much faster when running with lots of files and limited modules
+    * For example, if using `-m star` to only use the STAR module, all other file searches now skipped
 
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
 
