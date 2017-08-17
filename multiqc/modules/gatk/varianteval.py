@@ -80,6 +80,7 @@ class VariantEvalMixin():
 
 def parse_single_report(f):
     """ Parse a gatk varianteval varianteval """
+    # Fixme: Separate GATKReport parsing and data subsetting. A GATKReport parser now available from the GATK MultiqcModel.
 
     data = dict()
     in_CompOverlap = False
