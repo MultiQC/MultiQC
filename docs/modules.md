@@ -505,7 +505,7 @@ self.add_section (
     name = 'First Module Section',
     anchor = 'mymod-first',
     description = 'My amazing module output, from the first section',
-    helptext = "If you're not sure how to interpret the data, we can help!",
+    helptext = "If you're not sure _how_ to interpret the data, we can help!",
     plot = bargraph.plot(data)
 )
 self.add_section (
@@ -519,6 +519,10 @@ self.add_section (
 ```
 These will automatically be labelled and linked in the navigation (unless
 the module has only one section or `name` is not specified).
+
+Note that `description` and `helptext` are processed as Markdown by default.
+This can be disabled by passing `autoformat=False` to the function.
+
 
 ## Step 6 - Plot some data
 Ok, you have some data, now the fun bit - visualising it! Each of the plot

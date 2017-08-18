@@ -26,6 +26,8 @@ above. For example:
 self.add_section (
     name = 'Module Section',
     anchor = 'mymod_section',
+    description = 'This plot shows some really nice data.',
+    helptext = 'This longer string (can be **markdown**) helps explain how to interpret the plot',
     plot = bargraph.plot(self.parsed_data, categories, pconfig)
 )
 ```
@@ -72,7 +74,7 @@ cats['not_aligned'] = {
 }
 ```
 
-Finally, a third variable can be supplied with configuration variables for
+Finally, a third variable should be supplied with configuration variables for
 the plot. The defaults are as follows:
 ```python
 config = {
@@ -106,6 +108,12 @@ config = {
     'tt_percentages': True,                 # Show the percentages of each count in the tooltip
 }
 ```
+
+> The keys `id` and `title` should always be passed as a minimum. The `id` is used
+> for the plot name when exporting. If left unset, the Plot Export panel will call
+> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
+> Plots should always have titles, especially as they can stand by themselves
+> when exported.
 
 ### Switching datasets
 It's possible to have single plot with buttons to switch between different
@@ -220,6 +228,12 @@ config = {
 }
 html_content = linegraph.plot(data, config)
 ```
+
+> The keys `id` and `title` should always be passed as a minimum. The `id` is used
+> for the plot name when exporting. If left unset, the Plot Export panel will call
+> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
+> Plots should always have titles, especially as they can stand by themselves
+> when exported.
 
 ### Switching datasets
 You can also have a single plot with buttons to switch between different
