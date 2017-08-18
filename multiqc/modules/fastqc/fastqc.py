@@ -38,6 +38,8 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a quality control tool for high throughput sequence data,"\
         " written by Simon Andrews at the Babraham Institute in Cambridge.")
 
+        # For this module the dict will be indexed by tuple(s_name, read_number)
+        # even if there is only one read and read_number is always None.
         self.fastqc_data = dict()
 
     def gather(self):
@@ -51,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
             if f['s_name'].endswith('_fastqc.zip'):
                 f['s_name'] = f['s_name'][:-11]
             # Skip if we already have this report - parsing zip files is slow..
-            if s_name in self.fastqc_data.keys():
+            if (f['s_name'], f.get('read_pairs')) in self.fastqc_data.keys():
                 log.debug("Skipping '{}' as already parsed '{}'".format(f['fn'], s_name))
                 continue
             try:
@@ -79,11 +81,15 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.fastqc_data)))
 
         # Write the summary stats to a file
-        data = dict()
-        for s_name in self.fastqc_data:
-            data[s_name] = self.fastqc_data[s_name]['basic_statistics']
-            data[s_name].update(self.fastqc_data[s_name]['statuses'])
-        self.write_data_file(data, 'multiqc_fastqc')
+        data = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
+            data[read_num][s_name] = s_fastqc_data['basic_statistics']
+            data[read_num][s_name].update(s_fastqc_data['statuses'])
+        if len(data) == 1:
+            data_to_write, = data.values()
+        else:
+            data_to_write = { "{} Read {}".format(s, r) : d for r, rs in data.items() for s, d in rs.items() }
+        self.write_data_file(data_to_write, 'multiqc_fastqc')
 
         # Add to self.css and self.js to be included in template
         self.css = { 'assets/css/multiqc_fastqc.css' : os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css') }
@@ -97,10 +103,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up.
         # FIXME - if the graphs want to show pass/fail bar for just read1 or read2 this
-        # is going to take some JS hacking, but I think it will do as-is for now.
+        # is going to take some JS hacking, but just fudge it for now - the call
+        # will be based on whichever read is seen last!
         statuses = dict()
-        for s_name in self.fastqc_data:
-            for section, status in self.fastqc_data[s_name]['statuses'].items():
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
+            for section, status in s_fastqc_data['statuses'].items():
                 try:
                     statuses[section][s_name] = status
                 except KeyError:
@@ -312,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             try:
                 data[read_num][s_name] = { self.avg_bp_from_range(d['base']): d['mean']
-                                           for d in s_fastqc_data[report_name]['per_base_sequence_quality']}
+                                           for d in s_fastqc_data['per_base_sequence_quality']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -408,7 +415,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = defaultdict(OrderedDict)
         for (s_name, read_num), s_fastqc_data in sorted(self.fastqc_data.items()):
             try:
-                data[red_num][s_name] = {self.avg_bp_from_range(d['base']): d for d in s_fastqc_data['per_base_sequence_content']}
+                data[read_num][s_name] = {self.avg_bp_from_range(d['base']): d for d in s_fastqc_data['per_base_sequence_content']}
             except KeyError:
                 pass
             # Old versions of FastQC give counts instead of percentages
@@ -475,7 +482,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data_norm[read_num][s_name] = dict()
                 total = sum( [ c for c in data[read_num][s_name].values() ] )
                 for gc, count in data[read_num][s_name].items():
-                    data_norm[red_num][s_name][gc] = (count / total) * 100
+                    data_norm[read_num][s_name][gc] = (count / total) * 100
         if len(data) == 0:
             log.debug('per_sequence_gc_content not found in FastQC reports')
             return None

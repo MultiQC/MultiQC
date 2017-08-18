@@ -255,8 +255,11 @@ class BaseMultiqcModule(object):
                 return data
             for k,v in data.items():
                 # Match ignore glob patterns
-                glob_match = any( fnmatch.fnmatch(k, sn) for sn in config.sample_names_ignore )
-                re_match = any( re.match(sn, k) for sn in config.sample_names_ignore_re )
+                # Deal with the case where k is a tuple and the sample name is k[0]
+                sample_name = k[0] if type(k) is tuple else k
+
+                glob_match = any( fnmatch.fnmatch(sample_name, si) for si in config.sample_names_ignore )
+                re_match = any( re.match(si, sample_name) for si in config.sample_names_ignore_re )
                 if not glob_match and not re_match:
                     newdata[k] = v
             return newdata
