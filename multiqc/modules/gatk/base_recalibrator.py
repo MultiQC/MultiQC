@@ -81,8 +81,10 @@ class BaseRecalibratorMixin():
                 'distribution of base quality scores.'
             ),
             helptext=(
-                'For more information see <a href=https://gatkforums.broadinstitute.org/gatk/discussion/44/base-quality-score-recalibration-bqsr>'
-                'the Broad\'s description of BQSR</a>.'
+                'For more information see '
+                '[the Broad\'s description of BQSR]'
+                '(https://gatkforums.broadinstitute.org/gatk/discussion/44/base-quality-score-recalibration-bqsr)'
+                '.'
             ),
             plot=plot,
         )
