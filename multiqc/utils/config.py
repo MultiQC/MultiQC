@@ -192,6 +192,9 @@ def mqc_add_config(conf, conf_path=None):
                 continue
             logger.debug("New config '{}': {}".format(c, fpath))
             update_dict(globals(), {c: fpath})
+        elif c == 'define_merge_groups':
+            for f in v:
+                define_merge_groups[f['name']] = f['regex']
         else:
             logger.debug("New config '{}': {}".format(c, v))
             update_dict(globals(), {c: v})

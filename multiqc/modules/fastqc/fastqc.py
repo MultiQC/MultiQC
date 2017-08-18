@@ -10,14 +10,16 @@
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
 
-from __future__ import print_function
-from collections import OrderedDict
+from __future__ import print_function, division
+
+from collections import OrderedDict, defaultdict
 import io
 import json
 import logging
 import os
 import re
 import zipfile
+from statistics import mean
 
 from multiqc import config
 from multiqc.plots import linegraph, bargraph
@@ -41,14 +43,13 @@ class MultiqcModule(BaseMultiqcModule):
     def gather(self):
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files('fastqc/data'):
-            s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
-            self.parse_fastqc_report(f['f'], s_name, f)
+            self.parse_fastqc_report(f['f'], f=f) #fffffff
 
         # Find and parse zipped FastQC reports
         for f in self.find_log_files('fastqc/zip', filecontents=False):
-            s_name = f['fn']
-            if s_name.endswith('_fastqc.zip'):
-                s_name = s_name[:-11]
+            # Do we still need this??
+            if f['s_name'].endswith('_fastqc.zip'):
+                f['s_name'] = f['s_name'][:-11]
             # Skip if we already have this report - parsing zip files is slow..
             if s_name in self.fastqc_data.keys():
                 log.debug("Skipping '{}' as already parsed '{}'".format(f['fn'], s_name))
@@ -64,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 with fqc_zip.open(os.path.join(d_name, 'fastqc_data.txt')) as fh:
                     r_data = fh.read().decode('utf8')
-                    self.parse_fastqc_report(r_data, s_name, f)
+                    self.parse_fastqc_report(r_data, f=f)
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
@@ -94,7 +95,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the general statistics table
         self.fastqc_general_stats()
 
-        # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
+        # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up.
+        # FIXME - if the graphs want to show pass/fail bar for just read1 or read2 this
+        # is going to take some JS hacking, but I think it will do as-is for now.
         statuses = dict()
         for s_name in self.fastqc_data:
             for section, status in self.fastqc_data[s_name]['statuses'].items():
@@ -105,30 +108,48 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(statuses))
 
         # Now add each section in order
-        self.sequence_quality_plot()
-        self.per_seq_quality_plot()
-        self.sequence_content_plot()
-        self.gc_content_plot()
-        self.n_content_plot()
-        self.seq_length_dist_plot()
-        self.seq_dup_levels_plot()
-        self.overrepresented_sequences()
-        self.adapter_content_plot()
+        # Allow plot selection in config
+        try:
+            plots_enabled = config.fastqc_plots_enabled.split()
+        except AttributeError:
+            plots_enabled = []
 
-    def parse_fastqc_report(self, file_contents, s_name=None, f=None):
+        for plot_func in (
+                self.sequence_quality_plot,
+                self.per_seq_quality_plot,
+                self.sequence_content_plot,
+                self.gc_content_plot,
+                self.n_content_plot,
+                self.seq_length_dist_plot,
+                self.seq_dup_levels_plot,
+                self.overrepresented_sequences,
+                self.adapter_content_plot
+            ):
+            if ( not plots_enabled
+                 or plot_func.__name__ in plots_enabled ):
+
+                plot_func()
+
+
+    def parse_fastqc_report(self, file_contents, f=None):
         """ Takes contents from a fastq_data.txt file and parses out required
         statistics and data. Returns a dict with keys 'stats' and 'data'.
-        Data is for plotting graphs, stats are for top table. """
+        Data is for plotting graphs, stats are for top table.
+        """
 
-        # Make the sample name from the input filename if we find it
+        # Make the sample name from the input filename if we find it, overriding
+        # the filename of the report.
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
-            s_name = self.clean_s_name(fn_search.group(1) , f['root'])
+            f.update( self.clean_and_scan_s_name(fn_search.group(1), f['root']) )
 
-        if s_name in self.fastqc_data.keys():
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-        self.add_data_source(f, s_name)
-        self.fastqc_data[s_name] = { 'statuses': dict() }
+        s_name = f['s_name']
+        s_read = f.get('read_pairs')
+
+        if (s_name, s_read) in self.fastqc_data.keys():
+            log.debug("Duplicate sample name found! Overwriting: {}".format( (s_name, s_read) ))
+        self.add_data_source(f, section=s_read)
+        s_fastqc_data = self.fastqc_data[(s_name,s_read)] = { 'statuses': dict() }
 
         # Parse the report
         section = None
@@ -141,13 +162,13 @@ class MultiqcModule(BaseMultiqcModule):
             elif l.startswith('>>'):
                 (section, status) = l[2:].split("\t", 1)
                 section = section.lower().replace(' ', '_')
-                self.fastqc_data[s_name]['statuses'][section] = status
+                s_fastqc_data['statuses'][section] = status
             elif section is not None:
                 if l.startswith('#'):
                     s_headers = l[1:].split("\t")
                     # Special case: Total Deduplicated Percentage header line
                     if s_headers[0] == 'Total Deduplicated Percentage':
-                        self.fastqc_data[s_name]['basic_statistics'].append({
+                        s_fastqc_data['basic_statistics'].append({
                             'measure': 'total_deduplicated_percentage',
                             'value': float(s_headers[1])
                         })
@@ -156,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
                         if s_headers[1] == 'Relative count':
                             s_headers[1] = 'Percentage of total'
                         s_headers = [s.lower().replace(' ', '_') for s in s_headers]
-                        self.fastqc_data[s_name][section] = list()
+                        s_fastqc_data[section] = list()
 
                 elif s_headers is not None:
                     s = l.split("\t")
@@ -168,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
                         except ValueError:
                             pass
                         row[s_headers[i]] = v
-                    self.fastqc_data[s_name][section].append(row)
+                    s_fastqc_data[section].append(row)
                     # Special case - need to remember order of duplication keys
                     if section == 'sequence_duplication_levels':
                         try:
@@ -177,42 +198,59 @@ class MultiqcModule(BaseMultiqcModule):
                             self.dup_keys.append(s[0])
 
         # Tidy up the Basic Stats
-        self.fastqc_data[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_data[s_name]['basic_statistics']}
+        s_fastqc_data['basic_statistics'] = { d['measure']: d['value']
+                                              for d in s_fastqc_data['basic_statistics'] }
 
         # Calculate the average sequence length (Basic Statistics gives a range)
         length_bp = 0
         total_count = 0
-        for d in self.fastqc_data[s_name].get('sequence_length_distribution', {}):
+        for d in s_fastqc_data.get('sequence_length_distribution', {}):
             length_bp += d['count'] * self.avg_bp_from_range(d['length'])
             total_count += d['count']
         if total_count > 0:
-            self.fastqc_data[s_name]['basic_statistics']['avg_sequence_length'] = length_bp / total_count
+            s_fastqc_data['basic_statistics']['avg_sequence_length'] = length_bp / total_count
+
 
     def fastqc_general_stats(self):
         """ Add some single-number stats to the basic statistics
-        table at the top of the report """
+            table at the top of the report
+            If read_name_regex is set it will be used to sggregate statistics from read1 and read2
+            accordingly.
+        """
 
-        # Prep the data
-        data = dict()
-        for s_name in self.fastqc_data:
-            bs = self.fastqc_data[s_name]['basic_statistics']
-            data[s_name] = {
-                'percent_gc': bs['%GC'],
-                'avg_sequence_length': bs['avg_sequence_length'],
-                'total_sequences': bs['Total Sequences'],
-            }
+        # Prep the data. Here's a container which detfaults to dicts of lists.
+        data = defaultdict(lambda: defaultdict(list))
+
+        for s_name, read_num in self.fastqc_data:
+
+            s_fastqc_data = self.fastqc_data[(s_name,read_num)]
+
+            bs = s_fastqc_data['basic_statistics']
+            data[s_name]['percent_gc'].append(bs['%GC'])
+            data[s_name]['avg_sequence_length'].append(bs['avg_sequence_length'])
+            data[s_name]['total_sequences'].append(bs['Total Sequences'])
             try:
-                data[s_name]['percent_duplicates'] = 100 - bs['total_deduplicated_percentage']
+                data[s_name]['percent_duplicates'].append( 100 - bs['total_deduplicated_percentage'] )
             except KeyError:
                 pass # Older versions of FastQC don't have this
             # Add count of fail statuses
             num_statuses = 0
             num_fails = 0
-            for s in self.fastqc_data[s_name]['statuses'].values():
+            for s in s_fastqc_data['statuses'].values():
                 num_statuses += 1
                 if s == 'fail':
                     num_fails += 1
-            data[s_name]['percent_fails'] = (float(num_fails)/float(num_statuses))*100.0
+            data[s_name]['percent_fails'].append( ( num_fails/num_statuses ) * 100.0 )
+
+        # Now aggregate all the lists back to single figures. This should work
+        # whether or not the reads were actually paired.
+        for s_dict in data.values():
+            for k in s_dict:
+                if k in ['total_sequences']:
+                    s_dict[k] = max( s_dict[k] )
+                else:
+                    s_dict[k] = mean( s_dict[k] )
+
 
         # Are sequence lengths interesting?
         seq_lengths = [x['avg_sequence_length'] for x in data.values()]
@@ -269,10 +307,12 @@ class MultiqcModule(BaseMultiqcModule):
     def sequence_quality_plot (self):
         """ Create the HTML for the phred quality score plot """
 
-        data = dict()
-        for s_name in self.fastqc_data:
+        data = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
+
             try:
-                data[s_name] = {self.avg_bp_from_range(d['base']): d['mean'] for d in self.fastqc_data[s_name]['per_base_sequence_quality']}
+                data[read_num][s_name] = { self.avg_bp_from_range(d['base']): d['mean']
+                                           for d in s_fastqc_data[report_name]['per_base_sequence_quality']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -292,24 +332,34 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
-            ]
+            ],
         }
+
+        # Did we have 1 read or 2 (or N reads, why not...)?
+        reads_in_data = sorted(data.keys())
+        if len(reads_in_data) >= 2:
+            pconfig['data_labels'] = [ dict(name='Read {}'.format(read))
+                                       for read in reads_in_data ]
+            data_to_plot = [data[r] for r in reads_in_data]
+        else:
+            data_to_plot = data[reads_in_data[0]]
+
         self.add_section (
             name = 'Sequence Quality Histograms',
             anchor = 'fastqc_per_base_sequence_quality',
             description = 'The mean quality value across each base position in the read. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.',
-            plot = linegraph.plot(data, pconfig)
+            plot = linegraph.plot(data_to_plot, pconfig)
         )
 
 
     def per_seq_quality_plot (self):
         """ Create the HTML for the per sequence quality score plot """
 
-        data = dict()
-        for s_name in self.fastqc_data:
+        data = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
-                data[s_name] = {d['quality']: d['count'] for d in self.fastqc_data[s_name]['per_sequence_quality_scores']}
+                data[read_num][s_name] = {d['quality']: d['count'] for d in s_fastqc_data['per_sequence_quality_scores']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -332,12 +382,19 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
             ]
         }
+
+        # For now just flatten data. Maybe could hilight read1 vs read2 or do 2 graphs as above?
+        if len(data) == 1:
+            data_to_plot, = data.values()
+        else:
+            data_to_plot = { "{} Read {}".format(s, r) : d for r, rs in data.items() for s, d in rs.items() }
+
         self.add_section (
             name = 'Per Sequence Quality Scores',
             anchor = 'fastqc_per_sequence_quality_scores',
             description = 'The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.',
-            plot = linegraph.plot(data, pconfig)
+            plot = linegraph.plot(data_to_plot, pconfig)
         )
 
 
@@ -348,23 +405,28 @@ class MultiqcModule(BaseMultiqcModule):
                     See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
 
         # Prep the data
-        data = OrderedDict()
-        for s_name in sorted(self.fastqc_data.keys()):
+        data = defaultdict(OrderedDict)
+        for (s_name, read_num), s_fastqc_data in sorted(self.fastqc_data.items()):
             try:
-                data[s_name] = {self.avg_bp_from_range(d['base']): d for d in self.fastqc_data[s_name]['per_base_sequence_content']}
+                data[red_num][s_name] = {self.avg_bp_from_range(d['base']): d for d in s_fastqc_data['per_base_sequence_content']}
             except KeyError:
                 pass
             # Old versions of FastQC give counts instead of percentages
-            for b in data[s_name]:
-                tot = sum([data[s_name][b][base] for base in ['a','c','t','g']])
+            for b in data[read_num][s_name]:
+                tot = sum([data[read_num][s_name][b][base] for base in ['a','c','t','g']])
                 if tot == 100.0:
                     break
                 else:
                     for base in ['a','c','t','g']:
-                        data[s_name][b][base] = (float(data[s_name][b][base])/float(tot)) * 100.0
+                        data[read_num][s_name][b][base] = (float(data[s_name][b][base])/float(tot)) * 100.0
         if len(data) == 0:
             log.debug('sequence_content not found in FastQC reports')
             return None
+
+        if len(data) == 1:
+            data_to_plot, = data.values()
+        else:
+            data_to_plot = OrderedDict([ ("{} Read {}".format(s, r), d) for r, rs in data.items() for s, d in rs.items() ])
 
         html += '''<div id="fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
@@ -390,7 +452,7 @@ class MultiqcModule(BaseMultiqcModule):
         <script type="text/javascript">
             fastqc_seq_content_data = {d};
             $(function () {{ fastqc_seq_content_heatmap(); }});
-        </script>'''.format(d=json.dumps(data))
+        </script>'''.format(d=json.dumps(data_to_plot))
 
         self.add_section (
             name = 'Per Base Sequence Content',
@@ -402,18 +464,18 @@ class MultiqcModule(BaseMultiqcModule):
     def gc_content_plot (self):
         """ Create the HTML for the FastQC GC content plot """
 
-        data = dict()
-        data_norm = dict()
-        for s_name in self.fastqc_data:
+        data = defaultdict(dict)
+        data_norm = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
-                data[s_name] = {d['gc_content']: d['count'] for d in self.fastqc_data[s_name]['per_sequence_gc_content']}
+                data[read_num][s_name] = {d['gc_content']: d['count'] for d in s_fastqc_data['per_sequence_gc_content']}
             except KeyError:
                 pass
             else:
-                data_norm[s_name] = dict()
-                total = sum( [ c for c in data[s_name].values() ] )
-                for gc, count in data[s_name].items():
-                    data_norm[s_name][gc] = (count / total) * 100
+                data_norm[read_num][s_name] = dict()
+                total = sum( [ c for c in data[read_num][s_name].values() ] )
+                for gc, count in data[read_num][s_name].items():
+                    data_norm[red_num][s_name][gc] = (count / total) * 100
         if len(data) == 0:
             log.debug('per_sequence_gc_content not found in FastQC reports')
             return None
@@ -470,11 +532,19 @@ class MultiqcModule(BaseMultiqcModule):
                     except (TypeError, IndexError):
                         pass
 
+        # For now just flatten data. Maybe could hilight read1 vs read2 or do 2 graphs as above?
+        if len(data) == 1:
+            data_to_plot, = data.values()
+            data_norm_to_plot, = data_norm.values()
+        else:
+            data_to_plot = { "{} Read {}".format(s, r) : d for r, rs in data.items() for s, d in rs.items() }
+            data_norm_to_plot = { "{} Read {}".format(s, r) : d for r, rs in data_norm.items() for s, d in rs.items() }
+
         desc = '''The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.
                 See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>'''
         if theoretical_gc is not None:
             # Calculate the count version of the theoretical data based on the largest data store
-            max_total = max([sum (d.values()) for d in data.values() ])
+            max_total = max([sum (d.values()) for d in data_to_plot.values() ])
             esconfig = {
                 'name': 'Theoretical GC Content',
                 'dashStyle': 'Dash',
@@ -493,17 +563,17 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Per Sequence GC Content',
             anchor = 'fastqc_per_sequence_gc_content',
             description = desc,
-            plot = linegraph.plot([data_norm, data], pconfig)
+            plot = linegraph.plot([data_norm_to_plot, data_to_plot], pconfig)
         )
 
 
     def n_content_plot (self):
         """ Create the HTML for the per base N content plot """
 
-        data = dict()
-        for s_name in self.fastqc_data:
+        data = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
-                data[s_name] = {self.avg_bp_from_range(d['base']): d['n-count'] for d in self.fastqc_data[s_name]['per_base_n_content']}
+                data[read_name][s_name] = {self.avg_bp_from_range(d['base']): d['n-count'] for d in s_fastqc_data['per_base_n_content']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -529,6 +599,15 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
 
+        # Did we have 1 read or 2 (or 73)? Plot a graph for each.
+        reads_in_data = sorted(data.keys())
+        if len(reads_in_data) >= 2:
+            pconfig['data_labels'] = [ dict(name='Read {}'.format(read))
+                                       for read in reads_in_data ]
+            data_to_plot = [data[r] for r in reads_in_data]
+        else:
+            data_to_plot = data[reads_in_data[0]]
+
         self.add_section (
             name = 'Per Base N Content',
             anchor = 'fastqc_per_base_n_content',
@@ -541,12 +620,12 @@ class MultiqcModule(BaseMultiqcModule):
     def seq_length_dist_plot (self):
         """ Create the HTML for the Sequence Length Distribution plot """
 
-        data = dict()
+        data = defaultdict(dict)
         seq_lengths = set()
         multiple_lenths = False
-        for s_name in self.fastqc_data:
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
-                data[s_name] = {self.avg_bp_from_range(d['length']): d['count'] for d in self.fastqc_data[s_name]['sequence_length_distribution']}
+                data[read_num][s_name] = {self.avg_bp_from_range(d['length']): d['count'] for d in s_fastqc_data['sequence_length_distribution']}
                 seq_lengths.update(data[s_name].keys())
                 if len(set(data[s_name].keys())) > 1:
                     multiple_lenths = True
@@ -578,27 +657,37 @@ class MultiqcModule(BaseMultiqcModule):
                 'colors': self.get_status_cols('sequence_length_distribution'),
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
+
+            # Did we have 1 read or 2 (or 73)? Plot a graph for each.
+            reads_in_data = sorted(data.keys())
+            if len(reads_in_data) >= 2:
+                pconfig['data_labels'] = [ dict(name='Read {}'.format(read))
+                                           for read in reads_in_data ]
+                data_to_plot = [data[r] for r in reads_in_data]
+            else:
+                data_to_plot = data[reads_in_data[0]]
+
             desc =  'The distribution of fragment sizes (read lengths) found. \
                 See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.'
             self.add_section (
                 name = 'Sequence Length Distribution',
                 anchor = 'fastqc_sequence_length_distribution',
                 description = desc,
-                plot = linegraph.plot(data, pconfig)
+                plot = linegraph.plot(data_to_plot, pconfig)
             )
 
 
     def seq_dup_levels_plot (self):
         """ Create the HTML for the Sequence Duplication Levels plot """
 
-        data = dict()
-        for s_name in self.fastqc_data:
+        data = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
-                d = {d['duplication_level']: d['percentage_of_total'] for d in self.fastqc_data[s_name]['sequence_duplication_levels']}
-                data[s_name] = OrderedDict()
+                d = {d['duplication_level']: d['percentage_of_total'] for d in s_fastqc_data['sequence_duplication_levels']}
+                data[read_num][s_name] = OrderedDict()
                 for k in self.dup_keys:
                     try:
-                        data[s_name][k] = d[k]
+                        data[read_num][s_name][k] = d[k]
                     except KeyError:
                         pass
             except KeyError:
@@ -620,31 +709,37 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
 
+        # For now just flatten data.
+        if len(data) == 1:
+            data_to_plot, = data.values()
+        else:
+            data_to_plot = { "{} Read {}".format(s, r) : d for r, rs in data.items() for s, d in rs.items() }
+
         self.add_section (
             name = 'Sequence Duplication Levels',
             anchor = 'fastqc_sequence_duplication_levels',
             description = 'The relative level of duplication found for every sequence. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.',
-            plot = linegraph.plot(data, pconfig)
+            plot = linegraph.plot(data_to_plot, pconfig)
         )
 
     def overrepresented_sequences (self):
         """Sum the percentages of overrepresented sequences and display them in a bar plot"""
 
-        data = dict()
-        for s_name in self.fastqc_data:
-            data[s_name] = dict()
+        data = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
+            s_data = data[read_num][s_name] = dict()
             try:
-                max_pcnt   = max( [ float(d['percentage']) for d in self.fastqc_data[s_name]['overrepresented_sequences']] )
-                total_pcnt = sum( [ float(d['percentage']) for d in self.fastqc_data[s_name]['overrepresented_sequences']] )
-                data[s_name]['total_overrepresented'] = total_pcnt
-                data[s_name]['top_overrepresented'] = max_pcnt
-                data[s_name]['remaining_overrepresented'] = total_pcnt - max_pcnt
+                max_pcnt   = max( [ float(d['percentage']) for d in s_fastqc_data['overrepresented_sequences']] )
+                total_pcnt = sum( [ float(d['percentage']) for d in s_fastqc_data['overrepresented_sequences']] )
+                s_data['total_overrepresented'] = total_pcnt
+                s_data['top_overrepresented'] = max_pcnt
+                s_data['remaining_overrepresented'] = total_pcnt - max_pcnt
             except KeyError:
-                if self.fastqc_data[s_name]['statuses']['overrepresented_sequences'] == 'pass':
-                    data[s_name]['total_overrepresented'] = 0
-                    data[s_name]['top_overrepresented'] = 0
-                    data[s_name]['remaining_overrepresented'] = 0
+                if s_fastqc_data['statuses']['overrepresented_sequences'] == 'pass':
+                    s_data['total_overrepresented'] = 0
+                    s_data['top_overrepresented'] = 0
+                    s_data['remaining_overrepresented'] = 0
                 else:
                     log.debug("Couldn't find data for {}, invalid Key".format(s_name))
 
@@ -667,11 +762,17 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'Percentage of Total Sequences'
         }
 
+        # For now just flatten data.
+        if len(data) == 1:
+            data_to_plot, = data.values()
+        else:
+            data_to_plot = { "{} Read {}".format(s, r) : d for r, rs in data.items() for s, d in rs.items() }
+
         # Check if any samples have more than 1% overrepresented sequences, else don't make plot.
-        if max([ x['total_overrepresented'] for x in data.values()]) < 1:
+        if max([ x['total_overrepresented'] for x in data_to_plot.values()]) < 1:
             plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(len(data))
         else:
-            plot_html = bargraph.plot(data, cats, pconfig)
+            plot_html = bargraph.plot(data_to_plot, cats, pconfig)
 
         self.add_section (
             name = 'Overrepresented sequences',
@@ -685,20 +786,20 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_content_plot (self):
         """ Create the HTML for the FastQC adapter plot """
 
-        data = dict()
-        for s_name in self.fastqc_data:
+        data = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
-                for d in self.fastqc_data[s_name]['adapter_content']:
+                for d in s_fastqc_data['adapter_content']:
                     pos = self.avg_bp_from_range(d['position'])
-                    for r in self.fastqc_data[s_name]['adapter_content']:
+                    for r in s_fastqc_data['adapter_content']:
                         pos = self.avg_bp_from_range(r['position'])
                         for a in r.keys():
                             k = "{} - {}".format(s_name, a)
                             if a != 'position':
                                 try:
-                                    data[k][pos] = r[a]
+                                    data[read_num][k][pos] = r[a]
                                 except KeyError:
-                                    data[k] = {pos: r[a]}
+                                    data[read_num][k] = {pos: r[a]}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -707,7 +808,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Lots of these datasets will be all zeros.
         # Only take datasets with > 0.1% adapter contamination
-        data = {k:d for k,d in data.items() if max(data[k].values()) >= 0.1 }
+        for read_num, read_data in data.items():
+            data[read_num] = {k:d for k,d in read_data.items() if max(read_data[k].values()) >= 0.1 }
 
         pconfig = {
             'id': 'fastqc_adapter_content_plot',
@@ -727,8 +829,18 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        if len(data) > 0:
-            plot_html = linegraph.plot(data, pconfig)
+        # Did we have 1 read or 2 (or 73)? Plot a graph for each.
+        reads_in_data = sorted(data.keys())
+        if len(reads_in_data) >= 2:
+            pconfig['data_labels'] = [ dict(name='Read {}'.format(read))
+                                       for read in reads_in_data ]
+            data_to_plot = [data[r] for r in reads_in_data]
+        else:
+            data_to_plot = data[reads_in_data[0]]
+
+        # More succinct way of saying any(len(read_data) > 0 for read_data in data.values())
+        if any(data.values()):
+            plot_html = linegraph.plot(data_to_plot, pconfig)
         else:
             plot_html = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
 
@@ -764,8 +876,14 @@ class MultiqcModule(BaseMultiqcModule):
     def get_status_cols(self, section):
         """ Helper function - returns a list of colours according to the FastQC
         status of this module for each sample. """
-        colours = dict()
-        for s_name in self.fastqc_data:
-            status = self.fastqc_data[s_name]['statuses'].get(section, 'default')
-            colours[s_name] = self.status_colours[status]
-        return colours
+        colours = defaultdict(dict)
+        for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
+            status = s_fastqc_data['statuses'].get(section, 'default')
+            colours[read_num][s_name] = self.status_colours[status]
+
+        # Naming template has to match that used in all plots, so add the read number
+        # if there is more than one read.
+        if len(colours) == 1:
+            return list(colours.values())[0]
+        else:
+            return { "{} Read {}".format(s, r) : d for r, rs in colours.items() for s, d in rs.items() }
