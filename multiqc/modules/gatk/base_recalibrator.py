@@ -80,7 +80,7 @@ class BaseRecalibratorMixin():
                 'after base quality score recalibration (BQSR). Applying BQSR should broaden the '
                 'distribution of base quality scores.'
             ),
-            helptext= (
+            helptext=(
                 'For more information see <a href=https://gatkforums.broadinstitute.org/gatk/discussion/44/base-quality-score-recalibration-bqsr>'
                 'the Broad\'s description of BQSR</a>.'
             ),
