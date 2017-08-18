@@ -63,6 +63,8 @@ class BaseRecalibratorMixin():
         plot = linegraph.plot(
             sample_data,
             pconfig={
+                'title': "Observed Quality Score Counts",
+                'id': 'gatk-base-recalibrator-quality-score-vs-number-of-observations',
                 'xlab': 'Observed Quality Score',
                 'ylab': 'Count',
                 'yDecimals': False,
