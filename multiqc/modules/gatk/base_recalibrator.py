@@ -73,6 +73,8 @@ class BaseRecalibratorMixin():
         data_labels = []
         for rt_type in RecalTableType:
             sample_tables = self.gatk_base_recalibrator[rt_type]['quality_quantization_map']
+            if len(sample_tables) == 0:
+                continue
 
             sample_data.append({
                 sample: {int(x): int(y) for x, y in zip(table['QualityScore'], table['Count'])}
