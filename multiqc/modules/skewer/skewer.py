@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-import os
 from collections import OrderedDict
 import logging
 import re
@@ -28,8 +27,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data = dict()
         self.skewer_readlen_dist = dict()
 
-        for f in self.find_log_files(config.sp['skewer'], filehandles=True):
+        for f in self.find_log_files('skewer', filehandles=True):
             self.parse_skewer_log(f)
+
+        # Filter to strip out ignored sample names
+        self.skewer_data = self.ignore_samples(self.skewer_data)
 
         if len(self.skewer_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
@@ -84,11 +86,9 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
-
-        html_content = linegraph.plot(self.skewer_readlen_dist, pconfig)
-
-        # Only one section, so add to the intro
-        self.intro += html_content
+        self.add_section(
+            plot = linegraph.plot(self.skewer_readlen_dist, pconfig)
+        )
 
     def parse_skewer_log(self, f):
         """ Go through log file looking for skewer output """

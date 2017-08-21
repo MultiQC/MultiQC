@@ -60,19 +60,154 @@ Then this will be displayed at the top of reports:
 
 Note that you can also specify a path to a config file using `-c`.
 
+## Bulk sample renaming
+Although it is possible to rename samples manually and in bulk using the
+[report toolbox](#renaming-samples), it's often desirable to embed such renaming patterns
+into the report so that they can be shared with others. For example, a typical case could be
+for a sequencing centre that has internal sample IDs and also user-supplied sample names.
+Or public sample identifiers such as SRA numbers as well as more meaningful names.
+
+It's possible to supply a file with one or more sets of sample names using the `--sample-names`
+command line option. This file should be a tab-delimited file with a header row (used for
+the report button labels) and then any number of renamed sample identifiers. For example:
+
+```
+MultiQC Names	Proper Names	AWESOME NAMES
+SRR1067503_1	Sample_1	MYBESTSAMP_1
+SRR1067505_1	Sample_2	MYBESTSAMP_2
+SRR1067510_1	Sample_3	MYBESTSAMP_3
+```
+
+If supplied, buttons will be generated at the top of the report with your labels.
+Clicking these will populate and apply the Toolbox renaming panel.
+
+> **NB:** Sample renaming works with partial substrings - these will be replaced!
+
+It's also possible to supply such renaming patterns within a config file (useful if you're
+already generating a config file for a run). In this case, you need to set the variables
+`sample_names_rename_buttons` and `sample_names_rename`. For example:
+
+```yaml
+sample_names_rename_buttons:
+    - "MultiQC Names"
+    - "Proper Names"
+    - "AWESOME NAMES"
+sample_names_rename:
+    - ["SRR1067503_1", "Sample_1", "MYBESTSAMP_1"]
+    - ["SRR1067505_1", "Sample_2", "MYBESTSAMP_2"]
+    - ["SRR1067510_1", "Sample_3", "MYBESTSAMP_3"]
+```
+
+## Module and section comments
+Sometimes you may want to add a custom comment above specific sections in the report. You can
+do this with the config option `section_comments` as follows:
+
+```yaml
+section_comments:
+    featurecounts: 'This comment is for a module header, but should still work'
+    star_alignments: 'This new way of commenting above sections is **awesome**!'
+```
+
+Comments can be written in Markdown. The `section_comments` keys should correspond to the HTML IDs
+of the report section. You can find these by clicking on a navigation link in the report and seeing
+the `#section_id` at the end of the browser URL.
+
 ## Order of modules
 By default, modules are included in the report as in the order specified in `config.module_order`.
-Any modules found which aren't in this list are appended at the top of the report. To specify
-certain modules that should always come at the top of the report, you can configure `config.top_modules`
-in your MultiQC configuration file. For example, to always have the FastQC module at the top
-of reports, add the following to your `~/.multiqc_config.yaml` file:
+Any modules found which aren't in this list are appended at the top of the report.
+
+#### Top modules
+To specify certain modules that should always come at the top of the report, you can configure
+`config.top_modules` in your MultiQC configuration file. For example, to always have the FastQC
+module at the top of reports, add the following to your `~/.multiqc_config.yaml` file:
 
 ```yaml
 top_modules:
     - 'fastqc'
 ```
 
-## Customising tables
+#### Running modules multiple times
+A module can be specified multiple times in either `config.module_order` or `config.top_modules`,
+causing it to be run multiple times. By itself you'll just get two identical report sections.
+However, you can also supply configuration options to the modules as follows:
+
+```yaml
+top_modules:
+    - moduleName:
+        name: 'Module (filtered)'
+        info: 'This section shows the module with different files'
+        path_filters:
+            - '*_special.txt'
+            - '*_others.txt'
+    - moduleName:
+        name: 'Module (all)'
+```
+These overwrite the defaults that are hardcoded in the module code. `path_filters` is the
+exception, which filters the file searches for a given list of glob filename patterns.
+The available options are:
+
+* `name`: Section name
+* `anchor`: Section report ID
+* `target`: Intro link text
+* `href`: Intro link URL
+* `info`: Intro text
+* `extra`: Additional HTML after intro.
+
+For example, to run the FastQC module twice, before and after adapter trimming, you could
+use the following config:
+
+```yaml
+module_order:
+    - fastqc:
+        name: 'FastQC (trimmed)'
+        info: 'This section of the report shows FastQC results after adapter trimming.'
+        target: ''
+        path_filters:
+            - '*_1_trimmed_fastqc.zip'
+    - cutadapt
+    - fastqc:
+        name: 'FastQC (raw)'
+        path_filters:
+            - '*_1_fastqc.zip'
+```
+
+Note that if you change the `name` then you will get multiples of columns in the
+_General Statistics_ table. If unchanged, the topmost module may overwrite output from
+the first iteration.
+
+> NB: Currently, you can not list a module name in both `top_modules` and `module_order`.
+> Let me know if this is a problem..
+
+
+## Order of sections
+Sometimes it's desirable to customise the order of specific sections in a report, independent of
+module execution. For example, the `custom_content` module can generate multiple sections from
+different input files.
+
+To do this, follow a link in a report navigation to skip to the section you want to move (must
+be a major section header, not a subheading). Find the ID of that section by looking at the URL.
+For example, clicking on _FastQC_ changes the URL to `multiqc_report.html#fastqc` -  the ID is
+the text after (not including) the `#` symbol.
+
+Next, specify the `report_section_order` option in your MultiQC config file. Section in
+the report are given a number ranging from 10 (section at bottom of report), incrementing by +10
+for each section. You can change this number (eg. a very low number to always get at the bottom
+of the report or very high to always be at the top), or you can move a section to before or after
+another existing section (has no effect if the other named ID is not in the report).
+
+For example, add the following to your MultiQC config file:
+
+```yaml
+report_section_order:
+    section1:
+        order: -1000
+    section2:
+        before: 'othersection'
+    section3:
+        after: 'diffsection'
+```
+
+## Customising tables
 Report tables such as the General Statistics table can get quite wide. To help with this,
 columns in the report can be hidden. Some MultiQC modules include columns which are hidden
 by default, others may be uninteresting to some users.
@@ -92,6 +227,51 @@ table_columns_visible:
 
 Note that you can set these to `True` to show columns that would otherwise be hidden
 by default.
+
+In the same way, you can force a column to appear at the start or end of the table, or
+indeed impose a custom ordering on all the columns, by setting the `table_columns_placement`.
+High values push columns to the right hand side of the table and low to the left. The default
+value is 1000. For example:
+
+```yaml
+table_columns_placement:
+    Samtools:
+        reads_mapped: 900
+        properly_paired: 1010
+        secondary: 1020
+```
+
+In this case, since the default placement weighting is `1000`, the `reads_mapped` will end up as the
+leftmost column and the other two will and up as the final columns on the right of the table.
+
+## Number base (multiplier)
+To make numbers in the General Statistics table easier to read and compare quickly,
+MultiQC sometimes divides them by one million (typically read counts). If your
+samples have very low read counts then this can result in the table showing
+counts of `0.0`, which isn't very helpful.
+
+To change this behaviour, you can customise three config variables in your MultiQC
+config. The defaults are as follows:
+```yaml
+read_count_multiplier: 0.000001
+read_count_prefix: 'M'
+read_count_desc: 'millions'
+```
+
+So, to show thousands of reads instead of millions, change these to:
+```yaml
+read_count_multiplier: 0.001
+read_count_prefix: 'K'
+read_count_desc: 'thousands'
+```
+
+The same options are also available for numbers of base pairs:
+```yaml
+base_count_multiplier: 0.000001
+base_count_prefix: 'Mb'
+base_count_desc: 'millions'
+```
+
 
 ## Number formatting
 By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand

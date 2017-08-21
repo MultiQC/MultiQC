@@ -33,6 +33,17 @@ multiqc . --ignore run_two/
 multiqc . --ignore */run_three/*/fastqc/*_R2.zip
 ```
 
+Some modules get sample names from the contents of the file and not the filename
+(for example, `stdout` logs can contain multiple samples). In this case, you can
+skip samples by name instead:
+```
+multiqc . --ignore-samples sample_3*
+```
+These strings are matched using glob logic (`*` and `?` are wildcards).
+
+All of these settings can be saved in a MultiQC config file so that you don't have
+to type them on the command line for every run.
+
 Finally, you can supply a file containing a list of file paths, one per row.
 MultiQC only search the listed files.
 ```
@@ -42,7 +53,7 @@ multiqc --file-list my_file_list.txt
 ## Renaming reports
 The report is called `multiqc_report.html` by default. Tab-delimited data files
 are created in `multiqc_data/`, containing additional information.
-You can use a custom name for the report with the `-n`/`--name` parameter, or instruct
+You can use a custom name for the report with the `-n`/`--filename` parameter, or instruct
 MultiQC to create them in a subdirectory using the `-o`/`-outdir` parameter.
 
 Note that different MultiQC templates may have different defaults.
@@ -58,8 +69,8 @@ finds log files with the same sample name, the previous data will be overwritten
 (this can be inspected by running MultiQC with `-v`/`--verbose`).
 
 To avoid this, run MultiQC with the `-d`/`--dirs` parameter. This will prefix every
-sample name with the directory path that the log file was found within. As
-such, sample names will no longer be unique, and data will not be overwritten.
+sample name with the directory path for that log file. As such, sample names should
+now be unique, and not overwrite one-another.
 
 By default, `--dirs` will prepend the entire path to each sample name. You can choose
 which directories are added with the `-dd`/`--dirs-depth` parameter. Set to a positive
@@ -144,7 +155,7 @@ To zip the data directory, use the `-z`/`--zip-data-dir` flag.
 In addition to the HTML report, it's also possible to get MultiQC to save
 plots as stand alone files. You can do this with the `-p`/`--export` command
 line flag. By default, plots will be saved in a directory called `multiqc_plots`
-as `.png`, `.svg` and `.pdf` files.
+as `.png`, `.svg` and `.pdf` files. Raw data for the plots are also saved to files.
 
 You can instruct MultiQC to always do this by setting the `export_plots` config
 option to `true`, though note that this will add a few seconds on to execution time.
@@ -167,3 +178,5 @@ situation.
 You can do this by using `-m`/`--modules` to explicitly define which modules
 you want to run. Alternatively, use `-e`/`--exclude` to run all modules
 except those listed.
+
+You can get a group of modules by using `--tag` followed by a tag e.g. RNA or DNA. 

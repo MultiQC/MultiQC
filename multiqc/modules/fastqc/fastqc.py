@@ -39,12 +39,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_data = dict()
 
         # Find and parse unzipped FastQC reports
-        for f in self.find_log_files(config.sp['fastqc']['data']):
+        for f in self.find_log_files('fastqc/data'):
             s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
             self.parse_fastqc_report(f['f'], s_name, f)
 
         # Find and parse zipped FastQC reports
-        for f in self.find_log_files(config.sp['fastqc']['zip'], filecontents=False):
+        for f in self.find_log_files('fastqc/zip', filecontents=False):
             s_name = f['fn']
             if s_name.endswith('_fastqc.zip'):
                 s_name = s_name[:-11]
@@ -66,6 +66,9 @@ class MultiqcModule(BaseMultiqcModule):
                     self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
                 log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
+
+        # Filter to strip out ignored sample names
+        self.fastqc_data = self.ignore_samples(self.fastqc_data)
 
         if len(self.fastqc_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -99,9 +102,6 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     statuses[section] = {s_name: status}
         self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(statuses))
-
-        # Start the sections
-        self.sections = list()
 
         # Now add each section in order
         self.sequence_quality_plot()
@@ -224,8 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlGn-rev',
-            'format': '{:.1f}%'
+            'scale': 'RdYlGn-rev'
         }
         headers['percent_gc'] = {
             'title': '% GC',
@@ -234,15 +233,15 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'Set1',
-            'format': '{:.0f}%'
+            'format': '{:,.0f}'
         }
         headers['avg_sequence_length'] = {
             'title': 'Length',
             'description': 'Average Sequence Length (bp)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': ' bp',
             'scale': 'RdYlGn',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'hidden': hide_seq_length
         }
         headers['percent_fails'] = {
@@ -252,15 +251,15 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'Reds',
-            'format': '{:.0f}%',
+            'format': '{:,.0f}',
             'hidden': True
         }
         headers['total_sequences'] = {
-            'title': 'M Seqs',
-            'description': 'Total Sequences (millions)',
+            'title': '{} Seqs'.format(config.read_count_prefix),
+            'description': 'Total Sequences ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'Blues',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         self.general_stats_addcols(data, headers)
@@ -294,13 +293,13 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
             ]
         }
-        self.sections.append({
-            'name': 'Sequence Quality Histograms',
-            'anchor': 'fastqc_per_base_sequence_quality',
-            'content': '<p>The mean quality value across each base position in the read. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.</p>' +
-                        linegraph.plot(data, pconfig)
-        })
+        self.add_section (
+            name = 'Sequence Quality Histograms',
+            anchor = 'fastqc_per_base_sequence_quality',
+            description = 'The mean quality value across each base position in the read. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.',
+            plot = linegraph.plot(data, pconfig)
+        )
 
 
     def per_seq_quality_plot (self):
@@ -332,21 +331,20 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
             ]
         }
-        self.sections.append({
-            'name': 'Per Sequence Quality Scores',
-            'anchor': 'fastqc_per_sequence_quality_scores',
-            'content': '<p>The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.</p>' +
-                        linegraph.plot(data, pconfig)
-        })
+        self.add_section (
+            name = 'Per Sequence Quality Scores',
+            anchor = 'fastqc_per_sequence_quality_scores',
+            description = 'The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.',
+            plot = linegraph.plot(data, pconfig)
+        )
 
 
     def sequence_content_plot (self):
         """ Create the epic HTML for the FastQC sequence content heatmap """
 
         html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
-                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p> \
-                 <p class="text-primary"><span class="glyphicon glyphicon-info-sign"></span> Click a heatmap row to see a line plot for that dataset.</p>'
+                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
 
         # Prep the data
         data = OrderedDict()
@@ -355,36 +353,49 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = {self.avg_bp_from_range(d['base']): d for d in self.fastqc_data[s_name]['per_base_sequence_content']}
             except KeyError:
                 pass
+            # Old versions of FastQC give counts instead of percentages
+            for b in data[s_name]:
+                tot = sum([data[s_name][b][base] for base in ['a','c','t','g']])
+                if tot == 100.0:
+                    break
+                else:
+                    for base in ['a','c','t','g']:
+                        data[s_name][b][base] = (float(data[s_name][b][base])/float(tot)) * 100.0
         if len(data) == 0:
             log.debug('sequence_content not found in FastQC reports')
             return None
 
-        html += '<div id="fastqc_per_base_sequence_content_plot"> \n\
-            <h5><span class="s_name"><em class="text-muted">rollover for sample name</em></span></h5> \n\
-            <div class="fastqc_seq_heatmap_key">\n\
-                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>\n\
-                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>\n\
-                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>\n\
-            </div>\n\
-            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">\n\
-                <div id="fastqc_seq" class="hc-plot"> \n\
-                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas> \n\
-                </div> \n\
-            </div> \n\
-            <div class="clearfix"></div> \n\
-        </div> \n\
-        <script type="text/javascript"> \n\
-            fastqc_seq_content_data = {d};\n\
-            $(function () {{ fastqc_seq_content_heatmap(); }}); \n\
-        </script>'.format(d=json.dumps(data))
+        html += '''<div id="fastqc_per_base_sequence_content_plot_div">
+            <div class="alert alert-info">
+               <span class="glyphicon glyphicon-hand-up"></span>
+               Click a sample row to see a line plot for that dataset.
+            </div>
+            <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
+            <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
+            <div class="fastqc_seq_heatmap_key">
+                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
+                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
+            </div>
+            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
+                <div id="fastqc_per_base_sequence_content_plot" class="hc-plot has-custom-export">
+                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <script type="text/javascript">
+            fastqc_seq_content_data = {d};
+            $(function () {{ fastqc_seq_content_heatmap(); }});
+        </script>'''.format(d=json.dumps(data))
 
-        self.sections.append({
-            'name': 'Per Base Sequence Content',
-            'anchor': 'fastqc_per_base_sequence_content',
-            'content': html
-        })
+        self.add_section (
+            name = 'Per Base Sequence Content',
+            anchor = 'fastqc_per_base_sequence_content',
+            content = html
+        )
 
 
     def gc_content_plot (self):
@@ -410,7 +421,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'fastqc_per_sequence_gc_content_plot',
             'title': 'Per Sequence GC Content',
             'ylab': 'Count',
-            'xlab': '%GC',
+            'xlab': '% GC',
             'ymin': 0,
             'xmax': 100,
             'xmin': 0,
@@ -427,7 +438,7 @@ class MultiqcModule(BaseMultiqcModule):
         theoretical_gc = None
         theoretical_gc_raw = None
         theoretical_gc_name = None
-        for f in self.find_log_files(config.sp['fastqc']['theoretical_gc']):
+        for f in self.find_log_files('fastqc/theoretical_gc'):
             if theoretical_gc_raw is not None:
                 log.warn("Multiple FastQC Theoretical GC Content files found, now using {}".format(f['fn']))
             theoretical_gc_raw = f['f']
@@ -458,7 +469,8 @@ class MultiqcModule(BaseMultiqcModule):
                     except (TypeError, IndexError):
                         pass
 
-        theoretical_gc_desc = ''
+        desc = '''The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.
+                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>'''
         if theoretical_gc is not None:
             # Calculate the count version of the theoretical data based on the largest data store
             max_total = max([sum (d.values()) for d in data.values() ])
@@ -474,15 +486,14 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig['extra_series'] = [ [dict(esconfig)], [dict(esconfig)] ]
             pconfig['extra_series'][0][0]['data'] = theoretical_gc
             pconfig['extra_series'][1][0]['data'] = [ [ d[0], (d[1]/100.0)*max_total ] for d in theoretical_gc ]
-            theoretical_gc_desc = '<p>The dashed black line shows theoretical GC content: {}.</p>'.format(theoretical_gc_name)
+            desc = '</p><p>The dashed black line shows theoretical GC content: {}.'.format(theoretical_gc_name)
 
-        self.sections.append({
-            'name': 'Per Sequence GC Content',
-            'anchor': 'fastqc_per_sequence_gc_content',
-            'content': '<p>The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        theoretical_gc_desc + linegraph.plot([data_norm, data], pconfig)
-        })
+        self.add_section (
+            name = 'Per Sequence GC Content',
+            anchor = 'fastqc_per_sequence_gc_content',
+            description = desc,
+            plot = linegraph.plot([data_norm, data], pconfig)
+        )
 
 
     def n_content_plot (self):
@@ -517,13 +528,13 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
 
-        self.sections.append({
-            'name': 'Per Base N Content',
-            'anchor': 'fastqc_per_base_n_content',
-            'content': '<p>The percentage of base calls at each position for which an N was called. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.</p>' +
-                        linegraph.plot(data, pconfig)
-        })
+        self.add_section (
+            name = 'Per Base N Content',
+            anchor = 'fastqc_per_base_n_content',
+            description = 'The percentage of base calls at each position for which an N was called. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.',
+            plot = linegraph.plot(data, pconfig)
+        )
 
 
     def seq_length_dist_plot (self):
@@ -546,9 +557,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         if not multiple_lenths:
             lengths = 'bp , '.join([str(l) for l in list(seq_lengths)])
-            html = '<p>All samples have sequences of a single length ({}bp).'.format(lengths)
+            desc = 'All samples have sequences of a single length ({}bp).'.format(lengths)
             if len(seq_lengths) > 1:
-                html += ' See the <a href="#general_stats">General Statistics Table</a>.</p>'
+                desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
+            self.add_section (
+                name = 'Sequence Length Distribution',
+                anchor = 'fastqc_sequence_length_distribution',
+                description = '<div class="alert alert-info">{}</div>'.format(desc)
+            )
         else:
             pconfig = {
                 'id': 'fastqc_sequence_length_distribution_plot',
@@ -561,15 +577,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'colors': self.get_status_cols('sequence_length_distribution'),
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
-            html =  '<p>The distribution of fragment sizes (read lengths) found. \
-                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.</p>'
-            html += linegraph.plot(data, pconfig)
-
-        self.sections.append({
-            'name': 'Sequence Length Distribution',
-            'anchor': 'fastqc_sequence_length_distribution',
-            'content': html
-        })
+            desc =  'The distribution of fragment sizes (read lengths) found. \
+                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.'
+            self.add_section (
+                name = 'Sequence Length Distribution',
+                anchor = 'fastqc_sequence_length_distribution',
+                description = desc,
+                plot = linegraph.plot(data, pconfig)
+            )
 
 
     def seq_dup_levels_plot (self):
@@ -604,13 +619,13 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
 
-        self.sections.append({
-            'name': 'Sequence Duplication Levels',
-            'anchor': 'fastqc_sequence_duplication_levels',
-            'content': '<p>The relative level of duplication found for every sequence. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.</p>' +
-                        linegraph.plot(data, pconfig)
-        })
+        self.add_section (
+            name = 'Sequence Duplication Levels',
+            anchor = 'fastqc_sequence_duplication_levels',
+            description = 'The relative level of duplication found for every sequence. ' +
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.',
+            plot = linegraph.plot(data, pconfig)
+        )
 
     def overrepresented_sequences (self):
         """Sum the percentages of overrepresented sequences and display them in a bar plot"""
@@ -657,13 +672,13 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             plot_html = bargraph.plot(data, cats, pconfig)
 
-        self.sections.append({
-            'name': 'Overrepresented sequences',
-            'anchor': 'fastqc_overrepresented_sequences',
-            'content': '<p> The total amount of overrepresented sequences found in each library. ' +
-                    'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html" target="_bkank">FastQC help for further information</a>.</p>'
-                    + plot_html
-            })
+        self.add_section (
+            name = 'Overrepresented sequences',
+            anchor = 'fastqc_overrepresented_sequences',
+            description = 'The total amount of overrepresented sequences found in each library. ' +
+                    'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html" target="_bkank">FastQC help for further information</a>.',
+            plot  = plot_html
+        )
 
 
     def adapter_content_plot (self):
@@ -697,7 +712,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'fastqc_adapter_content_plot',
             'title': 'Adapter Content',
             'ylab': '% of Sequences',
-            'xlab': 'Position',
+            'xlab': 'Position (bp)',
             'yCeiling': 100,
             'yMinRange': 5,
             'ymin': 0,
@@ -714,20 +729,21 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             plot_html = linegraph.plot(data, pconfig)
         else:
-            plot_html = '<div class="alert alert-warning">No samples found with any adapter contamination > 0.1%</div>'
+            plot_html = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
 
         # Note - colours are messy as we've added adapter names here. Not
         # possible to break down pass / warn / fail for each adapter, which
         # could lead to misleading labelling (fails on adapter types with
         # little or no contamination)
 
-        self.sections.append({
-            'name': 'Adapter Content',
-            'anchor': 'fastqc_adapter_content',
-            'content': '<p>The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position. ' +
+        self.add_section (
+            name = 'Adapter Content',
+            anchor = 'fastqc_adapter_content',
+            description = 'The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html" target="_bkank">FastQC help</a>. ' +
-                        'Only samples with &ge; 0.1% adapter contamination are shown.</p>' + plot_html
-        })
+                        'Only samples with &ge; 0.1% adapter contamination are shown.',
+            plot = plot_html
+        )
 
 
     def avg_bp_from_range(self, bp):
