@@ -59,6 +59,7 @@ setup(
         'requests',
         'simplejson',
         'spectra',
+        'networkx==1.*',
     ],
     entry_points = {
         'multiqc.modules.v1': [
