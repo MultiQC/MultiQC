@@ -168,6 +168,7 @@ fn_clean_trim:
 fn_ignore_files:
     - '.DS_Store'
     - '*.bam'
+    - '*.bai'
     - '*.sam'
     - '*.fq.gz'
     - '*.fastq.gz'
@@ -295,6 +296,10 @@ module_order:
             - DNA
 
     # Alignment tool stats
+    - bbmap:
+        module_tag:
+            - DNA
+            - RNA
     - bismark:
         module_tag:
             - DNA

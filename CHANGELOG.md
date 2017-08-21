@@ -66,6 +66,8 @@ Many thanks to those involved!
     * Added initial support for VCFTools `relatedness2`
     * Added support for VCFTools `TsTv-by-count` `TsTv-by-qual` `TsTv-summary`
     * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
+* [**BBMap**](https://sourceforge.net/projects/bbmap/)
+    * BBMap is a suite of DNA/RNA mapping tools and utilities
 
 #### Module updates:
 * **FastQ Screen**
