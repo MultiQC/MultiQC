@@ -28,23 +28,21 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
-
-
 |Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |---------------------------------|------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]       |[BUSCO][busco]        |
-|[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
-|[Bcl2fastq][bcl2fastq]           |[Bowtie 2][bowtie-2]    |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HOMER][homer]             |[goleft][goleft]      |
-|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[HTSeq][htseq]             |[methylQA][methylqa]  |
-|[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[MACS2][macs2]             |[Peddy][peddy]        |
-|[leeHom][leehom]                 |[Salmon][salmon]        |[Picard][picard]           |[Preseq][preseq]      |
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]    |[Prokka][prokka]           |[QoRTs][qorts]        |
-|[FastQ Screen][fastq-screen]     |[STAR][star]            |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
-|[Flexbar][flexbar]               |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
-|[Jellyfish][jellyfish]           |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
+|[Adapter Removal][adapterremoval]|[BBMap/BBTools][bbmap]  |[Bamtools][bamtools]       |[BUSCO][busco]        |
+|[AfterQC][afterqc]               |[Bismark][bismark]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
+|[BBMap/BBTools][bbmap]           |[Bowtie][bowtie-1]      |[GATK][gatk]               |[Disambiguate][disambiguate]|
+|[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]    |[HOMER][homer]             |[goleft][goleft]      |
+|[Cluster Flow][clusterflow]      |[HiCUP][hicup]          |[HTSeq][htseq]             |[methylQA][methylqa]  |
+|[Cutadapt][cutadapt]             |[HISAT2][hisat2]        |[MACS2][macs2]             |[Peddy][peddy]        |
+|[leeHom][leehom]                 |[Kallisto][kallisto]    |[Picard][picard]           |[Preseq][preseq]      |
+|[FastQC][fastqc]                 |[Salmon][salmon]        |[Prokka][prokka]           |[QoRTs][qorts]        |
+|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
+|[Flexbar][flexbar]               |[STAR][star]            |[Samtools][samtools]       |[QUAST][quast]        |
+|[Jellyfish][jellyfish]           |[Tophat][tophat]        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
 |[Skewer][skewer]                 |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]           | [VCFTools][vcftools] |
+|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]           |[VCFTools][vcftools]  | 
 |[Trimmomatic][trimmomatic]       |                        |                           |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -153,6 +151,8 @@ Code contributions from:
 [@ahvigil](https://github.com/ahvigil),
 [@bschiffthaler](https://github.com/bschiffthaler),
 [@jrderuiter](https://github.com/jrderuiter),
+[@epruesse](https://github.com/epruesse),
+[@boulund](https://github.com/boulund),
 [@iimog](https://github.com/iimog),
 [@rlegendre](https://github.com/rlegendre),
 [@ehsueh](https://github.com/ehsueh)
@@ -162,6 +162,7 @@ and many others. Thanks for your support!
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
 [afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
+[bbmap]:          http://multiqc.info/docs/#bbmap
 [bcftools]:       http://multiqc.info/docs/#bcftools
 [bcl2fastq]:      http://multiqc.info/docs/#bcl2fastq
 [biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
