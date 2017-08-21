@@ -28,7 +28,6 @@ class MultiqcModule(BaseMultiqcModule):
         info="provides both a programmer's API and an end-user's toolkit for handling BAM files.")
 
         # Set up class objects to hold parsed data
-        self.sections = list()
         self.general_stats_headers = OrderedDict()
         self.general_stats_data = dict()
         n = dict()

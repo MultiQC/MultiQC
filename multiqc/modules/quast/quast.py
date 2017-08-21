@@ -27,8 +27,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any QUAST reports
         self.quast_data = dict()
-        for f in self.find_log_files(config.sp['quast']):
+        for f in self.find_log_files('quast'):
             self.parse_quast_log(f)
+
+        # Filter to strip out ignored sample names
+        self.quast_data = self.ignore_samples(self.quast_data)
 
         if len(self.quast_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -42,25 +45,30 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.quast_general_stats_table()
 
-        self.sections = list()
         # Quast Stats Table
-        self.sections.append({
-            'name': 'Assembly Statistics',
-            'anchor': 'quast-stats',
-            'content': self.quast_table()
-        })
+        self.add_section (
+            name = 'Assembly Statistics',
+            anchor = 'quast-stats',
+            plot = self.quast_table()
+        )
         # Number of contigs plot
-        self.sections.append({
-            'name': 'Number of Contigs',
-            'anchor': 'quast-contigs',
-            'content': self.quast_contigs_barplot()
-        })
+        self.add_section (
+            name = 'Number of Contigs',
+            anchor = 'quast-contigs',
+            description = """This plot shows the number of contigs found for each assembly, broken
+                    down by length.""",
+            plot = self.quast_contigs_barplot()
+        )
         # Number of genes plot
-        self.sections.append({
-            'name': 'Number of Predicted Genes',
-            'anchor': 'quast-genes',
-            'content': self.quast_predicted_genes_barplot()
-        })
+        ng_pdata = self.quast_predicted_genes_barplot()
+        if ng_pdata:
+            self.add_section (
+                name = 'Number of Predicted Genes',
+                anchor = 'quast-genes',
+                description = """This plot shows the number of predicted genes found for each
+                          assembly, broken down by length.""",
+                plot = ng_pdata
+            )
 
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
@@ -109,7 +117,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['Total length'] = {
@@ -118,7 +125,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'YlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000000
         }
         self.general_stats_addcols(self.quast_data, headers)
@@ -129,39 +135,35 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['N50'] = {
             'title': 'N50 (Kbp)',
-            'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
+            'description': 'N50 is the contig length such that using longer or equal length contigs produces 50% of the bases of the assembly (kilo base pairs)',
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
 
         headers['N75'] = {
             'title': 'N75 (Kbp)',
-            'description': 'N75 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
+            'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly (kilo base pairs)',
             'min': 0,
             'suffix': 'bp',
             'scale': 'RdYlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['L50'] = {
             'title': 'L50 (k)',
-            'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising half the total assembly length.',
+            'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.',
             'min': 0,
             'suffix': '',
             'scale': 'GnYlRd',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['L75'] = {
             'title': 'L75 (k)',
-            'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising three quarters of the total assembly length.',
+            'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.',
             'min': 0,
             'suffix': '',
             'scale': 'GnYlRd',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['Largest contig'] = {
@@ -170,7 +172,6 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'YlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000
         }
         headers['Total length'] = {
@@ -179,46 +180,45 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': 'bp',
             'scale': 'YlGn',
-            'format': '{:.1f}',
             'modify': lambda x: x / 1000000
         }
         headers['# misassemblies'] = {
             'title': 'Misassemblies',
             'description': 'The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).',
             'scale': 'RdYlGn-rev',
-            'format': '{:.0f}'
+            'format': '{,:.0f}'
         }
         headers['# mismatches per 100 kbp'] = {
             'title': 'Mismatches/100kbp',
             'description': 'The number of mismatches per 100 kbp',
             'scale': 'YlOrRd',
-            'format': '{:.2f}',
+            'format': '{:,.2f}',
         }
         headers['# indels per 100 kbp'] = {
             'title': 'Indels/100kbp',
             'description': 'The number of indels per 100 kbp',
             'scale': 'YlOrRd',
-            'format': '{:.2f}',
+            'format': '{:,.2f}',
         }
         headers['# genes'] = {
             'title': 'Genes',
             'description': '# Genes',
             'scale': 'YlGnBu',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'shared_key': 'gene_count'
         }
         headers['# genes_partial'] = {
             'title': 'Genes (Partial)',
             'description': '# Genes (Partial)',
             'scale': 'YlGnBu',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'shared_key': 'gene_count'
         }
         headers['# predicted genes (unique)'] = {
             'title': 'Genes',
             'description': '# Predicted Genes (Unique)',
             'scale': 'YlGnBu',
-            'format': '{:.0f}',
+            'format': '{:,.0f}',
             'shared_key': 'gene_count'
         }
         headers['Genome fraction (%)'] = {
@@ -226,8 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'The total number of aligned bases in the reference, divided by the genome size.',
             'max': 100,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%'
+            'scale': 'YlGn'
         }
         config = {
             'id': 'quast_table',
@@ -239,35 +238,34 @@ class MultiqcModule(BaseMultiqcModule):
     def quast_contigs_barplot(self):
         """ Make a bar plot showing the number and length of contigs for each assembly """
 
-        # Intro text
-        html = """<p>This plot shows the number of contigs found for each assembly, broken
-                down by length.</p> """
-
         # Prep the data
         data = dict()
+        categories = []
         for s_name, d in self.quast_data.items():
-            try:
-                p = dict()
-                p['>= 50000 bp'] = d['# contigs (>= 50000 bp)']
-                p['25000-50000 bp'] = d['# contigs (>= 25000 bp)'] - d['# contigs (>= 50000 bp)']
-                p['10000-25000 bp'] = d['# contigs (>= 10000 bp)'] - d['# contigs (>= 25000 bp)']
-                p['5000-10000 bp'] = d['# contigs (>= 5000 bp)'] - d['# contigs (>= 10000 bp)']
-                p['1000-5000 bp'] = d['# contigs (>= 1000 bp)'] - d['# contigs (>= 5000 bp)']
-                p['0-1000 bp'] = d['# contigs (>= 0 bp)'] - d['# contigs (>= 1000 bp)']
-                assert sum(p.values()) == d['# contigs (>= 0 bp)']
-                data[s_name] = p
-            except AssertionError:
-                log.warning("Contig counts didn't add up properly for {}".format(s_name))
+            nums_by_t = dict()
+            for k, v in d.items():
+                m = re.match('# contigs \(>= (\d+) bp\)', k)
+                if m:
+                    nums_by_t[int(m.groups()[0])] = v
 
-        # Define the order of the categories, small to big
-        cats = [
-            '0-1000 bp',
-            '1000-5000 bp',
-            '5000-10000 bp',
-            '10000-25000 bp',
-            '25000-50000 bp',
-            '>= 50000 bp',
-        ]
+            tresholds = sorted(nums_by_t.keys(), reverse=True)
+            p = dict()
+            cats = []
+            for i, t in enumerate(tresholds):
+                if i == 0:
+                    c = '>= ' + str(t) + ' bp'
+                    cats.append(c)
+                    p[c] = nums_by_t[t]
+                else:
+                    c = str(t) + '-' + str(tresholds[i - 1]) + ' bp'
+                    cats.append(c)
+                    p[c] = nums_by_t[t] - nums_by_t[tresholds[i - 1]]
+            if not categories:
+                categories = cats
+            elif set(cats) != set(categories):
+                log.warning("Different contig threshold categories for samples, skip plotting barplot".format(s_name))
+                continue
+            data[s_name] = p
 
         pconfig = {
             'id': 'quast_num_contigs',
@@ -276,17 +274,13 @@ class MultiqcModule(BaseMultiqcModule):
             'yDecimals': False
         }
 
-        return "{}{}".format(html, bargraph.plot(data, cats, pconfig))
+        return bargraph.plot(data, categories, pconfig)
 
     def quast_predicted_genes_barplot(self):
         """
         Make a bar plot showing the number and length of predicted genes
         for each assembly
         """
-
-        # Intro text
-        html = """<p>This plot shows the number of predicted genes found for each
-                  assembly, broken down by length.</p>"""
 
         # Prep the data
         # extract the ranges given to quast with "--gene-thresholds"
@@ -328,6 +322,6 @@ class MultiqcModule(BaseMultiqcModule):
                  for low,high in zip(all_thresholds, all_thresholds[1:]+[None]) ]
 
         if len(cats) > 0:
-            return "\n".join([html, bargraph.plot(data, cats)])
+            return bargraph.plot(data, cats)
         else:
             return None

@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -38,7 +37,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files(config.sp['rseqc']['read_distribution']):
+    for f in self.find_log_files('rseqc/read_distribution'):
         d = dict()
         for k, r in first_regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
@@ -67,6 +66,9 @@ def parse_reports(self):
             self.add_data_source(f, section='read_distribution')
             self.read_dist[f['s_name']] = d
 
+    # Filter to strip out ignored sample names
+    self.read_dist = self.ignore_samples(self.read_dist)
+
     if len(self.read_dist) > 0:
 
         # Write to file
@@ -94,13 +96,13 @@ def parse_reports(self):
             'cpswitch_c_active': False
         }
 
-        p_link = '<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
-        self.sections.append({
-            'name': 'Read Distribution',
-            'anchor': 'rseqc-read_distribution',
-            'content': "<p>"+p_link+" calculates how mapped reads are distributed over genome features.</p>" +
-                bargraph.plot(self.read_dist, keys, pconfig)
-        })
+        self.add_section (
+            name = 'Read Distribution',
+            anchor = 'rseqc-read_distribution',
+            description = '<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>' \
+                " calculates how mapped reads are distributed over genome features.",
+            plot = bargraph.plot(self.read_dist, keys, pconfig)
+        )
 
     # Return number of samples found
     return len(self.read_dist)

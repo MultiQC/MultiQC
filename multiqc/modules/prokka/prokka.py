@@ -4,10 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import json
 import logging
-import os
-import re
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -27,8 +24,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs
         self.prokka = dict()
-        for f in self.find_log_files(config.sp['prokka'], filehandles=True):
+        for f in self.find_log_files('prokka', filehandles=True):
             self.parse_prokka(f)
+
+        # Filter to strip out ignored sample names
+        self.prokka = self.ignore_samples(self.prokka)
 
         if len(self.prokka) == 0:
             log.debug("Could not find any Prokka data in {}".format(config.analysis_dir))
@@ -67,9 +67,25 @@ class MultiqcModule(BaseMultiqcModule):
         # 'prokka_barplot', to specify whether to include a table or a barplot, or both.
         # Default is to make a plot only.
         if getattr(config, 'prokka_table', False):
-            self.intro += self.prokka_table()
+            self.add_section( plot = self.prokka_table() )
         if getattr(config, 'prokka_barplot', True):
-            self.intro += self.prokka_barplot()
+            descr_plot = "This barplot shows the distribution of different types of features found in each contig."
+            helptext = '''
+            `Prokka` can detect different features:
+
+            - CDS
+            - rRNA
+            - tmRNA
+            - tRNA
+            - miscRNA
+            - signal peptides
+            - CRISPR arrays
+
+            This barplot shows you the distribution of these different types of features found in each contig.
+            '''
+            self.add_section(plot=self.prokka_barplot(),
+                             helptext=helptext,
+                             description=descr_plot)
 
 
     def parse_prokka(self, f):
@@ -97,8 +113,18 @@ class MultiqcModule(BaseMultiqcModule):
         # Assumes organism name only consists of two words,
         # i.e. 'Genusname speciesname', and that the remaining
         # text on the organism line is the sample name.
-        organism = " ".join(first_line.strip().split(":", 1)[1].split()[:2])
-        s_name = " ".join(first_line.split()[3:])
+        try:
+            organism = " ".join(first_line.strip().split(":", 1)[1].split()[:2])
+            s_name = self.clean_s_name(" ".join(first_line.split()[3:]), f['root'])
+        except KeyError:
+            organism = first_line.strip().split(":", 1)[1]
+            s_name = f['s_name']
+        # Don't try to guess sample name if requested in the config
+        if getattr(config, 'prokka_fn_snames', False):
+            s_name = f['s_name']
+
+        if s_name in self.prokka:
+            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         self.prokka[s_name] = dict()
         self.prokka[s_name]['organism'] = organism
         self.prokka[s_name]['contigs'] = int(contigs_line.split(":")[1])
@@ -164,7 +190,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Number of annotated sig_peptide',
                 'format': '{:i}',
         }
-
+        headers['repeat_region'] = {
+                'title': '# CRISPR arrays',
+                'description': 'Number of annotated CRSIPR arrays',
+                'format': '{:i}',
+        }
         table_config = {
             'namespace': 'prokka',
             'min': 0,
@@ -183,6 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys['tmRNA'] =         { 'name': 'tmRNA' }
         keys['misc_RNA'] =      { 'name': 'misc RNA' }
         keys['sig_peptide'] =   { 'name': 'Signal peptides' }
+        keys['repeat_region'] = { 'name': 'CRISPR array'}
 
         plot_config = {
             'id': 'prokka_plot',

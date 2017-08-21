@@ -25,8 +25,12 @@ class MultiqcModule(BaseMultiqcModule):
                                             info="is a tool to mark duplicates and extract discordant and split reads from sam files.")
 
         self.samblaster_data = dict()
-        for f in self.find_log_files(config.sp['samblaster'], filehandles=True):
+        for f in self.find_log_files('samblaster', filehandles=True):
             self.parse_samblaster(f)
+
+        # Filter to strip out ignored sample names
+        self.samblaster_data = self.ignore_samples(self.samblaster_data)
+
         if len(self.samblaster_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
@@ -38,8 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'OrRd',
-            'format': '{:.1f}%'
+            'scale': 'OrRd'
         }
 
         self.general_stats_addcols(self.samblaster_data, headers)
@@ -61,8 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'samblaster_duplicates',
             'title': 'Number of duplicate reads',
         }
-        # Only one section, so add to the intro
-        self.intro += bargraph.plot(self.samblaster_data, cats, pconfig)
+        self.add_section( plot = bargraph.plot(self.samblaster_data, cats, pconfig) )
 
     def parse_samblaster(self, f):
         """ Go through log file looking for samblaster output.
@@ -79,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
             # including the read group will be written in the log
             match = re.search(rgtag_name_regex, l)
             if match:
-                s_name = match.group(1)
+                s_name = self.clean_s_name( match.group(1), f['root'])
 
             # try to find name from the input file name, if used
             match = re.search(input_file_regex, l)
@@ -88,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
                 fname, ext = os.path.splitext(basefn)
                 # if it's stdin, then try bwa RG-tag instead
                 if fname != 'stdin':
-                    s_name = fname
+                    s_name = self.clean_s_name( fname, f['root'])
 
             match = re.search(dups_regex, l)
             if match:
@@ -97,8 +99,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data['n_nondups'] = data['n_tot'] - data['n_dups']
                 data['pct_dups'] = float(match.group(4))
 
-        if s_name is not None:
-            s_name = self.clean_s_name(s_name, f['root'])
+        if s_name is None:
+            s_name = f['s_name']
+
+        if len(data) > 0:
             if s_name in self.samblaster_data:
                 log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
             self.add_data_source(f, s_name)

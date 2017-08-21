@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 import logging
+import math
 import re
 from collections import OrderedDict
 
@@ -15,8 +16,6 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """ Find Qualimap BamQC reports and parse their data """
-
-    sp = config.sp['qualimap']['bamqc']
 
     try:
         covs = config.qualimap_config['general_stats_coverage']
@@ -32,24 +31,28 @@ def parse_reports(self):
 
     # General stats - genome_results.txt
     self.qualimap_bamqc_genome_results = dict()
-    for f in self.find_log_files(sp['genome_results']):
+    for f in self.find_log_files('qualimap/bamqc/genome_results'):
         parse_genome_results(self, f)
+    self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
 
     # Coverage - coverage_histogram.txt
     self.qualimap_bamqc_coverage_hist = dict()
-    for f in self.find_log_files(sp['coverage'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/coverage', filehandles=True):
         parse_coverage(self, f)
+    self.qualimap_bamqc_coverage_hist = self.ignore_samples(self.qualimap_bamqc_coverage_hist)
 
     # Insert size - insert_size_histogram.txt
     self.qualimap_bamqc_insert_size_hist = dict()
-    for f in self.find_log_files(sp['insert_size'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/insert_size', filehandles=True):
         parse_insert_size(self, f)
+    self.qualimap_bamqc_insert_size_hist = self.ignore_samples(self.qualimap_bamqc_insert_size_hist)
 
     # GC distribution - mapped_reads_gc-content_distribution.txt
     self.qualimap_bamqc_gc_content_dist = dict()
     self.qualimap_bamqc_gc_by_species = dict()  # {'HUMAN': data_dict, 'MOUSE': data_dict}
-    for f in self.find_log_files(sp['gc_dist'], filehandles=True):
+    for f in self.find_log_files('qualimap/bamqc/gc_dist', filehandles=True):
         parse_gc_dist(self, f)
+    self.qualimap_bamqc_gc_by_species = self.ignore_samples(self.qualimap_bamqc_gc_by_species)
 
     # Make the plots for the report
     report_sections(self)
@@ -236,7 +239,15 @@ def report_sections(self):
         rates_within_threshs = dict()
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
             total = total_bases_by_sample[s_name]
-            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, range(max_x + 1))
+            # Make a range of depths that isn't stupidly huge for high coverage expts
+            depth_range = list(range(0, max_x + 1, math.ceil(float(max_x)/400.0)))
+            # Check that we have our specified coverages in the list
+            for c in self.covs:
+                if int(c) not in depth_range:
+                    depth_range.append(int(c))
+            # Calculate the coverage rates for this range of coverages
+            rates_within_threshs[s_name] = _calculate_bases_within_thresholds(hist, total, depth_range)
+            # Add requested coverage levels to the General Statistics table
             for c in self.covs:
                 if int(c) in rates_within_threshs[s_name]:
                     self.general_stats_data[s_name]['{}_x_pc'.format(c)] = rates_within_threshs[s_name][int(c)]
@@ -244,10 +255,52 @@ def report_sections(self):
                     self.general_stats_data[s_name]['{}_x_pc'.format(c)] = 0
 
         # Section 1 - BamQC Coverage Histogram
-        self.sections.append({
-            'name': 'Coverage histogram',
-            'anchor': 'qualimap-coverage-histogram',
-            'content': linegraph.plot(self.qualimap_bamqc_coverage_hist, {
+        coverage_histogram_helptext = '''
+        For a set of DNA or RNA reads mapped to a reference sequence, such as a genome
+        or transcriptome, the depth of coverage at a given base position is the number
+        of high-quality reads that map to the reference at that position
+        (<a href="https://doi.org/10.1038/nrg3642" target="_blank">Sims et al. 2014</a>).
+
+        QualiMap groups the bases of a reference sequence by their depth of coverage
+        (*0&#215;, 1&#215;, &#8230;, N&#215;*), then plots the number of bases of the
+        reference (y-axis) at each level of coverage depth (x-axis). This plot shows
+        the frequency of coverage depths relative to the reference sequence for each
+        read dataset, which provides an indirect measure of the level and variation of
+        coverage depth in the corresponding sequenced sample.
+
+        If reads are randomly distributed across the reference sequence, this plot
+        should resemble a Poisson distribution (<a href="https://doi.org/10.1016/0888-7543(88)90007-9"
+        target="_blank">Lander & Waterman 1988</a>), with a peak indicating approximate
+        depth of coverage, and more uniform coverage depth being reflected in a narrower
+        spread. The optimal level of coverage depth depends on the aims of the
+        experiment, though it should at minimum be sufficiently high to adequately
+        address the biological question; greater uniformity of coverage is generally
+        desirable, because it increases breadth of coverage for a given depth of
+        coverage, allowing equivalent results to be achieved at a lower sequencing depth
+        (<a href="https://doi.org/10.1002/gepi.20575" target="_blank">Sampson
+        et al. 2011</a>; <a href="https://doi.org/10.1038/nrg3642" target="_blank">Sims
+        et al. 2014</a>). However, it is difficult to achieve uniform coverage
+        depth in practice, due to biases introduced during sample preparation
+        (<a href="https://doi.org/10.1016/j.yexcr.2014.01.008" target="_blank">van
+        Dijk et al. 2014</a>), sequencing (<a href="https://doi.org/10.1186/gb-2013-14-5-r51"
+        target="_blank">Ross et al. 2013</a>) and read mapping
+        (<a href="https://doi.org/10.1038/nrg3642" target="_blank">Sims et al. 2014</a>).
+
+        This plot may include a small peak for regions of the reference sequence with
+        zero depth of coverage. Such regions may be absent from the given sample (due
+        to a deletion or structural rearrangement), present in the sample but not
+        successfully sequenced (due to bias in sequencing or preparation), or sequenced
+        but not successfully mapped to the reference (due to the choice of mapping
+        algorithm, the presence of repeat sequences, or mismatches caused by variants
+        or sequencing errors). Related factors cause most datasets to contain some
+        unmapped reads (<a href="https://doi.org/10.1038/nrg3642" target="_blank">Sims
+        et al. 2014</a>).'''
+        self.add_section (
+            name = 'Coverage histogram',
+            anchor = 'qualimap-coverage-histogram',
+            description = 'Distribution of the number of locations in the reference genome with a given depth of coverage.',
+            helptext = coverage_histogram_helptext,
+            plot = linegraph.plot(self.qualimap_bamqc_coverage_hist, {
                 'id': 'qualimap_coverage_histogram',
                 'title': 'Coverage histogram',
                 'ylab': 'Genome bin counts',
@@ -258,12 +311,38 @@ def report_sections(self):
                 'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y}',
             })
-        })
+        )
         # Section 2 - BamQC cumulative coverage genome fraction
-        self.sections.append({
-            'name': 'Cumulative coverage genome fraction',
-            'anchor': 'qualimap-cumulative-genome-fraction-coverage',
-            'content': linegraph.plot(rates_within_threshs, {
+        genome_fraction_helptext = '''
+        For a set of DNA or RNA reads mapped to a reference sequence, such as a genome
+        or transcriptome, the depth of coverage at a given base position is the number
+        of high-quality reads that map to the reference at that position, while the
+        breadth of coverage is the fraction of the reference sequence to which reads
+        have been mapped with at least a given depth of coverage
+        (<a href="https://doi.org/10.1038/nrg3642" target="_blank">Sims et al. 2014</a>).
+
+        Defining coverage breadth in terms of coverage depth is useful, because
+        sequencing experiments typically require a specific minimum depth of coverage
+        over the region of interest (<a href="https://doi.org/10.1038/nrg3642"
+        target="_blank">Sims et al. 2014</a>), so the extent of the reference sequence
+        that is amenable to analysis is constrained to lie within regions that have
+        sufficient depth. With inadequate sequencing breadth, it can be difficult to
+        distinguish the absence of a biological feature (such as a gene) from a lack
+        of data (<a href="https://doi.org/10.1101/gr.7050807" target="_blank">Green 2007</a>).
+
+        For increasing coverage depths (*1&#215;, 2&#215;, &#8230;, N&#215;*),
+        QualiMap calculates coverage breadth as the percentage of the reference
+        sequence that is covered by at least that number of reads, then plots
+        coverage breadth (y-axis) against coverage depth (x-axis). This plot
+        shows the relationship between sequencing depth and breadth for each read
+        dataset, which can be used to gauge, for example, the likely effect of a
+        minimum depth filter on the fraction of a genome available for analysis.'''
+        self.add_section (
+            name = 'Cumulative genome coverage',
+            anchor = 'qualimap-cumulative-genome-fraction-coverage',
+            description = 'Percentage of the reference genome with at least the given depth of coverage.',
+            helptext = genome_fraction_helptext,
+            plot = linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
                 'title': 'Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',
@@ -275,14 +354,57 @@ def report_sections(self):
                 'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
             })
-        })
+        )
 
     # Section 3 - Insert size histogram
     if len(self.qualimap_bamqc_insert_size_hist) > 0:
-        self.sections.append({
-            'name': 'Insert size histogram',
-            'anchor': 'qualimap-insert-size-histogram',
-            'content': linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
+        insert_size_helptext = '''
+        To overcome limitations in the length of DNA or RNA sequencing reads,
+        many sequencing instruments can produce two or more shorter reads from
+        one longer fragment in which the relative position of reads is
+        approximately known, such as paired-end or mate-pair reads
+        (<a href="https://doi.org/10.1146/annurev-anchem-062012-092628"
+        target="_blank">Mardis 2013</a>). Such techniques can extend the reach
+        of sequencing technology, allowing for more accurate placement of reads
+        (<a href="https://doi.org/10.1146/annurev-genom-090413-025358"
+        target="_blank">Reinert et al. 2015</a>) and better resolution of repeat
+        regions (<a href="https://doi.org/10.1146/annurev-genom-090413-025358"
+        target="_blank">Reinert et al. 2015</a>), as well as detection of
+        structural variation (<a href="https://doi.org/10.1038/nrg2958"
+        target="_blank">Alkan et al. 2011</a>) and chimeric transcripts
+        (<a href="https://doi.org/10.1073/pnas.0904720106"
+        target="_blank">Maher et al. 2009</a>).
+
+        All these methods assume that the approximate size of an insert is known.
+        (Insert size can be defined as the length in bases of a sequenced DNA or
+        RNA fragment, excluding technical sequences such as adapters, which are
+        typically removed before alignment.) This plot allows for that assumption
+        to be assessed. With the set of mapped fragments for a given sample, QualiMap
+        groups the fragments by insert size, then plots the frequency of mapped
+        fragments (y-axis) over a range of insert sizes (x-axis). In an ideal case,
+        the distribution of fragment sizes for a sequencing library would culminate
+        in a single peak indicating average insert size, with a narrow spread
+        indicating highly consistent fragment lengths.
+
+        QualiMap calculates insert sizes as follows: for each fragment in which
+        every read mapped successfully to the same reference sequence, it
+        extracts the insert size from the `TLEN` field of the leftmost read
+        (see the <a href="http://qualimap.bioinfo.cipf.es/doc_html/index.html"
+        target="_blank">Qualimap 2 documentation</a>), where the `TLEN` (or
+        'observed Template LENgth') field contains 'the number of bases from the
+        leftmost mapped base to the rightmost mapped base'
+        (<a href="https://samtools.github.io/hts-specs/" target="_blank">SAM
+        format specification</a>). Note that because it is defined in terms of
+        alignment to a reference sequence, the value of the `TLEN` field may
+        differ from the insert size due to factors such as alignment clipping,
+        alignment errors, or structural variation or splicing in a gap between
+        reads from the same fragment.'''
+        self.add_section (
+            name = 'Insert size histogram',
+            anchor = 'qualimap-insert-size-histogram',
+            description = 'Distribution of estimated insert sizes of mapped reads.',
+            helptext = insert_size_helptext,
+            plot = linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
                 'id': 'qualimap_insert_size',
                 'title': 'Insert size histogram',
                 'ylab': 'Fraction of reads',
@@ -291,10 +413,28 @@ def report_sections(self):
                 'xmin': 0,
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             })
-        })
+        )
 
     # Section 4 - GC-content distribution
     if len(self.qualimap_bamqc_gc_content_dist) > 0:
+        gc_content_helptext = '''
+        GC bias is the difference between the guanine-cytosine content
+        (GC-content) of a set of sequencing reads and the GC-content of the DNA
+        or RNA in the original sample. It is a well-known issue with sequencing
+        systems, and may be introduced by PCR amplification, among other factors
+        (<a href="https://doi.org/10.1093/nar/gks001" target="_blank">Benjamini
+        & Speed 2012</a>; <a href="https://doi.org/10.1186/gb-2013-14-5-r51"
+        target="_blank">Ross et al. 2013</a>).
+
+        QualiMap calculates the GC-content of individual mapped reads, then
+        groups those reads by their GC-content (*1%, 2%, &#8230;, 100%*), and
+        plots the frequency of mapped reads (y-axis) at each level of GC-content
+        (x-axis). This plot shows the GC-content distribution of mapped reads
+        for each read dataset, which should ideally resemble that of the
+        original sample. It can be useful to display the GC-content distribution
+        of an appropriate reference sequence for comparison, and QualiMap has an
+        option to do this (see the <a href="http://qualimap.bioinfo.cipf.es/doc_html/index.html"
+        target="_blank">Qualimap 2 documentation</a>).'''
         extra_series = []
         for i, (species_name, species_data) in enumerate(sorted(self.qualimap_bamqc_gc_by_species.items())):
             extra_series.append({
@@ -304,53 +444,60 @@ def report_sections(self):
                 'lineWidth': 1,
                 'color': ['#000000', '#E89191'][i % 2],
             })
-        content = ''
+        if len(self.qualimap_bamqc_gc_content_dist) == 1:
+            desc = 'The solid line represents the distribution of GC content of mapped reads for the sample.'
+        else:
+            desc = 'Each solid line represents the distribution of GC content of mapped reads for a given sample.'
+        lg_config = {
+            'id': 'qualimap_gc_content',
+            'title': 'GC content distribution',
+            'ylab': 'Fraction of reads',
+            'xlab': 'GC content (%)',
+            'ymin': 0,
+            'xmin': 0,
+            'xmax': 100,
+            'tt_label': '<b>{point.x}%</b>: {point.y:.3f}'
+        }
         if len(extra_series) == 1:
-            content += '<p>The dotted line represents a pre-calculated GC destribution for the reference genome.</p>'
+            desc += ' The dotted line represents a pre-calculated GC distribution for the reference genome.'
+            lg_config['extra_series'] = extra_series
         elif len(extra_series) > 1:
-            content += '<p>The dotted lines represent pre-calculated GC destributions for the reference genomes.</p>'
+            desc += ' Each dotted line represents a pre-calculated GC distribution for a specific reference genome.'
+            lg_config['extra_series'] = extra_series
 
-        self.sections.append({
-            'name': 'GC content distribution',
-            'anchor': 'qualimap-gc-distribution',
-            'content': content + linegraph.plot(self.qualimap_bamqc_gc_content_dist, {
-                'id': 'qualimap_gc_content',
-                'title': 'GC content distribution',
-                'ylab': 'Fraction of reads',
-                'xlab': 'GC content (%)',
-                'ymin': 0,
-                'xmin': 0,
-                'xmax': 100,
-                'tt_label': '<b>{point.x}%</b>: {point.y:.3f}',
-                'extra_series': extra_series,
-            })
-        })
+        self.add_section (
+            name = 'GC content distribution',
+            anchor = 'qualimap-gc-distribution',
+            description = desc,
+            helptext = gc_content_helptext,
+            plot = linegraph.plot(self.qualimap_bamqc_gc_content_dist, lg_config)
+        )
 
 def general_stats_headers (self):
     try:
         hidecovs = config.qualimap_config['general_stats_coverage_hidden']
         assert type(hidecovs) == list
         log.debug("Hiding Qualimap thresholds: {}".format(", ".join([i for i in hidecovs])))
-    except (AttributeError, TypeError, AssertionError):
+    except (AttributeError, TypeError, KeyError, AssertionError):
         hidecovs = [1, 5, 10, 50]
     hidecovs = [str(i) for i in hidecovs]
 
     self.general_stats_headers['avg_gc'] = {
-        'title': 'Avg. GC',
-        'description': 'Average GC content',
+        'title': '% GC',
+        'description': 'Mean GC content',
         'max': 100,
         'min': 0,
         'suffix': '%',
         'scale': 'Set1',
-        'format': '{:.0f}%'
+        'format': '{:,.0f}'
     }
     self.general_stats_headers['median_insert_size'] = {
-        'title': 'Insert Size',
+        'title': 'Ins. size',
         'description': 'Median insert size',
         'min': 0,
         'suffix': 'bp',
         'scale': 'PuOr',
-        'format': '{:.0f}'
+        'format': '{:,.0f}'
     }
     for c in self.covs:
         self.general_stats_headers['{}_x_pc'.format(c)] = {
@@ -360,7 +507,6 @@ def general_stats_headers (self):
             'min': 0,
             'suffix': '%',
             'scale': 'RdYlGn',
-            'format': '{:.1f}%',
             'hidden': c in hidecovs
         }
     self.general_stats_headers['median_coverage'] = {
@@ -376,38 +522,40 @@ def general_stats_headers (self):
         'max': 100,
         'min': 0,
         'suffix': '%',
-        'scale': 'YlGn',
-        'format': '{:.1f}%'
+        'scale': 'YlGn'
     }
     self.general_stats_headers['mapped_reads'] = {
-        'title': 'Aligned',
-        'description': 'Number of mapped reads (millions)',
+        'title': '{} Aligned'.format(config.read_count_prefix),
+        'description': 'Number of mapped reads ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'RdYlGn',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
     self.general_stats_headers['total_reads'] = {
-        'title': 'Total reads',
-        'description': 'Number of reads (millions)',
+        'title': '{} Total reads'.format(config.read_count_prefix),
+        'description': 'Number of reads ({})'.format(config.read_count_desc),
         'min': 0,
         'scale': 'Blues',
         'shared_key': 'read_count',
-        'modify': lambda x: x / 1000000,
+        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
-
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
     bases_within_threshs = OrderedDict((depth, 0) for depth in depth_thresholds)
     rates_within_threshs = OrderedDict((depth, None) for depth in depth_thresholds)
 
-    for depth, bases in bases_by_depth.items():
-        for t in depth_thresholds:
-            if depth >= t:
-                bases_within_threshs[t] += bases
-    for t in depth_thresholds:
+    dt = sorted(depth_thresholds, reverse=True)
+    c = 0
+    for depth in sorted(bases_by_depth.keys(), reverse=True):
+        while depth < dt[c]:
+            c += 1
+            bases_within_threshs[dt[c]] = bases_within_threshs[dt[c - 1]]
+        if depth >= dt[c]:
+            bases_within_threshs[dt[c]] += bases_by_depth[depth]
+    for t in dt:
         bs = bases_within_threshs[t]
         if total_size > 0:
             rate = 100.0 * bases_within_threshs[t] / total_size

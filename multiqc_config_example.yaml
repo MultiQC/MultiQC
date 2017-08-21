@@ -34,7 +34,7 @@ make_data_dir: True
 # text to their right will be discarded.
 # For example - file1.fq.gz_trimmed.bam_deduplicated_fastqc.zip
 # would be cleaned to 'file1'
-# Two options here - fn_clean_exts will replace the defaults,
+# Two options here - fn_clean_exts will remove the defaults,
 # extra_fn_clean_exts will append to the defaults
 extra_fn_clean_exts:
     - .gz
@@ -46,10 +46,12 @@ extra_fn_clean_exts:
     - _tophat
     - _star_aligned
     - _fastqc
-    - type: replace
+    - type: remove
       pattern: '.sorted'
     - type: regex
       pattern: '^Sample_\d+'
+    - type: regex_keep
+      pattern: '[A-Z]{3}[1-9]{4}[A,B][1-9]'
 
 # Ignore these files / directories / paths when searching for logs
 fn_ignore_files:

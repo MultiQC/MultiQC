@@ -6,11 +6,14 @@ helper functions to generate markup for report. """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
+import click
 import fnmatch
 import io
 import json
+import lzstring
 import mimetypes
 import os
+import re
 import yaml
 
 from multiqc import config
@@ -30,15 +33,65 @@ general_stats_data = list()
 general_stats_headers = list()
 general_stats_html = ''
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
+plot_data = dict()
+html_ids = list()
 num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
 
-# Make a list of files to search
-files = list()
-def get_filelist():
+# Make a dict of discovered files for each seach key
+searchfiles = list()
+files = dict()
+def get_filelist(run_module_names):
+    """
+    Go through all supplied search directories and assembly a master
+    list of files to search. Then fire search functions for each file.
+    """
+    # Prep search patterns
+    spatterns = [{},{},{},{},{},{},{}]
+    ignored_patterns = []
+    for key, sps in config.sp.items():
+        mod_name = key.split('/', 1)[0]
+        if mod_name.lower() not in [m.lower() for m in run_module_names]:
+            ignored_patterns.append(key)
+            continue
+        files[key] = list()
+        if not isinstance(sps, list):
+            sps = [sps]
+
+        # Warn if we have any unrecognised search pattern keys
+        unrecognised_keys = [y for x in sps for y in x.keys() if y not in ['fn', 'fn_re', 'contents', 'contents_re', 'num_lines', 'shared', 'max_filesize']]
+        if len(unrecognised_keys) > 0:
+            logger.warn("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
+
+        # Split search patterns according to speed of execution.
+        if any([x for x in sps if 'contents_re' in x]):
+            if any([x for x in sps if 'num_lines' in x]):
+                spatterns[4][key] = sps
+            elif any([x for x in sps if 'max_filesize' in x]):
+                spatterns[5][key] = sps
+            else:
+                spatterns[6][key] = sps
+        elif any([x for x in sps if 'contents' in x]):
+            if any([x for x in sps if 'num_lines' in x]):
+                spatterns[1][key] = sps
+            elif any([x for x in sps if 'max_filesize' in x]):
+                spatterns[2][key] = sps
+            else:
+                spatterns[3][key] = sps
+        else:
+            spatterns[0][key] = sps
+
+    if len(ignored_patterns) > 0:
+        logger.debug("Ignored search patterns as didn't match running modules: {}".format(', '.join(ignored_patterns)))
 
     def add_file(fn, root):
+        """
+        Function applied to each file found when walking the analysis
+        directories. Runs through all search patterns and returns True
+        if a match is found.
+        """
+        f = {'fn': fn, 'root': root}
 
         # Check that this is a file and not a pipe or anything weird
         if not os.path.isfile(os.path.join(root, fn)):
@@ -50,35 +103,34 @@ def get_filelist():
             logger.debug("Ignoring file as matched an ignore pattern: {}".format(fn))
             return None
 
-        # Use mimetypes to exclude binary files where possible
-        (ftype, encoding) = mimetypes.guess_type(os.path.join(root, fn))
-        if encoding is not None:
-            logger.debug("Ignoring file as is encoded: {}".format(fn))
-            return None
-        if ftype is not None and ftype.startswith('image'):
-            if config.report_imgskips:
-                logger.debug("Ignoring file as has filetype '{}': {}".format(ftype, fn))
-            return None
-
-        # Limit search to files under 5MB to avoid 30GB FastQ files etc.
+        # Limit search to small files, to avoid 30GB FastQ files etc.
         try:
-            filesize = os.path.getsize(os.path.join(root,fn))
+            f['filesize'] = os.path.getsize(os.path.join(root,fn))
         except (IOError, OSError, ValueError, UnicodeDecodeError):
             logger.debug("Couldn't read file when checking filesize: {}".format(fn))
         else:
-            if filesize > config.log_filesize_limit:
-                logger.debug("Ignoring file as too large: {}".format(fn))
-                return None
+            if f['filesize'] > config.log_filesize_limit:
+                return False
 
-        # Looks good! Remember this file
-        files.append({
-            'root': root,
-            'fn': fn
-        })
+        # Test file for each search pattern
+        for patterns in spatterns:
+            for key, sps in patterns.items():
+                for sp in sps:
+                    if search_file (sp, f):
+                        # Looks good! Remember this file
+                        files[key].append(f)
+                        # Don't keep searching this file for other modules
+                        if not sp.get('shared', False):
+                            return
+                        # Don't look at other patterns for this module
+                        else:
+                            break
 
-    # Go through the analysis directories
+    # Go through the analysis directories and get file list
     for path in config.analysis_dir:
-        if os.path.isdir(path):
+        if os.path.isfile(path):
+            searchfiles.append([os.path.basename(path), os.path.dirname(path)])
+        elif os.path.isdir(path):
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
 
@@ -105,14 +157,78 @@ def get_filelist():
                 if len(p_matches) > 0:
                     logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
                     continue
-
                 # Search filenames in this directory
                 for fn in filenames:
-                    add_file(fn, root)
+                    searchfiles.append([fn, root])
+    # Search through collected files
+    with click.progressbar(searchfiles, label="Searching {} files..".format(len(searchfiles))) as sfiles:
+        for sf in sfiles:
+            add_file(sf[0], sf[1])
 
-        elif os.path.isfile(path):
-            add_file(os.path.basename(path), os.path.dirname(path))
+def search_file (pattern, f):
+    """
+    Function to searach a single file for a single search pattern.
+    """
 
+    fn_matched = False
+    contents_matched = False
+
+    # Use mimetypes to exclude binary files where possible
+    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+    if encoding is not None:
+        return False
+    if ftype is not None and ftype.startswith('image'):
+        return False
+
+    # Search pattern specific filesize limit
+    if pattern.get('max_filesize') is not None and 'filesize' in f:
+        if f['filesize'] > pattern.get('max_filesize'):
+            return False
+
+    # Search by file name (glob)
+    if pattern.get('fn') is not None:
+        if fnmatch.fnmatch(f['fn'], pattern['fn']):
+            fn_matched = True
+            if pattern.get('contents') is None and pattern.get('contents_re') is None:
+                return True
+
+    # Search by file name (regex)
+    if pattern.get('fn_re') is not None:
+        if re.match( pattern['fn_re'], f['fn']):
+            fn_matched = True
+            if pattern.get('contents') is None and pattern.get('contents_re') is None:
+                return True
+
+    # Search by file contents
+    if pattern.get('contents') is not None or pattern.get('contents_re') is not None:
+        try:
+            with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
+                l = 1
+                for line in f:
+                    # Search by file contents (string)
+                    if pattern.get('contents') is not None:
+                        if pattern['contents'] in line:
+                            contents_matched = True
+                            if pattern.get('fn') is None and pattern.get('fn_re') is None:
+                                return True
+                            break
+                    # Search by file contents (regex)
+                    elif pattern.get('contents_re') is not None:
+                        if re.match( pattern['contents_re'], line):
+                            contents_matched = True
+                            if pattern.get('fn') is None and pattern.get('fn_re') is None:
+                                return True
+                            break
+                    # Break if we've searched enough lines for this pattern
+                    if pattern.get('num_lines') and l >= pattern.get('num_lines'):
+                        break
+                    l += 1
+        except (IOError, OSError, ValueError, UnicodeDecodeError):
+            if config.report_readerrors:
+                logger.debug("Couldn't read file when looking for output: {}".format(f['fn']))
+                return False
+
+    return fn_matched and contents_matched
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])
@@ -131,4 +247,38 @@ def data_sources_tofile ():
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
 
+def save_htmlid(html_id):
+    """ Take a HTML ID, sanitise for HTML, check for duplicates and save.
+    Returns sanitised, unique ID """
+    global html_ids
+
+    # Trailing whitespace
+    html_id = html_id.strip()
+
+    # Must begin with a letter
+    if re.match(r'^[a-zA-Z]', html_id) is None:
+        html_id = 'mqc-{}'.format(html_id)
+
+    # Replace illegal characters
+    html_id = re.sub('[^a-zA-Z0-9_-]+', '-', html_id)
+
+    # Check for duplicates
+    i = 1
+    html_id_base = html_id
+    while html_id in html_ids:
+        html_id = '{}-{}'.format(html_id_base, i)
+        i += 1
+
+    # Remember and return
+    html_ids.append(html_id)
+    return html_id
+
+
+def compress_json(data):
+    """ Take a Python data object. Convert to JSON and compress using lzstring """
+    json_string = json.dumps(data).encode('utf-8', 'ignore').decode('utf-8')
+    # JSON.parse() doesn't handle `NaN`, but it does handle `null`.
+    json_string = json_string.replace('NaN', 'null');
+    x = lzstring.LZString()
+    return x.compressToBase64(json_string)
 

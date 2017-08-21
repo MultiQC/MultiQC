@@ -1,9 +1,6 @@
 /* CSS Styles for Default MultiQC Report Template */
 
 /* General Styles */
-.table tr td {
-    font-size:0.9em;
-}
 code {
     background-color: #f3f3f3;
     color: #666;
@@ -26,6 +23,9 @@ kbd {
 .radio.input-sm input {
     margin: 2px 0 0 -20px;
 }
+.mqc_thousandSep {
+    padding: 0 2px;
+}
 
 /* Page Template */
 @media only screen and (min-width: 768px){
@@ -37,7 +37,7 @@ kbd {
         transition: margin-left 0.5s;
     }
     .mainpage.hidden-nav, .footer.hidden-nav { margin-left: 0; }
-    
+
     .side-nav-wrapper {
         position: fixed;
     }
@@ -173,7 +173,7 @@ kbd {
 #page_title img {
     max-width: 260px;
 }
-.report_comment {
+.report_comment, .mqc-section-comment {
     border-left: 5px solid #8eb9dd;
     background-color: #e8f1f8;
 }
@@ -181,6 +181,13 @@ kbd {
   max-height: 80px;
   overflow: auto;
   margin-bottom: 15px;
+}
+#mqc_sname_switches_txt {
+  margin-bottom: 15px;
+}
+#mqc_sname_switches {
+  display: inline-block;
+  margin-left: 10px;
 }
 #mqc_header_hr {
     margin: 0;
@@ -606,14 +613,33 @@ input.form-control[type=color]{
     font-family: 'Consolas', 'Monaco', 'Courier New', Courier, monospace;
 }
 
+
 /* MultiQC tables */
-.mqc_table thead th {
+.table tr td {
+    font-size:0.9em;
+    height: 30px;
+}
+.mqc_table tbody tr td .wrapper .val {
+    z-index: -1;
+}
+.mqc-table-responsive.mqc-table-collapse {
+    max-height: 500px;
+}
+.mqc-table-responsive {
+    overflow: auto;
+}
+.table.mqc_table > thead > tr > th {
     cursor: pointer;
+    /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
+    border-bottom: 0;
+    -webkit-box-shadow: inset 0px -2px 0px 0 #ddd;
+    -moz-box-shadow: inset 0px -2px 0px 0 #ddd;
+    box-shadow: inset 0px -2px 0px 0 #ddd;
 }
 .mqc_table thead th, .mqc_table thead td {
     background-color: #FFFFFF;
 }
-.mqc_table thead th:after, .mqc_table_cloneWrapper thead th:after {
+.mqc_table thead th:after {
     content: "";
     display: inline-block;
     width: 0;
@@ -634,25 +660,20 @@ input.form-control[type=color]{
     color: #1ca8dd;
     border-bottom: 2px solid #1ca8dd;
 }
-.mqc_table thead td {
-    border-bottom: 2px solid #ddd;
-}
 .mqc_table th {
     white-space: nowrap;
 }
-/* Floating header */
-.mqc_table_cloneWrapper {
-    overflow: hidden;
-    border-bottom: 2px solid #ddd;
-    width: calc(100% - 340px);
+.mqc-table-expand {
+    text-align: center;
+    color: #999;
+    padding: 5px;
+    cursor: pointer;
+    background-color: #ffffff;
+    -webkit-transition: background-color 0.2s;
+    transition: background-color 0.2s;
 }
-/*.mqc_table_cloneWrapper thead th, .mqc_table_cloneWrapper thead td {
-    background-color: #FFFFFF;
-}*/
-@media only screen and (max-width: 768px){
-    .mqc_table_cloneWrapper {
-        width: calc(100% - 40px);
-    }
+.mqc-table-expand:hover, .mqc-table-expand:focus, .mqc-table-expand:active {
+    background-color: #ededed;
 }
 
 .mqc_table_numrows_text {
@@ -682,7 +703,6 @@ tbody .sorthandle {
 .mqc_table .rowheader {
     border-left: none;
 }
-
 .mqc_table tr, .mqc_table td {
     height: 100%;
 }
@@ -694,6 +714,7 @@ tbody .sorthandle {
     position: relative;
     height:100%;
     width:100%;
+    z-index: -10;
 }
 .mqc_table .bar {
     display: block;
