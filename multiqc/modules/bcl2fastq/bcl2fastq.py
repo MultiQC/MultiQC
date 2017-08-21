@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "qscore_sum": 0
             }
             for demuxResult in conversionResult["DemuxResults"]:
-                sample = demuxResult["SampleName"]
+                sample = self.clean_s_name(demuxResult["SampleName"], '.')
                 if sample in run_data[lane]["samples"]:
                     log.debug("Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(self.prepend_runid(runId, lane),sample))
                 run_data[lane]["samples"][sample] = {

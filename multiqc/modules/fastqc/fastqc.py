@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Now add each section in order
         # Allow plot selection in config
         try:
-            plots_enabled = config.fastqc_plots_enabled.split()
+            plots_enabled = config.fastqc_plots_enabled
         except AttributeError:
             plots_enabled = []
 
@@ -425,7 +425,7 @@ class MultiqcModule(BaseMultiqcModule):
                     break
                 else:
                     for base in ['a','c','t','g']:
-                        data[read_num][s_name][b][base] = (float(data[s_name][b][base])/float(tot)) * 100.0
+                        data[read_num][s_name][b][base] = (float(data[read_num][s_name][b][base])/float(tot)) * 100.0
         if len(data) == 0:
             log.debug('sequence_content not found in FastQC reports')
             return None
@@ -580,7 +580,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = defaultdict(dict)
         for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
-                data[read_name][s_name] = {self.avg_bp_from_range(d['base']): d['n-count'] for d in s_fastqc_data['per_base_n_content']}
+                data[read_num][s_name] = {self.avg_bp_from_range(d['base']): d['n-count'] for d in s_fastqc_data['per_base_n_content']}
             except KeyError:
                 pass
         if len(data) == 0:
@@ -620,7 +620,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'fastqc_per_base_n_content',
             description = 'The percentage of base calls at each position for which an N was called. ' +
                         'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.',
-            plot = linegraph.plot(data, pconfig)
+            plot = linegraph.plot(data_to_plot, pconfig)
         )
 
 
@@ -629,20 +629,20 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = defaultdict(dict)
         seq_lengths = set()
-        multiple_lenths = False
+        multiple_lengths = False
         for (s_name, read_num), s_fastqc_data in self.fastqc_data.items():
             try:
                 data[read_num][s_name] = {self.avg_bp_from_range(d['length']): d['count'] for d in s_fastqc_data['sequence_length_distribution']}
-                seq_lengths.update(data[s_name].keys())
-                if len(set(data[s_name].keys())) > 1:
-                    multiple_lenths = True
+                seq_lengths.update(data[read_num][s_name].keys())
+                if len(set(data[read_num][s_name].keys())) > 1:
+                    multiple_lengths = True
             except KeyError:
                 pass
         if len(data) == 0:
             log.debug('sequence_length_distribution not found in FastQC reports')
             return None
 
-        if not multiple_lenths:
+        if not multiple_lengths:
             lengths = 'bp , '.join([str(l) for l in list(seq_lengths)])
             desc = 'All samples have sequences of a single length ({}bp).'.format(lengths)
             if len(seq_lengths) > 1:

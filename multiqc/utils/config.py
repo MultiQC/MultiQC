@@ -233,5 +233,5 @@ def update_dict(d, u):
         if isinstance(val, collections.Mapping):
             d[key] = update_dict(d.get(key, {}), val)
         else:
-            d[key] = u[key]
+            d[key] = val
     return d
