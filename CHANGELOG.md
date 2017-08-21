@@ -11,6 +11,9 @@ For users with custom modules - search patterns _must_ now conform to the search
 pattern naming convention: `modulename` or `modulename/anything` (the search pattern
 string beginning with the name of your module, anything you like after the first `/`).
 
+#### New Modules:
+* [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
+
 #### New MultiQC Features:
 * File search refactored to only search for running modules
     * Makes search much faster when running with lots of files and limited modules

@@ -81,10 +81,8 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
             elif len(s) == 3:
                 data['Unique'] = s[0]
-                data['Unique_percent'] = (float(s[0])/float(s[0]+s[1]+s[2])) * 100
                 data['Multi'] = s[1]
                 data['Uncertain'] = s[2]
-                
             else:
                 break
         return data
@@ -94,6 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
 
         headers = OrderedDict()
+
         headers['Unalignable'] = {
             'title': '{} reads unalignable '.format(config.read_count_prefix),
             'description': 'number of unalignable reads ({})'.format(config.read_count_desc),
@@ -101,6 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: float(x) * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
+
         headers['Alignable'] = {
             'title': '{} reads alignable'.format(config.read_count_prefix),
             'description': 'number of alignable reads ({})'.format(config.read_count_desc),
@@ -109,6 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: float(x) * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
+
         headers['Filtered'] = {
             'title': '{} reads filtered'.format(config.read_count_prefix),
             'description': 'number of filtered reads due to too many alignments ({})'.format(config.read_count_desc),
@@ -117,21 +118,13 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: float(x) * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
-        
+
         headers['Unique'] = {
             'title': '{} reads aligned uniquely '.format(config.read_count_prefix),
             'description': 'number of reads aligned uniquely to a gene ({})'.format(config.read_count_desc),
             'scale': 'PuBu',
             'modify': lambda x: float(x) * config.read_count_multiplier,
             'shared_key': 'read_count'
-        }
-        headers['percent_unique'] = {
-            'title': '% Unique',
-            'description': '% Unique assigned reads',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'RdYlGn'
         }
         headers['Multi'] = {
             'title': '{} reads aligned to multiple genes'.format(config.read_count_prefix),
