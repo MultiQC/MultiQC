@@ -9,8 +9,6 @@ def plot_aqhist(samples, file_type, **plot_args):
     samples = bbmap.MultiqcModule.mod_data[file_type]
     """
 
-    print(samples)
-
     sumy = sum([int(samples[sample]['data'][x][0])
                 for sample in samples
                 for x in samples[sample]['data']])
@@ -19,31 +17,53 @@ def plot_aqhist(samples, file_type, **plot_args):
     all_x = set()
     for item in sorted(chain(*[samples[sample]['data'].items()
                                 for sample in samples])):
-        print(item)
         all_x.add(item[0])
         cutoff -= item[1][0]
         if cutoff < 0:
             xmax = item[0]
             break
 
-    columns_to_plot = [0,2]
-    data = {
-        sample+str(column): {
+
+    columns_to_plot = {
+        'Counts': {
+            0: 'Read1',
+            2: 'Read2'
+        },
+        'Proportions': {
+            1: 'Read1',
+            3: 'Read2'
+        }
+    }
+    count_data = {
+        sample+'.'+column_name: {
             x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
             for x in all_x
         }
         for sample in samples
-        for column in columns_to_plot
+        for column, column_name in columns_to_plot['Counts'].items()
+    }
+    proportion_data = {
+        sample+'.'+column_name: {
+            x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
+            for x in all_x
+        }
+        for sample in samples
+        for column, column_name in columns_to_plot['Proportions'].items()
     }
 
     plot_params = {
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
-            'xmax': xmax
+            'xmax': xmax,
+            'data_labels': [
+                {'name': 'Count data', 'ylab': 'Count'},
+                {'name': 'Proportion data', 'ylab': 'Proportion'},
+            ]
+
     }
     plot_params.update(plot_args['plot_params'])
     plot = linegraph.plot(
-        data,
+        [count_data, proportion_data],
         plot_params
     )
 
