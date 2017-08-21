@@ -3,7 +3,7 @@ from itertools import chain
 
 from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
-#from .plot_bhist import plot_bhist
+from .plot_bhist import plot_bhist
 #from .plot_bqhist import plot_bqhist
 
 class slice2OrderedDict(object):
@@ -39,7 +39,7 @@ file_types = {
         'cols': odict[
             'Pos':int, 'A':float, 'C':float, 'G':float, 'T':float, 'N':float
         ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_bhist,
         'plot_params': {}
     },
     'bincov': {
