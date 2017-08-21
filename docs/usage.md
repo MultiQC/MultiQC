@@ -69,8 +69,8 @@ finds log files with the same sample name, the previous data will be overwritten
 (this can be inspected by running MultiQC with `-v`/`--verbose`).
 
 To avoid this, run MultiQC with the `-d`/`--dirs` parameter. This will prefix every
-sample name with the directory path that the log file was found within. As
-such, sample names will no longer be unique, and data will not be overwritten.
+sample name with the directory path for that log file. As such, sample names should
+now be unique, and not overwrite one-another.
 
 By default, `--dirs` will prepend the entire path to each sample name. You can choose
 which directories are added with the `-dd`/`--dirs-depth` parameter. Set to a positive
