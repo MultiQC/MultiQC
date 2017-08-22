@@ -5,6 +5,7 @@ from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
 #from .plot_bqhist import plot_bqhist
+from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
 from .plot_qhist import plot_qhist
 
@@ -171,7 +172,7 @@ file_types = {
             'Match1':float, 'Sub1':float, 'Del1':float, 'Ins1':float, 'N1':float, 'Other1':float,
             'Match2':float, 'Sub2':float, 'Del2':float, 'Ins2':float, 'N2':float, 'Other2':float
         ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_mhist,
         'plot_params': {}
     },
     'qahist': {
