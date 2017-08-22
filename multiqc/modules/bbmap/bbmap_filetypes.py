@@ -4,7 +4,7 @@ from itertools import chain
 from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
-#from .plot_bqhist import plot_bqhist
+from .plot_bqhist import plot_bqhist
 from .plot_idhist import plot_idhist
 from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
@@ -73,7 +73,7 @@ file_types = {
             'count_2':int, 'min_2':int, 'max_2':int, 'mean_2':float,
             'Q1_2':int, 'med_2':int, 'Q3_2':int, 'LW_2':int, 'RW_2':int
         ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_bqhist,
         'plot_params': {}
     },
     'covhist': {
