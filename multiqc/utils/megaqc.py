@@ -75,8 +75,9 @@ def multiqc_api_post(exported_data):
     else:
         try:
             api_r = json.loads(r.text)
-        except KeyError:
-            api_r = {'message': 'JSON response could not be parsed: {}'.format(r.text)}
+        except Exception as e:
+            log.warn('Error: JSON response could not be parsed (status code: {})'.format(r.status_code))
+            return None
         if r.status_code == 200:
             log.info('{}'.format(api_r['message']))
         else:
