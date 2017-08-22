@@ -6,6 +6,7 @@ from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
 #from .plot_bqhist import plot_bqhist
 from .plot_idhist import plot_idhist
+from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
 from .plot_qhist import plot_qhist
@@ -153,7 +154,7 @@ file_types = {
         'descr': 'Indel length histogram.',
         'help_text': 'Placeholder help text.',
         'cols': odict['Length':int, 'Deletions':int, 'Insertions':int],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_indelhist,
         'plot_params': {}
     },
     'lhist' : {
