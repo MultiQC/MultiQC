@@ -34,22 +34,19 @@ def plot_aqhist(samples, file_type, **plot_args):
             3: 'Read2'
         }
     }
-    count_data = {
-        sample+'.'+column_name: {
-            x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
-            for x in all_x
-        }
-        for sample in samples
-        for column, column_name in columns_to_plot['Counts'].items()
-    }
-    proportion_data = {
-        sample+'.'+column_name: {
-            x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
-            for x in all_x
-        }
-        for sample in samples
-        for column, column_name in columns_to_plot['Proportions'].items()
-    }
+
+    plot_data = []
+    for column_type in columns_to_plot:
+        plot_data.append(
+            {
+                sample+'.'+column_name: {
+                    x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
+                    for x in all_x
+                }
+                for sample in samples
+                for column, column_name in columns_to_plot[column_type].items()
+            }
+        )
 
     plot_params = {
             'id': 'bbmap-' + file_type,
@@ -63,7 +60,7 @@ def plot_aqhist(samples, file_type, **plot_args):
     }
     plot_params.update(plot_args['plot_params'])
     plot = linegraph.plot(
-        [count_data, proportion_data],
+        plot_data,
         plot_params
     )
 
