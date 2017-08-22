@@ -31,6 +31,12 @@ file_types = {
         ],
         'plot_func': plot_aqhist,
         'plot_params': {
+            'xPlotBands': 
+            [
+                {'from': 28, 'to': 100, 'color': '#c3e6c3'},
+                {'from': 20, 'to': 28, 'color': '#e6dcc3'},
+                {'from': 0, 'to': 20, 'color': '#e6c3c3'},
+            ],
             'yLog': True,
         }
     },
@@ -45,7 +51,7 @@ file_types = {
             'Pos':int, 'A':float, 'C':float, 'G':float, 'T':float, 'N':float
         ],
         'plot_func': plot_bhist,
-        'plot_params': {}
+        'plot_params': {},
     },
     'bincov': {
         'title': 'Binned coverage',
