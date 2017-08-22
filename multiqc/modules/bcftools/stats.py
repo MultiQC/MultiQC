@@ -22,11 +22,17 @@ class StatsReportMixin():
           we treat each 'set' as a MultiQC sample, taking the first
           input filename for each set as the name.
         """
+        collapse_complementary = getattr(config, 'bcftools', {}).get('collapse_complementary_changes', False)
+        if collapse_complementary:
+            types = ['A>C', 'A>G', 'A>T', 'C>A', 'C>G', 'C>T']
+        else:
+            types = ['A>C', 'A>G', 'A>T', 'C>A', 'C>G', 'C>T',
+                     'G>A', 'G>C', 'G>T', 'T>A', 'T>C', 'T>G']
 
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
         depth_data = dict()
-        for f in self.find_log_files(config.sp['bcftools']['stats']):
+        for f in self.find_log_files('bcftools/stats'):
             s_names = list()
             for line in f['f'].splitlines():
                 s = line.split("\t")
@@ -62,9 +68,17 @@ class StatsReportMixin():
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    field = 'substitution_type_{}'.format(s[2].strip())
+
+                    rc = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+                    change = s[2].strip()
+                    if change not in types:
+                        change = '>'.join(rc[n] for n in change.split('>'))
+
+                    field = 'substitution_type_{}'.format(change)
                     value = float(s[3].strip())
-                    self.bcftools_stats[s_name][field] = value
+                    if field not in self.bcftools_stats[s_name]:
+                        self.bcftools_stats[s_name][field] = 0
+                    self.bcftools_stats[s_name][field] += value
 
                 # Indel length distributions
                 if s[0] == "IDD" and len(s_names) > 0:
@@ -87,6 +101,9 @@ class StatsReportMixin():
                     percent_sites = float(s[-1].strip())
                     depth_data[s_name][bin_name] = percent_sites
 
+        # Filter to strip out ignored sample names
+        self.bcftools_stats = self.ignore_samples(self.bcftools_stats)
+
         if len(self.bcftools_stats) > 0:
 
             # Write parsed report data to a file
@@ -96,7 +113,6 @@ class StatsReportMixin():
             self.bcftools_stats_genstats_table()
 
             # Make bargraph plot of substitution types
-            types = ['A>C','A>G','A>T','C>A','C>G','C>T','G>A','G>C','G>T','T>A','T>C','T>G']
             keys = OrderedDict()
             for t in types:
                 keys['substitution_type_{}'.format(t)] = {'name': t}
@@ -106,11 +122,11 @@ class StatsReportMixin():
                 'ylab': '# Substitutions',
                 'cpswitch_counts_label': 'Number of Substitutions'
             }
-            self.sections.append({
-                'name': 'Variant Substitution Types',
-                'anchor': 'bcftools-stats',
-                'content': bargraph.plot(self.bcftools_stats, keys, pconfig)
-            })
+            self.add_section (
+                name = 'Variant Substitution Types',
+                anchor = 'bcftools-stats',
+                plot = bargraph.plot(self.bcftools_stats, keys, pconfig)
+            )
 
             # Make line graph of indel lengths
             if len(self.bcftools_stats_indels) > 0:
@@ -123,20 +139,22 @@ class StatsReportMixin():
                     'ymin': 0,
                     # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
                 }
-                self.sections.append({
-                    'name': 'Indel Distribution',
-                    'anchor': 'bcftools-stats_indel_plot',
-                    'content': linegraph.plot(self.bcftools_stats_indels, pconfig)
-                })
+                self.add_section (
+                    name = 'Indel Distribution',
+                    anchor = 'bcftools-stats_indel_plot',
+                    plot = linegraph.plot(self.bcftools_stats_indels, pconfig)
+                )
             # Make line graph of variants per depth
             if len(depth_data) > 0:
                 pconfig = {'id': 'bcftools_stats_depth', 'title': 'Variant depths',
                            'ylab': 'Fraction of sites (%)', 'xlab': 'Variant depth',
                            'ymin': 0, 'ymax': 100, 'categories': True}
-                desc = '<p>Read depth support distribution for called variants</p>'
-                self.sections.append({'name': 'Variant depths',
-                                      'anchor': 'bcftools-stats_depth_plot',
-                                      'content': desc + linegraph.plot(depth_data, pconfig)})
+                self.add_section (
+                    name = 'Variant depths',
+                    anchor = 'bcftools-stats_depth_plot',
+                    description = 'Read depth support distribution for called variants',
+                    plot = linegraph.plot(depth_data, pconfig)
+                )
 
         # Return the number of logs that were found
         return len(self.bcftools_stats)
@@ -145,38 +163,38 @@ class StatsReportMixin():
         """ Add key statistics to the General Stats table """
         stats_headers = OrderedDict()
         stats_headers['number_of_records'] = {
-            'title': 'Variations',
-            'description': 'Variations Total',
-            'min': 0, 'format': '{:.0f}',
+            'title': 'Vars',
+            'description': 'Variations total',
+            'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['variations_hom'] = {
-            'title': 'Homozygous',
+            'title': 'Hom',
             'description': 'Variations homozygous',
-            'min': 0, 'format': '{:.0f}',
+            'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['variations_het'] = {
-            'title': 'Heterozygous',
+            'title': 'Het',
             'description': 'Variations heterozygous',
-            'min': 0, 'format': '{:.0f}',
+            'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['number_of_SNPs'] = {
-            'title': 'SNPs',
+            'title': 'SNP',
             'description': 'Variation SNPs',
-            'min': 0, 'format': '{:.0f}',
+            'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['number_of_indels'] = {
-            'title': 'Indels',
+            'title': 'Indel',
             'description': 'Variation Insertions/Deletions',
-            'min': 0, 'format': '{:.0f}',
+            'min': 0, 'format': '{:,.0f}',
         }
         stats_headers['tstv'] = {
             'title': 'Ts/Tv',
             'description': 'Variant SNP transition / transversion ratio',
-            'min': 0, 'format': '{:.0f}',
+            'min': 0, 'format': '{:,.2f}',
         }
         stats_headers['number_of_MNPs'] = {
-            'title': 'MNPs',
-            'description': 'Variation Multinucleotide Polymorphisms',
-            'min': 0, 'format': '{:.0f}', "hidden": True,
+            'title': 'MNP',
+            'description': 'Variation multinucleotide polymorphisms',
+            'min': 0, 'format': '{:,.0f}', "hidden": True,
         }
         self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')

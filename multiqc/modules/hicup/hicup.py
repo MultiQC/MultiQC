@@ -26,8 +26,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any HiCUP summary reports
         self.hicup_data = dict()
-        for f in self.find_log_files(config.sp['hicup']):
+        for f in self.find_log_files('hicup'):
             self.parse_hicup_logs(f)
+
+        # Filter to strip out ignored sample names
+        self.hicup_data = self.ignore_samples(self.hicup_data)
 
         if len(self.hicup_data) == 0:
             log.debug("Could not find any HiCUP data in {}".format(config.analysis_dir))
@@ -42,36 +45,35 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicup_stats_table()
 
         # Report sections
-        self.sections = list()
-        self.sections.append({
-            'name': 'Read Truncation',
-            'anchor': 'hicup-truncating',
-            'content': self.hicup_truncating_chart()
-        })
-        self.sections.append({
-            'name': 'Read Mapping',
-            'anchor': 'hicup-mapping',
-            'content': self.hicup_alignment_chart()
-        })
+        self.add_section (
+            name = 'Read Truncation',
+            anchor = 'hicup-truncating',
+            plot = self.hicup_truncating_chart()
+        )
+        self.add_section (
+            name = 'Read Mapping',
+            anchor = 'hicup-mapping',
+            plot = self.hicup_alignment_chart()
+        )
 
-        self.sections.append({
-            'name': 'Read Pair Filtering',
-            'anchor': 'hicup-filtering',
-            'content': self.hicup_filtering_chart()
-        })
+        self.add_section (
+            name = 'Read Pair Filtering',
+            anchor = 'hicup-filtering',
+            plot = self.hicup_filtering_chart()
+        )
 
         # TODO: Is there a log file with this data for a line plot?
-        # self.sections.append({
-        #     'name': 'Di-Tag Length Distribution',
-        #     'anchor': 'hicup-lengths',
-        #     'content': self.hicup_lengths_chart()
-        # })
+        # self.add_section (
+        #     name = 'Di-Tag Length Distribution',
+        #     anchor = 'hicup-lengths',
+        #     plot = self.hicup_lengths_chart()
+        # )
 
-        self.sections.append({
-            'name': 'De-Duplication &amp; Di-Tag Separation',
-            'anchor': 'hicup-deduplication',
-            'content': self.hicup_dedup_chart()
-        })
+        self.add_section (
+            name = 'De-Duplication &amp; Di-Tag Separation',
+            anchor = 'hicup-deduplication',
+            plot = self.hicup_dedup_chart()
+        )
 
 
     def parse_hicup_logs(self, f):
@@ -110,15 +112,14 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%',
+            'scale': 'YlGn'
         }
         headers['Deduplication_Read_Pairs_Uniques'] = {
-            'title': 'M Unique',
-            'description': 'Unique Di-Tags (millions)',
+            'title': '{} Unique'.format(config.read_count_prefix),
+            'description': 'Unique Di-Tags ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['Percentage_Uniques'] = {
@@ -128,15 +129,14 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'YlGn-rev',
-            'modify': lambda x: 100 - x,
-            'format': '{:.1f}%',
+            'modify': lambda x: 100 - x
         }
         headers['Valid_Pairs'] = {
-            'title': 'M Valid',
-            'description': 'Valid Pairs (millions)',
+            'title': '{} Valid'.format(config.read_count_prefix),
+            'description': 'Valid Pairs ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['Percentage_Valid'] = {
@@ -145,15 +145,14 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%',
+            'scale': 'YlGn'
         }
         headers['Paired_Read_1'] = {
-            'title': 'M Pairs Aligned',
-            'description': 'Paired Alignments (millions)',
+            'title': '{} Pairs Aligned'.format(config.read_count_prefix),
+            'description': 'Paired Alignments ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuRd',
-            'modify': lambda x: x / 1000000,
+            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['Percentage_Mapped'] = {
@@ -162,8 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn',
-            'format': '{:.1f}%',
+            'scale': 'YlGn'
         }
         self.general_stats_addcols(self.hicup_data, headers, 'HiCUP')
 

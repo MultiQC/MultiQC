@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import beeswarm
 
 # Initialise the logger
@@ -41,7 +40,7 @@ def parse_reports(self):
     is_paired_end=False
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files(config.sp['rseqc']['bam_stat']):
+    for f in self.find_log_files('rseqc/bam_stat'):
         d = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
@@ -65,6 +64,9 @@ def parse_reports(self):
                 is_paired_end = True
             self.bam_stat_data[f['s_name']] = d
 
+    # Filter to strip out ignored sample names
+    self.bam_stat_data = self.ignore_samples(self.bam_stat_data)
+
     if len(self.bam_stat_data) > 0:
         # Write to file
         self.write_data_file(self.bam_stat_data, 'multiqc_rseqc_bam_stat')
@@ -76,8 +78,7 @@ def parse_reports(self):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'RdYlGn',
-            'format': '{:.1f}%'
+            'scale': 'RdYlGn'
         }
         for s_name in self.bam_stat_data:
             if s_name not in self.general_stats_data:
@@ -116,11 +117,12 @@ def parse_reports(self):
             keys['proper-paired_reads_map_to_different_chrom'] = dict(defaults, **{
                         'title': 'Different chrom', 'description': 'Proper-paired reads map to different chrom' })
 
-        self.sections.append({
-            'name': 'Bam Stat',
-            'anchor': 'rseqc-bam_stat',
-            'content': '<p>All numbers reported in millions.</p>'+beeswarm.plot(self.bam_stat_data, keys)
-        })
+        self.add_section (
+            name = 'Bam Stat',
+            anchor = 'rseqc-bam_stat',
+            description = 'All numbers reported in millions.',
+            plot = beeswarm.plot(self.bam_stat_data, keys)
+        )
 
     # Return number of samples found
     return len(self.bam_stat_data)

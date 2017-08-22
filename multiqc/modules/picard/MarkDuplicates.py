@@ -7,7 +7,6 @@ import logging
 import os
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -21,7 +20,7 @@ def parse_reports(self):
     self.picard_dupMetrics_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files(config.sp['picard']['markdups'], filehandles=True):
+    for f in self.find_log_files('picard/markdups', filehandles=True):
         s_name = None
         for l in f['f']:
             # New log starting
@@ -29,9 +28,9 @@ def parse_reports(self):
                 s_name = None
 
                 # Pull sample name from input
-                fn_search = re.search("INPUT=\[?([^\\s]+)\]?", l)
+                fn_search = re.search(r"INPUT=(\[?[^\s]+\]?)", l)
                 if fn_search:
-                    s_name = os.path.basename(fn_search.group(1))
+                    s_name = os.path.basename(fn_search.group(1).strip('[]'))
                     s_name = self.clean_s_name(s_name, f['root'])
 
             if s_name is not None:
@@ -48,7 +47,8 @@ def parse_reports(self):
                         except ValueError:
                             self.picard_dupMetrics_data[s_name][k] = vals[i]
                     # Check that this sample had some reads
-                    if self.picard_dupMetrics_data[s_name].get('READ_PAIRS_EXAMINED', 0) == 0:
+                    if self.picard_dupMetrics_data[s_name].get('READ_PAIRS_EXAMINED', 0) == 0 and \
+                       self.picard_dupMetrics_data[s_name].get('UNPAIRED_READS_EXAMINED', 0) == 0:
                         self.picard_dupMetrics_data.pop(s_name, None)
                         log.warn("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
                     s_name = None
@@ -58,6 +58,9 @@ def parse_reports(self):
                 self.picard_dupMetrics_data.pop(s_name, None)
                 log.debug("Removing {} as no data parsed".format(s_name))
 
+
+    # Filter to strip out ignored sample names
+    self.picard_dupMetrics_data = self.ignore_samples(self.picard_dupMetrics_data)
 
     if len(self.picard_dupMetrics_data) > 0:
 
@@ -72,7 +75,6 @@ def parse_reports(self):
             'min': 0,
             'suffix': '%',
             'scale': 'OrRd',
-            'format': '{:.1f}%',
             'modify': lambda x: self.multiply_hundred(x)
         }
         for s_name in self.picard_dupMetrics_data:
@@ -105,12 +107,11 @@ def parse_reports(self):
             'cpswitch_c_active': False
         }
 
-        self.sections.append({
-            'id': 'picard_mark_duplicates',
-            'name': 'Mark Duplicates',
-            'anchor': 'picard-markduplicates',
-            'content': bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
-        })
+        self.add_section (
+            name = 'Mark Duplicates',
+            anchor = 'picard-markduplicates',
+            plot = bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
+        )
 
     # Return the number of detected samples to the parent module
     return len(self.picard_dupMetrics_data)

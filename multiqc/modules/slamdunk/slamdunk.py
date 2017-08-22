@@ -26,9 +26,6 @@ class MultiqcModule(BaseMultiqcModule):
         href='http://t-neumann.github.io/slamdunk/',
         info="is a tool to analyze SLAMSeq data.")
 
-        # Start the sections
-        self.sections = list()
-
         num_reports = 0
 
         self.plot_cols = [
@@ -38,8 +35,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Summary Reports
         self.slamdunk_data = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['summary'], filehandles = True):
+        for f in self.find_log_files('slamdunk/summary', filehandles = True):
             self.parseSummary(f)
+        self.slamdunk_data = self.ignore_samples(self.slamdunk_data)
         if len(self.slamdunk_data) > 0:
             self.slamdunkGeneralStatsTable()
             self.slamdunkFilterStatsTable()
@@ -48,8 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # PCA Plots
         self.PCA_data = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['PCA'], filehandles = True):
+        for f in self.find_log_files('slamdunk/PCA', filehandles = True):
             self.parsePCA(f)
+        self.PCA_data = self.ignore_samples(self.PCA_data)
         if len(self.PCA_data) > 0:
             self.slamdunkPCAPlot()
             log.debug("Found {} PCA plots".format(len(self.PCA_data)))
@@ -57,8 +56,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # UTR Rate reports
         self.utrates_data = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['utrrates'], filehandles = True):
+        for f in self.find_log_files('slamdunk/utrrates', filehandles = True):
             self.parseUtrRates(f)
+        self.utrates_data = self.ignore_samples(self.utrates_data)
         if len(self.utrates_data) > 0:
             self.write_data_file(self.utrates_data, 'multiqc_slamdunk_utrrates')
             self.slamdunkUtrRatesPlot()
@@ -68,8 +68,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Read rate reports
         self.rates_data_plus = dict()
         self.rates_data_minus = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['rates'], filehandles = True):
+        for f in self.find_log_files('slamdunk/rates', filehandles = True):
             self.parseSlamdunkRates(f)
+        self.rates_data_plus = self.ignore_samples(self.rates_data_plus)
+        self.rates_data_minus = self.ignore_samples(self.rates_data_minus)
         if len(self.rates_data_plus) > 0:
             self.write_data_file(self.rates_data_plus, 'multiqc_slamdunk_readrates_plus')
             self.write_data_file(self.rates_data_minus, 'multiqc_slamdunk_readrates_minus')
@@ -82,8 +84,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.nontc_per_readpos_minus = dict()
         self.tc_per_readpos_plus = dict()
         self.tc_per_readpos_minus = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['tcperreadpos'], filehandles = True):
+        for f in self.find_log_files('slamdunk/tcperreadpos', filehandles = True):
             self.parseSlamdunkTCPerReadpos(f)
+        self.nontc_per_readpos_plus = self.ignore_samples(self.nontc_per_readpos_plus)
+        self.nontc_per_readpos_minus = self.ignore_samples(self.nontc_per_readpos_minus)
+        self.tc_per_readpos_plus = self.ignore_samples(self.tc_per_readpos_plus)
+        self.tc_per_readpos_minus = self.ignore_samples(self.tc_per_readpos_minus)
         if len(self.tc_per_readpos_plus) > 0:
             self.write_data_file(self.tc_per_readpos_plus, 'multiqc_slamdunk_tcperreadpos_plus')
             self.write_data_file(self.nontc_per_readpos_plus, 'multiqc_slamdunk_nontcperreadpos_plus')
@@ -98,8 +104,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.nontc_per_utrpos_minus = dict()
         self.tc_per_utrpos_plus = dict()
         self.tc_per_utrpos_minus = dict()
-        for f in self.find_log_files(config.sp['slamdunk']['tcperutrpos'], filehandles = True):
+        for f in self.find_log_files('slamdunk/tcperutrpos', filehandles = True):
             self.parseSlamdunkTCPerUtrpos(f)
+        self.nontc_per_utrpos_plus = self.ignore_samples(self.nontc_per_utrpos_plus)
+        self.nontc_per_utrpos_minus = self.ignore_samples(self.nontc_per_utrpos_minus)
+        self.tc_per_utrpos_plus = self.ignore_samples(self.tc_per_utrpos_plus)
+        self.tc_per_utrpos_minus = self.ignore_samples(self.tc_per_utrpos_minus)
         if len(self.nontc_per_utrpos_plus) > 0:
             self.write_data_file(self.tc_per_utrpos_plus, 'multiqc_slamdunk_tcperutrpos_plus')
             self.write_data_file(self.nontc_per_utrpos_plus, 'multiqc_slamdunk_nontcperutrpos_plus')
@@ -314,40 +324,40 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['counted'] = {
-            'title': 'Counted',
-            'description': '# reads counted within 3\'UTRs',
+            'title': '{} Counted'.format(config.read_count_prefix),
+            'description': '# reads counted within 3\'UTRs ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['retained'] = {
-            'title': 'Retained',
-            'description': '# retained reads after filtering',
+            'title': '{} Retained'.format(config.read_count_prefix),
+            'description': '# retained reads after filtering ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['mapped'] = {
-            'title': 'Mapped',
-            'description': '# mapped reads',
+            'title': '{} Mapped'.format(config.read_count_prefix),
+            'description': '# mapped reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['sequenced'] = {
-            'title': 'Sequenced',
-            'description': '# sequenced reads',
+            'title': '{} Sequenced'.format(config.read_count_prefix),
+            'description': '# sequenced reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
 
         self.general_stats_addcols(self.slamdunk_data, headers)
@@ -358,65 +368,70 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['mapped'] = {
             'namespace': 'Slamdunk',
-            'title': 'Mapped',
-            'description': '# mapped reads',
+            'title': '{} Mapped'.format(config.read_count_prefix),
+            'description': '# mapped reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'YlGn',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['multimapper'] = {
             'namespace': 'Slamdunk',
-            'title': 'Multimap-Filtered',
-            'description': '# multimap-filtered reads',
+            'title': '{} Multimap-Filtered'.format(config.read_count_prefix),
+            'description': '# multimap-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['nmfiltered'] = {
             'namespace': 'Slamdunk',
-            'title': 'NM-Filtered',
-            'description': '# NM-filtered reads',
+            'title': '{} NM-Filtered'.format(config.read_count_prefix),
+            'description': '# NM-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['idfiltered'] = {
             'namespace': 'Slamdunk',
-            'title': 'Identity-Filtered',
-            'description': '# identity-filtered reads',
+            'title': '{} Identity-Filtered'.format(config.read_count_prefix),
+            'description': '# identity-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
         headers['mqfiltered'] = {
             'namespace': 'Slamdunk',
-            'title': 'MQ-Filtered',
-            'description': '# MQ-filtered reads',
+            'title': '{} MQ-Filtered'.format(config.read_count_prefix),
+            'description': '# MQ-filtered reads ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
             'min': 0,
-            'format': '{:.2f} M',
+            'format': '{:,.2f}',
+            'suffix': config.read_count_prefix,
             'scale': 'OrRd',
-            'modify': lambda x: float(x) / 1000000.0,
+            'modify': lambda x: float(x) * config.read_count_multiplier,
         }
-        config = {
+        pconfig = {
             'id': 'slamdunk_filtering_table',
             'min': 0,
         }
 
-        self.sections.append({
-            'name': 'Filter statistics',
-            'anchor': 'slamdunk_filtering',
-            'content': '<p> This table shows the number of reads filtered with each filter criterion during filtering phase of slamdunk.</p>' +
-                        table.plot(self.slamdunk_data, headers, config)
-        })
+        self.add_section (
+            name = 'Filter statistics',
+            anchor = 'slamdunk_filtering',
+            description = 'This table shows the number of reads filtered with each filter criterion during filtering phase of slamdunk.',
+            plot = table.plot(self.slamdunk_data, headers, pconfig)
+        )
 
     def slamdunkOverallRatesPlot (self):
         """ Generate the overall rates plot """
@@ -446,15 +461,15 @@ class MultiqcModule(BaseMultiqcModule):
             for j, v in enumerate(k):
                 cats[i][v] = { 'color': self.plot_cols[j] }
 
-        self.sections.append({
-            'name': 'Conversion rates per read',
-            'anchor': 'slamdunk_overall_rates',
-            'content': """<p>This plot shows the individual conversion rates over all reads.
+        self.add_section (
+            name = 'Conversion rates per read',
+            anchor = 'slamdunk_overall_rates',
+            description = """This plot shows the individual conversion rates over all reads.
                         It shows these conversion rates strand-specific: This means for a properly labelled
                         sample you would see a T&gt;C excess on the plus-strand and an A&gt;G excess on the minus strand
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk docs</a>).</p>"""
-                        + bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
-        })
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#rates" target="_blank">slamdunk docs</a>).""",
+            plot = bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
+        )
 
 
     def slamdunkUtrRatesPlot (self):
@@ -477,13 +492,13 @@ class MultiqcModule(BaseMultiqcModule):
             'hide_zero_cats': False
         }
 
-        self.sections.append({
-            'name': 'Conversion rates per UTR',
-            'anchor': 'slamdunk_utr_rates',
-            'content': """<p>This plot shows the individual conversion rates for all UTRs
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#utrrates" target="_blank">slamdunk docs</a>).</p>"""
-                        + bargraph.plot(self.utrates_data, cats, pconfig)
-        })
+        self.add_section (
+            name = 'Conversion rates per UTR',
+            anchor = 'slamdunk_utr_rates',
+            description = """This plot shows the individual conversion rates for all UTRs
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#utrrates" target="_blank">slamdunk docs</a>).""",
+            plot = bargraph.plot(self.utrates_data, cats, pconfig)
+        )
 
     def slamdunkPCAPlot (self):
         """ Generate the PCA plots """
@@ -496,14 +511,14 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': 'PC1 {point.x:.2f}: PC2 {point.y:.2f}'
         }
 
-        self.sections.append({
-            'name': 'PCA (T&gt;C based)',
-            'anchor': 'slamdunk_PCA',
-            'content': """<p> This plot shows the principal components of samples based
+        self.add_section (
+            name = 'PCA (T&gt;C based)',
+            anchor = 'slamdunk_PCA',
+            description = """This plot shows the principal components of samples based
                         on the distribution of reads with T&gt;C conversions within UTRs
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#summary" target="_blank">slamdunk docs</a>).</p>"""
-                        + scatter.plot(self.PCA_data, pconfig)
-        })
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#summary" target="_blank">slamdunk docs</a>).""",
+            plot = scatter.plot(self.PCA_data, pconfig)
+        )
 
     def slamdunkTcPerReadPosPlot (self):
         """ Generate the tc per read pos plots """
@@ -532,21 +547,21 @@ class MultiqcModule(BaseMultiqcModule):
                             {'name': 'Reverse reads -', 'ylab': 'Percent converted %'}]
         }
 
-        self.sections.append({
-            'name': 'Non T&gt;C mutations over read positions',
-            'anchor': 'slamdunk_nontcperreadpos',
-            'content': """<p>This plot shows the distribution of non T&gt;C mutations across read positions
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc)
-        })
+        self.add_section (
+            name = 'Non T&gt;C mutations over read positions',
+            anchor = 'slamdunk_nontcperreadpos',
+            description = """This plot shows the distribution of non T&gt;C mutations across read positions
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc)
+        )
 
-        self.sections.append({
-            'name': 'T&gt;C conversions over read positions',
-            'anchor': 'slamdunk_tcperreadpos',
-            'content': """<p>This plot shows the distribution of T&gt;C conversions across read positions
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc)
-        })
+        self.add_section (
+            name = 'T&gt;C conversions over read positions',
+            anchor = 'slamdunk_tcperreadpos',
+            description = """This plot shows the distribution of T&gt;C conversions across read positions
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperreadpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.tc_per_readpos_plus, self.tc_per_readpos_minus], pconfig_tc)
+        )
 
     def slamdunkTcPerUTRPosPlot (self):
         """ Generate the tc per UTR pos plots """
@@ -575,18 +590,18 @@ class MultiqcModule(BaseMultiqcModule):
                             {'name': 'UTRs on minus strand', 'ylab': 'Percent converted %'}]
         }
 
-        self.sections.append({
-            'name': 'Non T&gt;C mutations over UTR positions',
-            'anchor': 'slamdunk_nontcperutrpos',
-            'content': """<p>This plot shows the distribution of non T&gt;C mutations across UTR positions for the last 200 bp from the 3\' UTR end
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc)
-        })
+        self.add_section (
+            name = 'Non T&gt;C mutations over UTR positions',
+            anchor = 'slamdunk_nontcperutrpos',
+            description = """This plot shows the distribution of non T&gt;C mutations across UTR positions for the last 200 bp from the 3\' UTR end
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc)
+        )
 
-        self.sections.append({
-            'name': 'T&gt;C conversions over UTR positions',
-            'anchor': 'tcperutrpos',
-            'content': """<p>This plot shows the distribution of T&gt;C conversions across UTR positions for the last 200 bp from the 3\' UTR end
-                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).</p>"""
-                        + linegraph.plot([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc)
-        })
+        self.add_section (
+            name = 'T&gt;C conversions over UTR positions',
+            anchor = 'tcperutrpos',
+            description = """This plot shows the distribution of T&gt;C conversions across UTR positions for the last 200 bp from the 3\' UTR end
+                        (see the <a href="http://slamdunk.readthedocs.io/en/latest/Alleyoop.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
+            plot = linegraph.plot([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc)
+        )

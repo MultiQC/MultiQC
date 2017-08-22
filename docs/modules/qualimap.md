@@ -13,7 +13,10 @@ a platform-independent application to facilitate the quality
 control of alignment sequencing data and its derivatives like feature
 counts.
 
-Supported commands: `BamQC`, `RNASeq`
+The MultiQC module supports the Qualimap commands `BamQC` and `RNASeq`.
+Note that Qualimap must be run with the `-outdir` option as well as
+`-outformat HTML` (which is on by default). MultiQC uses files
+found within the `raw_data_qualimapReport` folder (as well as `genome_results.txt`).
 
 It is possible to customise which coverage thresholds are shown from BamQC in
 the General Statistics table _(default: 1, 5, 10, 30, 50)_ and which

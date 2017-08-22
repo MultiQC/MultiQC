@@ -28,8 +28,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.methylqa_data = dict()
         self.methylqa_coverage_counts = dict()
         self.methylqa_coverage_percentages = dict()
-        for f in self.find_log_files(config.sp['methylQA']):
+        for f in self.find_log_files('methylQA'):
             self.parse_methylqa_logs(f)
+
+        # Filter to strip out ignored sample names
+        self.methylqa_data = self.ignore_samples(self.methylqa_data)
 
         if len(self.methylqa_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -44,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.methylqa_general_stats_table()
 
         # Alignment bar plot - only one section, so add to the module intro
-        self.intro += self.methylqa_alignment_plot()
+        self.add_section( plot = self.methylqa_alignment_plot() )
 
 
     def parse_methylqa_logs(self, f):
@@ -111,8 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Fold Coverage',
             'min': 0,
             'suffix': 'X',
-            'scale': 'YlGn',
-            'format': '{:.1f}X'
+            'scale': 'YlGn'
         }
         self.general_stats_addcols(self.methylqa_data, headers)
 

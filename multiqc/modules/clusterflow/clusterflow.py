@@ -33,14 +33,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_commands = dict()
         self.clusterflow_runfiles = dict()
 
-        for f in self.find_log_files(config.sp['clusterflow']['logs'], filehandles=True):
+        for f in self.find_log_files('clusterflow/logs', filehandles=True):
             self.parse_clusterflow_logs(f)
             self.add_data_source(f, 'log')
-        for f in self.find_log_files(config.sp['clusterflow']['runfiles'], filehandles=True):
+        for f in self.find_log_files('clusterflow/runfiles', filehandles=True):
             parsed_data = self.parse_clusterflow_runfiles(f)
             if parsed_data is not None:
                 self.clusterflow_runfiles[f['s_name']] = parsed_data
                 self.add_data_source(f, 'runfile')
+
+        # Filters to strip out ignored sample names
+        self.clusterflow_commands = self.ignore_samples(self.clusterflow_commands)
+        self.clusterflow_runfiles = self.ignore_samples(self.clusterflow_runfiles)
 
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -53,23 +57,13 @@ class MultiqcModule(BaseMultiqcModule):
         log.debug("Found {} log pipelines".format(num_log_pipelines))
         log.debug("Found {} runfile pipelines".format(num_runfile_pipelines))
 
-        self.sections = list()
-
         # Pipeline Info
-        pipelines_section = self.clusterflow_pipelines_table()
-        pipelines_section += self.clusterflow_pipelines_printout()
-        self.sections.append({
-            'name': 'Pipelines',
-            'anchor': 'clusterflow-pipelines',
-            'content': pipelines_section
-        })
+        if len(self.clusterflow_runfiles) > 0:
+            self.clusterflow_pipelines_section()
 
         # Commands
-        self.sections.append({
-            'name': 'Commands',
-            'anchor': 'clusterflow-commands',
-            'content': self.clusterflow_commands_table()
-        })
+        if len(self.clusterflow_commands) > 0:
+            self.clusterflow_commands_table()
 
 
     def parse_clusterflow_logs(self, f):
@@ -101,15 +95,15 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def clusterflow_commands_table (self):
-        """ Generate the trimming length plot """
+        """ Make a table of the Cluster Flow commands """
 
         # I wrote this when I was tired. Sorry if it's incomprehensible.
 
-        html = '''<p>Every Cluster Flow run will have many different commands.
+        desc = '''Every Cluster Flow run will have many different commands.
             MultiQC splits these by whitespace, collects by the tool name
             and shows the first command found. Any terms not found in <em>all</em> subsequent
             calls are replaced with <code>[variable]</code>
-            <em>(typically input and ouput filenames)</em>. Each column is for one Cluster Flow run.</p>'''
+            <em>(typically input and ouput filenames)</em>. Each column is for one Cluster Flow run.'''
 
         # Loop through pipelines
         tool_cmds = OrderedDict()
@@ -150,7 +144,12 @@ class MultiqcModule(BaseMultiqcModule):
             'sortRows': False,
             'no_beeswarm': True
         }
-        return html + table.plot(tool_cmds, headers, table_config)
+        self.add_section (
+            name = 'Commands',
+            anchor = 'clusterflow-commands',
+            description = desc,
+            plot = table.plot(tool_cmds, headers, table_config)
+        )
 
 
     def _replace_variable_chunks(self, cmds):
@@ -192,8 +191,12 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         in_comment = False
         seen_pipeline = False
+        cf_file = False
         for l in f['f']:
             l = l.rstrip()
+            # Check that this is from Cluster Flow
+            if 'Cluster Flow' in l:
+                cf_file = True
             # Header
             if l.startswith('Pipeline: '):
                 data['pipeline_name'] = l[10:]
@@ -241,7 +244,18 @@ class MultiqcModule(BaseMultiqcModule):
         elif 'pipeline_start' in data:
             dt_r = re.match(r'(\d{2}):(\d{2}), (\d{2})-(\d{2})-(\d{4})', data['pipeline_start'])
             if dt_r:
-                dt = datetime(dt_r.group(5),dt_r.group(4),dt_r.group(3),dt_r.group(1),dt_r.group(2))
+                dt = datetime.datetime(
+                    int(dt_r.group(5)), # year
+                    int(dt_r.group(4)), # month
+                    int(dt_r.group(3)), # day
+                    int(dt_r.group(1)), # hour
+                    int(dt_r.group(2))  # minute
+                )
+
+        # Not a Cluster Flow file (eg. Nextflow .run file)
+        if not cf_file:
+            return None
+
         if dt is not None:
             data['pipeline_start_dateparts'] = {
                 'year':        dt.year,
@@ -262,7 +276,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data['pipeline_id'] = 'cf_{}_{}'.format(data['pipeline_name'], data['pipeline_start_dateparts']['timestamp'])
         return data
 
-    def clusterflow_pipelines_table(self):
+    def clusterflow_pipelines_section(self):
         """ Generate HTML for section about pipelines, generated from
         information parsed from run files. """
         data = dict()
@@ -286,15 +300,12 @@ class MultiqcModule(BaseMultiqcModule):
                 data[pid]['num_starting_files'] = int(num_starting_files)
             else:
                 data[pid]['num_starting_files'] += int(num_starting_files)
-        html = '''
-            <p>Information about pipelines is parsed from <code>*.run</code> files. {}</p>
-            '''.format(pids_guessed)
-        # import json; print(json.dumps(data, indent=4))
+
         headers = OrderedDict()
         headers['pipeline_name'] = {'title': 'Pipeline Name'}
         headers['pipeline_start'] = {'title': 'Date Started', 'description': 'Date and time that pipeline was started (YYYY-MM-DD HH:SS)'}
         headers['genome'] = {'title': 'Genome ID', 'description': 'ID of reference genome used'}
-        headers['num_starting_files'] = {'title': '# Starting Files', 'format': '{:.0f}', 'description': 'Number of input files at start of pipeline run.'}
+        headers['num_starting_files'] = {'title': '# Starting Files', 'format': '{:,.0f}', 'description': 'Number of input files at start of pipeline run.'}
         table_config = {
             'namespace': 'Cluster Flow',
             'id': 'clusterflow-pipelines',
@@ -303,7 +314,13 @@ class MultiqcModule(BaseMultiqcModule):
             'no_beeswarm': True,
             'save_file': True
         }
-        return html + table.plot(data, headers, table_config)
+        self.add_section (
+            name = 'Pipelines',
+            anchor = 'clusterflow-pipelines',
+            description = 'Information about pipelines is parsed from <code>*.run</code> files. {}'.format(pids_guessed),
+            plot = table.plot(data, headers, table_config),
+            content = self.clusterflow_pipelines_printout()
+        )
 
 
     def clusterflow_pipelines_printout(self):

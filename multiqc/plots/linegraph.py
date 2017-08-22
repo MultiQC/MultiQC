@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import base64
 import io
-import json
 import logging
 import os
 import random
@@ -25,7 +24,7 @@ except Exception as e:
     # The lack of the library will be handled when plots are attempted
     print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
     print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
-    logger.exception(e)
+    print(e)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -38,12 +37,16 @@ def get_template_mod():
         _template_mod = config.avail_templates[config.template].load()
     return _template_mod
 
-def plot (data, pconfig={}):
+def plot (data, pconfig=None):
     """ Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
+    # Why not just set {} as a default argument? See:
+    # http://python-guide-pt-br.readthedocs.io/en/latest/writing/gotchas/
+    if pconfig is None:
+        pconfig = {}
 
     # Given one dataset - turn it into a list
     if type(data) is not list:
@@ -53,9 +56,10 @@ def plot (data, pconfig={}):
     if pconfig.get('smooth_points', None) is not None:
         sumcounts = pconfig.get('smooth_points_sumcounts', True)
         for i, d in enumerate(data):
-            sumc = sumcounts
             if type(sumcounts) is list:
                 sumc = sumcounts[i]
+            else:
+                sumc = sumcounts
             data[i] = smooth_line_data(d, pconfig['smooth_points'], sumc)
 
     # Generate the data dict structure expected by HighCharts series
@@ -130,15 +134,22 @@ def plot (data, pconfig={}):
 
 
 
-def highcharts_linegraph (plotdata, pconfig={}):
+def highcharts_linegraph (plotdata, pconfig=None):
     """
     Build the HTML needed for a HighCharts line graph. Should be
     called by linegraph.plot(), which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
-    # Build the HTML for the page
+    # Get the plot ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
+    # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets
@@ -164,30 +175,33 @@ def highcharts_linegraph (plotdata, pconfig={}):
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "xy_line", \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': "xy_line",
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 
 
-def matplotlib_linegraph (plotdata, pconfig={}):
+def matplotlib_linegraph (plotdata, pconfig=None):
     """
     Plot a line graph with Matplot lib and return a HTML string. Either embeds a base64
     encoded image within HTML or writes the plot and links to it. Should be called by
     plot_bargraph, which properly formats the input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Plot group ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
     # Individual plot IDs
     pids = []
     for k in range(len(plotdata)):
@@ -196,7 +210,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
         except:
             name = k+1
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
-        pid = "".join([c for c in pid if c.isalpha() or c.isdigit() or c == '_' or c == '-'])
+        pid = report.save_htmlid(pid)
         pids.append(pid)
 
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
@@ -246,6 +260,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
                         fdata[d['name']][pconfig['categories'][i]] = x
                     except (KeyError, IndexError):
                         fdata[d['name']][str(i)] = x
+
         # Custom tsv output if the x axis varies
         if not sharedcats and config.data_format == 'tsv':
             fout = ''
@@ -362,7 +377,7 @@ def matplotlib_linegraph (plotdata, pconfig={}):
 
         # Tight layout - makes sure that legend fits in and stuff
         if len(pdata) <= 15:
-            lgd = axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
+            axes.legend(loc='lower center', bbox_to_anchor=(0, -0.22, 1, .102), ncol=5, mode='expand', fontsize=8, frameon=False)
             plt.tight_layout(rect=[0,0.08,1,0.92])
         else:
             plt.tight_layout(rect=[0,0,1,0.92])
@@ -414,13 +429,20 @@ def smooth_line_data(data, numpoints, sumcounts=True):
     """
     smoothed = {}
     for s_name, d in data.items():
+
+        # Check that we need to smooth this data
+        if len(d) <= numpoints:
+            smoothed[s_name] = d
+            continue
+
         smoothed[s_name] = OrderedDict();
         p = 0
         binsize = len(d) / numpoints
         if binsize < 1:
             binsize = 1
         binvals = []
-        for x, y in d.items():
+        for x in sorted(d):
+            y = d[x]
             if p < binsize:
                 binvals.append(y)
                 p += 1

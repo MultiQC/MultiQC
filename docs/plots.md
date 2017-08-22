@@ -23,11 +23,13 @@ and configuration options, and they return a string of HTML to add to the
 report. You can add this to the module introduction or sections as described
 above. For example:
 ```python
-self.sections.append({
-    'name': 'Module Section',
-    'anchor': 'mymod_section',
-    'content': bargraph.plot(self.parsed_data, categories, pconfig)
-})
+self.add_section (
+    name = 'Module Section',
+    anchor = 'mymod_section',
+    description = 'This plot shows some really nice data.',
+    helptext = 'This longer string (can be **markdown**) helps explain how to interpret the plot',
+    plot = bargraph.plot(self.parsed_data, categories, pconfig)
+)
 ```
 
 ## Bar graphs
@@ -35,7 +37,7 @@ Simple data can be plotted in bar graphs. Many MultiQC modules make use
 of stacked bar graphs. Here, the `bargraph.plot()` function comes to
 the rescue. A basic example is as follows:
 ```python
-from multiqc import plots
+from multiqc.plots import bargraph
 data = {
     'sample 1': {
         'aligned': 23542,
@@ -72,7 +74,7 @@ cats['not_aligned'] = {
 }
 ```
 
-Finally, a third variable can be supplied with configuration variables for
+Finally, a third variable should be supplied with configuration variables for
 the plot. The defaults are as follows:
 ```python
 config = {
@@ -106,6 +108,12 @@ config = {
     'tt_percentages': True,                 # Show the percentages of each count in the tooltip
 }
 ```
+
+> The keys `id` and `title` should always be passed as a minimum. The `id` is used
+> for the plot name when exporting. If left unset, the Plot Export panel will call
+> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
+> Plots should always have titles, especially as they can stand by themselves
+> when exported.
 
 ### Switching datasets
 It's possible to have single plot with buttons to switch between different
@@ -163,7 +171,7 @@ you spot something that's missing in the flat image plots, let me know.
 This base function works much like the above, but for two-dimensional
 data, to produce line graphs. It expects a dictionary in the following format:
 ```python
-from multiqc import plots
+from multiqc.plots import linegraph
 data = {
     'sample 1': {
         '<x val 1>': '<y val 1>',
@@ -179,7 +187,7 @@ html_content = linegraph.plot(data)
 
 Additionally, a config dict can be supplied. The defaults are as follows:
 ```python
-from multiqc import plots
+from multiqc.plots import linegraph
 config = {
     # Building the plot
     'smooth_points': None,       # Supply a number to limit number of points / smooth data
@@ -210,6 +218,8 @@ config = {
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     'yPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
     'xPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
+    'xLabelFormat': '{value}',   # Format string for the axis labels
+    'yLabelFormat': '{value}',   # Format string for the axis labels
     'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, eg. '{point.x} base pairs'
     'pointFormat': None,         # Replace the default HTML for the entire tooltip label
     'click_func': function(){},  # Javascript function to be called when a point is clicked
@@ -218,6 +228,12 @@ config = {
 }
 html_content = linegraph.plot(data, config)
 ```
+
+> The keys `id` and `title` should always be passed as a minimum. The `id` is used
+> for the plot name when exporting. If left unset, the Plot Export panel will call
+> the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
+> Plots should always have titles, especially as they can stand by themselves
+> when exported.
 
 ### Switching datasets
 You can also have a single plot with buttons to switch between different
@@ -244,7 +260,7 @@ dataset plots, use a list of list of dicts.
 
 For example, to add a dotted `x = y` reference line:
 ```python
-from multiqc import plots
+from multiqc.plots import linegraph
 config = {
     'extra_series': {
         'name': 'x = y',
@@ -268,7 +284,7 @@ config options are shared between the two. The data structure is similar but
 not identical:
 
 ```python
-from multiqc import plots
+from multiqc.plots import scatter
 data = {
     'sample 1': {
         x: '<x val>',
@@ -342,9 +358,13 @@ single_header = {
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
     'min': None,                    # Maximum value in range, for bar / colour coding
+    'ceiling': None,                # Maximum value for automatic bar limit
+    'floor': None,                  # Minimum value for automatic bar limit
+    'minRange': None,               # Minimum range for automatic bar
     'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
     'colour': '<auto>',             # Colour for column grouping
-    'format': '{:.1f}',             # Output format() string
+    'suffix': None,                 # Suffix for value (eg. '%')
+    'format': '{:,.1f}',            # Output format() string
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
@@ -403,16 +423,14 @@ headers = OrderedDict()
 headers['aligned_percent'] = {
     'title': '% Aligned',
     'description': 'Percentage of reads that aligned',
-    'format': '{:.1f}%',
     'suffix': '%',
     'max': 100,
 }
 headers['aligned'] = {
-    'title': 'M Aligned',
-    'description': 'Aligned Reads (millions)',
-    'format': '{:.2f}',
+    'title': '{} Aligned'.format(config.read_count_prefix),
+    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
     'shared_key': 'read_count',
-    'modify': lambda x: x / 1000000
+    'modify': lambda x: x * config.read_count_multiplier
 }
 config = {
     'namespace': 'My Module',
@@ -711,5 +729,15 @@ $('#YOUR_PLOT_ID').on('mqc_original_series_click', function(e, name){
 $('#YOUR_PLOT_ID').on('mqc_original_chg_source', function(e, name){
     // A plot with original images has had a request to change the
     // original image source (eg. pressing Prev / Next)
+});
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_image', function(e, cfg){
+    // A trigger to export an image of the plot. cfg contains
+    // config variables for the requested image.
+});
+
+$('#YOUR_PLOT_ID').on('mqc_plotexport_data', function(e, cfg){
+    // A trigger to export a data file of the plot. cfg contains
+    // config variables for the requested data.
 });
 ```

@@ -29,13 +29,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any FastQ Screen reports
         self.fq_screen_data = dict()
         self.num_orgs = 0
-        for f in self.find_log_files(config.sp['fastq_screen'], filehandles=True):
-            parsed_data = self.parse_fqscreen(f['f'])
+        for f in self.find_log_files('fastq_screen', filehandles=True):
+            parsed_data = self.parse_fqscreen(f)
             if parsed_data is not None:
                 if f['s_name'] in self.fq_screen_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
                 self.add_data_source(f)
                 self.fq_screen_data[f['s_name']] = parsed_data
+
+        # Filter to strip out ignored sample names
+        self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
 
         if len(self.fq_screen_data) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -45,29 +48,31 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Section 1 - Alignment Profiles
         # Posh plot only works for around 20 samples, 8 organisms.
-        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat:
-            self.intro += self.fqscreen_plot()
+        if len(self.fq_screen_data) * self.num_orgs <= 160 and not config.plots_force_flat and not getattr(config, 'fastqscreen_simpleplot', False):
+            self.add_section( content = self.fqscreen_plot() )
         # Use simpler plot that works with many samples
         else:
-            self.intro += self.fqscreen_simple_plot()
+            self.add_section( plot = self.fqscreen_simple_plot() )
 
         # Write the total counts and percentages to files
         self.write_data_file(self.parse_csv(), 'multiqc_fastq_screen')
 
 
-    def parse_fqscreen(self, fh):
+    def parse_fqscreen(self, f):
         """ Parse the FastQ Screen output into a 3D dict """
         parsed_data = OrderedDict()
-        for l in fh:
-            if l.startswith('%Hit_no_libraries:'):
-                empty = { 'unmapped': 0, 'multiple_hits_one_library': 0, 'one_hit_multiple_libraries': 0, 'multiple_hits_multiple_libraries': 0 }
-                parsed_data['No hits'] = {'percentages': empty, 'counts': empty}
-                parsed_data['No hits']['percentages']['one_hit_one_library'] = float(l[19:])
+        reads_processed = None
+        nohits_pct = None
+        for l in f['f']:
+            if l.startswith('%Hit_no_genomes:') or l.startswith('%Hit_no_libraries:'):
+                nohits_pct = float(l.split(':', 1)[1])
+                parsed_data['No hits'] = {'percentages': {'one_hit_one_library': nohits_pct }}
             else:
                 fqs = re.search(r"^(\S+)\s+(\d+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)\s+(\d+)\s+([\d\.]+)$", l)
                 if fqs:
                     org = fqs.group(1)
                     parsed_data[org] = {'percentages':{}, 'counts':{}}
+                    reads_processed = int(fqs.group(2))
                     parsed_data[org]['counts']['reads_processed'] = int(fqs.group(2))
                     parsed_data[org]['counts']['unmapped'] = int(fqs.group(3))
                     parsed_data[org]['percentages']['unmapped'] = float(fqs.group(4))
@@ -79,8 +84,17 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[org]['percentages']['one_hit_multiple_libraries'] = float(fqs.group(10))
                     parsed_data[org]['counts']['multiple_hits_multiple_libraries'] = int(fqs.group(11))
                     parsed_data[org]['percentages']['multiple_hits_multiple_libraries'] = float(fqs.group(12))
+                    # Can't use #Reads in subset as varies. #Reads_processed should be same for all orgs in a sample
+                    parsed_data['total_reads'] = int(fqs.group(2))
+
         if len(parsed_data) == 0:
             return None
+
+        # Calculate no hits counts
+        if reads_processed and nohits_pct:
+            parsed_data['No hits']['counts'] = {'one_hit_one_library': int((nohits_pct/100.0) * float(reads_processed)) }
+        else:
+            log.warn("Couldn't find number of reads with no hits for '{}'".format(f['s_name']))
 
         self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data
@@ -90,19 +104,22 @@ class MultiqcModule(BaseMultiqcModule):
         for s in sorted(self.fq_screen_data.keys()):
             totals[s] = OrderedDict()
             for org in self.fq_screen_data[s]:
+                if org == 'total_reads':
+                    totals[s]['total_reads'] = self.fq_screen_data[s][org]
+                    continue
                 try:
                     k = "{} counts".format(org)
                     totals[s][k] = self.fq_screen_data[s][org]['counts']['one_hit_one_library']
-                    totals[s][k] += self.fq_screen_data[s][org]['counts']['multiple_hits_one_library']
-                    totals[s][k] += self.fq_screen_data[s][org]['counts']['one_hit_multiple_libraries']
-                    totals[s][k] += self.fq_screen_data[s][org]['counts']['multiple_hits_multiple_libraries']
+                    totals[s][k] += self.fq_screen_data[s][org]['counts'].get('multiple_hits_one_library', 0)
+                    totals[s][k] += self.fq_screen_data[s][org]['counts'].get('one_hit_multiple_libraries', 0)
+                    totals[s][k] += self.fq_screen_data[s][org]['counts'].get('multiple_hits_multiple_libraries', 0)
                 except KeyError: pass
                 try:
                     k = "{} percentage".format(org)
                     totals[s][k] = self.fq_screen_data[s][org]['percentages']['one_hit_one_library']
-                    totals[s][k] += self.fq_screen_data[s][org]['percentages']['multiple_hits_one_library']
-                    totals[s][k] += self.fq_screen_data[s][org]['percentages']['one_hit_multiple_libraries']
-                    totals[s][k] += self.fq_screen_data[s][org]['percentages']['multiple_hits_multiple_libraries']
+                    totals[s][k] += self.fq_screen_data[s][org]['percentages'].get('multiple_hits_one_library', 0)
+                    totals[s][k] += self.fq_screen_data[s][org]['percentages'].get('one_hit_multiple_libraries', 0)
+                    totals[s][k] += self.fq_screen_data[s][org]['percentages'].get('multiple_hits_multiple_libraries', 0)
                 except KeyError: pass
         return totals
 
@@ -124,8 +141,13 @@ class MultiqcModule(BaseMultiqcModule):
                 thisdata = list()
                 if len(categories) > 0:
                     getCats = False
-                for org in self.fq_screen_data[s]:
-                    thisdata.append(self.fq_screen_data[s][org]['percentages'][k])
+                for org in sorted(self.fq_screen_data[s]):
+                    if org == 'total_reads':
+                        continue
+                    try:
+                        thisdata.append(self.fq_screen_data[s][org]['percentages'][k])
+                    except KeyError:
+                        thisdata.append(None)
                     if getCats:
                         categories.append(org)
                 td = {
@@ -181,29 +203,44 @@ class MultiqcModule(BaseMultiqcModule):
 
         # First, sum the different types of alignment counts
         data = OrderedDict()
-        cats = list()
+        cats = OrderedDict()
         for s_name in self.fq_screen_data:
             data[s_name] = OrderedDict()
+            sum_alignments = 0
             for org in self.fq_screen_data[s_name]:
-                if org == 'No hits':
+                if org == 'total_reads':
                     continue
-                data[s_name][org] = self.fq_screen_data[s_name][org]['percentages']['one_hit_one_library']
-                data[s_name][org] += self.fq_screen_data[s_name][org]['percentages']['multiple_hits_one_library']
-                data[s_name][org] += self.fq_screen_data[s_name][org]['percentages']['one_hit_multiple_libraries']
-                data[s_name][org] += self.fq_screen_data[s_name][org]['percentages']['multiple_hits_multiple_libraries']
-                if len(cats) < len(self.fq_screen_data[s_name]):
-                    cats.append(org)
+                try:
+                    data[s_name][org] = self.fq_screen_data[s_name][org]['counts']['one_hit_one_library']
+                except KeyError:
+                    log.error("No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results.".format(org, s_name))
+                    continue
+                try:
+                    data[s_name][org] += self.fq_screen_data[s_name][org]['counts']['multiple_hits_one_library']
+                except KeyError:
+                    pass
+                sum_alignments += data[s_name][org]
+                if org not in cats and org != 'No hits':
+                    cats[org] = { 'name': org }
+
+            # Calculate hits in multiple genomes
+            if 'total_reads' in self.fq_screen_data[s_name]:
+                data[s_name]['Multiple Genomes'] = self.fq_screen_data[s_name]['total_reads'] - sum_alignments
+
+        # Strip empty dicts
+        for s_name in list(data.keys()):
+            if len(data[s_name]) == 0:
+                del data[s_name]
 
         pconfig = {
+            'id': 'fastq_screen',
             'title': 'FastQ Screen',
-            'cpswitch': False,
-            'ylab_format': '{value}%',
-            'tt_percentages': False
+            'cpswitch_c_active': False
         }
+        cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
+        cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
 
-        return ("<p>Summed alignment percentages are shown below. Note that percentages \
-                can sum to greater than 100% if reads align to multiple organisms.</p>" +
-                bargraph.plot(data, cats, pconfig) )
+        return bargraph.plot(data, cats, pconfig)
 
 
 

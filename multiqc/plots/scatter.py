@@ -2,7 +2,6 @@
 
 """ MultiQC functions to plot a scatter plot """
 
-import json
 import logging
 import random
 
@@ -12,12 +11,14 @@ logger = logging.getLogger(__name__)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-def plot (data, pconfig={}):
+def plot (data, pconfig=None):
     """ Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
+    if pconfig is None:
+        pconfig = {}
 
     # Given one dataset - turn it into a list
     if type(data) is not list:
@@ -66,15 +67,22 @@ def plot (data, pconfig={}):
     # Make a plot
     return highcharts_scatter_plot(plotdata, pconfig)
 
-def highcharts_scatter_plot (plotdata, pconfig={}):
+def highcharts_scatter_plot (plotdata, pconfig=None):
     """
     Build the HTML needed for a HighCharts scatter plot. Should be
     called by scatter.plot(), which properly formats input data.
     """
+    if pconfig is None:
+        pconfig = {}
 
-    # Build the HTML for the page
+    # Get the plot ID
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+
+    # Sanitise plot ID and check for duplicates
+    pconfig['id'] = report.save_htmlid(pconfig['id'])
+
+    # Build the HTML for the page
     html = '<div class="mqc_hcplot_plotgroup">'
 
     # Buttons to cycle through different datasets
@@ -100,16 +108,13 @@ def highcharts_scatter_plot (plotdata, pconfig={}):
     # The plot div
     html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
 
-    # Javascript with data dump
-    html += '<script type="text/javascript"> \n\
-        mqc_plots["{id}"] = {{ \n\
-            "plot_type": "scatter", \n\
-            "datasets": {d}, \n\
-            "config": {c} \n\
-        }} \n\
-    </script>'.format(id=pconfig['id'], d=json.dumps(plotdata), c=json.dumps(pconfig));
-
     report.num_hc_plots += 1
+
+    report.plot_data[pconfig['id']] = {
+        'plot_type': "scatter",
+        'datasets': plotdata,
+        'config': pconfig
+    }
 
     return html
 
