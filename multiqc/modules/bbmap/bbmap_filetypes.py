@@ -5,6 +5,7 @@ from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
 #from .plot_bqhist import plot_bqhist
+from .plot_qahist import plot_qahist
 from .plot_qhist import plot_qhist
 
 class slice2OrderedDict(object):
@@ -182,7 +183,7 @@ file_types = {
             'Quality':int, 'Match':int, 'Sub':int, 'Ins':int, 'Del':int,
             'TrueQuality':float, 'TrueQualitySub':float
         ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_qahist,
         'plot_params': {}
     },
     'qhist': {
