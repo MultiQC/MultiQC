@@ -58,18 +58,6 @@ def plot_mhist(samples, file_type, **plot_args):
             'data_labels': [
                 {'name': 'Read 1', 'ylab': 'Proportion'},
                 {'name': 'Read 2', 'ylab': 'Proportion'},
-                #{'name': 'Match_1', 'ylab': 'Proportion'},
-                #{'name': 'Sub_1', 'ylab': 'Proportion'},
-                #{'name': 'Del_1', 'ylab': 'Proportion'},
-                #{'name': 'Sub_1', 'ylab': 'Proportion'},
-                #{'name': 'N_1', 'ylab': 'Proportion'},
-                #{'name': 'Other_1', 'ylab': 'Proportion'},
-                #{'name': 'Match_2', 'ylab': 'Proportion'},
-                #{'name': 'Sub_2', 'ylab': 'Proportion'},
-                #{'name': 'Del_2', 'ylab': 'Proportion'},
-                #{'name': 'Sub_2', 'ylab': 'Proportion'},
-                #{'name': 'N_2', 'ylab': 'Proportion'},
-                #{'name': 'Other_2', 'ylab': 'Proportion'},
             ]
     }
 
