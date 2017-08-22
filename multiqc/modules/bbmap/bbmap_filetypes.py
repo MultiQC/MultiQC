@@ -5,6 +5,7 @@ from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
 #from .plot_bqhist import plot_bqhist
+from .plot_qhist import plot_qhist
 
 class slice2OrderedDict(object):
     def __getitem__(self, keys):
@@ -197,7 +198,7 @@ file_types = {
             'Read2_log':float,
             'Read2_measured':float
         ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_qhist,
         'plot_params': {}
     },
     'rpkm': {
