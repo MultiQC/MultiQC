@@ -5,6 +5,7 @@ from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
 #from .plot_bqhist import plot_bqhist
+from .plot_idhist import plot_idhist
 from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
 from .plot_qhist import plot_qhist
@@ -135,7 +136,7 @@ file_types = {
         'cols': odict[
             'Identity':float, 'Reads':int, 'Bases':int
         ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_idhist,
         'plot_params': {}
     },
     'ihist': {
