@@ -13,7 +13,8 @@ string beginning with the name of your module, anything you like after the first
 
 #### New Modules:
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
-
+    * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
+    * Module written by [@noirot]
 #### New MultiQC Features:
 * File search refactored to only search for running modules
     * Makes search much faster when running with lots of files and limited modules

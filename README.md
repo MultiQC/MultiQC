@@ -156,6 +156,7 @@ Code contributions from:
 [@iimog](https://github.com/iimog),
 [@rlegendre](https://github.com/rlegendre),
 [@ehsueh](https://github.com/ehsueh)
+[@noirot](https://github.com/noirot)
 
 and many others. Thanks for your support!
 

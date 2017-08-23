@@ -15,13 +15,7 @@ Supported scripts:
 
 * `rsem-calculate-expression`
 
-You can choose to hide sections of RSEL output and customise their order.
-To do this, add and customise the following to your MultiQC config file:
+This module search for the file .cnt created by RSEM into directory named PREFIX.stat
 
-```yaml
-sp:
-    rsem:
-        contents: 'rsem version'
-```
 
-Change the order to rearrage sections or remove to hide them from the report.
+
