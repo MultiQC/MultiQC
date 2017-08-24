@@ -91,6 +91,6 @@ def multiqc_api_post(exported_data):
                     log.error('Error 403: Authentication error, megaqc_access_token is required')
             else:
                 log.debug("MegaQC API status code was {}".format(r.status_code))
-                log.error('Error - {}'.format(api_r['message']))
+                log.error('Error - {}'.format(api_r.get('message', 'Unknown problem')))
 
 
