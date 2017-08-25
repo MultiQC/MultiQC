@@ -1,0 +1,301 @@
+#!/usr/bin/env python
+
+""" MultiQC module to parse output from Supernova"""
+
+from __future__ import print_function
+from collections import OrderedDict
+import logging
+import re
+import json
+from copy import deepcopy
+
+from multiqc import config
+from multiqc.plots import table, bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
+
+# Initialise the logger
+log = logging.getLogger(__name__)
+
+class MultiqcModule(BaseMultiqcModule):
+
+    def __init__(self):
+        super(MultiqcModule, self).__init__(name='Supernova', anchor='supernova',
+        href="https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome",
+        info="is a de novo genome assembler for Chromium Linked reads. Developed by 10X Chromium Genomics.")
+
+        # Table headers for the data
+        self.headers = OrderedDict()
+        self.headers['# Reads'] = {
+                'description': 'number of reads; ideal 800M-1200M for human',
+                'modify': lambda x: x / 1000000,
+                'suffix': 'M',
+                'scale': 'PuBu',
+        }
+        self.headers['Read len'] = {
+                'description': 'mean read length after trimming; ideal 140',
+                'suffix': 'b',
+                'scale': 'PuBu',
+                'format': '{:,.0f}',
+                'hidden': True
+        }
+        self.headers['Coverage'] = {
+                'description': 'effective read coverage; ideal ~42 for nominal 56x cov',
+                'suffix': 'x',
+                'scale': 'PuBu'
+        }
+        self.headers['% R2 Q30'] = {
+                'description': 'fraction of Q30 bases in read 2; ideal 75-85',
+                'suffix': '%',
+                'scale': 'OrRd',
+                'hidden': True
+        }
+        self.headers['Insert size'] = {
+                'description': 'median insert size; ideal 0.35-0.40',
+                'suffix': 'b',
+                'scale': 'OrRd',
+                'format': '{:,.0f}',
+                'hidden': True
+        }
+        self.headers['% proper'] = {
+                'description': 'fraction of proper read pairs; ideal >= 75',
+                'suffix': '%',
+                'scale': 'OrRd',
+                'hidden': True
+        }
+        self.headers['Mol size'] = {
+                'description': 'weighted mean molecule size; ideal 50-100',
+                'modify': lambda x: x / 1000,
+                'suffix': 'Kb',
+                'scale': 'BuGn'
+        }
+        self.headers['Het dist'] = {
+                'description': 'mean distance between heterozygous SNPs',
+                'modify': lambda x: x / 1000,
+                'suffix': 'Kb',
+                'scale': 'BuGn',
+                'hidden': True
+        }
+        self.headers['% missing BC'] = {
+                'description': 'fraction of reads that are not barcoded',
+                'suffix': '%',
+                'scale': 'BuGn',
+                'hidden': True
+        }
+        self.headers['Barcode N50'] = {
+                'description': 'N50 reads per barcode',
+                'suffix': 'b',
+                'scale': 'BuGn',
+                'format': '{:,.0f}',
+                'hidden': True
+        }
+        self.headers['% Dup'] = {
+                'description': 'fraction of reads that are duplicates',
+                'suffix': '%',
+                'scale': 'OrRd',
+                'hidden': True
+        }
+        self.headers['% Phased'] = {
+                'description': 'nonduplicate and phased reads; ideal 45-50',
+                'suffix': '%',
+                'scale': 'BuGn',
+                'hidden': True
+        }
+        self.headers['# Long scaffs'] = {
+                'description': 'number of scaffolds >= 10 kb',
+                'scale': 'YlGn',
+                'format': '{:,.0f}',
+                'hidden': True
+        }
+        self.headers['Edge N50'] = {
+                'description': 'N50 edge size',
+                'modify': lambda x: x / 1000,
+                'suffix': 'Kb',
+                'scale': 'RdYlGn',
+                'hidden': True
+        }
+        self.headers['Contig N50'] = {
+                'description': 'N50 contig size',
+                'modify': lambda x: x / 1000,
+                'suffix': 'Kb',
+                'scale': 'RdYlGn',
+        }
+        self.headers['Phase N50'] = {
+                'description': 'N50 phase block size',
+                'modify': lambda x: x / 1000,
+                'suffix': 'Kb',
+                'scale': 'BuGn',
+                'hidden': True
+        }
+        self.headers['Scaff N50'] = {
+                'description': 'N50 scaffold size',
+                'modify': lambda x: x / 1000,
+                'suffix': 'Kb',
+                'scale': 'RdYlGn'
+        }
+        self.headers['Asm size'] = {
+                'description': 'assembly size (only scaffolds >= 10 kb)',
+                'modify': lambda x: x / 1000000,
+                'suffix': 'Mb',
+                'scale': 'YlGn'
+        }
+
+        self.reports = OrderedDict()
+        self.summaries = OrderedDict()
+        self.molecules = OrderedDict()
+
+        for f in self.find_log_files('supernova/report'):
+            log.debug("Found report in: {}".format(f['root']))
+            sid, data = self.parse_report(f['f'])
+            self.reports[sid] = data
+        for f in self.find_log_files('supernova/summary'):
+            log.debug("Found summary.json in: {}".format(f['root']))
+            try:
+                sid, data = self.parse_summary(f['f'])
+            except ValueError:
+                log.debug("Error parsing JSON file in {}".format(f['root']))
+                continue
+            except RuntimeError:
+                log.debug("Could not find sample_id in JSON file in {}".format(f['root']))
+                continue
+
+            self.summaries[sid] = data
+        for f in self.find_log_files('supernova/molecules'):
+            log.debug("Found histogram_molecules.json in: {}".format(f['root']))
+
+
+        # Data from summary.json supersedes data from report.txt
+        for sample_id, sum_data in self.summaries.items():
+            if sample_id in self.reports.keys():
+                log.debug("Found summary data for sample {} which supersedes report data".format(sample_id))
+                self.reports[sample_id] = sum_data
+        self.general_stats_addcols(self.reports, self.headers)
+
+        # Add supernova section with all the data
+        full_headers = deepcopy(self.headers)
+        for header,val in full_headers.items():
+            val['hidden'] = False
+        config = {
+            'id': 'supernova_table',
+            'namespace': 'supernova',
+        }
+        self.add_section (
+            name = 'Supernova Statistics',
+            anchor = 'supernova-full',
+            plot = table.plot(self.reports, full_headers, config)
+        )
+
+
+    def parse_summary(self, content):
+
+        stats = {
+            'assembly_size': 'Asm size',
+            'bases_per_read': 'Read len',
+            'contig_N50': 'Contig N50',
+            'dup_perc': '% Dup',
+            'edge_N50': 'Edge N50',
+            'effective_coverage': 'Coverage',
+            'hetdist': 'Het dist',
+            'lw_mean_mol_len': 'Mol size',
+            'median_ins_sz': 'Insert size',
+            'nreads': '# Reads',
+            'phase_block_N50': 'Phase N50',
+            'placed_perc': '% Phased',
+            'placed_frac': '% Phased',
+            'proper_pairs_perc': '% proper',
+            'q30_r2_perc': '% R2 Q30',
+            'rpb_N50': 'Barcode N50',
+            'scaffold_N50': 'Scaff N50',
+            'scaffolds_10kb_plus': '# Long scaffs',
+            'valid_bc_perc': '% missing BC'
+        }
+ 
+        try:
+            cdict = json.loads(content)
+        except ValueError as e:
+            raise e
+
+        data = {}
+        # Try to find sample_id
+        sid = ''
+        if 'CS_SAMPLE_ID' in cdict.keys():
+            sid = cdict['CS_SAMPLE_ID'] # supernova 1.2
+        elif 'sample_id' in cdict.keys():
+            sid = cdict['sample_id']
+        else:
+            raise RuntimeError
+
+        for key, value in cdict.items():
+            if key in stats.keys():
+                #Some trickery for supernova 1.1.4 compatability
+                if key == 'placed_frac':
+                    value = value * 100
+                if key == 'valid_bc_perc':
+                    value = 100 - value
+                data[stats[key]] = value
+        
+        return (sid, data)
+
+    def parse_report(self, content):
+        # Some short-hands for converting the report numbers
+        exp = {
+            'K': 1000.0,
+            'Kb': 1000.0,
+            'kb': 1000.0,
+            'Mb': 1000000.0,
+            'M': 1000000.0,
+            'Gb': 1000000000.0,
+            'G': 1000000000.0
+        }
+        stats = {
+                'READS': '# Reads',
+                'MEAN READ LEN': 'Read len',
+                'EFFECTIVE COV': 'Coverage',
+                'READ TWO Q30': '% R2 Q30',
+                'MEDIAN INSERT': 'Insert size',
+                'PROPER PAIRS': '% proper',
+                'MOLECULE LEN': 'Mol size',
+                'HETDIST': 'Het dist',
+                'UNBAR': '% missing BC',
+                'BARCODE N50': 'Barcode N50',
+                'DUPS': '% Dup',
+                'PHASED': '% Phased',
+                'LONG SCAFFOLDS': '# Long scaffs',
+                'EDGE N50': 'Edge N50',
+                'CONTIG N50': 'Contig N50',
+                'PHASEBLOCK N50': 'Phase N50',
+                'SCAFFOLD N50': 'Scaff N50',
+                'ASSEMBLY SIZE': 'Asm size'
+        }
+
+        data = {}
+        # Find the sample ID
+        sid = ''
+        sid_pat = re.compile('- \[(.+)\]')
+        # [number, unit, category]
+        stat_pat = re.compile('-\s+(\d+\.\d+)\s+(\S+|.)\s+= (.+) =')
+
+        for l in content.splitlines(): 
+            sid_m = re.match(sid_pat,l)
+            stat_m = re.match(stat_pat, l)
+
+            if sid_m is not None:
+                sid = sid_m.groups()[0]
+            if stat_m is None:
+                continue
+            stat_val = stat_m.groups()
+            stat_type = stat_val[2].strip()
+            # Parse the lines containing statistics
+            if stat_type in stats.keys():
+                try:
+                    if stat_val[1] in exp.keys():
+                        data[stats[stat_type]] = float(stat_val[0]) * exp[stat_val[1]]
+                    else:
+                        data[stats[stat_type]] = stat_val[0]
+                except ValueError:
+                    log.debug('Error in parsing sample {}, on line "{}"'.format(sid, stat_val))                    
+
+        return (sid, data)
+
+
+    def parse_histogram(self, logfile):
+        pass
