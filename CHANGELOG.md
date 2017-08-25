@@ -3,13 +3,17 @@
 ## MultiQC v1.3dev
 
 #### Breaking changes
-Note that any users with custom search patterns for the `bowtie` or `star` will
-need to update their config files: The `bowtie` search key is now `bowtie1`,
+Only for users with custom search patterns for the `bowtie` or `star`: you will
+need to update your config files - the `bowtie` search key is now `bowtie1`,
 `star_genecounts` is now `star/genecounts`.
 
 For users with custom modules - search patterns _must_ now conform to the search
 pattern naming convention: `modulename` or `modulename/anything` (the search pattern
 string beginning with the name of your module, anything you like after the first `/`).
+
+#### Module updates:
+* **AfterQC**
+    * Handle new output format where JSON summary key changed names.
 
 #### New MultiQC Features:
 * File search refactored to only search for running modules
