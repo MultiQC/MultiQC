@@ -41,7 +41,7 @@ prepend_dirs_sep: ' | '
 file_list: false
 make_data_dir: true
 zip_data_dir: false
-data_dump_file: false
+data_dump_file: true
 megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30

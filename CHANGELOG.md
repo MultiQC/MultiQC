@@ -20,6 +20,9 @@ string beginning with the name of your module, anything you like after the first
     * Makes search much faster when running with lots of files and limited modules
     * For example, if using `-m star` to only use the STAR module, all other file searches now skipped
 * File search now warns if an unrecognised search type is given
+* MultiQC now saves nearly all parsed data to a structured output file by default
+    * See `multiqc_data/multiqc_data.json`
+    * This can be turned off by setting `config.data_dump_file: false`
 
 #### Bug Fixes
 * Minor `default_dev` directory creation bug squashed
