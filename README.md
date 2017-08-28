@@ -44,8 +44,8 @@ Currently, supported tools include:
 |[Flexbar][flexbar]               |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
 |[Jellyfish][jellyfish]           |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
 |[Skewer][skewer]                 |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[SortMeRNA][sortmerna]           |                        |[RSEM][THetA2][theta2]           | [VCFTools][vcftools] |
-|[Trimmomatic][trimmomatic]       |                        |                           |                      |
+|[SortMeRNA][sortmerna]           |                        |[RSEM][rsem]               | [VCFTools][vcftools] |
+|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
