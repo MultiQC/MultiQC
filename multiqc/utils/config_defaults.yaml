@@ -58,6 +58,8 @@ decimalPoint_format: null
 thousandsSep_format: null
 section_comments: {}
 
+define_merge_groups: {}
+
 fn_ignore_dirs:
     - 'multiqc_data'
     - 'icarus_viewers'       # quast

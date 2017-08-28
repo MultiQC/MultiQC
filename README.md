@@ -29,7 +29,6 @@ it ideal for routine fast quality control.
 Currently, supported tools include:
 
 
-
 |Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |---------------------------------|------------------------|---------------------------|----------------------|
 |[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]       |[BUSCO][busco]        |

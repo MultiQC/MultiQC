@@ -29,6 +29,7 @@ except NameError:
     pass # Python 3
 
 # Set up global variables shared across modules
+modules_output = list()
 general_stats_data = list()
 general_stats_headers = list()
 general_stats_html = ''
@@ -134,6 +135,8 @@ def get_filelist(run_module_names):
             for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
                 bname = os.path.basename(root)
 
+                logger.debug("Looking in: {}".format(root))
+
                 # Skip any sub-directories matching ignore params
                 orig_dirnames = dirnames[:]
                 for n in config.fn_ignore_dirs:
@@ -155,7 +158,7 @@ def get_filelist(run_module_names):
                     continue
                 p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
                 if len(p_matches) > 0:
-                    logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
+                    logger.debug("Ignoring directory {} as it matched {} in fn_ignore_paths".format(root, p_matches[0]))
                     continue
                 # Search filenames in this directory
                 for fn in filenames:
@@ -230,7 +233,7 @@ def search_file (pattern, f):
 
     return fn_matched and contents_matched
 
-def data_sources_tofile ():
+def data_sources_tofile():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])
     with io.open (os.path.join(config.data_dir, fn), 'w', encoding='utf-8') as f:
         if config.data_format == 'json':
@@ -246,6 +249,30 @@ def data_sources_tofile ():
                         lines.append([mod, sec, s_name, source])
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
+
+def count_hc_plots():
+    """This looks to see if any HighCharts plots are included in the output.
+       Previously, a global counter was incremented whenever such a plot was generated,
+       but doing it this way removes the coupling between the plot and report modules.
+    """
+    found = 0
+
+    for m in modules_output:
+        for s in vars(m).get('sections', []):
+            found += str(s.get('content')).count('<div class="hc-plot-wrapper"')
+
+    return found
+
+def count_mpl_plots():
+    """Similar to count_hc_plots above
+    """
+    found = 0
+
+    for m in modules_output:
+        for s in vars(m).get('sections', []):
+            found += str(s.get('content')).count('<div class="mqc_mplplot"')
+
+    return found
 
 def save_htmlid(html_id):
     """ Take a HTML ID, sanitise for HTML, check for duplicates and save.
@@ -282,3 +309,4 @@ def compress_json(data):
     x = lzstring.LZString()
     return x.compressToBase64(json_string)
 
+    return found

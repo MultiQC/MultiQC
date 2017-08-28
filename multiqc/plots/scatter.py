@@ -1,15 +1,13 @@
 #!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
 
 """ MultiQC functions to plot a scatter plot """
 
 import logging
-import random
 
-from multiqc.utils import report
+from . import get_uid
 
 logger = logging.getLogger(__name__)
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 def plot (data, pconfig=None):
     """ Plot a scatter plot with X,Y data.
@@ -77,9 +75,10 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
 
     # Get the plot ID
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Build the HTML for the page
@@ -102,13 +101,15 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
+            html += '''<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>
+                '''.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
         html += '</div>\n\n'
 
     # The plot div
-    html += '<div class="hc-plot-wrapper"><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(id=pconfig['id'])
-
-    report.num_hc_plots += 1
+    html += '''<div class="hc-plot-wrapper">
+        <div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div>
+        </div></div>
+        '''.format(id=pconfig['id'])
 
     report.plot_data[pconfig['id']] = {
         'plot_type': "scatter",
@@ -117,4 +118,3 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
     }
 
     return html
-

@@ -1,16 +1,15 @@
 #!/usr/bin/env python
+from __future__ import division, print_function, absolute_import
 
 """ MultiQC functions to plot a table """
 
 from collections import defaultdict, OrderedDict
 import logging
-import random
 
-from multiqc.utils import config, report, util_functions, mqc_colour
+from multiqc.utils import config, util_functions, mqc_colour
 from multiqc.plots import table_object, beeswarm
 logger = logging.getLogger(__name__)
 
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 def plot (data, headers=None, pconfig=None):
     """ Return HTML for a MultiQC table.
@@ -50,7 +49,9 @@ def make_table (dt):
     :param data: MultiQC datatable object
     """
 
-    table_id = dt.pconfig.get('id', 'table_{}'.format(''.join(random.sample(letters, 4))) )
+    table_id = dt.pconfig.get('id', 'table_{}'.format(id(dt)) )
+
+    from multiqc.utils import report
     table_id = report.save_htmlid(table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
@@ -117,7 +118,7 @@ def make_table (dt):
             )
 
         # Make a colour scale
-        if header['scale'] == False:
+        if header.get('scale', False) == False:
             c_scale = None
         else:
             c_scale = mqc_colour.mqc_colour_scale(header['scale'], header['dmin'], header['dmax'])
@@ -163,7 +164,7 @@ def make_table (dt):
                 valstring += header.get('suffix', '')
 
                 # Build HTML
-                if not header['scale']:
+                if not header.get('scale'):
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
                     t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
@@ -302,9 +303,4 @@ def make_table (dt):
         report.saved_raw_data[fn] = dt.raw_vals
 
     return html
-
-
-
-
-
 

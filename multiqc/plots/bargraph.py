@@ -1,18 +1,19 @@
 #!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
 
 """ MultiQC functions to plot a bargraph """
 
-from __future__ import print_function
 import base64
 from collections import OrderedDict
 import io
 import logging
 import math
 import os
-import random
 import sys
 
-from multiqc.utils import config, report, util_functions
+from . import get_uid
+
+from multiqc.utils import config, util_functions
 logger = logging.getLogger(__name__)
 
 try:
@@ -26,8 +27,6 @@ except Exception as e:
     print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
     print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
     print(e)
-
-letters = 'abcdefghijklmnopqrstuvwxyz'
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
@@ -160,9 +159,10 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
     if pconfig is None:
         pconfig = {}
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_hcplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_hcplot_{}'.format(id(plotdata))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -224,8 +224,6 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
     </div></div>""".format(id=pconfig['id']);
 
-    report.num_hc_plots += 1
-
     report.plot_data[pconfig['id']] = {
         'plot_type': 'bar_graph',
         'samples': plotsamples,
@@ -248,9 +246,10 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
 
     # Plot group ID
     if pconfig.get('id') is None:
-        pconfig['id'] = 'mqc_mplplot_'+''.join(random.sample(letters, 10))
+        pconfig['id'] = 'mqc_mplplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
+    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Individual plot IDs
@@ -464,8 +463,6 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
 
     # Close wrapping div
     html += '</div>'
-
-    report.num_mpl_plots += 1
 
     return html
 

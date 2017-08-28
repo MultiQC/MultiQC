@@ -54,6 +54,11 @@ class BaseMultiqcModule(object):
 
         self.sections = list()
 
+    def gather(self):
+        """This will be called after module init.  You can choose to use it or not.
+        """
+        pass
+
     def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
         Return matches log files of interest.
@@ -93,8 +98,8 @@ class BaseMultiqcModule(object):
                     logger.debug("{} - Skipping '{}' as didn't match module path filters".format(sp_key, f['fn']))
                     continue
 
-            # Make a sample name from the filename
-            f['s_name'] = self.clean_s_name(f['fn'], f['root'])
+            # Make a sample name from the filename and also extract any group info (eg read number)
+            f.update( self.clean_and_scan_s_name(f['fn'], f['root']) )
             if filehandles or filecontents:
                 try:
                     with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
@@ -162,12 +167,23 @@ class BaseMultiqcModule(object):
         })
 
     def clean_s_name(self, s_name, root):
+        """ For backwards compatibility, returns only the s_name value from
+            clean_and_scan_s_name.
+            Most of the modules calling this directly seem to be doing so
+            redundantly as it is already called by find_log_files.
+        """
+        return self.clean_and_scan_s_name(s_name, root)['s_name']
+
+    def clean_and_scan_s_name(self, s_name, root):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
+        If merge_groups are defined then these will be extracted,
+        if found.
         :param s_name: The sample name to clean
         :param root: The directory path that this file is within
         :config.prepend_dirs: boolean, whether to prepend dir name to s_name
-        :return: The cleaned sample name, ready to be used
+        :return: A dict where s_name = cleaned sample name, ready to be used
+                 and the other values correspond to the merge_groups.
         """
         if root is None:
             root = ''
@@ -184,6 +200,7 @@ class BaseMultiqcModule(object):
 
             s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
         if config.fn_clean_sample_names:
+
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
                 if type(ext) is str:
@@ -209,10 +226,23 @@ class BaseMultiqcModule(object):
                 if s_name.startswith(chrs):
                     s_name = s_name[len(chrs):]
 
-        # Remove trailing whitespace
-        s_name = s_name.strip()
+        # Put the result in a dict and remove trailing whitespace
+        res = dict(s_name = s_name.strip())
 
-        return s_name
+        # Look for merge groups. Typical use case is for reads 1 and 2 where we want
+        # to prune the read number to get the sample name but we don't want to lose the
+        # information.
+        for mg, regex in config.define_merge_groups.items():
+            mo = re.search(regex, res['s_name'])
+            if not mo:
+                res[mg] = None
+            else:
+                # If there was a match, the fist group is the read name (or whatever)
+                # and the whole of the match needs to be pruned from the s_name.
+                res['s_name'] = res['s_name'][:mo.span(0)[0]] + res['s_name'][mo.span(0)[1]:]
+                res[mg] = mo.group(1)
+
+        return res
 
     def ignore_samples(self, data):
         """ Strip out samples which match `sample_names_ignore` """
@@ -225,8 +255,11 @@ class BaseMultiqcModule(object):
                 return data
             for k,v in data.items():
                 # Match ignore glob patterns
-                glob_match = any( fnmatch.fnmatch(k, sn) for sn in config.sample_names_ignore )
-                re_match = any( re.match(sn, k) for sn in config.sample_names_ignore_re )
+                # Deal with the case where k is a tuple and the sample name is k[0]
+                sample_name = k[0] if type(k) is tuple else k
+
+                glob_match = any( fnmatch.fnmatch(sample_name, si) for si in config.sample_names_ignore )
+                re_match = any( re.match(si, sample_name) for si in config.sample_names_ignore_re )
                 if not glob_match and not re_match:
                     newdata[k] = v
             return newdata

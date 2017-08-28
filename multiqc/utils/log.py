@@ -82,7 +82,5 @@ def get_log_stream(logger):
         else:
             log_stream = handler.stream
 
-    if file_stream:
-        return file_stream
-
-    return log_stream
+    #Return the last file_stream or else the last log_stream
+    return file_stream or log_stream

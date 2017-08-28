@@ -147,3 +147,4 @@ headers['read_counts'] = {
 
 Not as pretty, but allows users to view low depth coverage.
 
+>>>>>>> origin/master

@@ -12,6 +12,7 @@ import pkg_resources
 import subprocess
 import sys
 import yaml
+from pprint import pformat
 
 import multiqc
 
@@ -45,10 +46,6 @@ with open(searchp_fn) as f:
     configs = yaml.load(f)
     for c, v in configs.items():
         globals()[c] = v
-# Module filename search patterns
-searchp_fn = os.path.join( MULTIQC_DIR, 'utils', 'search_patterns.yaml')
-with open(searchp_fn) as f:
-    sp = yaml.load(f)
 
 # Other defaults that can't be set in YAML
 data_tmp_dir = '/tmp' # will be overwritten by core script
@@ -62,9 +59,32 @@ output_dir = os.path.realpath(os.getcwd())
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
 avail_modules = dict()
+module_roots = set()
 for entry_point in pkg_resources.iter_entry_points('multiqc.modules.v1'):
-    nicename = str(entry_point).split('=')[0].strip()
-    avail_modules[nicename] = entry_point
+    avail_modules[entry_point.name] = entry_point
+
+    # Infer where the module is actually going to be loaded from.
+    module_roots.add(os.path.join(entry_point.dist.location, entry_point.module_name.split(".")[0]))
+
+# Module filename search patterns
+# Look for search_patterns.yaml in the utils directory where the module is located,
+# so that plugin modules can add their own patterns.
+sp = dict()
+for searchp_fn in [ os.path.join( d, 'utils', 'search_patterns.yaml') for d in module_roots ]:
+    try:
+        with open(searchp_fn) as f:
+            sp.update(yaml.load(f))
+    except OSError:
+        pass
+
+# We can't log yet, but this is a serious error.
+if not sp:
+    print("No default search patterns were loaded. Looked in locations:\n{}".format(pformat(module_roots)),
+          file = sys.stderr)
+
+# run_modules defined here so it can be shared between the main script and plugin
+# hooks.
+run_modules = collections.OrderedDict()
 
 ##### Available templates
 # Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
@@ -110,7 +130,6 @@ def mqc_load_userconfig(paths=()):
     # Custom command line config
     for p in paths:
         mqc_load_config(p)
-
 
 def mqc_load_config(yaml_config):
     """ Load and parse a config file if we find it """
@@ -173,6 +192,9 @@ def mqc_add_config(conf, conf_path=None):
                 continue
             logger.debug("New config '{}': {}".format(c, fpath))
             update_dict(globals(), {c: fpath})
+        elif c == 'define_merge_groups':
+            for f in v:
+                define_merge_groups[f['name']] = f['regex']
         else:
             logger.debug("New config '{}': {}".format(c, v))
             update_dict(globals(), {c: v})
@@ -211,5 +233,5 @@ def update_dict(d, u):
         if isinstance(val, collections.Mapping):
             d[key] = update_dict(d.get(key, {}), val)
         else:
-            d[key] = u[key]
+            d[key] = val
     return d

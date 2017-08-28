@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
 
 """ MultiQC datatable class, used by tables and beeswarm plots """
 
@@ -167,7 +168,7 @@ class datatable (object):
         # Within each section of headers, sort explicitly by 'title' if the dict
         # is not already ordered, so the final ordering is by:
         # placement > section > explicit_ordering > title
-        # Of course, the user can shuffle these manually.
+        # Of course, the user can shuffle these manually in the browser but the settings don't currently stick.
         self.headers_in_order = defaultdict(list)
 
         for idx, hs in enumerate(headers):
@@ -190,7 +191,7 @@ class datatable (object):
 
     def get_headers_in_order(self):
         """Gets the headers in the order they want to be displayed.
-           Returns a list of triplets: (idx, key, header_info)
+           Returns an iterable of triplets: (idx, key, header_info)
         """
         res = list()
         #Scan through self.headers_in_order and just bolt on the actual header info
