@@ -154,13 +154,13 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
     Build the HTML needed for a HighCharts bar graph. Should be
     called by plot_bargraph, which properly formats input data.
     """
+    from multiqc.utils import report
     if pconfig is None:
         pconfig = {}
     if pconfig.get('id') is None:
         pconfig['id'] = 'mqc_hcplot_{}'.format(id(plotdata))
 
     # Sanitise plot ID and check for duplicates
-    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     html = '<div class="mqc_hcplot_plotgroup">'
@@ -238,6 +238,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
     encoded image within HTML or writes the plot and links to it. Should be called by
     plot_bargraph, which properly formats the input data.
     """
+    from multiqc.utils import report
 
     if pconfig is None:
         pconfig = {}
@@ -247,7 +248,6 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
         pconfig['id'] = 'mqc_mplplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
-    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Individual plot IDs

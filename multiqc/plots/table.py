@@ -48,10 +48,10 @@ def make_table (dt):
     Build the HTML needed for a MultiQC table.
     :param data: MultiQC datatable object
     """
+    from multiqc.utils import report
 
     table_id = dt.pconfig.get('id', 'table_{}'.format(id(dt)) )
 
-    from multiqc.utils import report
     table_id = report.save_htmlid(table_id)
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()

@@ -36,6 +36,8 @@ def highcharts_heatmap (data, xcats, ycats, pconfig=None):
     Build the HTML needed for a HighCharts line graph. Should be
     called by plot_xy_data, which properly formats input data.
     """
+    from multiqc.utils import report
+
     if pconfig is None:
         pconfig = {}
 

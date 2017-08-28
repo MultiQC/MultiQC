@@ -68,6 +68,8 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
     Build the HTML needed for a HighCharts scatter plot. Should be
     called by scatter.plot(), which properly formats input data.
     """
+    from multiqc.utils import report
+
     if pconfig is None:
         pconfig = {}
 
@@ -76,7 +78,6 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
         pconfig['id'] = 'mqc_hcplot_{}'.format(id(pconfig))
 
     # Sanitise plot ID and check for duplicates
-    from multiqc.utils import report
     pconfig['id'] = report.save_htmlid(pconfig['id'])
 
     # Build the HTML for the page
