@@ -115,11 +115,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(statuses))
 
         # Now add each section in order
-        # Allow plot selection in config
-        try:
-            plots_enabled = config.fastqc_plots_enabled
-        except AttributeError:
-            plots_enabled = []
+        # Allow specific plot selection in config
+        plots_enabled = getattr(config, 'fastqc_config', {}).get('plots_enabled', None)
 
         for plot_func in (
                 self.sequence_quality_plot,
