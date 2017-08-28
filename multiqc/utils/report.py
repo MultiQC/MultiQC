@@ -308,5 +308,3 @@ def compress_json(data):
     json_string = json_string.replace('NaN', 'null');
     x = lzstring.LZString()
     return x.compressToBase64(json_string)
-
-    return found
