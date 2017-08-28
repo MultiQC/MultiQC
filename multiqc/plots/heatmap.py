@@ -7,8 +7,6 @@ import json
 import logging
 import os
 
-from . import get_uid
-
 from multiqc.utils import config
 
 logger = logging.getLogger(__name__)

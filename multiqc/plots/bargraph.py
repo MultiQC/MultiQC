@@ -11,8 +11,6 @@ import math
 import os
 import sys
 
-from . import get_uid
-
 from multiqc.utils import config, util_functions
 logger = logging.getLogger(__name__)
 

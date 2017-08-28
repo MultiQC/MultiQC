@@ -5,8 +5,6 @@ from __future__ import division, print_function, absolute_import
 
 import logging
 
-from . import get_uid
-
 logger = logging.getLogger(__name__)
 
 def plot (data, pconfig=None):

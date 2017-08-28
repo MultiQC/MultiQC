@@ -6,8 +6,6 @@ from __future__ import print_function, division, absolute_import
 import logging
 import os
 
-from . import get_uid
-
 from multiqc.utils import config
 from multiqc.plots import table_object
 

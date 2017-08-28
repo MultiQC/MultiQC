@@ -171,8 +171,9 @@ class BaseMultiqcModule(object):
     def clean_s_name(self, s_name, root):
         """ For backwards compatibility, returns only the s_name value from
             clean_and_scan_s_name.
-            Most of the modules calling this directly seem to be doing so
-            redundantly as it is already called by find_log_files.
+            Generally a module should only call this directly after extracting
+            a sample name from log file contents, since filenames are already passed
+            to this function by find_log_files.
         """
         return self.clean_and_scan_s_name(s_name, root)['s_name']
 
