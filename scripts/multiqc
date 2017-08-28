@@ -357,7 +357,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     run_modules.update( [ (n, c) for m in config.module_order for n, c in m.items() if n in config.avail_modules and n not in run_modules ] )
 
     if module:
-        #Pare down config.run_modules
+        #Pare down config.run_modules. Note casting to list() forces a shallow copy in both Py2 and Py3.
         for m in list(run_modules):
             if m not in module: del(run_modules[m])
         logger.info('Only using modules {}'.format(', '.join(run_modules)))
