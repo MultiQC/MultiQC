@@ -10,7 +10,7 @@ import json
 from copy import deepcopy
 
 from multiqc import config
-from multiqc.plots import table, bargraph
+from multiqc.plots import table, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -139,14 +139,15 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'YlGn'
         }
 
-        self.reports = OrderedDict()
-        self.summaries = OrderedDict()
-        self.molecules = OrderedDict()
+        reports = OrderedDict()
+        summaries = OrderedDict()
+        root_summary = {}
+        molecules = OrderedDict()
 
         for f in self.find_log_files('supernova/report'):
             log.debug("Found report in: {}".format(f['root']))
             sid, data = self.parse_report(f['f'])
-            self.reports[sid] = data
+            reports[sid] = data
         for f in self.find_log_files('supernova/summary'):
             log.debug("Found summary.json in: {}".format(f['root']))
             try:
@@ -158,30 +159,56 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Could not find sample_id in JSON file in {}".format(f['root']))
                 continue
 
-            self.summaries[sid] = data
+            summaries[sid] = data
+            root_summary[f['root']] = sid
         for f in self.find_log_files('supernova/molecules'):
             log.debug("Found histogram_molecules.json in: {}".format(f['root']))
+            try:
+                if f['root'] in root_summary.keys():
+                    data = self.parse_histogram(f['f'])
+                    sid = root_summary[f['root']]
+                    molecules[sid] = data
+            except RuntimeError:
+                log.debug("Could not find sample_id in JSON file in {}".format(f['root']))
+                continue
 
 
         # Data from summary.json supersedes data from report.txt
-        for sample_id, sum_data in self.summaries.items():
-            if sample_id in self.reports.keys():
+        for sample_id, sum_data in summaries.items():
+            if sample_id in reports.keys():
                 log.debug("Found summary data for sample {} which supersedes report data".format(sample_id))
-                self.reports[sample_id] = sum_data
-        self.general_stats_addcols(self.reports, self.headers)
+                reports[sample_id] = sum_data
+        self.general_stats_addcols(reports, self.headers)
 
         # Add supernova section with all the data
         full_headers = deepcopy(self.headers)
         for header,val in full_headers.items():
             val['hidden'] = False
-        config = {
+        config_table = {
             'id': 'supernova_table',
             'namespace': 'supernova',
         }
         self.add_section (
             name = 'Supernova Statistics',
             anchor = 'supernova-full',
-            plot = table.plot(self.reports, full_headers, config)
+            plot = table.plot(reports, full_headers, config_table)
+        )
+
+        # Add molecules plot
+        maxbins = max([len(val) for val in molecules.values()])
+        smoothed = int(maxbins * 0.5)
+        config_molecules = {
+            'id': 'supernova_molecules',
+            'title': 'Supernova Molecule Lengths',
+            'xlab': 'Inferred molecule length (bp)',
+            'ylab': '# molecules',
+            'smooth_points': 300,
+            'smooth_points_sumcounts': True
+        }
+        self.add_section (
+            name = 'Supernova Molecule Lengths',
+            anchor = 'supernova-molecules',
+            plot = linegraph.plot(molecules, config_molecules)
         )
 
 
@@ -235,8 +262,9 @@ class MultiqcModule(BaseMultiqcModule):
         
         return (sid, data)
 
+
     def parse_report(self, content):
-        # Some short-hands for converting the report numbers
+        # Some short-hands for converting the report numbers (pi is exactly three!)
         exp = {
             'K': 1000.0,
             'Kb': 1000.0,
@@ -297,5 +325,13 @@ class MultiqcModule(BaseMultiqcModule):
         return (sid, data)
 
 
-    def parse_histogram(self, logfile):
-        pass
+    def parse_histogram(self, content):
+
+        try:
+            cdict = json.loads(content)
+        except ValueError as e:
+            raise e
+
+        numbins = cdict['numbins'] + 1
+        xdata = [i * cdict['binsize'] for i in range(0, numbins)]
+        return {i: j for (i, j) in zip(xdata, cdict['vals'])}
