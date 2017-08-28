@@ -414,13 +414,13 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
             mod = config.avail_modules[mod_name].load()
             mod.mod_cust_config = mod_cust_config # feels bad doing this, but seems to work
             output = mod()
-            # Some modules prefer not to load all the data in the constructor
-            # since this makes them resistant to unit testing. In this case, gather()
-            # Note that we're looking at a better alternative that includes the above hack too.
-            output.gather()
             if type(output) != list:
                 output = [output]
             for m in output:
+                # Some modules prefer not to load all the data in the constructor
+                # since this makes them resistant to unit testing. In this case, gather()
+                # Note that we're looking at a better alternative that includes the above hack too.
+                m.gather()
                 report.modules_output.append(m)
 
             # Copy over css & js files if requested by the theme

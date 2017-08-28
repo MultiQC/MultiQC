@@ -249,11 +249,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Now aggregate all the lists back to single figures. This should work
         # whether or not the reads were actually paired.
         for s_dict in data.values():
+            # s_dict is a mapping of heading -> [ read1_val, read2_val ]
             for k in s_dict:
-                if k in ['total_sequences']:
-                    s_dict[k] = max( s_dict[k] )
+                # percent_duplicates can be empty. If so, prune it out completely
+                if not s_dict[k]:
+                    del s_dict[k]
                 else:
-                    s_dict[k] = mean( s_dict[k] )
+                    if k in ['total_sequences']:
+                        s_dict[k] = max( s_dict[k] )
+                    else:
+                        s_dict[k] = mean( s_dict[k] )
 
 
         # Are sequence lengths interesting?
