@@ -55,7 +55,9 @@ class BaseMultiqcModule(object):
         self.sections = list()
 
     def gather(self):
-        """This will be called after module init.  You can choose to use it or not.
+        """This will be called after module init.  Most older modules do all the data gathering from
+           __init__() but this can make unit testing very tricky, so you can put the logic here in
+           the gather() method instead. By default it is a no-op.
         """
         pass
 
