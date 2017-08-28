@@ -70,6 +70,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
 
+        # Get the sample groups for PE data
+        self.fastqc_s_groups = self.group_samples(self.fastqc_data.keys(), 'read_pairs')
+
         if len(self.fastqc_data) == 0:
             raise UserWarning
 
@@ -213,14 +216,58 @@ class MultiqcModule(BaseMultiqcModule):
                     num_fails += 1
             data[s_name]['percent_fails'] = (float(num_fails)/float(num_statuses))*100.0
 
+        # Merge Read 1 + Read 2 data
+        gdata = dict()
+        merged_samples = False
+        for g_name, s_names in self.fastqc_s_groups.items():
+            if len(s_names) == 1:
+                gdata[s_names[0]] = data[s_names[0]]
+            else:
+                merged_samples = True
+                t_seqs = sum([data[s_name]['total_sequences'] for s_name in s_names])
+                avg_len = sum([
+                            float(data[s_name]['avg_sequence_length'])
+                            * float(data[s_name]['total_sequences'])
+                            for s_name in s_names
+                        ]) / float(t_seqs)
+                percent_gc = sum([
+                            float(data[s_name]['percent_gc'])
+                            * float(data[s_name]['total_sequences'])
+                            for s_name in s_names
+                        ]) / float(t_seqs)
+                gdata[g_name] = {
+                    'total_sequences': float(t_seqs)/float(len(s_names)),
+                    'avg_sequence_length': avg_len,
+                    'percent_gc': percent_gc
+                }
+                try:
+                    gdata[g_name]['percent_duplicates'] = sum([
+                                float(data[s_name]['percent_duplicates'])
+                                * float(data[s_name]['total_sequences'])
+                                for s_name in s_names
+                            ]) / float(t_seqs)
+                except KeyError:
+                    pass
+                # Add count of fail statuses
+                num_statuses = 0
+                num_fails = 0
+                for s_name in s_names:
+                    for s in self.fastqc_data[s_name]['statuses'].values():
+                        num_statuses += 1
+                        if s == 'fail':
+                            num_fails += 1
+                gdata[g_name]['percent_fails'] = (float(num_fails)/float(num_statuses))*100.0
+
         # Are sequence lengths interesting?
         seq_lengths = [x['avg_sequence_length'] for x in data.values()]
         hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
 
+        ms_d = ', averaged across read pairs' if merged_samples else ''
+
         headers = OrderedDict()
         headers['percent_duplicates'] = {
             'title': '% Dups',
-            'description': '% Duplicate Reads',
+            'description': '% Duplicate Reads{}'.format(ms_d),
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -228,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['percent_gc'] = {
             'title': '% GC',
-            'description': 'Average % GC Content',
+            'description': 'Average % GC Content{}'.format(ms_d),
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -237,7 +284,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['avg_sequence_length'] = {
             'title': 'Length',
-            'description': 'Average Sequence Length (bp)',
+            'description': 'Average Sequence Length (bp){}'.format(ms_d),
             'min': 0,
             'suffix': ' bp',
             'scale': 'RdYlGn',
@@ -246,7 +293,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['percent_fails'] = {
             'title': '% Failed',
-            'description': 'Percentage of modules failed in FastQC report (includes those not plotted here)',
+            'description': 'Percentage of modules failed in FastQC report (includes those not plotted here){}'.format(ms_d),
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -256,13 +303,13 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['total_sequences'] = {
             'title': '{} Seqs'.format(config.read_count_prefix),
-            'description': 'Total Sequences ({})'.format(config.read_count_desc),
+            'description': 'Total Sequences ({}){}'.format(config.read_count_desc, ms_d),
             'min': 0,
             'scale': 'Blues',
             'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
-        self.general_stats_addcols(data, headers)
+        self.general_stats_addcols(gdata, headers)
 
 
     def read_count_plot (self):
@@ -334,6 +381,10 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_quality not found in FastQC reports')
             return None
 
+        # Split into Read 1 and Read 2
+        data = self.split_data_by_group(self.fastqc_s_groups, data)
+        data_labels = [ {'name': 'Read {}'.format(i+1)} for i in range(len(data)) ]
+
         pconfig = {
             'id': 'fastqc_per_base_sequence_quality_plot',
             'title': 'FastQC: Mean Quality Scores',
@@ -347,7 +398,8 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
-            ]
+            ],
+            'data_labels': data_labels
         }
         self.add_section (
             name = 'Sequence Quality Histograms',

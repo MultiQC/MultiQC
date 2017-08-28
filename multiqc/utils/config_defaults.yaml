@@ -106,6 +106,14 @@ export_plot_formats:
 custom_content:
     order: []
 
+# Search patterns for grouping samples within a report
+sample_merge_groups:
+    read_pairs:
+        - type: regex
+          pattern: '_[12]$'
+    pre_post_trimming:
+        - '_trimmed'
+
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
 

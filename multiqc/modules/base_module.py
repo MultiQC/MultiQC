@@ -177,18 +177,26 @@ class BaseMultiqcModule(object):
             'print_section': any([ n is not None and len(n) > 0 for n in [description, comment, helptext, plot, content] ])
         })
 
-    def clean_s_name(self, s_name, root):
+    def clean_s_name(self, s_name, root=None, patterns=None, trim_patterns=None, prepend_dirs=None):
         """ Helper function to take a long file name and strip it
         back to a clean sample name. Somewhat arbitrary.
         :param s_name: The sample name to clean
         :param root: The directory path that this file is within
-        :config.prepend_dirs: boolean, whether to prepend dir name to s_name
+        :patterns: list of list of patterns to use for cleaning (default: config.fn_clean_exts)
+        :trim_patterns: list of list of patterns to use for trimming (default: config.fn_clean_trim)
+        :prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs)
         :return: The cleaned sample name, ready to be used
         """
         s_name_original = s_name
         if root is None:
             root = ''
-        if config.prepend_dirs:
+        if patterns is None:
+            patterns = config.fn_clean_exts
+        if trim_patterns is None:
+            trim_patterns = config.fn_clean_trim
+        if prepend_dirs is None:
+            prepend_dirs = config.prepend_dirs
+        if prepend_dirs:
             sep = config.prepend_dirs_sep
             root = root.lstrip('.{}'.format(os.sep))
             dirs = [d.strip() for d in root.split(os.sep) if d.strip() != '']
@@ -202,7 +210,7 @@ class BaseMultiqcModule(object):
                 s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
-            for ext in config.fn_clean_exts:
+            for ext in patterns:
                 if type(ext) is str:
                     ext = {'type': 'truncate', 'pattern': ext}
                 if ext['type'] == 'truncate':
@@ -218,9 +226,9 @@ class BaseMultiqcModule(object):
                     match = re.search(ext['pattern'], s_name)
                     s_name = match.group() if match else s_name
                 else:
-                    logger.error('Unrecognised config.fn_clean_exts type: {}'.format(ext['type']))
+                    logger.error('Unrecognised sample name cleaning pattern type: {}'.format(ext['type']))
             # Trim off characters at the end of names
-            for chrs in config.fn_clean_trim:
+            for chrs in trim_patterns:
                 if s_name.endswith(chrs):
                     s_name = s_name[:-len(chrs)]
                 if s_name.startswith(chrs):
@@ -232,6 +240,45 @@ class BaseMultiqcModule(object):
             s_name = s_name_original
 
         return s_name
+
+    def group_samples(self, samples, group):
+        """
+        Takes a list of sample names and groups according to a named
+        set of patterns defined in the config
+        :param samples (list): List of sample names
+        :param group (str): The name of the grouping patterns from the config
+        :return: Returns a dict where the keys are the cleaned basename for
+                each group, containing a list of the original sample names
+                that are members.
+        """
+        # Get the cleaning patterns
+        c_patterns = config.sample_merge_groups.get(group)
+        if c_patterns is None:
+            logger.warn("self.group_samples() group not found: '{}'".format(group))
+            return { s_name:[s_name] for s_name in samples }
+        # Go through the samples
+        sample_groups = dict()
+        for s_name in sorted(samples):
+            g_name = self.clean_s_name(s_name, patterns=c_patterns, trim_patterns=[], prepend_dirs=False)
+            if g_name not in sample_groups:
+                sample_groups[g_name] = []
+            sample_groups[g_name].append(s_name)
+        return sample_groups
+
+    def split_data_by_group(self, s_groups, data):
+        """
+        Takes output from self.group_samples along with a regular MultiQC data structure
+        (dict where each key is a sample name) and returns the data organised into lists.
+        Sample names are sorted and the first member of each each group is returned in the
+        first list item. The second of each group in the second and so on.
+        """
+        gdata = list()
+        for n in range(max(len(k) for k in s_groups.values())):
+            gdata.append(dict())
+        for s_names in s_groups.values():
+            for idx, s_name in enumerate(s_names):
+                gdata[idx][s_name] = data[s_name]
+        return gdata
 
     def ignore_samples(self, data):
         """ Strip out samples which match `sample_names_ignore` """
