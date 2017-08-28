@@ -126,8 +126,7 @@ def make_table (dt):
         for (s_name, samp) in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
-                # truncate '12345_' random prefix from rid
-                kname = '{}_{}'.format(header['namespace'], rid.split('_',1)[1])
+                kname = '{}_{}'.format(header['namespace'], rid)
                 dt.raw_vals[s_name][kname] = val
 
                 if 'modify' in header and callable(header['modify']):

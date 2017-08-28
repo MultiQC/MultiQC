@@ -74,6 +74,10 @@ def make_plot(dt):
             data.append(thisdata)
             s_names.append(these_snames)
 
+    if len(s_names) == 0:
+        logger.warning('Tried to make beeswarm plot, but had no data')
+        return '<p class="text-danger">Error - was not able to plot data.</p>'
+
     # Plot HTML
     html = """<div class="hc-plot-wrapper">
         <div id="{bid}" class="hc-plot not_rendered hc-beeswarm-plot"><small>loading..</small></div>
