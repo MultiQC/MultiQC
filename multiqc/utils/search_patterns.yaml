@@ -175,6 +175,8 @@ rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
     fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+rsem:
+    - fn: '*.cnt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
     max_filesize: 500000

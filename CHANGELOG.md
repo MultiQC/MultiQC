@@ -11,6 +11,11 @@ For users with custom modules - search patterns _must_ now conform to the search
 pattern naming convention: `modulename` or `modulename/anything` (the search pattern
 string beginning with the name of your module, anything you like after the first `/`).
 
+#### New Modules:
+* [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
+    * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
+    * Module written by [@noirot]
+
 #### Module updates:
 * **AfterQC**
     * Handle new output format where JSON summary key changed names.
