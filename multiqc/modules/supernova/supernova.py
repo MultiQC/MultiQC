@@ -141,13 +141,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         reports = OrderedDict()
         summaries = OrderedDict()
-        root_summary = {}
         molecules = OrderedDict()
+        root_summary = {}
 
         for f in self.find_log_files('supernova/report'):
             log.debug("Found report in: {}".format(f['root']))
             sid, data = self.parse_report(f['f'])
-            reports[sid] = data
+            s_name = self.clean_s_name(sid, f['root'])
+            reports[s_name] = data
         for f in self.find_log_files('supernova/summary'):
             log.debug("Found summary.json in: {}".format(f['root']))
             try:
@@ -159,26 +160,40 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Could not find sample_id in JSON file in {}".format(f['root']))
                 continue
 
-            summaries[sid] = data
-            root_summary[f['root']] = sid
+            s_name = self.clean_s_name(sid, f['root'])
+            summaries[s_name] = data
+            # The plot json files do not contain sample IDs, sadly. So we need to store it somewhere.
+            root_summary[f['root']] = sid 
         for f in self.find_log_files('supernova/molecules'):
             log.debug("Found histogram_molecules.json in: {}".format(f['root']))
             try:
                 if f['root'] in root_summary.keys():
                     data = self.parse_histogram(f['f'])
                     sid = root_summary[f['root']]
-                    molecules[sid] = data
+                    s_name = self.clean_s_name(sid, f['root'])
+                    molecules[s_name] = data
             except RuntimeError:
                 log.debug("Could not find sample_id in JSON file in {}".format(f['root']))
                 continue
-
 
         # Data from summary.json supersedes data from report.txt
         for sample_id, sum_data in summaries.items():
             if sample_id in reports.keys():
                 log.debug("Found summary data for sample {} which supersedes report data".format(sample_id))
                 reports[sample_id] = sum_data
+        # Ignore cmd-line specified samples
+        reports = self.ignore_samples(reports)
+        molecules = self.ignore_samples(molecules)
+
+        if len(reports) == 0:
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
+            raise UserWarning
+        else:
+            log.info("Found {} reports".format(len(reports.keys())))
+
+        # General stats table and data file
         self.general_stats_addcols(reports, self.headers)
+        self.write_data_file(reports, 'multiqc_supernova')
 
         # Add supernova section with all the data
         full_headers = deepcopy(self.headers)
@@ -195,8 +210,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Add molecules plot
-        maxbins = max([len(val) for val in molecules.values()])
-        smoothed = int(maxbins * 0.5)
         config_molecules = {
             'id': 'supernova_molecules',
             'title': 'Supernova Molecule Lengths',
