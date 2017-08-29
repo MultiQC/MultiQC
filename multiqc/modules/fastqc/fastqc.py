@@ -19,7 +19,11 @@ import logging
 import os
 import re
 import zipfile
-from statistics import mean
+try:
+    from statistics import mean
+except ImportError:
+    #Must be Python2...
+    def mean(ns): return float(sum(ns)) / len(ns)
 
 from multiqc import config
 from multiqc.plots import linegraph, bargraph
