@@ -42,7 +42,7 @@ Currently, supported tools include:
 |[Flexbar][flexbar]               |[STAR][star]            |[Samtools][samtools]       |[QUAST][quast]        |
 |[Jellyfish][jellyfish]           |[Tophat][tophat]        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
 |[Skewer][skewer]                 |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]           |[Supernova][Supernova]|
+|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]           |[Supernova][supernova]|
 |[Trimmomatic][trimmomatic]       |                        |                           |[VCFTools][vcftools]  |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -213,3 +213,4 @@ and many others. Thanks for your support!
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [tophat]:         http://multiqc.info/docs/#tophat
 [vcftools]:       http://multiqc.info/docs/#vcftools
+[supernova]:      http://multiqc.info/docs/#supernova
