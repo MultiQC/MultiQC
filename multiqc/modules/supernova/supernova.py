@@ -20,8 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         super(MultiqcModule, self).__init__(name='Supernova', anchor='supernova',
-        href="https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome",
-        info="is a de novo genome assembler for Chromium Linked reads. Developed by 10X Chromium Genomics.")
+        href="https://www.10xgenomics.com/",
+        info="is a de novo genome assembler 10X Genomics linked-reads.")
 
         # Table headers for the data
         self.headers = OrderedDict()
@@ -142,12 +142,15 @@ class MultiqcModule(BaseMultiqcModule):
         reports = OrderedDict()
         summaries = OrderedDict()
         molecules = OrderedDict()
+        kmers = OrderedDict()
         root_summary = {}
 
         for f in self.find_log_files('supernova/report'):
             log.debug("Found report in: {}".format(f['root']))
             sid, data = self.parse_report(f['f'])
             s_name = self.clean_s_name(sid, f['root'])
+            if s_name in reports.keys():
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             reports[s_name] = data
         for f in self.find_log_files('supernova/summary'):
             log.debug("Found summary.json in: {}".format(f['root']))
@@ -161,6 +164,8 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             s_name = self.clean_s_name(sid, f['root'])
+            if s_name in summaries.keys():
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             summaries[s_name] = data
             # The plot json files do not contain sample IDs, sadly. So we need to store it somewhere.
             root_summary[f['root']] = sid 
@@ -173,7 +178,18 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = self.clean_s_name(sid, f['root'])
                     molecules[s_name] = data
             except RuntimeError:
-                log.debug("Could not find sample_id in JSON file in {}".format(f['root']))
+                log.debug("Could not parse JSON file in {}".format(f['root']))
+                continue
+        for f in self.find_log_files('supernova/kmers'):
+            log.debug("Found histogram_kmer_count.json in: {}".format(f['root']))
+            try:
+                if f['root'] in root_summary.keys():
+                    data = self.parse_histogram(f['f'], 400)
+                    sid = root_summary[f['root']]
+                    s_name = self.clean_s_name(sid, f['root'])
+                    kmers[s_name] = data
+            except RuntimeError:
+                log.debug("Could not parse JSON file in {}".format(f['root']))
                 continue
 
         # Data from summary.json supersedes data from report.txt
@@ -204,25 +220,56 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'supernova',
         }
         self.add_section (
-            name = 'Supernova Statistics',
+            name = 'Assembly statistics',
             anchor = 'supernova-full',
             plot = table.plot(reports, full_headers, config_table)
         )
 
-        # Add molecules plot
-        config_molecules = {
-            'id': 'supernova_molecules',
-            'title': 'Supernova Molecule Lengths',
-            'xlab': 'Inferred molecule length (bp)',
-            'ylab': '# molecules',
-            'smooth_points': 300,
-            'smooth_points_sumcounts': True
-        }
-        self.add_section (
-            name = 'Supernova Molecule Lengths',
-            anchor = 'supernova-molecules',
-            plot = linegraph.plot(molecules, config_molecules)
-        )
+        ### Conditional sections
+        if len(molecules) > 0:
+            # Add molecules plot
+            config_molecules = {
+                'id': 'supernova_molecules',
+                'title': 'Supernova Molecule Lengths',
+                'xlab': 'Inferred molecule length (bp)',
+                'ylab': '# molecules',
+                'logswitch': True,
+                'smooth_points': 300,
+                'smooth_points_sumcounts': True
+            }
+            self.add_section (
+                name = 'Molecule Lengths',
+                anchor = 'supernova-molecules',
+                description = 'Shows the inferred molecule lengths of the input 10X library.',
+                helptext = 'Inferred in the "patch" step of the Supernova pipeline. It is worth ' \
+                        'keeping in mind that the mean molecule length from the report is a length-weighted mean. ' \
+                        'See the [source code](https://github.com/10XGenomics/supernova/search?q=lw_mean_mol_len&type=) ' \
+                        'for how this value is calculated.',
+                plot = linegraph.plot(molecules, config_molecules)
+            )
+        if len(kmers) > 0:
+        # Add kmers plot
+            config_kmers = {
+                'id': 'supernova_kmers',
+                'title': 'Supernova Kmer Counts',
+                'xlab': 'Filtered kmer multiplicity',
+                'ylab': 'Counts',
+                'logswitch': True,
+                'smooth_points_sumcounts': False,
+                'xmax': 200 # Emulate the PDF output of supernova
+            }
+            self.add_section (
+                name = 'K-mer counts',
+                anchor = 'supernova-kmers',
+                description = 'Shows the k-mer frequencies of the input data to Supernova (after filtering)',
+                helptext = 'This data is generated from k-merizing the input read data, where the sequences are ' \
+                        'transformed in to the set of all possible sub-sequences of a fixed length of K (Supernova uses K=48). ' \
+                        'The plot shows on the x-axis the multiplicity (i.e. how many times are they repeated) of these k-mers ' \
+                        'and the y-axis the number of k-mers at this level of multiplicity. ' \
+                        'A careful reading of this plot can give some insights into the levels of heterozygosity and repeats ' \
+                        'in the genome that was sequenced and indications if the sequencing experiment was successful.',
+                plot = linegraph.plot(kmers, config_kmers)
+            )
 
 
     def parse_summary(self, content):
@@ -338,7 +385,7 @@ class MultiqcModule(BaseMultiqcModule):
         return (sid, data)
 
 
-    def parse_histogram(self, content):
+    def parse_histogram(self, content, cutoff=None):
 
         try:
             cdict = json.loads(content)
@@ -347,4 +394,4 @@ class MultiqcModule(BaseMultiqcModule):
 
         numbins = cdict['numbins'] + 1
         xdata = [i * cdict['binsize'] for i in range(0, numbins)]
-        return {i: j for (i, j) in zip(xdata, cdict['vals'])}
+        return {i: j for (i, j) in zip(xdata, cdict['vals'][:cutoff])}
