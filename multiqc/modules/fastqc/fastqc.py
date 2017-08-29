@@ -250,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
         # whether or not the reads were actually paired.
         for s_dict in data.values():
             # s_dict is a mapping of heading -> [ read1_val, read2_val ]
-            for k in s_dict:
+            for k in list(s_dict):
                 # percent_duplicates can be empty. If so, prune it out completely
                 if not s_dict[k]:
                     del s_dict[k]
