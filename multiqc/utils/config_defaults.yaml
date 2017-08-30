@@ -237,6 +237,11 @@ module_order:
     - disambiguate:
         module_tag:
             - RNA
+    - deeptools:
+        module_tag:
+            - DNA
+            - RNA
+            - chip
     # Post-alignment processing
     - homer:
         module_tag:
