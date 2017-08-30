@@ -19,6 +19,10 @@ string beginning with the name of your module, anything you like after the first
 #### Module updates:
 * **AfterQC**
     * Handle new output format where JSON summary key changed names.
+* **Picard HsMetrics**
+    * Parsing code can now handle commas for decimal places
+* **QoRTs**
+    * Added new plots, new helptext and updated the module to produce a lot more output.
 
 #### New MultiQC Features:
 * File search refactored to only search for running modules
