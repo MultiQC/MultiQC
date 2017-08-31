@@ -240,7 +240,7 @@ def report_sections(self):
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
             total = total_bases_by_sample[s_name]
             # Make a range of depths that isn't stupidly huge for high coverage expts
-            depth_range = list(range(0, max_x + 1, math.ceil(float(max_x)/400.0)))
+            depth_range = list(range(0, max_x + 1, math.ceil(float(max_x)/400.0) if max_x > 0 else 1))
             # Check that we have our specified coverages in the list
             for c in self.covs:
                 if int(c) not in depth_range:
