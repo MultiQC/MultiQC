@@ -225,7 +225,7 @@ def report_sections(self):
     if len(self.qualimap_bamqc_coverage_hist) > 0:
         # Chew back on histogram to prevent long flat tail
         # (find a sensible max x - lose 1% of longest tail)
-        max_x = 0
+        max_x = 1
         total_bases_by_sample = dict()
         for s_name, d in self.qualimap_bamqc_coverage_hist.items():
             total_bases_by_sample[s_name] = sum(d.values())
