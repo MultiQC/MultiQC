@@ -66,6 +66,7 @@ def parse_reports(self):
         parsed_data = dict()
         s_name = None
         keys = None
+        commadecimal = None
         for l in f['f']:
             # New log starting
             if 'picard.analysis.directed.CalculateHsMetrics' in l or \
@@ -90,8 +91,19 @@ def parse_reports(self):
                         if keys[0] == 'BAIT_SET':
                             j = vals[0]
                         parsed_data[s_name][j] = dict()
+                        # Check that we're not using commas for decimal places
+                        if commadecimal is None:
+                            for i, k in enumerate(keys):
+                                if k.startswith('PCT_'):
+                                    if ',' in vals[i]:
+                                        commadecimal = True
+                                    else:
+                                        commadecimal = False
                         for i, k in enumerate(keys):
                             try:
+                                if commadecimal:
+                                    vals[i] = vals[i].replace('.', '')
+                                    vals[i] = vals[i].replace(',', '.')
                                 parsed_data[s_name][j][k] = float(vals[i])
                             except ValueError:
                                 parsed_data[s_name][j][k] = vals[i]
