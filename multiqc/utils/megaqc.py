@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 import json
+import os
 import requests
 
 from multiqc import config
@@ -55,6 +56,13 @@ def multiqc_dump_json(report):
                 exported_data.update(d)
             except (TypeError, KeyError, AttributeError):
                 log.warn("Couldn't export data key '{}.{}'".format(s, k))
+        # Get the absolute paths of analysis directories
+        exported_data['config_analysis_dir_abs'] = list()
+        for d in exported_data.get('config_analysis_dir', []):
+            try:
+                exported_data['config_analysis_dir_abs'].append(os.path.abspath(d))
+            except:
+                pass
     return exported_data
 
 

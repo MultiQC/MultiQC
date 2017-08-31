@@ -23,6 +23,8 @@ string beginning with the name of your module, anything you like after the first
     * Parsing code can now handle commas for decimal places
 * **QoRTs**
     * Added new plots, new helptext and updated the module to produce a lot more output.
+* **Qualimap BamQC**
+    * Fixed edge-case bug where the refactored coverage plot code could raise an error from the `range` call.
 
 #### New MultiQC Features:
 * File search refactored to only search for running modules
