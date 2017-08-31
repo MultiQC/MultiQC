@@ -27,9 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.headers = OrderedDict()
         self.headers['# Reads'] = {
                 'description': 'number of reads; ideal 800M-1200M for human',
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x / 1000000.0,
                 'suffix': 'M',
                 'scale': 'PuBu',
+                'shared_key': 'read_count'
         }
         self.headers['Read len'] = {
                 'description': 'mean read length after trimming; ideal 140',
@@ -64,13 +65,13 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.headers['Mol size'] = {
                 'description': 'weighted mean molecule size; ideal 50-100',
-                'modify': lambda x: x / 1000,
+                'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
                 'scale': 'BuGn'
         }
         self.headers['Het dist'] = {
                 'description': 'mean distance between heterozygous SNPs',
-                'modify': lambda x: x / 1000,
+                'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
                 'scale': 'BuGn',
                 'hidden': True
@@ -108,33 +109,33 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.headers['Edge N50'] = {
                 'description': 'N50 edge size',
-                'modify': lambda x: x / 1000,
+                'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
                 'scale': 'RdYlGn',
                 'hidden': True
         }
         self.headers['Contig N50'] = {
                 'description': 'N50 contig size',
-                'modify': lambda x: x / 1000,
+                'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
                 'scale': 'RdYlGn',
         }
         self.headers['Phase N50'] = {
                 'description': 'N50 phase block size',
-                'modify': lambda x: x / 1000,
+                'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
                 'scale': 'BuGn',
                 'hidden': True
         }
         self.headers['Scaff N50'] = {
                 'description': 'N50 scaffold size',
-                'modify': lambda x: x / 1000,
+                'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
                 'scale': 'RdYlGn'
         }
         self.headers['Asm size'] = {
                 'description': 'assembly size (only scaffolds >= 10 kb)',
-                'modify': lambda x: x / 1000000,
+                'modify': lambda x: x / 1000000.0,
                 'suffix': 'Mb',
                 'scale': 'YlGn'
         }
@@ -145,6 +146,8 @@ class MultiqcModule(BaseMultiqcModule):
         kmers = OrderedDict()
         root_summary = {}
 
+        ### Parse the input log files
+        # report.txt files
         for f in self.find_log_files('supernova/report'):
             log.debug("Found report in: {}".format(f['root']))
             sid, data = self.parse_report(f['f'])
@@ -152,6 +155,9 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name in reports.keys():
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             reports[s_name] = data
+            self.add_data_source(f, s_name=s_name, section='supernova-table')
+
+        # summary.json files
         for f in self.find_log_files('supernova/summary'):
             log.debug("Found summary.json in: {}".format(f['root']))
             try:
@@ -167,8 +173,11 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name in summaries.keys():
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             summaries[s_name] = data
+            self.add_data_source(f, s_name=s_name, section='supernova-table')
             # The plot json files do not contain sample IDs, sadly. So we need to store it somewhere.
-            root_summary[f['root']] = sid 
+            root_summary[f['root']] = sid
+
+        # histogram_molecules.json files
         for f in self.find_log_files('supernova/molecules'):
             log.debug("Found histogram_molecules.json in: {}".format(f['root']))
             try:
@@ -177,9 +186,12 @@ class MultiqcModule(BaseMultiqcModule):
                     sid = root_summary[f['root']]
                     s_name = self.clean_s_name(sid, f['root'])
                     molecules[s_name] = data
+                    self.add_data_source(f, s_name=s_name, section='supernova-molecules')
             except RuntimeError:
                 log.debug("Could not parse JSON file in {}".format(f['root']))
                 continue
+
+        # histogram_kmer_count.json files
         for f in self.find_log_files('supernova/kmers'):
             log.debug("Found histogram_kmer_count.json in: {}".format(f['root']))
             try:
@@ -188,6 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
                     sid = root_summary[f['root']]
                     s_name = self.clean_s_name(sid, f['root'])
                     kmers[s_name] = data
+                    self.add_data_source(f, s_name=s_name, section='supernova-kmers')
             except RuntimeError:
                 log.debug("Could not parse JSON file in {}".format(f['root']))
                 continue
@@ -200,6 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Ignore cmd-line specified samples
         reports = self.ignore_samples(reports)
         molecules = self.ignore_samples(molecules)
+        kmers = self.ignore_samples(kmers)
 
         if len(reports) == 0:
             log.debug("Could not find any reports in {}".format(config.analysis_dir))
@@ -207,6 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             log.info("Found {} reports".format(len(reports.keys())))
 
+        ### Write the report
         # General stats table and data file
         self.general_stats_addcols(reports, self.headers)
         self.write_data_file(reports, 'multiqc_supernova')
@@ -221,11 +236,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section (
             name = 'Assembly statistics',
-            anchor = 'supernova-full',
+            anchor = 'supernova-table',
             plot = table.plot(reports, full_headers, config_table)
         )
 
-        ### Conditional sections
+        # Conditional sections
         if len(molecules) > 0:
             # Add molecules plot
             config_molecules = {
@@ -241,14 +256,14 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Molecule Lengths',
                 anchor = 'supernova-molecules',
                 description = 'Shows the inferred molecule lengths of the input 10X library.',
-                helptext = 'Inferred in the "patch" step of the Supernova pipeline. It is worth ' \
+                helptext = 'Inferred in the `patch` step of the Supernova pipeline. It is worth ' \
                         'keeping in mind that the mean molecule length from the report is a length-weighted mean. ' \
                         'See the [source code](https://github.com/10XGenomics/supernova/search?q=lw_mean_mol_len&type=) ' \
                         'for how this value is calculated.',
                 plot = linegraph.plot(molecules, config_molecules)
             )
         if len(kmers) > 0:
-        # Add kmers plot
+            # Add kmers plot
             config_kmers = {
                 'id': 'supernova_kmers',
                 'title': 'Supernova Kmer Counts',
@@ -313,7 +328,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for key, value in cdict.items():
             if key in stats.keys():
-                #Some trickery for supernova 1.1.4 compatability
+                # Some trickery for supernova 1.1.4 compatability
                 if key == 'placed_frac':
                     value = value * 100
                 if key == 'valid_bc_perc':
