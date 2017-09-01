@@ -25,6 +25,8 @@ string beginning with the name of your module, anything you like after the first
     * Added new plots, new helptext and updated the module to produce a lot more output.
 * **Qualimap BamQC**
     * Fixed edge-case bug where the refactored coverage plot code could raise an error from the `range` call.
+* Went through all modules and standardised plot titles
+    * All plots should now have a title with the format _Module name: Plot name_
 
 #### New MultiQC Features:
 * File search refactored to only search for running modules
