@@ -166,7 +166,7 @@ def alignment_chart(data):
     # Config for the plot
     plot_conf = {
         'id': 'samtools_alignment_plot',
-        'title': 'Samtools Alignment Scores',
+        'title': 'Samtools stats: Alignment Scores',
         'ylab': '# Reads',
         'cpswitch_counts_label': 'Number of Reads'
     }

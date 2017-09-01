@@ -110,7 +110,7 @@ class IdxstatsReportMixin():
                 xy_keys['y'] = { 'name': ychr if ychr else 'Chromosome Y' }
                 pconfig = {
                     'id': 'samtools-idxstats-xy-plot',
-                    'title': 'Samtools idxstats - chrXY mapped reads',
+                    'title': 'Samtools idxstats: chrXY mapped reads',
                     'ylab': 'Percent of X+Y Reads',
                     'cpswitch_counts_label': 'Number of Reads',
                     'cpswitch_percent_label': 'Percent of X+Y Reads',
@@ -126,7 +126,7 @@ class IdxstatsReportMixin():
             # Mapped reads per chr line plot
             pconfig = {
                 'id': 'samtools-idxstats-mapped-reads-plot',
-                'title': 'Samtools idxstats - Mapped reads per contig',
+                'title': 'Samtools idxstats: Mapped reads per contig',
                 'ylab': '# mapped reads',
                 'xlab': 'Chromosome Name',
                 'categories': True,

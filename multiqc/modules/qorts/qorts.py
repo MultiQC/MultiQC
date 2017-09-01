@@ -8,7 +8,7 @@ import re
 import logging
 
 from multiqc import config
-from multiqc.plots import bargraph, beeswarm
+from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger

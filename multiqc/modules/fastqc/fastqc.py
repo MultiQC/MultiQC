@@ -280,7 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_base_sequence_quality_plot',
-            'title': 'Mean Quality Scores',
+            'title': 'FastQC: Mean Quality Scores',
             'ylab': 'Phred Score',
             'xlab': 'Position (bp)',
             'ymin': 0,
@@ -317,7 +317,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_sequence_quality_scores_plot',
-            'title': 'Per Sequence Quality Scores',
+            'title': 'FastQC: Per Sequence Quality Scores',
             'ylab': 'Count',
             'xlab': 'Mean Sequence Quality (Phred Score)',
             'ymin': 0,
@@ -419,7 +419,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_sequence_gc_content_plot',
-            'title': 'Per Sequence GC Content',
+            'title': 'FastQC: Per Sequence GC Content',
             'ylab': 'Count',
             'xlab': '% GC',
             'ymin': 0,
@@ -511,7 +511,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_base_n_content_plot',
-            'title': 'Per Base N Content',
+            'title': 'FastQC: Per Base N Content',
             'ylab': 'Percentage N-Count',
             'xlab': 'Position in Read (bp)',
             'yCeiling': 100,
@@ -568,7 +568,7 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             pconfig = {
                 'id': 'fastqc_sequence_length_distribution_plot',
-                'title': 'Sequence Length Distribution',
+                'title': 'FastQC: Sequence Length Distribution',
                 'ylab': 'Read Count',
                 'xlab': 'Sequence Length (bp)',
                 'ymin': 0,
@@ -608,7 +608,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_sequence_duplication_levels_plot',
-            'title': 'Sequence Duplication Levels',
+            'title': 'FastQC: Sequence Duplication Levels',
             'categories': True,
             'ylab': '% of Library',
             'xlab': 'Sequence Duplication Level',
@@ -654,7 +654,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'fastqc_overrepresented_sequencesi_plot',
-            'title': 'Overrepresented sequences',
+            'title': 'FastQC: Overrepresented sequences',
             'ymin': 0,
             'yCeiling': 100,
             'yMinRange': 20,
@@ -710,7 +710,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_adapter_content_plot',
-            'title': 'Adapter Content',
+            'title': 'FastQC: Adapter Content',
             'ylab': '% of Sequences',
             'xlab': 'Position (bp)',
             'yCeiling': 100,

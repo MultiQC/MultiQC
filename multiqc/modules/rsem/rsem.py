@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'rsem_assignment_plot',
-            'title': 'RSEM mapped reads',
+            'title': 'RSEM: Mapped reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False

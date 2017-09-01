@@ -89,7 +89,9 @@ def parse_reports(self):
                     self.general_stats_data[s_name].update( self.bam_stat_data[s_name] )
 
         # Make dot plot of counts
-        pconfig = {}
+        pconfig = {
+            'id': 'rseqc_bam_stat'
+        }
         keys = OrderedDict()
         defaults = {
             'min': 0,
@@ -121,7 +123,7 @@ def parse_reports(self):
             name = 'Bam Stat',
             anchor = 'rseqc-bam_stat',
             description = 'All numbers reported in millions.',
-            plot = beeswarm.plot(self.bam_stat_data, keys)
+            plot = beeswarm.plot(self.bam_stat_data, keys, pconfig)
         )
 
     # Return number of samples found

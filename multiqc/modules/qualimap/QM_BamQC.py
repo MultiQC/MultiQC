@@ -302,7 +302,7 @@ def report_sections(self):
             helptext = coverage_histogram_helptext,
             plot = linegraph.plot(self.qualimap_bamqc_coverage_hist, {
                 'id': 'qualimap_coverage_histogram',
-                'title': 'Coverage histogram',
+                'title': 'Qualimap BamQC: Coverage histogram',
                 'ylab': 'Genome bin counts',
                 'xlab': 'Coverage (X)',
                 'ymin': 0,
@@ -344,7 +344,7 @@ def report_sections(self):
             helptext = genome_fraction_helptext,
             plot = linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
-                'title': 'Genome fraction covered by at least X reads',
+                'title': 'Qualimap BamQC: Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',
                 'xlab': 'Coverage (X)',
                 'ymax': 100,
@@ -406,7 +406,7 @@ def report_sections(self):
             helptext = insert_size_helptext,
             plot = linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
                 'id': 'qualimap_insert_size',
-                'title': 'Insert size histogram',
+                'title': 'Qualimap BamQC: Insert size histogram',
                 'ylab': 'Fraction of reads',
                 'xlab': 'Insert Size (bp)',
                 'ymin': 0,
@@ -450,7 +450,7 @@ def report_sections(self):
             desc = 'Each solid line represents the distribution of GC content of mapped reads for a given sample.'
         lg_config = {
             'id': 'qualimap_gc_content',
-            'title': 'GC content distribution',
+            'title': 'Qualimap BamQC: GC content distribution',
             'ylab': 'Fraction of reads',
             'xlab': 'GC content (%)',
             'ymin': 0,

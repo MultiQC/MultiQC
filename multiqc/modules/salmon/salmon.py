@@ -85,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'smooth_points': 500,
             'id': 'salmon_plot',
-            'title': 'Salmon Fragment Length Distribution',
+            'title': 'Salmon: Fragment Length Distribution',
             'ylab': 'Fraction',
             'xlab': 'Fragment Length (bp)',
             'ymin': 0,

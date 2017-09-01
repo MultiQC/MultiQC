@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'afterqc_bad_reads_plot',
-            'title': 'After QC Filtered Reads',
+            'title': 'AfterQC: Filtered Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False,

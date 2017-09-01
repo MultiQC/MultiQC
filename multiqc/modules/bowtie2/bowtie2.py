@@ -216,11 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.bowtie2_data:
             if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_none_halved' in self.bowtie2_data[s_name]:
                 half_warning = '<em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em>'
-
-        description_text = (
-            "The stacked bar plot shows types of alignments and the number of "
-            "reads for each alignments."
-        )
+        description_text = 'This plot shows the number of reads aligning to the reference in different ways.'
 
         # Config for the plot
         config = {
@@ -235,19 +231,15 @@ class MultiqcModule(BaseMultiqcModule):
             sekeys['unpaired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'SE multimapped' }
             sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
             config['id'] = 'bowtie2_se_plot'
-            config['title'] = 'Bowtie 2 SE Alignment Scores'
+            config['title'] = 'Bowtie 2: SE Alignment Scores'
             self.add_section(
                 description = description_text,
-                helptext = (
-                    "There are 3 possible types of alignment:"
-                    "<ul>"
-                    "<li><b>SE Mapped uniquely</b>: Read has only one "
-                    "occurence in the reference genome.</li>"
-                    "<li><b>SE Multimapped</b>: Read has multiple "
-                    "occurence.</li>"
-                    "<li><b>SE No aligned</b>: Read has no occurence.</li>"
-                    "</ul>"
-                ),
+                helptext = '''
+                There are 3 possible types of alignment:
+                * **SE Mapped uniquely**: Read has only one occurence in the reference genome.
+                * **SE Multimapped**: Read has multiple occurence.
+                * **SE No aligned**: Read has no occurence.
+                ''',
                 plot = bargraph.plot(self.bowtie2_data, sekeys, config)
             )
 
@@ -261,25 +253,17 @@ class MultiqcModule(BaseMultiqcModule):
             pekeys['paired_aligned_mate_multi_halved'] = { 'color': '#ffeb75', 'name': 'PE one mate multimapped' }
             pekeys['paired_aligned_mate_none_halved'] = { 'color': '#981919', 'name': 'PE neither mate aligned' }
             config['id'] = 'bowtie2_pe_plot'
-            config['title'] = 'Bowtie 2 PE Alignment Scores'
+            config['title'] = 'Bowtie 2: PE Alignment Scores'
             self.add_section(
                 description = "<br>".join([description_text,half_warning]),
-                helptext = (
-                    "There are 6 possible types of alignment:"
-                    "<ul>"
-                    "<li><b>PE mapped uniquely</b>: Pair has only one "
-                    "occurence in the reference genome.</li>"
-                    "<li><b>PE mapped discordantly uniquely</b>: Pair has "
-                    "only one occurence but not in proper pair.</li>"
-                    "<li><b>PE one mate mapped uniquely</b>: One read of a "
-                    "pair has one occurence.</li>"
-                    "<li><b>PE multimapped</b>: Pair has multiple "
-                    "occurence.</li>"
-                    "<li><b>PE one mate multimapped</b>: One read of a "
-                    "pair has multiple occurence.</li>"
-                    "<li><b>PE neither mate aligned</b>: Pair has no "
-                    "occurence.</li>"
-                    "</ul>"
-                ),
+                helptext = '''
+                There are 6 possible types of alignment:
+                * **PE mapped uniquely**: Pair has only one occurence in the reference genome.
+                * **PE mapped discordantly uniquely**: Pair has only one occurence but not in proper pair.
+                * **PE one mate mapped uniquely**: One read of a pair has one occurence.
+                * **PE multimapped**: Pair has multiple occurence.
+                * **PE one mate multimapped**: One read of a pair has multiple occurence.
+                * **PE neither mate aligned**: Pair has no occurence.
+                ''',
                 plot = bargraph.plot(self.bowtie2_data, pekeys, config)
             )

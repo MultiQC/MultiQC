@@ -113,7 +113,7 @@ config = {
 > for the plot name when exporting. If left unset, the Plot Export panel will call
 > the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
 > Plots should always have titles, especially as they can stand by themselves
-> when exported.
+> when exported. The title should have the format `Modulename: Plot Name`
 
 ### Switching datasets
 It's possible to have single plot with buttons to switch between different
@@ -233,7 +233,7 @@ html_content = linegraph.plot(data, config)
 > for the plot name when exporting. If left unset, the Plot Export panel will call
 > the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
 > Plots should always have titles, especially as they can stand by themselves
-> when exported.
+> when exported. The title should have the format `Modulename: Plot Name`
 
 ### Switching datasets
 You can also have a single plot with buttons to switch between different

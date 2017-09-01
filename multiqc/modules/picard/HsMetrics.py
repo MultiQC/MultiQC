@@ -254,7 +254,7 @@ def _add_target_bases(data):
                 data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
 
     pconfig = { 'id': 'picard_percentage_target_bases',
-                'title': 'Percentage of target bases',
+                'title': 'Picard: Percentage of target bases',
                 'xlab': 'Fold Coverage',
                 'ylab': 'Pct of bases',
                 'ymax': 100,
@@ -280,7 +280,7 @@ def _add_hs_penalty(data):
                     any_non_zero = True
 
     pconfig = { 'id': 'picard_hybrid_selection_penalty',
-                'title': 'Hybrid Selection Penalty',
+                'title': 'Picard: Hybrid Selection Penalty',
                 'xlab': 'Fold Coverage',
                 'ylab': 'Pct of bases',
                 'ymax': 100,
