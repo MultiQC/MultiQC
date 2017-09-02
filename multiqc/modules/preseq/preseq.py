@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif read_length:
                 self.counts_in_1x = genome_size / read_length
         if self.counts_in_1x:
-            data = {k / self.counts_in_1x: v / self.counts_in_1x for k, v in data.items()}
+            data = {k: v / self.counts_in_1x for k, v in data.items()}
             self.axis_label = 'Coverage'
         return data
 
@@ -133,8 +133,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert real counts to coverage
         if self.counts_in_1x is not None:
-            for f, c in real_counts_total.items():
-                real_counts_total[f] = float(c) / self.counts_in_1x
+            # for f, c in real_counts_total.items():
+            #     real_counts_total[f] = float(c) / self.counts_in_1x
             for f, c in real_counts_unique.items():
                 real_counts_unique[f] = float(c) / self.counts_in_1x
         return real_counts_total, real_counts_unique
@@ -195,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
                 precision = '1'
             if max_y > 300:  # when the depth are very high, decimal digits are excessive
                 precision = '0'
-            tt_label = '<b>{point.x:,.' + precision + 'f}x total</b>: {point.y:,.' + precision + 'f}x unique'
+            tt_label = '<b>{point.x:,.0f} total molecules</b>: {point.y:,.' + precision + 'f}x depth'
             label_format = '{value}x'
         else:
             tt_label = '<b>{point.x:,.0f} total molecules</b>: {point.y:,.0f} unique molecules'
@@ -205,12 +205,12 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'preseq_plot',
             'title': 'Preseq: Complexity curve',
             'ylab': 'Unique {}'.format(self.axis_label),
-            'xlab': 'Total {} (including duplicates)'.format(self.axis_label),
+            'xlab': 'Total Molecules (including duplicates)'.format(self.axis_label),
             'ymin': 0,
             'xmin': 0,
             'tt_label': tt_label,
             'yLabelFormat': label_format,
-            'xLabelFormat': label_format,
+            'xLabelFormat': None,
             'extra_series': []
         }
 
@@ -239,7 +239,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plot perfect library as dashed line
         pconfig['extra_series'].append({
-            'name': 'x = y (a perfect library where each read is unique)',
+            'name': 'a perfect library where each read is unique',
             'data': [[0, 0], [max_y, max_y]],
             'dashStyle': 'Dash',
             'lineWidth': 1,
