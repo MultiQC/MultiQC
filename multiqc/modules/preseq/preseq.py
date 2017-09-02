@@ -134,10 +134,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert real counts to coverage
         if self.counts_in_1x is not None:
-            for f, c in real_counts_total.items():
-                real_counts_total[f] = float(c) * config.read_count_multiplier
             for f, c in real_counts_unique.items():
                 real_counts_unique[f] = float(c) / self.counts_in_1x
+        for f, c in real_counts_total.items():
+            real_counts_total[f] = float(c) * config.read_count_multiplier
         return real_counts_total, real_counts_unique
 
 
@@ -243,10 +243,11 @@ class MultiqcModule(BaseMultiqcModule):
                 show 80% of their maximum y-value, to avoid ridiculous scales.</p>"
 
         # Plot perfect library as dashed line
-        max_y_x = max_y if not self.counts_in_1x else max_y / self.counts_in_1x
+        max_yx = max_y * self.counts_in_1x if self.counts_in_1x else max_y
+        max_yx *= config.read_count_multiplier
         pconfig['extra_series'].append({
             'name': 'a perfect library where each read is unique',
-            'data': [[0, 0], [max_y_x, max_y]],
+            'data': [[0, 0], [max_yx, max_y]],
             'dashStyle': 'Dash',
             'lineWidth': 1,
             'color': '#000000',
