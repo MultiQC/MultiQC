@@ -97,7 +97,8 @@ class MultiqcModule(BaseMultiqcModule):
             elif read_length:
                 self.counts_in_1x = genome_size / read_length
         if self.counts_in_1x:
-            data = {k: v / self.counts_in_1x for k, v in data.items()}
+            data = {float(k) * config.read_count_multiplier: v / self.counts_in_1x
+                    for k, v in data.items()}
             self.axis_label = 'Coverage'
         return data
 
@@ -133,8 +134,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert real counts to coverage
         if self.counts_in_1x is not None:
-            # for f, c in real_counts_total.items():
-            #     real_counts_total[f] = float(c) / self.counts_in_1x
+            for f, c in real_counts_total.items():
+                real_counts_total[f] = float(c) * config.read_count_multiplier
             for f, c in real_counts_unique.items():
                 real_counts_unique[f] = float(c) / self.counts_in_1x
         return real_counts_total, real_counts_unique
@@ -188,6 +189,10 @@ class MultiqcModule(BaseMultiqcModule):
         max_y, sn = max((max(d.values()), s) for s, d in self.preseq_data.items())
         description = ''
 
+        x_label_format = '{point.x:,.2f} ' + config.read_count_prefix
+        if config.read_count_multiplier == 1:
+            x_label_format = '{point.x:,.0f}'
+
         # Plot config
         if self.counts_in_1x is not None:
             precision = '2'
@@ -195,11 +200,11 @@ class MultiqcModule(BaseMultiqcModule):
                 precision = '1'
             if max_y > 300:  # when the depth are very high, decimal digits are excessive
                 precision = '0'
-            tt_label = '<b>{point.x:,.0f} total molecules</b>: {point.y:,.' + precision + 'f}x depth'
-            label_format = '{value}x'
+            y_label_format = '{point.y:,.' + precision + 'f}x'
+            tt_label_y = y_label_format + ' depth'
         else:
-            tt_label = '<b>{point.x:,.0f} total molecules</b>: {point.y:,.0f} unique molecules'
-            label_format = None
+            y_label_format = x_label_format.replace('point.x', 'point.y')
+            tt_label_y = y_label_format + ' unique molecules'
 
         pconfig = {
             'id': 'preseq_plot',
@@ -208,9 +213,9 @@ class MultiqcModule(BaseMultiqcModule):
             'xlab': 'Total Molecules (including duplicates)'.format(self.axis_label),
             'ymin': 0,
             'xmin': 0,
-            'tt_label': tt_label,
-            'yLabelFormat': label_format,
-            'xLabelFormat': None,
+            'tt_label': '<b>' + x_label_format + ' total molecules</b>: ' + tt_label_y,
+            'yLabelFormat': y_label_format.replace('point.y', 'value'),
+            'xLabelFormat': x_label_format.replace('point.x', 'value'),
             'extra_series': []
         }
 
@@ -238,9 +243,10 @@ class MultiqcModule(BaseMultiqcModule):
                 show 80% of their maximum y-value, to avoid ridiculous scales.</p>"
 
         # Plot perfect library as dashed line
+        max_y_x = max_y if not self.counts_in_1x else max_y / self.counts_in_1x
         pconfig['extra_series'].append({
             'name': 'a perfect library where each read is unique',
-            'data': [[0, 0], [max_y, max_y]],
+            'data': [[0, 0], [max_y_x, max_y]],
             'dashStyle': 'Dash',
             'lineWidth': 1,
             'color': '#000000',
