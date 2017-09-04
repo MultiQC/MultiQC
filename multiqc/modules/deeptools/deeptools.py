@@ -8,12 +8,13 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 # deepTools modules
 from .bamPEFragmentSize import bamPEFragmentSizeMixin
+from .estimateReadFiltering import estimateReadFilteringMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin):
+class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='deepTools', anchor='deepTools', target='deepTools',
@@ -29,8 +30,12 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin):
         # bamPEFragmentSize
         n['bamPEFragmentSize'] = self.parse_bamPEFragmentSize()
         if n['bamPEFragmentSize'] > 0:
-            log.info("Found {} deepTools 'bamPEFragmentSize --table' outputs".format(n['bamPEFragmentSize']))
-        # computeGCBias
-        #n['computeGCBias'] = self.parse_computeGCBias()
-        #if n['computGCBias'] > 0:
-        #    log.info("Found {} deepTools computeGCBias outputs".format(n['computeGCBias']))
+            log.info("Found {} deepTools 'bamPEFragmentSize --table' samples".format(n['bamPEFragmentSize']))
+        else:
+            log.debug("Could not find any 'bamPEFragmentSize --table' outputs in {}".format(config.analysis_dir))
+        # estimateReadFiltering
+        n['estimateReadFiltering'] = self.parse_estimateReadFiltering()
+        if n['estimateReadFiltering'] > 0:
+            log.info("Found {} deepTools estimateReadFiltering samples".format(n['estimateReadFiltering']))
+        else:
+            log.debug("Could not find any estmateReadFiltering outputs in {}".format(config.analysis_dir))

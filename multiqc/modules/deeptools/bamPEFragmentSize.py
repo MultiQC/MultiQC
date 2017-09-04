@@ -17,7 +17,7 @@ class bamPEFragmentSizeMixin():
         """Find bamPEFragmentSize output. Only the output from --table is supported."""
         self.deeptools_bamPEFragmentSize = dict()
         for f in self.find_log_files('deeptools/bamPEFragmentSize'):
-            parsed_data = self.parseFile(f['f'])
+            parsed_data = self.parseBamPEFile(f['f'], f['fn'])
             for k, v in parsed_data.items():
                 if k in self.deeptools_bamPEFragmentSize:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -106,7 +106,7 @@ class bamPEFragmentSizeMixin():
 
         return len(self.deeptools_bamPEFragmentSize)
 
-    def parseFile(self, f):
+    def parseBamPEFile(self, f, fname):
         d = {}
         firstLine = True
         for line in f.splitlines():
@@ -117,7 +117,7 @@ class bamPEFragmentSizeMixin():
 
             if len(cols) != 37:
                 # This is not really the output from bamPEFragmentSize!
-                log.warning("{} was initially flagged as the tabular output from bamPEFragmentSize, but that seems to not be the case. Skipping...".format(f.name))
+                log.warning("{} was initially flagged as the tabular output from bamPEFragmentSize, but that seems to not be the case. Skipping...".format(fname))
                 return dict()
 
             if cols[0] in d:
@@ -168,6 +168,6 @@ class bamPEFragmentSizeMixin():
                     d[cols[0]]["F99"] = float(cols[18])
             except:
                 # Obviously this isn't really the output from bamPEFragmentSize
-                log.warning("{} was initially flagged as the tabular output from bamPEFragmentSize, but that seems to not be the case. Skipping...".format(f.name))
+                log.warning("{} was initially flagged as the tabular output from bamPEFragmentSize, but that seems to not be the case. Skipping...".format(fname))
                 return dict()
         return d

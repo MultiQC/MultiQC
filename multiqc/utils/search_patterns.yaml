@@ -58,6 +58,9 @@ cutadapt:
 deeptools/bamPEFragmentSize:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
     num_lines: 1
+deeptools/estimateReadFiltering:
+    contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'
+    num_lines: 1
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:
