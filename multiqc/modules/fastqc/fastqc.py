@@ -297,7 +297,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Sequence Quality Histograms',
             anchor = 'fastqc_per_base_sequence_quality',
             description = 'The mean quality value across each base position in the read. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.',
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_blank">FastQC help</a>.',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -335,7 +335,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Per Sequence Quality Scores',
             anchor = 'fastqc_per_sequence_quality_scores',
             description = 'The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.',
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_blank">FastQC help</a>.',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -344,7 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the epic HTML for the FastQC sequence content heatmap """
 
         html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
-                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
+                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_blank">FastQC help</a>.</p>'
 
         # Prep the data
         data = OrderedDict()
@@ -470,7 +470,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
 
         desc = '''The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.
-                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>'''
+                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_blank">FastQC help</a>.</p>'''
         if theoretical_gc is not None:
             # Calculate the count version of the theoretical data based on the largest data store
             max_total = max([sum (d.values()) for d in data.values() ])
@@ -532,7 +532,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Per Base N Content',
             anchor = 'fastqc_per_base_n_content',
             description = 'The percentage of base calls at each position for which an N was called. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.',
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_blank">FastQC help</a>.',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -578,7 +578,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
             desc =  'The distribution of fragment sizes (read lengths) found. \
-                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.'
+                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_blank">FastQC help</a>.'
             self.add_section (
                 name = 'Sequence Length Distribution',
                 anchor = 'fastqc_sequence_length_distribution',
