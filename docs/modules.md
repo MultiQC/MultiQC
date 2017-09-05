@@ -377,7 +377,7 @@ data = {
         'second_col': '66.3%'
     }
 }
-self.general_stats_addcols(data, headers)
+self.general_stats_addcols(data)
 ```
 
 To give more informative table headers and configure things like
