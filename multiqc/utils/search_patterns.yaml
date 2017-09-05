@@ -61,6 +61,12 @@ deeptools/bamPEFragmentSize:
 deeptools/estimateReadFiltering:
     contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'
     num_lines: 1
+deeptools/plotCoverageStdout:
+    contents: 'sample	mean	std	min	25%	50%	75%	max'
+    num_lines: 1
+deeptools/plotCoverageOutRawCounts:
+    contents: "#'chr'	'start'	'end'	'"
+    num_lines: 1
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:

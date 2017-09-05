@@ -7,7 +7,6 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import table, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
