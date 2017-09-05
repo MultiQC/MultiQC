@@ -21,6 +21,8 @@ string beginning with the name of your module, anything you like after the first
     * Handle new output format where JSON summary key changed names.
 * **Picard HsMetrics**
     * Parsing code can now handle commas for decimal places
+* **Preseq**
+    * Updated odd file-search pattern that limited input files to 500kb
 * **QoRTs**
     * Added new plots, new helptext and updated the module to produce a lot more output.
 * **Qualimap BamQC**

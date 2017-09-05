@@ -142,9 +142,9 @@ picard/wgs_metrics:
     shared: true
 preseq:
     - contents: 'EXPECTED_DISTINCT'
-      max_filesize: 500000
+      num_lines: 2
     - contents: 'distinct_reads'
-      max_filesize: 500000
+      num_lines: 2
 preseq/real_counts:
     fn: '*preseq_real_counts*'
 prokka:
