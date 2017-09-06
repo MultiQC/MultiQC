@@ -22,23 +22,26 @@ class TagDirReportMixin():
 
         # Find and parse GC content:
         for f in self.find_log_files('homer/GCcontent', filehandles=True):
+            # Get the s_name from the parent directory
+            s_name = os.path.basename(f['root'])
+            s_name = self.clean_s_name(s_name, f['root'])
             parsed_data = self.parse_GCcontent(f)
             if parsed_data is not None:
-                if f['s_name'] in self.tagdir_data['GCcontent']:
-                    log.debug("Duplicate GCcontent sample log found! Overwriting: {}".format(f['s_name']))
+                if s_name in self.tagdir_data['GCcontent']:
+                    log.debug("Duplicate GCcontent sample log found! Overwriting: {}".format(s_name))
 
-                self.add_data_source(f, f['s_name'], section='GCcontent')
-                self.tagdir_data['GCcontent'][f['s_name']] = parsed_data
+                self.add_data_source(f, s_name, section='GCcontent')
+                self.tagdir_data['GCcontent'][s_name] = parsed_data
 
         ## get esimated genome content distribution:
         for f in self.find_log_files('homer/genomeGCcontent', filehandles=True):
             parsed_data = self.parse_GCcontent(f)
             if parsed_data is not None:
-                if f['s_name'] + "_genome" in self.tagdir_data['GCcontent']:
-                    log.debug("Duplicate genome GCcontent sample log found! Overwriting: {}".format(f['s_name'] + "_genome"))
+                if s_name + "_genome" in self.tagdir_data['GCcontent']:
+                    log.debug("Duplicate genome GCcontent sample log found! Overwriting: {}".format(s_name+ "_genome"))
 
-                self.add_data_source(f, f['s_name'] + "_genome", section='GCcontent')
-                self.tagdir_data['GCcontent'][f['s_name'] + "_genome"] = parsed_data
+                self.add_data_source(f, s_name + "_genome", section='GCcontent')
+                self.tagdir_data['GCcontent'][s_name + "_genome"] = parsed_data
 
 
         ## plot GC content:  
@@ -57,14 +60,16 @@ class TagDirReportMixin():
 
         # Find and parse homer restriction distribution reports
         for f in self.find_log_files('homer/RestrictionDistribution', filehandles=True):
+            s_name = os.path.basename(f['root'])
+            s_name = self.clean_s_name(s_name, f['root'])
             parsed_data = self.parse_restriction_dist(f)
             if parsed_data is not None:
-                if f['s_name'] in self.tagdir_data['restriction']:
-                    log.debug("Duplicate Restriction Distribution sample log found! Overwriting: {}".format(f['s_name']))
+                if s_name in self.tagdir_data['restriction']:
+                    log.debug("Duplicate Restriction Distribution sample log found! Overwriting: {}".format(s_name))
 
-                self.add_data_source(f, f['s_name'], section='restriction')
-                self.tagdir_data['restriction'][f['s_name']] = parsed_data                
-                self.tagdir_data['restriction_norm'][f['s_name']] = self.normalize(parsed_data)        
+                self.add_data_source(f, s_name, section='restriction')
+                self.tagdir_data['restriction'][s_name] = parsed_data                
+                self.tagdir_data['restriction_norm'][s_name] = self.normalize(parsed_data)        
                 
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
 
@@ -83,13 +88,15 @@ class TagDirReportMixin():
 
         # Find and parse homer tag length distribution reports
         for f in self.find_log_files('homer/LengthDistribution', filehandles=True):
+            s_name = os.path.basename(f['root'])
+            s_name = self.clean_s_name(s_name, f['root'])
             parsed_data = self.parse_length_dist(f)
             if parsed_data is not None:
-                if f['s_name'] in self.tagdir_data['length']:
-                    log.debug("Duplicate Length Distribution sample log found! Overwriting: {}".format(f['s_name']))
+                if s_name in self.tagdir_data['length']:
+                    log.debug("Duplicate Length Distribution sample log found! Overwriting: {}".format(s_name))
 
-                self.add_data_source(f, f['s_name'], section='length')
-                self.tagdir_data['length'][f['s_name']] = parsed_data
+                self.add_data_source(f, s_name, section='length')
+                self.tagdir_data['length'][s_name] = parsed_data
         
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
         description = '<p>This plot shows the distribution of tag length.</p>'
@@ -106,22 +113,26 @@ class TagDirReportMixin():
 
         # Find and parse homer taginfo reports
         for f in self.find_log_files('homer/tagInfo', filehandles=True):
+            s_name = os.path.basename(f['root'])
+            s_name = self.clean_s_name(s_name, f['root'])
             parsed_data = self.parse_tag_info_chrs(f)
             if parsed_data is not None:
-                if f['s_name'] in self.tagdir_data['taginfo_total']:
-                    log.debug("Duplicate tag info sample log found! Overwriting: {}".format(f['s_name']))
-                self.add_data_source(f, f['s_name'], section='taginfo')
-                self.tagdir_data['taginfo_total'][f['s_name']] = parsed_data[0]
-                self.tagdir_data['taginfo_total_norm'][f['s_name']] = self.normalize(parsed_data[0])
-                self.tagdir_data['taginfo_uniq'][f['s_name']] = parsed_data[1]
-                self.tagdir_data['taginfo_uniq_norm'][f['s_name']] = self.normalize(parsed_data[1])
+                if s_name in self.tagdir_data['taginfo_total']:
+                    log.debug("Duplicate tag info sample log found! Overwriting: {}".format(s_name))
+                self.add_data_source(f, s_name, section='taginfo')
+                self.tagdir_data['taginfo_total'][s_name] = parsed_data[0]
+                self.tagdir_data['taginfo_total_norm'][s_name] = self.normalize(parsed_data[0])
+                self.tagdir_data['taginfo_uniq'][s_name] = parsed_data[1]
+                self.tagdir_data['taginfo_uniq_norm'][s_name] = self.normalize(parsed_data[1])
 
 
-        for f in self.find_log_files('homer/tagInfo', filehandles=True):                
+        for f in self.find_log_files('homer/tagInfo', filehandles=True):
+            s_name = os.path.basename(f['root'])
+            s_name = self.clean_s_name(s_name, f['root'])                
             ## collected tag_info data for general stats table and store under 'header'
             parsed_data = self.parse_tag_info(f)
             if parsed_data is not None:
-                self.tagdir_data['header'][f['s_name']] = parsed_data
+                self.tagdir_data['header'][s_name] = parsed_data
 
 
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
@@ -139,19 +150,21 @@ class TagDirReportMixin():
 
         # Find and parse homer tag FreqDistribution_1000 reports
         for f in self.find_log_files('homer/FreqDistribution', filehandles=True):
+            s_name = os.path.basename(f['root'])
+            s_name = self.clean_s_name(s_name, f['root'])
             parsed_data = self.parse_FreqDist(f)
             if parsed_data is not None:
-                if f['s_name'] in self.tagdir_data['FreqDistribution']:
-                    log.debug("Duplicate Freq Distribution sample log found! Overwriting: {}".format(f['s_name']))
+                if s_name in self.tagdir_data['FreqDistribution']:
+                    log.debug("Duplicate Freq Distribution sample log found! Overwriting: {}".format(s_name))
 
-                self.add_data_source(f, f['s_name'], section='FreqDistribution')
-                self.tagdir_data['FreqDistribution'][f['s_name']] = parsed_data
+                self.add_data_source(f, s_name, section='FreqDistribution')
+                self.tagdir_data['FreqDistribution'][s_name] = parsed_data
 
 
         
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
         description = '<p>This plot shows the distribution of distance between PE tags.</p>'
-        helptext = '<p>It is expected the the frquency of PE tags decays with increasing distance between the PE tags. This plot gives an idea of the proportion of the proportion of short-range versus long-range interactions.</p>'
+        helptext = '<p>It is expected the the frequency of PE tags decays with increasing distance between the PE tags. This plot gives an idea of the proportion of short-range versus long-range interactions.</p>'
 
         self.add_section (
         name = 'Frequency Distribution',
@@ -513,6 +526,7 @@ class TagDirReportMixin():
 
         """ Make the taginfo.txt plot """
 
+        ## TODO: human chrs on hg19. How will this work with GRCh genome or other, non human, genomes? nice if they are ordered by size
         chrs = ["chr" + str(i) for i in range(1,23)]
         chrs.extend([ "chrX", "chrY", "chrM"])
 
@@ -542,6 +556,7 @@ class TagDirReportMixin():
             'data_labels': ['Reads', 'Percent'],
             'smooth_points': 2000,    
             'smooth_points_sumcounts': False,
+            ## TODO: xLog does seem to work? 
             'xLog' : True,
             'yLog' : True
        }
