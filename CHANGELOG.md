@@ -41,6 +41,7 @@ string beginning with the name of your module, anything you like after the first
 
 #### Bug Fixes
 * Minor `default_dev` directory creation bug squashed
+* Don't prepend the directory separator (`|`) to sample names with `-d` when there are no subdirs
 
 
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
