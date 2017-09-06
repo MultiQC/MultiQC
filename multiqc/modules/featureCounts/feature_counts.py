@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'featureCounts_assignment_plot',
-            'title': 'featureCounts Assignments',
+            'title': 'featureCounts: Assignments',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

@@ -204,7 +204,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'preseq_plot',
-            'title': 'Preseq complexity curve',
+            'title': 'Preseq: Complexity curve',
             'ylab': 'Unique {}'.format(self.axis_label),
             'xlab': 'Total {} (including duplicates)'.format(self.axis_label),
             'ymin': 0,

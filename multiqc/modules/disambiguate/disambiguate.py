@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_config = {
             'id': "disambiguated_alignments",
-            'title': "Disambiguated alignments",
+            'title': "Disambiguate: Alignment Counts",
             'cpswitch_counts_label': "# Reads",
             'ylab': "# Reads"
         }

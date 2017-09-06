@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats['not_aligned'] =   { 'name': 'Not Aligned' }
         config = {
             'id': 'htseq_assignment_plot',
-            'title': 'HTSeq Count Assignments',
+            'title': 'HTSeq: Count Assignments',
             'ylab': '# Reads',
             'hide_zero_cats': False,
             'cpswitch_counts_label': 'Number of Reads'

@@ -269,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'quast_num_contigs',
-            'title': 'Number of Contigs',
+            'title': 'QUAST: Number of Contigs',
             'ylab': '# Contigs',
             'yDecimals': False
         }
@@ -322,6 +322,6 @@ class MultiqcModule(BaseMultiqcModule):
                  for low,high in zip(all_thresholds, all_thresholds[1:]+[None]) ]
 
         if len(cats) > 0:
-            return bargraph.plot(data, cats)
+            return bargraph.plot(data, cats, {'id': 'quast_predicted_genes', 'title': 'QUAST: Number of predicted genes'})
         else:
             return None

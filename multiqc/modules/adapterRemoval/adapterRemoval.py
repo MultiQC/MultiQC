@@ -245,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_retained_chart(self):
 
         pconfig = {
-            'title': 'Discarded Reads',
+            'title': 'Adapter Removal: Discarded Reads',
             'id': 'ar_retained_plot',
             'ylab': '# Reads',
             'hide_zero_cats': False,
@@ -281,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_length_dist_plot(self):
 
         pconfig = {
-            'title': 'Length Distribution',
+            'title': 'Adapter Removal: Length Distribution',
             'id': 'ar_length_count_plot',
             'ylab': 'Counts',
             'xlab': 'read length',

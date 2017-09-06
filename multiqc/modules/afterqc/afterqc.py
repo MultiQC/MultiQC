@@ -61,11 +61,24 @@ class MultiqcModule(BaseMultiqcModule):
         except:
             log.warn("Could not parse AfterQC JSON: '{}'".format(f['fn']))
             return None
+
+        # AfterQC changed the name of their summary key at some point
+        if 'summary' in parsed_json:
+            summaryk = 'summary'
+        elif 'afterqc_main_summary' in parsed_json:
+            summaryk = 'afterqc_main_summary'
+        else:
+            log.warn("AfterQC JSON did not have a 'summary' or 'afterqc_main_summary' key, skipping: '{}'".format(f['fn']))
+            return None
+
         s_name = f['s_name']
         self.add_data_source(f, s_name)
         self.afterqc_data[s_name] = {}
-        for k in parsed_json.get('summary', {}):
-            self.afterqc_data[s_name][k] = float(parsed_json['summary'][k])
+        for k in parsed_json[summaryk]:
+            try:
+                self.afterqc_data[s_name][k] = float(parsed_json[summaryk][k])
+            except ValueError:
+                self.afterqc_data[s_name][k] = parsed_json[summaryk][k]
         try:
             self.afterqc_data[s_name]['pct_good_bases'] = (self.afterqc_data[s_name]['good_bases'] / self.afterqc_data[s_name]['total_bases']) * 100.0
         except KeyError:
@@ -126,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'afterqc_bad_reads_plot',
-            'title': 'After QC Filtered Reads',
+            'title': 'AfterQC: Filtered Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False,

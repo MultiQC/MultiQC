@@ -217,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_config = {
             'id': 'prokka_plot',
-            'title': 'Prokka',
+            'title': 'Prokka: Feature Types',
             'ylab': '# Counts',
             'cpswitch_counts_label': 'Features'
         }

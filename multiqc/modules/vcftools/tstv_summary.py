@@ -2,9 +2,8 @@
 
 """ MultiQC module to parse TsTv by summary output from vcftools TsTv-summary """
 
-import csv
 import logging
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -36,7 +35,7 @@ class TsTvSummaryMixin():
 
         pconfig = {
             'id': 'vcftools_tstv_summary',
-            'title': 'TsTv Summary',
+            'title': 'VCFTools: TsTv Summary',
             'ylab': 'Counts',
         }
 

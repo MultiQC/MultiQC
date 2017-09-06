@@ -166,7 +166,7 @@ def count_variants_barplot(data):
 
     plot_conf = {
         'id': 'gatk_varianteval_variant_plot',
-        'title': 'GATK VariantEval Variant Counts',
+        'title': 'GATK VariantEval: Variant Counts',
         'ylab': '# Variants',
         'cpswitch_counts_label': 'Number of Variants'
     }

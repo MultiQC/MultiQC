@@ -159,7 +159,7 @@ def parse_reports(self):
                 'smooth_points': 500,
                 'smooth_points_sumcounts': [True, False],
                 'id': 'picard_insert_size',
-                'title': 'Insert Size',
+                'title': 'Picard: Insert Size',
                 'ylab': 'Count',
                 'xlab': 'Insert Size (bp)',
                 'xDecimals': False,

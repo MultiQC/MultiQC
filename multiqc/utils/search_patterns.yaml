@@ -199,9 +199,9 @@ picard/wgs_metrics:
     shared: true
 preseq:
     - contents: 'EXPECTED_DISTINCT'
-      max_filesize: 500000
+      num_lines: 2
     - contents: 'distinct_reads'
-      max_filesize: 500000
+      num_lines: 2
 preseq/real_counts:
     fn: '*preseq_real_counts*'
 prokka:
@@ -232,6 +232,8 @@ rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
     fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+rsem:
+    - fn: '*.cnt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
     max_filesize: 500000

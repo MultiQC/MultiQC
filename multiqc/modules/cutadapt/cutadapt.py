@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'cutadapt_plot',
-            'title': 'Lengths of Trimmed Sequences',
+            'title': 'Cutadapt: Lengths of Trimmed Sequences',
             'ylab': 'Counts',
             'xlab': 'Length Trimmed (bp)',
             'xDecimals': False,

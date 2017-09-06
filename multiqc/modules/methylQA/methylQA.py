@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'methylqa_coverage',
-            'title': 'CpG Coverage',
+            'title': 'methylQA: CpG Coverage',
             'categories': True,
             'ylab': 'CpG Counts',
             'xlab': 'Times covered',

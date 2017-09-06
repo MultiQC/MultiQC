@@ -26,10 +26,10 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python --version"
   # Install everything
-  - "%CMD_IN_ENV% conda update --yes --quiet conda"
-  - "%CMD_IN_ENV% conda install --yes --quiet pip jinja2 simplejson pyyaml click numpy matplotlib"
-  - "pip install -q spectra"
-  - "python setup.py -q install"
+  - "%CMD_IN_ENV% conda update --yes conda"
+  - "%CMD_IN_ENV% conda install --yes pip jinja2 simplejson pyyaml click numpy matplotlib"
+  - "pip install spectra"
+  - "python setup.py install"
   # Download and extract test data and get ready
   - "curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip"
   - '7z x test_data.zip -y -o"%APPVEYOR_BUILD_FOLDER%"'
