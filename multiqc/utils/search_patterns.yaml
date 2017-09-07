@@ -70,6 +70,12 @@ deeptools/plotCoverageOutRawCounts:
 deeptools/plotEnrichment:
     contents: 'file	featureType	percent	featureReadCount	totalReadCount'
     num_lines: 1
+deeptools/plotFingerprintOutRawCounts:
+    contents: '#plotFingerprint --outRawCounts'
+    num_lines: 1
+deeptools/plotFingerprintOutQualityMetrics:
+    contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
+    num_lines: 1
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:
