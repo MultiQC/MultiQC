@@ -67,6 +67,9 @@ deeptools/plotCoverageStdout:
 deeptools/plotCoverageOutRawCounts:
     contents: "#'chr'	'start'	'end'	'"
     num_lines: 1
+deeptools/plotEnrichment:
+    contents: 'file	featureType	percent	featureReadCount	totalReadCount'
+    num_lines: 1
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:

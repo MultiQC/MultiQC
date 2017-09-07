@@ -10,12 +10,13 @@ from multiqc.modules.base_module import BaseMultiqcModule
 from .bamPEFragmentSize import bamPEFragmentSizeMixin
 from .estimateReadFiltering import estimateReadFilteringMixin
 from .plotCoverage import plotCoverageMixin
+from .plotEnrichment import plotEnrichmentMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin, plotCoverageMixin):
+class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='deepTools', anchor='deepTools', target='deepTools',
@@ -39,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
         if n['estimateReadFiltering'] > 0:
             log.info("Found {} deepTools estimateReadFiltering samples".format(n['estimateReadFiltering']))
         else:
-            log.debug("Could not find any estmateReadFiltering outputs in {}".format(config.analysis_dir))
+            log.debug("Could not find any estimateReadFiltering outputs in {}".format(config.analysis_dir))
 
         # plotCoverage
         n['plotCoverageStdout'], n['plotCoverageOutRawCounts'] = self.parse_plotCoverage()
@@ -50,3 +51,10 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
             log.info("Found {} and {} deepTools plotCoverage standard output and --outRawCounts samples, respectively{}".format(n['plotCoverageStdout'], n['plotCoverageOutRawCounts'], extra))
         else:
             log.debug("Could not find any plotCoverage outputs in {} (you may need to increase the maximum log file size)".format(config.analysis_dir))
+
+        # plotEnrichment
+        n['plotEnrichment'] = self.parse_plotEnrichment()
+        if n['plotEnrichment'] > 0:
+            log.info("Found {} deepTools plotEnrichment samples".format(n['plotEnrichment']))
+        else:
+            log.debug("Could not find any plotEnrichment outputs in {}".format(config.analysis_dir))
