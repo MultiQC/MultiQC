@@ -7,7 +7,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.plots import linegraph
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -27,23 +27,26 @@ class plotEnrichmentMixin():
                 self.add_data_source(f, section='plotEnrichment')
 
         if len(self.deeptools_plotEnrichment) > 0:
-            dCounts = {}
-            dPercents = {}
-            for k, v in self.deeptools_plotEnrichment.items():
-                dCounts[k] = dict()
-                dPercents[k] = dict()
-                for k2, v2 in v.items():
-                    dCounts[k][k2] = v2['count']
-                    dPercents[k][k2] = v2['percent']
+            dCounts = OrderedDict()
+            dPercents = OrderedDict()
+            for sample, v in self.deeptools_plotEnrichment.items():  # Key is sample
+                for category, v2 in v.items():  # Key is categ
+                    if category not in dCounts:
+                        dCounts[category] = dict()
+                        dPercents[category] = dict()
+                    dCounts[category][sample] = v2['count']
+                    dPercents[category][sample] = v2['percent']
             config = {'data_labels': [
-                          {'name': 'Counts', 'ylab': 'Counts in feature'},
-                          {'name': 'Percents', 'ylab': 'Percent of reads in feature'}],
-                      'ylab': 'Counts',
-                      'categories': True,
-                      'ymin': 0.0}
+                          {'name': 'Counts in features', 'ylab': 'Counts in feature'},
+                          {'name': 'Percents in features', 'ylab': 'Percent of reads in feature'}],
+                      'ylab': 'Counts in feature',
+                      'stacking': None,
+                      'ymin': 0.0,
+                      'tt_percentages': False,
+                      'cpswitch': False}
             self.add_section(name="plotEnrichment",
                              anchor="plotEnrichment",
-                             plot=linegraph.plot([dCounts, dPercents], config))
+                             plot=bargraph.plot([dCounts, dPercents], pconfig=config))
 
         return len(self.deeptools_plotEnrichment)
 
