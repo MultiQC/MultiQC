@@ -38,6 +38,7 @@ MultiQC Modules:
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
     Disambiguate: modules/disambiguate.md
+    deepTools: modules/deeptools.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md

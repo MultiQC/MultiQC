@@ -15,6 +15,9 @@ string beginning with the name of your module, anything you like after the first
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
     * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
     * Module written by [@noirot]
+* [**deepTools**](https://github.com/fidelram/deepTools) - new module!
+    * Parse text output from `bamPEFragmentSize`, `estimateReadFiltering`, `plotCoverage`, `plotEnrichment`, and `plotFingerprint`
+    * Module written by [@dpryan79]
 
 #### Module updates:
 * **AfterQC**
