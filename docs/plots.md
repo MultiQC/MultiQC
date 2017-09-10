@@ -346,7 +346,7 @@ key should match the keys used in the data dictionary, but values can
 customise the output. If you want to specify the order of the columns, you
 must use an `OrderedDict`.
 
-Finally, a the function accepts a third parameter, a config dictionary.
+Finally, the function accepts a config dictionary as a third parameter.
 This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 
