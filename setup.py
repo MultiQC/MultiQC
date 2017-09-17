@@ -109,6 +109,7 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
+            'snpsplit = multiqc.modules.snpsplit:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
