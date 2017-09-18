@@ -85,6 +85,9 @@ hisat2:
 homer/findpeaks:
     contents: '# HOMER Peaks'
     num_lines: 3
+interop/summary:
+    contents_re: '# Version: '
+    contents_re: 'Level\s+,Yield\s+,Projected Yield\s+,Aligned\s+,Error Rate\s+,Intensity C1\s+,%>=Q30\s+'
 jellyfish:
     fn: '*_jf.hist'
 kallisto:
