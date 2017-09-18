@@ -30,22 +30,23 @@ Currently, supported tools include:
 
 
 
-|Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
-|---------------------------------|------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]       |[BUSCO][busco]        |
-|[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
-|[Bcl2fastq][bcl2fastq]           |[Bowtie 2][bowtie-2]    |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HOMER][homer]             |[goleft][goleft]      |
-|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[HTSeq][htseq]             |[methylQA][methylqa]  |
-|[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[MACS2][macs2]             |[Peddy][peddy]        |
-|[leeHom][leehom]                 |[Salmon][salmon]        |[Picard][picard]           |[Preseq][preseq]      |
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]    |[Prokka][prokka]           |[QoRTs][qorts]        |
-|[FastQ Screen][fastq-screen]     |[STAR][star]            |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
-|[Flexbar][flexbar]               |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
-|[Jellyfish][jellyfish]           |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
-|[Skewer][skewer]                 |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[SortMeRNA][sortmerna]           |                        |[RSEM][rsem]               | [VCFTools][vcftools] |
-|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           |                      |
+|Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing            | Post-alignment QC           |
+|---------------------------------|------------------------|--------------------------------------|-----------------------------|
+|[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]                  |[BUSCO][busco]               |
+|[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]                  |[Conpair][conpair]           |
+|[Bcl2fastq][bcl2fastq]           |[Bowtie 2][bowtie-2]    |[GATK][gatk]                          |[Disambiguate][disambiguate] |
+|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HOMER][homer]                        |[goleft][goleft]             |
+|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[HTSeq][htseq]                        |[methylQA][methylqa]         |
+|[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[MACS2][macs2]                        |[Peddy][peddy]               |
+|[leeHom][leehom]                 |[Salmon][salmon]        |[Picard][picard]                      |[Preseq][preseq]             |
+|[InterOp][interop]               |[Slamdunk][slamdunk]    |[Prokka][prokka]                      |[QoRTs][qorts]               |
+|[FastQC][fastqc]                 |[STAR][star]            |[Samblaster][samblaster]              |[Qualimap][qualimap]         |
+|[FastQ Screen][fastq-screen]     |[Tophat][tophat]        |[Samtools][samtools]                  |[QUAST][quast]               |
+|[Flexbar][flexbar]               |                        |[SnpEff][snpeff]                      |[RNA-SeQC][rna_seqc]         |
+|[Jellyfish][jellyfish]           |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]               |
+|[Skewer][skewer]                 |                        |[RSEM][rsem]                          | [VCFTools][vcftools]        |
+|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]                      |                             |
+|[Trimmomatic][trimmomatic]       |                        |                                      |                              
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -158,7 +159,7 @@ Code contributions from:
 [@ehsueh](https://github.com/ehsueh)
 [@noirot](https://github.com/noirot)
 [@wkretzsch](https://github.com/wkretzsch)
-
+[@matthdsm](https://github.com/matthdsm)
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapteremoval
@@ -186,6 +187,7 @@ and many others. Thanks for your support!
 [hisat2]:         http://multiqc.info/docs/#hisat2
 [homer]:          http://multiqc.info/docs/#homer
 [htseq]:          http://multiqc.info/docs/#htseq
+[interop]:        http://multiqc.info/docs/#interop
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [leehom]:         http://multiqc.info/docs/#leehom
 [macs2]:          http://multiqc.info/docs/#macs2
