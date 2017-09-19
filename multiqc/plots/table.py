@@ -129,13 +129,18 @@ def make_table (dt):
                 kname = '{}_{}'.format(header['namespace'], rid)
                 dt.raw_vals[s_name][kname] = val
 
+                if header.get('shared_key', None) == 'read_count' and header.get('modify') is None:
+                    header['modify'] = lambda x: x * config.read_count_multiplier
+                if header.get('shared_key', None) == 'base_count' and header.get('modify') is None:
+                    header['modify'] = lambda x: x * config.base_count_multiplier
+
                 if 'modify' in header and callable(header['modify']):
                     val = header['modify'](val)
 
                 try:
                     dmin = header['dmin']
                     dmax = header['dmax']
-                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
+                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
                     percentage = min(percentage, 100)
                     percentage = max(percentage, 0)
                 except (ZeroDivisionError,ValueError):
