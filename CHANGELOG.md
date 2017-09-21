@@ -19,6 +19,8 @@ string beginning with the name of your module, anything you like after the first
 #### Module updates:
 * **AfterQC**
     * Handle new output format where JSON summary key changed names.
+* **GATK**
+    * New submodule to handle Base Recalibrator stats, written by @wkretzsch
 * **Picard HsMetrics**
     * Parsing code can now handle commas for decimal places
 * **Preseq**
