@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(name="Allele-tagging report",
                              description="Per-sample metrics of how many reads were assigned to each genome.",
-                             helptext="Possible reasons for not assigning reads to a genome are that they aren't aligned ('Unaligned reads'), they don't overlap a SNP ('Reads that could not be assigned to a genome'), they overlap informative SNPs, but don't contain the expected nucleotide for either genome ('Reads did not match either genome'), or the reads overlapped multiple informative SNPs, but there was a conflict in support for assignment to one genome over the other between the SNPs ('Reads contain conflicting SNPs'). Additionally, for bisulfite sequencing data reads overlapping C->T SNPs may be unassigned ('Reads unassigned due to a C->T SNP').",
+                             helptext="Possible reasons for not assigning reads to a genome are that they aren't aligned (`Unaligned reads`), they don't overlap a SNP (`Reads that could not be assigned to a genome`), they overlap informative SNPs, but don't contain the expected nucleotide for either genome (`Reads did not match either genome`), or the reads overlapped multiple informative SNPs, but there was a conflict in support for assignment to one genome over the other between the SNPs (`Reads contain conflicting SNPs`). Additionally, for bisulfite sequencing data reads overlapping C->T SNPs may be unassigned (`Reads unassigned due to a C->T SNP`).",
                              anchor="SNPsplit",
                              plot=bargraph.plot(d, cats))
 

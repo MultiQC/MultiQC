@@ -15,6 +15,8 @@ string beginning with the name of your module, anything you like after the first
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
     * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
     * Module written by [@noirot]
+* [**SNPsplit**](https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/) - new module!
+    * Parse log files and create plots from tagging and sorting reports
 
 #### Module updates:
 * **AfterQC**

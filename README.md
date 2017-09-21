@@ -40,12 +40,13 @@ Currently, supported tools include:
 |[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[MACS2][macs2]             |[Peddy][peddy]        |
 |[leeHom][leehom]                 |[Salmon][salmon]        |[Picard][picard]           |[Preseq][preseq]      |
 |[FastQC][fastqc]                 |[Slamdunk][slamdunk]    |[Prokka][prokka]           |[QoRTs][qorts]        |
-|[FastQ Screen][fastq-screen]     |[STAR][star]            |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
-|[Flexbar][flexbar]               |[Tophat][tophat]        |[Samtools][samtools]       |[QUAST][quast]        |
-|[Jellyfish][jellyfish]           |                        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
-|[Skewer][skewer]                 |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[SortMeRNA][sortmerna]           |                        |[RSEM][rsem]               | [VCFTools][vcftools] |
-|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           |                      |
+|[FastQ Screen][fastq-screen]     |[STAR][star]            |[RSEM][rsem]               |[Qualimap][qualimap]  |
+|[Flexbar][flexbar]               |[Tophat][tophat]        |[Samblaster][samblaster]   |[QUAST][quast]        |
+|[Jellyfish][jellyfish]           |                        |[Samtools][samtools]       |[RNA-SeQC][rna_seqc]  |
+|[Skewer][skewer]                 |                        |[SnpEff][snpeff]           |[RSeQC][rseqc]        |
+|[SortMeRNA][sortmerna]           |                        |[SNPsplit][snpsplit]       |[VCFTools][vcftools]  |
+|[Trimmomatic][trimmomatic]       |                        |[Subread featureCounts][featurecounts]|                      |
+|                                 |                        |[THetA2][theta2]           |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -204,6 +205,7 @@ and many others. Thanks for your support!
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [skewer]:         http://multiqc.info/docs/#skewer
 [snpeff]:         http://multiqc.info/docs/#snpeff
+[snpsplit]:       http://multiqc.info/docs/#snpsplit
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
 [star]:           http://multiqc.info/docs/#star
 [samtools]:       http://multiqc.info/docs/#samtools
