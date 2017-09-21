@@ -74,39 +74,6 @@ class MultiqcModule(BaseMultiqcModule):
                  }
 
         return metrics
-        # readMetricsDone=False
-        # with open(f) as logfile:
-        #     for line in logfile:
-        #         #Read header, store as meta
-        #         if line.startswith("# Version:"):
-        #             self.meta['version'] = line.split(":")[1].strip()
-        #             self.meta['run_id'] = next(logfile).strip()
-        #         #Read readMetrics
-        #         elif line.startswith("Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"):
-        #             header = line.strip().split(",")
-        #             line=next(logfile)
-        #             while line != '\n':
-        #                 values=line.strip().split(",")
-        #                 self.readMetrics[values[0]]={}
-        #                 for idx in range(1,len(values)):
-        #                     self.readMetrics[values[0]][header[idx]]=values[idx]
-        #                 line = next(logfile)
-        #             readMetricsDone=True
-        #         #Read laneMetrics
-        #         elif re.search("Read [0-3]",line.strip()) and readMetricsDone:
-        #             read = line.strip()
-        #             self.laneMetrics[read]={}
-        #             header = next(logfile).strip().split(",")
-        #             line=next(logfile)
-        #             key=0
-        #             while not re.search("Read [0-3]",line.strip()) and not re.search("Extracted:",line.strip()):
-        #                 values=line.strip().split(",")
-        #                 valuesDict={}
-        #                 for idx in range(0,len(values)):
-        #                     valuesDict[header[idx]]=values[idx]
-        #                 self.laneMetrics[read][key]=valuesDict
-        #                 key +=1
-        #                 line = next(logfile)
 
     def parse_index-summary_csv(self,data):
         metrics={'summary':{},
