@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             return False
         log_descr = file_types[file_type]
         if 'not_implemented' in log_descr:
-            log.warning("Can't parse '%s' -- implementation missing", file_type)
+            log.debug("Can't parse '%s' -- implementation missing", file_type)
             return False
 
         cols = log_descr['cols']
