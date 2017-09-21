@@ -50,6 +50,7 @@ setup(
     install_requires = [
         'click',
         'future>0.14.0',
+        'networkx<2',
         'lzstring',
         'jinja2>=2.9',
         'matplotlib',
@@ -59,7 +60,6 @@ setup(
         'requests',
         'simplejson',
         'spectra',
-        'networkx<2',
         'enum34'
     ],
     entry_points = {
