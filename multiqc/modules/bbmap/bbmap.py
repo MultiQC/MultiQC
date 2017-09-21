@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
                           len(self.mod_data[file_type]))
 
                 self.add_section(
-                    name = file_types[file_type]['title']+' ('+file_type+')',
+                    name = file_types[file_type]['title'],
                     anchor =  'bbmap-' + file_type,
                     description = file_types[file_type]['descr'],
                     helptext = file_types[file_type]['help_text'],
@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
             if any(self.mod_data[file_type][sample]['kv'] 
                    for sample in self.mod_data[file_type]):
                 self.add_section(
-                    name = file_types[file_type]['title']+' summary table ('+file_type+')',
+                    name = file_types[file_type]['title']+' summary table',
                     anchor =  'bbmap-' + file_type,
                     description = file_types[file_type]['descr'],
                     helptext = file_types[file_type]['help_text'],
