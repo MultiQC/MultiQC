@@ -378,7 +378,15 @@ module_order:
             - RNA
             - DNA
             - methylation
-    - atropos:
+    - atropos-pre:
+        module_tag:
+            - RNA
+            - DNA
+    - atropos-post:
+        module_tag:
+            - RNA
+            - DNA
+    - atropos-trim:
         module_tag:
             - RNA
             - DNA
