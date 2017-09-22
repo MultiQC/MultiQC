@@ -144,6 +144,22 @@ fn_clean_exts:
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
+    - '.aqhist'
+    - '.bhist'
+    - '.bincov'
+    - '.bqhist'
+    - '.covhist'
+    - '.covstats'
+    - '.ehist'
+    - '.gchist'
+    - '.idhist'
+    - '.ihist'
+    - '.indelhist'
+    - '.lhist'
+    - '.mhist'
+    - '.qahist'
+    - '.qhist'
+    - '.rpkm'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
