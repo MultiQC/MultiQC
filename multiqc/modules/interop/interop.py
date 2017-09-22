@@ -17,55 +17,53 @@ class MultiqcModule(BaseMultiqcModule):
         info="The Illumina InterOp libraries are a set of common routines used for reading and writing InterOp metric files.")
 
         log = logging.getLogger(__name__)
+        summaryFiles, indexSummaryFiles = self.find_log_files('interop/summary',filehandles=True), self.find_log_files('interop/index-summary',filehandles=True)
+        self.runSummary,self.indexSummary = {}, {}
 
-        # Find all files for mymod
-        for f in self.find_log_files('interop/summary'):
+        for f in summaryFiles:
             log.debug( "Run Summary File Found: {}".format(f['fn'] ))      # Filename
-            self.parse_summary_csv(f['f'])
             self.runSummary = self.parse_summary_csv(f['f'])
 
-        #Create report Sections
-        self.add_section (
-            name = 'Run Metrics Summary',
-            anchor = 'interop-runmetrics-summary',
-            description = 'Run metrics summary',
-            plot = self.run_metrics_summary_table(self.runSummary['summary'])
-        )
-        self.add_section (
-            name = 'Run & Lane Metrics',
-            anchor = 'interop-runmetrics-details',
-            description = 'Run & Lane metrics details',
-            plot = self.run_metrics_details_table(self.runSummary['details'])
-            )
+            #Create report Sections
+            self.add_section (
+                name = '{} - Run Metrics Summary'.format(f['s_name']),
+                anchor = 'interop-runmetrics-summary',
+                plot = self.run_metrics_summary_table(self.runSummary['summary'])
+                )
+            self.add_section (
+                name = '{} - Run & Lane Metric Details'.format(f['s_name']),
+                anchor = 'interop-runmetrics-details',
+                plot = self.run_metrics_details_table(self.runSummary['details'])
+                )
 
+        for f in indexSummaryFiles:
+            log.debug( "Index Summary File Found: {}".format(f['s_name'] ))      # Filename
+            self.indexSummary = self.parse_index_summary_csv(f['f'])
 
-        for f in self.find_log_files('interop/index-summary'):
-            log.debug( "Index Summary File Found: {}".format(f['fn'] ))      # Filename
-
-        self.add_section (
-            name = 'Indexing QC Metrics',
-            anchor = 'interop-indexmetrics-summary',
-            description = 'Metrics about each lane',
-            plot = self.index_metrics_summary_table(self.indexSummary['summary'])
-            )
-        self.add_section (
-            name = 'Indexing QC Metrics',
-            anchor = 'interop-indexmetrics-details',
-            description = 'Metrics about each lane',
-            plot = self.index_metrics_details_table(self.indexSummary['details'])
-            )
+            self.add_section (
+                name = 'Indexing QC Metrics',
+                anchor = 'interop-indexmetrics-summary',
+                description = 'Metrics about each lane',
+                plot = self.index_metrics_summary_table(self.indexSummary['summary'])
+                )
+            self.add_section (
+                name = 'Indexing QC Metrics',
+                anchor = 'interop-indexmetrics-details',
+                description = 'Metrics about each lane',
+                plot = self.index_metrics_details_table(self.indexSummary['details'])
+                )
 
     def parse_summary_csv(self,f):
         '''
         Required data structure
         data = {
-            'Lane 1': {
-                'var1': val1,
-                'var2': val2,
-            },
-            'Lane 2': {
-                'aligned': 1275,
-                'not_aligned': 7328,
+            'Read 1': {
+                        surface: {},
+                        },
+                        surface: {},
+                        },
+            'Read 2': {},
+            ...
             }
         }
         '''
@@ -73,9 +71,62 @@ class MultiqcModule(BaseMultiqcModule):
                  'details':{}
                  }
 
+        header = []
+        summary = {}
+        details = {}
+        section = None
+        read = None
+        for line in f:
+            line = line.strip()
+            #assume fixed file format
+            #find summary header
+            if line.startswith("Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"):
+                #set section to summary
+                section = "summary"
+                header = line.split(",")
+                continue
+            if section == "summary":
+                data = line.split(",")
+                #process summary
+                summary[data[0]]={}
+                for idx in range(1,len(data)):
+                    summary[data[0]][header[idx]]=data[idx]
+                if line.startswith("Total"):
+                    section = None
+                    log.debug("Finished summary")
+                continue
+            if line.startswith("Read") and (section is None or section == "details"):
+                #set section to details
+                section = "details"
+                read = line
+                details[read]=[]
+                continue
+            if line.startswith("Lane,Surface,Tiles,Density,Cluster") and section == "details":
+                #get details header
+                header = line.split(",")
+                continue
+            if section == "details":
+                if line.startswith("Extracted: "):
+                    section = "finish"
+                    log.debug("Finished details")
+                    continue
+                data = line.split(",")
+                #process summary
+                linedata={}
+                for idx in range(0,len(data)):
+                    linedata[header[idx]]=data[idx]
+                details[read].append(linedata)
+                continue
+
+        # import pprint
+        # pp = pprint.PrettyPrinter(indent=4)
+        # log.debug(pp.pprint(details))
+
+        metrics['summary']=summary
+        metrics['details']=details
         return metrics
 
-    def parse_index-summary_csv(self,data):
+    def parse_index_summary_csv(self,data):
         metrics={'summary':{},
                  'details':{}
                  }
@@ -112,7 +163,8 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'interop-runmetrics-summary-table',
             'table_title': 'Run metrics summary',
             'col1_header': '',
-            'no_beeswarm': True
+            'no_beeswarm': True,
+            'scale': False
         }
         return table.plot(data, headers, table_config)
 
@@ -172,15 +224,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Error (35)'] = {
             'title': 'Error Rate 35 Cycles (%)',
-            'description': 'The calculated error rate for cycles 1–35.'
+            'description': 'The calculated error rate for cycles 1-35.'
         }
         headers['Error (75)'] = {
             'title': 'Error Rate 75 Cycles (%)',
-            'description': 'The calculated error rate for cycles 1–75.'
+            'description': 'The calculated error rate for cycles 1-75.'
         }
         headers['Error (100)'] = {
             'title': 'Error Rate 100 Cycles (%)',
-            'description': 'The calculated error rate for cycles 1–100.'
+            'description': 'The calculated error rate for cycles 1-100.'
         }
         headers['Intensity C1'] = {
             'title': 'Intensity Cycle 1',
@@ -191,8 +243,9 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'interop',
             'id': 'interop-runmetrics-detail-table',
             'table_title': 'Sequencing Lane Statistics',
-            'col1_header': 'Run & Lane metrics details',
-            'no_beeswarm': True
+            'col1_header': '',
+            'no_beeswarm': True,
+            'scale': False
         }
         return table.plot(data, headers, table_config)
 
@@ -227,7 +280,8 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'interop-indexmetrics-summary-table',
             'table_title': 'Index Read Statistics Summary',
             'col1_header': '',
-            'no_beeswarm': True
+            'no_beeswarm': True,
+            'scale': False
         }
         return table.plot(data, headers, table_config)
 
@@ -254,6 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'interop-indexmetrics-details-table',
             'table_title': 'Index Read Statistics Details',
             'col1_header': '',
-            'no_beeswarm': True
+            'no_beeswarm': True,
+            'scale': False
         }
         return table.plot(data, headers, table_config)
