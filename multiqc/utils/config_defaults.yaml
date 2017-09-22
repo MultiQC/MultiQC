@@ -378,3 +378,7 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - atropos:
+        module_tag:
+            - RNA
+            - DNA
