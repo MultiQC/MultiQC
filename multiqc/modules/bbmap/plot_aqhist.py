@@ -52,9 +52,10 @@ def plot_aqhist(samples, file_type, **plot_args):
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
             'xmax': xmax,
+            'xlab': 'Quality score',
             'data_labels': [
-                {'name': 'Count data', 'ylab': 'Count'},
-                {'name': 'Proportion data', 'ylab': 'Proportion'},
+                {'name': 'Count data', 'ylab': 'Read count'},
+                {'name': 'Proportion data', 'ylab': 'Proportion of reads'},
             ]
 
     }
