@@ -5,6 +5,7 @@ from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
 from .plot_bqhist import plot_bqhist
+from .plot_covhist import plot_covhist
 from .plot_idhist import plot_idhist
 from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
@@ -84,10 +85,12 @@ file_types = {
     },
     'covhist': {
         'title': 'Coverage histogram',
-        'descr': 'Histogram of # occurrences of each depth level.',
+        'descr': 'Histogram of # occurrences of each depth level (covhist). '
+                 'Note that lines have been smoothed to 400 points; '
+                 'higher resolution data might be available in the original data source.',
         'help_text': 'Placeholder help text.',
         'cols': odict['Coverage':int, 'numBases':int],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_covhist,
         'plot_params': {
             'yLog': True,
         }
