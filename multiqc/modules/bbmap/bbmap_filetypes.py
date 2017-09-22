@@ -125,7 +125,10 @@ file_types = {
         'help_text': 'Placeholder help text.',
         'cols': odict['Errors':int, 'Count':int ],
         'plot_func': plot_basic_hist,
-        'plot_params': {}
+        'plot_params': {
+            'xlab': 'Errors',
+            'ylab': 'Read count'
+        }
     },
     'gchist' : {
         'title': 'GC content',
@@ -134,7 +137,10 @@ file_types = {
         'kvrows': ['Mean', 'Median', 'Mode', 'STDev'],
         'cols': odict['GC':float, 'Count':int ],
         'plot_func': plot_basic_hist,
-        'plot_params': {}
+        'plot_params': {
+            'xlab': 'Proportion GC',
+            'ylab': 'Read count'
+        }
     },
     'idhist': {
         'title': 'Identity histogram',
@@ -175,7 +181,10 @@ file_types = {
         'help_text': 'Placeholder help text.',
         'cols': odict['Length':int, 'Count':int ],
         'plot_func': plot_basic_hist,
-        'plot_params': {}
+        'plot_params': {
+            'xlab': 'Read length',
+            'ylab': 'Read count'
+        }
     },
     'mhist': {
         'title': 'Match, sub, del, and ins rates',
