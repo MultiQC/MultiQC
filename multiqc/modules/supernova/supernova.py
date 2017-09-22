@@ -8,9 +8,8 @@ import logging
 import re
 import json
 from copy import deepcopy
-
 from multiqc import config
-from multiqc.plots import table, linegraph
+from multiqc.plots import table, linegraph, bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -23,35 +22,86 @@ class MultiqcModule(BaseMultiqcModule):
         href="https://www.10xgenomics.com/",
         info="is a de novo genome assembler 10X Genomics linked-reads.")
 
-        # Table headers for the data
+        # Table headers for the General data
+        self.gheaders = OrderedDict()
+
+
+        # Headers for the supernova Table
         self.headers = OrderedDict()
-        self.headers['# Reads'] = {
-                'description': 'number of reads; ideal 800M-1200M for human',
+        self.headers['Asm size'] = {
+                'description': 'assembly size (in megabases) ;only scaffolds >= 10 kb',
                 'modify': lambda x: x / 1000000.0,
-                'suffix': 'M',
-                'scale': 'PuBu',
-                'shared_key': 'read_count'
+                'suffix': 'Mb',
+                'scale': 'YlGn'
+        }
+        self.headers['# Long scaffs'] = {
+                'description': 'number of scaffolds >= 10 kb',
+                'scale': 'YlGn',
+                'format': '{:,.0f}',
+        }
+        self.headers['Scaff N50'] = {
+                'description': 'N50 scaffold size (in kilobases)',
+                'modify': lambda x: x / 1000.0,
+                'suffix': 'Kb',
+                'scale': 'RdYlGn'
+        }
+        self.headers['Phase N50'] = {
+                'description': 'N50 phase block size (in kilobases)',
+                'modify': lambda x: x / 1000.0,
+                'suffix': 'Kb',
+                'scale': 'RdYlGn',
+                'hidden': True
+        }
+        self.headers['Contig N50'] = {
+                'description': 'N50 contig size (in kilobases)',
+                'modify': lambda x: x / 1000.0,
+                'suffix': 'Kb',
+                'scale': 'RdYlGn',
+                'hidden': True
+        }
+        self.headers['Edge N50'] = {
+                'description': 'N50 edge size (in kilobases)',
+                'modify': lambda x: x / 1000.0,
+                'suffix': 'Kb',
+                'scale': 'RdYlGn',
+                'hidden': True
+        }
+        self.headers['Mol size'] = {
+                'description': 'weighted mean molecule size (in kilobases); ideal 50-100',
+                'modify': lambda x: x / 1000.0,
+                'suffix': 'Kb',
+                'scale': 'BuGn'
         }
         self.headers['Read len'] = {
-                'description': 'mean read length after trimming; ideal 140',
+                'description': 'mean read length (in bases) after trimming; ideal 140',
                 'suffix': 'b',
                 'scale': 'PuBu',
                 'format': '{:,.0f}',
                 'hidden': True
+        }
+        self.headers['# Reads'] = {
+                'description': 'number of reads (in millions); ideal 800M-1200M for human',
+                'modify': lambda x: x / 1000000.0,
+                'suffix': 'M',
+                'scale': 'PuBu',
         }
         self.headers['Coverage'] = {
                 'description': 'effective read coverage; ideal ~42 for nominal 56x cov',
                 'suffix': 'x',
                 'scale': 'PuBu'
         }
+        self.headers['% Dup'] = {
+                'description': 'fraction of reads that are duplicates',
+                'suffix': '%',
+                'scale': 'OrRd',
+        }
         self.headers['% R2 Q30'] = {
                 'description': 'fraction of Q30 bases in read 2; ideal 75-85',
                 'suffix': '%',
                 'scale': 'OrRd',
-                'hidden': True
         }
         self.headers['Insert size'] = {
-                'description': 'median insert size; ideal 0.35-0.40',
+                'description': 'median insert size (in bases); ideal 0.35-0.40',
                 'suffix': 'b',
                 'scale': 'OrRd',
                 'format': '{:,.0f}',
@@ -63,81 +113,28 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'OrRd',
                 'hidden': True
         }
-        self.headers['Mol size'] = {
-                'description': 'weighted mean molecule size; ideal 50-100',
-                'modify': lambda x: x / 1000.0,
-                'suffix': 'Kb',
-                'scale': 'BuGn'
-        }
         self.headers['Het dist'] = {
-                'description': 'mean distance between heterozygous SNPs',
+                'description': 'mean distance between heterozygous SNPs (in kilobases)',
                 'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
                 'scale': 'BuGn',
-                'hidden': True
         }
         self.headers['% missing BC'] = {
                 'description': 'fraction of reads that are not barcoded',
                 'suffix': '%',
                 'scale': 'BuGn',
-                'hidden': True
         }
         self.headers['Barcode N50'] = {
-                'description': 'N50 reads per barcode',
+                'description': 'N50 reads per barcode (in bases)',
                 'suffix': 'b',
                 'scale': 'BuGn',
                 'format': '{:,.0f}',
-                'hidden': True
-        }
-        self.headers['% Dup'] = {
-                'description': 'fraction of reads that are duplicates',
-                'suffix': '%',
-                'scale': 'OrRd',
-                'hidden': True
         }
         self.headers['% Phased'] = {
                 'description': 'nonduplicate and phased reads; ideal 45-50',
                 'suffix': '%',
                 'scale': 'BuGn',
                 'hidden': True
-        }
-        self.headers['# Long scaffs'] = {
-                'description': 'number of scaffolds >= 10 kb',
-                'scale': 'YlGn',
-                'format': '{:,.0f}',
-                'hidden': True
-        }
-        self.headers['Edge N50'] = {
-                'description': 'N50 edge size',
-                'modify': lambda x: x / 1000.0,
-                'suffix': 'Kb',
-                'scale': 'RdYlGn',
-                'hidden': True
-        }
-        self.headers['Contig N50'] = {
-                'description': 'N50 contig size',
-                'modify': lambda x: x / 1000.0,
-                'suffix': 'Kb',
-                'scale': 'RdYlGn',
-        }
-        self.headers['Phase N50'] = {
-                'description': 'N50 phase block size',
-                'modify': lambda x: x / 1000.0,
-                'suffix': 'Kb',
-                'scale': 'BuGn',
-                'hidden': True
-        }
-        self.headers['Scaff N50'] = {
-                'description': 'N50 scaffold size',
-                'modify': lambda x: x / 1000.0,
-                'suffix': 'Kb',
-                'scale': 'RdYlGn'
-        }
-        self.headers['Asm size'] = {
-                'description': 'assembly size (only scaffolds >= 10 kb)',
-                'modify': lambda x: x / 1000000.0,
-                'suffix': 'Mb',
-                'scale': 'YlGn'
         }
 
         reports = OrderedDict()
@@ -222,14 +219,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} reports".format(len(reports.keys())))
 
         ### Write the report
-        # General stats table and data file
-        self.general_stats_addcols(reports, self.headers)
         self.write_data_file(reports, 'multiqc_supernova')
 
-        # Add supernova section with all the data
-        full_headers = deepcopy(self.headers)
-        for header,val in full_headers.items():
-            val['hidden'] = False
         config_table = {
             'id': 'supernova_table',
             'namespace': 'supernova',
@@ -237,20 +228,38 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Assembly statistics',
             anchor = 'supernova-table',
-            plot = table.plot(reports, full_headers, config_table)
+            plot = table.plot(reports, self.headers, config_table)
+        )
+
+
+        # N50 barcharts
+        n50_cats = ['Scaff N50', 'Contig N50', 'Edge N50', 'Phase N50']
+        config_n50 = {
+                'id': 'supernova_n50',
+                'title': 'Supernova N50 statistics',
+                'cpswitch': False,
+                'stacking': None,
+                'data_labels': n50_cats
+        }
+        self.add_section (
+            name = 'N50 statistics',
+            anchor = 'supernova-n50',
+            plot = bargraph.plot(reports, n50_cats, config_n50)
         )
 
         # Conditional sections
         if len(molecules) > 0:
+            # Remove the long tail
+            max_x = self.trim_tail(molecules, 100000)
             # Add molecules plot
             config_molecules = {
                 'id': 'supernova_molecules',
                 'title': 'Supernova Molecule Lengths',
                 'xlab': 'Inferred molecule length (bp)',
                 'ylab': '# molecules',
-                'logswitch': True,
                 'smooth_points': 300,
-                'smooth_points_sumcounts': True
+                'smooth_points_sumcounts': True,
+                'xmax': max_x
             }
             self.add_section (
                 name = 'Molecule Lengths',
@@ -263,15 +272,17 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(molecules, config_molecules)
             )
         if len(kmers) > 0:
+            # Remove the long tail
+            max_x = self.trim_tail(kmers, 50)
+
             # Add kmers plot
             config_kmers = {
                 'id': 'supernova_kmers',
                 'title': 'Supernova Kmer Counts',
                 'xlab': 'Filtered kmer multiplicity',
                 'ylab': 'Counts',
-                'logswitch': True,
                 'smooth_points_sumcounts': False,
-                'xmax': 200 # Emulate the PDF output of supernova
+                'xmax': max_x
             }
             self.add_section (
                 name = 'K-mer counts',
@@ -410,3 +421,20 @@ class MultiqcModule(BaseMultiqcModule):
         numbins = cdict['numbins'] + 1
         xdata = [i * cdict['binsize'] for i in range(0, numbins)]
         return {i: j for (i, j) in zip(xdata, cdict['vals'][:cutoff])}
+
+
+    def trim_tail(self, plot, min_x=50, pct=0.99):
+            join_plot = {}
+            cuml_plot = {}
+            for sample, plot_data in plot.items():
+                for key, value in plot_data.items():
+                    join_plot[key] = join_plot.get(key, 0) + value
+            max_i = 0
+            for key in join_plot.keys():
+                max_i += join_plot[key]
+                cuml_plot[key] = max_i
+            max_x = [i for i,j in cuml_plot.items() if j <= max_i * pct][-1]
+            # xlim = {, 50} at minimum
+            if max_x < min_x:
+                max_x = min_x
+            return max_x
