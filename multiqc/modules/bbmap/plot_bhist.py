@@ -35,6 +35,8 @@ def plot_bhist(samples, file_type, **plot_args):
     plot_params = {
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
+            'xlab': 'Read position',
+            'ylab': 'Proportion',
     }
     plot_params.update(plot_args['plot_params'])
     plot = linegraph.plot(

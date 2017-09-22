@@ -34,7 +34,9 @@ def plot_ihist(samples, file_type, **plot_args):
     plot_params = {
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
-            'xmax': xmax
+            'xmax': xmax,
+            'xlab': 'Insert size',
+            'ylab': 'Read count'
     }
     plot_params.update(plot_args['plot_params'])
     plot = linegraph.plot(
