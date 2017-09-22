@@ -7,6 +7,7 @@ from .plot_bhist import plot_bhist
 from .plot_bqhist import plot_bqhist
 from .plot_covhist import plot_covhist
 from .plot_idhist import plot_idhist
+from .plot_ihist import plot_ihist
 from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
@@ -151,11 +152,13 @@ file_types = {
     },
     'ihist': {
         'title': 'Insert sizes',
-        'descr': 'Histogram of insert sizes, for paired reads (ihist).',
+        'descr': 'Histogram of insert sizes, for paired reads (ihist). '
+                 'Plotted data has been cut off at 99% to prevent long tails; '
+                 'Complete data available in original source files.',
         'help_text': 'Placeholder help text.',
         'kvrows': ['Mean', 'Median', 'STDev', 'PercentOfPairs'],
         'cols': odict['InsertSize':int, 'Count':int ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_ihist,
         'plot_params': {}
     },
     'indelhist': {
