@@ -3,7 +3,7 @@ from itertools import chain
 from multiqc.plots import linegraph
 
 def plot_covhist(samples, file_type, **plot_args):
-    """ Create line graph plot for basic histogram data for 'file_type'.
+    """ Create line graph plot for basic histogram data for 'covhist'.
 
     The 'samples' parameter could be from the bbmap mod_data dictionary:
     samples = bbmap.MultiqcModule.mod_data[file_type]
