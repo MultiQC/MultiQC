@@ -123,6 +123,10 @@ $(function () {
       if(ylab != undefined){
         $('#'+target).highcharts().yAxis[0].setTitle({ text: ylab });
       }
+      var xlab = $(this).data('xlab');
+      if(xlab != undefined){
+        $('#'+target).highcharts().xAxis[0].setTitle({ text: xlab });
+      }
     }
     // Switch to log10 axis
     if(action == 'set_log'){
