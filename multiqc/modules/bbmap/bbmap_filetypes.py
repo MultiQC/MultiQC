@@ -72,7 +72,8 @@ file_types = {
     },
     'bqhist': {
         'title': 'Base quality',
-        'descr': 'Quality histogram designed for box plots (bqhist).',
+        'descr': 'Quality histogram designed for box plots (bqhist). '
+                 'Refer to original source files for complete boxplot data.',
         'help_text': 'Placeholder help text.',
         'cols': odict[
             'BaseNum':int,
