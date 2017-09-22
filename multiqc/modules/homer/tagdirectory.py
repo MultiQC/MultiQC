@@ -17,15 +17,24 @@ class TagDirReportMixin():
 
     def homer_tagdirectory(self):
         """ Find HOMER tagdirectory logs and parse their data """
+        self.parse_gc_content()
+        self.parse_re_dist()
+        self.parse_tagLength_dist()
+        self.parse_tagInfo_data()
+        self.parse_FreqDistribution_data()
+        self.homer_stats_table_tagInfo()
+
+        return sum([len(v) for v in self.tagdir_data.values()])
 
 
-
+    def parse_gc_content(self):
+        """parses and plots GC content and genome GC content files"""
         # Find and parse GC content:
         for f in self.find_log_files('homer/GCcontent', filehandles=True):
             # Get the s_name from the parent directory
             s_name = os.path.basename(f['root'])
             s_name = self.clean_s_name(s_name, f['root'])
-            parsed_data = self.parse_GCcontent(f)
+            parsed_data = self.parse_twoCol_file(f)
             if parsed_data is not None:
                 if s_name in self.tagdir_data['GCcontent']:
                     log.debug("Duplicate GCcontent sample log found! Overwriting: {}".format(s_name))
@@ -35,7 +44,7 @@ class TagDirReportMixin():
 
         ## get esimated genome content distribution:
         for f in self.find_log_files('homer/genomeGCcontent', filehandles=True):
-            parsed_data = self.parse_GCcontent(f)
+            parsed_data = self.parse_twoCol_file(f)
             if parsed_data is not None:
                 if s_name + "_genome" in self.tagdir_data['GCcontent']:
                     log.debug("Duplicate genome GCcontent sample log found! Overwriting: {}".format(s_name+ "_genome"))
@@ -46,8 +55,8 @@ class TagDirReportMixin():
 
         ## plot GC content:  
         self.tagdir_data = self.ignore_samples(self.tagdir_data) 
-        description = '<p>This plot shows the distribution of GC content.</p>'
-        helptext = '<p>This is a good quality control for GC bias</p>'
+        description = 'This plot shows the distribution of GC content.'
+        helptext = 'This is a good quality control for GC bias'
 
         self.add_section (
             name = 'Per Sequence GC Content',
@@ -57,7 +66,8 @@ class TagDirReportMixin():
         )
 
 
-
+    def parse_re_dist(self):
+        """parses and plots restriction distribution files"""
         # Find and parse homer restriction distribution reports
         for f in self.find_log_files('homer/RestrictionDistribution', filehandles=True):
             s_name = os.path.basename(f['root'])
@@ -73,8 +83,8 @@ class TagDirReportMixin():
                 
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
 
-        description = '<p>This plot shows the distribution of tags around restriction enzyme cut sites.</p>'
-        helptext = '<p>Hi-C data often involves the digestion of DNA using a restriction enzyme. A good quality control for the experiment is the centering of reads around the restriction enzyme cut site.</p>'
+        description = 'This plot shows the distribution of tags around restriction enzyme cut sites.'
+        helptext = 'Hi-C data often involves the digestion of DNA using a restriction enzyme. A good quality control for the experiment is the centering of reads around the restriction enzyme cut site.'
         
         self.add_section (
             name = 'PE Tag Distribution Around Restriction Sites',
@@ -83,9 +93,10 @@ class TagDirReportMixin():
             helptext = helptext,
             plot = self.restriction_dist_chart()
         )
-        
-        
-
+    
+    
+    def parse_tagLength_dist(self):
+        """parses and plots tag length distribution files"""
         # Find and parse homer tag length distribution reports
         for f in self.find_log_files('homer/LengthDistribution', filehandles=True):
             s_name = os.path.basename(f['root'])
@@ -99,8 +110,8 @@ class TagDirReportMixin():
                 self.tagdir_data['length'][s_name] = parsed_data
         
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
-        description = '<p>This plot shows the distribution of tag length.</p>'
-        helptext = '<p>This is a good quality control for tag length inputed into Homer.</p>'
+        description = 'This plot shows the distribution of tag length.'
+        helptext = 'This is a good quality control for tag length inputed into Homer.'
 
         self.add_section (
         name = 'Tag Length Distribution',
@@ -111,6 +122,8 @@ class TagDirReportMixin():
         )
         
 
+    def parse_tagInfo_data(self):
+        """parses and plots taginfo files"""
         # Find and parse homer taginfo reports
         for f in self.find_log_files('homer/tagInfo', filehandles=True):
             s_name = os.path.basename(f['root'])
@@ -136,8 +149,8 @@ class TagDirReportMixin():
 
 
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
-        description = '<p>This plot shows the distribution of tags along chromosomes.</p>'
-        helptext = '<p>This is a good quality control for tag distribution and could be a good indication of large duplications or deletions.</p>'
+        description = 'This plot shows the distribution of tags along chromosomes.'
+        helptext = 'This is a good quality control for tag distribution and could be a good indication of large duplications or deletions.'
 
         self.add_section (
         name = 'Tag Info Chromosomal Coverage',
@@ -148,6 +161,8 @@ class TagDirReportMixin():
         )
 
 
+    def parse_FreqDistribution_data(self):
+        """parses and plots taginfo files"""
         # Find and parse homer tag FreqDistribution_1000 reports
         for f in self.find_log_files('homer/FreqDistribution', filehandles=True):
             s_name = os.path.basename(f['root'])
@@ -160,11 +175,10 @@ class TagDirReportMixin():
                 self.add_data_source(f, s_name, section='FreqDistribution')
                 self.tagdir_data['FreqDistribution'][s_name] = parsed_data
 
-
         
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
-        description = '<p>This plot shows the distribution of distance between PE tags.</p>'
-        helptext = '<p>It is expected the the frequency of PE tags decays with increasing distance between the PE tags. This plot gives an idea of the proportion of short-range versus long-range interactions.</p>'
+        description = 'This plot shows the distribution of distance between PE tags.'
+        helptext = 'It is expected the the frequency of PE tags decays with increasing distance between the PE tags. This plot gives an idea of the proportion of short-range versus long-range interactions.'
 
         self.add_section (
         name = 'Frequency Distribution',
@@ -173,17 +187,6 @@ class TagDirReportMixin():
         helptext = helptext,
         plot = self.FreqDist_chart()
         )
-
-
-        # Basic Stats Table
-        self.homer_stats_table_tagInfo()
-
-        if len(self.tagdir_data) > 0:
-
-            # Write parsed report data to a file
-            self.write_data_file(self.tagdir_data, 'multiqc_homer_tagdirectory')
-        return len(self.tagdir_data)
-
 
 
 
@@ -298,7 +301,7 @@ class TagDirReportMixin():
        return {key:value*factor for key,value in mydict.iteritems()}
 
 
-    def parse_GCcontent(self, f):
+    def parse_twoCol_file(self, f):
         """ Parse HOMER tagdirectory GCcontent file. """
         parsed_data = dict()
         firstline = True    
@@ -396,7 +399,7 @@ class TagDirReportMixin():
         """ Parse HOMER tagdirectory taginfo.txt file to extract chromosome coverage. """
         parsed_data_total = dict()
         parsed_data_uniq = dict()
-        remove = ["hap", "random", "chrUn", "cmd"]
+        remove = ["hap", "random", "chrUn", "cmd", "EBV", "GL", "NT_"]
         ## skip first 11 lines
         counter = 0
         for l in f['f']:
@@ -527,8 +530,11 @@ class TagDirReportMixin():
         """ Make the taginfo.txt plot """
 
         ## TODO: human chrs on hg19. How will this work with GRCh genome or other, non human, genomes? nice if they are ordered by size
-        chrs = ["chr" + str(i) for i in range(1,23)]
-        chrs.extend([ "chrX", "chrY", "chrM"])
+        ucsc = ["chr" + str(i) for i in range(1,23)]
+        ucsc.extend([ "chrX", "chrY", "chrM"])
+
+        ensembl = range(1,23)
+        ensembl.extend([ "X", "Y", "MT"])
 
         pconfig = {
             'id': 'tagInfo',
@@ -540,6 +546,15 @@ class TagDirReportMixin():
         datasets = [
             self.tagdir_data['taginfo_total'],
         ]
+
+        ## check if chromosomes starts with "chr" (UCSC) or "#" (ensembl)
+        sample1 = next(iter(self.tagdir_data['taginfo_total']))
+        chrFormat = next(iter(self.tagdir_data['taginfo_total'][sample1]))
+        
+        if ("chr" in chrFormat):
+            chrs = ucsc
+        else:
+            chrs = ensembl
 
         return bargraph.plot(datasets, chrs, pconfig)
 
