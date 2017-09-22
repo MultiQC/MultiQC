@@ -355,7 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'bismark_alignment',
-            'title': 'Bismark Alignment Scores',
+            'title': 'Bismark: Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
@@ -393,7 +393,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'bismark_strand_alignment',
-            'title': 'Alignment to Individual Bisulfite Strands',
+            'title': 'Bismark: Alignment to Individual Bisulfite Strands',
             'ylab': '% Reads',
             'cpswitch_c_active': False,
             'cpswitch_counts_label': 'Number of Reads'
@@ -418,7 +418,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'bismark_deduplication',
-            'title': 'Bismark Deduplication',
+            'title': 'Bismark: Deduplication',
             'ylab': '% Reads',
             'cpswitch_c_active': False,
             'cpswitch_counts_label': 'Number of Reads'
@@ -463,7 +463,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'bismark_mbias',
-            'title': 'M-Bias',
+            'title': 'Bismark: M-Bias',
             'ylab': '% Methylation',
             'xlab': 'Position (bp)',
             'xDecimals': False,

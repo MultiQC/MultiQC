@@ -7,8 +7,7 @@ import logging
 import os
 import re
 
-from multiqc import config
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

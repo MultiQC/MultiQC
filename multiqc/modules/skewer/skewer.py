@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate plot HTML for read length distribution plot. """
         pconfig = {
             'id': 'skewer_read_length_histogram',
-            'title': 'Read Length Distribution after trimming with Skewer',
+            'title': 'Skewer: Read Length Distribution after trimming',
             'xDecimals': False,
             'ylab': '% of Reads',
             'xlab': 'Read Length',

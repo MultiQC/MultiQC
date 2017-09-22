@@ -1,6 +1,8 @@
 
-# MultiQC configuration files
+# MultiQC files
 multiqc_config.yaml
+multiqc_report.html
+multiqc_data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

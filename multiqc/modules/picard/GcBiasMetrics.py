@@ -92,7 +92,7 @@ def parse_reports(self):
 
         pconfig = {
             'id': 'picard_gcbias_plot',
-            'title': 'GC Coverage Bias',
+            'title': 'Picard: GC Coverage Bias',
             'ylab': 'Normalized Coverage',
             'xlab': '% GC',
             'xmin': 0,

@@ -42,7 +42,7 @@ class Relatedness2Mixin():
                     m.data,
                     xcats = m.x_labels,
                     ycats = m.y_labels,
-                    pconfig = {'square': True, 'decimalPlaces': 7}
+                    pconfig = {'square': True, 'decimalPlaces': 7, 'title': 'VCFTools: Relatedness2'}
                 )
             )
 

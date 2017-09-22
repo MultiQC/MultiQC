@@ -25,13 +25,19 @@ section of the docs explains this in more detail.
 
 ### Big log files
 
-Another reason that log files can be skipped is if the log filesize is very large. For example, this could happen with very long concatenated standard out files. By default, MultiQC skips any file that is larger than 10MB to keep execution fast. The verbose log output (`-v` or `multiqc_data/multiqc.log`) will show you if files are being skipped with messages such as these:
+Another reason that log files can be skipped is if the log filesize is very
+large. For example, this could happen with very long concatenated standard out
+files. By default, MultiQC skips any file that is larger than 10MB to keep
+execution fast. The verbose log output (`-v` or `multiqc_data/multiqc.log`) will
+show you if files are being skipped with messages such as these:
 
 ```
 [DEBUG  ]  Ignoring file as too large: filename.txt
 ```
 
-You can configure the threshold and parse your files by changing the `log_filesize_limit` config option. For example, to parse files up to 2GB in size, add the following to your MultiQC config file:
+You can configure the threshold and parse your files by changing the
+`log_filesize_limit` config option. For example, to parse files up to 2GB in
+size, add the following to your MultiQC config file:
 
 ```yaml
 log_filesize_limit: 2000000000

@@ -438,7 +438,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'overallratesplot',
-            'title': 'Overall conversion rates in reads',
+            'title': 'Slamdunk: Overall conversion rates in reads',
             'cpswitch': False,
             'cpswitch_c_active': False,
             'stacking': 'normal',
@@ -482,7 +482,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'slamdunk_utrratesplot',
-            'title': 'Overall conversion rates per UTR',
+            'title': 'Slamdunk: Overall conversion rates per UTR',
             'cpswitch': False,
             'cpswitch_c_active': False,
             'stacking': 'normal',
@@ -505,7 +505,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'slamdunk_pca',
-            'title': 'Slamdunk PCA',
+            'title': 'Slamdunk: PCA',
             'xlab': 'PC1',
             'ylab': 'PC2',
             'tt_label': 'PC1 {point.x:.2f}: PC2 {point.y:.2f}'
@@ -525,7 +525,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig_nontc = {
             'id': 'slamdunk_nontcperreadpos_plot',
-            'title': 'Non-T>C mutations over reads',
+            'title': 'Slamdunk: Non-T>C mutations over reads',
             'ylab': 'Percent mutated %',
             'xlab': 'Position in read',
             'xDecimals': False,
@@ -537,7 +537,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig_tc = {
             'id': 'slamdunk_tcperreadpos_plot',
-            'title': 'T>C conversions over reads',
+            'title': 'Slamdunk: T>C conversions over reads',
             'ylab': 'Percent converted %',
             'xlab': 'Position in read',
             'xDecimals': False,
@@ -568,7 +568,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig_nontc = {
             'id': 'slamdunk_slamdunk_nontcperutrpos_plot',
-            'title': 'Non-T>C mutations over UTR ends',
+            'title': 'Slamdunk: Non-T>C mutations over UTR ends',
             'ylab': 'Percent mutated %',
             'xlab': 'Position in UTR from 3\' end',
             'xDecimals': False,
@@ -580,7 +580,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig_tc = {
             'id': 'slamdunk_slamdunk_tcperutrpos_plot',
-            'title': 'T>C conversions over UTR ends',
+            'title': 'Slamdunk: T>C conversions over UTR ends',
             'ylab': 'Percent converted %',
             'xlab': 'Position in UTR from 3\' end',
             'xDecimals': False,
