@@ -129,7 +129,12 @@ You can also customise the y-axis label and min/max values for each dataset:
 config = {
     'data_labels': [
         {'name': 'Reads', 'ylab': 'Number of Reads'},
-        {'name': 'Bases', 'ylab': 'Number of Base Pairs', 'ymax':100}
+        {
+            'name': 'Bases',
+            'ylab': 'Number of Base Pairs',
+            'ymax': 100,
+            'xlab': 'Different x axis'
+        }
     ]
 }
 ```
