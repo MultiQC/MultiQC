@@ -258,7 +258,7 @@ What most MultiQC modules do once they have found matching analysis files
 is to pass the matched file contents to another function, responsible
 for parsing the data from the file. How this parsing is done will depend
 on the format of the log file and the type of data being read. See below
-for a basic example, based loosly on the preseq module:
+for a basic example, based loosely on the preseq module:
 
 ```python
 class MultiqcModule(BaseMultiqcModule):
@@ -377,7 +377,7 @@ data = {
         'second_col': '66.3%'
     }
 }
-self.general_stats_addcols(data, headers)
+self.general_stats_addcols(data)
 ```
 
 To give more informative table headers and configure things like
@@ -414,7 +414,7 @@ headers['name'] = {
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False,                # Set to True to hide the column on page load
-    'placement' : 1000.0,           # Alter the default ordering of coumns in the table
+    'placement' : 1000.0,           # Alter the default ordering of columns in the table
 }
 ```
 * `namespace`

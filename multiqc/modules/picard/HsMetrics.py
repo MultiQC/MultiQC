@@ -66,6 +66,7 @@ def parse_reports(self):
         parsed_data = dict()
         s_name = None
         keys = None
+        commadecimal = None
         for l in f['f']:
             # New log starting
             if 'picard.analysis.directed.CalculateHsMetrics' in l or \
@@ -90,8 +91,19 @@ def parse_reports(self):
                         if keys[0] == 'BAIT_SET':
                             j = vals[0]
                         parsed_data[s_name][j] = dict()
+                        # Check that we're not using commas for decimal places
+                        if commadecimal is None:
+                            for i, k in enumerate(keys):
+                                if k.startswith('PCT_'):
+                                    if ',' in vals[i]:
+                                        commadecimal = True
+                                    else:
+                                        commadecimal = False
                         for i, k in enumerate(keys):
                             try:
+                                if commadecimal:
+                                    vals[i] = vals[i].replace('.', '')
+                                    vals[i] = vals[i].replace(',', '.')
                                 parsed_data[s_name][j][k] = float(vals[i])
                             except ValueError:
                                 parsed_data[s_name][j][k] = vals[i]
@@ -242,7 +254,7 @@ def _add_target_bases(data):
                 data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
 
     pconfig = { 'id': 'picard_percentage_target_bases',
-                'title': 'Percentage of target bases',
+                'title': 'Picard: Percentage of target bases',
                 'xlab': 'Fold Coverage',
                 'ylab': 'Pct of bases',
                 'ymax': 100,
@@ -268,7 +280,7 @@ def _add_hs_penalty(data):
                     any_non_zero = True
 
     pconfig = { 'id': 'picard_hybrid_selection_penalty',
-                'title': 'Hybrid Selection Penalty',
+                'title': 'Picard: Hybrid Selection Penalty',
                 'xlab': 'Fold Coverage',
                 'ylab': 'Pct of bases',
                 'ymax': 100,

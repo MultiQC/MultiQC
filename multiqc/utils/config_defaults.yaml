@@ -41,7 +41,7 @@ prepend_dirs_sep: ' | '
 file_list: false
 make_data_dir: true
 zip_data_dir: false
-data_dump_file: false
+data_dump_file: true
 megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
@@ -143,6 +143,7 @@ fn_clean_exts:
     - '.summary'
     - '_peaks.xls'
     - '.relatedness'
+    - '.cnt'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -219,6 +220,9 @@ module_order:
         module_tag:
             - RNA
     - rna_seqc:
+        module_tag:
+            - RNA
+    - rsem:
         module_tag:
             - RNA
     - rseqc:

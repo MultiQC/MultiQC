@@ -113,7 +113,7 @@ def parse_reports(self):
         gorigin_cats['reads_aligned_intergenic'] = {'name': 'Intergenic'}
         gorigin_pconfig = {
             'id': 'qualimap_genomic_origin',
-            'title': 'Genomic Origin',
+            'title': 'Qualimap RNAseq: Genomic Origin',
             'cpswitch_c_active': False
         }
         genomic_origin_helptext = '''
@@ -187,7 +187,7 @@ def parse_reports(self):
             helptext = coverage_profile_helptext,
             plot = linegraph.plot(self.qualimap_rnaseq_cov_hist, {
                 'id': 'qualimap_gene_coverage_profile',
-                'title': 'Coverage Profile Along Genes (total)',
+                'title': 'Qualimap RNAseq: Coverage Profile Along Genes (total)',
                 'ylab': 'Coverage',
                 'xlab': 'Transcript Position (%)',
                 'ymin': 0,

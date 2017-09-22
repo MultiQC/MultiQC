@@ -50,6 +50,7 @@ setup(
     install_requires = [
         'click',
         'future>0.14.0',
+        'networkx<2',
         'lzstring',
         'jinja2>=2.9',
         'matplotlib',
@@ -59,7 +60,7 @@ setup(
         'requests',
         'simplejson',
         'spectra',
-        'networkx==1.*',
+        'enum34'
     ],
     entry_points = {
         'multiqc.modules.v1': [
@@ -101,6 +102,7 @@ setup(
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
             'rna_seqc = multiqc.modules.rna_seqc:MultiqcModule',
+            'rsem = multiqc.modules.rsem:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
             'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',

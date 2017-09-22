@@ -240,7 +240,7 @@ def report_sections(self):
         for s_name, hist in self.qualimap_bamqc_coverage_hist.items():
             total = total_bases_by_sample[s_name]
             # Make a range of depths that isn't stupidly huge for high coverage expts
-            depth_range = list(range(0, max_x + 1, math.ceil(float(max_x)/400.0)))
+            depth_range = list(range(0, max_x + 1, math.ceil(float(max_x)/400.0) if max_x > 0 else 1))
             # Check that we have our specified coverages in the list
             for c in self.covs:
                 if int(c) not in depth_range:
@@ -302,7 +302,7 @@ def report_sections(self):
             helptext = coverage_histogram_helptext,
             plot = linegraph.plot(self.qualimap_bamqc_coverage_hist, {
                 'id': 'qualimap_coverage_histogram',
-                'title': 'Coverage histogram',
+                'title': 'Qualimap BamQC: Coverage histogram',
                 'ylab': 'Genome bin counts',
                 'xlab': 'Coverage (X)',
                 'ymin': 0,
@@ -344,7 +344,7 @@ def report_sections(self):
             helptext = genome_fraction_helptext,
             plot = linegraph.plot(rates_within_threshs, {
                 'id': 'qualimap_genome_fraction',
-                'title': 'Genome fraction covered by at least X reads',
+                'title': 'Qualimap BamQC: Genome fraction covered by at least X reads',
                 'ylab': 'Fraction of reference (%)',
                 'xlab': 'Coverage (X)',
                 'ymax': 100,
@@ -406,7 +406,7 @@ def report_sections(self):
             helptext = insert_size_helptext,
             plot = linegraph.plot(self.qualimap_bamqc_insert_size_hist, {
                 'id': 'qualimap_insert_size',
-                'title': 'Insert size histogram',
+                'title': 'Qualimap BamQC: Insert size histogram',
                 'ylab': 'Fraction of reads',
                 'xlab': 'Insert Size (bp)',
                 'ymin': 0,
@@ -450,7 +450,7 @@ def report_sections(self):
             desc = 'Each solid line represents the distribution of GC content of mapped reads for a given sample.'
         lg_config = {
             'id': 'qualimap_gc_content',
-            'title': 'GC content distribution',
+            'title': 'Qualimap BamQC: GC content distribution',
             'ylab': 'Fraction of reads',
             'xlab': 'GC content (%)',
             'ymin': 0,

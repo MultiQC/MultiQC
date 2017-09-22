@@ -47,8 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             return chrom_clean
 
     def roc_plot(self):
-        desc = 'Coverage (ROC) plot that shows genome coverage at at given (scaled) depth. \n\
-        Lower coverage samples have shorter curves where the proportion of regions covered \n\
+        helptext = 'Lower coverage samples have shorter curves where the proportion of regions covered \n\
         drops off more quickly. This indicates a higher fraction of low coverage regions.'
         max_chroms = 50
         data = collections.defaultdict(lambda: collections.defaultdict(dict))
@@ -81,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
                 chroms = chroms[:max_chroms]
             pconfig = {
                 'id': 'goleft_indexcov-roc-plot',
-                'title': 'ROC: genome coverage per scaled depth by chromosome',
+                'title': 'goleft indexcov: ROC - genome coverage per scaled depth by chromosome',
                 'xlab': 'Scaled coverage',
                 'ylab': 'Proportion of regions covered',
                 'ymin': 0, 'ymax': 1.0,
@@ -90,7 +89,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = 'Scaled coverage ROC plot',
                 anchor = 'goleft_indexcov-roc',
-                description = desc,
+                description = 'Coverage (ROC) plot that shows genome coverage at at given (scaled) depth.',
+                helptext = helptext,
                 plot = linegraph.plot([data[c] for c in chroms], pconfig)
             )
             return True
@@ -98,8 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
             return False
 
     def bin_plot(self):
-        desc = 'This plot identifies problematic samples using binned coverage distributions. \n\
-        We expect bins to be around 1, so deviations from this indicate problems. \n\
+        helptext = 'We expect bins to be around 1, so deviations from this indicate problems. \n\
         Low coverage bins (< 0.15) on the x-axis have regions with low or missing coverage. \n\
         Higher values indicate truncated BAM files or missing data. \n\
         Bins with skewed distributions (<0.85 or >1.15) on the y-axis detect dosage bias. \n\
@@ -125,14 +124,15 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found goleft indexcov bin reports for %s samples" % (len(data)))
             pconfig = {
                 'id': 'goleft_indexcov-bin-plot',
-                'title': 'Problematic low and non-uniform coverage bins',
+                'title': 'goleft indexcov: Problematic low and non-uniform coverage bins',
                 'xlab': 'Proportion of bins with depth < 0.15',
                 'ylab': 'Proportion of bins with depth outside of (0.85, 1.15)',
                 'yCeiling': 1.0, 'yFloor': 0.0, 'xCeiling': 1.0, 'xFloor': 0.0}
             self.add_section (
                 name = 'Problem coverage bins',
                 anchor = 'goleft_indexcov-roc',
-                description = desc,
+                description = 'This plot identifies problematic samples using binned coverage distributions.',
+                helptext = helptext,
                 plot = scatter.plot(data, pconfig)
             )
             return True

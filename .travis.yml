@@ -10,11 +10,13 @@ install:
   - git clone https://github.com/ewels/MultiQC_TestData.git test_data
   - cd test_data
   - mkdir empty_dir
-# commands to run tests
-script:
-  - python -m unittest discover
-  - multiqc data
-  - multiqc data -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" -n custom_fn --no-data-dir
-  - multiqc data -f -v --flat -e star -x ngi -s -z -c ../multiqc_config_example.yaml
-  - multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
-  - multiqc -f empty_dir
+# commands to run tests. Use env to make them run in parallel
+env:
+  - CMD='python -m unittest discover'
+  - CMD='multiqc data'
+  - CMD='multiqc data -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" -n custom_fn --no-data-dir'
+  - CMD='multiqc data -f -v --flat -e star -x ngi -s -z -c ../multiqc_config_example.yaml'
+  - CMD='multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt'
+  - CMD='multiqc -f empty_dir'
+  - CMD='multiqc -f data/modules/gatk/BaseRecalibrator/recal_data.table'
+script: "$CMD"

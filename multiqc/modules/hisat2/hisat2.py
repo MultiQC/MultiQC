@@ -151,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             sekeys['unpaired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'SE multimapped' }
             sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
             config['id'] = 'hisat2_se_plot'
-            config['title'] = 'HISAT2 SE Alignment Scores'
+            config['title'] = 'HISAT2: SE Alignment Scores'
             self.add_section(
                 plot = bargraph.plot(sedata, sekeys, config)
             )
@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             pekeys['unpaired_aligned_multi'] = { 'color': '#ffeb75', 'name': 'PE one mate multimapped' }
             pekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'PE neither mate aligned' }
             config['id'] = 'hisat2_pe_plot'
-            config['title'] = 'HISAT2 PE Alignment Scores'
+            config['title'] = 'HISAT2: PE Alignment Scores'
             self.add_section(
                 description = '<em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em>',
                 plot = bargraph.plot(pedata, pekeys, config)

@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'theta2_purity_plot',
-            'title': 'THetA2 Tumour Subclone Purities',
+            'title': 'THetA2: Tumour Subclone Purities',
             'cpswitch': False,
             'ymin': 0,
             'ymax': 100,

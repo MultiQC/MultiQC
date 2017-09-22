@@ -60,11 +60,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Clusters by lane',
             anchor = 'bcl2fastq-bylane',
-            description = 'Number of reads per lane (with number of perfect index reads)',
+            description = 'Number of reads per lane (with number of perfect index reads).',
             helptext = """Perfect index reads are those that do not have a single mismatch.
                 All samples of a lane are combined. Undetermined reads are treated as a third category.
                 To avoid conflicts the run ID is prepended.""",
-            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bylane), cats)
+            plot = bargraph.plot(
+                self.get_bar_data_from_counts(self.bcl2fastq_bylane),
+                cats,
+                {
+                    'id': 'bcl2fastq_lane_counts',
+                    'title': 'bcl2tfastq: Clusters by lane'
+                }
+            )
         )
 
         # Add section for counts by sample
@@ -76,7 +83,14 @@ class MultiqcModule(BaseMultiqcModule):
                 All samples are aggregated across lanes combinned. Undetermined reads are ignored.
                 Undetermined reads are treated as a separate sample.
                 To avoid conflicts the runId is prepended.""",
-            plot = bargraph.plot(self.get_bar_data_from_counts(self.bcl2fastq_bysample), cats)
+            plot = bargraph.plot(
+                self.get_bar_data_from_counts(self.bcl2fastq_bysample),
+                cats,
+                {
+                    'id': 'bcl2fastq_sample_counts',
+                    'title': 'bcl2tfastq: Clusters by sample'
+                }
+            )
         )
 
     def parse_file_as_json(self, myfile):

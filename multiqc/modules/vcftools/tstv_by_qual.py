@@ -2,9 +2,7 @@
 
 """ MultiQC module to parse TsTv by quality output from vcftools TsTv-by-qual """
 
-import csv
 import logging
-from collections import defaultdict
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -32,7 +30,7 @@ class TsTvByQualMixin():
 
         pconfig = {
             'id': 'vcftools_tstv_by_qual',
-            'title': 'TsTv by Qual',
+            'title': 'VCFTools: TsTv by Qual',
             'ylab': 'TsTv Ratio',
             'xlab': 'SNP Quality Threshold',
             'xmin': 0,
@@ -43,9 +41,9 @@ class TsTvByQualMixin():
 
         helptext = '''
         `Transition` is a purine-to-purine or pyrimidine-to-pyrimidine point mutations.
-        `Transversion` is a purine-to-pyrimidine or pyrimidine-to-purine point mutation. 
+        `Transversion` is a purine-to-pyrimidine or pyrimidine-to-purine point mutation.
         `Quality` here is the Phred-scaled quality score as given in the QUAL column of VCF.
-        Note: only bi-allelic SNPs are used (multi-allelic sites and INDELs are skipped.) 
+        Note: only bi-allelic SNPs are used (multi-allelic sites and INDELs are skipped.)
         Refer to Vcftools's manual (https://vcftools.github.io/man_latest.html) on `--TsTv-by-qual`
         '''
 

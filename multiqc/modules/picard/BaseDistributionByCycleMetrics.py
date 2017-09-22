@@ -173,7 +173,7 @@ def parse_reports(self):
         # Plot the data and add section
         pconfig = {
             'id': 'picard_base_distribution_by_cycle',
-            'title': 'Base Distribution',
+            'title': 'Picard: Base Distribution',
             'ylab': '%',
             'xlab': 'Cycle #',
             'xDecimals': False,

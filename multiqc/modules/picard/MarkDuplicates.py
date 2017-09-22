@@ -101,7 +101,7 @@ def parse_reports(self):
         # Config for the plot
         pconfig = {
             'id': 'picard_deduplication',
-            'title': 'Picard Deduplication Stats',
+            'title': 'Picard: Deduplication Stats',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'cpswitch_c_active': False
