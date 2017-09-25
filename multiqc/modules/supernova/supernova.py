@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 import json
-from copy import deepcopy
 from multiqc import config
 from multiqc.plots import table, linegraph, bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -21,10 +20,6 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(name='Supernova', anchor='supernova',
         href="https://www.10xgenomics.com/",
         info="is a de novo genome assembler 10X Genomics linked-reads.")
-
-        # Table headers for the General data
-        self.gheaders = OrderedDict()
-
 
         # Headers for the supernova Table
         self.headers = OrderedDict()
@@ -224,7 +219,6 @@ class MultiqcModule(BaseMultiqcModule):
         config_table = {
             'id': 'supernova_table',
             'namespace': 'supernova'
-
         }
         self.add_section (
             name = 'Assembly statistics',
@@ -253,12 +247,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'N50 statistics',
             anchor = 'supernova-n50',
-            description = 'Assembly N50 values',
-            helptext = 'Note that assembly size and N50 values are computed after removing scaffolds ≤ 10 kb and do not count Ns: ' \
-                    '**Scaffold N50** - N50 size of scaffolds in bases, ' \
-                    '**Contig N50** - N50 size of contigs in bases, ' \
-                    '**Edge N50** - N50 size of raw graph assembly edges in bases, ' \
-                    '**Phase block N50** - N50 size of phase blocks in bases. ' \
+            description = 'Assembly N50 values - the shortest sequence length at 50% of the genome when sorted by size (see [wikipedia](https://en.wikipedia.org/wiki/N50,_L50,_and_related_statistics#N50)).',
+            helptext = "Note that assembly size and N50 values are computed after removing scaffolds &le; 10 kb and do not count `N`s: \n\n" \
+                    "* **Scaffold N50** - N50 size of scaffolds in bases, \n" \
+                    "* **Contig N50** - N50 size of contigs in bases, \n" \
+                    "* **Edge N50** - N50 size of raw graph assembly edges in bases, \n" \
+                    "* **Phase block N50** - N50 size of phase blocks in bases. \n\n" \
                     '[(source)](https://support.10xgenomics.com/de-novo-assembly/software/pipelines/latest/output/asm-stats)',
             plot = bargraph.plot([reports,reports,reports,reports], n50_cats, config_n50)
         )
@@ -303,9 +297,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = 'K-mer counts',
                 anchor = 'supernova-kmers',
-                description = 'Shows the k-mer frequencies of the input data to Supernova (after filtering)',
+                description = 'Shows the k-mer frequencies of the input data to Supernova (after filtering).',
                 helptext = 'This data is generated from k-merizing the input read data, where the sequences are ' \
-                        'transformed in to the set of all possible sub-sequences of a fixed length of K (Supernova uses K=48). ' \
+                        'transformed in to the set of all possible sub-sequences of a fixed length of `K` (Supernova uses `K=48`). ' \
                         'The plot shows on the x-axis the multiplicity (i.e. how many times are they repeated) of these k-mers ' \
                         'and the y-axis the number of k-mers at this level of multiplicity. ' \
                         'A careful reading of this plot can give some insights into the levels of heterozygosity and repeats ' \
@@ -337,7 +331,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scaffolds_10kb_plus': '# Long scaffs',
             'valid_bc_perc': '% missing BC'
         }
- 
+
         try:
             cdict = json.loads(content)
         except ValueError as e:
@@ -361,7 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if key == 'valid_bc_perc':
                     value = 100 - value
                 data[stats[key]] = value
-        
+
         return (sid, data)
 
 
@@ -404,7 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
         # [number, unit, category]
         stat_pat = re.compile('-\s+(\d+\.\d+)\s+(\S+|.)\s+= (.+) =')
 
-        for l in content.splitlines(): 
+        for l in content.splitlines():
             sid_m = re.match(sid_pat,l)
             stat_m = re.match(stat_pat, l)
 
@@ -422,7 +416,7 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         data[stats[stat_type]] = stat_val[0]
                 except ValueError:
-                    log.debug('Error in parsing sample {}, on line "{}"'.format(sid, stat_val))                    
+                    log.debug('Error in parsing sample {}, on line "{}"'.format(sid, stat_val))
 
         return (sid, data)
 
