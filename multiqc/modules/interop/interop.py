@@ -18,55 +18,47 @@ class MultiqcModule(BaseMultiqcModule):
 
         log = logging.getLogger(__name__)
         summaryFiles, indexSummaryFiles = self.find_log_files('interop/summary',filehandles=True), self.find_log_files('interop/index-summary',filehandles=True)
-        self.runSummary,self.indexSummary = {}, {}
 
         for f in summaryFiles:
-            log.debug( "Run Summary File Found: {}".format(f['fn'] ))      # Filename
-            self.runSummary = self.parse_summary_csv(f['f'])
+            if f is not None:
+                log.debug( "Run Summary File Found: {}".format(f['fn'] ))      # Filename
+                self.runSummary = self.parse_summary_csv(f['f'])
+            else:
+                continue
 
-            #Create report Sections
-            self.add_section (
-                name = '{} - Run Metrics Summary'.format(f['s_name']),
-                anchor = 'interop-runmetrics-summary',
-                plot = self.run_metrics_summary_table(self.runSummary['summary'])
-                )
-            self.add_section (
-                name = '{} - Run & Lane Metric Details'.format(f['s_name']),
-                anchor = 'interop-runmetrics-details',
-                plot = self.run_metrics_details_table(self.runSummary['details'])
-                )
+        #Create report Sections
+        self.add_section (
+            name = 'Read Metrics Summary',
+            anchor = 'interop-runmetrics-summary',
+            plot = self.run_metrics_summary_table(self.runSummary['summary'])
+            )
+        self.add_section (
+            name = 'Read Metrics per Lane',
+            anchor = 'interop-runmetrics-details',
+            plot = self.run_metrics_details_table(self.runSummary['details'])
+            )
 
         for f in indexSummaryFiles:
-            log.debug( "Index Summary File Found: {}".format(f['s_name'] ))      # Filename
-            self.indexSummary = self.parse_index_summary_csv(f['f'])
+            if f is not None:
+                log.debug( "Index Summary File Found: {}".format(f['s_name'] ))      # Filename
+                self.indexSummary = self.parse_index_summary_csv(f['f'])
+            else:
+                continue
 
-            self.add_section (
-                name = 'Indexing QC Metrics',
-                anchor = 'interop-indexmetrics-summary',
-                description = 'Metrics about each lane',
-                plot = self.index_metrics_summary_table(self.indexSummary['summary'])
-                )
-            self.add_section (
-                name = 'Indexing QC Metrics',
-                anchor = 'interop-indexmetrics-details',
-                description = 'Metrics about each lane',
-                plot = self.index_metrics_details_table(self.indexSummary['details'])
-                )
+        self.add_section (
+            name = 'Indexing QC Metrics summary',
+            anchor = 'interop-indexmetrics-summary',
+            description = 'Summary metrics about each lane',
+            plot = self.index_metrics_summary_table(self.indexSummary['summary'])
+            )
+        self.add_section (
+            name = 'Indexing QC Metrics details',
+            anchor = 'interop-indexmetrics-details',
+            description = ' Detail Metrics about each lane',
+            plot = self.index_metrics_details_table(self.indexSummary['details'])
+            )
 
     def parse_summary_csv(self,f):
-        '''
-        Required data structure
-        data = {
-            'Read 1': {
-                        surface: {},
-                        },
-                        surface: {},
-                        },
-            'Read 2': {},
-            ...
-            }
-        }
-        '''
         metrics={'summary':{},
                  'details':{}
                  }
@@ -93,7 +85,6 @@ class MultiqcModule(BaseMultiqcModule):
                     summary[data[0]][header[idx]]=data[idx]
                 if line.startswith("Total"):
                     section = None
-                    log.debug("Finished summary")
                 continue
             if line.startswith("Read") and (section is None or section == "details"):
                 #set section to details
@@ -108,7 +99,6 @@ class MultiqcModule(BaseMultiqcModule):
             if section == "details":
                 if line.startswith("Extracted: "):
                     section = "finish"
-                    log.debug("Finished details")
                     continue
                 data = line.split(",")
                 #process summary
@@ -118,20 +108,53 @@ class MultiqcModule(BaseMultiqcModule):
                 details[read].append(linedata)
                 continue
 
-        # import pprint
-        # pp = pprint.PrettyPrinter(indent=4)
-        # log.debug(pp.pprint(details))
+        #import pprint
+        #pp = pprint.PrettyPrinter(indent=4)
+        #log.debug(pp.pprint(summary))
+        return metrics
+
+    def parse_index_summary_csv(self,f):
+        metrics={'summary':{},
+                 'details':{}
+                 }
+
+        summary = {}
+        details = {}
+        lane = None
+        section = None
+        header = []
+        for line in f:
+            line = line.strip()
+            #assume fixed file format
+            if line.startswith("Lane"):
+                #set lane
+                lane = line
+                summary[lane]={}
+                details[lane]={}
+                continue
+            if line.startswith("Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max"):
+                header = line.split(",")
+                section = "summary"
+                continue
+            if line.startswith("Index Number,Sample Id,Project,Index 1 (I7),Index 2 (I5),% Read Identified (PF)"):
+                header = line.split(",")
+                section = "details"
+                continue
+            if section == "summary":
+                data = line.split(",")
+                for idx in range(0,len(data)):
+                    summary[lane][header[idx]]=data[idx]
+                continue
+            if section == "details":
+                data = line.split(",")
+                for idx in range(1,len(data)):
+                    details[lane][header[idx]]=data[idx]
+                continue
 
         metrics['summary']=summary
         metrics['details']=details
         return metrics
 
-    def parse_index_summary_csv(self,data):
-        metrics={'summary':{},
-                 'details':{}
-                 }
-
-        return metrics
     def run_metrics_summary_table(self,data):
         headers = OrderedDict()
         headers['Yield'] = {
@@ -161,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             'namespace': 'interop',
             'id': 'interop-runmetrics-summary-table',
-            'table_title': 'Run metrics summary',
+            'table_title': 'Read metrics summary',
             'col1_header': '',
             'no_beeswarm': True,
             'scale': False
@@ -259,13 +282,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'PF Reads',
             'description': 'The total number of passing filter reads for this lane.'
         }
-        headers['% Reads Identified (PF)'] = {
+        headers['% Read Identified (PF)'] = {
             'title': '% Reads Identified (PF)',
             'description': 'The total fraction of passing filter reads assigned to an index.'
         }
         headers['CV'] = {
-            'title': 'The coefficient of variation for the number of counts across all indexes.',
-            'description': ''
+            'title': 'CV',
+            'description': 'The coefficient of variation for the number of counts across all indexes.'
         }
         headers['Min'] = {
             'title': 'Min',
@@ -299,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Index 2 (I5)',
             'description': 'The sequence for the second Index Read.'
         }
-        headers['% Reads Identified (PF)'] = {
+        headers['% Read Identified (PF)'] = {
             'title': '% Reads Identified (PF)',
             'description': 'The number of reads (only includes Passing Filter reads) mapped to this index.'
         }

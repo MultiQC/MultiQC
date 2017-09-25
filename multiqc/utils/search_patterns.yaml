@@ -89,11 +89,9 @@ homer/findpeaks:
     contents: '# HOMER Peaks'
     num_lines: 3
 interop/summary:
-    contents_re: '# Version: '
-    contents_re: 'Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30'
+    contents: 'Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30'
 interop/index-summary:
-    contents_re: '# Version: '
-    contents_re: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
+    contents: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
 jellyfish:
     fn: '*_jf.hist'
 kallisto:
