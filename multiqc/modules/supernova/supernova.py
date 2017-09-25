@@ -96,19 +96,19 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'OrRd',
         }
         self.headers['% R2 Q30'] = {
-                'description': 'fraction of Q30 bases in read 2; ideal 75-85',
+                'description': 'fraction of Q30 bases in read 2; ideal 75-85%',
                 'suffix': '%',
                 'scale': 'OrRd',
         }
         self.headers['Insert size'] = {
-                'description': 'median insert size (in bases); ideal 0.35-0.40',
+                'description': 'median insert size (in bases); ideal 0.35-0.40 Kb',
                 'suffix': 'b',
                 'scale': 'OrRd',
                 'format': '{:,.0f}',
                 'hidden': True
         }
         self.headers['% proper'] = {
-                'description': 'fraction of proper read pairs; ideal >= 75',
+                'description': 'fraction of proper read pairs; ideal >= 75%',
                 'suffix': '%',
                 'scale': 'OrRd',
                 'hidden': True
@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:,.0f}',
         }
         self.headers['% Phased'] = {
-                'description': 'nonduplicate and phased reads; ideal 45-50',
+                'description': 'nonduplicate and phased reads; ideal 45-50%',
                 'suffix': '%',
                 'scale': 'BuGn',
                 'hidden': True
@@ -223,28 +223,44 @@ class MultiqcModule(BaseMultiqcModule):
 
         config_table = {
             'id': 'supernova_table',
-            'namespace': 'supernova',
+            'namespace': 'supernova'
+
         }
         self.add_section (
             name = 'Assembly statistics',
             anchor = 'supernova-table',
+            description = 'Statistics gathered from the summary report(s) of Supernova. Note! ' \
+                    'There are more columns available but they are hidden by default.',
+            helptext = 'As a bare minimum these numbers are generated from the file report.txt, ' \
+                    'found in the folder `sampleID/outs/`. If available the stats in the report ' \
+                    'file will be superseded by the higher precision numbers found in the file ' \
+                    '`sampleID/outs/assembly/stats/summary.json`',
             plot = table.plot(reports, self.headers, config_table)
         )
 
-
         # N50 barcharts
-        n50_cats = ['Scaff N50', 'Contig N50', 'Edge N50', 'Phase N50']
+        n50_cats = [{'Scaff N50': {'name': 'Scaffold N50', 'color': '#66c2a5'}},
+                {'Contig N50': {'name': 'Contig N50', 'color': '#fc8d62'}},
+                {'Edge N50': {'name': 'Edge N50', 'color': '#8da0cb'}},
+                {'Phase N50': {'name': 'Phase block N50', 'color': '#e78ac3'}}
+        ]
         config_n50 = {
                 'id': 'supernova_n50',
                 'title': 'Supernova N50 statistics',
                 'cpswitch': False,
-                'stacking': None,
-                'data_labels': n50_cats
+                'data_labels': ['Scaffold N50', 'Contig N50', 'Edge N50', 'Phase block N50']
         }
         self.add_section (
             name = 'N50 statistics',
             anchor = 'supernova-n50',
-            plot = bargraph.plot(reports, n50_cats, config_n50)
+            description = 'Assembly N50 values',
+            helptext = 'Note that assembly size and N50 values are computed after removing scaffolds ≤ 10 kb and do not count Ns: ' \
+                    '**Scaffold N50** - N50 size of scaffolds in bases, ' \
+                    '**Contig N50** - N50 size of contigs in bases, ' \
+                    '**Edge N50** - N50 size of raw graph assembly edges in bases, ' \
+                    '**Phase block N50** - N50 size of phase blocks in bases. ' \
+                    '[(source)](https://support.10xgenomics.com/de-novo-assembly/software/pipelines/latest/output/asm-stats)',
+            plot = bargraph.plot([reports,reports,reports,reports], n50_cats, config_n50)
         )
 
         # Conditional sections
