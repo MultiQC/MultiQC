@@ -12,7 +12,7 @@ The MultiQC module for Jellyfish parses *only* `*_jf.hist` files. The general us
  - `gunzip -c file.fastq.gz | jellyfish count -o file.jf  -m ...`
  - `jellyfish histo -o file_jf.hist -f file.jf`
 
-In case a user wants to customise the mathcing pattern for jellyfish, then multiqc can be run with option `--cl_config "sp: { jellyfish: { fn: 'PATTERN' } }"` where `PATTERN` is the patern to be matched. For example:
+In case a user wants to customise the matching pattern for jellyfish, then multiqc can be run with the option `--cl_config "sp: { jellyfish: { fn: 'PATTERN' } }"` where `PATTERN` is the pattern to be matched. For example:
 
 ```
 multiqc . --cl_config "sp: { jellyfish: { fn: '*.hist' } }"

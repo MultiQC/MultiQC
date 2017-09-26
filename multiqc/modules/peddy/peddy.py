@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'peddy_pca_plot',
-            'title': 'Peddy PCA Plot',
+            'title': 'Peddy: PCA Plot',
             'xlab': 'PC1',
             'ylab': 'PC2'
         }
@@ -191,7 +191,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'peddy_relatedness_plot',
-            'title': 'Peddy Relatedness Plot',
+            'title': 'Peddy: Relatedness Plot',
             'xlab': 'IBS0 (no alleles shared)',
             'ylab': 'IBS2 (both alleles shared)',
         }

@@ -53,11 +53,13 @@ MultiQC Modules:
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
     RNA-SeQC: modules/rna_seqc.md
+    RSEM: modules/rsem.md
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
 Custom Content:

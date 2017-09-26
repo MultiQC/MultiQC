@@ -41,7 +41,7 @@ prepend_dirs_sep: ' | '
 file_list: false
 make_data_dir: true
 zip_data_dir: false
-data_dump_file: false
+data_dump_file: true
 megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
@@ -143,6 +143,23 @@ fn_clean_exts:
     - '.summary'
     - '_peaks.xls'
     - '.relatedness'
+    - '.cnt'
+    - '.aqhist'
+    - '.bhist'
+    - '.bincov'
+    - '.bqhist'
+    - '.covhist'
+    - '.covstats'
+    - '.ehist'
+    - '.gchist'
+    - '.idhist'
+    - '.ihist'
+    - '.indelhist'
+    - '.lhist'
+    - '.mhist'
+    - '.qahist'
+    - '.qhist'
+    - '.rpkm'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -222,6 +239,9 @@ module_order:
     - rna_seqc:
         module_tag:
             - RNA
+    - rsem:
+        module_tag:
+            - RNA
     - rseqc:
         module_tag:
             - RNA
@@ -234,6 +254,10 @@ module_order:
     - disambiguate:
         module_tag:
             - RNA
+    - supernova:
+        module_tag:
+            - DNA
+            - Denovo
     # Post-alignment processing
     - homer:
         module_tag:

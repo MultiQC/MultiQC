@@ -120,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'trimmomatic_plot',
-            'title': 'Trimmomatic',
+            'title': 'Trimmomatic: Surviving Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

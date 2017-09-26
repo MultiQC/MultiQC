@@ -146,9 +146,15 @@ class StatsReportMixin():
                 )
             # Make line graph of variants per depth
             if len(depth_data) > 0:
-                pconfig = {'id': 'bcftools_stats_depth', 'title': 'Variant depths',
-                           'ylab': 'Fraction of sites (%)', 'xlab': 'Variant depth',
-                           'ymin': 0, 'ymax': 100, 'categories': True}
+                pconfig = {
+                    'id': 'bcftools_stats_depth',
+                    'title': 'Bcftools Stats: Variant depths',
+                    'ylab': 'Fraction of sites (%)',
+                    'xlab': 'Variant depth',
+                    'ymin': 0,
+                    'ymax': 100,
+                    'categories': True
+                }
                 self.add_section (
                     name = 'Variant depths',
                     anchor = 'bcftools-stats_depth_plot',

@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'samblaster_duplicates',
-            'title': 'Number of duplicate reads',
+            'title': 'Samblaster: Number of duplicate reads',
         }
         self.add_section( plot = bargraph.plot(self.samblaster_data, cats, pconfig) )
 

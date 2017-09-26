@@ -128,6 +128,9 @@ flexbar:
 gatk/varianteval:
     contents: '#:GATKTable:TiTvVariantEvaluator'
     shared: true
+gatk/base_recalibrator:
+    contents: '#:GATKTable:Arguments:Recalibration'
+    num_lines: 3
 goleft_indexcov/roc:
     fn: '*-indexcov.roc'
 goleft_indexcov/ped:
@@ -199,9 +202,9 @@ picard/wgs_metrics:
     shared: true
 preseq:
     - contents: 'EXPECTED_DISTINCT'
-      max_filesize: 500000
+      num_lines: 2
     - contents: 'distinct_reads'
-      max_filesize: 500000
+      num_lines: 2
 preseq/real_counts:
     fn: '*preseq_real_counts*'
 prokka:
@@ -232,6 +235,8 @@ rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
     fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+rsem:
+    - fn: '*.cnt'
 rseqc/bam_stat:
     contents: 'Proper-paired reads map to different chrom:'
     max_filesize: 500000
@@ -304,6 +309,22 @@ star:
     fn: '*Log.final.out'
 star/genecounts:
     fn: '*ReadsPerGene.out.tab'
+supernova/report:
+    fn: '*report*.txt'
+    num_lines: 40
+    contents: '- assembly checksum ='
+supernova/summary:
+    fn: 'summary.json'
+    num_lines: 50
+    contents: '"lw_mean_mol_len":'
+supernova/molecules:
+    fn: 'histogram_molecules.json'
+    num_lines: 10
+    contents: '"description": "molecules",'
+supernova/kmers:
+    fn: 'histogram_kmer_count.json'
+    num_lines: 10
+    contents: '"description": "kmer_count",'
 theta2:
     fn: '*.BEST.results'
 tophat:

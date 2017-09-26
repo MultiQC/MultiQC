@@ -132,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'tophat_alignment',
-            'title': 'Tophat Alignment Scores',
+            'title': 'Tophat: Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

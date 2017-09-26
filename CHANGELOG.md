@@ -3,22 +3,50 @@
 ## MultiQC v1.3dev
 
 #### Breaking changes
-Note that any users with custom search patterns for the `bowtie` or `star` will
-need to update their config files: The `bowtie` search key is now `bowtie1`,
+Only for users with custom search patterns for the `bowtie` or `star`: you will
+need to update your config files - the `bowtie` search key is now `bowtie1`,
 `star_genecounts` is now `star/genecounts`.
 
 For users with custom modules - search patterns _must_ now conform to the search
 pattern naming convention: `modulename` or `modulename/anything` (the search pattern
 string beginning with the name of your module, anything you like after the first `/`).
 
+#### New Modules:
+* [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
+    * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
+    * Module written by [@noirot](https://github.com/noirot/)
+* [**10X Supernova**](https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome)
+    * Parses statistics from the _de-novo_ Supernova software.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
+
+#### Module updates:
+* **AfterQC**
+    * Handle new output format where JSON summary key changed names.
+* **GATK**
+    * New submodule to handle Base Recalibrator stats, written by [@wkretzsch](https://github.com/wkretzsch/)
+* **Picard HsMetrics**
+    * Parsing code can now handle commas for decimal places
+* **Preseq**
+    * Updated odd file-search pattern that limited input files to 500kb
+* **QoRTs**
+    * Added new plots, new helptext and updated the module to produce a lot more output.
+* **Qualimap BamQC**
+    * Fixed edge-case bug where the refactored coverage plot code could raise an error from the `range` call.
+* Went through all modules and standardised plot titles
+    * All plots should now have a title with the format _Module name: Plot name_
+
 #### New MultiQC Features:
 * File search refactored to only search for running modules
     * Makes search much faster when running with lots of files and limited modules
     * For example, if using `-m star` to only use the STAR module, all other file searches now skipped
 * File search now warns if an unrecognised search type is given
+* MultiQC now saves nearly all parsed data to a structured output file by default
+    * See `multiqc_data/multiqc_data.json`
+    * This can be turned off by setting `config.data_dump_file: false`
 
 #### Bug Fixes
 * Minor `default_dev` directory creation bug squashed
+* Don't prepend the directory separator (`|`) to sample names with `-d` when there are no subdirs
 
 
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
