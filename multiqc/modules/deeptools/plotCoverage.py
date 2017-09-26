@@ -17,7 +17,7 @@ class plotCoverageMixin():
         """Find plotCoverage output. Both stdout and --outRawCounts"""
         self.deeptools_plotCoverageStdout = dict()
         for f in self.find_log_files('deeptools/plotCoverageStdout'):
-            parsed_data = self.parsePlotCoverageStdout(f['f'], f['fn'])
+            parsed_data = self.parsePlotCoverageStdout(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCoverageStdout:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -28,7 +28,7 @@ class plotCoverageMixin():
 
         self.deeptools_plotCoverageOutRawCounts= dict()
         for f in self.find_log_files('deeptools/plotCoverageOutRawCounts'):
-            parsed_data = self.parsePlotCoverageOutRawCounts(f['f'], f['fn'])
+            parsed_data = self.parsePlotCoverageOutRawCounts(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCoverageOutRawCounts:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -46,70 +46,75 @@ class plotCoverageMixin():
             header["50%"] = {'title': 'Med. Cov.', 'description': 'Median coverage (second quartile)'}
             header["75%"] = {'title': '3rd Q.', 'description': 'Third quartile coverage'}
             header["max"] = {'title': 'Max. Cov.', 'description': 'Maximum coverage'}
-            self.add_section(name="plotCoverage (standard output)",
+            config = {'namespace': 'deepTools plotCoverage'}
+            self.add_section(name="Coverage metrics",
                              anchor="plotCoverage",
-                             plot=table.plot(self.deeptools_plotCoverageStdout, header))
+                             plot=table.plot(self.deeptools_plotCoverageStdout, header, config))
 
         if len(self.deeptools_plotCoverageOutRawCounts) > 0:
-            config = dict(xlab='Coverage', ylab='Fraction of bases sampled')
-            self.add_section(name="plotCoverage",
+            config = dict(xlab='Coverage', ylab='Fraction of bases sampled', id='plotCoverage', title='Coverage distribution')
+            self.add_section(name="Coverage distribution",
                              anchor="plotCoverage",
+                             description="The fraction of bases with a given number of read/fragment coverage",
                              plot=linegraph.plot(self.deeptools_plotCoverageOutRawCounts, config))
-
-
 
         return len(self.deeptools_plotCoverageStdout), len(self.deeptools_plotCoverageOutRawCounts)
 
-    def parsePlotCoverageStdout(self, f, fname):
+    def parsePlotCoverageStdout(self, f):
         d = {}
         firstLine = True
-        for line in f.splitlines():
+        for line in f['f'].splitlines():
             if firstLine:
                 firstLine = False
                 continue
             cols = line.strip().split("\t")
 
             if len(cols) != 8:
-                log.warning("{} was initially flagged as the standard output from plotCoverage, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the standard output from plotCoverage, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
 
-            if cols[0] in d:
-                log.warning("Replacing duplicate sample {}.".format(cols[0]))
-            d[cols[0]] = dict()
+            s_name = self.clean_s_name(cols[0], f['root'])
+            if s_name in d:
+                log.warning("Replacing duplicate sample {}.".format(s_name))
+            d[s_name] = dict()
 
             try:
-                d[cols[0]]["mean"] = float(cols[1])
-                d[cols[0]]["std"] = float(cols[2])
-                d[cols[0]]["min"] = float(cols[3])
-                d[cols[0]]["25%"] = float(cols[4])
-                d[cols[0]]["50%"] = float(cols[5])
-                d[cols[0]]["75%"] = float(cols[6])
-                d[cols[0]]["max"] = float(cols[7])
+                d[s_name]["mean"] = float(cols[1])
+                d[s_name]["std"] = float(cols[2])
+                d[s_name]["min"] = float(cols[3])
+                d[s_name]["25%"] = float(cols[4])
+                d[s_name]["50%"] = float(cols[5])
+                d[s_name]["75%"] = float(cols[6])
+                d[s_name]["max"] = float(cols[7])
             except:
-                log.warning("{} was initially flagged as the standard output from plotCoverage, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the standard output from plotCoverage, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
         return d
 
-    def parsePlotCoverageOutRawCounts(self, f, fname):
+    def parsePlotCoverageOutRawCounts(self, f):
         samples = []
         d = {}
         nCols = 0
         nRows = 0
-        for line in f.splitlines():
+        for line in f['f'].splitlines():
+            if line.startswith('#plotCoverage'):
+                continue
+
             cols = line.strip().split('\t')
             if len(cols) < 4:
-                log.warning("{} was initially flagged as the output from plotCoverage --outRawCounts, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the output from plotCoverage --outRawCounts, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
 
             if cols[0] == "#'chr'":
                 nCols = len(cols)
                 for col in cols[3:]:
-                    samples.append(col.strip("'"))
-                    d[col.strip("'")] = dict()
+                    s_name = self.clean_s_name(col.strip("'"), f['root'])
+                    samples.append(s_name)
+                    d[s_name] = dict()
                 continue
 
             if len(cols) != nCols:
-                log.warning("{} was initially flagged as the output from plotCoverage --outRawCounts, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the output from plotCoverage --outRawCounts, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
 
             for i, v in enumerate(cols[3:]):

@@ -16,7 +16,7 @@ class estimateReadFilteringMixin():
         """Find estimateReadFiltering output. Only the output from --table is supported."""
         self.deeptools_estimateReadFiltering = dict()
         for f in self.find_log_files('deeptools/estimateReadFiltering'):
-            parsed_data = self.parseEstimateReadFilteringFile(f['f'], f['fn'])
+            parsed_data = self.parseEstimateReadFilteringFile(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_estimateReadFiltering:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -57,10 +57,10 @@ class estimateReadFilteringMixin():
 
         return len(self.deeptools_estimateReadFiltering)
 
-    def parseEstimateReadFilteringFile(self, f, fname):
+    def parseEstimateReadFilteringFile(self, f):
         d = {}
         firstLine = True
-        for line in f.splitlines():
+        for line in f['f'].splitlines():
             if firstLine:
                 firstLine = False
                 continue
@@ -68,27 +68,28 @@ class estimateReadFilteringMixin():
 
             if len(cols) != 12:
                 # This is not really the output from estimateReadFiltering!
-                log.warning("{} was initially flagged as the tabular output from estimateReadFiltering, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the tabular output from estimateReadFiltering, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
 
-            if cols[0] in d:
-                log.warning("Replacing duplicate sample {}.".format(cols[0]))
-            d[cols[0]] = dict()
+            s_name = self.clean_s_name(cols[0], f['root'])
+            if s_name in d:
+                log.debug("Replacing duplicate sample {}.".format(s_name))
+            d[s_name] = dict()
 
             try:
-                d[cols[0]]["total"] = int(cols[1])
-                d[cols[0]]["mapped"] = int(cols[2])
-                d[cols[0]]["blacklisted"] = int(cols[3])
-                d[cols[0]]["filtered"] = float(cols[4])
-                d[cols[0]]["mapq"] = float(cols[5])
-                d[cols[0]]["required flags"] = float(cols[6])
-                d[cols[0]]["excluded flags"] = float(cols[7])
-                d[cols[0]]["internal dupes"] = float(cols[8])
-                d[cols[0]]["dupes"] = float(cols[9])
-                d[cols[0]]["singletons"] = float(cols[10])
-                d[cols[0]]["strand"] = float(cols[11])
+                d[s_name]["total"] = int(cols[1])
+                d[s_name]["mapped"] = int(cols[2])
+                d[s_name]["blacklisted"] = int(cols[3])
+                d[s_name]["filtered"] = float(cols[4])
+                d[s_name]["mapq"] = float(cols[5])
+                d[s_name]["required flags"] = float(cols[6])
+                d[s_name]["excluded flags"] = float(cols[7])
+                d[s_name]["internal dupes"] = float(cols[8])
+                d[s_name]["dupes"] = float(cols[9])
+                d[s_name]["singletons"] = float(cols[10])
+                d[s_name]["strand"] = float(cols[11])
             except:
                 # Obviously this isn't really the output from estimateReadFiltering
-                log.warning("{} was initially flagged as the output from estimateReadFiltering, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the output from estimateReadFiltering, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
         return d

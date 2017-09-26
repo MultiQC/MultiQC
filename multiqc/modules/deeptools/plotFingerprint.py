@@ -18,7 +18,7 @@ class plotFingerprintMixin():
         """Find plotFingerprint output. Both --outQualityMetrics and --outRawCounts"""
         self.deeptools_plotFingerprintOutQualityMetrics = dict()
         for f in self.find_log_files('deeptools/plotFingerprintOutQualityMetrics'):
-            parsed_data = self.parsePlotFingerprintOutQualityMetrics(f['f'], f['fn'])
+            parsed_data = self.parsePlotFingerprintOutQualityMetrics(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotFingerprintOutQualityMetrics:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -29,7 +29,7 @@ class plotFingerprintMixin():
 
         self.deeptools_plotFingerprintOutRawCounts= dict()
         for f in self.find_log_files('deeptools/plotFingerprintOutRawCounts'):
-            parsed_data = self.parsePlotFingerprintOutRawCounts(f['f'], f['fn'])
+            parsed_data = self.parsePlotFingerprintOutRawCounts(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotFingerprintOutRawCounts:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -49,27 +49,33 @@ class plotFingerprintMixin():
                         categories.append(category)
                     d[category][sample] = v2
             config = dict(cpswitch=False, hide_zero_cats=False, ymin=0.0, ymax=1.0, ylab='Value', stacking=None, tt_percentages=False, tt_decimals=3)
-            self.add_section(name="plotFingerprint (quality metrics)",
+            config['id'] = 'plotFingerprint_quality_metrics'
+            config['title'] = 'Fingerprint quality metrics'
+            self.add_section(name="Fingerprint quality metrics",
                              anchor="plotFingerprint",
+                             description="Various quality metrics returned by plotFingerprint",
                              plot=bargraph.plot(d, pconfig=config))
 
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
             config = dict(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.0, xlab='rank', ylab='Fraction w.r.t. bin with highest coverage')
-            self.add_section(name="plotFingerprint",
+            config['id'] = 'plotFingerprint'
+            config['title'] = 'Fingerprint'
+            self.add_section(name="Fingerprint",
                              anchor="plotFingerprint",
+                             description="Signal fingerprint according to plotFingerprint",
                              plot=linegraph.plot(self.deeptools_plotFingerprintOutRawCounts, config))
 
         return len(self.deeptools_plotFingerprintOutQualityMetrics), len(self.deeptools_plotFingerprintOutRawCounts)
 
-    def parsePlotFingerprintOutQualityMetrics(self, f, fname):
+    def parsePlotFingerprintOutQualityMetrics(self, f):
         d = {}
         firstLine = True
         header = []
-        for line in f.splitlines():
+        for line in f['f'].splitlines():
             cols = line.strip().split("\t")
 
             if len(cols) < 7:
-                log.warning("{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
 
             if firstLine:
@@ -77,28 +83,29 @@ class plotFingerprintMixin():
                 firstLine = False
                 continue
 
-            if cols[0] in d:
-                log.warning("Replacing duplicate sample {}.".format(cols[0]))
-            d[cols[0]] = OrderedDict()
+            s_name = self.clean_s_name(cols[0], f['root'])
+            if s_name in d:
+                log.warning("Replacing duplicate sample {}.".format(s_name))
+            d[s_name] = OrderedDict()
 
             try:
                 for i, c in enumerate(cols[1:]):
                     if i >= len(header):
-                        log.warning("{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(fname))
+                        log.warning("{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(f['fn']))
                         return dict()
                     if header[i] == "AUC" or header[i] == "Synthetic AUC":
                         continue
-                    d[cols[0]][header[i]] = float(c)
+                    d[s_name][header[i]] = float(c)
             except:
-                log.warning("{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(fname))
+                log.warning("{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(f['fn']))
                 return dict()
         return d
 
-    def parsePlotFingerprintOutRawCounts(self, f, fname):
+    def parsePlotFingerprintOutRawCounts(self, f):
         d = dict()
         samples = []
         firstLine = True
-        for line in f.splitlines():
+        for line in f['f'].splitlines():
             cols = line.strip().split('\t')
             if cols[0] == "#plotFingerprint --outRawCounts":
                 continue
@@ -106,8 +113,9 @@ class plotFingerprintMixin():
             if firstLine:
                 for c in cols:
                     c = str(c).strip("'")
-                    d[c] = []
-                    samples.append(c)
+                    s_name = self.clean_s_name(c, f['root'])
+                    d[s_name] = []
+                    samples.append(s_name)
                 firstLine = False
                 continue
 
