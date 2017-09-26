@@ -43,7 +43,7 @@ def plot (data, pconfig=None):
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    # Why not just set {} as a default argument? See:
+    # Don't just use {} as the default argument as it's mutable. See:
     # http://python-guide-pt-br.readthedocs.io/en/latest/writing/gotchas/
     if pconfig is None:
         pconfig = {}
@@ -61,6 +61,18 @@ def plot (data, pconfig=None):
             else:
                 sumc = sumcounts
             data[i] = smooth_line_data(d, pconfig['smooth_points'], sumc)
+
+    # Add initial axis labels if defined in `data_labels` but not main config
+    if pconfig.get('ylab') is None:
+        try:
+            pconfig['ylab'] = pconfig['data_labels'][0]['ylab']
+        except (KeyError, IndexError):
+            pass
+    if pconfig.get('xlab') is None:
+        try:
+            pconfig['xlab'] = pconfig['data_labels'][0]['xlab']
+        except (KeyError, IndexError):
+            pass
 
     # Generate the data dict structure expected by HighCharts series
     plotdata = list()
@@ -169,7 +181,11 @@ def highcharts_linegraph (plotdata, pconfig=None):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
+            try:
+                xlab = 'data-xlab="{}"'.format(pconfig['data_labels'][k]['xlab'])
+            except:
+                xlab = ''
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {x} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, x=xlab, k=k)
         html += '</div>\n\n'
 
     # The plot div

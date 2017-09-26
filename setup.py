@@ -50,6 +50,7 @@ setup(
     install_requires = [
         'click',
         'future>0.14.0',
+        'networkx<2',
         'lzstring',
         'jinja2>=2.9',
         'matplotlib',
@@ -59,7 +60,7 @@ setup(
         'requests',
         'simplejson',
         'spectra',
-        'networkx<2',
+        'enum34'
     ],
     entry_points = {
         'multiqc.modules.v1': [
@@ -112,6 +113,7 @@ setup(
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',

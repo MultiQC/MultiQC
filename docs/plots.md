@@ -243,8 +243,8 @@ supply names to the buttons and graph labels:
 ```python
 config = {
     'data_labels': [
-        {'name': 'DS 1', 'ylab': 'Dataset 1'},
-        {'name': 'DS 2', 'ylab': 'Dataset 2'}
+        {'name': 'DS 1', 'ylab': 'Dataset 1', 'xlab': 'x Axis 1'},
+        {'name': 'DS 2', 'ylab': 'Dataset 2', 'xlab': 'x Axis 2'}
     ]
 }
 ```
@@ -346,7 +346,7 @@ key should match the keys used in the data dictionary, but values can
 customise the output. If you want to specify the order of the columns, you
 must use an `OrderedDict`.
 
-Finally, a the function accepts a third parameter, a config dictionary.
+Finally, the function accepts a config dictionary as a third parameter.
 This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 

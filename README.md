@@ -42,8 +42,9 @@ Currently, supported tools include:
 |[Flexbar][flexbar]               |[STAR][star]            |[Samtools][samtools]       |[QUAST][quast]        |
 |[Jellyfish][jellyfish]           |[Tophat][tophat]        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
 |[Skewer][skewer]                 |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[SortMeRNA][sortmerna]           |                        |[RSEM][rsem]               | [VCFTools][vcftools] |
-|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           |                      |
+|[SortMeRNA][sortmerna]           |                        |[RSEM][rsem]               |[Supernova][supernova]|
+|[Trimmomatic][trimmomatic]       |                        |[THetA2][theta2]           |[VCFTools][vcftools]  |
+
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -157,6 +158,7 @@ Code contributions from:
 [@rlegendre](https://github.com/rlegendre),
 [@ehsueh](https://github.com/ehsueh)
 [@noirot](https://github.com/noirot)
+[@wkretzsch](https://github.com/wkretzsch)
 
 and many others. Thanks for your support!
 
@@ -212,3 +214,4 @@ and many others. Thanks for your support!
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [tophat]:         http://multiqc.info/docs/#tophat
 [vcftools]:       http://multiqc.info/docs/#vcftools
+[supernova]:      http://multiqc.info/docs/#supernova

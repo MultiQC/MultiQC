@@ -28,6 +28,8 @@ your MultiQC error log here
 
 * **File that triggers the error:**
     * [please drag and drop an input file that I can use to replicate the error here]
+* **Command used to run MultiQC**
+    * `multiqc .`
 * **MultiQC Version:**
     * [eg. MultiQC v1.1]
 * **Operating System:**

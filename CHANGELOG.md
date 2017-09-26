@@ -14,11 +14,16 @@ string beginning with the name of your module, anything you like after the first
 #### New Modules:
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
     * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
-    * Module written by [@noirot]
+    * Module written by [@noirot](https://github.com/noirot/)
+* [**10X Supernova**](https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome)
+    * Parses statistics from the _de-novo_ Supernova software.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 #### Module updates:
 * **AfterQC**
     * Handle new output format where JSON summary key changed names.
+* **GATK**
+    * New submodule to handle Base Recalibrator stats, written by [@wkretzsch](https://github.com/wkretzsch/)
 * **Picard HsMetrics**
     * Parsing code can now handle commas for decimal places
 * **Preseq**
@@ -41,6 +46,7 @@ string beginning with the name of your module, anything you like after the first
 
 #### Bug Fixes
 * Minor `default_dev` directory creation bug squashed
+* Don't prepend the directory separator (`|`) to sample names with `-d` when there are no subdirs
 
 
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16

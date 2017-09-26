@@ -238,6 +238,10 @@ module_order:
     - disambiguate:
         module_tag:
             - RNA
+    - supernova:
+        module_tag:
+            - DNA
+            - Denovo
     # Post-alignment processing
     - homer:
         module_tag:
