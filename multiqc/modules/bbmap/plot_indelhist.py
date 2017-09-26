@@ -40,9 +40,10 @@ def plot_indelhist(samples, file_type, **plot_args):
     plot_params = {
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
+            'xlab': 'Indel size',
             'data_labels': [
-                {'name': 'Insertions', 'ylab': 'Count'},
-                {'name': 'Deletions', 'ylab': 'Count'},
+                {'name': 'Insertions', 'ylab': 'Insertion count'},
+                {'name': 'Deletions', 'ylab': 'Deletion count'},
             ]
 
     }

@@ -15,26 +15,41 @@ def plot_bhist(samples, file_type, **plot_args):
         all_x.add(item[0])
 
     columns_to_plot = {
-        'Nucleotides': {
-            0: 'A',
+        'GC': {
             1: 'C',
             2: 'G',
+        },
+        'AT': {
+            0: 'A',
             3: 'T',
+        },
+        'N': {
             4: 'N'
         },
     }
-    nucleotide_data = {
-        sample+'.'+column_name: {
-            x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
-            for x in all_x
+    nucleotide_data = []
+    for column_type in columns_to_plot:
+        nucleotide_data.append(
+            {
+                sample+'.'+column_name: {
+                    x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
+                    for x in all_x
+            }
+            for sample in samples
+            for column, column_name in columns_to_plot[column_type].items()
         }
-        for sample in samples
-        for column, column_name in columns_to_plot['Nucleotides'].items()
-    }
+    )
 
     plot_params = {
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
+            'xlab': 'Read position',
+            'ylab': 'Proportion',
+            'data_labels': [
+                {'name': 'GC'},
+                {'name': 'AT'},
+                {'name': 'N'},
+            ]
     }
     plot_params.update(plot_args['plot_params'])
     plot = linegraph.plot(

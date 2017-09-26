@@ -57,10 +57,11 @@ def plot_qhist(samples, file_type, **plot_args):
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
             'xmax': xmax,
+            'xlab': 'Position in read',
             'data_labels': [
-                {'name': 'Linear', 'ylab': 'Score'},
+                {'name': 'Linear', 'ylab': 'Quality score'},
                 {'name': 'Logarithmic', 'ylab': 'Log score'},
-                {'name': 'Measured', 'ylab': 'Value'},
+                {'name': 'Measured', 'ylab': 'Measured quality value'},
             ]
     }
 

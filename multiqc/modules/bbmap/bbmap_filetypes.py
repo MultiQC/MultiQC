@@ -5,7 +5,9 @@ from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
 from .plot_bqhist import plot_bqhist
+from .plot_covhist import plot_covhist
 from .plot_idhist import plot_idhist
+from .plot_ihist import plot_ihist
 from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
@@ -20,8 +22,8 @@ odict = slice2OrderedDict()
 file_types = {
     'aqhist': {
         'title': 'Average read quality',
-        'descr': 'Histogram of average read quality.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Histogram of average read quality (aqhist).',
+        'help_text': '',
         'cols': odict[
             'Quality':int,
             'count1':int,
@@ -45,7 +47,7 @@ file_types = {
 #  - too big to interpret here
     'bhist' : {
         'title': 'Base composition',
-        'descr': 'Base composition histogram by position.',
+        'descr': 'Base composition histogram by position (bhist).',
         'help_text': 'Relative composition',
         'cols': odict[
             'Pos':int, 'A':float, 'C':float, 'G':float, 'T':float, 'N':float
@@ -55,8 +57,8 @@ file_types = {
     },
     'bincov': {
         'title': 'Binned coverage',
-        'descr': 'Binned coverage per location (one line per X bases).',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Binned coverage per location, one line per X bases (bincov).',
+        'help_text': '',
         'kvrows': ['Mean', 'STDev' ],
         'cols': odict[
             'RefName':str,
@@ -70,8 +72,9 @@ file_types = {
     },
     'bqhist': {
         'title': 'Base quality',
-        'descr': 'Quality histogram designed for box plots.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Quality histogram designed for box plots (bqhist). '
+                 'Refer to original source files for complete boxplot data.',
+        'help_text': '',
         'cols': odict[
             'BaseNum':int,
             'count_1':int, 'min_1':int, 'max_1':int, 'mean_1':float,
@@ -84,18 +87,20 @@ file_types = {
     },
     'covhist': {
         'title': 'Coverage histogram',
-        'descr': 'Histogram of # occurrences of each depth level.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Histogram of # occurrences of each depth level (covhist). '
+                 'Note that lines have been smoothed to 400 points; '
+                 'higher resolution data might be available in the original data source.',
+        'help_text': '',
         'cols': odict['Coverage':int, 'numBases':int],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_covhist,
         'plot_params': {
             'yLog': True,
         }
     },
     'covstats': {
         'title': 'Coverage stats',
-        'descr': 'Per-scaffold coverage info.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Per-scaffold coverage info (covstats).',
+        'help_text': '',
         'cols': odict[
             'ID':str,
             'Avg_fold':float
@@ -117,29 +122,51 @@ file_types = {
     },
     'ehist': {
         'title': 'Errors-per-read',
-        'descr': 'Errors-per-read histogram.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Errors-per-read histogram (ehist).',
+        'help_text': '',
         'cols': odict['Errors':int, 'Count':int ],
         'plot_func': plot_basic_hist,
-        'plot_params': {}
+        'plot_params': {
+            'xlab': 'Errors',
+            'ylab': 'Read count'
+        }
     },
     'gchist' : {
         'title': 'GC content',
-        'descr': 'Read GC content histogram.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Read GC content histogram (gchist).',
+        'help_text': '',
         'kvrows': ['Mean', 'Median', 'Mode', 'STDev'],
+        'kv_descriptions': {
+            'Mean': 'Average GC content',
+            'Median': 'Median GC content',
+            'Mode': 'The most commonly occuring value of the GC content distribution',
+            'STDev': 'Standard deviation of average GC content'
+        },
         'cols': odict['GC':float, 'Count':int ],
         'plot_func': plot_basic_hist,
-        'plot_params': {}
+        'plot_params': {
+            'xlab': 'Proportion GC',
+            'ylab': 'Read count'
+        }
     },
     'idhist': {
         'title': 'Identity histogram',
-        'descr': 'Histogram of read count versus percent identity.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Histogram of read count versus percent identity (idhist).',
+        'help_text': '',
         'kvrows': ['Mean_reads', 'Mean_bases',
                    'Median_reads', 'Median_bases',
                    'Mode_reads', 'Mode_bases',
                    'STDev_reads', 'STDev_bases' ],
+        'kv_descriptions': {
+            'Mean_reads': '',
+            'Mean_bases': '',
+            'Median_reads': '',
+            'Median_bases': '',
+            'Mode_reads': '',
+            'Mode_bases': '',
+            'STDev_reads': '',
+            'STDev_bases': '',
+        },
         'cols': odict[
             'Identity':float, 'Reads':int, 'Bases':int
         ],
@@ -148,33 +175,44 @@ file_types = {
     },
     'ihist': {
         'title': 'Insert sizes',
-        'descr': 'Histogram of insert sizes (for paired reads).',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Histogram of insert sizes, for paired reads (ihist). '
+                 'Plotted data has been cut off at 99% to prevent long tails; '
+                 'Complete data available in original source files.',
+        'help_text': '',
         'kvrows': ['Mean', 'Median', 'STDev', 'PercentOfPairs'],
+        'kv_descriptions': {
+            'Mean': '',
+            'Median': '',
+            'STDev': '',
+            'PercentOfPairs': '',
+        },
         'cols': odict['InsertSize':int, 'Count':int ],
-        'plot_func': plot_basic_hist,
+        'plot_func': plot_ihist,
         'plot_params': {}
     },
     'indelhist': {
         'title': 'Indel lengths',
-        'descr': 'Indel length histogram.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Indel length histogram (indelhist).',
+        'help_text': '',
         'cols': odict['Length':int, 'Deletions':int, 'Insertions':int],
         'plot_func': plot_indelhist,
         'plot_params': {}
     },
     'lhist' : {
         'title': 'Read lengths',
-        'descr': 'Read length histogram.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Read length histogram (lhist).',
+        'help_text': '',
         'cols': odict['Length':int, 'Count':int ],
         'plot_func': plot_basic_hist,
-        'plot_params': {}
+        'plot_params': {
+            'xlab': 'Read length',
+            'ylab': 'Read count'
+        }
     },
     'mhist': {
         'title': 'Match, sub, del, and ins rates',
-        'descr': 'Histogram of match, sub, del, and ins rates by read location.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Histogram of match, sub, del, and ins rates by read location (mhist).',
+        'help_text': '',
         'cols': odict[
             'BaseNum':int,
             'Match1':float, 'Sub1':float, 'Del1':float, 'Ins1':float, 'N1':float, 'Other1':float,
@@ -185,9 +223,13 @@ file_types = {
     },
     'qahist': {
         'title': 'Quality accuracy',
-        'descr': 'Quality accuracy histogram of error rates versus quality score.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Quality accuracy histogram of error rates versus quality score (qahist).',
+        'help_text': '',
         'kvrows': ['Deviation', 'DeviationSub' ],
+        'kv_descriptions': {
+            'Deviation': '',
+            'DeviationSub': '',
+        },
         'cols': odict[
             'Quality':int, 'Match':int, 'Sub':int, 'Ins':int, 'Del':int,
             'TrueQuality':float, 'TrueQualitySub':float
@@ -197,8 +239,8 @@ file_types = {
     },
     'qhist': {
         'title': 'Quality',
-        'descr': 'Quality histogram by position.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Quality histogram by position (qhist).',
+        'help_text': '',
         'cols': odict[
             'BaseNum':int,
             'Read1_linear':float,
@@ -213,9 +255,15 @@ file_types = {
     },
     'rpkm': {
         'title': 'RPKM/FPKM',
-        'descr': 'Per-scaffold RPKM/FPKM counts.',
-        'help_text': 'Placeholder help text.',
+        'descr': 'Per-scaffold RPKM/FPKM counts (rpkm).',
+        'help_text': '',
         'kvrows': ['File', 'Reads', 'Mapped', 'RefSequences' ],
+        'kv_descriptions': {
+            'File': '',
+            'Reads': '',
+            'Mapped': '',
+            'RefSequences': '',
+        },
         'cols': odict[
             'Name':str,
             'Length':int, 'Bases':int, 'Coverage':float,
@@ -227,16 +275,16 @@ file_types = {
     },
     'statsfile_machine': {
         'title': 'General stats',
-        'descr': 'General Stats',
-        'help_text': 'Placeholder help text.',
+        'descr': 'General Stats (statsfile_machine).',
+        'help_text': '',
         'cols': [],
         'plot_func': plot_basic_hist,
         'plot_params': {}
     },
     'statsfile': {
         'title': 'General stats',
-        'descr': 'General Stats',
-        'help_text': 'Placeholder help text.',
+        'descr': 'General Stats (statsfile).',
+        'help_text': '',
         'cols': [],
         'plot_params': {},
         'plot_func': plot_basic_hist,

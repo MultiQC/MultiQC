@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
                           len(self.mod_data[file_type]))
 
                 self.add_section(
-                    name = file_types[file_type]['title']+' ('+file_type+')',
+                    name = file_types[file_type]['title'],
                     anchor =  'bbmap-' + file_type,
                     description = file_types[file_type]['descr'],
                     helptext = file_types[file_type]['help_text'],
@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
             if any(self.mod_data[file_type][sample]['kv'] 
                    for sample in self.mod_data[file_type]):
                 self.add_section(
-                    name = file_types[file_type]['title']+' summary table ('+file_type+')',
+                    name = file_types[file_type]['title']+' summary table',
                     anchor =  'bbmap-' + file_type,
                     description = file_types[file_type]['descr'],
                     helptext = file_types[file_type]['help_text'],
@@ -77,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             return False
         log_descr = file_types[file_type]
         if 'not_implemented' in log_descr:
-            log.warning("Can't parse '%s' -- implementation missing", file_type)
+            log.debug("Can't parse '%s' -- implementation missing", file_type)
             return False
 
         cols = log_descr['cols']
@@ -147,11 +147,21 @@ class MultiqcModule(BaseMultiqcModule):
         """  Create table of key-value items in 'file_type'.
         """
 
-        table_data = {sample: items['kv'] for sample, items in self.mod_data[file_type].items()}
+        table_data = {sample: items['kv'] 
+                for sample, items 
+                in self.mod_data[file_type].items()
+        }
+        table_headers = {column_header: {
+                    'title': column_header,
+                    'description': description,
+                }
+                for column_header, description 
+                in file_types[file_type]['kv_descriptions'].items()
+        }
         for sample in table_data:
             for key, value in table_data[sample].items():
                 try:
                     table_data[sample][key] = float(value)
                 except ValueError:
                     pass
-        return table.plot(table_data)
+        return table.plot(table_data, table_headers)
