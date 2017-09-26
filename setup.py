@@ -113,6 +113,7 @@ setup(
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
