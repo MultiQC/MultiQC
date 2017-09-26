@@ -60,11 +60,12 @@ def plot_qahist(samples, file_type, **plot_args):
     plot_params = {
             'id': 'bbmap-' + file_type,
             'title': plot_args['plot_title'],
+            'xlab': 'Quality score',
             'data_labels': [
-                {'name': 'Match', 'ylab': 'Count'},
-                {'name': 'Sub', 'ylab': 'Count'},
-                {'name': 'Ins', 'ylab': 'Count'},
-                {'name': 'Del', 'ylab': 'Count'},
+                {'name': 'Match', 'ylab': 'Match count'},
+                {'name': 'Sub', 'ylab': 'Substitution count'},
+                {'name': 'Ins', 'ylab': 'Insertion count'},
+                {'name': 'Del', 'ylab': 'Deletion count'},
                 {'name': 'TrueQuality', 'ylab': 'Count'},
                 {'name': 'TrueQualitySub', 'ylab': 'Count'},
             ]
