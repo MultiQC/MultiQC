@@ -252,6 +252,22 @@ star:
     fn: '*Log.final.out'
 star/genecounts:
     fn: '*ReadsPerGene.out.tab'
+supernova/report:
+    fn: '*report*.txt'
+    num_lines: 40
+    contents: '- assembly checksum ='
+supernova/summary:
+    fn: 'summary.json'
+    num_lines: 50
+    contents: '"lw_mean_mol_len":'
+supernova/molecules:
+    fn: 'histogram_molecules.json'
+    num_lines: 10
+    contents: '"description": "molecules",'
+supernova/kmers:
+    fn: 'histogram_kmer_count.json'
+    num_lines: 10
+    contents: '"description": "kmer_count",'
 theta2:
     fn: '*.BEST.results'
 tophat:
