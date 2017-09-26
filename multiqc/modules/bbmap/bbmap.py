@@ -147,11 +147,21 @@ class MultiqcModule(BaseMultiqcModule):
         """  Create table of key-value items in 'file_type'.
         """
 
-        table_data = {sample: items['kv'] for sample, items in self.mod_data[file_type].items()}
+        table_data = {sample: items['kv'] 
+                for sample, items 
+                in self.mod_data[file_type].items()
+        }
+        table_headers = {column_header: {
+                    'title': column_header,
+                    'description': description,
+                }
+                for column_header, description 
+                in file_types[file_type]['kv_descriptions'].items()
+        }
         for sample in table_data:
             for key, value in table_data[sample].items():
                 try:
                     table_data[sample][key] = float(value)
                 except ValueError:
                     pass
-        return table.plot(table_data)
+        return table.plot(table_data, table_headers)

@@ -136,6 +136,12 @@ file_types = {
         'descr': 'Read GC content histogram (gchist).',
         'help_text': '',
         'kvrows': ['Mean', 'Median', 'Mode', 'STDev'],
+        'kv_descriptions': {
+            'Mean': 'Average GC content',
+            'Median': 'Median GC content',
+            'Mode': 'The most commonly occuring value of the GC content distribution',
+            'STDev': 'Standard deviation of average GC content'
+        },
         'cols': odict['GC':float, 'Count':int ],
         'plot_func': plot_basic_hist,
         'plot_params': {
@@ -151,6 +157,16 @@ file_types = {
                    'Median_reads', 'Median_bases',
                    'Mode_reads', 'Mode_bases',
                    'STDev_reads', 'STDev_bases' ],
+        'kv_descriptions': {
+            'Mean_reads': '',
+            'Mean_bases': '',
+            'Median_reads': '',
+            'Median_bases': '',
+            'Mode_reads': '',
+            'Mode_bases': '',
+            'STDev_reads': '',
+            'STDev_bases': '',
+        },
         'cols': odict[
             'Identity':float, 'Reads':int, 'Bases':int
         ],
@@ -164,6 +180,12 @@ file_types = {
                  'Complete data available in original source files.',
         'help_text': '',
         'kvrows': ['Mean', 'Median', 'STDev', 'PercentOfPairs'],
+        'kv_descriptions': {
+            'Mean': '',
+            'Median': '',
+            'STDev': '',
+            'PercentOfPairs': '',
+        },
         'cols': odict['InsertSize':int, 'Count':int ],
         'plot_func': plot_ihist,
         'plot_params': {}
@@ -204,6 +226,10 @@ file_types = {
         'descr': 'Quality accuracy histogram of error rates versus quality score (qahist).',
         'help_text': '',
         'kvrows': ['Deviation', 'DeviationSub' ],
+        'kv_descriptions': {
+            'Deviation': '',
+            'DeviationSub': '',
+        },
         'cols': odict[
             'Quality':int, 'Match':int, 'Sub':int, 'Ins':int, 'Del':int,
             'TrueQuality':float, 'TrueQualitySub':float
@@ -232,6 +258,12 @@ file_types = {
         'descr': 'Per-scaffold RPKM/FPKM counts (rpkm).',
         'help_text': '',
         'kvrows': ['File', 'Reads', 'Mapped', 'RefSequences' ],
+        'kv_descriptions': {
+            'File': '',
+            'Reads': '',
+            'Mapped': '',
+            'RefSequences': '',
+        },
         'cols': odict[
             'Name':str,
             'Length':int, 'Bases':int, 'Coverage':float,
