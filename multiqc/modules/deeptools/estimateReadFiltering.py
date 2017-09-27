@@ -7,6 +7,7 @@ import re
 from collections import OrderedDict
 
 from multiqc import config
+from multiqc.plots import table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -53,7 +54,11 @@ class estimateReadFilteringMixin():
                         '% Singletons': 100. * v['singletons'] / float(v['total']),
                         '% Strand Filtered': 100. * v['strand'] / float(v['total'])}
 
-            self.general_stats_addcols(d, header)
+            config = {'namespace': 'deepTools bamPEFragmentSize'}
+            self.add_section(name="Filtering metrics",
+                             anchor="estimateReadFiltering",
+                             description="Estimated percentages of alignments filtered independently for each setting in `estimateReadFiltering`",
+                             plot=table.plot(d, header, config))
 
         return len(self.deeptools_estimateReadFiltering)
 

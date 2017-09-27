@@ -8,7 +8,7 @@ from collections import OrderedDict
 import numpy as np
 
 from multiqc import config
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -39,22 +39,13 @@ class plotFingerprintMixin():
                 self.add_data_source(f, section='plotFingerprint')
 
         if len(self.deeptools_plotFingerprintOutQualityMetrics) > 0:
-            d = OrderedDict()
-            categories = []
-            for sample, v in self.deeptools_plotFingerprintOutQualityMetrics.items():
-                sample = str(sample)
-                for category, v2 in v.items():
-                    if category not in d:
-                        d[category] = dict()
-                        categories.append(category)
-                    d[category][sample] = v2
-            config = dict(cpswitch=False, hide_zero_cats=False, ymin=0.0, ymax=1.0, ylab='Value', stacking=None, tt_percentages=False, tt_decimals=3)
+            config = dict(ymin=0.0, ymax=1.0, ylab='Value', categories=True)
             config['id'] = 'plotFingerprint_quality_metrics'
             config['title'] = 'Fingerprint quality metrics'
             self.add_section(name="Fingerprint quality metrics",
                              anchor="plotFingerprint",
                              description="Various quality metrics returned by plotFingerprint",
-                             plot=bargraph.plot(d, pconfig=config))
+                             plot=linegraph.plot(self.deeptools_plotFingerprintOutQualityMetrics, config))
 
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
             config = dict(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.0, xlab='rank', ylab='Fraction w.r.t. bin with highest coverage')
