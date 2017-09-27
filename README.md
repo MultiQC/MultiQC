@@ -162,7 +162,7 @@ Code contributions from:
 
 and many others. Thanks for your support!
 
-[adapterremoval]: http://multiqc.info/docs/#adapteremoval
+[adapterremoval]: http://multiqc.info/docs/#adapter-removal
 [afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
 [bcftools]:       http://multiqc.info/docs/#bcftools
