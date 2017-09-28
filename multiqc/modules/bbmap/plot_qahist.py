@@ -63,11 +63,11 @@ def plot_qahist(samples, file_type, **plot_args):
             'xlab': 'Quality score',
             'data_labels': [
                 {'name': 'Match', 'ylab': 'Match count'},
-                {'name': 'Sub', 'ylab': 'Substitution count'},
-                {'name': 'Ins', 'ylab': 'Insertion count'},
-                {'name': 'Del', 'ylab': 'Deletion count'},
+                {'name': 'Substitution', 'ylab': 'Substitution count'},
+                {'name': 'Insertion', 'ylab': 'Insertion count'},
+                {'name': 'Deletion', 'ylab': 'Deletion count'},
                 {'name': 'TrueQuality', 'ylab': 'Count'},
-                {'name': 'TrueQualitySub', 'ylab': 'Count'},
+                {'name': 'TrueQualitySubtitution', 'ylab': 'Count'},
             ]
     }
 

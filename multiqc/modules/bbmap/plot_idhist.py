@@ -43,8 +43,8 @@ def plot_idhist(samples, file_type, **plot_args):
             'xlab': 'Percent identity',
             'ylab': 'Read count',
             'data_labels': [
-                {'name': 'Reads', 'ylab': 'Count'},
-                {'name': 'Bases', 'ylab': 'Count'},
+                {'name': 'Reads', 'ylab': 'Read count'},
+                {'name': 'Bases', 'ylab': 'Number of bases'},
             ]
 
     }
