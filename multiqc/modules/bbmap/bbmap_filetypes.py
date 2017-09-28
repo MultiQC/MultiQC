@@ -22,7 +22,8 @@ odict = slice2OrderedDict()
 file_types = {
     'aqhist': {
         'title': 'Average read quality',
-        'descr': 'Histogram of average read quality (aqhist).',
+        'descr': 'Histogram of average read quality (`aqhist`). '
+                 'Plot shows the number of reads at each quality score.',
         'help_text': '',
         'cols': odict[
             'Quality':int,
@@ -47,7 +48,9 @@ file_types = {
 #  - too big to interpret here
     'bhist' : {
         'title': 'Base composition',
-        'descr': 'Base composition histogram by position (bhist).',
+        'descr': 'Base composition histogram by position (`bhist`). '
+                 'The plot shows the proportion of GC, AT, and N bases '
+                 'for each position in the reads.',
         'help_text': 'Relative composition',
         'cols': odict[
             'Pos':int, 'A':float, 'C':float, 'G':float, 'T':float, 'N':float
@@ -57,7 +60,7 @@ file_types = {
     },
     'bincov': {
         'title': 'Binned coverage',
-        'descr': 'Binned coverage per location, one line per X bases (bincov).',
+        'descr': 'Binned coverage per location, one line per X bases (`bincov`).',
         'help_text': '',
         'kvrows': ['Mean', 'STDev' ],
         'cols': odict[
@@ -72,8 +75,9 @@ file_types = {
     },
     'bqhist': {
         'title': 'Base quality',
-        'descr': 'Quality histogram designed for box plots (bqhist). '
-                 'Refer to original source files for complete boxplot data.',
+        'descr': 'Quality histogram designed for box plots (`bqhist`). '
+                 'Refer to original source files for complete boxplot data. '
+                 'Plot shows base quality for each read position. ',
         'help_text': '',
         'cols': odict[
             'BaseNum':int,
@@ -87,9 +91,9 @@ file_types = {
     },
     'covhist': {
         'title': 'Coverage histogram',
-        'descr': 'Histogram of # occurrences of each depth level (covhist). '
+        'descr': 'Histogram of number of occurrences of each coverage depth level (`covhist`). '
                  'Note that lines have been smoothed to 400 points; '
-                 'higher resolution data might be available in the original data source.',
+                 'higher resolution data might be available in the original data source. ',
         'help_text': '',
         'cols': odict['Coverage':int, 'numBases':int],
         'plot_func': plot_covhist,
@@ -99,7 +103,7 @@ file_types = {
     },
     'covstats': {
         'title': 'Coverage stats',
-        'descr': 'Per-scaffold coverage info (covstats).',
+        'descr': 'Per-scaffold coverage info (`covstats`).',
         'help_text': '',
         'cols': odict[
             'ID':str,
@@ -122,7 +126,7 @@ file_types = {
     },
     'ehist': {
         'title': 'Errors-per-read',
-        'descr': 'Errors-per-read histogram (ehist).',
+        'descr': 'Errors-per-read histogram (`ehist`). ',
         'help_text': '',
         'cols': odict['Errors':int, 'Count':int ],
         'plot_func': plot_basic_hist,
@@ -133,7 +137,7 @@ file_types = {
     },
     'gchist' : {
         'title': 'GC content',
-        'descr': 'Read GC content histogram (gchist).',
+        'descr': 'Read GC content histogram (`gchist`).',
         'help_text': '',
         'kvrows': ['Mean', 'Median', 'Mode', 'STDev'],
         'kv_descriptions': {
@@ -151,21 +155,22 @@ file_types = {
     },
     'idhist': {
         'title': 'Identity histogram',
-        'descr': 'Histogram of read count versus percent identity (idhist).',
+        'descr': 'Histogram of read count versus percent base pair identity '
+                 'of aligned reads (`idhist`).',
         'help_text': '',
         'kvrows': ['Mean_reads', 'Mean_bases',
                    'Median_reads', 'Median_bases',
                    'Mode_reads', 'Mode_bases',
                    'STDev_reads', 'STDev_bases' ],
         'kv_descriptions': {
-            'Mean_reads': '',
-            'Mean_bases': '',
-            'Median_reads': '',
-            'Median_bases': '',
-            'Mode_reads': '',
-            'Mode_bases': '',
-            'STDev_reads': '',
-            'STDev_bases': '',
+            'Mean_reads': 'Average percent identity of aligned reads',
+            'Mean_bases': 'Average percent identity of aligned bases',
+            'Median_reads': 'Median percent identity of aligned reads',
+            'Median_bases': 'Median percent identity of aligned bases',
+            'Mode_reads': 'The most commonly occuring average value amongst aligned reads (i.e. the mode of the distribution)',
+            'Mode_bases': 'The most commonly occuring average value amongst aligned bases (i.e. the mode of the distribution)',
+            'STDev_reads': 'The standard deviation of the average percent identity distribution for aligned reads',
+            'STDev_bases': 'The standard deviation of the average percent identity distribution for aligned bases',
         },
         'cols': odict[
             'Identity':float, 'Reads':int, 'Bases':int
@@ -175,15 +180,20 @@ file_types = {
     },
     'ihist': {
         'title': 'Insert sizes',
-        'descr': 'Histogram of insert sizes, for paired reads (ihist). '
+        'descr': 'Histogram of computed insert sizes, for paired reads (`ihist`). '
                  'Plotted data has been cut off at 99% to prevent long tails; '
                  'Complete data available in original source files.',
-        'help_text': '',
+        'help_text': 'The insert size is the length of the sequence between the '
+                     'sequencing adapters, which for most common insert sizes is '
+                     'longer than the sum of both read pairs. '
+                     'In some cases, the insert size is shorter than the length '
+                     'of the two read pairs combined, resulting in an insert size '
+                     'shorter than the sum of the length of the reads pairs.',
         'kvrows': ['Mean', 'Median', 'STDev', 'PercentOfPairs'],
         'kv_descriptions': {
-            'Mean': '',
-            'Median': '',
-            'STDev': '',
+            'Mean': 'Average insert length',
+            'Median': 'Median insert length',
+            'STDev': 'Standard deviation of insert size length distribution',
             'PercentOfPairs': '',
         },
         'cols': odict['InsertSize':int, 'Count':int ],
@@ -192,7 +202,9 @@ file_types = {
     },
     'indelhist': {
         'title': 'Indel lengths',
-        'descr': 'Indel length histogram (indelhist).',
+        'descr': 'Indel length histogram (`indelhist`). '
+                 'The plots show the number of observed insertions and deletions, '
+                 'for each insertion and deletion length.',
         'help_text': '',
         'cols': odict['Length':int, 'Deletions':int, 'Insertions':int],
         'plot_func': plot_indelhist,
@@ -200,7 +212,7 @@ file_types = {
     },
     'lhist' : {
         'title': 'Read lengths',
-        'descr': 'Read length histogram (lhist).',
+        'descr': 'Read length histogram (`lhist`).',
         'help_text': '',
         'cols': odict['Length':int, 'Count':int ],
         'plot_func': plot_basic_hist,
@@ -210,8 +222,9 @@ file_types = {
         }
     },
     'mhist': {
-        'title': 'Match, sub, del, and ins rates',
-        'descr': 'Histogram of match, sub, del, and ins rates by read location (mhist).',
+        'title': 'Match, substitution, deletion, and insertion rates',
+        'descr': 'Histogram of match, substitution, deleletion, '
+                 'and insertion rates by read location (`mhist`).',
         'help_text': '',
         'cols': odict[
             'BaseNum':int,
@@ -223,7 +236,8 @@ file_types = {
     },
     'qahist': {
         'title': 'Quality accuracy',
-        'descr': 'Quality accuracy histogram of error rates versus quality score (qahist).',
+        'descr': 'Base quality accuracy histogram of error rates versus quality score (`qahist`). '
+                 'The plots show the observed count of each type of alignment by base quality score.',
         'help_text': '',
         'kvrows': ['Deviation', 'DeviationSub' ],
         'kv_descriptions': {
@@ -239,7 +253,10 @@ file_types = {
     },
     'qhist': {
         'title': 'Quality',
-        'descr': 'Quality histogram by position (qhist).',
+        'descr': 'Quality histogram by position (`qhist`). '
+                 'The plots show the average quality for each position in the reads, '
+                 'using the linear values, logarithmically scaled values, and the '
+                 'actual measured qualities based on the alignments.',
         'help_text': '',
         'cols': odict[
             'BaseNum':int,
@@ -255,7 +272,7 @@ file_types = {
     },
     'rpkm': {
         'title': 'RPKM/FPKM',
-        'descr': 'Per-scaffold RPKM/FPKM counts (rpkm).',
+        'descr': 'Per-scaffold RPKM/FPKM counts (`rpkm`).',
         'help_text': '',
         'kvrows': ['File', 'Reads', 'Mapped', 'RefSequences' ],
         'kv_descriptions': {
@@ -275,7 +292,7 @@ file_types = {
     },
     'statsfile_machine': {
         'title': 'General stats',
-        'descr': 'General Stats (statsfile_machine).',
+        'descr': 'General Stats (`statsfile_machine`).',
         'help_text': '',
         'cols': [],
         'plot_func': plot_basic_hist,
@@ -283,7 +300,7 @@ file_types = {
     },
     'statsfile': {
         'title': 'General stats',
-        'descr': 'General Stats (statsfile).',
+        'descr': 'General Stats (`statsfile`).',
         'help_text': '',
         'cols': [],
         'plot_params': {},
