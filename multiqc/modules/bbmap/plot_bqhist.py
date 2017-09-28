@@ -16,10 +16,10 @@ def plot_bqhist(samples, file_type, **plot_args):
 
 
     columns_to_plot = {
-        'Counts': {
-            0: 'Read 1',
-            9: 'Read 2',
-        },
+        #'Counts': {
+        #    0: 'Read 1',
+        #    9: 'Read 2',
+        #},
         'Read 1 averages': {
             #1: 'Min',
             #2: 'Max',
@@ -60,7 +60,7 @@ def plot_bqhist(samples, file_type, **plot_args):
             'title': plot_args['plot_title'],
             'xlab': 'Read position',
             'data_labels': [
-                {'name': 'Count histogram', 'ylab': 'Read count'},
+                #{'name': 'Count histogram', 'ylab': 'Read count'},
                 {'name': 'Read 1 average scores', 'ylab': 'Average score'},
                 {'name': 'Read 2 average scores', 'ylab': 'Average score'},
             ]

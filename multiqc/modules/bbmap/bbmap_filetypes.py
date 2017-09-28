@@ -73,7 +73,8 @@ file_types = {
     'bqhist': {
         'title': 'Base quality',
         'descr': 'Quality histogram designed for box plots (`bqhist`). '
-                 'Refer to original source files for complete boxplot data.',
+                 'Refer to original source files for complete boxplot data. '
+                 'Plot shows base quality for each read position. ',
         'help_text': '',
         'cols': odict[
             'BaseNum':int,
