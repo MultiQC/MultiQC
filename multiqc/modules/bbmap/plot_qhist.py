@@ -23,7 +23,7 @@ def plot_qhist(samples, file_type, **plot_args):
             xmax = item[0]
             break
 
-    # The columns_to_plot dictionary should be replaced with an OrderedDict, 
+    # The columns_to_plot dictionary should be replaced with an OrderedDict,
     # not to rely on the ordered-by-default implementation details on Python 3.6
     columns_to_plot = {
         'Linear': {
@@ -55,7 +55,7 @@ def plot_qhist(samples, file_type, **plot_args):
 
     plot_params = {
             'id': 'bbmap-' + file_type,
-            'title': plot_args['plot_title'],
+            'title': 'BBTools: ' + plot_args['plot_title'],
             'xmax': xmax,
             'xlab': 'Position in read',
             'data_labels': [

@@ -42,15 +42,14 @@ def plot_bhist(samples, file_type, **plot_args):
 
     plot_params = {
             'id': 'bbmap-' + file_type,
-            'title': plot_args['plot_title'],
+            'title': 'BBTools: ' + plot_args['plot_title'],
             'xlab': 'Read position',
-            'ylab': 'Proportion',
             'ymin': 0,
             'ymax': 100,
             'data_labels': [
-                {'name': 'Proportion GC'},
-                {'name': 'Proportion AT'},
-                {'name': 'Proportion N'},
+                {'name': 'Percentage of G+C bases'},
+                {'name': 'Percentage of A+T bases'},
+                {'name': 'Percentage of N bases'},
             ]
     }
     plot_params.update(plot_args['plot_params'])

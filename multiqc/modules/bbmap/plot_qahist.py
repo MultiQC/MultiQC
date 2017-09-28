@@ -19,7 +19,7 @@ def plot_qahist(samples, file_type, **plot_args):
                                 for sample in samples])):
         # Skip plotting values for this x if missing columns.
         if len(item[1]) < 6:
-            continue 
+            continue
         all_x.add(item[0])
 
 
@@ -59,7 +59,7 @@ def plot_qahist(samples, file_type, **plot_args):
 
     plot_params = {
             'id': 'bbmap-' + file_type,
-            'title': plot_args['plot_title'],
+            'title': 'BBTools: ' + plot_args['plot_title'],
             'xlab': 'Quality score',
             'data_labels': [
                 {'name': 'Match', 'ylab': 'Match count'},

@@ -50,7 +50,7 @@ def plot_aqhist(samples, file_type, **plot_args):
 
     plot_params = {
             'id': 'bbmap-' + file_type,
-            'title': plot_args['plot_title'],
+            'title': 'BBTools: ' + plot_args['plot_title'],
             'xmax': xmax,
             'xlab': 'Quality score',
             'data_labels': [

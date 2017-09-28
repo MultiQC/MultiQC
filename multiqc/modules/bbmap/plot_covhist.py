@@ -33,7 +33,7 @@ def plot_covhist(samples, file_type, **plot_args):
 
     plot_params = {
             'id': 'bbmap-' + file_type,
-            'title': plot_args['plot_title'],
+            'title': 'BBTools: ' + plot_args['plot_title'],
             'smooth_points': 400,
             'xmax': xmax,
             'xlab': 'Coverage (depth)',

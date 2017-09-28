@@ -18,11 +18,31 @@ class slice2OrderedDict(object):
         return OrderedDict([(slice.start, slice.stop) for slice in keys])
 odict = slice2OrderedDict()
 
+section_order = [
+    'covhist',
+    'covstats',
+    'bincov',
+    'bqhist',
+    'idhist',
+    'indelhist',
+    'mhist',
+    'qahist',
+    'qhist',
+    'aqhist',
+    'ehist',
+    'lhist',
+    'ihist',
+    'gchist',
+    'bhist' ,
 
+    'rpkm',
+    'statsfile_machine',
+    'statsfile',
+]
 file_types = {
     'aqhist': {
-        'title': 'Average read quality',
-        'descr': 'Histogram of average read quality (`aqhist`). '
+        'title': 'Read quality',
+        'descr': 'Histogram of average read qualities (`aqhist`). '
                  'Plot shows the number of reads at each quality score.',
         'help_text': '',
         'cols': odict[
@@ -34,7 +54,7 @@ file_types = {
         ],
         'plot_func': plot_aqhist,
         'plot_params': {
-            'xPlotBands': 
+            'xPlotBands':
             [
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
@@ -49,7 +69,7 @@ file_types = {
     'bhist' : {
         'title': 'Base composition',
         'descr': 'Base composition histogram by position (`bhist`). '
-                 'The plot shows the proportion of GC, AT, and N bases '
+                 'The plot shows the percentage of `G+C`, `A+T`, and `N` bases '
                  'for each position in the reads.',
         'help_text': 'Relative composition',
         'cols': odict[
@@ -77,7 +97,7 @@ file_types = {
         'title': 'Base quality',
         'descr': 'Quality histogram designed for box plots (`bqhist`). '
                  'Refer to original source files for complete boxplot data. '
-                 'Plot shows base quality for each read position. ',
+                 'Plot shows mean base quality for each read position. ',
         'help_text': '',
         'cols': odict[
             'BaseNum':int,
@@ -132,7 +152,7 @@ file_types = {
         'plot_func': plot_basic_hist,
         'plot_params': {
             'xlab': 'Errors',
-            'ylab': 'Read count'
+            'ylab': '# Reads'
         }
     },
     'gchist' : {
@@ -150,7 +170,7 @@ file_types = {
         'plot_func': plot_basic_hist,
         'plot_params': {
             'xlab': 'Proportion GC',
-            'ylab': 'Read count'
+            'ylab': '# Reads'
         }
     },
     'idhist': {
@@ -217,8 +237,8 @@ file_types = {
         'cols': odict['Length':int, 'Count':int ],
         'plot_func': plot_basic_hist,
         'plot_params': {
-            'xlab': 'Read length',
-            'ylab': 'Read count'
+            'xlab': 'Read length (base pairs)',
+            'ylab': '# Reads'
         }
     },
     'mhist': {
@@ -252,7 +272,7 @@ file_types = {
         'plot_params': {}
     },
     'qhist': {
-        'title': 'Quality',
+        'title': 'Sequence Quality Histograms',
         'descr': 'Quality histogram by position (`qhist`). '
                  'The plots show the average quality for each position in the reads, '
                  'using the linear values, logarithmically scaled values, and the '
@@ -311,7 +331,7 @@ file_types = {
 
 statsfile_machine_keys = [
     'Reads_Used', 'Bases_Used', 'Reads/sec', 'kBases/sec',
-    
+
     'R1_Mapped_Percent', 'R1_Unambiguous_Percent', 'R1_Mapped_Reads',
     'R1_Unambiguous_Reads', 'Mated_Pairs', 'Bad_Pairs', 'R1_Rescued',
     'Avg_Insert_Size', 'R1_Perfect_Best_Site', 'R1_Semiperfect_Site',
@@ -327,6 +347,5 @@ statsfile_machine_keys = [
     'R2_Ins_Rate', 'R2_N_Rate', 'R2_Match_Count', 'R2_Error_Count',
     'R2_Sub_Count', 'R2_Del_Count', 'R2_Ins_Count', 'R2_N_Count',
     'R2_Mapped_Percent',
-    
-]
 
+]

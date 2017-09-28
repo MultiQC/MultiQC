@@ -9,7 +9,7 @@ from multiqc import config
 from multiqc.plots import linegraph, bargraph, scatter, table, heatmap, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
 
-from .bbmap_filetypes import file_types, statsfile_machine_keys
+from .bbmap_filetypes import section_order, file_types, statsfile_machine_keys
 
 """ MultiQC module to parse output from BBMap """
 
@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="BBTools",
             anchor="bbmap",
             href="http://jgi.doe.gov/data-and-tools/bbtools/",
-            info="""is a suite of fast multithreaded bioinformatics tools 
+            info="""is a suite of fast multithreaded bioinformatics tools
             designed for the analysis of DNA and RNA sequence data."""
         )
 
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Could not find any data in '%s'", config.analysis_dir)
             raise UserWarning
 
-        for file_type in file_types:
+        for file_type in section_order:
             if len(self.mod_data[file_type]) > 0:
                 log.debug("section %s has %d entries", file_type,
                           len(self.mod_data[file_type]))
@@ -58,8 +58,8 @@ class MultiqcModule(BaseMultiqcModule):
                     helptext = file_types[file_type]['help_text'],
                     plot = self.plot(file_type)
                 )
-            
-            if any(self.mod_data[file_type][sample]['kv'] 
+
+            if any(self.mod_data[file_type][sample]['kv']
                    for sample in self.mod_data[file_type]):
                 self.add_section(
                     name = file_types[file_type]['title']+' summary table',
@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             if line[0][0] == '#':
                 # It's a header row
                 line[0] = line[0][1:] # remove leading '#'
-                    
+
                 if line[0] != cols[0]:
                     # It's not the table header, it must be a key-value row
                     if len(line) != 2:
@@ -137,9 +137,9 @@ class MultiqcModule(BaseMultiqcModule):
         plot_title = file_types[file_type]['title']
         plot_func = file_types[file_type]['plot_func']
         plot_params = file_types[file_type]['plot_params']
-        return plot_func(samples, 
-                    file_type, 
-                    plot_title=plot_title, 
+        return plot_func(samples,
+                    file_type,
+                    plot_title=plot_title,
                     plot_params=plot_params)
 
 
@@ -147,16 +147,19 @@ class MultiqcModule(BaseMultiqcModule):
         """  Create table of key-value items in 'file_type'.
         """
 
-        table_data = {sample: items['kv'] 
-                for sample, items 
+        table_data = {sample: items['kv']
+                for sample, items
                 in self.mod_data[file_type].items()
         }
         table_headers = {column_header: {
                     'title': column_header,
                     'description': description,
                 }
-                for column_header, description 
+                for column_header, description
                 in file_types[file_type]['kv_descriptions'].items()
+        }
+        tconfig = {
+            'namespace': 'BBTools'
         }
         for sample in table_data:
             for key, value in table_data[sample].items():
@@ -164,4 +167,4 @@ class MultiqcModule(BaseMultiqcModule):
                     table_data[sample][key] = float(value)
                 except ValueError:
                     pass
-        return table.plot(table_data, table_headers)
+        return table.plot(table_data, table_headers, tconfig)

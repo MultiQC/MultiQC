@@ -57,12 +57,13 @@ def plot_bqhist(samples, file_type, **plot_args):
 
     plot_params = {
             'id': 'bbmap-' + file_type,
-            'title': plot_args['plot_title'],
+            'title': 'BBTools: ' + plot_args['plot_title'],
             'xlab': 'Read position',
+            'ylab': 'Average quality score',
             'data_labels': [
                 #{'name': 'Count histogram', 'ylab': 'Read count'},
-                {'name': 'Read 1 average scores', 'ylab': 'Average score'},
-                {'name': 'Read 2 average scores', 'ylab': 'Average score'},
+                {'name': 'Read 1',},
+                {'name': 'Read 2',},
             ]
     }
 
