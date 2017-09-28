@@ -178,6 +178,7 @@ fn_clean_trim:
     - '.json'
     - '_mqc'
     - 'short_summary_'
+    - '.align'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
