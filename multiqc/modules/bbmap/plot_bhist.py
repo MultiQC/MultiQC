@@ -32,7 +32,7 @@ def plot_bhist(samples, file_type, **plot_args):
         nucleotide_data.append(
             {
                 sample+'.'+column_name: {
-                    x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
+                    x: samples[sample]['data'][x][column]*100 if x in samples[sample]['data'] else 0
                     for x in all_x
             }
             for sample in samples
@@ -45,10 +45,12 @@ def plot_bhist(samples, file_type, **plot_args):
             'title': plot_args['plot_title'],
             'xlab': 'Read position',
             'ylab': 'Proportion',
+            'ymin': 0,
+            'ymax': 100,
             'data_labels': [
-                {'name': 'GC'},
-                {'name': 'AT'},
-                {'name': 'N'},
+                {'name': 'Proportion GC'},
+                {'name': 'Proportion AT'},
+                {'name': 'Proportion N'},
             ]
     }
     plot_params.update(plot_args['plot_params'])
