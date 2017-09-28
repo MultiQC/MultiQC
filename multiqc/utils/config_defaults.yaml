@@ -144,6 +144,22 @@ fn_clean_exts:
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
+    - '.aqhist'
+    - '.bhist'
+    - '.bincov'
+    - '.bqhist'
+    - '.covhist'
+    - '.covstats'
+    - '.ehist'
+    - '.gchist'
+    - '.idhist'
+    - '.ihist'
+    - '.indelhist'
+    - '.lhist'
+    - '.mhist'
+    - '.qahist'
+    - '.qhist'
+    - '.rpkm'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -168,6 +184,7 @@ fn_clean_trim:
 fn_ignore_files:
     - '.DS_Store'
     - '*.bam'
+    - '*.bai'
     - '*.sam'
     - '*.fq.gz'
     - '*.fastq.gz'
@@ -299,6 +316,10 @@ module_order:
             - DNA
 
     # Alignment tool stats
+    - bbmap:
+        module_tag:
+            - DNA
+            - RNA
     - bismark:
         module_tag:
             - DNA
