@@ -45,6 +45,9 @@ class MultiqcModule(BaseMultiqcModule):
         if not data_found:
             log.debug("Could not find any data in '%s'", config.analysis_dir)
             raise UserWarning
+        else:
+            num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
+            log.info("Found {} reports".format(num_samples))
 
         for file_type in section_order:
             if len(self.mod_data[file_type]) > 0:

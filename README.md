@@ -30,10 +30,10 @@ Currently, supported tools include:
 
 |Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
 |---------------------------------|------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval]|[BBMap/BBTools][bbmap]  |[Bamtools][bamtools]       |[BUSCO][busco]        |
+|[Adapter Removal][adapterremoval]|[BBMap][bbmap]          |[Bamtools][bamtools]       |[BUSCO][busco]        |
 |[AfterQC][afterqc]               |[Bismark][bismark]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
 |[Bcl2fastq][bcl2fastq]           |[Bowtie][bowtie-1]      |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BBMap/BBTools][bbmap]           |[Bowtie 2][bowtie-2]    |[HOMER][homer]             |[goleft][goleft]      |
+|[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]    |[HOMER][homer]             |[goleft][goleft]      |
 |[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HTSeq][htseq]             |[methylQA][methylqa]  |
 |[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[MACS2][macs2]             |[Peddy][peddy]        |
 |[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[Picard][picard]           |[Preseq][preseq]      |
