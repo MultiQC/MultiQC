@@ -59,7 +59,7 @@ Many thanks to those involved!
 * [**AfterQC**](https://github.com/OpenGene/AfterQC) - New module!
     * Added parsing of the _AfterQC_ json file data, with a plot of filtered reads.
     * Work by [@raonyguimaraes](https://github.com/raonyguimaraes)
-* [**bcl2fastq**](https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html)
+* [**bcl2fastq**](https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html)
     * bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis
     * New module parses JSON output from recent versions and summarises some key statistics from the demultiplexing process.
     * Work by [@iimog](https://github.com/iimog) (with a little help from [@tbooth](https://github.com/tbooth) and [@ewels](https://github.com/ewels))
