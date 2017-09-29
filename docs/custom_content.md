@@ -180,7 +180,7 @@ custom_data:
 > **Note:** Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the order
 > of columns in the table.
 
-See the [general statistics docs](http://multiqc.info/docs/#step-4-adding-to-the-general-statistics-table)
+See the [general statistics docs](http://multiqc.info/docs/#step-3-adding-to-the-general-statistics-table)
 for more information about configuring data for the General Statistics table.
 
 ## MultiQC-specific data file
