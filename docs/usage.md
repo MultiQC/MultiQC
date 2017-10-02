@@ -180,13 +180,3 @@ you want to run. Alternatively, use `-e`/`--exclude` to run all modules
 except those listed.
 
 You can get a group of modules by using `--tag` followed by a tag e.g. RNA or DNA.
-
-## Using the Docker container
-A Docker container based on `python:2.7-slim` is provided.
-Specify the volume to bind mount as desired with `-v`, same for the working directory inside the container with `-w`. Or just use `-v "$PWD":"$PWD" -w "$PWD"` to run in current directory.
-For more information, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/)
-
-The usual multiqc command line should work fine:
-```
-docker run -v "$PWD":"$PWD" -w "$PWD" ewels/multiqc multiqc .
-```
