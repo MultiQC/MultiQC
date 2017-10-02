@@ -152,3 +152,12 @@ prepend-path    PATH        $modroot/bin
 prepend-path	PYTHONPATH	$modroot/lib/python2.7/site-packages
 ```
 
+## Using the Docker container
+A Docker container based on `python:2.7-slim` is provided.
+Specify the volume to bind mount as desired with `-v`, same for the working directory inside the container with `-w`. Or just use `-v "$PWD":"$PWD" -w "$PWD"` to run in current directory.
+For more information, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/)
+
+The usual multiqc command line should work fine:
+```
+docker run -v "$PWD":"$PWD" -w "$PWD" ewels/multiqc multiqc .
+```

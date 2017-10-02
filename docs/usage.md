@@ -179,4 +179,4 @@ You can do this by using `-m`/`--modules` to explicitly define which modules
 you want to run. Alternatively, use `-e`/`--exclude` to run all modules
 except those listed.
 
-You can get a group of modules by using `--tag` followed by a tag e.g. RNA or DNA. 
+You can get a group of modules by using `--tag` followed by a tag e.g. RNA or DNA.

@@ -140,25 +140,26 @@ If in doubt, feel free to get in touch with the author directly:
 Project lead and main author: [@ewels](https://github.com/ewels)
 
 Code contributions from:
-[@moonso](https://github.com/moonso),
-[@lpantano](https://github.com/lpantano),
-[@dakl](https://github.com/dakl),
-[@robinandeer](https://github.com/robinandeer),
-[@mlusignan](https://github.com/mlusignan),
-[@HLWiencko](https://github.com/HLWiencko),
-[@guillermo-carrasco](https://github.com/guillermo-carrasco),
-[@avilella](https://github.com/avilella),
-[@vladsaveliev](https://github.com/vladsaveliev),
-[@t-neumann](https://github.com/t-neumann),
 [@ahvigil](https://github.com/ahvigil),
-[@bschiffthaler](https://github.com/bschiffthaler),
-[@jrderuiter](https://github.com/jrderuiter),
-[@epruesse](https://github.com/epruesse),
+[@avilella](https://github.com/avilella),
 [@boulund](https://github.com/boulund),
-[@iimog](https://github.com/iimog),
-[@rlegendre](https://github.com/rlegendre),
+[@bschiffthaler](https://github.com/bschiffthaler),
+[@dakl](https://github.com/dakl),
 [@ehsueh](https://github.com/ehsueh)
+[@epruesse](https://github.com/epruesse),
+[@guillermo-carrasco](https://github.com/guillermo-carrasco),
+[@HLWiencko](https://github.com/HLWiencko),
+[@iimog](https://github.com/iimog),
+[@jrderuiter](https://github.com/jrderuiter),
+[@lpantano](https://github.com/lpantano),
+[@MaxUlysse](https://github.com/MaxUlysse),
+[@mlusignan](https://github.com/mlusignan),
+[@moonso](https://github.com/moonso),
 [@noirot](https://github.com/noirot)
+[@rlegendre](https://github.com/rlegendre),
+[@robinandeer](https://github.com/robinandeer),
+[@t-neumann](https://github.com/t-neumann),
+[@vladsaveliev](https://github.com/vladsaveliev),
 [@wkretzsch](https://github.com/wkretzsch)
 
 and many others. Thanks for your support!
@@ -184,11 +185,11 @@ and many others. Thanks for your support!
 [flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
-[jellyfish]:      http://multiqc.info/docs/#jellyfish
 [hicup]:          http://multiqc.info/docs/#hicup
 [hisat2]:         http://multiqc.info/docs/#hisat2
 [homer]:          http://multiqc.info/docs/#homer
 [htseq]:          http://multiqc.info/docs/#htseq
+[jellyfish]:      http://multiqc.info/docs/#jellyfish
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [leehom]:         http://multiqc.info/docs/#leehom
 [macs2]:          http://multiqc.info/docs/#macs2
@@ -205,14 +206,14 @@ and many others. Thanks for your support!
 [rseqc]:          http://multiqc.info/docs/#rseqc
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster
-[slamdunk]:       http://multiqc.info/docs/#slamdunk
+[samtools]:       http://multiqc.info/docs/#samtools
 [skewer]:         http://multiqc.info/docs/#skewer
+[slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
 [star]:           http://multiqc.info/docs/#star
-[samtools]:       http://multiqc.info/docs/#samtools
-[theta2]:         http://multiqc.info/docs/#theta2
-[trimmomatic]:    http://multiqc.info/docs/#trimmomatic
-[tophat]:         http://multiqc.info/docs/#tophat
-[vcftools]:       http://multiqc.info/docs/#vcftools
 [supernova]:      http://multiqc.info/docs/#supernova
+[theta2]:         http://multiqc.info/docs/#theta2
+[tophat]:         http://multiqc.info/docs/#tophat
+[trimmomatic]:    http://multiqc.info/docs/#trimmomatic
+[vcftools]:       http://multiqc.info/docs/#vcftools
