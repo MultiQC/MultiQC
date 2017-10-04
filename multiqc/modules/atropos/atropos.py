@@ -66,15 +66,17 @@ class BaseAtroposModule(BaseMultiqcModule):
         from_config: Whether to load data from configured locations. This should
             only be set to False in tests.
     """
-    def __init__(self, name, anchor, info='', from_config=True):
+    def __init__(self, name, anchor, config_key=None, info='', from_config=True):
         # Initialise the parent object
-        super().__init__(
+        super(BaseAtroposModule, self).__init__(
             name=name, anchor=anchor,
             href=ATROPOS_GITHUB_URL,
             info=info+"is a general-purpose NGS pre-processing tool that "\
                  "specializes in adatper- and quality-trimming, written "
                  "by John Didion at NHGRI. It is a fork of Cutadapt, "
                  "written by Marcel Martin at Stockholm University.")
+        # Name of module in the config file.
+        self.config_key = config_key or anchor
         # List of sample IDs
         self.atropos_sample_ids = []
         # General data (for summary table)
@@ -98,13 +100,17 @@ class BaseAtroposModule(BaseMultiqcModule):
         """Initialize module from JSON files discovered via MultiQC
         configuration.
         """
-        # Atropos summary files are JSON files (with .json extension) and
-        # always have '"program": "Atropos"' as the first key-value pair.
-        if 'atropos' in config.sp:
-            patterns = config.sp['atropos']
+        if self.config_key in config.sp:
+            log_files = self.find_log_files(self.config_key, filehandles=True)
         else:
+            # Atropos summary files are JSON files (with .json extension) and
+            # always have '"program": "Atropos"' as the first key-value pair.
+            # Note that this way is deprecated; currently it produces a warning
+            # but it may produce an error in the future.
             patterns = dict(fn='*.json', contents='"program": "Atropos"')
-        for file_dict in self.find_log_files(patterns, filehandles=True):
+            log_files = self.find_log_files(patterns, filehandles=True)
+
+        for file_dict in log_files:
             fileobj = file_dict['f']
             data = json.load(fileobj)
             if self.can_add_atropos_data(data):
@@ -180,7 +186,7 @@ class BaseAtroposModule(BaseMultiqcModule):
 
 class TrimModule(BaseAtroposModule):
     def __init__(self, **kwargs):
-        super().__init__(name="Atropos", anchor="atropos", **kwargs)
+        super().__init__(name="Atropos", anchor="atropos", config_key="atropos_trim", **kwargs)
         # TODO: these should only be loaded when there is QC data
         self.css = {
             'atropos-assets/css/multiqc_atropos.css' :
@@ -284,7 +290,7 @@ class QcModule(BaseAtroposModule):
         self.phase = phase.lower()
         super().__init__(
             name="Atropos: {}-trim QC".format(phase),
-            anchor='atropos-{}'.format(phase.lower()),
+            anchor='atropos_{}'.format(phase.lower()),
             info="reports {}-trimming statistics. Atropos ".format(phase),
             **kwargs)
     
