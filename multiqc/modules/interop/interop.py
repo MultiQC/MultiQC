@@ -14,103 +14,103 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Illumina InterOp Statistics', anchor='interop',
         href="http://illumina.github.io/interop/index.html",
-        info="The Illumina InterOp libraries are a set of common routines used for reading and writing InterOp metric files.")
+        info=" - a set of common routines used for reading and writing InterOp metric files.")
 
         log = logging.getLogger(__name__)
-        summaryFiles, indexSummaryFiles = self.find_log_files('interop/summary',filehandles=True), self.find_log_files('interop/index-summary',filehandles=True)
 
-        for f in summaryFiles:
-            if f is not None:
-                log.debug( "Run Summary File Found: {}".format(f['fn'] ))      # Filename
-                self.runSummary = self.parse_summary_csv(f['f'])
-            else:
-                continue
+        # Parse data
+        self.runSummary = {}
+        self.indexSummary = {}
+        for f in self.find_log_files('interop/summary',filehandles=True):
+            parsed_data = self.parse_summary_csv(f['f'])
+            if max(len(parsed_data['summary']), len(parsed_data['details'])) > 0:
+                self.runSummary[f['s_name']] = parsed_data
+        for f in self.find_log_files('interop/index-summary',filehandles=True):
+            parsed_data = self.parse_index_summary_csv(f['f'])
+            if max(len(parsed_data['summary']), len(parsed_data['details'])) > 0:
+                self.indexSummary[f['s_name']] = parsed_data
 
-        #Create report Sections
-        self.add_section (
-            name = 'Read Metrics Summary',
-            anchor = 'interop-runmetrics-summary',
-            plot = self.run_metrics_summary_table(self.runSummary['summary'])
-            )
-        self.add_section (
-            name = 'Read Metrics per Lane',
-            anchor = 'interop-runmetrics-details',
-            plot = self.run_metrics_details_table(self.runSummary['details'])
-            )
+        # No samples
+        if max(len(self.runSummary), len(self.indexSummary)) == 0:
+            raise UserWarning
 
-        for f in indexSummaryFiles:
-            if f is not None:
-                log.debug( "Index Summary File Found: {}".format(f['s_name'] ))      # Filename
-                self.indexSummary = self.parse_index_summary_csv(f['f'])
-            else:
-                continue
-
-        self.add_section (
-            name = 'Indexing QC Metrics summary',
-            anchor = 'interop-indexmetrics-summary',
-            description = 'Summary metrics about each lane',
-            plot = self.index_metrics_summary_table(self.indexSummary['summary'])
+        # Create report Sections
+        if len(self.runSummary) > 0:
+            self.add_section (
+                name = 'Read Metrics Summary',
+                anchor = 'interop-runmetrics-summary',
+                description = 'Summary statistics for Total read count from each run.',
+                plot = self.run_metrics_summary_table(self.runSummary)
             )
-        self.add_section (
-            name = 'Indexing QC Metrics details',
-            anchor = 'interop-indexmetrics-details',
-            description = ' Detail Metrics about each lane',
-            plot = self.index_metrics_details_table(self.indexSummary['details'])
-            )
+        #     self.add_section (
+        #         name = 'Read Metrics per Lane',
+        #         anchor = 'interop-runmetrics-details',
+        #         plot = self.run_metrics_details_table(self.runSummary['details'])
+        #     )
+        #
+        # if len(self.indexSummary) > 0:
+        #     self.add_section (
+        #         name = 'Indexing QC Metrics summary',
+        #         anchor = 'interop-indexmetrics-summary',
+        #         description = 'Summary metrics about each lane',
+        #         plot = self.index_metrics_summary_table(self.indexSummary['summary'])
+        #     )
+        #     self.add_section (
+        #         name = 'Indexing QC Metrics details',
+        #         anchor = 'interop-indexmetrics-details',
+        #         description = ' Detail Metrics about each lane',
+        #         plot = self.index_metrics_details_table(self.indexSummary['details'])
+        #     )
 
     def parse_summary_csv(self,f):
-        metrics={'summary':{},
-                 'details':{}
-                 }
-
+        metrics = {
+            'summary': {},
+            'details': {}
+        }
         header = []
-        summary = {}
-        details = {}
         section = None
         read = None
         for line in f:
             line = line.strip()
-            #assume fixed file format
-            #find summary header
+            # assume fixed file format
+            # find summary header
             if line.startswith("Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"):
-                #set section to summary
+                # set section to summary
                 section = "summary"
                 header = line.split(",")
-                continue
-            if section == "summary":
+            elif section == "summary":
                 data = line.split(",")
-                #process summary
-                summary[data[0]]={}
+                # process summary
+                metrics['summary'][data[0]] = {}
                 for idx in range(1,len(data)):
-                    summary[data[0]][header[idx]]=data[idx]
+                    try:
+                        metrics['summary'][data[0]][header[idx]] = float(data[idx])
+                    except ValueError:
+                        metrics['summary'][data[0]][header[idx]] = data[idx]
                 if line.startswith("Total"):
                     section = None
-                continue
-            if line.startswith("Read") and (section is None or section == "details"):
-                #set section to details
+            elif line.startswith("Read") and (section is None or section == "details"):
+                # set section to details
                 section = "details"
                 read = line
-                details[read]=[]
-                continue
-            if line.startswith("Lane,Surface,Tiles,Density,Cluster") and section == "details":
-                #get details header
+                metrics['details'][read] = []
+            elif line.startswith("Lane,Surface,Tiles,Density,Cluster") and section == "details":
+                # get details header
                 header = line.split(",")
-                continue
-            if section == "details":
+            elif section == "details":
                 if line.startswith("Extracted: "):
                     section = "finish"
                     continue
                 data = line.split(",")
-                #process summary
-                linedata={}
+                # process summary
+                linedata = {}
                 for idx in range(0,len(data)):
-                    linedata[header[idx]]=data[idx]
-                details[read].append(linedata)
-                continue
+                    try:
+                        linedata[header[idx]] = float(data[idx])
+                    except ValueError:
+                        linedata[header[idx]] = data[idx]
+                metrics['details'][read].append(linedata)
 
-        #import pprint
-        #pp = pprint.PrettyPrinter(indent=4)
-        #log.debug(pp.pprint(summary))
         return metrics
 
     def parse_index_summary_csv(self,f):
@@ -155,41 +155,56 @@ class MultiqcModule(BaseMultiqcModule):
         metrics['details']=details
         return metrics
 
-    def run_metrics_summary_table(self,data):
+    def run_metrics_summary_table(self, data):
+
         headers = OrderedDict()
         headers['Yield'] = {
             'title': 'Yield',
-            'description': 'The number of bases sequenced.'
-        }
-        headers['Projected Yield'] = {
-            'title': 'Projected Yield',
-            'description': 'The projected number of bases expected to be sequenced at the end of the run.'
+            'description': 'The number of bases sequenced.',
+            'scale': 'PuOr'
         }
         headers['Aligned'] = {
-            'title': 'Aligned (%)',
-            'description': 'The percentage of the sample that aligned to the PhiX genome, which is determined for each level or read independently.'
+            'title': '% Aligned',
+            'description': 'The percentage of the sample that aligned to the PhiX genome',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'PiYG'
         }
         headers['Error Rate'] = {
-            'title': 'Error rate (%)',
-            'description': ''
+            'title': '% Error rate',
+            'description': '',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'OrRd'
         }
         headers['Intensity C1'] = {
             'title': 'Intensity Cycle 1',
             'description': ''
         }
         headers['%>=Q30'] = {
-            'title': '%>=Q30',
-            'description': ''
+            'title': '% >= Q30',
+            'description': 'Percentage of reads with quality phred score of 30 or above',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'RdYlGn'
         }
         table_config = {
             'namespace': 'interop',
             'id': 'interop-runmetrics-summary-table',
             'table_title': 'Read metrics summary',
-            'col1_header': '',
-            'no_beeswarm': True,
-            'scale': False
+            'no_beeswarm': True
         }
-        return table.plot(data, headers, table_config)
+
+        tdata = {}
+        for s_name in data:
+            try:
+                tdata[s_name] = data[s_name]['summary']['Total']
+            except KeyError:
+                log.warn("Expected summary Total key not found in {}".format(f['fn']))
+        return table.plot(tdata, headers, table_config)
 
     def run_metrics_details_table(self,data):
         headers = OrderedDict()
@@ -267,8 +282,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'interop-runmetrics-detail-table',
             'table_title': 'Sequencing Lane Statistics',
             'col1_header': '',
-            'no_beeswarm': True,
-            'scale': False
+            'no_beeswarm': True
         }
         return table.plot(data, headers, table_config)
 
@@ -303,8 +317,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'interop-indexmetrics-summary-table',
             'table_title': 'Index Read Statistics Summary',
             'col1_header': '',
-            'no_beeswarm': True,
-            'scale': False
+            'no_beeswarm': True
         }
         return table.plot(data, headers, table_config)
 
@@ -331,7 +344,6 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'interop-indexmetrics-details-table',
             'table_title': 'Index Read Statistics Details',
             'col1_header': '',
-            'no_beeswarm': True,
-            'scale': False
+            'no_beeswarm': True
         }
         return table.plot(data, headers, table_config)
