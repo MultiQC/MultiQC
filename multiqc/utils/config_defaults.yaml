@@ -259,6 +259,12 @@ module_order:
         module_tag:
             - DNA
             - Denovo
+    - deeptools:
+        module_tag:
+            - DNA
+            - RNA
+            - chip
+
     # Post-alignment processing
     - homer:
         module_tag:

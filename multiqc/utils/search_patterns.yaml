@@ -112,6 +112,27 @@ cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
     shared: true
+deeptools/bamPEFragmentSize:
+    contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
+    num_lines: 1
+deeptools/estimateReadFiltering:
+    contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'
+    num_lines: 1
+deeptools/plotCoverageStdout:
+    contents: 'sample	mean	std	min	25%	50%	75%	max'
+    num_lines: 1
+deeptools/plotCoverageOutRawCounts:
+    contents: "#plotCoverage --outRawCounts"
+    num_lines: 1
+deeptools/plotEnrichment:
+    contents: 'file	featureType	percent	featureReadCount	totalReadCount'
+    num_lines: 1
+deeptools/plotFingerprintOutRawCounts:
+    contents: '#plotFingerprint --outRawCounts'
+    num_lines: 1
+deeptools/plotFingerprintOutQualityMetrics:
+    contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
+    num_lines: 1
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:

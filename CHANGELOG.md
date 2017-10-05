@@ -13,13 +13,16 @@ string beginning with the name of your module, anything you like after the first
 
 #### New Modules:
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
-    * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
+    * Parse `.cnt` file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
     * Module written by [@noirot](https://github.com/noirot/)
 * [**10X Supernova**](https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome)
     * Parses statistics from the _de-novo_ Supernova software.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
-* [**Home Tag Directory**](http://homer.ucsd.edu/homer/ngs/tagDir.html) - new submodule!
+* [**Homer Tag Directory**](http://homer.ucsd.edu/homer/ngs/tagDir.html) - new submodule!
     * Module written by [@rdali](https://github.com/rdali/)
+* [**deepTools**](https://github.com/fidelram/deepTools) - new module!
+    * Parse text output from `bamPEFragmentSize`, `estimateReadFiltering`, `plotCoverage`, `plotEnrichment`, and `plotFingerprint`
+    * Module written by [@dpryan79](https://github.com/dpryan79/)
 
 #### Module updates:
 * **AfterQC**
