@@ -27,30 +27,113 @@ class bamPEFragmentSizeMixin():
                 self.add_data_source(f, section='bamPEFragmentSize')
         if len(self.deeptools_bamPEFragmentSize) > 0:
             headersSE = OrderedDict()
-            headersSE["Reads Sampled"] = {'title': 'Reads Sampled'}
-            headersSE["Read Len. Min."] = {'title': 'Read Len. Min.', 'description': 'Minimum read length'}
-            headersSE["Read Len. 1st. Qu."] = {'title': 'Read Len. 1st Qu.', 'description': '1st quartile read length'}
-            headersSE["Read Len. Mean"] = {'title': 'Read Len. Mean', 'description': 'Mean read length'}
-            headersSE["Read Len. Median"] = {'title': 'Read Len. Median', 'description': 'Median read length'}
-            headersSE["Read Len. 3rd Qu."] = {'title': 'Read Len. 3rd Qu.', 'description': '3rd quartile read length'}
-            headersSE["Read Len. Max"] = {'title': 'Read Len. Max.', 'description': 'Maximum read length'}
-            headersSE["Read Len. Std."] = {'title': 'Read Len. Std. Dev.', 'description': 'read length standard deviation'}
-            headersSE["Read Med. Abs. Dev."] = {'title': 'Read Len. MAD', 'description': 'read length median absolute deviation'}
+            headersSE["Reads Sampled"] = {
+                'title': '# Sampled',
+                'description': 'Number of reads sampled',
+                'format': '{:,.0f}'
+            }
+            headersSE["Read Len. Min."] = {
+                'title': 'Min',
+                'description': 'Minimum read length',
+                'format': '{:,.0f}',
+                'shared_key': 'read_length'
+            }
+            headersSE["Read Len. 1st. Qu."] = {
+                'title': '1st Quartile',
+                'description': '1st quartile read length',
+                'format': '{:,.0f}',
+                'shared_key': 'read_length'
+            }
+            headersSE["Read Len. Mean"] = {
+                'title': 'Mean',
+                'description': 'Mean read length',
+                'shared_key': 'read_length'
+            }
+            headersSE["Read Len. Median"] = {
+                'title': 'Median',
+                'description': 'Median read length',
+                'format': '{:,.0f}',
+                'shared_key': 'read_length'
+            }
+            headersSE["Read Len. 3rd Qu."] = {
+                'title': '3rd Quartile',
+                'description': '3rd quartile read length',
+                'format': '{:,.0f}',
+                'shared_key': 'read_length'
+            }
+            headersSE["Read Len. Max"] = {
+                'title': 'Max',
+                'description': 'Maximum read length',
+                'format': '{:,.0f}',
+                'shared_key': 'read_length'
+            }
+            headersSE["Read Len. Std."] = {
+                'title': 'Std. Dev.',
+                'description': 'read length standard deviation',
+                'shared_key': 'read_length'
+            }
+            headersSE["Read Med. Abs. Dev."] = {
+                'title': 'MAD',
+                'description': 'read length median absolute deviation',
+                'shared_key': 'read_length'
+            }
             config = {'namespace': 'deepTools bamPEFragmentSize'}
             self.add_section(name="Read lengths",
                              anchor="bamPEFragmentSize",
                              plot=table.plot(self.deeptools_bamPEFragmentSize, headersSE, config))
 
             headersPE = OrderedDict()
-            headersPE["Frag. Sampled"] = {'title': 'Fragments Sampled'}
-            headersPE["Frag. Len. Min."] = {'title': 'Fragment Len. Min.', 'description': 'Minimum fragment length'}
-            headersPE["Frag. Len. 1st. Qu."] = {'title': 'Fragment Len. 1st Qu.', 'description': '1st quartile fragment length'}
-            headersPE["Frag. Len. Mean"] = {'title': 'Fragment Len. Mean', 'description': 'Mean fragment length'}
-            headersPE["Frag. Len. Median"] = {'title': 'Fragment Len. Median', 'description': 'Median fragment length'}
-            headersPE["Frag. Len. 3rd Qu."] = {'title': 'Fragment Len. 3rd Qu.', 'description': '3rd quartile fragment length'}
-            headersPE["Frag. Len. Max"] = {'title': 'Fragment Len. Max.', 'description': 'Maximum fragment length'}
-            headersPE["Frag. Len. Std."] = {'title': 'Fragment Len. Std. Dev.', 'description': 'Fragment length standard deviation'}
-            headersPE["Frag. Med. Abs. Dev."] = {'title': 'Fragment Len. MAD', 'description': 'Fragment length median absolute deviation'}
+            headersPE["Frag. Sampled"] = {
+                'title': '# Sampled',
+                'description': 'Number of fragments sampled',
+                'format': '{:,.0f}'
+            }
+            headersPE["Frag. Len. Min."] = {
+                'title': 'Min',
+                'description': 'Minimum fragment length',
+                'format': '{:,.0f}',
+                'shared_key': 'frag_length'
+            }
+            headersPE["Frag. Len. 1st. Qu."] = {
+                'title': '1st Quartile',
+                'description': '1st quartile fragment length',
+                'format': '{:,.0f}',
+                'shared_key': 'frag_length'
+            }
+            headersPE["Frag. Len. Mean"] = {
+                'title': 'Mean',
+                'description': 'Mean fragment length',
+                'format': '{:,.0f}',
+                'shared_key': 'frag_length'
+            }
+            headersPE["Frag. Len. Median"] = {
+                'title': 'Median',
+                'description': 'Median fragment length',
+                'format': '{:,.0f}',
+                'shared_key': 'frag_length'
+            }
+            headersPE["Frag. Len. 3rd Qu."] = {
+                'title': '3rd Quartile',
+                'description': '3rd quartile fragment length',
+                'format': '{:,.0f}',
+                'shared_key': 'frag_length'
+            }
+            headersPE["Frag. Len. Max"] = {
+                'title': 'Max',
+                'description': 'Maximum fragment length',
+                'format': '{:,.0f}',
+                'shared_key': 'frag_length'
+            }
+            headersPE["Frag. Len. Std."] = {
+                'title': 'Std. Dev.',
+                'description': 'Fragment length standard deviation',
+                'shared_key': 'frag_length'
+            }
+            headersPE["Frag. Med. Abs. Dev."] = {
+                'title': 'MAD',
+                'description': 'Fragment length median absolute deviation',
+                'shared_key': 'frag_length'
+            }
 
             # Are there any PE datasets?
             PE = False

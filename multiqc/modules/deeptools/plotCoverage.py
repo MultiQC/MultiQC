@@ -39,13 +39,41 @@ class plotCoverageMixin():
 
         if len(self.deeptools_plotCoverageStdout) > 0:
             header = OrderedDict()
-            header["mean"] = {'title': 'Mean Cov.', 'description': 'Mean coverage'}
-            header["std"] = {'title': 'Std. Dev.', 'description': 'Coverage standard deviation'}
-            header["min"] = {'title': 'Min. Cov.', 'description': 'Minimum Coverage'}
-            header["25%"] = {'title': '1st Q.', 'description': 'First quartile coverage'}
-            header["50%"] = {'title': 'Med. Cov.', 'description': 'Median coverage (second quartile)'}
-            header["75%"] = {'title': '3rd Q.', 'description': 'Third quartile coverage'}
-            header["max"] = {'title': 'Max. Cov.', 'description': 'Maximum coverage'}
+            header["min"] = {
+                'title': 'Min',
+                'description': 'Minimum Coverage',
+                'shared_key': 'coverage'
+            }
+            header["25%"] = {
+                'title': '1st Quartile',
+                'description': 'First quartile coverage',
+                'shared_key': 'coverage'
+            }
+            header["50%"] = {
+                'title': 'Median',
+                'description': 'Median coverage (second quartile)',
+                'shared_key': 'coverage'
+            }
+            header["mean"] = {
+                'title': 'Mean',
+                'description': 'Mean coverage',
+                'shared_key': 'coverage'
+            }
+            header["75%"] = {
+                'title': '3rd Quartile',
+                'description': 'Third quartile coverage',
+                'shared_key': 'coverage'
+            }
+            header["max"] = {
+                'title': 'Max',
+                'description': 'Maximum coverage',
+                'shared_key': 'coverage'
+            }
+            header["std"] = {
+                'title': 'Std. Dev.',
+                'description': 'Coverage standard deviation',
+                'shared_key': 'coverage'
+            }
             config = {'namespace': 'deepTools plotCoverage'}
             self.add_section(name="Coverage metrics",
                              anchor="plotCoverage",

@@ -29,13 +29,6 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
         self.general_stats_data = dict()
         n = dict()
 
-        # bamPEFragmentSize
-        n['bamPEFragmentSize'] = self.parse_bamPEFragmentSize()
-        if n['bamPEFragmentSize'] > 0:
-            log.debug("Found {} deepTools 'bamPEFragmentSize --table' samples".format(n['bamPEFragmentSize']))
-        else:
-            log.debug("Could not find any 'bamPEFragmentSize --table' outputs in {}".format(config.analysis_dir))
-
         # estimateReadFiltering
         n['estimateReadFiltering'] = self.parse_estimateReadFiltering()
         if n['estimateReadFiltering'] > 0:
@@ -52,6 +45,13 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
             log.debug("Found {} and {} deepTools plotCoverage standard output and --outRawCounts samples, respectively{}".format(n['plotCoverageStdout'], n['plotCoverageOutRawCounts'], extra))
         else:
             log.debug("Could not find any plotCoverage outputs in {} (you may need to increase the maximum log file size)".format(config.analysis_dir))
+
+        # bamPEFragmentSize
+        n['bamPEFragmentSize'] = self.parse_bamPEFragmentSize()
+        if n['bamPEFragmentSize'] > 0:
+            log.debug("Found {} deepTools 'bamPEFragmentSize --table' samples".format(n['bamPEFragmentSize']))
+        else:
+            log.debug("Could not find any 'bamPEFragmentSize --table' outputs in {}".format(config.analysis_dir))
 
         # plotEnrichment
         n['plotEnrichment'] = self.parse_plotEnrichment()

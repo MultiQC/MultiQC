@@ -28,17 +28,79 @@ class estimateReadFilteringMixin():
 
         if len(self.deeptools_estimateReadFiltering) > 0:
             header = OrderedDict()
-            header["M Entries"] = {'title': 'M entries', 'description': 'Number of entries in the file (millions)'}
-            header["% Aligned"] = {'title': '% Aligned', 'description': 'Percent of aligned entries'}
-            header["% Filtered"] = {'title': '% Tot. Filtered', 'description': 'Percent of alignment that would be filtered for any reason.'}
-            header["% Blacklisted"] = {'title': '% Blacklisted', 'description': 'Percent of alignments falling (at least partially) inside a blacklisted region'}
-            header["% MAPQ"] = {'title': '% MAPQ', 'description': 'Percent of alignments having MAPQ scores below the specified threshold'}
-            header["% Missing Flags"] = {'title': '% Missing Flags', 'description': 'Percent of alignments lacking at least on flag specified by --samFlagInclude'}
-            header["% Forbidden Flags"] = {'title': '% Forbidden Flags', 'description': 'Percent of alignments having at least one flag specified by --samFlagExclude'}
-            header["% deepTools Dupes"] = {'title': '% deepTools Dupes', 'description': 'Percent of alignments marked by deepTools as being duplicates'}
-            header["% Duplication"] = {'title': '% Duplication', 'description': 'Percent of alignments originally marked as being duplicates'}
-            header["% Singletons"] = {'title': '% Singletons', 'description': 'Percent of alignments that are singletons (i.e., paired-end reads where the mates don\'t align as a pair'}
-            header["% Strand Filtered"] = {'title': '% Strand Filtered', 'description': 'Percent of alignments arising from the wrong strand'}
+            header["M Entries"] = {
+                'title': 'M entries',
+                'description': 'Number of entries in the file (millions)'}
+            header["% Aligned"] = {
+                'title': '% Aligned',
+                'description': 'Percent of aligned entries',
+                'scale': 'YlGn',
+                'min': 0,
+                'max': 100
+            }
+            header["% Filtered"] = {
+                'title': '% Tot. Filtered',
+                'description': 'Percent of alignment that would be filtered for any reason.',
+                'scale': 'OrRd',
+                'min': 0,
+                'max': 100
+            }
+            header["% Blacklisted"] = {
+                'title': '% Blacklisted',
+                'description': 'Percent of alignments falling (at least partially) inside a blacklisted region',
+                'scale': 'YlOrRd',
+                'min': 0,
+                'max': 100
+            }
+            header["% MAPQ"] = {
+                'title': '% MAPQ', 'description':
+                'Percent of alignments having MAPQ scores below the specified threshold',
+                'scale': 'YlOrBn',
+                'min': 0,
+                'max': 100
+            }
+            header["% Missing Flags"] = {
+                'title': '% Missing Flags',
+                'description': 'Percent of alignments lacking at least on flag specified by --samFlagInclude',
+                'scale': 'PuRd',
+                'min': 0,
+                'max': 100
+            }
+            header["% Forbidden Flags"] = {
+                'title': '% Forbidden Flags',
+                'description': 'Percent of alignments having at least one flag specified by --samFlagExclude',
+                'scale': 'OrRd',
+                'min': 0,
+                'max': 100
+            }
+            header["% deepTools Dupes"] = {
+                'title': '% deepTools Dupes',
+                'description': 'Percent of alignments marked by deepTools as being duplicates',
+                'scale': 'PuRd',
+                'min': 0,
+                'max': 100
+            }
+            header["% Duplication"] = {
+                'title': '% Duplication',
+                'description': 'Percent of alignments originally marked as being duplicates',
+                'scale': 'OrRd',
+                'min': 0,
+                'max': 100
+            }
+            header["% Singletons"] = {
+                'title': '% Singletons',
+                 'description': 'Percent of alignments that are singletons (i.e., paired-end reads where the mates don\'t align as a pair',
+                 'scale': 'OrRd',
+                 'min': 0,
+                 'max': 100
+                }
+            header["% Strand Filtered"] = {
+                'title': '% Strand Filtered',
+                'description': 'Percent of alignments arising from the wrong strand',
+                'scale': 'OrRd',
+                'min': 0,
+                'max': 100
+            }
 
             d = dict()
             for k, v in self.deeptools_estimateReadFiltering.items():
