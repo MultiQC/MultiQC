@@ -145,6 +145,18 @@ hisat2:
 homer/findpeaks:
     contents: '# HOMER Peaks'
     num_lines: 3
+homer/GCcontent:
+    fn: 'tagGCcontent.txt'
+homer/genomeGCcontent:
+    fn: 'genomeGCcontent.txt'
+homer/RestrictionDistribution:
+    fn: 'petagRestrictionDistribution.*.txt'
+homer/LengthDistribution:
+    fn: 'tagLengthDistribution.txt'
+homer/tagInfo:
+    fn: 'tagInfo.txt'
+homer/FreqDistribution:
+    fn: 'petag.FreqDistribution_1000.txt'
 jellyfish:
     fn: '*_jf.hist'
 kallisto:
