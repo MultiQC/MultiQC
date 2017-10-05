@@ -53,8 +53,8 @@ class TagDirReportMixin():
                 self.tagdir_data['GCcontent'][s_name + "_genome"] = parsed_data
 
 
-        ## plot GC content:  
-        self.tagdir_data = self.ignore_samples(self.tagdir_data) 
+        ## plot GC content:
+        self.tagdir_data = self.ignore_samples(self.tagdir_data)
         description = 'This plot shows the distribution of GC content.'
         helptext = 'This is a good quality control for GC bias'
 
@@ -78,14 +78,14 @@ class TagDirReportMixin():
                     log.debug("Duplicate Restriction Distribution sample log found! Overwriting: {}".format(s_name))
 
                 self.add_data_source(f, s_name, section='restriction')
-                self.tagdir_data['restriction'][s_name] = parsed_data                
-                self.tagdir_data['restriction_norm'][s_name] = self.normalize(parsed_data)        
-                
+                self.tagdir_data['restriction'][s_name] = parsed_data
+                self.tagdir_data['restriction_norm'][s_name] = self.normalize(parsed_data)
+
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
 
         description = 'This plot shows the distribution of tags around restriction enzyme cut sites.'
         helptext = 'Hi-C data often involves the digestion of DNA using a restriction enzyme. A good quality control for the experiment is the centering of reads around the restriction enzyme cut site.'
-        
+
         self.add_section (
             name = 'PE Tag Distribution Around Restriction Sites',
             anchor = 'homer-restrictionDist',
@@ -93,8 +93,8 @@ class TagDirReportMixin():
             helptext = helptext,
             plot = self.restriction_dist_chart()
         )
-    
-    
+
+
     def parse_tagLength_dist(self):
         """parses and plots tag length distribution files"""
         # Find and parse homer tag length distribution reports
@@ -108,7 +108,7 @@ class TagDirReportMixin():
 
                 self.add_data_source(f, s_name, section='length')
                 self.tagdir_data['length'][s_name] = parsed_data
-        
+
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
         description = 'This plot shows the distribution of tag length.'
         helptext = 'This is a good quality control for tag length inputed into Homer.'
@@ -120,7 +120,7 @@ class TagDirReportMixin():
         helptext = helptext,
         plot = self.length_dist_chart()
         )
-        
+
 
     def parse_tagInfo_data(self):
         """parses and plots taginfo files"""
@@ -141,7 +141,7 @@ class TagDirReportMixin():
 
         for f in self.find_log_files('homer/tagInfo', filehandles=True):
             s_name = os.path.basename(f['root'])
-            s_name = self.clean_s_name(s_name, f['root'])                
+            s_name = self.clean_s_name(s_name, f['root'])
             ## collected tag_info data for general stats table and store under 'header'
             parsed_data = self.parse_tag_info(f)
             if parsed_data is not None:
@@ -175,7 +175,7 @@ class TagDirReportMixin():
                 self.add_data_source(f, s_name, section='FreqDistribution')
                 self.tagdir_data['FreqDistribution'][s_name] = parsed_data
 
-        
+
         self.tagdir_data = self.ignore_samples(self.tagdir_data)
         description = 'This plot shows the distribution of distance between PE tags.'
         helptext = 'It is expected the the frequency of PE tags decays with increasing distance between the PE tags. This plot gives an idea of the proportion of short-range versus long-range interactions.'
@@ -253,7 +253,7 @@ class TagDirReportMixin():
             'description': 'Fraction of Reads forming inter chromosomal interactions',
             'format': '{:,.4f}'
         }
-        self.general_stats_addcols(self.tagdir_data['FreqDistribution'], headers, 'Homer-InterChr')       
+        self.general_stats_addcols(self.tagdir_data['FreqDistribution'], headers, 'Homer-InterChr')
 
 
     def reduce_points_average(self, mydict, iterations = 1):
@@ -269,10 +269,10 @@ class TagDirReportMixin():
         new_values = [(a + b) / 2.0 for a, b in zip(values[::2], values[1::2])]
         newDict = dict(zip(new_keys, new_values))
         counter = counter + 1
-        
+
         while counter < iterations:
             self.reduce_points_average(newDict, iterations - 1)
-            
+
         return newDict
 
 
@@ -288,10 +288,10 @@ class TagDirReportMixin():
         new_values = values[::2]
         newDict = dict(zip(new_keys, new_values))
         counter = counter + 1
-        
+
         while counter < iterations:
             self.reduce_points_skip(newDict, iterations - 1)
-            
+
         return newDict
 
 
@@ -304,29 +304,29 @@ class TagDirReportMixin():
     def parse_twoCol_file(self, f):
         """ Parse HOMER tagdirectory GCcontent file. """
         parsed_data = dict()
-        firstline = True    
+        firstline = True
         for l in f['f']:
             if firstline:    #skip first line
                 firstline = False
-                continue       
+                continue
             s = l.split("\t")
             if len(s) > 1:
                 k = float(s[0].strip())
                 v = float(s[2].strip())
                 parsed_data[k] = v
 
-        return parsed_data 
+        return parsed_data
 
 
 
     def parse_restriction_dist(self, f):
         """ Parse HOMER tagdirectory petagRestrictionDistribution file. """
         parsed_data = dict()
-        firstline = True    
+        firstline = True
         for l in f['f']:
             if firstline:    #skip first line
                 firstline = False
-                continue       
+                continue
             s = l.split("\t")
             if len(s) > 1:
                 nuc = float(s[0].strip())
@@ -336,24 +336,24 @@ class TagDirReportMixin():
                 #parsed_data.update({nuc:v1})
                 #parsed_data.update({nuc:v2})
                 parsed_data.update({nuc:v})
-        return parsed_data 
+        return parsed_data
 
 
     def parse_length_dist(self, f):
         """ Parse HOMER tagdirectory tagLengthDistribution file. """
         parsed_data = dict()
-        firstline = True    
+        firstline = True
         for l in f['f']:
             if firstline:    #skip first line
                 firstline = False
-                continue       
+                continue
             s = l.split("\t")
             if len(s) > 1:
                 k = float(s[0].strip())
                 v = float(s[1].strip())
                 parsed_data[k] = v
 
-        return parsed_data 
+        return parsed_data
 
 
     def parse_tag_info(self, f):
@@ -362,7 +362,7 @@ class TagDirReportMixin():
         tag_info = dict()
         counter = 0
         for l in f['f']:
-            if counter == 1:  
+            if counter == 1:
                 s = l.split("\t")
                 tag_info['UniqPositions'] = float(s[1].strip())
                 tag_info['TotalPositions'] = float(s[2].strip())
@@ -377,7 +377,7 @@ class TagDirReportMixin():
                 tag_info['tagsPerBP'] = float(s[0].strip().split("=")[1])
             if counter == 7:
                 s = l.split("\t")
-                tag_info['averageTagsPerPosition'] = float(s[0].strip().split("=")[1])          
+                tag_info['averageTagsPerPosition'] = float(s[0].strip().split("=")[1])
             if counter == 8:
                 s = l.split("\t")
                 tag_info['averageTagLength'] = float(s[0].strip().split("=")[1])
@@ -406,7 +406,7 @@ class TagDirReportMixin():
             ## skip first 11 lines
             if counter < 11:
                 counter = counter + 1
-                continue    
+                continue
             s = l.split("\t")
 
             key = s[0].strip()
@@ -422,18 +422,18 @@ class TagDirReportMixin():
                 parsed_data_total[key] = vT
                 parsed_data_uniq[key] = vU
 
-        return [parsed_data_total, parsed_data_uniq] 
+        return [parsed_data_total, parsed_data_uniq]
 
 
     def parse_FreqDist(self, f):
         """ Parse HOMER tagdirectory petag.FreqDistribution_1000 file. """
         parsed_data = dict()
-        firstline = True    
+        firstline = True
         for l in f['f']:
             if firstline:
                 firstline = False
                 continue
-            else: 
+            else:
                 s = l.split("\t")
                 if len(s) > 1:
                     k = s[0].strip()
@@ -448,12 +448,12 @@ class TagDirReportMixin():
     def parse_FreqDist_interChr(self, f):
         """ Parse HOMER tagdirectory petag.FreqDistribution_1000 file to get inter-chromosomal interactions. """
         parsed_data = dict()
-        firstline = True    
+        firstline = True
         for l in f['f']:
             if firstline:
                 firstline = False
                 interChr = float(re.sub("\)", "", l.split(":")[1]))
-            else: 
+            else:
                 break
         parsed_data['interChr'] = interChr
         return parsed_data
@@ -489,7 +489,7 @@ class TagDirReportMixin():
 
         pconfig = {
             'id': 'tagLengthDistribution',
-            'cpswitch': True, 
+            'cpswitch': True,
             'title': 'Tag Length Distribution',
             'ylab': 'Fraction of Tags',
             'xlab': 'Tag Length (bp)'
@@ -550,7 +550,7 @@ class TagDirReportMixin():
         ## check if chromosomes starts with "chr" (UCSC) or "#" (ensembl)
         sample1 = next(iter(self.tagdir_data['taginfo_total']))
         chrFormat = next(iter(self.tagdir_data['taginfo_total'][sample1]))
-        
+
         if ("chr" in chrFormat):
             chrs = ucsc
         else:
@@ -569,9 +569,9 @@ class TagDirReportMixin():
             'ylab': 'Log10(Fraction of Reads)',
             'xlab': 'Log10(Distance between regions)',
             'data_labels': ['Reads', 'Percent'],
-            'smooth_points': 2000,    
+            'smooth_points': 2000,
             'smooth_points_sumcounts': False,
-            ## TODO: xLog does seem to work? 
+            ## TODO: xLog does seem to work?
             'xLog' : True,
             'yLog' : True
        }
@@ -580,4 +580,3 @@ class TagDirReportMixin():
         ]
 
         return linegraph.plot(datasets, pconfig)
-
