@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from HOMER tagdirectory """
 
 import logging
+import math
 import os
 import re
 from multiqc.plots import bargraph, linegraph, scatter, table
@@ -52,18 +53,15 @@ class TagDirReportMixin():
                 self.add_data_source(f, s_name + "_genome", section='GCcontent')
                 self.tagdir_data['GCcontent'][s_name + "_genome"] = parsed_data
 
+        self.tagdir_data['GCcontent'] = self.ignore_samples(self.tagdir_data['GCcontent'])
 
-        ## plot GC content:
-        self.tagdir_data = self.ignore_samples(self.tagdir_data)
-        description = 'This plot shows the distribution of GC content.'
-        helptext = 'This is a good quality control for GC bias'
-
-        self.add_section (
-            name = 'Per Sequence GC Content',
-            anchor = 'homer_per_sequence_gc_content',
-            description = description,
-            plot = self.GCcontent_plot()
-        )
+        if len(self.tagdir_data['GCcontent']) > 0:
+            self.add_section (
+                name = 'Per Sequence GC Content',
+                anchor = 'homer_per_sequence_gc_content',
+                description = 'This plot shows the distribution of GC content.',
+                plot = self.GCcontent_plot()
+            )
 
 
     def parse_re_dist(self):
@@ -81,18 +79,19 @@ class TagDirReportMixin():
                 self.tagdir_data['restriction'][s_name] = parsed_data
                 self.tagdir_data['restriction_norm'][s_name] = self.normalize(parsed_data)
 
-        self.tagdir_data = self.ignore_samples(self.tagdir_data)
+        self.tagdir_data['restriction'] = self.ignore_samples(self.tagdir_data['restriction'])
+        self.tagdir_data['restriction_norm'] = self.ignore_samples(self.tagdir_data['restriction_norm'])
 
-        description = 'This plot shows the distribution of tags around restriction enzyme cut sites.'
-        helptext = 'Hi-C data often involves the digestion of DNA using a restriction enzyme. A good quality control for the experiment is the centering of reads around the restriction enzyme cut site.'
-
-        self.add_section (
-            name = 'PE Tag Distribution Around Restriction Sites',
-            anchor = 'homer-restrictionDist',
-            description = description,
-            helptext = helptext,
-            plot = self.restriction_dist_chart()
-        )
+        if len(self.tagdir_data['restriction']) > 0:
+            self.add_section (
+                name = 'Restriction Site Tag Dist',
+                anchor = 'homer-restrictionDist',
+                description = 'This plot shows the distribution of tags around restriction enzyme cut sites.',
+                helptext = '''Hi-C data often involves the digestion of DNA using a restriction enzyme.
+                    A good quality control for the experiment is the centering of reads around the
+                    restriction enzyme cut site.''',
+                plot = self.restriction_dist_chart()
+            )
 
 
     def parse_tagLength_dist(self):
@@ -105,21 +104,18 @@ class TagDirReportMixin():
             if parsed_data is not None:
                 if s_name in self.tagdir_data['length']:
                     log.debug("Duplicate Length Distribution sample log found! Overwriting: {}".format(s_name))
-
                 self.add_data_source(f, s_name, section='length')
                 self.tagdir_data['length'][s_name] = parsed_data
 
-        self.tagdir_data = self.ignore_samples(self.tagdir_data)
-        description = 'This plot shows the distribution of tag length.'
-        helptext = 'This is a good quality control for tag length inputed into Homer.'
-
-        self.add_section (
-        name = 'Tag Length Distribution',
-        anchor = 'homer-tagLength',
-        description = description,
-        helptext = helptext,
-        plot = self.length_dist_chart()
-        )
+        self.tagdir_data['length'] = self.ignore_samples(self.tagdir_data['length'])
+        if len(self.tagdir_data['length']) > 0:
+            self.add_section (
+                name = 'Tag Length Distribution',
+                anchor = 'homer-tagLength',
+                description = 'This plot shows the distribution of tag length.',
+                helptext = 'This is a good quality control for tag length inputed into Homer.',
+                plot = self.length_dist_chart()
+            )
 
 
     def parse_tagInfo_data(self):
@@ -147,18 +143,20 @@ class TagDirReportMixin():
             if parsed_data is not None:
                 self.tagdir_data['header'][s_name] = parsed_data
 
+        self.tagdir_data['taginfo_total'] = self.ignore_samples(self.tagdir_data['taginfo_total'])
+        self.tagdir_data['taginfo_total_norm'] = self.ignore_samples(self.tagdir_data['taginfo_total_norm'])
+        self.tagdir_data['taginfo_uniq'] = self.ignore_samples(self.tagdir_data['taginfo_uniq'])
+        self.tagdir_data['taginfo_uniq_norm'] = self.ignore_samples(self.tagdir_data['taginfo_uniq_norm'])
 
-        self.tagdir_data = self.ignore_samples(self.tagdir_data)
-        description = 'This plot shows the distribution of tags along chromosomes.'
-        helptext = 'This is a good quality control for tag distribution and could be a good indication of large duplications or deletions.'
-
-        self.add_section (
-        name = 'Tag Info Chromosomal Coverage',
-        anchor = 'homer-tagInfo',
-        description = description,
-        helptext = helptext,
-        plot = self.tag_info_chart()
-        )
+        if len(self.tagdir_data['taginfo_total']) > 0:
+            self.add_section (
+                name = 'Chromosomal Coverage',
+                anchor = 'homer-tagInfo',
+                description = 'This plot shows the distribution of tags along chromosomes.',
+                helptext = '''This is a good quality control for tag distribution and
+                        could be a good indication of large duplications or deletions.''',
+                plot = self.tag_info_chart()
+            )
 
 
     def parse_FreqDistribution_data(self):
@@ -176,22 +174,26 @@ class TagDirReportMixin():
                 self.tagdir_data['FreqDistribution'][s_name] = parsed_data
 
 
-        self.tagdir_data = self.ignore_samples(self.tagdir_data)
-        description = 'This plot shows the distribution of distance between PE tags.'
-        helptext = 'It is expected the the frequency of PE tags decays with increasing distance between the PE tags. This plot gives an idea of the proportion of short-range versus long-range interactions.'
+        self.tagdir_data['FreqDistribution'] = self.ignore_samples(self.tagdir_data['FreqDistribution'])
 
-        self.add_section (
-        name = 'Frequency Distribution',
-        anchor = 'homer-FreqDistribution',
-        description = description,
-        helptext = helptext,
-        plot = self.FreqDist_chart()
-        )
+        if len(self.tagdir_data['FreqDistribution']) > 0:
+            self.add_section (
+                name = 'Frequency Distribution',
+                anchor = 'homer-FreqDistribution',
+                description = 'This plot shows the distribution of distance between PE tags.',
+                helptext = '''It is expected the the frequency of PE tags decays with
+                    increasing distance between the PE tags. This plot gives an idea
+                     of the proportion of short-range versus long-range interactions.''',
+                plot = self.FreqDist_chart()
+            )
 
 
 
     def homer_stats_table_tagInfo(self):
         """ Add core HOMER stats to the general stats table from tagInfo file"""
+
+        if len(self.tagdir_data['header']) == 0:
+            return None
 
         headers = OrderedDict()
         headers['UniqPositions'] = {
@@ -256,49 +258,10 @@ class TagDirReportMixin():
         self.general_stats_addcols(self.tagdir_data['FreqDistribution'], headers, 'Homer-InterChr')
 
 
-    def reduce_points_average(self, mydict, iterations = 1):
-        """
-        reduces the numbers of points in dictionary by averging every 2 consecutive points
-        """
-        ## should just reduce points by skipping some, or better to average?
-        counter = 0
-        myOrderedDict = OrderedDict(sorted(mydict.items()))
-        keys = myOrderedDict.keys()
-        new_keys = [(a + b) / 2.0 for a, b in zip(keys[::2], keys[1::2])]
-        values = myOrderedDict.values()
-        new_values = [(a + b) / 2.0 for a, b in zip(values[::2], values[1::2])]
-        newDict = dict(zip(new_keys, new_values))
-        counter = counter + 1
-
-        while counter < iterations:
-            self.reduce_points_average(newDict, iterations - 1)
-
-        return newDict
-
-
-    def reduce_points_skip(self, mydict, iterations = 1):
-        """
-        reduces the numbers of points in dictionary by skipping every other point
-        """
-        counter = 0
-        myOrderedDict = OrderedDict(sorted(mydict.items()))
-        keys = myOrderedDict.keys()
-        new_keys = keys[::2]
-        values = myOrderedDict.values()
-        new_values = values[::2]
-        newDict = dict(zip(new_keys, new_values))
-        counter = counter + 1
-
-        while counter < iterations:
-            self.reduce_points_skip(newDict, iterations - 1)
-
-        return newDict
-
-
     def normalize(self, mydict, target=100):
        raw = sum(mydict.values())
        factor = target/raw
-       return {key:value*factor for key,value in mydict.iteritems()}
+       return { key:value*factor for key,value in mydict.iteritems() }
 
 
     def parse_twoCol_file(self, f):
@@ -493,12 +456,8 @@ class TagDirReportMixin():
             'title': 'Tag Length Distribution',
             'ylab': 'Fraction of Tags',
             'xlab': 'Tag Length (bp)'
-       }
-        datasets = [
-            self.tagdir_data['length'],
-        ]
-
-        return linegraph.plot(datasets, pconfig)
+        }
+        return linegraph.plot(self.tagdir_data['length'], pconfig)
 
 
 
@@ -508,6 +467,8 @@ class TagDirReportMixin():
         pconfig = {
             'id': 'Homer Tag Directory GC Content',
             'title': 'Per Sequence GC Content',
+            'smooth_points': 200,
+            'smooth_points_sumcounts': False,
             'ylab': 'Normalized Count',
             'xlab': '% GC',
             'ymin': 0,
@@ -516,13 +477,7 @@ class TagDirReportMixin():
             'yDecimals': True,
             'tt_label': '<b>{point.x}% GC</b>: {point.y}'
         }
-
-        datasets = [
-            self.tagdir_data['GCcontent']
-        ]
-
-
-        return linegraph.plot(datasets, pconfig)
+        return linegraph.plot(self.tagdir_data['GCcontent'], pconfig)
 
 
     def tag_info_chart (self):
@@ -543,10 +498,6 @@ class TagDirReportMixin():
             'cpswitch_counts_label': 'Number of Tags'
         }
 
-        datasets = [
-            self.tagdir_data['taginfo_total'],
-        ]
-
         ## check if chromosomes starts with "chr" (UCSC) or "#" (ensembl)
         sample1 = next(iter(self.tagdir_data['taginfo_total']))
         chrFormat = next(iter(self.tagdir_data['taginfo_total'][sample1]))
@@ -556,27 +507,29 @@ class TagDirReportMixin():
         else:
             chrs = ensembl
 
-        return bargraph.plot(datasets, chrs, pconfig)
+        return bargraph.plot(self.tagdir_data['taginfo_total'], chrs, pconfig)
 
 
     def FreqDist_chart (self):
-
         """ Make the petag.FreqDistribution_1000 plot """
-
+        # Take a log of the data before plotting so that we can
+        # reduce the number of points to plot evenly
+        pdata = {}
+        for idx, s_name in enumerate(self.tagdir_data['FreqDistribution']):
+            pdata[s_name] = {}
+            for x, y in self.tagdir_data['FreqDistribution'][s_name].items():
+                try:
+                    pdata[s_name][math.log(float(x))] = y
+                except ValueError:
+                    pass
         pconfig = {
             'id': 'FreqDistribution',
             'title': 'Frequency Distribution',
-            'ylab': 'Log10(Fraction of Reads)',
+            'ylab': 'Fraction of Reads',
             'xlab': 'Log10(Distance between regions)',
             'data_labels': ['Reads', 'Percent'],
-            'smooth_points': 2000,
+            'smooth_points': 500,
             'smooth_points_sumcounts': False,
-            ## TODO: xLog does seem to work?
-            'xLog' : True,
             'yLog' : True
-       }
-        datasets = [
-            self.tagdir_data['FreqDistribution']
-        ]
-
-        return linegraph.plot(datasets, pconfig)
+        }
+        return linegraph.plot(pdata, pconfig)
