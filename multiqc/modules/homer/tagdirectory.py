@@ -484,13 +484,10 @@ class TagDirReportMixin():
 
         """ Make the taginfo.txt plot """
 
-        ## TODO: human chrs on hg19. How will this work with GRCh genome or other, non human, genomes? nice if they are ordered by size
-        ucsc = ["chr" + str(i) for i in range(1,23)]
-        ucsc.extend([ "chrX", "chrY", "chrM"])
-
-        ensembl = range(1,23)
-        ensembl.extend([ "X", "Y", "MT"])
-
+        ## TODO: human chrs on hg19. How will this work with GRCh genome or other, non human, genomes?
+        # nice if they are ordered by size
+        ucsc = ["chr" + str(i) for i in range(1,23)].append([ "chrX", "chrY", "chrM"])
+        ensembl = list(range(1,23)).append([ "X", "Y", "MT"])
         pconfig = {
             'id': 'tagInfo',
             'title': 'Tag Info Distribution',
