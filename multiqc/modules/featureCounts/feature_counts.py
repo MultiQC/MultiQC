@@ -35,7 +35,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.featurecounts_data = self.ignore_samples(self.featurecounts_data)
 
         if len(self.featurecounts_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.featurecounts_data)))

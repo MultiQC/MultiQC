@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.macs_data = self.ignore_samples(self.macs_data)
 
         if len(self.macs_data) == 0:
-            log.debug("Could not find any MACS2 data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.macs_data)))

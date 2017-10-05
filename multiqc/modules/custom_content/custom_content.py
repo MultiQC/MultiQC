@@ -169,7 +169,6 @@ def custom_module_classes():
         del cust_mods[k]
 
     if len(cust_mods) == 0:
-        log.debug("No custom content found")
         raise UserWarning
 
     # Go through each data type
@@ -481,6 +480,3 @@ def _parse_txt(f, conf):
     log.debug("Not able to figure out a plot type for '{}' ".format(f['fn']) +
       "plot type = {}, all numeric = {}, first row str = {}".format( conf.get('plot_type'), all_numeric, first_row_str ))
     return (None, conf)
-
-
-

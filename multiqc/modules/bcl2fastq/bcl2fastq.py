@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return with Warning if no files are found
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
-            log.debug("Could not find any bcl2fastq data in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Print source files

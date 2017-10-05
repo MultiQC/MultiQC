@@ -298,7 +298,6 @@ exception of type `UserWarning`. This tells the core MultiQC program
 that no modules were found. For example:
 ```python
 if len(self.mod_data) == 0:
-    log.debug("Could not find any data in {}".format(config.analysis_dir))
     raise UserWarning
 ```
 

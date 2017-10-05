@@ -139,7 +139,6 @@ class MultiqcModule(BaseMultiqcModule):
         num_parsed += len(self.bismark_mbias_data['meth']['CpG_R1'])
         num_parsed += len(self.bismark_data['bam2nuc'])
         if num_parsed == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Basic Stats Table

@@ -39,7 +39,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.conpair_concordance_data = self.ignore_samples(self.conpair_data)
 
         if len(self.conpair_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.conpair_data)))

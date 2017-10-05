@@ -17,18 +17,6 @@ log = logging.getLogger(__name__)
 def parse_reports(self):
     """ Find Qualimap BamQC reports and parse their data """
 
-    try:
-        covs = config.qualimap_config['general_stats_coverage']
-        assert type(covs) == list
-        assert len(covs) > 0
-        covs = [str(i) for i in covs]
-        log.debug("Custom Qualimap thresholds: {}".format(", ".join([i for i in covs])))
-    except (AttributeError, TypeError, AssertionError):
-        covs = [1, 5, 10, 30, 50]
-        covs = [str(i) for i in covs]
-        log.debug("Using default Qualimap thresholds: {}".format(", ".join([i for i in covs])))
-    self.covs = covs
-
     # General stats - genome_results.txt
     self.qualimap_bamqc_genome_results = dict()
     for f in self.find_log_files('qualimap/bamqc/genome_results'):
@@ -54,6 +42,28 @@ def parse_reports(self):
         parse_gc_dist(self, f)
     self.qualimap_bamqc_gc_by_species = self.ignore_samples(self.qualimap_bamqc_gc_by_species)
 
+    num_parsed = max(
+        len(self.qualimap_bamqc_genome_results),
+        len(self.qualimap_bamqc_coverage_hist),
+        len(self.qualimap_bamqc_insert_size_hist),
+        len(self.qualimap_bamqc_gc_content_dist)
+    )
+    # Go no further if nothing found
+    if num_parsed == 0:
+        return 0
+
+    try:
+        covs = config.qualimap_config['general_stats_coverage']
+        assert type(covs) == list
+        assert len(covs) > 0
+        covs = [str(i) for i in covs]
+        log.debug("Custom Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+    except (AttributeError, TypeError, AssertionError):
+        covs = [1, 5, 10, 30, 50]
+        covs = [str(i) for i in covs]
+        log.debug("Using default Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+    self.covs = covs
+
     # Make the plots for the report
     report_sections(self)
 
@@ -61,7 +71,7 @@ def parse_reports(self):
     general_stats_headers(self)
 
     # Return the number of reports we found
-    return len(self.qualimap_bamqc_genome_results.keys())
+    return num_parsed
 
 def parse_genome_results(self, f):
     """ Parse the contents of the Qualimap BamQC genome_results.txt file """

@@ -120,7 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.nontc_per_utrpos_plus))
 
         if num_reports == 0:
-            log.debug("No slamdunk reports found.")
             raise UserWarning
         else:
             log.info("Found {} reports".format(num_reports))

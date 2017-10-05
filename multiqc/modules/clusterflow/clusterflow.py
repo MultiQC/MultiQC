@@ -47,7 +47,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_runfiles = self.ignore_samples(self.clusterflow_runfiles)
 
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Count pipelines

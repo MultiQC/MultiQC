@@ -208,7 +208,6 @@ class MultiqcModule(BaseMultiqcModule):
         kmers = self.ignore_samples(kmers)
 
         if len(reports) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
         else:
             log.info("Found {} reports".format(len(reports.keys())))

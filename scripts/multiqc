@@ -442,7 +442,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 pass
 
         except UserWarning:
-            pass # No samples found
+            logger.debug("No samples found: {}".format(mod_dict.keys()[0]))
         except KeyboardInterrupt:
             shutil.rmtree(tmp_dir)
             logger.critical(
