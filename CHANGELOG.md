@@ -48,6 +48,7 @@ string beginning with the name of your module, anything you like after the first
 * MultiQC now saves nearly all parsed data to a structured output file by default
     * See `multiqc_data/multiqc_data.json`
     * This can be turned off by setting `config.data_dump_file: false`
+* Verbose logging when no log files found standardised. Less duplication in code and logs easier to read!
 
 #### Bug Fixes
 * Minor `default_dev` directory creation bug squashed
