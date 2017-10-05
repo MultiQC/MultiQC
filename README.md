@@ -158,6 +158,7 @@ Code contributions from:
 [@mlusignan](https://github.com/mlusignan),
 [@moonso](https://github.com/moonso),
 [@noirot](https://github.com/noirot)
+[@rdali](https://github.com/rdali),
 [@rlegendre](https://github.com/rlegendre),
 [@robinandeer](https://github.com/robinandeer),
 [@t-neumann](https://github.com/t-neumann),

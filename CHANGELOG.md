@@ -18,6 +18,8 @@ string beginning with the name of your module, anything you like after the first
 * [**10X Supernova**](https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome)
     * Parses statistics from the _de-novo_ Supernova software.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
+* [**Home Tag Directory**](http://homer.ucsd.edu/homer/ngs/tagDir.html) - new submodule!
+    * Module written by [@rdali](https://github.com/rdali/)
 
 #### Module updates:
 * **AfterQC**
