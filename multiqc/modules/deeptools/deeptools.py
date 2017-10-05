@@ -74,4 +74,5 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
         if tot > 0:
             log.info('Found {} total deepTools samples'.format(tot))
         else:
-            log.debug('Could not find any deepTools samples in {}'.format(config.analysis_dir))
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
+            raise UserWarning
