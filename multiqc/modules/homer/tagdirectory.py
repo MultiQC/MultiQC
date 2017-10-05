@@ -261,7 +261,7 @@ class TagDirReportMixin():
     def normalize(self, mydict, target=100):
        raw = sum(mydict.values())
        factor = target/raw
-       return { key:value*factor for key,value in mydict.iteritems() }
+       return { key:value*factor for key,value in mydict.items() }
 
 
     def parse_twoCol_file(self, f):
