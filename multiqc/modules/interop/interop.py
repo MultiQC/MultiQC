@@ -42,31 +42,31 @@ class MultiqcModule(BaseMultiqcModule):
                 description = 'Summary statistics for Total read count from each run.',
                 plot = self.run_metrics_summary_table(self.runSummary)
             )
-        #     self.add_section (
-        #         name = 'Read Metrics per Lane',
-        #         anchor = 'interop-runmetrics-details',
-        #         plot = self.run_metrics_details_table(self.runSummary['details'])
-        #     )
-        #
-        # if len(self.indexSummary) > 0:
-        #     self.add_section (
-        #         name = 'Indexing QC Metrics summary',
-        #         anchor = 'interop-indexmetrics-summary',
-        #         description = 'Summary metrics about each lane',
-        #         plot = self.index_metrics_summary_table(self.indexSummary['summary'])
-        #     )
-        #     self.add_section (
-        #         name = 'Indexing QC Metrics details',
-        #         anchor = 'interop-indexmetrics-details',
-        #         description = ' Detail Metrics about each lane',
-        #         plot = self.index_metrics_details_table(self.indexSummary['details'])
-        #     )
+            self.add_section (
+                name = 'Read Metrics per Lane',
+                anchor = 'interop-runmetrics-details',
+                plot = self.run_metrics_details_table(self.runSummary)
+            )
+
+        if len(self.indexSummary) > 0:
+            self.add_section (
+                name = 'Indexing QC Metrics summary',
+                anchor = 'interop-indexmetrics-summary',
+                description = 'Summary metrics about each lane',
+                plot = self.index_metrics_summary_table(self.indexSummary)
+            )
+            self.add_section (
+                name = 'Indexing QC Metrics details',
+                anchor = 'interop-indexmetrics-details',
+                description = ' Detail Metrics about each lane',
+                plot = self.index_metrics_details_table(self.indexSummary)
+            )
 
     def parse_summary_csv(self,f):
         metrics = {
-            'summary': {},
-            'details': {}
-        }
+                'summary': {},
+                'details': {}
+                }
         header = []
         section = None
         read = None
@@ -93,7 +93,6 @@ class MultiqcModule(BaseMultiqcModule):
                 # set section to details
                 section = "details"
                 read = line
-                metrics['details'][read] = []
             elif line.startswith("Lane,Surface,Tiles,Density,Cluster") and section == "details":
                 # get details header
                 header = line.split(",")
@@ -104,12 +103,22 @@ class MultiqcModule(BaseMultiqcModule):
                 data = line.split(",")
                 # process summary
                 linedata = {}
-                for idx in range(0,len(data)):
+                # Check if "surface" is total (-) else skip
+                if data[1] == '-':
+                    metrics['details']["{} - Lane {}".format(read,data[0])] = {}
+                else:
+                    continue
+                for idx in range(2,len(data)):
                     try:
-                        linedata[header[idx]] = float(data[idx])
+                        if header[idx] == 'Phas/Prephas':
+                            val = data[idx].split('/')
+                            linedata['Phased'] = val[0]
+                            linedata['Prephased'] = val[1]
+                        else:
+                            linedata[header[idx]] = float(data[idx])
                     except ValueError:
-                        linedata[header[idx]] = data[idx]
-                metrics['details'][read].append(linedata)
+                        linedata[header[idx]] = re.sub(pattern='\+/-.*', repl='', string=data[idx])
+                metrics['details']["Lane {} - {}".format(data[0],read)]=linedata
 
         return metrics
 
@@ -117,12 +126,13 @@ class MultiqcModule(BaseMultiqcModule):
         metrics={'summary':{},
                  'details':{}
                  }
+        header = []
+        section = None
+        lane = None
 
         summary = {}
         details = {}
-        lane = None
-        section = None
-        header = []
+
         for line in f:
             line = line.strip()
             #assume fixed file format
@@ -130,7 +140,6 @@ class MultiqcModule(BaseMultiqcModule):
                 #set lane
                 lane = line
                 summary[lane]={}
-                details[lane]={}
                 continue
             if line.startswith("Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max"):
                 header = line.split(",")
@@ -147,12 +156,14 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             if section == "details":
                 data = line.split(",")
-                for idx in range(1,len(data)):
-                    details[lane][header[idx]]=data[idx]
+                details["{} - {}".format(data[1],lane)]={}
+                for idx in range(2,len(data)):
+                    details["{} - {}".format(data[1],lane)][header[idx]]=data[idx]
                 continue
 
         metrics['summary']=summary
         metrics['details']=details
+
         return metrics
 
     def run_metrics_summary_table(self, data):
@@ -164,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'PuOr'
         }
         headers['Aligned'] = {
-            'title': '% Aligned',
+            'title': 'Aligned (%)',
             'description': 'The percentage of the sample that aligned to the PhiX genome',
             'min': 0,
             'max': 100,
@@ -172,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'PiYG'
         }
         headers['Error Rate'] = {
-            'title': '% Error rate',
+            'title': 'Error Rate (%)',
             'description': '',
             'min': 0,
             'max': 100,
@@ -195,110 +206,158 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'interop',
             'id': 'interop-runmetrics-summary-table',
             'table_title': 'Read metrics summary',
-            'no_beeswarm': True
+            'col1_header': 'Run - Read',
         }
 
         tdata = {}
         for s_name in data:
-            try:
-                tdata[s_name] = data[s_name]['summary']['Total']
-            except KeyError:
-                log.warn("Expected summary Total key not found in {}".format(f['fn']))
+            for key in data[s_name]['summary']:
+                tdata["{} - {}".format(s_name,key)]=data[s_name]['summary'][key]
+
         return table.plot(tdata, headers, table_config)
 
     def run_metrics_details_table(self,data):
         headers = OrderedDict()
-        headers['Lane'] = {
-            'title': 'Lane',
-            'description': ''
-        }
         headers['Surface'] = {
             'title': 'Surface',
             'description': ''
         }
         headers['Tiles'] = {
             'title': 'Tiles',
-            'description': 'The number of tiles per lane.'
+            'description': 'The number of tiles per lane.',
+            'hidden': True
         }
         headers['Density'] = {
-            'title': 'Density (K / mm^2)',
-            'description': 'The density of clusters (in thousands per mm2) detected by image analysis, +/- 1 standard deviation.'
+            'title': 'Density',
+            'description': 'The density of clusters (in thousands per mm2) detected by image analysis, +/- 1 standard deviation.',
+            'hidden': True
         }
         headers['Cluster PF'] = {
             'title': 'Cluster PF (%)',
-            'description': 'The percentage of clusters passing filtering, +/- 1 standard deviation.'
+            'description': 'The percentage of clusters passing filtering, +/- 1 standard deviation.',
+            'suffix': '%',
         }
-        headers['Phas/Prephas'] = {
-            'title': 'Phas/Prephas (%)',
-            'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.'
+        # headers['Phas/Prephas'] = {
+        #     'title': 'Phas/Prephas (%)',
+        #     'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.'
+        # }
+        headers['Phased'] = {
+            'title': 'Phased (%)',
+            'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.',
+            'suffix': '%',
+        }
+        headers['Prephased'] = {
+            'title': 'Prephased (%)',
+            'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.',
+            'suffix': '%',
         }
         headers['Reads'] = {
             'title': 'Reads',
-            'description': 'The number of clusters (in millions).'
+            'description': 'The number of clusters (in millions).',
+            'suffix': 'M',
         }
         headers['Reads PF'] = {
             'title': 'Reads PF',
-            'description': 'The number of clusters (in millions) passing filtering.'
-        }
-        headers['%>=Q30'] = {
-            'title': '%>=Q30',
-            'description': 'The percentage of bases with a quality score of 30 or higher, respectively.'
-        }
-        headers['Yield'] = {
-            'title': 'Yield',
-            'description': 'The number of bases sequenced which passed filter.'
+            'description': 'The number of clusters (in millions) passing filtering.',
+            'suffix': 'M',
         }
         headers['Cycles Error'] = {
             'title': 'Cycles Error',
             'description': 'The number of cycles that have been error-rated using PhiX, starting at cycle 1.'
         }
+        headers['Yield'] = {
+            'title': 'Yield',
+            'description': 'The number of bases sequenced which passed filter.',
+            'scale': 'PuOr'
+        }
         headers['Aligned'] = {
             'title': 'Aligned (%)',
-            'description': 'The percentage that aligned to the PhiX genome.'
+            'description': 'The percentage that aligned to the PhiX genome.',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'PiYG'
         }
         headers['Error'] = {
             'title': 'Error Rate (%)',
-            'description': 'The calculated error rate, as determined by the PhiX alignment. '
+            'description': 'The calculated error rate, as determined by the PhiX alignment.',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'OrRd'
         }
         headers['Error (35)'] = {
             'title': 'Error Rate 35 Cycles (%)',
-            'description': 'The calculated error rate for cycles 1-35.'
+            'description': 'The calculated error rate for cycles 1-35.',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'OrRd',
+            'hidden': True
         }
         headers['Error (75)'] = {
             'title': 'Error Rate 75 Cycles (%)',
-            'description': 'The calculated error rate for cycles 1-75.'
+            'description': 'The calculated error rate for cycles 1-75.',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'OrRd',
+            'hidden': True
         }
         headers['Error (100)'] = {
             'title': 'Error Rate 100 Cycles (%)',
-            'description': 'The calculated error rate for cycles 1-100.'
+            'description': 'The calculated error rate for cycles 1-100.',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'OrRd',
+            'hidden': True
         }
         headers['Intensity C1'] = {
             'title': 'Intensity Cycle 1',
             'description': 'The corresponding intensity statistic at cycle 20 as a percentage of that value at the first cycle.',
             'help': 'equation: 100%x(Intensity at cycle 20)/(Intensity at cycle 1).'
         }
+        headers['%>=Q30'] = {
+            'title': '%>=Q30',
+            'description': 'The percentage of bases with a quality score of 30 or higher, respectively.',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'RdYlGn'
+        }
         table_config = {
             'namespace': 'interop',
             'id': 'interop-runmetrics-detail-table',
             'table_title': 'Sequencing Lane Statistics',
-            'col1_header': '',
-            'no_beeswarm': True
+            'col1_header': 'Run - Lane - Read',
         }
-        return table.plot(data, headers, table_config)
+
+        tdata = {}
+        for s_name in data:
+            for key in data[s_name]['details']:
+                tdata["{} - {}".format(s_name,key)]=data[s_name]['details'][key]
+
+        return table.plot(tdata, headers, table_config)
 
     def index_metrics_summary_table(self,data):
         headers = OrderedDict()
         headers['Total Reads'] = {
             'title': 'Total Reads',
-            'description': 'The total number of reads for this lane.'
+            'description': 'The total number of reads for this lane (in millions).',
+            'modify': lambda x: float(x) / 1000000,
+            'suffix': 'M',
         }
         headers['PF Reads'] = {
             'title': 'PF Reads',
-            'description': 'The total number of passing filter reads for this lane.'
+            'description': 'The total number of passing filter reads for this lane (in millions).',
+            'modify': lambda x: float(x) / 1000000,
+            'suffix': 'M',
         }
         headers['% Read Identified (PF)'] = {
             'title': '% Reads Identified (PF)',
-            'description': 'The total fraction of passing filter reads assigned to an index.'
+            'description': 'The total fraction of passing filter reads assigned to an index.',
+            'suffix': '%',
         }
         headers['CV'] = {
             'title': 'CV',
@@ -316,16 +375,22 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'interop',
             'id': 'interop-indexmetrics-summary-table',
             'table_title': 'Index Read Statistics Summary',
-            'col1_header': '',
-            'no_beeswarm': True
+            'col1_header': 'Run - Lane',
         }
-        return table.plot(data, headers, table_config)
+
+        tdata = {}
+        for s_name in data:
+            for key in data[s_name]['summary']:
+                tdata["{} - {}".format(s_name,key)]=data[s_name]['summary'][key]
+
+        return table.plot(tdata, headers, table_config)
 
     def index_metrics_details_table(self,data):
         headers = OrderedDict()
-        headers['Sample ID'] = {
-            'title': 'Sample ID',
-            'description': 'The sample ID assigned to an index in the sample sheet.'
+        headers['% Read Identified (PF)'] = {
+            'title': '% Reads Identified (PF)',
+            'description': 'The number of reads (only includes Passing Filter reads) mapped to this index.',
+            'suffix': '%',
         }
         headers['Index 1 (I7)'] = {
             'title': 'Index 1 (I7)',
@@ -335,15 +400,16 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Index 2 (I5)',
             'description': 'The sequence for the second Index Read.'
         }
-        headers['% Read Identified (PF)'] = {
-            'title': '% Reads Identified (PF)',
-            'description': 'The number of reads (only includes Passing Filter reads) mapped to this index.'
-        }
+
         table_config = {
             'namespace': 'interop',
             'id': 'interop-indexmetrics-details-table',
             'table_title': 'Index Read Statistics Details',
-            'col1_header': '',
-            'no_beeswarm': True
+            'col1_header': 'Run - Sample - Lane',
         }
-        return table.plot(data, headers, table_config)
+        tdata = {}
+        for s_name in data:
+            for key in data[s_name]['details']:
+                tdata["{} - {}".format(s_name,key)]=data[s_name]['details'][key]
+
+        return table.plot(tdata, headers, table_config)
