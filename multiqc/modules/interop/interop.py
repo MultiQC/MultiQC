@@ -366,14 +366,17 @@ class MultiqcModule(BaseMultiqcModule):
         headers['CV'] = {
             'title': 'CV',
             'description': 'The coefficient of variation for the number of counts across all indexes.'
+            'format': '{:.,2f}',
         }
         headers['Min'] = {
             'title': 'Min',
             'description': 'The lowest representation for any index.'
+            'format': '{:.,2f}',
         }
         headers['Max'] = {
             'title': 'Max',
             'description': 'The highest representation for any index.'
+            'format': '{:.,2f}',
         }
         table_config = {
             'namespace': 'interop',
