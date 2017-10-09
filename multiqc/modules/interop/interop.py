@@ -237,19 +237,23 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'The percentage of clusters passing filtering, +/- 1 standard deviation.',
             'suffix': '%',
         }
-        # headers['Phas/Prephas'] = {
-        #     'title': 'Phas/Prephas (%)',
-        #     'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.'
-        # }
         headers['Phased'] = {
             'title': 'Phased (%)',
             'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.',
+            'format': '{:.,2f}',
+            'min': 0,
+            'max': 100,
             'suffix': '%',
+            'scale': 'OrRd'
         }
         headers['Prephased'] = {
             'title': 'Prephased (%)',
             'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.',
+            'format': '{:.,2f}',
+            'min': 0,
+            'max': 100,
             'suffix': '%',
+            'scale': 'OrRd'
         }
         headers['Reads'] = {
             'title': 'Reads',
@@ -407,6 +411,7 @@ class MultiqcModule(BaseMultiqcModule):
             'table_title': 'Index Read Statistics Details',
             'col1_header': 'Run - Sample - Lane',
         }
+
         tdata = {}
         for s_name in data:
             for key in data[s_name]['details']:
