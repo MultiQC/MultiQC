@@ -5,7 +5,7 @@
 import logging
 from collections import OrderedDict
 from multiqc import config
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -109,8 +109,15 @@ class StatsReportMixin():
             # Write parsed report data to a file
             self.write_data_file(self.bcftools_stats, 'multiqc_bcftools_stats')
 
-            # General Stats Table
-            self.bcftools_stats_genstats_table()
+            # Stats Table
+            stats_headers = self.bcftools_stats_genstats_headers()
+            if getattr(config, 'bcftools', {}).get('write_general_stats', True):
+                self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')
+            if getattr(config, 'bcftools', {}).get('write_separate_table', False):
+                self.add_section(
+                    name='Bcftools Stats',
+                    anchor='bcftools-stats',
+                    plot=table.plot(self.bcftools_stats, stats_headers))
 
             # Make bargraph plot of substitution types
             keys = OrderedDict()
@@ -165,7 +172,7 @@ class StatsReportMixin():
         # Return the number of logs that were found
         return len(self.bcftools_stats)
 
-    def bcftools_stats_genstats_table(self):
+    def bcftools_stats_genstats_headers(self):
         """ Add key statistics to the General Stats table """
         stats_headers = OrderedDict()
         stats_headers['number_of_records'] = {
@@ -203,4 +210,4 @@ class StatsReportMixin():
             'description': 'Variation multinucleotide polymorphisms',
             'min': 0, 'format': '{:,.0f}', "hidden": True,
         }
-        self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')
+        return stats_headers
