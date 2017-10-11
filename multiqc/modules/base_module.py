@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 class BaseMultiqcModule(object):
 
-    def __init__(self, name='base', anchor='base', target=None, href=None, info=None, comment=None, extra=None, autoformat=True, autoformat_type='markdown'):
+    def __init__(self, name='base', anchor='base', target=None, href=None, info=None, comment=None, extra=None,
+                 autoformat=True, autoformat_type='markdown'):
 
         # Custom options from user config that can overwrite module values
         mod_cust_config = getattr(self, 'mod_cust_config', {})
@@ -28,6 +29,10 @@ class BaseMultiqcModule(object):
         info = mod_cust_config.get('info', info)
         self.comment = mod_cust_config.get('comment', comment)
         extra = mod_cust_config.get('extra', extra)
+        # Assuming all remaing values are for the module-level config:
+        config.update({anchor:
+            {k: v for k, v in mod_cust_config.items() if k not in
+            ['name', 'anchor', 'target', 'href', 'info', 'comment', 'extra', 'path_filters']}})
 
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:
