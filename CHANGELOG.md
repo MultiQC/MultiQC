@@ -23,6 +23,9 @@ string beginning with the name of your module, anything you like after the first
 * [**deepTools**](https://github.com/fidelram/deepTools) - new module!
     * Parse text output from `bamPEFragmentSize`, `estimateReadFiltering`, `plotCoverage`, `plotEnrichment`, and `plotFingerprint`
     * Module written by [@dpryan79](https://github.com/dpryan79/)
+* [**HiCExplorer**](https://github.com/maxplanck-ie/HiCExplorer) 
+    * New module to parse the log files of `hicBuildMatrix`.
+    * Module written by [@joachimwolff](https://github.com/joachimwolff/)
 
 #### Module updates:
 * **AfterQC**
