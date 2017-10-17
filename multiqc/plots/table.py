@@ -129,11 +129,6 @@ def make_table (dt):
                 kname = '{}_{}'.format(header['namespace'], rid)
                 dt.raw_vals[s_name][kname] = val
 
-                if header.get('shared_key', None) == 'read_count' and header.get('modify') is None:
-                    header['modify'] = lambda x: x * config.read_count_multiplier
-                if header.get('shared_key', None) == 'base_count' and header.get('modify') is None:
-                    header['modify'] = lambda x: x * config.base_count_multiplier
-
                 if 'modify' in header and callable(header['modify']):
                     val = header['modify'](val)
 
