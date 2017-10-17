@@ -135,7 +135,7 @@ def make_table (dt):
                 try:
                     dmin = header['dmin']
                     dmax = header['dmax']
-                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
+                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
                     percentage = min(percentage, 100)
                     percentage = max(percentage, 0)
                 except (ZeroDivisionError,ValueError):

@@ -26,6 +26,7 @@ MultiQC Modules:
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
+    BBMap: modules/bbmap.md
     HiCUP: modules/hicup.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md

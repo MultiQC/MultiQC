@@ -505,7 +505,6 @@ def general_stats_headers (self):
         'title': 'Ins. size',
         'description': 'Median insert size',
         'min': 0,
-        'suffix': 'bp',
         'scale': 'PuOr',
         'format': '{:,.0f}'
     }
@@ -537,19 +536,15 @@ def general_stats_headers (self):
     self.general_stats_headers['mapped_reads'] = {
         'title': '{} Aligned'.format(config.read_count_prefix),
         'description': 'Number of mapped reads ({})'.format(config.read_count_desc),
-        'min': 0,
         'scale': 'RdYlGn',
         'shared_key': 'read_count',
-        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
     self.general_stats_headers['total_reads'] = {
         'title': '{} Total reads'.format(config.read_count_prefix),
         'description': 'Number of reads ({})'.format(config.read_count_desc),
-        'min': 0,
         'scale': 'Blues',
         'shared_key': 'read_count',
-        'modify': lambda x: x * config.read_count_multiplier,
         'hidden': True
     }
 
