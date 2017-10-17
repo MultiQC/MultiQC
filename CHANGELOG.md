@@ -29,6 +29,8 @@ string beginning with the name of your module, anything you like after the first
     * Handle new output format where JSON summary key changed names.
 * **GATK**
     * New submodule to handle Base Recalibrator stats, written by [@wkretzsch](https://github.com/wkretzsch/)
+* **HiSAT2**
+    * Fixed bug where plot title was incorrect if both SE and PE bargraphs were in one report
 * **Picard HsMetrics**
     * Parsing code can now handle commas for decimal places
 * **Preseq**
