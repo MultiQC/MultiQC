@@ -370,12 +370,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Min'] = {
             'title': 'Min',
-            'description': 'The lowest representation for any index.'
+            'description': 'The lowest representation for any index.',
             'format': '{:.,2f}',
         }
         headers['Max'] = {
             'title': 'Max',
-            'description': 'The highest representation for any index.'
+            'description': 'The highest representation for any index.',
             'format': '{:.,2f}',
         }
         table_config = {
