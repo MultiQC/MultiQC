@@ -235,7 +235,7 @@ def _counts_to_coverages(sample_data, counts_in_1x):
         convert the raw counts/bases into the depth of coverage.
     """
     if not counts_in_1x:
-        return None
+        return {None: None}
 
     return {
         _count_to_coverage(x, counts_in_1x): _count_to_coverage(y, counts_in_1x)
@@ -278,12 +278,14 @@ def _get_counts_in_1x(data_is_basepairs):
 
 
 def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
-    cov_precision = '2'
-    if max_y_cov > 30:   # no need to be so precise when the depth numbers are high
-        cov_precision = '1'
-    if max_y_cov > 300:  # when the depth are very high, decimal digits are excessive
-        cov_precision = '0'
-    cov_lbl = '{value:,.' + cov_precision + 'f}x'
+    cov_lbl = None
+    if x_axis == 'coverage' or y_axis == 'coverage':
+        cov_precision = '2'
+        if max_y_cov > 30:   # no need to be so precise when the depth numbers are high
+            cov_precision = '1'
+        if max_y_cov > 300:  # when the depth are very high, decimal digits are excessive
+            cov_precision = '0'
+        cov_lbl = '{value:,.' + cov_precision + 'f}x'
 
     cnt_lbl = '{value:,.2f} ' + config.read_count_prefix
     if config.read_count_multiplier == 1:
