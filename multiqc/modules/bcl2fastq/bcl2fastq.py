@@ -210,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers = OrderedDict()
         headers['total'] = {
-            'title': '{} Total Reads'.format(config.read_count_prefix),
+            'title': '{} Clusters'.format(config.read_count_prefix),
             'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'Blues',
