@@ -365,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['CV'] = {
             'title': 'CV',
-            'description': 'The coefficient of variation for the number of counts across all indexes.'
+            'description': 'The coefficient of variation for the number of counts across all indexes.',
             'format': '{:.,2f}',
         }
         headers['Min'] = {
