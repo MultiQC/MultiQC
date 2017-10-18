@@ -170,9 +170,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['Yield'] = {
-            'title': 'Yield',
-            'description': 'The number of bases sequenced.',
-            'scale': 'PuOr'
+            'title': '{} Bp Yield'.format(config.base_count_prefix),
+            'description': 'The number of bases sequenced ({})'.format(config.base_count_desc),
+            'scale': 'PuOr',
+            'shared_key': 'base_count'
         }
         headers['Aligned'] = {
             'title': 'Aligned (%)',
@@ -192,7 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Intensity C1'] = {
             'title': 'Intensity Cycle 1',
-            'description': ''
+            'description': 'The intensity statistic at cycle 1.',
         }
         headers['%>=Q30'] = {
             'title': '% >= Q30',
@@ -240,7 +241,6 @@ class MultiqcModule(BaseMultiqcModule):
         headers['Phased'] = {
             'title': 'Phased (%)',
             'description': 'The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.',
-            'format': '{:.,2f}',
             'min': 0,
             'max': 100,
             'suffix': '%',
@@ -256,23 +256,25 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd'
         }
         headers['Reads'] = {
-            'title': 'Reads',
-            'description': 'The number of clusters (in millions).',
-            'suffix': 'M',
+            'title': '{} Reads'.format(config.read_count_prefix),
+            'description': 'The number of clusters ({})'.format(config.read_count_desc),
+            'shared_key': 'read_count',
         }
         headers['Reads PF'] = {
-            'title': 'Reads PF',
-            'description': 'The number of clusters (in millions) passing filtering.',
-            'suffix': 'M',
+            'title': '{} PF Reads'.format(config.read_count_prefix),
+            'description': 'The number of passing filter clusters ({})'.format(config.read_count_desc),
+            'shared_key': 'read_count',
         }
         headers['Cycles Error'] = {
             'title': 'Cycles Error',
-            'description': 'The number of cycles that have been error-rated using PhiX, starting at cycle 1.'
+            'description': 'The number of cycles that have been error-rated using PhiX, starting at cycle 1.',
+            'format': '{:.,0f}',
         }
         headers['Yield'] = {
-            'title': 'Yield',
-            'description': 'The number of bases sequenced which passed filter.',
-            'scale': 'PuOr'
+            'title': '{} Bp Yield'.format(config.base_count_prefix),
+            'description': 'The number of bases sequenced which passed filter ({})'.format(config.base_count_desc),
+            'scale': 'PuOr',
+            'shared_key': 'base_count'
         }
         headers['Aligned'] = {
             'title': 'Aligned (%)',
@@ -319,8 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Intensity C1'] = {
             'title': 'Intensity Cycle 1',
-            'description': 'The corresponding intensity statistic at cycle 20 as a percentage of that value at the first cycle.',
-            'help': 'equation: 100%x(Intensity at cycle 20)/(Intensity at cycle 1).'
+            'description': 'The intensity statistic at cycle 1.',
         }
         headers['%>=Q30'] = {
             'title': '%>=Q30',
@@ -347,16 +348,18 @@ class MultiqcModule(BaseMultiqcModule):
     def index_metrics_summary_table(self,data):
         headers = OrderedDict()
         headers['Total Reads'] = {
-            'title': 'Total Reads',
-            'description': 'The total number of reads for this lane (in millions).',
-            'modify': lambda x: float(x) / 1000000,
-            'suffix': 'M',
+            'title': '{} Reads'.format(config.read_count_prefix),
+            'description': 'The total number of reads for this lane ({})'.format(config.read_count_desc),
+            'modify': lambda x: float(x) * config.read_count_multiplier,
+            'format': '{:,.2f}',
+            'shared_key': 'read_count'
         }
         headers['PF Reads'] = {
-            'title': 'PF Reads',
-            'description': 'The total number of passing filter reads for this lane (in millions).',
-            'modify': lambda x: float(x) / 1000000,
-            'suffix': 'M',
+            'title': '{} PF Reads'.format(config.read_count_prefix),
+            'description': 'The total number of passing filter reads for this lane ({})'.format(config.read_count_desc),
+            'modify': lambda x: float(x) * config.read_count_multiplier,
+            'format': '{:,.2f}',
+            'shared_key': 'read_count'
         }
         headers['% Read Identified (PF)'] = {
             'title': '% Reads Identified (PF)',
@@ -370,13 +373,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['Min'] = {
             'title': 'Min',
-            'description': 'The lowest representation for any index.',
-            'format': '{:.,2f}',
+            'description': 'The lowest representation for any index.'
         }
         headers['Max'] = {
             'title': 'Max',
-            'description': 'The highest representation for any index.',
-            'format': '{:.,2f}',
+            'description': 'The highest representation for any index.'
         }
         table_config = {
             'namespace': 'interop',
