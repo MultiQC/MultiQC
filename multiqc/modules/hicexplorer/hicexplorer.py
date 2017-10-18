@@ -45,11 +45,9 @@ class MultiqcModule(BaseMultiqcModule):
             name='Pair categorization',
             anchor='hicexplorer_pairs_categorized',
             plot=self.hicexplorer_create_plot(keys_list_plot_pairs, 'HiCExplorer: Categorization of reads'),
-            helptext='''
-            This figure contains the number of reads that were finally used to build the 
-            Hi-C matrix along with the reads that where filtered out.
-
-
+            description='This figure contains the number of reads that were finally used to build the '
+                            'Hi-C matrix along with the reads that where filtered out.',
+            helptext='''        
             #### Dangling ends
 
             These are reads that start with the restriction site and constitute reads that were digested but no ligated.
@@ -71,13 +69,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Contact distance',
             anchor='hicexplorer_contact_distance',
-            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Categorization of reads')
+            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'Categorization of reads')
         )
 
         self.add_section(
             name='Read orientation',
             anchor='hicexplorer_read_orientation',
-            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'HiCExplorer: Read orientation')
+            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'Read orientation')
         )
 
     def parse_logs(self, f):
@@ -129,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
 
         headers['Pairs considered'] = {
-            'title': 'M Number of pairs',
+            'title': '{} Pairs'.format(config.read_count_prefix),
             'shared_key': 'read_count'
         }
 
@@ -137,24 +135,28 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '% Used pairs',
             'max': 100,
             'min': 0,
-            'modify': lambda x: x * 100
+            'modify': lambda x: x * 100,
+            'suffix': '%'
         }
         headers['Mapped'] = {
             'title': '% Mapped',
             'max': 100,
             'min': 0,
             'modify': lambda x: (1 - x) * 100,
-            'scale': 'RdYlGn'
+            'scale': 'RdYlGn',
+            'suffix': '%'
         }
 
         headers['Min rest. site distance'] = {
-            'title': 'Min rest. site distance',
+            'title': 'Min RE dist',
+            'descripton': 'Minimum restriction site distance (bp)',
             'scale': None,
             'modify': lambda x: int(x)
         }
 
         headers['Max rest. site distance'] = {
-            'title': 'Max rest. site distance',
+            'title': 'Max RE dist',
+            'descripton': 'Maximum restriction site distance (bp)',
             'scale': None,
             'modify': lambda x: int(x)
         }
