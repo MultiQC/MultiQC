@@ -17,8 +17,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.mod_data = dict()
         for file in self.find_log_files('hicexplorer'):
+
             self.mod_data[file['s_name']] = self.parse_logs(file['f'])
+            self.mod_data[file['s_name']]['File'][0] = self.clean_s_name(self.mod_data[file['s_name']]['File'][0], file['root'])
             self.add_data_source(file)
+
         if len(self.mod_data) == 0:
             raise UserWarning
         self.colors = ["#1f77b4",
@@ -36,7 +39,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # key lists for plotting
         keys_list_plot_pairs = ['Pairs used', 'One mate unmapped', 'One mate not unique', 'One mate low quality',
-                                'Dangling end', 'One mate not close to rest site', 'Self circle', 'Duplicated pairs']
+                                'Dangling end', 'Self ligation (removed)', 'One mate not close to rest site', 'Same fragment',
+                                'Self circle', 'Duplicated pairs']
         keys_list_contact_distance = ['Inter chromosomal', 'Short range', 'Long range']
         keys_list_read_orientation = ['Inward pairs', 'Outward pairs', 'Left pairs', 'Right pairs']
 
@@ -46,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor='hicexplorer_pairs_categorized',
             plot=self.hicexplorer_create_plot(keys_list_plot_pairs, 'HiCExplorer: Categorization of reads'),
             description='This figure contains the number of reads that were finally used to build the '
-                            'Hi-C matrix along with the reads that where filtered out.',
+            'Hi-C matrix along with the reads that where filtered out.',
             helptext='''        
             #### Dangling ends
 
@@ -69,13 +73,50 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Contact distance',
             anchor='hicexplorer_contact_distance',
-            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'Categorization of reads')
+            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'Contact distance'),
+            description='This figure contains information about the distance and location of the valid pairs used.',
+            helptext='''  
+            ####Long range
+            
+            Pairs with a distance greater than 20 kilobases
+
+            ####Short range
+            
+            Pairs with a distance less than 20 kilobases
+
+            ####Inter chromosomal
+
+            Interchromosomal pairs.
+            '''
         )
 
         self.add_section(
             name='Read orientation',
             anchor='hicexplorer_read_orientation',
-            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'Read orientation')
+            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'Read orientation'),
+            description='This figure contains information about the orientation of the read pairs.',
+            helptext='''  
+                ####Inward pairs
+                
+                First mate is a forward read, second is reverse.
+                --------------->              <----------------
+                
+                ####Outward pairs
+                
+                First mate is a reverse read, second is forward.
+                --------------->              <----------------
+                
+                ####Left pairs
+                
+                Both are reverse reads.
+                <---------------              <----------------
+                
+                ####Right pairs
+                
+                Both are forward reads.
+                --------------->              ---------------->
+
+            '''
         )
 
     def parse_logs(self, f):
@@ -106,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif s[0].startswith('same fragment'):
                 s[0] = 'same fragment'
             s[0] = s[0].capitalize()
-            data[s[0]] = tuple(data_)
+            data[s[0]] = data_
         return data
 
     def hicexplorer_basic_statistics(self):
