@@ -23,6 +23,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # TODO: eventually these need pointers to specific sections of the docs
 # TODO: handle multiplexed output
 # TODO: compute read1 and read2 status separately
+# TODO: look at whether there are any plots to duplicate from here: https://github.com/pnnl/fqc
 
 ATROPOS_GITHUB_URL = "https://github.com/jdidion/atropos"
 ATROPOS_DOC_URL = "http://atropos.readthedocs.org/en/latest/guide.html"
@@ -295,13 +296,14 @@ class TrimModule(Submodule):
             'modify': lambda x: x * 100,
             'format': '{:.1f}%'
         }
+        print('adding general stats', str(self.atropos_general_data), str(headers))
         parent.general_stats_addcols(self.atropos_general_data, headers)
     
     def atropos_plots(self, parent):
         for section in self.trim_sections:
             context = section(self.atropos_trim_data, self.atropos_general_data)
             if 'plot' in context:
-                parent.sections.append(context['plot'])
+                parent.add_section(**context['plot'])
 
 
 class QcModule(Submodule):
@@ -375,7 +377,7 @@ class QcModule(Submodule):
                 for sample_id, status in statuses[section_name].items():
                     if status == FAIL:
                         fails[sample_id] += 1
-                parent.sections.append(context['plot'])
+                parent.add_section(**context['plot'])
         
         for sample_id, num_fails in fails.items():
             self.atropos_general_data[sample_id]['percent_fails_{}'.format(self.phase)] = \
