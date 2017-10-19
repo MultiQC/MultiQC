@@ -4,10 +4,10 @@
 
 from __future__ import print_function
 import gzip
+import io
 import json
 import os
 import requests
-import StringIO
 
 from multiqc import config
 log = config.logger
@@ -76,7 +76,7 @@ def multiqc_api_post(exported_data):
     post_data = post_data.encode('utf-8', 'ignore')
 
     # Gzip the JSON for massively decreased filesize
-    sio_obj = StringIO.StringIO()
+    sio_obj = io.BytesIO()
     gzfh = gzip.GzipFile(fileobj=sio_obj, mode='w')
     gzfh.write(post_data)
     gzfh.close()
