@@ -29,7 +29,7 @@ try:
     git_hash = subprocess.check_output( ['git', 'rev-parse', 'HEAD'],
                                         cwd=script_path,
                                         stderr=subprocess.STDOUT,
-                                        universal_newlines=True )
+                                        universal_newlines=True ).strip()
     git_hash_short = git_hash[:7]
     version = '{} ({})'.format(version, git_hash_short)
 except:
