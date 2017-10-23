@@ -23,6 +23,6 @@ conjunction with the
 tool to recalibrate base quality scores.
 
 ### VariantEval
-[VariantEval](https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php)
+[VariantEval](https://software.broadinstitute.org/gatk/gatkdocs/current/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php)
 is a general-purpose tool for variant evaluation. It gives information about percentage of
 variants in dbSNP, genotype concordance, Ti/Tv ratios and a lot more.

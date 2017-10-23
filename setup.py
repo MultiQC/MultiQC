@@ -68,6 +68,7 @@ setup(
             'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'atropos = multiqc.modules.atropos:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
+            'bbmap = multiqc.modules.bbmap:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
@@ -80,6 +81,7 @@ setup(
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
+            'deeptools = multiqc.modules.deeptools:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
@@ -113,6 +115,7 @@ setup(
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',

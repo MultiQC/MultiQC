@@ -12,7 +12,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='bcl2fastq', anchor='bcl2fastq',
-        href="https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html",
+        href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",
         info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.")
 
         # Gather data from all json files
@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return with Warning if no files are found
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
-            log.debug("Could not find any bcl2fastq data in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Print source files
@@ -211,19 +210,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers = OrderedDict()
         headers['total'] = {
-            'title': '{} Total Reads'.format(config.read_count_prefix),
+            'title': '{} Clusters'.format(config.read_count_prefix),
             'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})'.format(config.read_count_desc),
-            'min': 0,
             'scale': 'Blues',
-            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['yieldQ30'] = {
             'title': '{} Yield &ge; Q30'.format(config.base_count_prefix),
             'description': 'Number of bases with a Phred score of 30 or higher ({})'.format(config.base_count_desc),
-            'min': 0,
             'scale': 'Greens',
-            'modify': lambda x: x * config.base_count_multiplier,
             'shared_key': 'base_count'
         }
         headers['perfectPercent'] = {
@@ -242,17 +237,13 @@ class MultiqcModule(BaseMultiqcModule):
         headers['total_yield'] = {
             'title': '{} Total Yield'.format(config.base_count_prefix),
             'description': 'Number of bases ({})'.format(config.base_count_desc),
-            'min': 0,
             'scale': 'Greens',
-            'modify': lambda x: x * config.base_count_multiplier,
             'shared_key': 'base_count'
         }
         headers['total'] = {
             'title': '{} Total Clusters'.format(config.read_count_prefix),
             'description': 'Total number of clusters for this lane ({})'.format(config.read_count_desc),
-            'min': 0,
             'scale': 'Blues',
-            'modify': lambda x: x * config.read_count_multiplier,
             'shared_key': 'read_count'
         }
         headers['percent_Q30'] = {

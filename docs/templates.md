@@ -18,7 +18,7 @@ acts as a plugin. For more information about this, see the
 For a new template to be recognised by MultiQC, it must be a python submodule
 directory with a `__init__.py` file. This must be referenced in the `setup.py`
 installation script as an 
-[entry point](https://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins).
+[entry point](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
 
 You can see the bundled templates defined in this way:
 

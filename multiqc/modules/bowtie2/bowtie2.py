@@ -41,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.bowtie2_data = self.ignore_samples(self.bowtie2_data)
 
         if len(self.bowtie2_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.bowtie2_data)))

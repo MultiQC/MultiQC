@@ -43,7 +43,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.data = self.ignore_samples(self.data)
 
         if len(self.data) == 0:
-            log.debug("Could not find any data in %s", config.analysis_dir)
             raise UserWarning
 
         log.info("Found %d reports", len(self.data))

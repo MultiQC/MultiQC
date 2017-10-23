@@ -54,7 +54,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_removal_data = self.ignore_samples(self.adapter_removal_data)
 
         if len(self.adapter_removal_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.adapter_removal_data)))

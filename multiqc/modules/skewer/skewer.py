@@ -34,7 +34,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data = self.ignore_samples(self.skewer_data)
 
         if len(self.skewer_data) == 0:
-            log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
 
         headers = OrderedDict()
@@ -152,4 +151,3 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data[s_name]['pct_avail'] = 100.0 * float(data['r_avail']) / float(data['r_processed'])
         self.skewer_data[s_name]['pct_trimmed'] = 100.0 * float(data['r_trimmed']) / float(data['r_avail'])
         self.skewer_data[s_name]['pct_untrimmed'] = 100.0 * float(data['r_untrimmed']) / float(data['r_avail'])
-

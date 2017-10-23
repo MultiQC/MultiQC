@@ -144,6 +144,22 @@ fn_clean_exts:
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
+    - '.aqhist'
+    - '.bhist'
+    - '.bincov'
+    - '.bqhist'
+    - '.covhist'
+    - '.covstats'
+    - '.ehist'
+    - '.gchist'
+    - '.idhist'
+    - '.ihist'
+    - '.indelhist'
+    - '.lhist'
+    - '.mhist'
+    - '.qahist'
+    - '.qhist'
+    - '.rpkm'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -162,12 +178,14 @@ fn_clean_trim:
     - '.json'
     - '_mqc'
     - 'short_summary_'
+    - '.align'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
 fn_ignore_files:
     - '.DS_Store'
     - '*.bam'
+    - '*.bai'
     - '*.sam'
     - '*.fq.gz'
     - '*.fastq.gz'
@@ -237,6 +255,16 @@ module_order:
     - disambiguate:
         module_tag:
             - RNA
+    - supernova:
+        module_tag:
+            - DNA
+            - Denovo
+    - deeptools:
+        module_tag:
+            - DNA
+            - RNA
+            - chip
+
     # Post-alignment processing
     - homer:
         module_tag:
@@ -295,6 +323,10 @@ module_order:
             - DNA
 
     # Alignment tool stats
+    - bbmap:
+        module_tag:
+            - DNA
+            - RNA
     - bismark:
         module_tag:
             - DNA

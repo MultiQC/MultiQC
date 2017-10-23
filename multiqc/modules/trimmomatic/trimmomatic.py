@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.trimmomatic = self.ignore_samples(self.trimmomatic)
 
         if len(self.trimmomatic) == 0:
-            log.debug("Could not find any Trimmomatic data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.trimmomatic)))
