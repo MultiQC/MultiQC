@@ -66,9 +66,7 @@ setup(
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'afterqc = multiqc.modules.afterqc:MultiqcModule',
-            'atropos_trim = multiqc.modules.atropos.atropos:TrimModule',
-            'atropos_pre = multiqc.modules.atropos.atropos:PreModule',
-            'atropos_post = multiqc.modules.atropos.atropos:PostModule',
+            'atropos = multiqc.modules.atropos:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',

@@ -7,13 +7,7 @@ adapterRemoval:
 afterqc:
     fn: '*.json'
     contents: 'allow_mismatch_in_poly'
-atropos-pre:
-    fn: '*.json'
-    contents: '"program": "Atropos"'
-atropos-post:
-    fn: '*.json'
-    contents: '"program": "Atropos"'
-atropos-trim:
+atropos:
     fn: '*.json'
     contents: '"program": "Atropos"'
 bamtools/stats:
