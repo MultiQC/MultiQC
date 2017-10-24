@@ -28,6 +28,8 @@ install:
   # Install everything
   - "%CMD_IN_ENV% conda update --yes conda"
   - "%CMD_IN_ENV% conda install --yes pip jinja2 simplejson pyyaml click numpy matplotlib"
+  - "python -m pip install --upgrade pip"
+  - 'pip install "networkx<2"'
   - "pip install spectra"
   - "python setup.py install"
   # Download and extract test data and get ready

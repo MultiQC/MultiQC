@@ -26,6 +26,7 @@ MultiQC Modules:
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
+    BBMap: modules/bbmap.md
     HiCUP: modules/hicup.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
@@ -38,6 +39,7 @@ MultiQC Modules:
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
     Disambiguate: modules/disambiguate.md
+    deepTools: modules/deeptools.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
@@ -59,6 +61,7 @@ MultiQC Modules:
     Samtools: modules/samtools.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
 Custom Content:

@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.flexbar_data = self.ignore_samples(self.flexbar_data)
 
         if len(self.flexbar_data) == 0:
-            log.debug("Could not find any Flexbar data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.flexbar_data)))

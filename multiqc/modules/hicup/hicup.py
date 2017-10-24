@@ -33,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicup_data = self.ignore_samples(self.hicup_data)
 
         if len(self.hicup_data) == 0:
-            log.debug("Could not find any HiCUP data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.hicup_data)))

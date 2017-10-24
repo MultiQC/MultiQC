@@ -54,7 +54,6 @@ class MultiqcModule(BaseMultiqcModule):
         if self.rna_seqc_spearman is not None:
             num_found += 1
         if num_found == 0:
-            log.debug("Could not find any RNA-SeQC data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} samples".format(num_found))

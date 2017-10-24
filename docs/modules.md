@@ -37,7 +37,7 @@ from .modname import MultiqcModule
 ### Entry points
 Once your submodule files are in place, you need to tell MultiQC that they
 are available as an analysis module. This is done within `setup.py` using
-[entry points](https://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins).
+[entry points](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
 In `setup.py` you will see some code that looks like this:
 ```python
 entry_points = {
@@ -298,7 +298,6 @@ exception of type `UserWarning`. This tells the core MultiQC program
 that no modules were found. For example:
 ```python
 if len(self.mod_data) == 0:
-    log.debug("Could not find any data in {}".format(config.analysis_dir))
     raise UserWarning
 ```
 

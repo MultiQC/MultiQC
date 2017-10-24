@@ -13,12 +13,24 @@ string beginning with the name of your module, anything you like after the first
 
 #### New Modules:
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
-    * Parse .cnt file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
-    * Module written by [@noirot]
+    * Parse `.cnt` file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
+    * Module written by [@noirot](https://github.com/noirot/)
+* [**10X Supernova**](https://support.10xgenomics.com/de-novo-assembly/software/overview/welcome)
+    * Parses statistics from the _de-novo_ Supernova software.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
+* [**Homer Tag Directory**](http://homer.ucsd.edu/homer/ngs/tagDir.html) - new submodule!
+    * Module written by [@rdali](https://github.com/rdali/)
+* [**deepTools**](https://github.com/fidelram/deepTools) - new module!
+    * Parse text output from `bamPEFragmentSize`, `estimateReadFiltering`, `plotCoverage`, `plotEnrichment`, and `plotFingerprint`
+    * Module written by [@dpryan79](https://github.com/dpryan79/)
 
 #### Module updates:
 * **AfterQC**
     * Handle new output format where JSON summary key changed names.
+* **GATK**
+    * New submodule to handle Base Recalibrator stats, written by [@wkretzsch](https://github.com/wkretzsch/)
+* **HiSAT2**
+    * Fixed bug where plot title was incorrect if both SE and PE bargraphs were in one report
 * **Picard HsMetrics**
     * Parsing code can now handle commas for decimal places
 * **Preseq**
@@ -38,6 +50,7 @@ string beginning with the name of your module, anything you like after the first
 * MultiQC now saves nearly all parsed data to a structured output file by default
     * See `multiqc_data/multiqc_data.json`
     * This can be turned off by setting `config.data_dump_file: false`
+* Verbose logging when no log files found standardised. Less duplication in code and logs easier to read!
 
 #### Bug Fixes
 * Minor `default_dev` directory creation bug squashed
@@ -54,7 +67,7 @@ Many thanks to those involved!
 * [**AfterQC**](https://github.com/OpenGene/AfterQC) - New module!
     * Added parsing of the _AfterQC_ json file data, with a plot of filtered reads.
     * Work by [@raonyguimaraes](https://github.com/raonyguimaraes)
-* [**bcl2fastq**](https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html)
+* [**bcl2fastq**](https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html)
     * bcl2fastq can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis
     * New module parses JSON output from recent versions and summarises some key statistics from the demultiplexing process.
     * Work by [@iimog](https://github.com/iimog) (with a little help from [@tbooth](https://github.com/tbooth) and [@ewels](https://github.com/ewels))
@@ -64,6 +77,8 @@ Many thanks to those involved!
     * Added initial support for VCFTools `relatedness2`
     * Added support for VCFTools `TsTv-by-count` `TsTv-by-qual` `TsTv-summary`
     * Module written by [@mwhamgenomics](https://github.com/mwhamgenomics)
+* [**BBMap**](https://sourceforge.net/projects/bbmap/)
+    * BBMap is a suite of DNA/RNA mapping tools and utilities
 
 #### Module updates:
 * **FastQ Screen**

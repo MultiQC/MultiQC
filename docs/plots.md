@@ -243,8 +243,8 @@ supply names to the buttons and graph labels:
 ```python
 config = {
     'data_labels': [
-        {'name': 'DS 1', 'ylab': 'Dataset 1'},
-        {'name': 'DS 2', 'ylab': 'Dataset 2'}
+        {'name': 'DS 1', 'ylab': 'Dataset 1', 'xlab': 'x Axis 1'},
+        {'name': 'DS 2', 'ylab': 'Dataset 2', 'xlab': 'x Axis 2'}
     ]
 }
 ```
