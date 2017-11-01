@@ -15,8 +15,8 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class MultiqcModule(BaseMultiqcModule):
 
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_meta = dict()
         for f in self.find_log_files('salmon/meta'):
             # Get the s_name from the parent directory
-            s_name = os.path.basename( os.path.dirname(f['root']) )
+            s_name = os.path.basename(os.path.dirname(f['root']))
             s_name = self.clean_s_name(s_name, f['root'])
             self.salmon_meta[s_name] = json.loads(f['f'])
         # Parse Fragment Length Distribution logs
@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('salmon/fld'):
             # Get the s_name from the parent directory
             if os.path.basename(f['root']) == 'libParams':
-                s_name = os.path.basename( os.path.dirname(f['root']) )
+                s_name = os.path.basename(os.path.dirname(f['root']))
                 s_name = self.clean_s_name(s_name, f['root'])
                 parsed = OrderedDict()
                 for i, v in enumerate(f['f'].split()):
@@ -91,4 +91,4 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
-        self.add_section( plot = linegraph.plot(self.salmon_fld, pconfig) )
+        self.add_section(plot=linegraph.plot(self.salmon_fld, pconfig))
