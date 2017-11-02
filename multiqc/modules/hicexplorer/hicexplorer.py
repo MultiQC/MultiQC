@@ -38,17 +38,43 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicexplorer_basic_statistics()
 
         # key lists for plotting
-        keys_list_plot_pairs = ['Pairs used', 'One mate unmapped', 'One mate not unique', 'One mate low quality',
-                                'Dangling end', 'Self ligation (removed)', 'One mate not close to rest site', 'Same fragment',
-                                'Self circle', 'Duplicated pairs']
+        keys_categorization_of_reads_considered = ['Pairs mappable, unique and high quality', 'One mate unmapped',
+                                                   'One mate not unique', 'One mate low quality']
+        keys_mappable_unique_and_high_quality = ['Dangling end', 'Self ligation (removed)', 'One mate not close to rest site', 'Same fragment',
+                                                 'Self circle', 'Duplicated pairs', 'Pairs used']
         keys_list_contact_distance = ['Inter chromosomal', 'Short range', 'Long range']
-        keys_list_read_orientation = ['Inward pairs', 'Outward pairs', 'Left pairs', 'Right pairs']
+        keys_list_read_orientation = ['Inward pairs', 'Outward pairs', 'Left pairs', 'Right pairs', 'Inter chromosomal']
 
         # prepare the detail report section
         self.add_section(
-            name='Pair categorization',
+            name='Categorization of considered reads',
+            anchor='hicexplorer_categorization_of_considered_reads',
+            plot=self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads'),
+            description='This figure contains information about the considered pairs.',
+            helptext='''  
+                ####Pairs mappable, unique and high quality
+                
+                The count of reads that were considered as valid reads and were not one of the following:
+                
+                #####One mate unmapped
+                
+                Filtered out read because one mate was not mapped.
+                
+                #####One mate not unique
+                
+                Filtered out read because one mate was not unique.
+                
+                #####One mate low quality
+                
+                Filtered out because one mate was having a low quality.
+
+            '''
+        )
+
+        self.add_section(
+            name='Categorization of reads w.r.t. Pairs mappable, unique and high quality',
             anchor='hicexplorer_pairs_categorized',
-            plot=self.hicexplorer_create_plot(keys_list_plot_pairs, 'HiCExplorer: Categorization of reads'),
+            plot=self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads w.r.t. Pairs mappable, unique and high quality'),
             description='This figure contains the number of reads that were finally used to build the '
             'Hi-C matrix along with the reads that where filtered out.',
             helptext='''        
@@ -71,9 +97,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name='Contact distance',
+            name='Contact distance w.r.t. used pairs',
             anchor='hicexplorer_contact_distance',
-            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'Contact distance'),
+            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'Contact distance w.r.t. used pairs'),
             description='This figure contains information about the distance and location of the valid pairs used.',
             helptext='''  
             ####Long range
@@ -91,9 +117,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name='Read orientation',
+            name='Read orientation w.r.t. used pairs',
             anchor='hicexplorer_read_orientation',
-            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'Read orientation'),
+            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'Read orientation w.r.t. used pairs'),
             description='This figure contains information about the orientation of the read pairs.',
             helptext='''  
                 ####Inward pairs
