@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
         for file in self.find_log_files('hicexplorer'):
 
             self.mod_data[file['s_name']] = self.parse_logs(file['f'])
-            self.mod_data[file['s_name']]['File'][0] = self.clean_s_name(self.mod_data[file['s_name']]['File'][0], file['root'])
+            self.mod_data[file['s_name']]['File'][0] = self.clean_s_name(file['s_name'] + "_" + self.mod_data[file['s_name']]['File'][0], file['root'])
             self.add_data_source(file)
 
         if len(self.mod_data) == 0:
@@ -34,6 +34,15 @@ class MultiqcModule(BaseMultiqcModule):
                        "#bcbd22",
                        "#17becf",
                        "#D2691E"]
+
+        # compatibility to HiCExplorer <= 1.7 version QC files
+        for data_ in self.mod_data:
+            if not 'Pairs mappable, unique and high quality' in self.mod_data[data_]:
+                self.mod_data[data_]['Pairs mappable, unique and high quality'] = self.mod_data[data_]['Pairs considered']
+                keys = ['One mate unmapped', 'One mate not unique', 'One mate low quality']
+                for key in keys:
+                    self.mod_data[data_]['Pairs mappable, unique and high quality'][0] -= self.mod_data[data_][key][0]
+
         # prepare the basic statistics for hicexplorer
         self.hicexplorer_basic_statistics()
 
