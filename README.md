@@ -40,13 +40,15 @@ Currently, supported tools include:
 |[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[MACS2][macs2]             |[Peddy][peddy]        |
 |[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[Picard][picard]           |[Preseq][preseq]      |
 |[leeHom][leehom]                 |[Salmon][salmon]        |[Prokka][prokka]           |[QoRTs][qorts]        |
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
-|[FastQ Screen][fastq-screen]     |[STAR][star]            |[Samtools][samtools]       |[QUAST][quast]        |
-|[Flexbar][flexbar]               |[Tophat][tophat]        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
-|[Jellyfish][jellyfish]           |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[Skewer][skewer]                 |                        |[RSEM][rsem]               |[Supernova][supernova]|
-|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]           |[VCFTools][vcftools]  |
+|[InterOp][interop]               |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
+|[FastQC][fastqc]                 |[STAR][star]            |[Samtools][samtools]       |[QUAST][quast]        |
+|[FastQ Screen][fastq-screen]     |[Tophat][tophat]        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
+|[Flexbar][flexbar]               |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
+|[Jellyfish][jellyfish]           |                        |[RSEM][rsem]               |[Supernova][supernova]|
+|[Skewer][skewer]                 |                        |[THetA2][theta2]           |[VCFTools][vcftools]  |
+|[SortMeRNA][sortmerna]           |                        |                           |                      |
 |[Trimmomatic][trimmomatic]       |                        |                           |                      |
+|[Illumina InterOp][interop]      |                        |                           |                      |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -164,7 +166,7 @@ Code contributions from:
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@wkretzsch](https://github.com/wkretzsch)
-
+[@matthdsm](https://github.com/matthdsm)
 and many others. Thanks for your support!
 
 [adapterremoval]: http://multiqc.info/docs/#adapter-removal
@@ -193,6 +195,7 @@ and many others. Thanks for your support!
 [homer]:          http://multiqc.info/docs/#homer
 [htseq]:          http://multiqc.info/docs/#htseq
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
+[interop]:        http://multiqc.info/docs/#interop
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [leehom]:         http://multiqc.info/docs/#leehom
 [macs2]:          http://multiqc.info/docs/#macs2
