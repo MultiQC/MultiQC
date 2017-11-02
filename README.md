@@ -48,6 +48,7 @@ Currently, supported tools include:
 |[Skewer][skewer]                 |                        |[THetA2][theta2]           |[VCFTools][vcftools]  |
 |[SortMeRNA][sortmerna]           |                        |                           |                      |
 |[Trimmomatic][trimmomatic]       |                        |                           |                      |
+|[Illumina InterOp][interop]      |                        |                           |                      |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
