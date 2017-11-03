@@ -1,5 +1,9 @@
 # MultiQC Version History
 
+## MultiQC v1.4dev
+
+_..nothing yet.._
+
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
 
 #### Breaking changes - custom search patterns
