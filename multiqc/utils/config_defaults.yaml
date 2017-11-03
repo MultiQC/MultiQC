@@ -331,6 +331,9 @@ module_order:
         module_tag:
             - DNA
             - methylation
+    - hicexplorer:
+        module_tag:
+            - hi-c
     - hicup:
         module_tag:
             - hi-c
