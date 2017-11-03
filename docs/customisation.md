@@ -152,6 +152,7 @@ The available options are:
 * `href`: Intro link URL
 * `info`: Intro text
 * `extra`: Additional HTML after intro.
+* `custom_config`: Custom module-level settings. Translated into `config.moduleName`, but specifically for this section.
 
 For example, to run the FastQC module twice, before and after adapter trimming, you could
 use the following config:

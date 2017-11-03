@@ -172,12 +172,12 @@ def mqc_add_config(conf, conf_path=None):
                 logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
                 continue
             logger.debug("New config '{}': {}".format(c, fpath))
-            update_dict(globals(), {c: fpath})
+            update({c: fpath})
         else:
             logger.debug("New config '{}': {}".format(c, v))
-            update_dict(globals(), {c: v})
+            update({c: v})
 
-#### Function to load file containinga list of alternative sample-name swaps
+#### Function to load file containing a list of alternative sample-name swaps
 # Essentially a fancy way of loading stuff into the sample_names_rename config var
 # As such, can also be done directly using a config file
 def load_sample_names(snames_file):
@@ -203,6 +203,9 @@ def load_sample_names(snames_file):
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+
+def update(u):
+    return update_dict(globals(), u)
 
 def update_dict(d, u):
     """ Recursively updates nested dict d from nested dict u
