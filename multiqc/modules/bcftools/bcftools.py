@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name='Bcftools',
-            anchor='Bcftools', target='Bcftools',
+            anchor='bcftools', target='Bcftools',
             href='https://samtools.github.io/bcftools/',
             info=(" contains utilities for variant calling and manipulating VCFs and BCFs."))
 

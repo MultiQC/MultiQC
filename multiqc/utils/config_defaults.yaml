@@ -413,3 +413,8 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - interop:
+        module_tag:
+            - RNA
+            - DNA
+            - methylation
