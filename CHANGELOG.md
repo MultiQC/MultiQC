@@ -33,6 +33,8 @@ string beginning with the name of your module, anything you like after the first
 #### Module updates:
 * **AfterQC**
     * Handle new output format where JSON summary key changed names.
+* **bcl2fastq**
+    * Clusters per sample plot now has tab where counts are categoried by lane.
 * **GATK**
     * New submodule to handle Base Recalibrator stats, written by [@winni2k](https://github.com/winni2k/)
 * **HiSAT2**
