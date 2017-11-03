@@ -169,6 +169,8 @@ Code contributions from:
 [@matthdsm](https://github.com/matthdsm)
 and many others. Thanks for your support!
 
+MultiQC is released under the GPL v3 or later licence.
+
 [adapterremoval]: http://multiqc.info/docs/#adapter-removal
 [afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
