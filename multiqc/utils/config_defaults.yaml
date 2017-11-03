@@ -179,6 +179,8 @@ fn_clean_trim:
     - '_mqc'
     - 'short_summary_'
     - '.align'
+    - '.h5'
+    - '_matrix'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.

@@ -50,108 +50,80 @@ class MultiqcModule(BaseMultiqcModule):
         # key lists for plotting
         keys_categorization_of_reads_considered = ['Pairs mappable, unique and high quality', 'One mate unmapped',
                                                    'One mate not unique', 'One mate low quality']
-        keys_mappable_unique_and_high_quality = ['Dangling end', 'Self ligation (removed)', 'One mate not close to rest site', 'Same fragment',
-                                                 'Self circle', 'Duplicated pairs', 'Pairs used']
-        keys_list_contact_distance = ['Inter chromosomal', 'Short range', 'Long range']
+        keys_mappable_unique_and_high_quality = ['Pairs used', 'Self ligation (removed)', 'Same fragment', 'Self circle',
+                                                'Dangling end', 'One mate not close to rest site', 'Duplicated pairs']
+        keys_list_contact_distance = ['Short range', 'Long range', 'Inter chromosomal']
         keys_list_read_orientation = ['Inward pairs', 'Outward pairs', 'Left pairs', 'Right pairs', 'Inter chromosomal']
 
         # prepare the detail report section
         self.add_section(
-            name='Categorization of considered reads',
-            anchor='hicexplorer_categorization_of_considered_reads',
-            plot=self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads'),
-            description='This figure contains information about the considered pairs.',
-            helptext='''  
-                ####Pairs mappable, unique and high quality
-                
-                The count of reads that were considered as valid reads and were not one of the following:
-                
-                #####One mate unmapped
-                
-                Filtered out read because one mate was not mapped.
-                
-                #####One mate not unique
-                
-                Filtered out read because one mate was not unique.
-                
-                #####One mate low quality
-                
-                Filtered out because one mate was having a low quality.
-
+            name = 'Mapping statistics',
+            anchor = 'hicexplorer_categorization_of_considered_reads',
+            plot = self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads'),
+            description = 'This shows how the sequenced read pairs were mapped and those filtered due to mapping problems.',
+            helptext = '''
+                * **Pairs mappable, unique and high quality**
+                    * The count of reads that were considered as valid reads and were not one of the following:
+                * **One mate unmapped**
+                    * Filtered out read because one mate was not mapped.
+                * **One mate not unique**
+                    * Filtered out read because one mate was not unique.
+                * **One mate low quality**
+                    * Filtered out because one mate was having a low quality.
             '''
         )
 
         self.add_section(
-            name='Categorization of reads w.r.t. Pairs mappable, unique and high quality',
-            anchor='hicexplorer_pairs_categorized',
-            plot=self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads w.r.t. Pairs mappable, unique and high quality'),
-            description='This figure contains the number of reads that were finally used to build the '
+            name = 'Read filtering',
+            anchor = 'hicexplorer_pairs_categorized',
+            plot = self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads - Pairs mappable, unique and high quality'),
+            description = 'This figure contains the number of reads that were finally used to build the '
             'Hi-C matrix along with the reads that where filtered out.',
-            helptext='''        
-            #### Dangling ends
-
-            These are reads that start with the restriction site and constitute reads that were digested but no ligated.
-
-            #### Same fragment
-
-            These are read mates, facing inward, separated by up to 800 bp that do not have a restriction enzyme in between.
-            These read pairs are not valid Hi-C pairs.
-
-            #### Self circle
-
-            Self circles are defined as pairs within 25kb with \'outward\' read orientation
-
-            #### Self ligation
-
-            These are read pairs with a restriction site in between that are within 800 bp.'''
+            helptext = """
+            * **Dangling ends**
+                * These are reads that start with the restriction site and constitute reads that were digested but no ligated.
+            * **Same fragment**
+                * These are read mates, facing inward, separated by up to 800 bp that do not have a restriction enzyme in between.
+                * These read pairs are not valid Hi-C pairs.
+            * **Self circle**
+                * Self circles are defined as pairs within 25kb with 'outward' read orientation
+            * **Self ligation**
+                * These are read pairs with a restriction site in between that are within 800 bp."""
         )
 
         self.add_section(
-            name='Contact distance w.r.t. used pairs',
-            anchor='hicexplorer_contact_distance',
-            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'Contact distance w.r.t. used pairs'),
-            description='This figure contains information about the distance and location of the valid pairs used.',
-            helptext='''  
-            ####Long range
-            
-            Pairs with a distance greater than 20 kilobases
-
-            ####Short range
-            
-            Pairs with a distance less than 20 kilobases
-
-            ####Inter chromosomal
-
-            Interchromosomal pairs.
+            name = 'Contact distance',
+            anchor = 'hicexplorer_contact_distance',
+            plot = self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Contact distance'),
+            description = 'This figure contains information about the distance and location of the valid pairs used.',
+            helptext = '''
+            * **Long range**
+                * Pairs with a distance greater than 20 kilobases
+            * **Short range**
+                * Pairs with a distance less than 20 kilobases
+            * **Inter chromosomal**
+                * Interchromosomal pairs.
             '''
         )
 
         self.add_section(
-            name='Read orientation w.r.t. used pairs',
-            anchor='hicexplorer_read_orientation',
-            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'Read orientation w.r.t. used pairs'),
-            description='This figure contains information about the orientation of the read pairs.',
-            helptext='''  
-                ####Inward pairs
-                
-                First mate is a forward read, second is reverse.
-                --------------->              <----------------
-                
-                ####Outward pairs
-                
-                First mate is a reverse read, second is forward.
-                --------------->              <----------------
-                
-                ####Left pairs
-                
-                Both are reverse reads.
-                <---------------              <----------------
-                
-                ####Right pairs
-                
-                Both are forward reads.
-                --------------->              ---------------->
-
+            name = 'Read orientation',
+            anchor = 'hicexplorer_read_orientation',
+            plot = self.hicexplorer_create_plot(keys_list_read_orientation, 'HiCExplorer: Read orientation'),
+            description = 'This figure contains information about the orientation of the read pairs.',
+            helptext = '''
+                * **Inward pairs**
+                    * First mate is a forward read, second is reverse.
+                    * `--------------->              <----------------`
+                * **Outward pairs**
+                    * First mate is a reverse read, second is forward.
+                    * `--------------->              <----------------`
+                * **Left pairs**
+                    * Both are reverse reads.
+                    * `<---------------              <----------------`
+                * **Right pairs**
+                    * Both are forward reads.
+                    * `--------------->              ---------------->`
             '''
         )
 
@@ -194,7 +166,6 @@ class MultiqcModule(BaseMultiqcModule):
             total_pairs = self.mod_data[file]['Pairs considered'][0]
             data_ = {
                 'Pairs considered': self.mod_data[file]['Pairs considered'][0],
-
                 'Pairs used': self.mod_data[file]['Pairs used'][0] / total_pairs,
                 'Mapped': self.mod_data[file]['One mate unmapped'][0] / total_pairs,
                 'Min rest. site distance': self.mod_data[file]['Min rest. site distance'][0],
@@ -202,12 +173,11 @@ class MultiqcModule(BaseMultiqcModule):
             }
             data[self.mod_data[file]['File'][0]] = data_
         headers = OrderedDict()
-
         headers['Pairs considered'] = {
             'title': '{} Pairs'.format(config.read_count_prefix),
+            'description': 'Total number of read pairs ({})'.format(config.read_count_desc),
             'shared_key': 'read_count'
         }
-
         headers['Pairs used'] = {
             'title': '% Used pairs',
             'max': 100,
@@ -223,19 +193,17 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'suffix': '%'
         }
-
         headers['Min rest. site distance'] = {
             'title': 'Min RE dist',
-            'descripton': 'Minimum restriction site distance (bp)',
-            'scale': None,
-            'modify': lambda x: int(x)
+            'description': 'Minimum restriction site distance (bp)',
+            'format': '{:.0f}',
+            'suffix': ' bp'
         }
-
         headers['Max rest. site distance'] = {
             'title': 'Max RE dist',
-            'descripton': 'Maximum restriction site distance (bp)',
-            'scale': None,
-            'modify': lambda x: int(x)
+            'description': 'Maximum restriction site distance (bp)',
+            'format': '{:.0f}',
+            'suffix': ' bp'
         }
         self.general_stats_addcols(data, headers)
 
@@ -256,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'title': pTitle,
-            'ylab': '# Reads',
+            'ylab': 'Number of Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
 

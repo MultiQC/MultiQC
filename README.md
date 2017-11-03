@@ -154,8 +154,10 @@ Code contributions from:
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@HLWiencko](https://github.com/HLWiencko),
 [@iimog](https://github.com/iimog),
+[@joachimwolff](https://github.com/joachimwolff),
 [@jrderuiter](https://github.com/jrderuiter),
 [@lpantano](https://github.com/lpantano),
+[@matthdsm](https://github.com/matthdsm)
 [@MaxUlysse](https://github.com/MaxUlysse),
 [@mlusignan](https://github.com/mlusignan),
 [@moonso](https://github.com/moonso),
@@ -165,14 +167,8 @@ Code contributions from:
 [@robinandeer](https://github.com/robinandeer),
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
-<<<<<<< HEAD
 [@wkretzsch](https://github.com/wkretzsch),
-[@joachimwolff](https://github.com/joachimwolff)
 
-=======
-[@wkretzsch](https://github.com/wkretzsch)
-[@matthdsm](https://github.com/matthdsm)
->>>>>>> upstream/master
 and many others. Thanks for your support!
 
 MultiQC is released under the GPL v3 or later licence.
