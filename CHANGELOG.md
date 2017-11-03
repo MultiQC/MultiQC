@@ -34,7 +34,7 @@ string beginning with the name of your module, anything you like after the first
 * **AfterQC**
     * Handle new output format where JSON summary key changed names.
 * **GATK**
-    * New submodule to handle Base Recalibrator stats, written by [@wkretzsch](https://github.com/wkretzsch/)
+    * New submodule to handle Base Recalibrator stats, written by [@winni2k](https://github.com/winni2k/)
 * **HiSAT2**
     * Fixed bug where plot title was incorrect if both SE and PE bargraphs were in one report
 * **Picard HsMetrics**
@@ -73,6 +73,7 @@ string beginning with the name of your module, anything you like after the first
 * Installation problem caused by changes in upstream dependencies solved by stricter installation requirements
 * Minor `default_dev` directory creation bug squashed
 * Don't prepend the directory separator (`|`) to sample names with `-d` when there are no subdirs
+* `yPlotLines` now works even if you don't set `width`
 
 
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
