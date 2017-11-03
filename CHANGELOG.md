@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## MultiQC v1.3dev
+## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
 
 #### Breaking changes - custom search patterns
 Only for users with custom search patterns for the `bowtie` or `star`: you will
@@ -29,7 +29,7 @@ string beginning with the name of your module, anything you like after the first
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
     * Parse `.cnt` file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
     * Module written by [@noirot](https://github.com/noirot/)
-* [**HiCExplorer**](https://github.com/maxplanck-ie/HiCExplorer) 
+* [**HiCExplorer**](https://github.com/maxplanck-ie/HiCExplorer)
     * New module to parse the log files of `hicBuildMatrix`.
     * Module written by [@joachimwolff](https://github.com/joachimwolff/)
 
