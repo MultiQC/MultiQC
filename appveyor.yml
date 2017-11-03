@@ -9,10 +9,6 @@ environment:
   matrix:
     - PYTHON: "C:\\Miniconda"
       PYTHON_VERSION: "2.7.x"
-    - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4.x"
-    - PYTHON: "C:\\Miniconda35"
-      PYTHON_VERSION: "3.5.x"
     - PYTHON: "C:\\Miniconda36"
       PYTHON_VERSION: "3.6.x"
 
