@@ -29,6 +29,9 @@ string beginning with the name of your module, anything you like after the first
 * [**RSEM**](https://deweylab.github.io/RSEM/) - new module!
     * Parse `.cnt` file comming from rsem-calculate-expression and plot read repartitions (Unalignable, Unique, Multi ...)
     * Module written by [@noirot](https://github.com/noirot/)
+* [**HiCExplorer**](https://github.com/maxplanck-ie/HiCExplorer) 
+    * New module to parse the log files of `hicBuildMatrix`.
+    * Module written by [@joachimwolff](https://github.com/joachimwolff/)
 
 #### Module updates:
 * **AfterQC**
