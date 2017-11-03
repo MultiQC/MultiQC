@@ -20,7 +20,7 @@ class BaseMultiqcModule(object):
     def __init__(self, name='base', anchor='base', target=None, href=None, info=None, comment=None, extra=None,
                  autoformat=True, autoformat_type='markdown'):
 
-        # Custom options from user config that can overwrite module values
+        # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, 'mod_cust_config', {})
         self.name = mod_cust_config.get('name', name)
         self.anchor = report.save_htmlid( mod_cust_config.get('anchor', anchor) )
@@ -29,10 +29,8 @@ class BaseMultiqcModule(object):
         info = mod_cust_config.get('info', info)
         self.comment = mod_cust_config.get('comment', comment)
         extra = mod_cust_config.get('extra', extra)
-        # Assuming all remaing values are for the module-level config:
-        config.update({anchor:
-            {k: v for k, v in mod_cust_config.items() if k not in
-            ['name', 'anchor', 'target', 'href', 'info', 'comment', 'extra', 'path_filters']}})
+        # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
+        config.update({anchor: mod_cust_config.get('custom_config', {})})
 
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:

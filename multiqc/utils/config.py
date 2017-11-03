@@ -177,7 +177,7 @@ def mqc_add_config(conf, conf_path=None):
             logger.debug("New config '{}': {}".format(c, v))
             update({c: v})
 
-#### Function to load file containinga list of alternative sample-name swaps
+#### Function to load file containing a list of alternative sample-name swaps
 # Essentially a fancy way of loading stuff into the sample_names_rename config var
 # As such, can also be done directly using a config file
 def load_sample_names(snames_file):
