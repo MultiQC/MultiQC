@@ -17,6 +17,7 @@ MultiQC Modules:
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
     Flexbar: modules/flexbar.md
+    InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
     leeHom: modules/leehom.md
     Skewer: modules/skewer.md
