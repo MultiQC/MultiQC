@@ -2,7 +2,9 @@
 
 ## MultiQC v1.4dev
 
-_..nothing yet.._
+#### New MultiQC Features:
+* If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
+    * Hopefully this will help with debugging / finding dodgy input data
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
 
