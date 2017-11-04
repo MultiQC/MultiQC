@@ -38,6 +38,7 @@ html_ids = list()
 num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
+last_found_file = None
 
 # Make a dict of discovered files for each seach key
 searchfiles = list()
@@ -281,4 +282,3 @@ def compress_json(data):
     json_string = json_string.replace('NaN', 'null');
     x = lzstring.LZString()
     return x.compressToBase64(json_string)
-
