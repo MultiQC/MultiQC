@@ -98,29 +98,32 @@ class MultiqcModule(BaseMultiqcModule):
         self.plot_gc_bias()
 
     def plot_gc_bias(self):
-        pconfig = {
-            'smooth_points': 500,
-            'id': 'salmon_gc_plot',
-            'title': 'GC Bias',
+        pconfig = lambda x: {
+            'smooth_points': 25,
+            'id': 'salmon_gc_plot {}'.format(x),
+            'title': 'GC Bias {}'.format(x),
             'ylab': 'Obs/Exp ratio',
             'xlab': 'bins',
             'ymin': 0,
             'xmin': 0,
-            'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
-        for sample_gc in self.salmon_gc:
+        qrt1, qrt2, qrt3 = {}, {}, {}
+        for i, sample_gc in enumerate(self.salmon_gc):
             ratio = numpy.divide(sample_gc.obs_, sample_gc.exp_)
-            plot_details = {
-                0: OrderedDict(enumerate(ratio[0])),
-                1: OrderedDict(enumerate(ratio[1])),
-                2: OrderedDict(enumerate(ratio[2]))
-            }
-            self.add_section(plot=linegraph.plot(plot_details, pconfig))
+            sample = 'Sample {}'.format(i)
+            qrt1[sample] = OrderedDict(enumerate(ratio[0]))
+            qrt2[sample] = OrderedDict(enumerate(ratio[1]))
+            qrt3[sample] = OrderedDict(enumerate(ratio[2]))
+
+        self.add_section(plot=linegraph.plot(qrt1, pconfig(1)))
+        self.add_section(plot=linegraph.plot(qrt2, pconfig(2)))
+        self.add_section(plot=linegraph.plot(qrt3, pconfig(3)))
 
     def parse_gc_bias(self, f_root):
-        is_exp_gc_exists = os.path.exists(os.path.join(os.path.dirname(f_root), 'aux_info', 'exp_gc.gz'))
-        is_obs_gc_exists = os.path.exists(os.path.join(os.path.dirname(f_root), 'aux_info', 'obs_gc.gz'))
+        bias_dir = os.path.dirname(f_root)
+        is_exp_gc_exists = os.path.exists(os.path.join(bias_dir, 'aux_info', 'exp_gc.gz'))
+        is_obs_gc_exists = os.path.exists(os.path.join(bias_dir, 'aux_info', 'obs_gc.gz'))
         if is_exp_gc_exists and is_obs_gc_exists:
             gc = GCModel()
-            gc.from_file(os.path.dirname(f_root))
+            gc.from_file(bias_dir)
             self.salmon_gc.append(gc)
