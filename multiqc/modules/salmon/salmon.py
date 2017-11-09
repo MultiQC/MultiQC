@@ -103,17 +103,18 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'salmon_gc_plot {}'.format(x),
             'title': 'GC Bias {}'.format(x),
             'ylab': 'Obs/Exp ratio',
-            'xlab': 'bins',
+            'xlab': 'Fragment Length (bp)',
             'ymin': 0,
             'xmin': 0,
         }
         qrt1, qrt2, qrt3 = {}, {}, {}
+        fragment_len = len(self.salmon_fld['bias'])
         for i, sample_gc in enumerate(self.salmon_gc):
             ratio = numpy.divide(sample_gc.obs_, sample_gc.exp_)
             sample = 'Sample {}'.format(i)
-            qrt1[sample] = OrderedDict(enumerate(ratio[0]))
-            qrt2[sample] = OrderedDict(enumerate(ratio[1]))
-            qrt3[sample] = OrderedDict(enumerate(ratio[2]))
+            qrt1[sample] = self.scale(ratio[0], fragment_len)
+            qrt2[sample] = self.scale(ratio[1], fragment_len)
+            qrt3[sample] = self.scale(ratio[2], fragment_len)
 
         self.add_section(plot=linegraph.plot(qrt1, pconfig(1)))
         self.add_section(plot=linegraph.plot(qrt2, pconfig(2)))
@@ -127,3 +128,10 @@ class MultiqcModule(BaseMultiqcModule):
             gc = GCModel()
             gc.from_file(bias_dir)
             self.salmon_gc.append(gc)
+
+    def scale(self, ratios, fragment_len):
+        scaling_factor = fragment_len / (len(ratios))
+        scaled_result = {}
+        for i, ratio in enumerate(ratios):
+            scaled_result[i * scaling_factor] = ratio
+        return scaled_result
