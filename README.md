@@ -35,18 +35,20 @@ Currently, supported tools include:
 |[Adapter Removal][adapterremoval]|[BBMap][bbmap]          |[Bamtools][bamtools]       |[BUSCO][busco]        |
 |[AfterQC][afterqc]               |[Bismark][bismark]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
 |[Bcl2fastq][bcl2fastq]           |[Bowtie][bowtie-1]      |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]    |[HOMER][homer]             |[goleft][goleft]      |
-|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HTSeq][htseq]             |[methylQA][methylqa]  |
-|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[MACS2][macs2]             |[Peddy][peddy]        |
-|[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[Picard][picard]           |[Preseq][preseq]      |
-|[leeHom][leehom]                 |[Salmon][salmon]        |[Prokka][prokka]           |[QoRTs][qorts]        |
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[Qualimap][qualimap]  |
-|[FastQ Screen][fastq-screen]     |[STAR][star]            |[Samtools][samtools]       |[QUAST][quast]        |
-|[Flexbar][flexbar]               |[Tophat][tophat]        |[SnpEff][snpeff]           |[RNA-SeQC][rna_seqc]  |
-|[Jellyfish][jellyfish]           |                        |[Subread featureCounts][featurecounts]|[RSeQC][rseqc]|
-|[Skewer][skewer]                 |                        |[RSEM][rsem]               |[Supernova][supernova]|
-|[SortMeRNA][sortmerna]           |                        |[THetA2][theta2]           |[VCFTools][vcftools]  |
+|[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]    |[HOMER][homer]             |[goleft][goleft]|
+|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]|
+|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[MACS2][macs2]             |[methylQA][methylqa]|
+|[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[Picard][picard]           |[Peddy][peddy]|
+|[leeHom][leehom]                 |[Salmon][salmon]        |[Prokka][prokka]           |[Preseq][preseq]|
+|[InterOp][interop]               |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[QoRTs][qorts]|
+|[FastQC][fastqc]                 |[STAR][star]            |[Samtools][samtools]       |[Qualimap][qualimap]|
+|[FastQ Screen][fastq-screen]     |[Tophat][tophat]        |[SnpEff][snpeff]           |[QUAST][quast]|
+|[Flexbar][flexbar]               ||[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
+|[Jellyfish][jellyfish]           |                        |[RSEM][rsem]               |[RSeQC][rseqc]|
+|[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Supernova][supernova]|
+|[SortMeRNA][sortmerna]           |                        |                           |[VCFTools][vcftools] |
 |[Trimmomatic][trimmomatic]       |                        |                           |                      |
+|[Illumina InterOp][interop]      |                        |                           |                      |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -152,8 +154,10 @@ Code contributions from:
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@HLWiencko](https://github.com/HLWiencko),
 [@iimog](https://github.com/iimog),
+[@joachimwolff](https://github.com/joachimwolff),
 [@jrderuiter](https://github.com/jrderuiter),
 [@lpantano](https://github.com/lpantano),
+[@matthdsm](https://github.com/matthdsm)
 [@MaxUlysse](https://github.com/MaxUlysse),
 [@mlusignan](https://github.com/mlusignan),
 [@moonso](https://github.com/moonso),
@@ -163,9 +167,11 @@ Code contributions from:
 [@robinandeer](https://github.com/robinandeer),
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
-[@wkretzsch](https://github.com/wkretzsch)
+[@wkretzsch](https://github.com/wkretzsch),
 
 and many others. Thanks for your support!
+
+MultiQC is released under the GPL v3 or later licence.
 
 [adapterremoval]: http://multiqc.info/docs/#adapter-removal
 [afterqc]:        http://multiqc.info/docs/#afterqc
@@ -188,11 +194,13 @@ and many others. Thanks for your support!
 [flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
+[hicexplorer]:    http://multiqc.info/docs/#hicexplorer
 [hicup]:          http://multiqc.info/docs/#hicup
 [hisat2]:         http://multiqc.info/docs/#hisat2
 [homer]:          http://multiqc.info/docs/#homer
 [htseq]:          http://multiqc.info/docs/#htseq
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
+[interop]:        http://multiqc.info/docs/#interop
 [kallisto]:       http://multiqc.info/docs/#kallisto
 [leehom]:         http://multiqc.info/docs/#leehom
 [macs2]:          http://multiqc.info/docs/#macs2

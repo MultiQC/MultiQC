@@ -31,12 +31,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Collect counts by lane and sample (+source_files)
         self.bcl2fastq_bylane = dict()
         self.bcl2fastq_bysample = dict()
+        self.bcl2fastq_bysample_lane = dict()
         self.source_files = dict()
         self.split_data_by_lane_and_sample()
 
         # Filter to strip out ignored sample names
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
         self.bcl2fastq_bysample = self.ignore_samples(self.bcl2fastq_bysample)
+        self.bcl2fastq_bysample_lane = self.ignore_samples(self.bcl2fastq_bysample_lane)
 
         # Return with Warning if no files are found
         if len(self.bcl2fastq_bylane) == 0 and len(self.bcl2fastq_bysample) == 0:
@@ -77,33 +79,43 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'bcl2fastq-bylane',
             description = 'Number of reads per lane (with number of perfect index reads).',
             helptext = """Perfect index reads are those that do not have a single mismatch.
-                All samples of a lane are combined. Undetermined reads are treated as a third category.
-                To avoid conflicts the run ID is prepended.""",
+                All samples of a lane are combined. Undetermined reads are treated as a third category.""",
             plot = bargraph.plot(
                 self.get_bar_data_from_counts(self.bcl2fastq_bylane),
                 cats,
                 {
                     'id': 'bcl2fastq_lane_counts',
-                    'title': 'bcl2tfastq: Clusters by lane'
+                    'title': 'bcl2fastq: Clusters by lane',
+                    'hide_zero_cats': False
                 }
             )
         )
 
         # Add section for counts by sample
+        # get cats for per-lane tab
+        lcats = set()
+        for s_name in self.bcl2fastq_bysample_lane:
+            lcats.update(self.bcl2fastq_bysample_lane[s_name].keys())
+        lcats = sorted(list(lcats))
         self.add_section (
             name='Clusters by sample',
             anchor = 'bcl2fastq-bysample',
-            description = 'Number of reads per sample (with number of perfect index reads)',
+            description = 'Number of reads per sample.',
             helptext = """Perfect index reads are those that do not have a single mismatch.
                 All samples are aggregated across lanes combinned. Undetermined reads are ignored.
-                Undetermined reads are treated as a separate sample.
-                To avoid conflicts the runId is prepended.""",
+                Undetermined reads are treated as a separate sample.""",
             plot = bargraph.plot(
-                self.get_bar_data_from_counts(self.bcl2fastq_bysample),
-                cats,
+                [
+                    self.get_bar_data_from_counts(self.bcl2fastq_bysample),
+                    self.bcl2fastq_bysample_lane
+                ],
+                [cats, lcats],
                 {
                     'id': 'bcl2fastq_sample_counts',
-                    'title': 'bcl2tfastq: Clusters by sample'
+                    'title': 'bcl2fastq: Clusters by sample',
+                    'hide_zero_cats': False,
+                    'ylab': 'Number of clusters',
+                    'data_labels': ['Index mismatches', 'Counts per lane']
                 }
             )
         )
@@ -135,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()
         run_data = self.bcl2fastq_data[runId]
-        for conversionResult in content["ConversionResults"]:
+        for conversionResult in content.get("ConversionResults", []):
             l = conversionResult["LaneNumber"]
             lane = 'L{}'.format(l)
             if lane in run_data:
@@ -157,7 +169,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add undetermine barcodes
             unknown_barcode = content['UnknownBarcodes'][l - 1]['Barcodes']
             run_data[lane]['unknown_barcodes'] = unknown_barcode
-            for demuxResult in conversionResult["DemuxResults"]:
+            for demuxResult in conversionResult.get("DemuxResults", []):
                 sample = demuxResult["SampleName"]
                 if sample in run_data[lane]["samples"]:
                     log.debug(
@@ -185,10 +197,10 @@ class MultiqcModule(BaseMultiqcModule):
                 rlane["total_yield"] += demuxResult["Yield"]
                 lsample["total"] += demuxResult["NumberReads"]
                 lsample["total_yield"] += demuxResult["Yield"]
-                for indexMetric in demuxResult["IndexMetrics"]:
+                for indexMetric in demuxResult.get("IndexMetrics", []):
                     rlane["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
                     lsample["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
-                for readMetric in demuxResult["ReadMetrics"]:
+                for readMetric in demuxResult.get("ReadMetrics", []):
                     r = readMetric["ReadNumber"]
                     rlane["yieldQ30"] += readMetric["YieldQ30"]
                     rlane["qscore_sum"] += readMetric["QualityScoreSum"]
@@ -199,16 +211,17 @@ class MultiqcModule(BaseMultiqcModule):
                     lsample["R{}_trimmed_bases".format(r)] += readMetric["TrimmedBases"]
             undeterminedYieldQ30 = 0
             undeterminedQscoreSum = 0
-            for readMetric in conversionResult["Undetermined"]["ReadMetrics"]:
-                undeterminedYieldQ30 += readMetric["YieldQ30"]
-                undeterminedQscoreSum += readMetric["QualityScoreSum"]
-            run_data[lane]["samples"]["undetermined"] = {
-                "total": conversionResult["Undetermined"]["NumberReads"],
-                "total_yield": conversionResult["Undetermined"]["Yield"],
-                "perfectIndex": 0,
-                "yieldQ30": undeterminedYieldQ30,
-                "qscore_sum": undeterminedQscoreSum
-            }
+            if "Undetermined" in conversionResult:
+                for readMetric in conversionResult["Undetermined"]["ReadMetrics"]:
+                    undeterminedYieldQ30 += readMetric["YieldQ30"]
+                    undeterminedQscoreSum += readMetric["QualityScoreSum"]
+                run_data[lane]["samples"]["undetermined"] = {
+                    "total": conversionResult["Undetermined"]["NumberReads"],
+                    "total_yield": conversionResult["Undetermined"]["Yield"],
+                    "perfectIndex": 0,
+                    "yieldQ30": undeterminedYieldQ30,
+                    "qscore_sum": undeterminedQscoreSum
+                }
 
         # Calculate Percents and averages
         for lane_id, lane in iteritems(run_data):
@@ -228,7 +241,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "total": lane["total"],
                     "total_yield": lane["total_yield"],
                     "perfectIndex": lane["perfectIndex"],
-                    "undetermined": lane["samples"]["undetermined"]["total"],
+                    "undetermined": lane["samples"].get("undetermined", {}).get("total", "NA"),
                     "yieldQ30": lane["yieldQ30"],
                     "qscore_sum": lane["qscore_sum"],
                     "percent_Q30": lane["percent_Q30"],
@@ -267,6 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
                         s["R2_trimmed_bases"] += sample["R2_trimmed_bases"]
                     except KeyError:
                         pass
+                    s["percent_Q30"] = (float(s["yieldQ30"]) / float(s["total_yield"])) * 100.0
                     s["percent_perfectIndex"] = (float(s["perfectIndex"]) / float(s["total"])) * 100.0
                     s["mean_qscore"] = (float(s["qscore_sum"]) / float(s["total_yield"]))
                     if sample_id != "undetermined":

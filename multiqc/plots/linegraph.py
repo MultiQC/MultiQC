@@ -62,6 +62,10 @@ def plot (data, pconfig=None):
                 sumc = sumcounts
             data[i] = smooth_line_data(d, pconfig['smooth_points'], sumc)
 
+    # Add sane plotting config defaults
+    for idx, yp in enumerate(pconfig.get('yPlotLines', [])):
+        pconfig['yPlotLines'][idx]["width"] = pconfig['yPlotLines'][idx].get("width", 2)
+
     # Add initial axis labels if defined in `data_labels` but not main config
     if pconfig.get('ylab') is None:
         try:
@@ -471,4 +475,3 @@ def smooth_line_data(data, numpoints, sumcounts=True):
                 p = 0
                 binvals = []
     return smoothed
-

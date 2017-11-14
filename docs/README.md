@@ -17,6 +17,7 @@ MultiQC Modules:
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
     Flexbar: modules/flexbar.md
+    InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
     leeHom: modules/leehom.md
     Skewer: modules/skewer.md
@@ -43,6 +44,7 @@ MultiQC Modules:
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
+    HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
     MACS2: modules/macs2.md

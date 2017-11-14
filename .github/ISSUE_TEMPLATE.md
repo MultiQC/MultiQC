@@ -3,7 +3,7 @@ Hi there!
 
 Many thanks for creating a MultiQC issue. Most issues
 fall into two categories: either you're reporting a
-problem with MultiQC or you'd like a new issue.
+problem with MultiQC or you'd like a new module / feature.
 
 To make sure that you include all of the information
 I'll need, I've made two templates for these scenarios

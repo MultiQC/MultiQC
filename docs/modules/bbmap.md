@@ -17,7 +17,7 @@ The module can summarise data from the following BBMap output files
     * Per-scaffold RPKM/FPKM counts.
 * `covhist`
     * Histogram of # occurrences of each depth level.
-* `basecov`
+* `basecov` _(not yet implemented)_
     * Coverage per base location.
 * `bincov` _(not yet implemented)_
     * Print binned coverage per location (one line per X bases).

@@ -453,9 +453,11 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         except:
             # Flag the error, but carry on
             logger.error("Oops! The '{}' MultiQC module broke... \n".format(this_module) + \
-                      (' '*20)+"Please copy the following traceback and report it at " + \
+                      "  Please copy the following traceback and report it at " + \
                       "https://github.com/ewels/MultiQC/issues \n" + \
-                      (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
+                      "  If possible, please include a log file that triggers the error - " + \
+                      "the last file found was:\n" + \
+                      "    {}\n".format(report.last_found_file) + \
                       ('='*60)+"\nModule {} raised an exception: {}".format(
                           this_module, traceback.format_exc()) + ('='*60))
             sys_exit_code = 1

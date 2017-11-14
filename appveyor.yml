@@ -9,10 +9,6 @@ environment:
   matrix:
     - PYTHON: "C:\\Miniconda"
       PYTHON_VERSION: "2.7.x"
-    - PYTHON: "C:\\Miniconda3"
-      PYTHON_VERSION: "3.4.x"
-    - PYTHON: "C:\\Miniconda35"
-      PYTHON_VERSION: "3.5.x"
     - PYTHON: "C:\\Miniconda36"
       PYTHON_VERSION: "3.6.x"
 
@@ -26,9 +22,9 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python --version"
   # Install everything
-  - "%CMD_IN_ENV% conda update --yes conda"
-  - "%CMD_IN_ENV% conda install --yes pip jinja2 simplejson pyyaml click numpy matplotlib"
-  - "python -m pip install --upgrade pip"
+  - "%CMD_IN_ENV% conda update --yes --quiet conda"
+  - 'pip install --disable-pip-version-check --user --upgrade pip'
+  - "%CMD_IN_ENV% conda install --yes jinja2 simplejson pyyaml click numpy matplotlib"
   - 'pip install "networkx<2"'
   - "pip install spectra"
   - "python setup.py install"

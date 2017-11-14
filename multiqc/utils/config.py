@@ -57,6 +57,7 @@ creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
+megaqc_access_token = os.environ.get('MEGAQC_ACCESS_TOKEN')
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
@@ -172,12 +173,12 @@ def mqc_add_config(conf, conf_path=None):
                 logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
                 continue
             logger.debug("New config '{}': {}".format(c, fpath))
-            update_dict(globals(), {c: fpath})
+            update({c: fpath})
         else:
             logger.debug("New config '{}': {}".format(c, v))
-            update_dict(globals(), {c: v})
+            update({c: v})
 
-#### Function to load file containinga list of alternative sample-name swaps
+#### Function to load file containing a list of alternative sample-name swaps
 # Essentially a fancy way of loading stuff into the sample_names_rename config var
 # As such, can also be done directly using a config file
 def load_sample_names(snames_file):
@@ -203,6 +204,9 @@ def load_sample_names(snames_file):
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+
+def update(u):
+    return update_dict(globals(), u)
 
 def update_dict(d, u):
     """ Recursively updates nested dict d from nested dict u
