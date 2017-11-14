@@ -132,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'cpswitch': False,
                     'tt_percentages': False,
                     'use_legend': True,
-                    'tt_suffix': 'bp'
+                    'tt_suffix': 'reads'
                 }
             )
         )
