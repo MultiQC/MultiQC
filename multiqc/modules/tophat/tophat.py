@@ -44,7 +44,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_data = self.ignore_samples(self.tophat_data)
 
         if len(self.tophat_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.tophat_data)))
@@ -132,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'tophat_alignment',
-            'title': 'Tophat Alignment Scores',
+            'title': 'Tophat: Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

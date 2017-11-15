@@ -34,7 +34,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.quast_data = self.ignore_samples(self.quast_data)
 
         if len(self.quast_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.quast_data)))
@@ -269,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'quast_num_contigs',
-            'title': 'Number of Contigs',
+            'title': 'QUAST: Number of Contigs',
             'ylab': '# Contigs',
             'yDecimals': False
         }
@@ -322,6 +321,6 @@ class MultiqcModule(BaseMultiqcModule):
                  for low,high in zip(all_thresholds, all_thresholds[1:]+[None]) ]
 
         if len(cats) > 0:
-            return bargraph.plot(data, cats)
+            return bargraph.plot(data, cats, {'id': 'quast_predicted_genes', 'title': 'QUAST: Number of predicted genes'})
         else:
             return None

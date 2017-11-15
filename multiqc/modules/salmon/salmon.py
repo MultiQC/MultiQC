@@ -52,7 +52,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_fld = self.ignore_samples(self.salmon_fld)
 
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
-            log.debug("Could not find any Salmon data in {}".format(config.analysis_dir))
             raise UserWarning
 
         if len(self.salmon_meta) > 0:
@@ -85,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'smooth_points': 500,
             'id': 'salmon_plot',
-            'title': 'Salmon Fragment Length Distribution',
+            'title': 'Salmon: Fragment Length Distribution',
             'ylab': 'Fraction',
             'xlab': 'Fragment Length (bp)',
             'ymin': 0,
@@ -93,4 +92,3 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
         self.add_section( plot = linegraph.plot(self.salmon_fld, pconfig) )
-

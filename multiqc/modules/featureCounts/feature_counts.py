@@ -35,7 +35,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.featurecounts_data = self.ignore_samples(self.featurecounts_data)
 
         if len(self.featurecounts_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.featurecounts_data)))
@@ -134,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'featureCounts_assignment_plot',
-            'title': 'featureCounts Assignments',
+            'title': 'featureCounts: Assignments',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

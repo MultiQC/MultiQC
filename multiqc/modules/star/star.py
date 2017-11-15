@@ -61,7 +61,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.star_genecounts_second_strand = self.ignore_samples(self.star_genecounts_second_strand)
 
         if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         if len(self.star_data) > 0:
@@ -222,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'star_alignment_plot',
-            'title': 'STAR Alignment Scores',
+            'title': 'STAR: Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
@@ -243,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'star_gene_counts',
-            'title': 'STAR Gene Counts',
+            'title': 'STAR: Gene Counts',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'data_labels': ['Unstranded','Same Stranded','Reverse Stranded']

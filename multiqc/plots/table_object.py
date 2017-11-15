@@ -6,7 +6,7 @@ from collections import defaultdict, OrderedDict
 import logging
 import re
 
-from multiqc.utils import config
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,22 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = '{}_{}'.format( id(headers[idx]), re.sub(r'\W+', '_', k) )
+                headers[idx][k]['rid'] = report.save_htmlid(re.sub(r'\W+', '_', k))
+
+                # Applying defaults presets for data keys if shared_key is set to base_count or read_count
+                shared_key = headers[idx][k].get('shared_key', None)
+                if shared_key in ['read_count', 'base_count']:
+                    if shared_key == 'read_count':
+                        multiplier = config.read_count_multiplier
+                    else:
+                        multiplier = config.base_count_multiplier
+                    if headers[idx][k].get('modify') is None:
+                        headers[idx][k]['modify'] = lambda x: x * multiplier
+                    if headers[idx][k].get('min') is None:
+                        headers[idx][k]['min'] = 0
+                    if headers[idx][k].get('format') is None:
+                        if multiplier == 1:
+                            headers[idx][k]['format'] = '{:,.0f}'
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]['namespace']   = headers[idx][k].get('namespace', pconfig.get('namespace', ''))

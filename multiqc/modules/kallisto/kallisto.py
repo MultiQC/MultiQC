@@ -33,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.kallisto_data = self.ignore_samples(self.kallisto_data)
 
         if len(self.kallisto_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.kallisto_data)))
@@ -124,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'kallisto_alignment',
-            'title': 'Kallisto Alignment Scores',
+            'title': 'Kallisto: Alignment Scores',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

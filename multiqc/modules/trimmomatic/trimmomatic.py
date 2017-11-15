@@ -32,7 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.trimmomatic = self.ignore_samples(self.trimmomatic)
 
         if len(self.trimmomatic) == 0:
-            log.debug("Could not find any Trimmomatic data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.trimmomatic)))
@@ -120,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'trimmomatic_plot',
-            'title': 'Trimmomatic',
+            'title': 'Trimmomatic: Surviving Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

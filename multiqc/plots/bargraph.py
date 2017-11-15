@@ -95,7 +95,10 @@ def plot (data, cats=None, pconfig=None):
     plotsamples = list()
     plotdata = list()
     for idx, d in enumerate(data):
-        hc_samples = sorted(list(d.keys()))
+        if isinstance(d, OrderedDict):
+            hc_samples = list(d.keys())
+        else:
+            hc_samples = sorted(list(d.keys()))
         hc_data = list()
         sample_dcount = dict()
         for c in cats[idx].keys():

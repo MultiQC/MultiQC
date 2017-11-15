@@ -152,3 +152,21 @@ prepend-path    PATH        $modroot/bin
 prepend-path	PYTHONPATH	$modroot/lib/python2.7/site-packages
 ```
 
+## Using the Docker container
+A Docker container based on `python:2.7-slim` is provided.
+Specify the volume to bind mount as desired with `-v`, same for the working directory inside the container with `-w`. Or just use `-v "$PWD":"$PWD" -w "$PWD"` to run in current directory.
+For more information, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/)
+
+The usual multiqc command line should work fine:
+```
+docker run -v "$PWD":"$PWD" -w "$PWD" ewels/multiqc multiqc .
+```
+
+
+## Using MultiQC through Galaxy
+
+### On the main Galaxy instance
+The easiest and fast manner to use MutliQC is to use the [usegalaxy.org](https://usegalaxy.org/) main Galaxy instance where you will find [MultiQC Galaxy tool](https://usegalaxy.org/?tool_id=toolshed.g2.bx.psu.edu%2Frepos%2Fengineson%2Fmultiqc%2Fmultiqc%2F1.0.0.0&version=1.0.0.0&__identifer=2sjdq8d9r3l) under the *NGS: QC and manipualtion* tool panel section.
+
+### On your instance
+You can install MultiQC on your own Galaxy instance through your Galaxy admin space, searching on the [main Toolshed](https://toolshed.g2.bx.psu.edu/) for the [MultiQC repository](https://toolshed.g2.bx.psu.edu/view/iuc/multiqc/3bad335ccea9) available under the *visualization*, *statistics* and *Fastq Manipulation* sections.

@@ -71,7 +71,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
 
         if len(self.fastqc_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.fastqc_data)))
@@ -280,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_base_sequence_quality_plot',
-            'title': 'Mean Quality Scores',
+            'title': 'FastQC: Mean Quality Scores',
             'ylab': 'Phred Score',
             'xlab': 'Position (bp)',
             'ymin': 0,
@@ -297,7 +296,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Sequence Quality Histograms',
             anchor = 'fastqc_per_base_sequence_quality',
             description = 'The mean quality value across each base position in the read. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_bkank">FastQC help</a>.',
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_blank">FastQC help</a>.',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -317,7 +316,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_sequence_quality_scores_plot',
-            'title': 'Per Sequence Quality Scores',
+            'title': 'FastQC: Per Sequence Quality Scores',
             'ylab': 'Count',
             'xlab': 'Mean Sequence Quality (Phred Score)',
             'ymin': 0,
@@ -335,7 +334,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Per Sequence Quality Scores',
             anchor = 'fastqc_per_sequence_quality_scores',
             description = 'The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_bkank">FastQC help</a>.',
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_blank">FastQC help</a>.',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -344,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the epic HTML for the FastQC sequence content heatmap """
 
         html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
-                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_bkank">FastQC help</a>.</p>'
+                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_blank">FastQC help</a>.</p>'
 
         # Prep the data
         data = OrderedDict()
@@ -419,7 +418,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_sequence_gc_content_plot',
-            'title': 'Per Sequence GC Content',
+            'title': 'FastQC: Per Sequence GC Content',
             'ylab': 'Count',
             'xlab': '% GC',
             'ymin': 0,
@@ -470,7 +469,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
 
         desc = '''The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.
-                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_bkank">FastQC help</a>.</p>'''
+                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_blank">FastQC help</a>.</p>'''
         if theoretical_gc is not None:
             # Calculate the count version of the theoretical data based on the largest data store
             max_total = max([sum (d.values()) for d in data.values() ])
@@ -511,7 +510,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_per_base_n_content_plot',
-            'title': 'Per Base N Content',
+            'title': 'FastQC: Per Base N Content',
             'ylab': 'Percentage N-Count',
             'xlab': 'Position in Read (bp)',
             'yCeiling': 100,
@@ -532,7 +531,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Per Base N Content',
             anchor = 'fastqc_per_base_n_content',
             description = 'The percentage of base calls at each position for which an N was called. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_bkank">FastQC help</a>.',
+                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_blank">FastQC help</a>.',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -568,7 +567,7 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             pconfig = {
                 'id': 'fastqc_sequence_length_distribution_plot',
-                'title': 'Sequence Length Distribution',
+                'title': 'FastQC: Sequence Length Distribution',
                 'ylab': 'Read Count',
                 'xlab': 'Sequence Length (bp)',
                 'ymin': 0,
@@ -578,7 +577,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
             desc =  'The distribution of fragment sizes (read lengths) found. \
-                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_bkank">FastQC help</a>.'
+                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_blank">FastQC help</a>.'
             self.add_section (
                 name = 'Sequence Length Distribution',
                 anchor = 'fastqc_sequence_length_distribution',
@@ -608,7 +607,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_sequence_duplication_levels_plot',
-            'title': 'Sequence Duplication Levels',
+            'title': 'FastQC: Sequence Duplication Levels',
             'categories': True,
             'ylab': '% of Library',
             'xlab': 'Sequence Duplication Level',
@@ -654,7 +653,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'fastqc_overrepresented_sequencesi_plot',
-            'title': 'Overrepresented sequences',
+            'title': 'FastQC: Overrepresented sequences',
             'ymin': 0,
             'yCeiling': 100,
             'yMinRange': 20,
@@ -710,7 +709,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastqc_adapter_content_plot',
-            'title': 'Adapter Content',
+            'title': 'FastQC: Adapter Content',
             'ylab': '% of Sequences',
             'xlab': 'Position (bp)',
             'yCeiling': 100,

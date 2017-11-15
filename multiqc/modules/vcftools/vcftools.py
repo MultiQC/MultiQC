@@ -26,19 +26,18 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
 
         n = dict()
         n['relatedness2'] = self.parse_relatedness2()
-        
+
         n['tstv_by_count'] = self.parse_tstv_by_count()
         if n['tstv_by_count'] > 0:
             log.info("Found {} TsTv.count reports".format(n['tstv_by_count']))
-        
+
         n['tstv_by_qual'] = self.parse_tstv_by_qual()
         if n['tstv_by_qual'] > 0:
             log.info("Found {} TsTv.qual reports".format(n['tstv_by_qual']))
-        
+
         n['tstv_summary'] = self.parse_tstv_summary()
         if n['tstv_summary'] > 0:
             log.info("Found {} TsTv.summary reports".format(n['tstv_summary']))
 
         if sum(n.values()) == 0:
-            log.debug('Could not find any reports in %s', config.analysis_dir)
             raise UserWarning

@@ -41,7 +41,7 @@ prepend_dirs_sep: ' | '
 file_list: false
 make_data_dir: true
 zip_data_dir: false
-data_dump_file: false
+data_dump_file: true
 megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
@@ -143,6 +143,23 @@ fn_clean_exts:
     - '.summary'
     - '_peaks.xls'
     - '.relatedness'
+    - '.cnt'
+    - '.aqhist'
+    - '.bhist'
+    - '.bincov'
+    - '.bqhist'
+    - '.covhist'
+    - '.covstats'
+    - '.ehist'
+    - '.gchist'
+    - '.idhist'
+    - '.ihist'
+    - '.indelhist'
+    - '.lhist'
+    - '.mhist'
+    - '.qahist'
+    - '.qhist'
+    - '.rpkm'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -161,12 +178,16 @@ fn_clean_trim:
     - '.json'
     - '_mqc'
     - 'short_summary_'
+    - '.align'
+    - '.h5'
+    - '_matrix'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
 fn_ignore_files:
     - '.DS_Store'
     - '*.bam'
+    - '*.bai'
     - '*.sam'
     - '*.fq.gz'
     - '*.fastq.gz'
@@ -221,6 +242,9 @@ module_order:
     - rna_seqc:
         module_tag:
             - RNA
+    - rsem:
+        module_tag:
+            - RNA
     - rseqc:
         module_tag:
             - RNA
@@ -233,6 +257,16 @@ module_order:
     - disambiguate:
         module_tag:
             - RNA
+    - supernova:
+        module_tag:
+            - DNA
+            - Denovo
+    - deeptools:
+        module_tag:
+            - DNA
+            - RNA
+            - chip
+
     # Post-alignment processing
     - homer:
         module_tag:
@@ -291,10 +325,17 @@ module_order:
             - DNA
 
     # Alignment tool stats
+    - bbmap:
+        module_tag:
+            - DNA
+            - RNA
     - bismark:
         module_tag:
             - DNA
             - methylation
+    - hicexplorer:
+        module_tag:
+            - hi-c
     - hicup:
         module_tag:
             - hi-c
@@ -370,6 +411,11 @@ module_order:
             - DNA
             - methylation
     - bcl2fastq:
+        module_tag:
+            - RNA
+            - DNA
+            - methylation
+    - interop:
         module_tag:
             - RNA
             - DNA

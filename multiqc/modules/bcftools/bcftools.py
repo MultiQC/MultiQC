@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name='Bcftools',
-            anchor='Bcftools', target='Bcftools',
+            anchor='bcftools', target='Bcftools',
             href='https://samtools.github.io/bcftools/',
             info=(" contains utilities for variant calling and manipulating VCFs and BCFs."))
 
@@ -41,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Add to the General Stats table (has to be called once per MultiQC module)

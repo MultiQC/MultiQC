@@ -37,8 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.snpeff_data = self.ignore_samples(self.snpeff_data)
 
         if len(self.snpeff_data) == 0:
-            log.debug("Could not find any data in {}".format(
-                config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.snpeff_data)))
@@ -289,4 +287,3 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return linegraph.plot(self.snpeff_qualities, pconfig)
-

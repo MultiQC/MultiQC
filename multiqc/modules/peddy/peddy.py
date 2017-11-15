@@ -57,7 +57,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.peddy_data = self.ignore_samples(self.peddy_data)
 
         if len(self.peddy_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.peddy_data)))
@@ -161,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'peddy_pca_plot',
-            'title': 'Peddy PCA Plot',
+            'title': 'Peddy: PCA Plot',
             'xlab': 'PC1',
             'ylab': 'PC2'
         }
@@ -191,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'peddy_relatedness_plot',
-            'title': 'Peddy Relatedness Plot',
+            'title': 'Peddy: Relatedness Plot',
             'xlab': 'IBS0 (no alleles shared)',
             'ylab': 'IBS2 (both alleles shared)',
         }

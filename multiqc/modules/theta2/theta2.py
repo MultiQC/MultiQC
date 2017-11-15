@@ -37,7 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.theta2_data = self.ignore_samples(self.theta2_data)
 
         if len(self.theta2_data) == 0 :
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.theta2_data)))
@@ -89,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'theta2_purity_plot',
-            'title': 'THetA2 Tumour Subclone Purities',
+            'title': 'THetA2: Tumour Subclone Purities',
             'cpswitch': False,
             'ymin': 0,
             'ymax': 100,

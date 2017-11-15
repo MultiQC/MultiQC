@@ -35,7 +35,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.hisat2_data = self.ignore_samples(self.hisat2_data)
 
         if len(self.hisat2_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.hisat2_data)))
@@ -124,12 +123,6 @@ class MultiqcModule(BaseMultiqcModule):
     def hisat2_alignment_plot (self):
         """ Make the HighCharts HTML to plot the alignment rates """
 
-        # Config for the plot
-        config = {
-            'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads'
-        }
-
         # Split the data into SE and PE
         sedata = {}
         pedata = {}
@@ -150,10 +143,14 @@ class MultiqcModule(BaseMultiqcModule):
             sekeys['unpaired_aligned_one'] = { 'color': '#20568f', 'name': 'SE mapped uniquely' }
             sekeys['unpaired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'SE multimapped' }
             sekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'SE not aligned' }
-            config['id'] = 'hisat2_se_plot'
-            config['title'] = 'HISAT2 SE Alignment Scores'
+            pconfig = {
+                'id': 'hisat2_se_plot',
+                'title': 'HISAT2: SE Alignment Scores',
+                'ylab': '# Reads',
+                'cpswitch_counts_label': 'Number of Reads'
+            }
             self.add_section(
-                plot = bargraph.plot(sedata, sekeys, config)
+                plot = bargraph.plot(sedata, sekeys, pconfig)
             )
 
         if len(pedata) > 0:
@@ -164,9 +161,13 @@ class MultiqcModule(BaseMultiqcModule):
             pekeys['paired_aligned_multi'] = { 'color': '#f7a35c', 'name': 'PE multimapped' }
             pekeys['unpaired_aligned_multi'] = { 'color': '#ffeb75', 'name': 'PE one mate multimapped' }
             pekeys['unpaired_aligned_none'] = { 'color': '#981919', 'name': 'PE neither mate aligned' }
-            config['id'] = 'hisat2_pe_plot'
-            config['title'] = 'HISAT2 PE Alignment Scores'
+            pconfig = {
+                'id': 'hisat2_pe_plot',
+                'title': 'HISAT2: PE Alignment Scores',
+                'ylab': '# Reads',
+                'cpswitch_counts_label': 'Number of Reads'
+            }
             self.add_section(
                 description = '<em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em>',
-                plot = bargraph.plot(pedata, pekeys, config)
+                plot = bargraph.plot(pedata, pekeys, pconfig)
             )

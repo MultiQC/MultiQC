@@ -36,7 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.htseq_data = self.ignore_samples(self.htseq_data)
 
         if len(self.htseq_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.htseq_data)))
@@ -108,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats['not_aligned'] =   { 'name': 'Not Aligned' }
         config = {
             'id': 'htseq_assignment_plot',
-            'title': 'HTSeq Count Assignments',
+            'title': 'HTSeq: Count Assignments',
             'ylab': '# Reads',
             'hide_zero_cats': False,
             'cpswitch_counts_label': 'Number of Reads'

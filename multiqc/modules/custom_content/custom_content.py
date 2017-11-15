@@ -65,94 +65,99 @@ def custom_module_classes():
     bm = BaseMultiqcModule()
     for k in search_patterns:
         for f in bm.find_log_files(k):
+            # Handle any exception without messing up for remaining custom content files
+            try:
+                f_extension = os.path.splitext(f['fn'])[1]
 
-            f_extension = os.path.splitext(f['fn'])[1]
-
-            # YAML and JSON files are the easiest
-            parsed_data = None
-            if f_extension == '.yaml' or f_extension == '.yml':
-                try:
-                    # Parsing as OrderedDict is slightly messier with YAML
-                    # http://stackoverflow.com/a/21048064/713980
-                    def dict_constructor(loader, node):
-                        return OrderedDict(loader.construct_pairs(node))
-                    yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-                    parsed_data = yaml.load(f['f'])
-                except Exception as e:
-                    log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
-                    log.warning("YAML error: {}".format(e))
-                    break
-            elif f_extension == '.json':
-                try:
-                    # Use OrderedDict for objects so that column order is honoured
-                    parsed_data = json.loads(f['f'], object_pairs_hook=OrderedDict)
-                except Exception as e:
-                    log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
-                    log.warning("JSON error: {}".format(e))
-                    break
-            if parsed_data is not None:
-                c_id = parsed_data.get('id', k)
-                if len(parsed_data.get('data', {})) > 0:
-                    if type(parsed_data['data']) == str:
-                        cust_mods[c_id]['data'] = parsed_data['data']
-                    else:
-                        cust_mods[c_id]['data'].update( parsed_data['data'] )
-                    cust_mods[c_id]['config'].update ( { j:k for j,k in parsed_data.items() if j != 'data' } )
-                else:
-                    log.warning("No data found in {}".format(f['fn']))
-
-            # txt, csv, tsv etc
-            else:
-                # Look for configuration details in the header
-                m_config = _find_file_header( f )
-                s_name = None
-                if m_config is not None:
-                    c_id = m_config.get('id', k)
-                    # Update the base config with anything parsed from the file
-                    b_config = cust_mods.get(c_id, {}).get('config', {})
-                    b_config.update( m_config )
-                    # Now set the module config to the merged dict
-                    m_config = dict(b_config)
-                    s_name = m_config.get('sample_name')
-                else:
-                    c_id = k
-                    m_config = cust_mods.get(c_id, {}).get('config', {})
-
-                # Guess sample name if not given
-                if s_name is None:
-                    s_name = bm.clean_s_name(f['s_name'], f['root'])
-
-                # Guess c_id if no information known
-                if k == 'custom_content':
-                    c_id = s_name
-
-                # Add information about the file to the config dict
-                if 'files' not in m_config:
-                    m_config['files'] = dict()
-                m_config['files'].update( { s_name : { 'fn': f['fn'], 'root': f['root'] } } )
-
-                # Guess file format if not given
-                if m_config.get('file_format') is None:
-                    m_config['file_format'] = _guess_file_format( f )
-
-                # Parse data
-                try:
-                    parsed_data, conf = _parse_txt( f, m_config )
-                    if parsed_data is None or len(parsed_data) == 0:
-                        log.warning("Not able to parse custom data in {}".format(f['fn']))
-                    else:
-                        # Did we get a new section id from the file?
-                        if conf.get('id') is not None:
-                            c_id = conf.get('id')
-                        # heatmap - special data type
-                        if type(parsed_data) == list:
-                            cust_mods[c_id]['data'] = parsed_data
+                # YAML and JSON files are the easiest
+                parsed_data = None
+                if f_extension == '.yaml' or f_extension == '.yml':
+                    try:
+                        # Parsing as OrderedDict is slightly messier with YAML
+                        # http://stackoverflow.com/a/21048064/713980
+                        def dict_constructor(loader, node):
+                            return OrderedDict(loader.construct_pairs(node))
+                        yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
+                        parsed_data = yaml.load(f['f'])
+                    except Exception as e:
+                        log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
+                        log.warning("YAML error: {}".format(e))
+                        break
+                elif f_extension == '.json':
+                    try:
+                        # Use OrderedDict for objects so that column order is honoured
+                        parsed_data = json.loads(f['f'], object_pairs_hook=OrderedDict)
+                    except Exception as e:
+                        log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
+                        log.warning("JSON error: {}".format(e))
+                        break
+                if parsed_data is not None:
+                    c_id = parsed_data.get('id', k)
+                    if len(parsed_data.get('data', {})) > 0:
+                        if type(parsed_data['data']) == str:
+                            cust_mods[c_id]['data'] = parsed_data['data']
                         else:
-                            cust_mods[c_id]['data'].update(parsed_data)
-                        cust_mods[c_id]['config'].update(conf)
-                except (IndexError, AttributeError, TypeError):
-                    log.error("Unexpected parsing error for {}".format(f['fn']), exc_info=True)
-                    raise # testing
+                            cust_mods[c_id]['data'].update( parsed_data['data'] )
+                        cust_mods[c_id]['config'].update ( { j:k for j,k in parsed_data.items() if j != 'data' } )
+                    else:
+                        log.warning("No data found in {}".format(f['fn']))
+
+                # txt, csv, tsv etc
+                else:
+                    # Look for configuration details in the header
+                    m_config = _find_file_header( f )
+                    s_name = None
+                    if m_config is not None:
+                        c_id = m_config.get('id', k)
+                        # Update the base config with anything parsed from the file
+                        b_config = cust_mods.get(c_id, {}).get('config', {})
+                        b_config.update( m_config )
+                        # Now set the module config to the merged dict
+                        m_config = dict(b_config)
+                        s_name = m_config.get('sample_name')
+                    else:
+                        c_id = k
+                        m_config = cust_mods.get(c_id, {}).get('config', {})
+
+                    # Guess sample name if not given
+                    if s_name is None:
+                        s_name = bm.clean_s_name(f['s_name'], f['root'])
+
+                    # Guess c_id if no information known
+                    if k == 'custom_content':
+                        c_id = s_name
+
+                    # Add information about the file to the config dict
+                    if 'files' not in m_config:
+                        m_config['files'] = dict()
+                    m_config['files'].update( { s_name : { 'fn': f['fn'], 'root': f['root'] } } )
+
+                    # Guess file format if not given
+                    if m_config.get('file_format') is None:
+                        m_config['file_format'] = _guess_file_format( f )
+                    # Parse data
+                    try:
+                        parsed_data, conf = _parse_txt( f, m_config )
+                        if parsed_data is None or len(parsed_data) == 0:
+                            log.warning("Not able to parse custom data in {}".format(f['fn']))
+                        else:
+                            # Did we get a new section id from the file?
+                            if conf.get('id') is not None:
+                                c_id = conf.get('id')
+                            # heatmap - special data type
+                            if type(parsed_data) == list:
+                                cust_mods[c_id]['data'] = parsed_data
+                            elif conf.get('plot_type') == 'html':
+                                cust_mods[c_id]['data'] = parsed_data
+                            else:
+                                cust_mods[c_id]['data'].update(parsed_data)
+                            cust_mods[c_id]['config'].update(conf)
+                    except (IndexError, AttributeError, TypeError):
+                        log.error("Unexpected parsing error for {}".format(f['fn']), exc_info=True)
+                        raise # testing
+            except Exception as e:
+                log.error("Uncaught exception raised for file '{}'".format(f['fn']))
+                log.exception(e)
 
     # Filter to strip out ignored sample names
     for k in cust_mods:
@@ -164,7 +169,6 @@ def custom_module_classes():
         del cust_mods[k]
 
     if len(cust_mods) == 0:
-        log.debug("No custom content found")
         raise UserWarning
 
     # Go through each data type
@@ -202,7 +206,10 @@ def custom_module_classes():
         # Initialise this new module class and append to list
         else:
             parsed_modules.append( MultiqcModule(k, mod) )
-            log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
+            if mod['config'].get('plot_type') == 'html':
+                log.info("{}: Found 1 sample (html)".format(k))
+            else:
+                log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, 'custom_content', {}).get('order', [])
@@ -281,7 +288,7 @@ def _find_file_header(f):
     hconfig = None
     try:
         hconfig = yaml.load("\n".join(hlines))
-        assert( type(hconfig) == dict)
+        assert(isinstance(hconfig, dict))
     except yaml.YAMLError as e:
         log.warn("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
         log.debug(e)
@@ -346,6 +353,15 @@ def _parse_txt(f, conf):
         sep = "\t"
     lines = f['f'].splitlines()
     d = []
+
+    # Check for special case - HTML
+    if conf.get('plot_type') == 'html':
+        for l in lines:
+            if l and not l.startswith('#'):
+                d.append(l)
+        return ("\n".join(d), conf)
+
+    # Not HTML, need to parse data
     ncols = None
     for l in lines:
         if l and not l.startswith('#'):
@@ -464,6 +480,3 @@ def _parse_txt(f, conf):
     log.debug("Not able to figure out a plot type for '{}' ".format(f['fn']) +
       "plot type = {}, all numeric = {}, first row str = {}".format( conf.get('plot_type'), all_numeric, first_row_str ))
     return (None, conf)
-
-
-

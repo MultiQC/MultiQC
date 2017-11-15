@@ -32,6 +32,16 @@ self.add_section (
 )
 ```
 
+## Common options
+All plots should as a minimum have a config with an `id` and a `title`.
+MultiQC is written to work with sensible defaults, so won't complain if you
+don't supply these, but it's good practice for usability (the ID is used as
+a filename when exporting plots, and all plots should have a title when exported).
+
+Plot titles should use the format _Module name: Plot name_ (this is partly for
+ease of use within MegaQC and other downstream tools).
+
+
 ## Bar graphs
 Simple data can be plotted in bar graphs. Many MultiQC modules make use
 of stacked bar graphs. Here, the `bargraph.plot()` function comes to
@@ -89,7 +99,7 @@ config = {
     'logswitch_label': 'Log10',             # Label for 'Log10' button
     'hide_zero_cats': True,                 # Hide categories where data for all samples is 0
     # Customising the plot
-    'title': None,                          # Plot title
+    'title': None,                          # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                           # X axis label
     'ylab': None,                           # Y axis label
     'ymax': None,                           # Max y limit
@@ -113,7 +123,7 @@ config = {
 > for the plot name when exporting. If left unset, the Plot Export panel will call
 > the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
 > Plots should always have titles, especially as they can stand by themselves
-> when exported.
+> when exported. The title should have the format `Modulename: Plot Name`
 
 ### Switching datasets
 It's possible to have single plot with buttons to switch between different
@@ -197,7 +207,7 @@ config = {
     'colors': dict()             # Provide dict with keys = sample names and values colours
     'extra_series': None,        # See section below
     # Plot configuration
-    'title': None,               # Plot title
+    'title': None,               # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                # X axis label
     'ylab': None,                # Y axis label
     'xCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
@@ -233,7 +243,7 @@ html_content = linegraph.plot(data, config)
 > for the plot name when exporting. If left unset, the Plot Export panel will call
 > the filename `mqc_hcplot_gtucwirdzx.png` (with some other random string).
 > Plots should always have titles, especially as they can stand by themselves
-> when exported.
+> when exported. The title should have the format `Modulename: Plot Name`
 
 ### Switching datasets
 You can also have a single plot with buttons to switch between different
@@ -243,8 +253,8 @@ supply names to the buttons and graph labels:
 ```python
 config = {
     'data_labels': [
-        {'name': 'DS 1', 'ylab': 'Dataset 1'},
-        {'name': 'DS 2', 'ylab': 'Dataset 2'}
+        {'name': 'DS 1', 'ylab': 'Dataset 1', 'xlab': 'x Axis 1'},
+        {'name': 'DS 2', 'ylab': 'Dataset 2', 'xlab': 'x Axis 2'}
     ]
 }
 ```
@@ -346,7 +356,7 @@ key should match the keys used in the data dictionary, but values can
 customise the output. If you want to specify the order of the columns, you
 must use an `OrderedDict`.
 
-Finally, a the function accepts a third parameter, a config dictionary.
+Finally, the function accepts a config dictionary as a third parameter.
 This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 
@@ -485,7 +495,7 @@ using a config dictionary:
 
 ```python
 pconfig = {
-    'title': None,                 # Plot title
+    'title': None,                 # Plot title - should be in format "Module Name: Plot Title"
     'xTitle': None,                # X-axis title
     'yTitle': None,                # Y-axis title
     'min': None,                   # Minimum value (default: auto)

@@ -115,6 +115,10 @@ def parse_reports(self):
         self.general_stats_addcols(self.picard_RnaSeqMetrics_data, GenStatsHeaders)
 
         # Bar plot of bases assignment
+        pconfig = {
+            'id': 'picard_rnaseq_metrics',
+            'title': 'Picard: RNA alignment regions'
+        }
         bg_cats = OrderedDict()
         bg_cats['CODING_BASES'] = { 'name': 'Coding' }
         bg_cats['UTR_BASES'] = { 'name': 'UTR' }
@@ -136,7 +140,7 @@ def parse_reports(self):
                 'smooth_points': 500,
                 'smooth_points_sumcounts': [True, False],
                 'id': 'picard_rna_coverage',
-                'title': 'Normalized Coverage',
+                'title': 'Picard: Normalized Gene Coverage',
                 'ylab': 'Coverage',
                 'xlab': 'Percent through gene',
                 'xDecimals': False,

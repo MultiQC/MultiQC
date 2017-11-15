@@ -41,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
 
         if len(self.fq_screen_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.fq_screen_data)))

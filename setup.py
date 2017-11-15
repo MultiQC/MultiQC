@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 
 from setuptools import setup, find_packages
 
-version = '1.3dev'
+version = '1.3'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -50,6 +50,7 @@ setup(
     install_requires = [
         'click',
         'future>0.14.0',
+        'networkx<2',
         'lzstring',
         'jinja2>=2.9',
         'matplotlib',
@@ -59,13 +60,14 @@ setup(
         'requests',
         'simplejson',
         'spectra',
-        'networkx==1.*',
+        'enum34'
     ],
     entry_points = {
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
+            'bbmap = multiqc.modules.bbmap:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
@@ -78,16 +80,19 @@ setup(
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
+            'deeptools = multiqc.modules.deeptools:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
+            'hicexplorer = multiqc.modules.hicexplorer:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
             'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
+            'interop = multiqc.modules.interop:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
@@ -101,6 +106,7 @@ setup(
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
             'rna_seqc = multiqc.modules.rna_seqc:MultiqcModule',
+            'rsem = multiqc.modules.rsem:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
             'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
@@ -110,6 +116,7 @@ setup(
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',

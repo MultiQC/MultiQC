@@ -33,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.sortmerna = self.ignore_samples(self.sortmerna)
 
         if len(self.sortmerna) == 0:
-            log.debug("Could not find any SortMeRNA data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.sortmerna)))
@@ -131,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'sortmerna-detailed-plot',
-            'title': 'SortMeRNA hits',
+            'title': 'SortMeRNA: Hit Counts',
             'ylab': 'Reads'
         }
 

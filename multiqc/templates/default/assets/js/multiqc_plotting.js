@@ -123,6 +123,10 @@ $(function () {
       if(ylab != undefined){
         $('#'+target).highcharts().yAxis[0].setTitle({ text: ylab });
       }
+      var xlab = $(this).data('xlab');
+      if(xlab != undefined){
+        $('#'+target).highcharts().xAxis[0].setTitle({ text: xlab });
+      }
     }
     // Switch to log10 axis
     if(action == 'set_log'){
@@ -134,9 +138,13 @@ $(function () {
       var ds = $(this).data('newdata');
       plot_graph(target, ds);
       var ylab = $(this).data('ylab');
+      var xlab = $(this).data('xlab');
       var ymax = $(this).data('ymax');
       if(ylab != undefined){
         $('#'+target).highcharts().yAxis[0].setTitle({ text: ylab });
+      }
+      if(xlab != undefined){
+        $('#'+target).highcharts().xAxis[0].setTitle({ text: xlab });
       }
       if(ymax != undefined){
         $('#'+target).highcharts().yAxis[0].setExtremes(null, ymax);

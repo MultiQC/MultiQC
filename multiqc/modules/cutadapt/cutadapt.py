@@ -43,7 +43,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
 
         if len(self.cutadapt_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.cutadapt_data)))
@@ -177,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'cutadapt_plot',
-            'title': 'Lengths of Trimmed Sequences',
+            'title': 'Cutadapt: Lengths of Trimmed Sequences',
             'ylab': 'Counts',
             'xlab': 'Length Trimmed (bp)',
             'xDecimals': False,

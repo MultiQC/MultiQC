@@ -6,13 +6,15 @@ it collects the configuration settings from the following places in this order
 
 1. Hardcoded defaults in MultiQC code
 2. System-wide config in `<installation_dir>/multiqc_config.yaml`
-  * Manual installations only, not `pip` or `conda`
+    * Manual installations only, not `pip` or `conda`
 3. User config in `~/.multiqc_config.yaml`
 4. File path set in environment variable `MULTIQC_CONFIG_PATH`
-  * For example, define this in your `~/.bashrc` file and keep the file anywhere you like
+    * For example, define this in your `~/.bashrc` file and keep the file anywhere you like
 5. Config file in the current working directory: `multiqc_config.yaml`
-6. Command line config (`--cl_config`)
-7. Specific command line options (_e.g._ `--force`)
+6. Config file paths specified in the command with `--config` / `-c`
+    * You can specify multiple files like this, they can have any filename.
+7. Command line config (`--cl_config`)
+8. Specific command line options (_e.g._ `--force`)
 
 You can find an example configuration file with the MultiQC source code, called
 [`multiqc_config.example.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).

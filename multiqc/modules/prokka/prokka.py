@@ -31,7 +31,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.prokka = self.ignore_samples(self.prokka)
 
         if len(self.prokka) == 0:
-            log.debug("Could not find any Prokka data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.prokka)))
@@ -217,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_config = {
             'id': 'prokka_plot',
-            'title': 'Prokka',
+            'title': 'Prokka: Feature Types',
             'ylab': '# Counts',
             'cpswitch_counts_label': 'Features'
         }
