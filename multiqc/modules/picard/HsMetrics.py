@@ -275,17 +275,16 @@ def _add_hs_penalty(data):
     for s in data:
         for h in data[s]:
             if h.startswith("HS_PENALTY"):
-                data_clean[s][(h.replace("HS_PENALTY_", " ")[:-1])] = data[s][h]
-                if data[s][h] > 0:
+                data_clean[s][int(h.lstrip('HS_PENALTY_').rstrip('X'))] = data[s][h]
+                if data[s][h] != 0:
                     any_non_zero = True
 
     pconfig = { 'id': 'picard_hybrid_selection_penalty',
                 'title': 'Picard: Hybrid Selection Penalty',
                 'xlab': 'Fold Coverage',
-                'ylab': 'Pct of bases',
-                'ymax': 100,
-                'ymin': 0,
+                'ylab': 'Penalty',
                 'xmin': 0,
+                'xDecimals': False,
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
 
     if any_non_zero:
