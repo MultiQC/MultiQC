@@ -47,7 +47,7 @@ Currently, supported tools include:
 |[Jellyfish][jellyfish]           |                        |[RSEM][rsem]               |[RSeQC][rseqc]|
 |[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Supernova][supernova]|
 |[SortMeRNA][sortmerna]           |                        |                           |[VCFTools][vcftools] |
-|[Trimmomatic][trimmomatic]       |                        |                           |                      |
+|[Trimmomatic][trimmomatic]       |                        |                           |[Sargasso][sargasso]  |
 |[Illumina InterOp][interop]      |                        |                           |                      |
 
 
@@ -218,6 +218,7 @@ MultiQC is released under the GPL v3 or later licence.
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster
 [samtools]:       http://multiqc.info/docs/#samtools
+[sargasso]:       http://multiqc.info/docs/#sargasso
 [skewer]:         http://multiqc.info/docs/#skewer
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
