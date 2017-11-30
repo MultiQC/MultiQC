@@ -2,13 +2,15 @@
 
 ## MultiQC v1.4dev
 
+#### Module updates:
+* **MACS2**
+    * Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
+* **Picard**
+    * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
+
 #### New MultiQC Features:
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
     * Hopefully this will help with debugging / finding dodgy input data
-
-#### Bug Fixes
-* Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
-
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
 
