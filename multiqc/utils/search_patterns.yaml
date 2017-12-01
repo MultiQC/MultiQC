@@ -319,8 +319,8 @@ samtools/idxstats:
 samtools/rmdup:
     contents: '[bam_rmdup'
     shared: true
-sargasso/summary:
-    fn: 'overall_filtering_summary*.txt'
+sargasso:
+    fn: 'overall_filtering_summary.txt'
 fastqc/zip:
     fn: '*_fastqc.zip'
 skewer:
