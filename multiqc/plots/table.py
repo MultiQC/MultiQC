@@ -64,7 +64,7 @@ def make_table (dt):
 
     for idx, k, header in dt.get_headers_in_order():
 
-        rid = report.save_htmlid(header['rid'])
+        rid = header['rid']
 
         # Build the table header cell
         shared_key = ''
@@ -302,9 +302,3 @@ def make_table (dt):
         report.saved_raw_data[fn] = dt.raw_vals
 
     return html
-
-
-
-
-
-

@@ -10,6 +10,8 @@
     * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
 
 #### New MultiQC Features:
+* New `--lint` option which is strict about best-practices for writing new modules
+    * Useful when writing new modules and code as throws warnings
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
     * Hopefully this will help with debugging / finding dodgy input data
 

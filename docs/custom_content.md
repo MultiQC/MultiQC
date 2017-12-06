@@ -20,6 +20,18 @@ All plot types can be generated using custom content - see the
 [test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
 for examples of how data should be structured.
 
+# Linting
+MultiQC has been developed to be as forgiving as possible and will handle lots of
+invalid or ignored configurations. This is useful for most users but can make life
+difficult when getting MultiQC to work with a new custom content format.
+
+To help with this, you can run with the `--lint` flag, which will give explicit
+warnings about anything that is not optimally configured. For example:
+
+```
+multiqc --lint test_data
+```
+
 # Configuration
 ## Order of sections
 If you have multiple different Custom Content sections, their order will be random
@@ -301,4 +313,3 @@ As mentioned above - if no configuration is given, MultiQC will do its best to g
 your data appropriately. To see examples of typical file structures which are understood, see the
 [test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
 used to develop this code.
-
