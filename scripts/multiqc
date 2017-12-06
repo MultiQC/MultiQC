@@ -396,6 +396,9 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         pass # No subdirectory variable given
 
 
+    # Add custom content section names
+    if 'custom_content' in run_module_names:
+        run_module_names.extend(config.custom_data.keys())
     # Get the list of files to search
     report.get_filelist(run_module_names)
 

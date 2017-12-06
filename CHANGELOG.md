@@ -13,6 +13,10 @@
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
     * Hopefully this will help with debugging / finding dodgy input data
 
+#### Bug Fixes
+* Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
+
+
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
 
 #### Breaking changes - custom search patterns
