@@ -7,6 +7,7 @@
     * Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
 * **Picard**
     * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
+    * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
 
 #### New MultiQC Features:
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
