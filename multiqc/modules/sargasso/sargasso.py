@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
-        log.info('You are in sargasoo.py init2!!')
+
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='sargasso',
         anchor='sargasso', target='Subread featureCounts',
@@ -27,23 +27,26 @@ class MultiqcModule(BaseMultiqcModule):
 
          # Find and load any Sargasso reports
         self.sargasso_data = dict()
-        self.sargasso_keys = list()
+        self.sargasso_files = list()
+        self.sargasso_keys = list() #header keys
+
         for f in self.find_log_files('sargasso'):
             self.parse_sargasso_logs(f)
+            self.sargasso_files.append(f)
             # self.sargasso_data[f['s_name'].split(' | ')[-2]] = self.parse_sargasso_logs(f['f'])
             # self.sargasso_data[f['s_name']] = self.parse_sargasso_logs(f['f'])
 
-        log.info('Parsing log file...')
-        log.info(self.sargasso_data)
+        # log.info('Parsing log file...')
+        # log.info(self.sargasso_data)
 
         #sample name has been changed, think again
-        log.info('Removing innored samples...')
+        # log.info('Removing innored samples...')
         self.sargasso_data = self.ignore_samples(self.sargasso_data)
 
         if len(self.sargasso_data) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.sargasso_data)))
+        log.info("Found {} reports".format(len(self.sargasso_files)))
 
         # Write parsed report data to a file
         self.write_data_file(self.sargasso_data, 'multiqc_sargasso')
@@ -54,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Assignment bar plot
         self.add_section( plot = self.sargasso_chart() )
 
-        log.info('done')
+        # log.info('done')
 
 
     def _chunks(l, n):
@@ -64,6 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_sargasso_logs(self, f):
         """ Parse the sargasso log file. """
         # file_names = list()
+        # log.info('Parsing ' + f['s_name'])
         parsed_data = dict()
 
         species_name = list()
@@ -90,7 +94,8 @@ class MultiqcModule(BaseMultiqcModule):
                 sample_name = s.pop(0)
                 chunk_by_species = [s[i:i + len(items)] for i in xrange(0, len(s), len(items))];
                 for idx,v in enumerate(chunk_by_species):
-                    new_sample_name = '-'.join([sample_name, f['s_name'].split(' | ')[-2], species_name[idx]])
+                    #adding species name to the same name for easy interpretation
+                    new_sample_name = '_'.join([sample_name,species_name[idx]])
 
                     if new_sample_name in self.sargasso_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(new_sample_name))
@@ -101,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
 
 
-        # Check that this actually is a featureCounts file
+        # Check that this actually is a Sargasso file
         if 'Filtered-Hits' not in items:
             return None
 
@@ -157,4 +162,5 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(self.sargasso_data, self.sargasso_keys, config)
+        #We only want to plot the READs at the moment
+        return bargraph.plot(self.sargasso_data, [name for name in self.sargasso_keys if 'Reads' in name], config)
