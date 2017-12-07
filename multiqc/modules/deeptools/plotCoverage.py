@@ -45,11 +45,13 @@ class plotCoverageMixin():
                 'shared_key': 'coverage'
             }
             header["25%"] = {
+                'rid': 'first_quartile',
                 'title': '1st Quartile',
                 'description': 'First quartile coverage',
                 'shared_key': 'coverage'
             }
             header["50%"] = {
+                'rid': 'median',
                 'title': 'Median',
                 'description': 'Median coverage (second quartile)',
                 'shared_key': 'coverage'
@@ -60,6 +62,7 @@ class plotCoverageMixin():
                 'shared_key': 'coverage'
             }
             header["75%"] = {
+                'rid': 'third_quartile',
                 'title': '3rd Quartile',
                 'description': 'Third quartile coverage',
                 'shared_key': 'coverage'
@@ -75,16 +78,25 @@ class plotCoverageMixin():
                 'shared_key': 'coverage'
             }
             config = {'namespace': 'deepTools plotCoverage'}
-            self.add_section(name="Coverage metrics",
-                             anchor="plotCoverage",
-                             plot=table.plot(self.deeptools_plotCoverageStdout, header, config))
+            self.add_section(
+                name = "Coverage metrics",
+                anchor = "deeptools_coverage_metrics",
+                plot = table.plot(self.deeptools_plotCoverageStdout, header, config)
+            )
 
         if len(self.deeptools_plotCoverageOutRawCounts) > 0:
-            config = dict(xlab='Coverage', ylab='Fraction of bases sampled', id='plotCoverage', title='Coverage distribution')
-            self.add_section(name="Coverage distribution",
-                             anchor="plotCoverage",
-                             description="The fraction of bases with a given number of read/fragment coverage",
-                             plot=linegraph.plot(self.deeptools_plotCoverageOutRawCounts, config))
+            config = {
+                'id': 'deeptools_coverage_metrics_plot',
+                'title': 'Coverage distribution',
+                'xlab': 'Coverage',
+                'ylab': 'Fraction of bases sampled'
+            }
+            self.add_section(
+                name = "Coverage distribution",
+                anchor = "deeptools_coverage_distribution",
+                description = "The fraction of bases with a given number of read/fragment coverage",
+                plot = linegraph.plot(self.deeptools_plotCoverageOutRawCounts, config)
+            )
 
         return len(self.deeptools_plotCoverageStdout), len(self.deeptools_plotCoverageOutRawCounts)
 

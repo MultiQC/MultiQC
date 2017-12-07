@@ -62,7 +62,7 @@ def plot (data, cats=None, pconfig=None):
         for n in callstack:
             if 'multiqc/modules/' in n[1] and 'base_module.py' not in n[1]:
                 callpath = n[1].split('multiqc/modules/',1)[-1]
-                modname = '>{}< '.format(callpath.split(os.path.sep,1)[0])
+                modname = '>{}< '.format(callpath)
                 break
         # Look for essential missing pconfig keys
         for k in ['id', 'title', 'ylab']:

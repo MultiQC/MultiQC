@@ -465,8 +465,8 @@ class TagDirReportMixin():
         """ Create the HTML for the Homer GC content plot """
 
         pconfig = {
-            'id': 'Homer Tag Directory GC Content',
-            'title': 'Per Sequence GC Content',
+            'id': 'homer-tag-directory-gc-content',
+            'title': 'Homer: Tag Directory Per Sequence GC Content',
             'smooth_points': 200,
             'smooth_points_sumcounts': False,
             'ylab': 'Normalized Count',
@@ -490,7 +490,7 @@ class TagDirReportMixin():
         ensembl = list(range(1,23)).append([ "X", "Y", "MT"])
         pconfig = {
             'id': 'tagInfo',
-            'title': 'Tag Info Distribution',
+            'title': 'Homer: Tag Info Distribution',
             'ylab': 'Tags',
             'cpswitch_counts_label': 'Number of Tags'
         }

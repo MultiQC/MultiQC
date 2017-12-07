@@ -277,7 +277,7 @@ def save_htmlid(html_id):
         for n in callstack:
             if 'multiqc/modules/' in n[1] and 'base_module.py' not in n[1]:
                 callpath = n[1].split('multiqc/modules/',1)[-1]
-                modname = '>{}< '.format(callpath.split(os.path.sep,1)[0])
+                modname = '>{}< '.format(callpath)
                 codeline = n[4][0].strip()
                 break
     if config.lint and html_id != html_id_clean:

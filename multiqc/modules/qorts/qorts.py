@@ -268,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            'id': 'qorts_splice_events',
+            'id': 'qorts_strand_test',
             'title': 'QoRTs: Strand Test',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',

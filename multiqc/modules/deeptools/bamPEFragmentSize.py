@@ -78,9 +78,11 @@ class bamPEFragmentSizeMixin():
                 'shared_key': 'read_length'
             }
             config = {'namespace': 'deepTools bamPEFragmentSize'}
-            self.add_section(name="Read lengths",
-                             anchor="bamPEFragmentSize",
-                             plot=table.plot(self.deeptools_bamPEFragmentSize, headersSE, config))
+            self.add_section(
+                name = "Read lengths",
+                anchor = "deeptools_readlengths",
+                plot = table.plot(self.deeptools_bamPEFragmentSize, headersSE, config)
+            )
 
             headersPE = OrderedDict()
             headersPE["Frag. Sampled"] = {
@@ -143,17 +145,29 @@ class bamPEFragmentSizeMixin():
                     break
             if PE:
                 self.add_section(name="Fragment lengths",
-                                 anchor="bamPEFragmentSize",
+                                 anchor="deeptools_fragmentlengths",
                                  plot=table.plot(self.deeptools_bamPEFragmentSize, headersPE, config))
 
             # Read length plot
-            config = {'data_labels': [dict(name="Read length distribution", title="Read length distribution", ylab="Read length (bases)"),
-                                      dict(name="Fragment length distribution", title="Fragment length distribution", ylab="Fragment length (bases)")],
-                      'id': 'bamPEFragmentSize',
-                      'title': 'Read/Fragment length distribution',
-                      'namespace': 'deepTools bamPEFragmentSize',
-                      'ylab': "Read length (bases)",
-                      'xlab': "Percentile"}
+            config = {
+                'data_labels': [
+                    {
+                        'name': "Read length distribution",
+                        'title': "Read length distribution",
+                        'ylab': "Read length (bases)"
+                    },
+                    {
+                        'name': "Fragment length distribution",
+                        'title': "Fragment length distribution",
+                        'ylab': "Fragment length (bases)"
+                    }
+                ],
+                'id': 'deeptools_readlengthsPlot',
+                'title': 'Read/Fragment length distribution',
+                'namespace': 'deepTools bamPEFragmentSize',
+                'ylab': "Read length (bases)",
+                'xlab': "Percentile"
+            }
             SE = dict()
             PE = dict()
             for k, v in self.deeptools_bamPEFragmentSize.items():
@@ -187,9 +201,11 @@ class bamPEFragmentSizeMixin():
                          90: v['Frag. Len. 90%'],
                          99: v['Frag. Len. 99%'],
                          100: v['Frag. Len. Max']}
-            self.add_section(name="Read/fragment length distribution",
-                             anchor="bamPEFragmentSize",
-                             plot=linegraph.plot([SE, PE], config))
+            self.add_section(
+                name = "Read/fragment length distribution",
+                anchor = "deeptools_fragmentlengths_dist",
+                plot = linegraph.plot([SE, PE], config)
+            )
 
         return len(self.deeptools_bamPEFragmentSize)
 
