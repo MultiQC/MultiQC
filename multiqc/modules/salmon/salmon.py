@@ -9,7 +9,7 @@ import logging
 import os
 from collections import OrderedDict
 
-import numpy
+import numpy as np
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.salmon.gcmodel import GCModel
@@ -103,31 +103,41 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'salmon_gc_plot {}'.format(x),
             'title': 'GC Bias {}'.format(x),
             'ylab': 'Obs/Exp ratio',
-            'xlab': 'Fragment Length (bp)',
+            'xlab': 'bins',
             'ymin': 0,
             'xmin': 0,
         }
         qrt1, qrt2, qrt3 = {}, {}, {}
-        fragment_len = len(self.salmon_fld['bias'])
-        for i, sample_gc in enumerate(self.salmon_gc):
-            ratio = numpy.divide(sample_gc.obs_, sample_gc.exp_)
-            sample = 'Sample {}'.format(i)
-            qrt1[sample] = self.scale(ratio[0], fragment_len)
-            qrt2[sample] = self.scale(ratio[1], fragment_len)
-            qrt3[sample] = self.scale(ratio[2], fragment_len)
-
-        self.add_section(plot=linegraph.plot(qrt1, pconfig(1)))
-        self.add_section(plot=linegraph.plot(qrt2, pconfig(2)))
-        self.add_section(plot=linegraph.plot(qrt3, pconfig(3)))
+        exp_avg = np.zeros(shape=(3, 25))
+        obs_avg = np.zeros(shape=(3, 25))
+        for sample_name, sample_gc in self.salmon_gc:
+            exp = np.multiply(np.array(sample_gc.exp_weights_)[:, np.newaxis], sample_gc.exp_)
+            obs = np.multiply(np.array(sample_gc.obs_weights_)[:, np.newaxis], sample_gc.obs_)
+            exp_avg += exp
+            obs_avg += obs
+            ratio = np.divide(obs, exp)
+            qrt1[sample_name] = self.scale(ratio[0], 100)
+            qrt2[sample_name] = self.scale(ratio[1], 100)
+            qrt3[sample_name] = self.scale(ratio[2], 100)
+        ratio_avg = np.divide(obs_avg, exp_avg)
+        low_bias = self.scale(ratio_avg[0], 100)
+        med_bias = self.scale(ratio_avg[1], 100)
+        high_bias = self.scale(ratio_avg[2], 100)
+        avg_plot = {'low-bias': low_bias, 'medium-bias': med_bias, 'high-bias': high_bias}
+        self.add_section(plot=linegraph.plot(qrt1, pconfig('Low')))
+        self.add_section(plot=linegraph.plot(qrt2, pconfig('Medium')))
+        self.add_section(plot=linegraph.plot(qrt3, pconfig('High')))
+        self.add_section(plot=linegraph.plot(avg_plot, pconfig('Average')))
 
     def parse_gc_bias(self, f_root):
         bias_dir = os.path.dirname(f_root)
+        sample_name = os.path.basename(os.path.dirname(bias_dir))
         is_exp_gc_exists = os.path.exists(os.path.join(bias_dir, 'aux_info', 'exp_gc.gz'))
         is_obs_gc_exists = os.path.exists(os.path.join(bias_dir, 'aux_info', 'obs_gc.gz'))
         if is_exp_gc_exists and is_obs_gc_exists:
             gc = GCModel()
             gc.from_file(bias_dir)
-            self.salmon_gc.append(gc)
+            self.salmon_gc.append((sample_name, gc))
 
     def scale(self, ratios, fragment_len):
         scaling_factor = fragment_len / (len(ratios))
