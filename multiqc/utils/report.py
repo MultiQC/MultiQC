@@ -250,7 +250,7 @@ def data_sources_tofile ():
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
 
-def save_htmlid(html_id):
+def save_htmlid(html_id, skiplint=False):
     """ Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID """
     global html_ids
@@ -270,7 +270,7 @@ def save_htmlid(html_id):
     html_id_clean = re.sub('[^a-zA-Z0-9_-]+', '_', html_id_clean)
 
     # Validate if linting
-    if config.lint:
+    if config.lint and not skiplint:
         modname = ''
         codeline = ''
         callstack = inspect.stack()
@@ -280,7 +280,7 @@ def save_htmlid(html_id):
                 modname = '>{}< '.format(callpath)
                 codeline = n[4][0].strip()
                 break
-    if config.lint and html_id != html_id_clean:
+    if config.lint and not skiplint and html_id != html_id_clean:
         errmsg = "LINT: {}HTML ID was not clean ('{}' -> '{}') ## {}".format(modname, html_id, html_id_clean, codeline)
         logger.error(errmsg)
         lint_errors.append(errmsg)
@@ -291,7 +291,7 @@ def save_htmlid(html_id):
     while html_id_clean in html_ids:
         html_id_clean = '{}-{}'.format(html_id_base, i)
         i += 1
-        if config.lint:
+        if config.lint and not skiplint:
             errmsg = "LINT: {}HTML ID was a duplicate ({}) ## {}".format(modname, html_id_clean, codeline)
             logger.error(errmsg)
             lint_errors.append(errmsg)

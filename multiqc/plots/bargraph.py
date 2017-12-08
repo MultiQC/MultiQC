@@ -288,7 +288,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
         except:
             name = k+1
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
-        pid = report.save_htmlid(pid)
+        pid = report.save_htmlid(pid, skiplint=True)
         pids.append(pid)
 
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
