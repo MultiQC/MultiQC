@@ -14,6 +14,7 @@ import numpy as np
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.salmon.gcmodel import GCModel
 from multiqc.plots import linegraph
+from multiqc.plots import heatmap
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -110,15 +111,27 @@ class MultiqcModule(BaseMultiqcModule):
         qrt1, qrt2, qrt3 = {}, {}, {}
         exp_avg = np.zeros(shape=(3, 25))
         obs_avg = np.zeros(shape=(3, 25))
+        low, medium, high = [], [], []
+        sample_names = []
+        complete_avgs = []
         for sample_name, sample_gc in self.salmon_gc:
+            sample_names.append(sample_name)
             exp = np.multiply(np.array(sample_gc.exp_weights_)[:, np.newaxis], sample_gc.exp_)
             obs = np.multiply(np.array(sample_gc.obs_weights_)[:, np.newaxis], sample_gc.obs_)
             exp_avg += exp
             obs_avg += obs
             ratio = np.divide(obs, exp)
+            low.append(ratio[0])
+            medium.append(ratio[1])
+            high.append(ratio[2])
+            complete_avgs.append(np.average([ratio[0], ratio[1], ratio[2]], axis=1))
             qrt1[sample_name] = self.scale(ratio[0], 100)
             qrt2[sample_name] = self.scale(ratio[1], 100)
             qrt3[sample_name] = self.scale(ratio[2], 100)
+        low_bias_coeff = np.corrcoef(low)
+        medium_bias_coeff = np.corrcoef(medium)
+        high_bias_coeff = np.corrcoef(high)
+        complete_avgs_coeff = np.corrcoef(complete_avgs)
         ratio_avg = np.divide(obs_avg, exp_avg)
         low_bias = self.scale(ratio_avg[0], 100)
         med_bias = self.scale(ratio_avg[1], 100)
@@ -128,6 +141,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=linegraph.plot(qrt2, pconfig('Medium')))
         self.add_section(plot=linegraph.plot(qrt3, pconfig('High')))
         self.add_section(plot=linegraph.plot(avg_plot, pconfig('Average')))
+        self.add_section(plot=linegraph.plot(avg_plot, pconfig('Average')))
+        self.add_section(plot=heatmap.plot(low_bias_coeff, sample_names))
+        self.add_section(plot=heatmap.plot(medium_bias_coeff, sample_names))
+        self.add_section(plot=heatmap.plot(high_bias_coeff, sample_names))
+        self.add_section(plot=heatmap.plot(complete_avgs_coeff, sample_names))
 
     def parse_gc_bias(self, f_root):
         bias_dir = os.path.dirname(f_root)
