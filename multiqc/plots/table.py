@@ -202,7 +202,7 @@ def make_table (dt):
         """.format(tid=table_id)
 
         # Configure Columns Button
-        if len(t_headers) > 2:
+        if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure Columns
@@ -217,7 +217,7 @@ def make_table (dt):
         """.format(tid=table_id)
 
         # Scatter Plot Button
-        if len(t_headers) > 2:
+        if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
                 <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
