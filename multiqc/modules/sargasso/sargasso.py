@@ -107,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
         # Check that this actually is a Sargasso file
-        if 'Filtered-Hits' not in items:
+        if 'Assigned-Reads' not in items:
             return None
 
         self.sargasso_keys = items
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.sargasso_data[f_name]['Total'] = sum (self.sargasso_data[f_name].values())
             # Calculate the percent aligned if we can
             try:
-                self.sargasso_data[f_name]['sargasso_percent_assigned'] = (float(self.sargasso_data[f_name]['Filtered-Reads'])/float(self.sargasso_data[f_name]['Total'])) * 100.0
+                self.sargasso_data[f_name]['sargasso_percent_assigned'] = (float(self.sargasso_data[f_name]['Assigned-Reads'])/float(self.sargasso_data[f_name]['Total'])) * 100.0
             except (KeyError, ZeroDivisionError):
                 pass
 
@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%',
             'scale': 'RdYlGn'
         }
-        headers['Filtered-Reads'] = {
+        headers['Assigned-Reads'] = {
             'title': 'sargasso {} Assigned'.format(config.read_count_prefix),
             'description': 'sargasso Assigned reads ({})'.format(config.read_count_desc),
             'min': 0,
