@@ -118,8 +118,12 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(f_name, f['root'])
 
             # Reorganised parsed data for this sample
-            # Collect total count number
-            self.sargasso_data[f_name]['Total'] = sum (self.sargasso_data[f_name].values())
+            # Collect total read count number
+            self.sargasso_data[f_name]['Total'] = 0;
+            for key, value in self.sargasso_data[f_name].iteritems():   # iter on both keys and values
+                if key.endswith("Reads"):
+                    self.sargasso_data[f_name]['Total'] += value
+
             # Calculate the percent aligned if we can
             try:
                 self.sargasso_data[f_name]['sargasso_percent_assigned'] = (float(self.sargasso_data[f_name]['Assigned-Reads'])/float(self.sargasso_data[f_name]['Total'])) * 100.0
