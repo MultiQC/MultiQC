@@ -2,6 +2,11 @@
 
 ## MultiQC v1.4dev
 
+#### New Modules:
+* [**Sargasso**](http://statbio.github.io/Sargasso/)
+    * Parses output from Sargasso - a tool to separate mixed-species RNA-seq reads according to their species of origin
+    * Module written by [@hxin](https://github.com/hxin/)
+
 #### Module updates:
 * **MACS2**
     * Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
