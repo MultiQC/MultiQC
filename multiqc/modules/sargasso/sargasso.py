@@ -13,7 +13,6 @@ from multiqc.modules.base_module import BaseMultiqcModule
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-# xintodo main code goes here
 class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
@@ -118,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(f_name, f['root'])
 
             # Reorganised parsed data for this sample
-            # Collect total read count number
+            # Collect total READ count number
             self.sargasso_data[f_name]['Total'] = 0;
             for key, value in self.sargasso_data[f_name].iteritems():   # iter on both keys and values
                 if key.endswith("Reads"):

@@ -205,14 +205,10 @@ fn_ignore_files:
 # This is in addition to those below. These appear above _all_ other
 # modules (even those not present in the below list).
 top_modules: []
-# xintodo check the order of the module, for debugging this is set to appeared at the top of the page, but this can be changed later
 # Order that modules should appear in report. Try to list in order of analysis.
 module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
-    - sargasso:
-        module_tag:
-            - RNA
     # Post-alignment QC
     - conpair:
         module_tag:
@@ -269,6 +265,9 @@ module_order:
             - DNA
             - RNA
             - chip
+    - sargasso:
+        module_tag:
+            - RNA
 
     # Post-alignment processing
     - homer:
