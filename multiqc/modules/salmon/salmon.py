@@ -14,8 +14,8 @@ import numpy as np
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.salmon.gcmodel import GCModel
 from multiqc.modules.salmon.seqmodel import SeqModel
-from multiqc.plots import linegraph
 from multiqc.plots import heatmap
+from multiqc.plots import linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -112,6 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
             'ymin': 0,
             'xmin': 0,
         }
+
         qrt1, qrt2, qrt3 = {}, {}, {}
         exp_avg = np.zeros(shape=(3, 25))
         obs_avg = np.zeros(shape=(3, 25))
@@ -146,10 +147,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=linegraph.plot(qrt3, pconfig('High')))
         self.add_section(plot=linegraph.plot(avg_plot, pconfig('Average')))
 
-        self.add_section(plot=heatmap.plot(low_bias_coeff, sample_names))
-        self.add_section(plot=heatmap.plot(medium_bias_coeff, sample_names))
-        self.add_section(plot=heatmap.plot(high_bias_coeff, sample_names))
-        self.add_section(plot=heatmap.plot(complete_avgs_coeff, sample_names))
+        # pconfig = lambda x: {
+        #     'id': 'salmon_gc_plot {}'.format(x),
+        #     'title': 'GC Bias Correlation {}'.format(x)
+        # }
+        self.add_section(plot=heatmap.plot(low_bias_coeff, sample_names, pconfig=pconfig('Low Bias')))
+        self.add_section(plot=heatmap.plot(medium_bias_coeff, sample_names, pconfig=pconfig('Medium Bias')))
+        self.add_section(plot=heatmap.plot(high_bias_coeff, sample_names, pconfig=pconfig('High Bias')))
+        self.add_section(plot=heatmap.plot(complete_avgs_coeff, sample_names, pconfig=pconfig('Average Bias')))
 
     def parse_gc_bias(self, f_root):
         bias_dir = os.path.dirname(f_root)
@@ -172,12 +177,10 @@ class MultiqcModule(BaseMultiqcModule):
         scaling_factor = fragment_len / (len(ratios))
         scaled_result = {}
         midpoint = len(ratios)//2
-        print(len(ratios)//2)
         j = -1*midpoint
         while(j < midpoint):
             scaled_result[j] = ratios[j+midpoint]
             j=j+1
-        print(scaled_result)
         return scaled_result
 
     def parse_seq_bias(self,f_root):
@@ -189,7 +192,6 @@ class MultiqcModule(BaseMultiqcModule):
             seq = SeqModel()
             seq.from_file(bias_dir)
             self.salmon_seq3.append((sample_name,seq))
-            print("Multiply")
 
     def plot_seq_bias(self):
 
@@ -199,10 +201,6 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'Sequence Bias {}'.format(x),
                 'ylab': 'Obs/Exp ratio',
                 'xlab': 'windows',
-            }
-
-            Hpconfig = lambda x: {
-                'title': 'Sequence Bias {}'.format(x)
             }
 
             row3A = row5A = {}
@@ -228,10 +226,6 @@ class MultiqcModule(BaseMultiqcModule):
             sample_names = []
             for sample_name, sample_seq in self.salmon_seq3:
                 sample_names.append(sample_name)
-                # ratio3 = np.divide(sample_seq.obs3_, sample_seq.exp3_)
-                # ratio5 = np.divide(sample_seq.obs5_, sample_seq.exp5_)
-                # result3 = {'A': self.scale(ratio3[0], 100), 'C': self.scale(ratio3[1], 100), 'G': self.scale(ratio3[2], 100), 'T': self.scale(ratio3[3], 100)}
-                # result5 = {'A': self.scale(ratio5[0], 100), 'C': self.scale(ratio5[1], 100), 'G': self.scale(ratio5[2], 100), 'T': self.scale(ratio5[3], 100)}
 
                 ratio3 = np.divide(sample_seq.obs3_, sample_seq.exp3_)
                 ratio5 = np.divide(sample_seq.obs5_, sample_seq.exp5_)
@@ -245,9 +239,6 @@ class MultiqcModule(BaseMultiqcModule):
                 second3.append(ratio3[1])
                 third3.append(ratio3[2])
                 fourth3.append(ratio3[3])
-
-                # complete_avgs.append(np.average([ratio[0], ratio[1], ratio[2]], axis=1))
-
                 first5.append(ratio5[0])
                 second5.append(ratio5[1])
                 third5.append(ratio5[2])
@@ -289,7 +280,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(plot=linegraph.plot(avg_plot3, pconfig('Average 3')))
 
-            #
             self.add_section(plot=linegraph.plot(row5A, pconfig('5A')))
             self.add_section(plot=linegraph.plot(row5C, pconfig('5C')))
             self.add_section(plot=linegraph.plot(row5G, pconfig('5G')))
@@ -298,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(plot=linegraph.plot(avg_plot5, pconfig('Average 5')))
 
 
-            self.add_section(plot=heatmap.plot(A3_coeff, sample_names,Hpconfig('HeatMapA')))
+            self.add_section(plot=heatmap.plot(A3_coeff, sample_names))
             self.add_section(plot=heatmap.plot(C3_coeff, sample_names))
             self.add_section(plot=heatmap.plot(G3_coeff, sample_names))
             self.add_section(plot=heatmap.plot(T3_coeff, sample_names))

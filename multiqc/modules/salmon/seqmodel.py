@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 
+
 class SeqModel:
     def __init__(self):
         self.obs3_ = None
@@ -33,26 +34,6 @@ class SeqModel:
         model = np.array(model)
         model = model.reshape(4, context_length)
         return model
-        # print(data_)
-        # mspace = int_struct.unpack_from(data_[offset:])[0]
-        # offset += int_struct.size
-
-        # nrow = long_struct.unpack_from(data_[offset:])[0]
-        # offset += long_struct.size
-
-        # ncol = long_struct.unpack_from(data_[offset:])[0]
-        # offset += long_struct.size
-
-        # weight_struct = struct.Struct('@' + nrow * 'd')
-        # weights = weight_struct.unpack_from(data_[offset:])
-        # offset += weight_struct.size
-
-        # model_struct = struct.Struct('@' + nrow * ncol * 'd')
-        # model = model_struct.unpack_from(data_[offset:])
-        # model = np.array(model)
-        # model = model.reshape(ncol, nrow).T
-        # model = (model.T / model.sum(axis=1)).T
-        #return weights, model
 
     # dname is the root directory of salmon output
     def from_file(self, dname):
@@ -97,5 +78,4 @@ class SeqModel:
             print("Could not open file {}".format(exp5_name))
             return False
         self.valid_ = True
-        print(self.obs3_)
         return True
