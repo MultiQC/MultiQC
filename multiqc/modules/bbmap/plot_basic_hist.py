@@ -32,7 +32,7 @@ def plot_basic_hist(samples, file_type, **plot_args):
     }
 
     plot_params = {
-            'id': 'bbmap-' + file_type,
+            'id': 'bbmap-' + file_type + '_plot',
             'title': 'BBTools: ' + plot_args['plot_title'],
             'xmax': xmax
     }

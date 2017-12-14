@@ -64,7 +64,7 @@ def make_table (dt):
 
     for idx, k, header in dt.get_headers_in_order():
 
-        rid = report.save_htmlid(header['rid'])
+        rid = header['rid']
 
         # Build the table header cell
         shared_key = ''
@@ -202,7 +202,7 @@ def make_table (dt):
         """.format(tid=table_id)
 
         # Configure Columns Button
-        if len(t_headers) > 2:
+        if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure Columns
@@ -217,7 +217,7 @@ def make_table (dt):
         """.format(tid=table_id)
 
         # Scatter Plot Button
-        if len(t_headers) > 2:
+        if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
                 <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
@@ -302,9 +302,3 @@ def make_table (dt):
         report.saved_raw_data[fn] = dt.raw_vals
 
     return html
-
-
-
-
-
-

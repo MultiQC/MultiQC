@@ -57,6 +57,7 @@ table_columns_placement: {}
 decimalPoint_format: null
 thousandsSep_format: null
 section_comments: {}
+lint: False
 
 fn_ignore_dirs:
     - 'multiqc_data'

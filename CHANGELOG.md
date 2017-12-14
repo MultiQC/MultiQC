@@ -2,12 +2,21 @@
 
 ## MultiQC v1.4dev
 
+#### Module updates:
+* **MACS2**
+    * Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
+* **Picard**
+    * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
+    * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
+
 #### New MultiQC Features:
+* New `--lint` option which is strict about best-practices for writing new modules
+    * Useful when writing new modules and code as throws warnings
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
     * Hopefully this will help with debugging / finding dodgy input data
 
 #### Bug Fixes
-* Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
+* Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
 
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03

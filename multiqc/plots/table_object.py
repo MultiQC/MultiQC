@@ -76,7 +76,8 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = report.save_htmlid(re.sub(r'\W+', '_', k))
+                if 'rid' not in headers[idx][k]:
+                    headers[idx][k]['rid'] = report.save_htmlid(re.sub(r'\W+', '_', k).strip().strip('_'))
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[idx][k].get('shared_key', None)

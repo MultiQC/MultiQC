@@ -114,6 +114,7 @@ def parse_reports(self):
         gorigin_pconfig = {
             'id': 'qualimap_genomic_origin',
             'title': 'Qualimap RNAseq: Genomic Origin',
+            'ylab': 'Number of reads',
             'cpswitch_c_active': False
         }
         genomic_origin_helptext = '''

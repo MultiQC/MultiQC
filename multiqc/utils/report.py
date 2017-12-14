@@ -10,6 +10,7 @@ import click
 import fnmatch
 import io
 import json
+import inspect
 import lzstring
 import mimetypes
 import os
@@ -35,6 +36,7 @@ general_stats_html = ''
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
 plot_data = dict()
 html_ids = list()
+lint_errors = list()
 num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
@@ -248,31 +250,55 @@ def data_sources_tofile ():
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
 
-def save_htmlid(html_id):
+def save_htmlid(html_id, skiplint=False):
     """ Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID """
     global html_ids
+    global lint_errors
 
     # Trailing whitespace
-    html_id = html_id.strip()
+    html_id_clean = html_id.strip()
+
+    # Trailing underscores
+    html_id_clean = html_id_clean.strip('_')
 
     # Must begin with a letter
-    if re.match(r'^[a-zA-Z]', html_id) is None:
-        html_id = 'mqc-{}'.format(html_id)
+    if re.match(r'^[a-zA-Z]', html_id_clean) is None:
+        html_id_clean = 'mqc_{}'.format(html_id_clean)
 
     # Replace illegal characters
-    html_id = re.sub('[^a-zA-Z0-9_-]+', '-', html_id)
+    html_id_clean = re.sub('[^a-zA-Z0-9_-]+', '_', html_id_clean)
+
+    # Validate if linting
+    if config.lint and not skiplint:
+        modname = ''
+        codeline = ''
+        callstack = inspect.stack()
+        for n in callstack:
+            if 'multiqc/modules/' in n[1] and 'base_module.py' not in n[1]:
+                callpath = n[1].split('multiqc/modules/',1)[-1]
+                modname = '>{}< '.format(callpath)
+                codeline = n[4][0].strip()
+                break
+    if config.lint and not skiplint and html_id != html_id_clean:
+        errmsg = "LINT: {}HTML ID was not clean ('{}' -> '{}') ## {}".format(modname, html_id, html_id_clean, codeline)
+        logger.error(errmsg)
+        lint_errors.append(errmsg)
 
     # Check for duplicates
     i = 1
-    html_id_base = html_id
-    while html_id in html_ids:
-        html_id = '{}-{}'.format(html_id_base, i)
+    html_id_base = html_id_clean
+    while html_id_clean in html_ids:
+        html_id_clean = '{}-{}'.format(html_id_base, i)
         i += 1
+        if config.lint and not skiplint:
+            errmsg = "LINT: {}HTML ID was a duplicate ({}) ## {}".format(modname, html_id_clean, codeline)
+            logger.error(errmsg)
+            lint_errors.append(errmsg)
 
     # Remember and return
-    html_ids.append(html_id)
-    return html_id
+    html_ids.append(html_id_clean)
+    return html_id_clean
 
 
 def compress_json(data):
