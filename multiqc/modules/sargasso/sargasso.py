@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from featureCounts """
+""" MultiQC module to parse output from sargasso """
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='sargasso',
-        anchor='sargasso', target='Subread featureCounts',
+        anchor='sargasso',
         href='http://statbio.github.io/Sargasso/',
         info="is a tool to separate mixed-species RNA-seq reads"\
              "according to their species of origin.")
@@ -73,7 +73,6 @@ class MultiqcModule(BaseMultiqcModule):
         items = list()
         header = list()
         for l in f['f'].splitlines():
-            thisrow = list()
             s = l.split(",")
             if len(s) < 7:
                 continue
@@ -92,12 +91,12 @@ class MultiqcModule(BaseMultiqcModule):
                 #start sample lines.
                 sample_name = s.pop(0)
                 #python 2/3 compatibility issue
-                try:
-                    xrange
-                except NameError:
-                    xrange = range
+                # try:
+                #     xrange
+                # except NameError:
+                #     xrange = range
 
-                chunk_by_species = [s[i:i + len(items)] for i in xrange(0, len(s), len(items))];
+                chunk_by_species = [s[i:i + len(items)] for i in range(0, len(s), len(items))];
                 for idx,v in enumerate(chunk_by_species):
                     #adding species name to the same name for easy interpretation
                     new_sample_name = '_'.join([sample_name,species_name[idx]])
@@ -137,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def sargasso_stats_table(self):
-        """ Take the parsed stats from the featureCounts report and add them to the
+        """ Take the parsed stats from the sargasso report and add them to the
         basic stats table at the top of the report """
 
         headers = OrderedDict()
@@ -161,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def sargasso_chart (self):
-        """ Make the featureCounts assignment rates plot """
+        """ Make the sargasso plot """
 
         # Config for the plot
         config = {
