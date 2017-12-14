@@ -26,8 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Salmon', anchor='salmon',
-        href='http://combine-lab.github.io/salmon/',
-        info="is a tool for quantifying the expression of transcripts using RNA-seq data.")
+                                            href='http://combine-lab.github.io/salmon/',
+                                            info="is a tool for quantifying the expression of transcripts using RNA-seq data.")
 
         # Parse meta information. JSON win!
         self.salmon_meta = dict()
@@ -147,14 +147,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=linegraph.plot(qrt3, pconfig('High')))
         self.add_section(plot=linegraph.plot(avg_plot, pconfig('Average')))
 
-        # pconfig = lambda x: {
-        #     'id': 'salmon_gc_plot {}'.format(x),
-        #     'title': 'GC Bias Correlation {}'.format(x)
-        # }
-        self.add_section(plot=heatmap.plot(low_bias_coeff, sample_names, pconfig=pconfig('Low Bias')))
-        self.add_section(plot=heatmap.plot(medium_bias_coeff, sample_names, pconfig=pconfig('Medium Bias')))
-        self.add_section(plot=heatmap.plot(high_bias_coeff, sample_names, pconfig=pconfig('High Bias')))
-        self.add_section(plot=heatmap.plot(complete_avgs_coeff, sample_names, pconfig=pconfig('Average Bias')))
+        self.add_section(name='GC Low Bias', plot=heatmap.plot(low_bias_coeff, sample_names))
+        self.add_section(name='GC Medium Bias', plot=heatmap.plot(medium_bias_coeff, sample_names))
+        self.add_section(name='GC High Bias', plot=heatmap.plot(high_bias_coeff, sample_names))
+        self.add_section(name='GC Average Bias', plot=heatmap.plot(complete_avgs_coeff, sample_names))
 
     def parse_gc_bias(self, f_root):
         bias_dir = os.path.dirname(f_root)
@@ -170,20 +166,20 @@ class MultiqcModule(BaseMultiqcModule):
         scaling_factor = fragment_len / (len(ratios))
         scaled_result = {}
         for i, ratio in enumerate(ratios):
-                scaled_result[i * scaling_factor] = ratio
+            scaled_result[i * scaling_factor] = ratio
         return scaled_result
 
     def seq_scale(self, ratios, fragment_len):
         scaling_factor = fragment_len / (len(ratios))
         scaled_result = {}
-        midpoint = len(ratios)//2
-        j = -1*midpoint
-        while(j < midpoint):
-            scaled_result[j] = ratios[j+midpoint]
-            j=j+1
+        midpoint = len(ratios) // 2
+        j = -1 * midpoint
+        while (j < midpoint):
+            scaled_result[j] = ratios[j + midpoint]
+            j = j + 1
         return scaled_result
 
-    def parse_seq_bias(self,f_root):
+    def parse_seq_bias(self, f_root):
         bias_dir = os.path.dirname(f_root)
         sample_name = os.path.basename(os.path.dirname(bias_dir))
         is_exp_3_exists = os.path.exists(os.path.join(bias_dir, 'aux_info', 'exp3_seq.gz'))
@@ -191,110 +187,109 @@ class MultiqcModule(BaseMultiqcModule):
         if is_exp_3_exists and is_obs_3_exists:
             seq = SeqModel()
             seq.from_file(bias_dir)
-            self.salmon_seq3.append((sample_name,seq))
+            self.salmon_seq3.append((sample_name, seq))
 
     def plot_seq_bias(self):
 
-            pconfig = lambda x: {
-                'smooth_points': 25,
-                'id': 'salmon_seq_plot {}'.format(x),
-                'title': 'Sequence Bias {}'.format(x),
-                'ylab': 'Obs/Exp ratio',
-                'xlab': 'windows',
-            }
+        pconfig = lambda x: {
+            'smooth_points': 25,
+            'id': 'salmon_seq_plot {}'.format(x),
+            'title': 'Sequence Bias {}'.format(x),
+            'ylab': 'Obs/Exp ratio',
+            'xlab': 'windows',
+        }
 
-            row3A = row5A = {}
-            row3C = row5C = {}
-            row3G = row5G = {}
-            row3T = row5T = {}
+        row3A = row5A = {}
+        row3C = row5C = {}
+        row3G = row5G = {}
+        row3T = row5T = {}
 
-            first3 = []
-            second3 = []
-            third3 = []
-            fourth3 = []
-            first5 = []
-            second5 = []
-            third5 = []
-            fourth5 = []
+        first3 = []
+        second3 = []
+        third3 = []
+        fourth3 = []
+        first5 = []
+        second5 = []
+        third5 = []
+        fourth5 = []
 
-            exp_avg3 = np.zeros(shape=(4, 9))
-            obs_avg3 = np.zeros(shape=(4, 9))
+        exp_avg3 = np.zeros(shape=(4, 9))
+        obs_avg3 = np.zeros(shape=(4, 9))
 
-            exp_avg5 = np.zeros(shape=(4, 9))
-            obs_avg5 = np.zeros(shape=(4, 9))
+        exp_avg5 = np.zeros(shape=(4, 9))
+        obs_avg5 = np.zeros(shape=(4, 9))
 
-            sample_names = []
-            for sample_name, sample_seq in self.salmon_seq3:
-                sample_names.append(sample_name)
+        sample_names = []
+        for sample_name, sample_seq in self.salmon_seq3:
+            sample_names.append(sample_name)
 
-                ratio3 = np.divide(sample_seq.obs3_, sample_seq.exp3_)
-                ratio5 = np.divide(sample_seq.obs5_, sample_seq.exp5_)
-                exp_avg3 += sample_seq.exp3_
-                obs_avg3 += sample_seq.obs3_
+            ratio3 = np.divide(sample_seq.obs3_, sample_seq.exp3_)
+            ratio5 = np.divide(sample_seq.obs5_, sample_seq.exp5_)
+            exp_avg3 += sample_seq.exp3_
+            obs_avg3 += sample_seq.obs3_
 
-                exp_avg5 += sample_seq.exp5_
-                obs_avg5 += sample_seq.obs5_
+            exp_avg5 += sample_seq.exp5_
+            obs_avg5 += sample_seq.obs5_
 
-                first3.append(ratio3[0])
-                second3.append(ratio3[1])
-                third3.append(ratio3[2])
-                fourth3.append(ratio3[3])
-                first5.append(ratio5[0])
-                second5.append(ratio5[1])
-                third5.append(ratio5[2])
-                fourth5.append(ratio5[3])
+            first3.append(ratio3[0])
+            second3.append(ratio3[1])
+            third3.append(ratio3[2])
+            fourth3.append(ratio3[3])
+            first5.append(ratio5[0])
+            second5.append(ratio5[1])
+            third5.append(ratio5[2])
+            fourth5.append(ratio5[3])
 
-                row3A[sample_name] = self.seq_scale(ratio3[0], 100)
-                row5A[sample_name] = self.seq_scale(ratio5[0], 100)
+            row3A[sample_name] = self.seq_scale(ratio3[0], 100)
+            row5A[sample_name] = self.seq_scale(ratio5[0], 100)
 
-                row3C[sample_name] = self.seq_scale(ratio3[1], 100)
-                row5C[sample_name] = self.seq_scale(ratio5[1], 100)
+            row3C[sample_name] = self.seq_scale(ratio3[1], 100)
+            row5C[sample_name] = self.seq_scale(ratio5[1], 100)
 
-                row3G[sample_name] = self.seq_scale(ratio3[2], 100)
-                row5G[sample_name] = self.seq_scale(ratio5[2], 100)
+            row3G[sample_name] = self.seq_scale(ratio3[2], 100)
+            row5G[sample_name] = self.seq_scale(ratio5[2], 100)
 
-                row3T[sample_name] = self.seq_scale(ratio3[3], 100)
-                row5T[sample_name] = self.seq_scale(ratio5[3], 100)
+            row3T[sample_name] = self.seq_scale(ratio3[3], 100)
+            row5T[sample_name] = self.seq_scale(ratio5[3], 100)
 
+        ratio_avg3 = np.divide(obs_avg3, exp_avg3)
+        ratio_avg5 = np.divide(obs_avg5, exp_avg5)
 
-            ratio_avg3 = np.divide(obs_avg3, exp_avg3)
-            ratio_avg5 = np.divide(obs_avg5, exp_avg5)
+        A3_coeff = np.corrcoef(first3)
+        C3_coeff = np.corrcoef(second3)
+        G3_coeff = np.corrcoef(third3)
+        T3_coeff = np.corrcoef(fourth3)
 
-            A3_coeff = np.corrcoef(first3)
-            C3_coeff = np.corrcoef(second3)
-            G3_coeff = np.corrcoef(third3)
-            T3_coeff = np.corrcoef(fourth3)
+        A5_coeff = np.corrcoef(first5)
+        C5_coeff = np.corrcoef(second5)
+        G5_coeff = np.corrcoef(third5)
+        T5_coeff = np.corrcoef(fourth5)
 
-            A5_coeff = np.corrcoef(first5)
-            C5_coeff = np.corrcoef(second5)
-            G5_coeff = np.corrcoef(third5)
-            T5_coeff = np.corrcoef(fourth5)
+        avg_plot3 = {'A': self.scale(ratio_avg3[0], 100), 'C': self.scale(ratio_avg3[1], 100),
+                     'G': self.scale(ratio_avg3[2], 100), 'T': self.scale(ratio_avg3[3], 100)}
+        avg_plot5 = {'A': self.scale(ratio_avg5[0], 100), 'C': self.scale(ratio_avg5[1], 100),
+                     'G': self.scale(ratio_avg5[2], 100), 'T': self.scale(ratio_avg5[3], 100)}
 
-            avg_plot3 = {'A': self.scale(ratio_avg3[0], 100), 'C': self.scale(ratio_avg3[1], 100), 'G': self.scale(ratio_avg3[2], 100), 'T': self.scale(ratio_avg3[3], 100) }
-            avg_plot5 = {'A': self.scale(ratio_avg5[0], 100), 'C': self.scale(ratio_avg5[1], 100), 'G': self.scale(ratio_avg5[2], 100), 'T': self.scale(ratio_avg5[3], 100) }
+        self.add_section(plot=linegraph.plot(row3A, pconfig('3A')))
+        self.add_section(plot=linegraph.plot(row3C, pconfig('3C')))
+        self.add_section(plot=linegraph.plot(row3G, pconfig('3G')))
+        self.add_section(plot=linegraph.plot(row3T, pconfig('3T')))
 
-            self.add_section(plot=linegraph.plot(row3A, pconfig('3A')))
-            self.add_section(plot=linegraph.plot(row3C, pconfig('3C')))
-            self.add_section(plot=linegraph.plot(row3G, pconfig('3G')))
-            self.add_section(plot=linegraph.plot(row3T, pconfig('3T')))
+        self.add_section(plot=linegraph.plot(avg_plot3, pconfig('Average 3')))
 
-            self.add_section(plot=linegraph.plot(avg_plot3, pconfig('Average 3')))
+        self.add_section(plot=linegraph.plot(row5A, pconfig('5A')))
+        self.add_section(plot=linegraph.plot(row5C, pconfig('5C')))
+        self.add_section(plot=linegraph.plot(row5G, pconfig('5G')))
+        self.add_section(plot=linegraph.plot(row5T, pconfig('5T')))
 
-            self.add_section(plot=linegraph.plot(row5A, pconfig('5A')))
-            self.add_section(plot=linegraph.plot(row5C, pconfig('5C')))
-            self.add_section(plot=linegraph.plot(row5G, pconfig('5G')))
-            self.add_section(plot=linegraph.plot(row5T, pconfig('5T')))
+        self.add_section(plot=linegraph.plot(avg_plot5, pconfig('Average 5')))
 
-            self.add_section(plot=linegraph.plot(avg_plot5, pconfig('Average 5')))
+        self.add_section(name='Sequence Bias 3 - A', plot=heatmap.plot(A3_coeff, sample_names))
+        self.add_section(name='Sequence Bias 3 - C', plot=heatmap.plot(C3_coeff, sample_names))
+        self.add_section(name='Sequence Bias 3 - G', plot=heatmap.plot(G3_coeff, sample_names))
+        self.add_section(name='Sequence Bias 3 - T', plot=heatmap.plot(T3_coeff, sample_names))
 
-
-            self.add_section(plot=heatmap.plot(A3_coeff, sample_names))
-            self.add_section(plot=heatmap.plot(C3_coeff, sample_names))
-            self.add_section(plot=heatmap.plot(G3_coeff, sample_names))
-            self.add_section(plot=heatmap.plot(T3_coeff, sample_names))
-
-
-            self.add_section(plot=heatmap.plot(A5_coeff, sample_names))
-            self.add_section(plot=heatmap.plot(C5_coeff, sample_names))
-            self.add_section(plot=heatmap.plot(G5_coeff, sample_names))
-            self.add_section(plot=heatmap.plot(T5_coeff, sample_names))
+        self.add_section(name='Sequence Bias 5 - A', plot=heatmap.plot(A5_coeff, sample_names))
+        self.add_section(name='Sequence Bias 5 - C', plot=heatmap.plot(C5_coeff, sample_names))
+        self.add_section(name='Sequence Bias 5 - G', plot=heatmap.plot(G5_coeff, sample_names))
+        self.add_section(name='Sequence Bias 5 - T', plot=heatmap.plot(T5_coeff, sample_names))
