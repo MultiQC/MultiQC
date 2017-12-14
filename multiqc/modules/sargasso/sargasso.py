@@ -32,13 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('sargasso'):
             self.parse_sargasso_logs(f)
             self.sargasso_files.append(f)
-            # self.sargasso_data[f['s_name'].split(' | ')[-2]] = self.parse_sargasso_logs(f['f'])
-            # self.sargasso_data[f['s_name']] = self.parse_sargasso_logs(f['f'])
 
-        # log.info('Parsing log file...')
-        # log.info(self.sargasso_data)
-
-        #sample name has been changed, think again
         # log.info('Removing innored samples...')
         self.sargasso_data = self.ignore_samples(self.sargasso_data)
 
@@ -58,17 +52,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # log.info('done')
 
-
-    def _chunks(l, n):
-        n = max(1, n)
-        return (l[i:i+n] for i in xrange(0, len(l), n))
-
     def parse_sargasso_logs(self, f):
         """ Parse the sargasso log file. """
-        # file_names = list()
-        # log.info('Parsing ' + f['s_name'])
-        parsed_data = dict()
-
         species_name = list()
         items = list()
         header = list()
@@ -90,11 +75,6 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 #start sample lines.
                 sample_name = s.pop(0)
-                #python 2/3 compatibility issue
-                # try:
-                #     xrange
-                # except NameError:
-                #     xrange = range
 
                 chunk_by_species = [s[i:i + len(items)] for i in range(0, len(s), len(items))];
                 for idx,v in enumerate(chunk_by_species):
