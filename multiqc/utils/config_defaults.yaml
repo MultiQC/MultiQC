@@ -206,6 +206,7 @@ fn_ignore_files:
 # This is in addition to those below. These appear above _all_ other
 # modules (even those not present in the below list).
 top_modules: []
+
 # Order that modules should appear in report. Try to list in order of analysis.
 module_order:
     # MultiQC general module for catching output from custom scripts

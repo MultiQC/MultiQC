@@ -57,11 +57,18 @@ class MultiqcModule(BaseMultiqcModule):
         species_name = list()
         items = list()
         header = list()
+        is_first_line = True
         for l in f['f'].splitlines():
             s = l.split(",")
+            # Check that this actually is a Sargasso file
+            if is_first_line and s[0]!='Sample':
+                return None
+
             if len(s) < 7:
                 continue
-            if s[0] == 'Sample':
+            if is_first_line:
+                #prepare header
+                is_first_line = False
                 header = s
                 for i in header[1:]:
                     #find out what species included
@@ -81,6 +88,9 @@ class MultiqcModule(BaseMultiqcModule):
                     #adding species name to the sample name for easy interpretation
                     new_sample_name = '_'.join([sample_name,species_name[idx]])
 
+                    # Clean up sample name
+                    s_name = self.clean_s_name(new_sample_name, f['root'])
+
                     if new_sample_name in self.sargasso_data.keys():
                         log.debug("Duplicate sample name found! Overwriting: {}".format(new_sample_name))
 
@@ -90,16 +100,12 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
 
 
-        # Check that this actually is a Sargasso file
-        if 'Assigned-Reads' not in items:
-            return None
 
         self.sargasso_keys = items
 
         for idx, f_name in enumerate(self.sargasso_data.keys()):
 
-            # Clean up sample name
-            s_name = self.clean_s_name(f_name, f['root'])
+
 
             # Reorganised parsed data for this sample
             # Collect total READ count number
@@ -121,16 +127,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['sargasso_percent_assigned'] = {
-            'title': 'sargasso % Assigned',
-            'description': 'sargasso % Assigned reads',
+            'title': '% Assigned',
+            'description': 'Sargasso % Assigned reads',
             'max': 100,
             'min': 0,
             'suffix': '%',
             'scale': 'RdYlGn'
         }
         headers['Assigned-Reads'] = {
-            'title': 'sargasso {} Assigned'.format(config.read_count_prefix),
-            'description': 'sargasso Assigned reads ({})'.format(config.read_count_desc),
+            'title': '{} Assigned'.format(config.read_count_prefix),
+            'description': 'Sargasso Assigned reads ({})'.format(config.read_count_desc),
             'min': 0,
             'scale': 'PuBu',
             'modify': lambda x: float(x) * config.read_count_multiplier,
@@ -145,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         config = {
             'id': 'sargasso_assignment_plot',
-            'title': 'Sargasso:',
+            'title': 'Sargasso: Assigned Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }

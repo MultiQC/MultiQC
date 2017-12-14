@@ -321,8 +321,6 @@ samtools/rmdup:
     shared: true
 sargasso:
     fn: 'overall_filtering_summary.txt'
-fastqc/zip:
-    fn: '*_fastqc.zip'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
     shared: true
