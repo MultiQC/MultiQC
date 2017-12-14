@@ -91,6 +91,12 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 #start sample lines.
                 sample_name = s.pop(0)
+                #python 2/3 compatibility issue
+                try:
+                    xrange
+                except NameError:
+                    xrange = range
+
                 chunk_by_species = [s[i:i + len(items)] for i in xrange(0, len(s), len(items))];
                 for idx,v in enumerate(chunk_by_species):
                     #adding species name to the same name for easy interpretation
@@ -119,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Reorganised parsed data for this sample
             # Collect total READ count number
             self.sargasso_data[f_name]['Total'] = 0;
-            for key, value in self.sargasso_data[f_name].iteritems():   # iter on both keys and values
+            for key, value in list(self.sargasso_data[f_name].items()):   # iter on both keys and values
                 if key.endswith("Reads"):
                     self.sargasso_data[f_name]['Total'] += value
 
