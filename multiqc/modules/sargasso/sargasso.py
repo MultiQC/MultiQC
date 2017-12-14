@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse_sargasso_logs(f)
             self.sargasso_files.append(f)
 
-        # log.info('Removing innored samples...')
+        # log.info('Removing ignored samples...')
         self.sargasso_data = self.ignore_samples(self.sargasso_data)
 
         if len(self.sargasso_data) == 0:
@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 chunk_by_species = [s[i:i + len(items)] for i in range(0, len(s), len(items))];
                 for idx,v in enumerate(chunk_by_species):
-                    #adding species name to the same name for easy interpretation
+                    #adding species name to the sample name for easy interpretation
                     new_sample_name = '_'.join([sample_name,species_name[idx]])
 
                     if new_sample_name in self.sargasso_data.keys():
