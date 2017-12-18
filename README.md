@@ -43,11 +43,11 @@ Currently, supported tools include:
 |[InterOp][interop]               |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[QoRTs][qorts]|
 |[FastQC][fastqc]                 |[STAR][star]            |[Samtools][samtools]       |[Qualimap][qualimap]|
 |[FastQ Screen][fastq-screen]     |[Tophat][tophat]        |[SnpEff][snpeff]           |[QUAST][quast]|
-|[Flexbar][flexbar]               ||[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
+|[Flexbar][flexbar]               ||[Subread featureCounts][featurecounts]             |[RNA-SeQC][rna_seqc]|
 |[Jellyfish][jellyfish]           |                        |[RSEM][rsem]               |[RSeQC][rseqc]|
-|[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Supernova][supernova]|
-|[SortMeRNA][sortmerna]           |                        |                           |[VCFTools][vcftools] |
-|[Trimmomatic][trimmomatic]       |                        |                           |                      |
+|[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Sargasso][sargasso]|
+|[SortMeRNA][sortmerna]           |                        |                           |[Supernova][supernova] |
+|[Trimmomatic][trimmomatic]       |                        |                           |[VCFTools][vcftools] |
 |[Illumina InterOp][interop]      |                        |                           |                      |
 
 
@@ -218,6 +218,7 @@ MultiQC is released under the GPL v3 or later licence.
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster
 [samtools]:       http://multiqc.info/docs/#samtools
+[sargasso]:       http://multiqc.info/docs/#sargasso
 [skewer]:         http://multiqc.info/docs/#skewer
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff

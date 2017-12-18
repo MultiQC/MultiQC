@@ -126,11 +126,16 @@ def parse_reports(self):
         bg_cats['INTERGENIC_BASES'] = { 'name': 'Intergenic' }
         bg_cats['RIBOSOMAL_BASES'] = { 'name': 'Ribosomal' }
         bg_cats['PF_NOT_ALIGNED_BASES'] = { 'name': 'PF not aligned' }
+        pconfig = {
+            'id': 'picard_rnaseqmetrics_assignment_plot',
+            'title': 'Picard: RnaSeqMetrics Read Assignments',
+            'ylab': 'Number of reads'
+        }
         self.add_section (
             name = 'RnaSeqMetrics Assignment',
             anchor = 'picard-rna-assignment',
             description = 'Number of bases in primary alignments that align to regions in the reference genome.',
-            plot = bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats)
+            plot = bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig)
         )
 
         # Section with histogram plot
@@ -156,4 +161,3 @@ def parse_reports(self):
 
     # Return the number of detected samples to the parent module
     return len(self.picard_RnaSeqMetrics_data)
-

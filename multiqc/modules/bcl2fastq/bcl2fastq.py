@@ -86,6 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     'id': 'bcl2fastq_lane_counts',
                     'title': 'bcl2fastq: Clusters by lane',
+                    'ylab': 'Number of clusters',
                     'hide_zero_cats': False
                 }
             )

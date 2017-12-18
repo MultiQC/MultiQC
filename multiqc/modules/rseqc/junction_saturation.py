@@ -20,9 +20,6 @@ def parse_reports(self):
     self.junction_saturation_all = dict()
     self.junction_saturation_known = dict()
     self.junction_saturation_novel = dict()
-    self.junction_saturation_all_pct = dict()
-    self.junction_saturation_known_pct = dict()
-    self.junction_saturation_novel_pct = dict()
 
     # Go through files and parse data
     for f in self.find_log_files('rseqc/junction_saturation'):
@@ -53,34 +50,20 @@ def parse_reports(self):
 
     if len(self.junction_saturation_all) > 0:
 
-        # Make a normalised percentage version of the data
-        for s_name in self.junction_saturation_all:
-            self.junction_saturation_all_pct[s_name] = OrderedDict()
-            self.junction_saturation_known_pct[s_name] = OrderedDict()
-            self.junction_saturation_novel_pct[s_name] = OrderedDict()
-            total = list(self.junction_saturation_all[s_name].values())[-1]
-            if total == 0: # Shouldn't happen..?
-                continue
-            for k, v in self.junction_saturation_all[s_name].items():
-                self.junction_saturation_all_pct[s_name][k] = (v/total)*100
-                self.junction_saturation_known_pct[s_name][k] = (self.junction_saturation_known[s_name][k]/total)*100
-                self.junction_saturation_novel_pct[s_name][k] = (self.junction_saturation_novel[s_name][k]/total)*100
-
         # Add line graph to section
         pconfig = {
             'id': 'rseqc_junction_saturation_plot',
             'title': 'RSeQC: Junction Saturation',
-            'ylab': 'Percent of Junctions',
-            'ymax': 100,
+            'ylab': 'Number of Junctions',
             'ymin': 0,
             'xlab': "Percent of reads",
             'xmin': 0,
             'xmax': 100,
             'tt_label': "<strong>{point.x}% of reads</strong>: {point.y:.2f}",
             'data_labels': [
-                {'name': 'All Junctions'},
                 {'name': 'Known Junctions'},
                 {'name': 'Novel Junctions'},
+                {'name': 'All Junctions'}
             ],
             'cursor': 'pointer',
             'click_func': plot_single()
@@ -89,19 +72,18 @@ def parse_reports(self):
             name = 'Junction Saturation',
             anchor = 'rseqc-junction_saturation',
             description = '''<a href="http://rseqc.sourceforge.net/#junction-saturation-py" target="_blank">Junction Saturation</a>
-                calculates percentage of known splicing junctions that are observed
+                counts the number of known splicing junctions that are observed
                 in each dataset. If sequencing depth is sufficient, all (annotated) splice junctions should
                 be rediscovered, resulting in a curve that reaches a plateau. Missing low abundance splice
-                junctions can affect downstream analysis. Counts are normalised to the total number of
-                observed junctions.</p>
+                junctions can affect downstream analysis.</p>
                 <div class="alert alert-info" id="rseqc-junction_sat_single_hint">
                   <span class="glyphicon glyphicon-hand-up"></span>
                   Click a line to see the data side by side (as in the original RSeQC plot).
                 </div><p>''',
             plot = linegraph.plot([
-                    self.junction_saturation_all_pct,
-                    self.junction_saturation_known_pct,
-                    self.junction_saturation_novel_pct
+                    self.junction_saturation_known,
+                    self.junction_saturation_novel,
+                    self.junction_saturation_all
                 ], pconfig)
         )
 
@@ -183,7 +165,7 @@ def plot_single():
           for (var i = 0; i < 3; i++) {
               hc.series[i].setData(mqc_plots['rseqc_junction_saturation_plot']['datasets'][i][k]['data'], false);
           }
-          var ptitle = mqc_plots['rseqc_junction_saturation_plot']['datasets'][0][k]['name'];
+          var ptitle = 'RSeQC Junction Saturation: '+mqc_plots['rseqc_junction_saturation_plot']['datasets'][0][k]['name'];
           hc.setTitle({text: ptitle});
           hc.redraw({ duration: 200 });
         });
@@ -204,8 +186,7 @@ def plot_single():
             allowDecimals: false,
           },
           yAxis: {
-            title: { text: 'Percent of observed splicing junctions' },
-            max: 100,
+            title: { text: 'Number of observed splicing junctions' },
             min: 0,
           },
           legend: {
@@ -219,8 +200,7 @@ def plot_single():
           tooltip: {
             shared: true,
             crosshairs: true,
-            headerFormat: '<strong>{point.key}% of reads</strong><br/>',
-            valueDecimals: 2
+            headerFormat: '<strong>{point.key}% of reads</strong><br/>'
           },
           plotOptions: {
             series: {
@@ -242,4 +222,3 @@ def plot_single():
         });
     }
     """
-

@@ -2,9 +2,29 @@
 
 ## MultiQC v1.4dev
 
+#### New Modules:
+* [**Sargasso**](http://statbio.github.io/Sargasso/)
+    * Parses output from Sargasso - a tool to separate mixed-species RNA-seq reads according to their species of origin
+    * Module written by [@hxin](https://github.com/hxin/)
+
+#### Module updates:
+* **MACS2**
+    * Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
+* **Picard**
+    * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
+    * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
+* **RSeQC**
+    * Removed normalisation in Junction Saturation plot. Now raw counts instead of % of total junctions.
+
 #### New MultiQC Features:
+* New `--lint` option which is strict about best-practices for writing new modules
+    * Useful when writing new modules and code as throws warnings
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
     * Hopefully this will help with debugging / finding dodgy input data
+
+#### Bug Fixes
+* Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
+
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
 

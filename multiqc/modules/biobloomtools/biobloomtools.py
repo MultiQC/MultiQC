@@ -92,13 +92,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'biobloom_tools',
-            'title': 'BioBloom Tools',
+            'title': 'BioBloom Tools: Alignment counts per species',
+            'ylab': 'Number of hits',
             'hide_zero_cats': False
         }
         cats['multiMatch'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['noMatch'] = { 'name': 'No Match', 'color': '#cccccc' }
 
         return bargraph.plot(data, cats, pconfig)
-
-
-

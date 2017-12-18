@@ -57,6 +57,7 @@ table_columns_placement: {}
 decimalPoint_format: null
 thousandsSep_format: null
 section_comments: {}
+lint: False
 
 fn_ignore_dirs:
     - 'multiqc_data'
@@ -266,6 +267,9 @@ module_order:
             - DNA
             - RNA
             - chip
+    - sargasso:
+        module_tag:
+            - RNA
 
     # Post-alignment processing
     - homer:

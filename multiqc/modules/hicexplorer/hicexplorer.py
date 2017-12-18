@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Mapping statistics',
             anchor = 'hicexplorer_categorization_of_considered_reads',
-            plot = self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads'),
+            plot = self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads', 'categorization'),
             description = 'This shows how the sequenced read pairs were mapped and those filtered due to mapping problems.',
             helptext = '''
                 * **Pairs mappable, unique and high quality**
@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Read filtering',
             anchor = 'hicexplorer_pairs_categorized',
-            plot = self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads - Pairs mappable, unique and high quality'),
+            plot = self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads - Pairs mappable, unique and high quality', 'mapping'),
             description = 'This figure contains the number of reads that were finally used to build the '
             'Hi-C matrix along with the reads that where filtered out.',
             helptext = """
@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Contact distance',
             anchor = 'hicexplorer_contact_distance',
-            plot = self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Contact distance'),
+            plot = self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Contact distance', 'contact_distance'),
             description = 'This figure contains information about the distance and location of the valid pairs used.',
             helptext = '''
             * **Long range**
@@ -109,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Read orientation',
             anchor = 'hicexplorer_read_orientation',
-            plot = self.hicexplorer_create_plot(keys_list_read_orientation, 'HiCExplorer: Read orientation'),
+            plot = self.hicexplorer_create_plot(keys_list_read_orientation, 'HiCExplorer: Read orientation', 'orientation'),
             description = 'This figure contains information about the orientation of the read pairs.',
             helptext = '''
                 * **Inward pairs**
@@ -207,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(data, headers)
 
-    def hicexplorer_create_plot(self, pKeyList, pTitle):
+    def hicexplorer_create_plot(self, pKeyList, pTitle, pId):
         """Create the graphics containing information about the read quality."""
 
         keys = OrderedDict()
@@ -223,6 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data['{}'.format(self.mod_data[data_]['File'][0])][key_] = self.mod_data[data_][key_][0]
 
         config = {
+            'id': 'hicexplorer_'+pId+'_plot',
             'title': pTitle,
             'ylab': 'Number of Reads',
             'cpswitch_counts_label': 'Number of Reads'

@@ -38,7 +38,7 @@ def plot_indelhist(samples, file_type, **plot_args):
         )
 
     plot_params = {
-            'id': 'bbmap-' + file_type,
+            'id': 'bbmap-' + file_type + '_plot',
             'title': 'BBTools: ' + plot_args['plot_title'],
             'xlab': 'Indel size',
             'data_labels': [

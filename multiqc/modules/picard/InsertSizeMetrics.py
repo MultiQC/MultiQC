@@ -67,7 +67,11 @@ def parse_reports(self):
                             try:
                                 self.picard_insertSize_data[rowkey][k] = float(vals[i])
                             except ValueError:
-                                self.picard_insertSize_data[rowkey][k] = vals[i]
+                                try:
+                                    self.picard_insertSize_data[rowkey][k] = float(vals[i].replace(',','.'))
+                                    log.debug("Switching commas for points in '{}': {} - {}".format(f['fn'], vals[i], vals[i].replace(',','.')))
+                                except ValueError:
+                                    self.picard_insertSize_data[rowkey][k] = vals[i]
                             except IndexError:
                                 pass # missing data
                         # Add to mean sums
@@ -180,4 +184,3 @@ def parse_reports(self):
 
     # Return the number of detected samples to the parent module
     return len(self.picard_insertSize_data)
-

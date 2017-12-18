@@ -4,6 +4,9 @@ python:
   - "3.5"
   - "3.4"
   - "2.7"
+cache: pip
+matrix:
+  fast_finish: true
 # commands to install dependencies
 install:
   - python setup.py install
@@ -13,9 +16,10 @@ install:
 # commands to run tests
 script:
   - python -m unittest discover
-  - multiqc data
-  - multiqc data -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" -n custom_fn --no-data-dir
-  - multiqc data -f -v --flat -e star -x ngi -s -z -c ../multiqc_config_example.yaml
+  - multiqc data --ignore data/modules/
+  - multiqc --lint data/modules/
+  - multiqc --lint data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
+  - multiqc --lint data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c ../multiqc_config_example.yaml
   - multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
   - multiqc -f empty_dir
   - multiqc -f data/modules/gatk/BaseRecalibrator/recal_data.table

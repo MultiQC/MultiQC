@@ -30,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'YlGn'
         }
         self.headers['# Long scaffs'] = {
+                'rid': 'num_long_scaffs',
                 'description': 'number of scaffolds >= 10 kb',
                 'scale': 'YlGn',
                 'format': '{:,.0f}',
@@ -75,6 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'hidden': True
         }
         self.headers['# Reads'] = {
+                'rid': 'num_reads',
                 'description': 'number of reads (in millions); ideal 800M-1200M for human',
                 'modify': lambda x: x / 1000000.0,
                 'suffix': 'M',
@@ -86,11 +88,13 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'PuBu'
         }
         self.headers['% Dup'] = {
+                'rid': 'pct_Dup',
                 'description': 'fraction of reads that are duplicates',
                 'suffix': '%',
                 'scale': 'OrRd',
         }
         self.headers['% R2 Q30'] = {
+                'rid': 'pct_R2_Q30',
                 'description': 'fraction of Q30 bases in read 2; ideal 75-85%',
                 'suffix': '%',
                 'scale': 'OrRd',
@@ -103,6 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'hidden': True
         }
         self.headers['% proper'] = {
+                'rid': 'pct_proper',
                 'description': 'fraction of proper read pairs; ideal >= 75%',
                 'suffix': '%',
                 'scale': 'OrRd',
@@ -115,6 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'BuGn',
         }
         self.headers['% missing BC'] = {
+                'rid': 'pct_missing_BC',
                 'description': 'fraction of reads that are not barcoded',
                 'suffix': '%',
                 'scale': 'BuGn',
@@ -126,6 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:,.0f}',
         }
         self.headers['% Phased'] = {
+                'rid': 'pct_Phased',
                 'description': 'nonduplicate and phased reads; ideal 45-50%',
                 'suffix': '%',
                 'scale': 'BuGn',
@@ -239,7 +246,8 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         config_n50 = {
                 'id': 'supernova_n50',
-                'title': 'Supernova N50 statistics',
+                'title': 'Supernova: N50 statistics',
+                'ylab': 'Scaffold N50',
                 'cpswitch': False,
                 'data_labels': ['Scaffold N50', 'Contig N50', 'Edge N50', 'Phase block N50']
         }

@@ -22,6 +22,22 @@ you can write it as part of a custom plugin. The process is almost identical,
 though it keeps the code bases separate. For more information about this,
 see the docs about _MultiQC Plugins_ below.
 
+## Linting
+MultiQC has been developed to be as forgiving as possible and will handle lots of
+invalid or ignored code. This is useful most of the time but can be difficult when
+writing new MultiQC modules (especially during pull-request reviews).
+
+To help with this, you can run with the `--lint` flag, which will give explicit
+warnings about anything that is not optimally configured. For example:
+
+```
+multiqc --lint test_data
+```
+
+Note that the automated MultiQC continuous integration testing runs in this mode,
+so you will need to pass all lint tests for those checks to pass. This is required
+for any pull-requests.
+
 ## Initial setup
 ### Submodule
 MultiQC modules are Python submodules - as such, they need their own
