@@ -13,6 +13,8 @@
 * **Picard**
     * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
     * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
+* **RSeQC**
+    * Removed normalisation in Junction Saturation plot. Now raw counts instead of % of total junctions.
 
 #### New MultiQC Features:
 * New `--lint` option which is strict about best-practices for writing new modules
