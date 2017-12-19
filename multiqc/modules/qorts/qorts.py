@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import re
+import os
 import logging
 
 from multiqc import config
@@ -53,8 +54,11 @@ class MultiqcModule(BaseMultiqcModule):
             s = l.split("\t")
             if s_names is None:
                 s_names = [ self.clean_s_name(s_name, f['root']) for s_name in s[1:] ]
-                if len(s_names) == 1 and s_names[0] == 'COUNT':
-                    s_names = [ f['s_name'] ]
+                if len(s_names) <= 2 and s_names[0] == 'COUNT':
+                    if f['fn'] == 'QC.summary.txt':
+                        s_names = [ self.clean_s_name( os.path.basename(os.path.normpath(f['root'])), f['root']) ]
+                    else:
+                        s_names = [ f['s_name'] ]
                 for s_name in s_names:
                     if s_name in self.qorts_data:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))

@@ -13,6 +13,8 @@
 * **Picard**
     * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
     * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
+* **QoRTs**
+    * Added support for new style of output generated in the v1.3.0 release
 * **RSeQC**
     * Removed normalisation in Junction Saturation plot. Now raw counts instead of % of total junctions.
 
