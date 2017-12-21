@@ -687,7 +687,7 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
                 '--standalone',
                 config.output_fn,
                 '--output', pdf_fn_name,
-                '--latex-engine=xelatex',
+                '--pdf-engine=xelatex',
                 '-V', 'documentclass=article',
                 '-V', 'geometry=margin=1in',
                 '-V', 'title='

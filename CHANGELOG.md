@@ -26,6 +26,7 @@
 
 #### Bug Fixes
 * Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
+* Updated pandoc command used in `--pdf` to work with new releases of Pandoc.
 
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
