@@ -16,4 +16,4 @@ RUN \
   && rm -rf /var/lib/apt/lists/* /opt/get-pip.py
 
 # Install MultiQC
-RUN pip install git+git://github.com/metagenlab/MultiQC.git
+RUN pip install git+git://github.com/ewels/MultiQC.git
