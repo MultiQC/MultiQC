@@ -17,5 +17,3 @@ RUN \
 
 # Install MultiQC
 RUN pip install git+git://github.com/metagenlab/MultiQC.git
-
-

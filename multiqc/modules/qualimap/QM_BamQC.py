@@ -110,6 +110,7 @@ def parse_genome_results(self, f):
         self.general_stats_data[s_name]['mapped_reads'] = d['mapped_reads']
         d['percentage_aligned'] = (d['mapped_reads'] / d['total_reads'])*100
         self.general_stats_data[s_name]['percentage_aligned'] = d['percentage_aligned']
+        self.general_stats_data[s_name]['general_error_rate'] = d['general_error_rate']
     except KeyError:
         pass
 
