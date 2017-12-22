@@ -554,7 +554,7 @@ def general_stats_headers (self):
         'max': 100,
         'min': 0,
         'suffix': '%',
-        'scale': 'OrRd'
+        'scale': 'OrRd',
         'format': '{0:.2f}'
     }
 
