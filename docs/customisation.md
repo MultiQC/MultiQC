@@ -267,7 +267,7 @@ table_cond_formatting_rules:
             - s_eq: 'false'
 ```
 
-These make any table cells that match the string `pass` or `true` have text with a green background. There can be multiple tests for each style of formatting - if any match, it will be applied. The following comparison operators are available:
+These make any table cells that match the string `pass` or `true` have text with a green background, orange for `warn`, red for `fail` and so on. There can be multiple tests for each style of formatting - if there is a match for any, it will be applied. The following comparison operators are available:
 
 * `s_eq` - String exactly equals (case insensitive)
 * `s_contains` - String contains (case insensitive)
@@ -288,20 +288,15 @@ table_cond_formatting_rules:
             - lt: 80
         fail:
             - lt: 70
-    all_columns:
-        pass:
-            - s_eq: 'pass'
-        warn:
-            - s_eq: 'warn'
-        fail:
-            - s_eq: 'fail'
 ```
+
+Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by default, so that anything matching both `warn` and `fail` will be formatted as `fail` for example. This can be customised with `table_cond_formatting_colours` (see below).
 
 To find the unique ID for your column, right click a table cell in a report and inspect it's HTML (_Inpsect_ in Chrome). It should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
 > I know this isn't the same method of IDs as above and isn't super easy to do. Sorry!
 
-It's possible to highlight matches in any colour you like. MultiQC comes with the following defaults:
+It's possible to highlight matches in any number of colours. MultiQC comes with the following defaults:
 
 ```yaml
 table_cond_formatting_colours:
@@ -312,9 +307,9 @@ table_cond_formatting_colours:
     - fail: '#d9534f'
 ```
 
-These can be overridden or added to with any string / CSS hex colour combinations you like.
+These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example http://htmlcolorcodes.com/
 
-The different sets of rules are formatted in order. So if a value matches both `pass` and `fail` then it will be formatted as a `fail`
+Note that the different sets of rules are formatted in order. So if a value matches both `pass` and `fail` then it will be formatted as a `fail`
 
 
 ## Number base (multiplier)

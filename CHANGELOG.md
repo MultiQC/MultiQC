@@ -21,7 +21,7 @@
 #### New MultiQC Features:
 * Conditional formatting / highlighting of cell contents in tables
     * If you want to make values that match a criteria stand out more, you can now write custom rules and formatting instructions for tables.
-    * For instructions, see [the documentation](http://multiqc.info/docs/#customising-tables)
+    * For instructions, see [the documentation](http://multiqc.info/docs/#conditional-formatting)
 * New `--lint` option which is strict about best-practices for writing new modules
     * Useful when writing new modules and code as throws warnings
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
