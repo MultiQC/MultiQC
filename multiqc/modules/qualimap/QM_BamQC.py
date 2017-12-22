@@ -94,8 +94,6 @@ def parse_genome_results(self, f):
                 d[k] = float(r_search.group(1).replace(',',''))
             except ValueError:
                 d[k] = r_search.group(1)
-    print(d)
-
     # Check we have an input filename
     if 'bam_file' not in d:
         log.debug("Couldn't find an input filename in genome_results file {}".format(f['fn']))
