@@ -84,6 +84,7 @@ def parse_genome_results(self, f):
         'mean_insert_size': r"mean insert size = ([\d,\.]+)",
         'median_insert_size': r"median insert size = ([\d,\.]+)",
         'mean_mapping_quality': r"mean mapping quality = ([\d,\.]+)",
+        'general_error_rate': r"general error rate = ([\d,\.]+)",
     }
     d = dict()
     for k, r in regexes.items():
@@ -93,6 +94,7 @@ def parse_genome_results(self, f):
                 d[k] = float(r_search.group(1).replace(',',''))
             except ValueError:
                 d[k] = r_search.group(1)
+    print(d)
 
     # Check we have an input filename
     if 'bam_file' not in d:
@@ -546,6 +548,14 @@ def general_stats_headers (self):
         'scale': 'Blues',
         'shared_key': 'read_count',
         'hidden': True
+    }
+    self.general_stats_headers['general_error_rate'] = {
+        'title': 'Error rate'.format(config.read_count_prefix),
+        'description': 'General error rate of the reads',
+        'max': 100,
+        'min': 0,
+        'suffix': '%',
+        'scale': 'Blues'
     }
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
