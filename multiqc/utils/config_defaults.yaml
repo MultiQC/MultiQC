@@ -54,6 +54,23 @@ collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 table_columns_placement: {}
+table_cond_formatting_colours:
+    - blue: '#337ab7'
+    - lbue: '#5bc0de'
+    - pass: '#5cb85c'
+    - warn: '#f0ad4e'
+    - fail: '#d9534f'
+table_cond_formatting_rules:
+    all_columns:
+        pass:
+            - eq: 'pass'
+            - eq: 'true'
+        warn:
+            - eq: 'warn'
+            - eq: 'unknown'
+        fail:
+            - eq: 'fail'
+            - eq: 'false'
 decimalPoint_format: null
 thousandsSep_format: null
 section_comments: {}
