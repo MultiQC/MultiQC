@@ -554,7 +554,8 @@ def general_stats_headers (self):
         'max': 100,
         'min': 0,
         'suffix': '%',
-        'scale': 'Blues'
+        'scale': 'OrRd'
+        'format': '{0:.2f}'
     }
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
