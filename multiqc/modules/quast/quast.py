@@ -114,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'N50 (Kbp)',
             'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'RdYlGn',
             'modify': lambda x: x / 1000
         }
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Length (Mbp)',
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'YlGn',
             'modify': lambda x: x / 1000000
         }
@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'N50 (Kbp)',
             'description': 'N50 is the contig length such that using longer or equal length contigs produces 50% of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'RdYlGn',
             'modify': lambda x: x / 1000
         }
@@ -145,31 +145,29 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'N75 (Kbp)',
             'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'RdYlGn',
             'modify': lambda x: x / 1000
         }
         headers['L50'] = {
-            'title': 'L50 (k)',
+            'title': 'L50',
             'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.',
             'min': 0,
             'suffix': '',
-            'scale': 'GnYlRd',
-            'modify': lambda x: x / 1000
+            'scale': 'GnYlRd'
         }
         headers['L75'] = {
-            'title': 'L75 (k)',
+            'title': 'L75',
             'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.',
             'min': 0,
             'suffix': '',
-            'scale': 'GnYlRd',
-            'modify': lambda x: x / 1000
+            'scale': 'GnYlRd'
         }
         headers['Largest contig'] = {
             'title': 'Largest contig (Kbp)',
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'YlGn',
             'modify': lambda x: x / 1000
         }
@@ -177,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Length (Mbp)',
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'YlGn',
             'modify': lambda x: x / 1000000
         }
