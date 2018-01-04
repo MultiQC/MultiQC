@@ -123,10 +123,10 @@ class MultiqcModule(BaseMultiqcModule):
                     if i not in s_name_idx:
                         try:
                             # add the pattern as a suffic to key
-                            parsed_data[s_name][headers[i]+"_"+pattern] = float(v)
+                            parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
                         except ValueError:
                             # add the pattern as a suffic to key
-                            parsed_data[s_name][headers[i]+"_"+pattern] = v
+                            parsed_data[s_name][headers[i] + "_" + pattern] = v
         if len(parsed_data) == 0:
             return None
         return parsed_data
