@@ -229,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
     
        self.add_section (
             name = 'Peddy Het Check Plot',
-            anchor = 'peddy-relatedness-plot',
+            anchor = 'peddy-hetcheck-plot',
             description = """ """,
             plot = scatter.plot(data, pconfig))
 
