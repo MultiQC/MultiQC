@@ -44,6 +44,8 @@ class MultiqcModule(BaseMultiqcModule):
         for pattern in ['het_check', 'ped_check', 'sex_check']:
             sp_key = 'peddy/{}'.format(pattern)
             for f in self.find_log_files(sp_key):
+                # some columns have the same name in het_check and sex_check (median_depth)
+                # pass pattern to parse_peddy_csv so the column names can include pattern to avoid being overwritten
                 parsed_data = self.parse_peddy_csv(f, pattern)
                 if parsed_data is not None:
                     for s_name in parsed_data:
@@ -120,8 +122,10 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
                         try:
+                            # add the pattern as a suffic to key
                             parsed_data[s_name][headers[i]+"_"+pattern] = float(v)
                         except ValueError:
+                            # add the pattern as a suffic to key
                             parsed_data[s_name][headers[i]+"_"+pattern] = v
         if len(parsed_data) == 0:
             return None
@@ -183,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'x': d['ibs0_ped_check'],
                     'y': d['ibs2_ped_check']
                 }
-            if 'rel' in d:
+            if 'rel_ped_check' in d:
                 if d['rel_ped_check'] < 0.25:
                     data[s_name]['color'] = 'rgba(109, 164, 202, 0.9)'
                 elif d['rel_ped_check'] < 0.5:
@@ -211,10 +215,13 @@ class MultiqcModule(BaseMultiqcModule):
             
     def peddy_het_check_plot(self):
         """plot the het_check scatter plot"""
+        # empty dictionary to add sample names, and dictionary of values
         data = {}
+        # for each sample, and list in self.peddy_data
         for s_name, d in self.peddy_data.items():
-            #log.debug(d)
+            # check the sample contains the required columns
             if 'median_depth_het_check' in d and 'het_ratio_het_check' in d:
+                # add sample to dictionary with value as a dictionary of points to plot
                 data[s_name] = {
                     'x': d['median_depth_het_check'],
                     'y': d['het_ratio_het_check']
@@ -230,7 +237,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Peddy Het Check Plot',
             anchor = 'peddy-hetcheck-plot',
-            description = """ """,
             plot = scatter.plot(data, pconfig))
 
 
