@@ -211,23 +211,23 @@ class MultiqcModule(BaseMultiqcModule):
             
     def peddy_het_check_plot(self):
         """plot the het_check scatter plot"""
-       data = {}
-       for s_name, d in self.peddy_data.items():
+        data = {}
+        for s_name, d in self.peddy_data.items():
             #log.debug(d)
             if 'median_depth_het_check' in d and 'het_ratio_het_check' in d:
                 data[s_name] = {
                     'x': d['median_depth_het_check'],
                     'y': d['het_ratio_het_check']
                 }
-
-       pconfig = {
+        
+        pconfig = {
             'id': 'peddy_het_check_plot',
             'title': 'Peddy Het Check Plot',
             'xlab': 'median depth',
             'ylab': 'proportion het calls',
             }
     
-       self.add_section (
+        self.add_section (
             name = 'Peddy Het Check Plot',
             anchor = 'peddy-hetcheck-plot',
             description = """ """,
