@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         for pattern in ['het_check', 'ped_check', 'sex_check']:
             sp_key = 'peddy/{}'.format(pattern)
             for f in self.find_log_files(sp_key):
-                parsed_data = self.parse_peddy_csv(f)
+                parsed_data = self.parse_peddy_csv(f, pattern)
                 if parsed_data is not None:
                     for s_name in parsed_data:
                         s_name = self.clean_s_name(s_name, f['root'])
@@ -72,6 +72,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Relatedness plot
         self.peddy_relatedness_plot()
+        
+        # hetcheck plot
+        self.peddy_het_check_plot()
 
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
@@ -94,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         return parsed_data
 
-    def parse_peddy_csv(self, f):
+    def parse_peddy_csv(self, f, pattern):
         """ Parse csv output from peddy """
         parsed_data = dict()
         headers = None
@@ -117,9 +120,9 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
                         try:
-                            parsed_data[s_name][headers[i]] = float(v)
+                            parsed_data[s_name][headers[i]+"_"+pattern] = float(v)
                         except ValueError:
-                            parsed_data[s_name][headers[i]] = v
+                            parsed_data[s_name][headers[i]+"_"+pattern] = v
         if len(parsed_data) == 0:
             return None
         return parsed_data
@@ -152,10 +155,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         data = dict()
         for s_name, d in self.peddy_data.items():
-            if 'PC1' in d and 'PC2' in d:
+            if 'PC1_het_check' in d and 'PC2_het_check' in d:
                 data[s_name] = {
-                    'x': d['PC1'],
-                    'y': d['PC2'],
+                    'x': d['PC1_het_check'],
+                    'y': d['PC2_het_check'],
                 }
 
         pconfig = {
@@ -175,15 +178,15 @@ class MultiqcModule(BaseMultiqcModule):
     def peddy_relatedness_plot(self):
         data = dict()
         for s_name, d in self.peddy_data.items():
-            if 'ibs0' in d and 'ibs2' in d:
+            if 'ibs0_ped_check' in d and 'ibs2_ped_check' in d:
                 data[s_name] = {
-                    'x': d['ibs0'],
-                    'y': d['ibs2']
+                    'x': d['ibs0_ped_check'],
+                    'y': d['ibs2_ped_check']
                 }
             if 'rel' in d:
-                if d['rel'] < 0.25:
+                if d['rel_ped_check'] < 0.25:
                     data[s_name]['color'] = 'rgba(109, 164, 202, 0.9)'
-                elif d['rel'] < 0.5:
+                elif d['rel_ped_check'] < 0.5:
                     data[s_name]['color'] = 'rgba(250, 160, 81, 0.8)'
                 else:
                     data[s_name]['color'] = 'rgba(43, 159, 43, 0.8)'
@@ -205,3 +208,29 @@ class MultiqcModule(BaseMultiqcModule):
                 <span style="color: #2B9F2B;">greather than 0.5</span>.""",
                 plot = scatter.plot(data, pconfig)
             )
+            
+    def peddy_het_check_plot(self):
+        """plot the het_check scatter plot"""
+       data = {}
+       for s_name, d in self.peddy_data.items():
+            #log.debug(d)
+            if 'median_depth_het_check' in d and 'het_ratio_het_check' in d:
+                data[s_name] = {
+                    'x': d['median_depth_het_check'],
+                    'y': d['het_ratio_het_check']
+                }
+
+       pconfig = {
+            'id': 'peddy_het_check_plot',
+            'title': 'Peddy Het Check Plot',
+            'xlab': 'median depth',
+            'ylab': 'proportion het calls',
+            }
+    
+       self.add_section (
+            name = 'Peddy Het Check Plot',
+            anchor = 'peddy-relatedness-plot',
+            description = """ """,
+            plot = scatter.plot(data, pconfig))
+
+
