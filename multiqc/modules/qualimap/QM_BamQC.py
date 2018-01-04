@@ -549,13 +549,14 @@ def general_stats_headers (self):
         'hidden': True
     }
     self.general_stats_headers['general_error_rate'] = {
-        'title': 'Error rate'.format(config.read_count_prefix),
-        'description': 'General error rate of the reads',
+        'title': 'Error rate',
+        'description': 'General error rate of the reads. Defined as the total edit distance (NM field of the SAM format specification) over the number of mapped bases',
         'max': 100,
         'min': 0,
         'suffix': '%',
         'scale': 'OrRd',
-        'format': '{0:.2f}'
+        'format': '{0:.2f}',
+        'hidden': True
     }
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
