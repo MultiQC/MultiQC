@@ -550,7 +550,7 @@ def general_stats_headers (self):
     }
     self.general_stats_headers['general_error_rate'] = {
         'title': 'Error rate',
-        'description': 'General error rate of the reads. Defined as the total edit distance (NM field of the SAM format specification) over the number of mapped bases',
+        'description': 'Alignment error rate. Total edit distance (SAM NM field) over the number of mapped bases',
         'max': 100,
         'min': 0,
         'suffix': '%',
