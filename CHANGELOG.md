@@ -10,6 +10,8 @@
 #### Module updates:
 * **MACS2**
     * Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
+* **Peddy**
+    * Add het check plot to suggest potential contamination by [@aledj2](https://github.com/aledj2)
 * **Picard**
     * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
     * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
