@@ -218,10 +218,6 @@ class MultiqcModule(BaseMultiqcModule):
         # empty dictionary to add sample names, and dictionary of values
         data = {}
         
-        # set variable for y axis limits
-        ymin = 1
-        ymax = 0
-        
         # for each sample, and list in self.peddy_data
         for s_name, d in self.peddy_data.items():
             # check the sample contains the required columns
@@ -231,33 +227,17 @@ class MultiqcModule(BaseMultiqcModule):
                     'x': d['median_depth_het_check'],
                     'y': d['het_ratio_het_check']
                 }
-                # take y axis score and add 0.1 - see if this is the highest value
-                if d['het_ratio_het_check'] + 0.1 > ymax:
-                    ymax = d['het_ratio_het_check'] + 0.1
-                # take y axis score and subtract 0.1 - see if this is the lowest value
-                if d['het_ratio_het_check'] - 0.1 < ymin:
-                    ymin = d['het_ratio_het_check'] - 0.1
 
-        # ensure the y axis limits remain between 0 and 1
-        if ymin < 0:
-            ymin = 0
-        if ymax > 1:
-            ymax = 1
-        
         pconfig = {
             'id': 'peddy_het_check_plot',
             'title': 'Peddy: Het Check',
             'xlab': 'median depth',
-            'ymin': ymin,
-            'ymax': ymax,
             'ylab': 'proportion het calls',
             }
     
         self.add_section (
             name = 'Het Check',
-            description = "blah",
-            helptext = "blah",
+            description = "Proportion of sites that were heterozygous against median depth. A high het_ratio suggests contamination, a low het_ratio suggests consanguinity",
+            helptext = "See <a href='https://peddy.readthedocs.io/en/latest/output.html#het-check'> here</a> for more details ",
             anchor = 'peddy-hetcheck-plot',
             plot = scatter.plot(data, pconfig))
-
-
