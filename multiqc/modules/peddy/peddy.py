@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
     
         self.add_section (
             name = 'Het Check',
-            description = "Proportion of sites that were heterozygous against median depth. A high het_ratio suggests contamination, a low het_ratio suggests consanguinity",
+            description = "Proportion of sites that were heterozygous against median depth. A high proportion of heterozygous sites suggests contamination, a low proportion suggests consanguinity",
             helptext = "See <a href='https://peddy.readthedocs.io/en/latest/output.html#het-check'> here</a> for more details ",
             anchor = 'peddy-hetcheck-plot',
             plot = scatter.plot(data, pconfig))
