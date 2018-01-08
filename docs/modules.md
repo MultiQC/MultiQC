@@ -545,6 +545,40 @@ types is described in the _Plotting Functions_ section of the docs.
 
 ## Appendices
 
+### User configuration
+Instead of hardcoding defaults, it's a great idea to allow users to configure
+the behaviour of MultiQC module code.
+
+It's pretty easy to use the built in MultiQC configuration settings to do this,
+so that users can set up their config as described
+[above in the docs](http://multiqc.info/docs/#configuring-multiqc).
+
+To do this, just assume that your configuration variables are available in the
+MultiQC `config` module and have sensible defaults. For example:
+
+```python
+from multiqc import config
+
+mymod_config = getattr(config, mymod_config, {})
+my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
+```
+
+You now have a variable `my_custom_config_var` with a default value of 5, but that
+can be configured by a user as follows:
+
+```yaml
+mymod_config:
+    my_custom_config_var: 200
+```
+
+Please be sure to use a unique top-level config name to avoid clashes - prefixing
+with your module name is a good idea as in the example above. Keep all module config
+options under the same top-level name for clarity.
+
+Finally, don't forget to document the usage of your module-specific configuration
+in `docs/modules/mymodule.md` so that people know how to use it.
+
+
 ### Profiling Performance
 It's important that MultiQC runs quickly and efficiently, especially on big
 projects with large numbers of samples. The recommended method to check this is

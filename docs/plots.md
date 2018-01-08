@@ -396,9 +396,6 @@ table_config = {
 Header keys such as `max`, `min` and `scale` can also be specified in the table config.
 These will then be applied to all columns.
 
-Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
-![color brewer](images/cbrewer_scales.png)
-
 A very basic example is shown below:
 ```python
 data = {
@@ -449,6 +446,14 @@ config = {
 }
 table_html = table.plot(data, headers, config)
 ```
+
+### Table colour scales
+
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
+![color brewer](images/cbrewer_scales.png)
+
+Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
+
 
 ## Beeswarm plots (dot plots)
 Beeswarm plots work from the exact same data structure as tables, so the
