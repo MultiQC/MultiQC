@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.verify_data = dict()
 
         # for each file ending in self.SM
-        for f in self.find_log_files('selfSM'):
+        for f in self.find_log_files('verifybamid/selfsm'):
             # pass the file to function self.parse_selfsm to parse file
             parsed_data = self.parse_selfsm(f)
             # if data was found clean the sample name
