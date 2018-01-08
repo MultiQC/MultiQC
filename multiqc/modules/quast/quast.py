@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / self.contig_length_multiplier
+            'modify': lambda x: x * self.contig_length_multiplier
         }
         headers['Total length'] = {
             'title': 'Length ({})'.format(self.total_length_suffix),
@@ -138,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / self.total_length_multiplier
+            'modify': lambda x: x * self.total_length_multiplier
         }
         self.general_stats_addcols(self.quast_data, headers)
 
@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / self.contig_length_multiplier
+            'modify': lambda x: x * self.contig_length_multiplier
         }
 
         headers['N75'] = {
@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / self.contig_length_multiplier
+            'modify': lambda x: x * self.contig_length_multiplier
         }
 
         headers['L50'] = {
@@ -170,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.total_number_contigs_suffix,
             'scale': 'GnYlRd',
-            'modify': lambda x: x / self.total_number_contigs_multiplier
+            'modify': lambda x: x * self.total_number_contigs_multiplier
         }
         
         headers['L75'] = {
@@ -179,7 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.total_number_contigs_suffix,
             'scale': 'GnYlRd',
-            'mofidy': lambda x: x / self.total_number_contigs_multiplier
+            'mofidy': lambda x: x * self.total_number_contigs_multiplier
         }
         headers['Largest contig'] = {
             'title': 'Largest contig ({})'.format(self.contig_length_suffix),
@@ -187,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.contig_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / self.contig_length_multiplier
+            'modify': lambda x: x * self.contig_length_multiplier
         }
         
         headers['Total length'] = {
@@ -196,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': self.total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / self.total_length_multiplier
+            'modify': lambda x: x * self.total_length_multiplier
         }
 
         headers['# misassemblies'] = {
