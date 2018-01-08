@@ -25,6 +25,20 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a quality assessment tool for genome assemblies, written by " \
              "the Center for Algorithmic Biotechnology.")
 
+        # Get modifiers from config file
+        qconfig = getattr(config, "quast_config", {})
+
+        self.contig_length_multiplier = qconfig.get('contig_length_multiplier', 0.001)
+        self.contig_length_suffix = qconfig.get('contig_length_suffix', 'Kbp')
+
+        self.total_length_multiplier = qconfig.get('total_length_multiplier', 0.000001)
+        self.total_length_suffix = qconfig.get('total_length_suffix', 'Mbp')
+
+        self.total_number_contigs_multiplier = qconfig.get('total_number_contigs_multiplier', 0.001)
+        self.total_number_contigs_suffix = qconfig.get('total_number_contigs_suffix', 'K')
+
+
+
         # Find and load any QUAST reports
         self.quast_data = dict()
         for f in self.find_log_files('quast'):
@@ -69,18 +83,6 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = ng_pdata
             )
         
-        qconfig = getattr(config, "quast_config", {})
-
-        self.contig_length_multiplier = qconfig.get('contig_length_multiplier', 0.001)
-        self.contig_length_suffix = qconfig.get('contig_length_suffix', 'Kbp')
-
-        self.total_length_multiplier = qconfig.get('total_length_multiplier', 0.000001)
-        self.total_length_suffix = qconfig.get('total_length_suffix', 'Mbp')
-
-        self.total_number_contigs_multiplier = qconfig.get('total_number_contigs_multiplier', 0.001)
-        self.total_number_contigs_suffix = qconfig.get('total_number_contigs_suffix', 'K')
-
-
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
 
