@@ -133,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / total_lengt_multiplier
+            'modify': lambda x: x / total_length_multiplier
         }
         self.general_stats_addcols(self.quast_data, headers)
 
@@ -166,9 +166,9 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'N75 ({})'.format(contig_length_suffix),
             'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x / contig_length_multiplier
         }
 
         headers['L50'] = {
@@ -189,12 +189,12 @@ class MultiqcModule(BaseMultiqcModule):
             'mofidy': lambda x: x/total_number_contigs_multiplier
         }
         headers['Largest contig'] = {
-            'title': 'Largest contig (Kbp)',
+            'title': 'Largest contig ({})'.format(contig_length_suffix),
             'description': 'The size of the largest contig of the assembly',
             'min': 0,
-            'suffix': '',
+            'suffix': contig_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x / contig_length_multiplier
         }
         
         headers['Total length'] = {
