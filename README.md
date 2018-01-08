@@ -145,6 +145,7 @@ Project lead and main author: [@ewels](https://github.com/ewels)
 
 Code contributions from:
 [@ahvigil](https://github.com/ahvigil),
+[@aledj2](https://github.com/aledj2)
 [@avilella](https://github.com/avilella),
 [@boulund](https://github.com/boulund),
 [@bschiffthaler](https://github.com/bschiffthaler),
