@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': total_number_contigs_suffix,
             'scale': 'GnYlRd',
-            'mofidy': lambda x: x/total_number_contigs_multiplier
+            'modify': lambda x: x/total_number_contigs_multiplier
         }
         
         headers['L75'] = {
