@@ -108,77 +108,104 @@ class MultiqcModule(BaseMultiqcModule):
     def quast_general_stats_table(self):
         """ Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report """
+        qconfig = getattr(config, quast_config, {})
 
+        contig_length_multiplier= qconfig.get('contig_length_multiplier', 0.001)
+        contig_length_suffix= qconfig.get('contig_length_suffix', 'Kbp')
+
+        total_length_multiplier= qconfig.get('total_length_multiplier', 0.000001)
+        total_length_suffix= qconfig.get('total_length_suffix', 'Mbp')
+
+
+        
         headers = OrderedDict()
         headers['N50'] = {
-            'title': 'N50 (Kbp)',
+            'title': 'N50 ({})'.format(contig_length_suffix),
             'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': '',
+            'suffix': contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x / contig_length_multiplier
         }
         headers['Total length'] = {
-            'title': 'Length (Mbp)',
+            'title': 'Length ({})'.format(total_length_suffix),
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': '',
+            'suffix': total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / total_lengt_multiplier
         }
         self.general_stats_addcols(self.quast_data, headers)
 
     def quast_table(self):
         """ Write some more statistics about the assemblies in a table. """
+        qconfig = getattr(config, quast_config, {})
 
+        contig_length_multiplier= qconfig.get('contig_length_multiplier', 0.001)
+        contig_length_suffix= qconfig.get('contig_length_suffix', 'Kbp')
+
+        total_length_multiplier= qconfig.get('total_length_multiplier', 0.000001)
+        total_length_suffix= qconfig.get('total_length_suffix', 'Mbp')
+
+        total_number_contigs_multiplier=qconfig.get('total_number_contigs_multiplier', 0.001)
+        total_number_contigs_suffix=qconfig.get('total_number_contigs_suffix', 'K')
+        
+        
         headers = OrderedDict()
+        
         headers['N50'] = {
-            'title': 'N50 (Kbp)',
-            'description': 'N50 is the contig length such that using longer or equal length contigs produces 50% of the bases of the assembly (kilo base pairs)',
+            'title': 'N50 ({})'.format(contig_length_suffix),
+            'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.',
             'min': 0,
-            'suffix': '',
+            'suffix': contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x / contig_length_multiplier
         }
 
         headers['N75'] = {
-            'title': 'N75 (Kbp)',
-            'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly (kilo base pairs)',
+            'title': 'N75 ({})'.format(contig_length_suffix),
+            'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly',
             'min': 0,
-            'suffix': '',
+            'suffix': 'bp',
             'scale': 'RdYlGn',
             'modify': lambda x: x / 1000
         }
+
         headers['L50'] = {
-            'title': 'L50',
+            'title': 'L50 ({})'.format(total_number_contifs_suffix) if total_number_contifs_suffix else 'L50',
             'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.',
             'min': 0,
-            'suffix': '',
-            'scale': 'GnYlRd'
+            'suffix': total_number_contigs_suffix,
+            'scale': 'GnYlRd',
+            'mofidy': lambda x: x/total_number_contigs_multiplier
         }
+        
         headers['L75'] = {
-            'title': 'L75',
+            'title': 'L75 ({})'.format(total_number_contifs_suffix) if total_number_contifs_suffix else 'L75',
             'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.',
             'min': 0,
-            'suffix': '',
-            'scale': 'GnYlRd'
+            'suffix': total_number_contigs_suffix,
+            'scale': 'GnYlRd',
+            'mofidy': lambda x: x/total_number_contigs_multiplier
         }
         headers['Largest contig'] = {
             'title': 'Largest contig (Kbp)',
-            'description': 'The total number of bases in the assembly (mega base pairs).',
+            'description': 'The size of the largest contig of the assembly',
             'min': 0,
             'suffix': '',
             'scale': 'YlGn',
             'modify': lambda x: x / 1000
         }
+        
         headers['Total length'] = {
-            'title': 'Length (Mbp)',
-            'description': 'The total number of bases in the assembly (mega base pairs).',
+            'title': 'Length ({})'.format(total_length_suffix),
+            'description': 'The total number of bases in the assembly.',
             'min': 0,
-            'suffix': '',
+            'suffix': total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x / total_length_multiplier
         }
+
         headers['# misassemblies'] = {
             'title': 'Misassemblies',
             'description': 'The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).',
