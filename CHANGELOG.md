@@ -18,6 +18,9 @@
 * **Qualimap**
     * New `Error rate` column in General Statistics table, added by [@Cashalow](https://github.com/Cashalow/)
         * Hidden by default - customise your MultiQC config to always show this column (see [docs](http://multiqc.info/docs/#hiding-columns))
+* **QUAST**
+    * New option to customise the default display of contig count and length (eg. `bp` instead of `Mbp`).
+    * See [documentation](http://multiqc.info/docs/#quast). Written by [@ewels](https://github.com/ewels/) and [@Cashalow](https://github.com/Cashalow/)
 * **RSeQC**
     * Removed normalisation in Junction Saturation plot. Now raw counts instead of % of total junctions.
 

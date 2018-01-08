@@ -38,7 +38,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.total_number_contigs_suffix = qconfig.get('total_number_contigs_suffix', 'K')
 
 
-
         # Find and load any QUAST reports
         self.quast_data = dict()
         for f in self.find_log_files('quast'):
@@ -82,7 +81,8 @@ class MultiqcModule(BaseMultiqcModule):
                           assembly, broken down by length.""",
                 plot = ng_pdata
             )
-        
+
+
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
 
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
     def quast_general_stats_table(self):
         """ Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report """
-        
+
         headers = OrderedDict()
         headers['N50'] = {
             'title': 'N50 ({})'.format(self.contig_length_suffix),
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
     def quast_table(self):
         """ Write some more statistics about the assemblies in a table. """
         headers = OrderedDict()
-        
+
         headers['N50'] = {
             'title': 'N50 ({})'.format(self.contig_length_suffix),
             'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.',
@@ -172,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'GnYlRd',
             'modify': lambda x: x * self.total_number_contigs_multiplier
         }
-        
+
         headers['L75'] = {
             'title': 'L75 ({})'.format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else 'L75',
             'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.',
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'YlGn',
             'modify': lambda x: x * self.contig_length_multiplier
         }
-        
+
         headers['Total length'] = {
             'title': 'Length ({})'.format(self.total_length_suffix),
             'description': 'The total number of bases in the assembly.',
