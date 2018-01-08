@@ -68,6 +68,18 @@ class MultiqcModule(BaseMultiqcModule):
                           assembly, broken down by length.""",
                 plot = ng_pdata
             )
+        
+        qconfig = getattr(config, "quast_config", {})
+
+        self.contig_length_multiplier = qconfig.get('contig_length_multiplier', 0.001)
+        self.contig_length_suffix = qconfig.get('contig_length_suffix', 'Kbp')
+
+        self.total_length_multiplier = qconfig.get('total_length_multiplier', 0.000001)
+        self.total_length_suffix = qconfig.get('total_length_suffix', 'Mbp')
+
+        self.total_number_contigs_multiplier = qconfig.get('total_number_contigs_multiplier', 0.001)
+        self.total_number_contigs_suffix = qconfig.get('total_number_contigs_suffix', 'K')
+
 
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
@@ -108,102 +120,81 @@ class MultiqcModule(BaseMultiqcModule):
     def quast_general_stats_table(self):
         """ Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report """
-        qconfig = getattr(config, "quast_config", {})
-
-        contig_length_multiplier= qconfig.get('contig_length_multiplier', 0.001)
-        contig_length_suffix= qconfig.get('contig_length_suffix', 'Kbp')
-
-        total_length_multiplier= qconfig.get('total_length_multiplier', 0.000001)
-        total_length_suffix= qconfig.get('total_length_suffix', 'Mbp')
-
-
         
         headers = OrderedDict()
         headers['N50'] = {
-            'title': 'N50 ({})'.format(contig_length_suffix),
+            'title': 'N50 ({})'.format(self.contig_length_suffix),
             'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': contig_length_suffix,
+            'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / contig_length_multiplier
+            'modify': lambda x: x / self.contig_length_multiplier
         }
         headers['Total length'] = {
-            'title': 'Length ({})'.format(total_length_suffix),
+            'title': 'Length ({})'.format(self.total_length_suffix),
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': total_length_suffix,
+            'suffix': self.total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / total_length_multiplier
+            'modify': lambda x: x / self.total_length_multiplier
         }
         self.general_stats_addcols(self.quast_data, headers)
 
     def quast_table(self):
         """ Write some more statistics about the assemblies in a table. """
-        qconfig = getattr(config, "quast_config", {})
-
-        contig_length_multiplier= qconfig.get('contig_length_multiplier', 0.001)
-        contig_length_suffix= qconfig.get('contig_length_suffix', 'Kbp')
-
-        total_length_multiplier= qconfig.get('total_length_multiplier', 0.000001)
-        total_length_suffix= qconfig.get('total_length_suffix', 'Mbp')
-
-        total_number_contigs_multiplier=qconfig.get('total_number_contigs_multiplier', 0.001)
-        total_number_contigs_suffix=qconfig.get('total_number_contigs_suffix', 'K')
-        
-        
         headers = OrderedDict()
         
         headers['N50'] = {
-            'title': 'N50 ({})'.format(contig_length_suffix),
+            'title': 'N50 ({})'.format(self.contig_length_suffix),
             'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.',
             'min': 0,
-            'suffix': contig_length_suffix,
+            'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / contig_length_multiplier
+            'modify': lambda x: x / self.contig_length_multiplier
         }
 
         headers['N75'] = {
-            'title': 'N75 ({})'.format(contig_length_suffix),
+            'title': 'N75 ({})'.format(self.contig_length_suffix),
             'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly',
             'min': 0,
-            'suffix': contig_length_suffix,
+            'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / contig_length_multiplier
+            'modify': lambda x: x / self.contig_length_multiplier
         }
 
         headers['L50'] = {
-            'title': 'L50 ({})'.format(total_number_contifs_suffix) if total_number_contifs_suffix else 'L50',
+            'title': 'L50 ({})'.format(self.total_number_contifs_suffix) if self.total_number_contifs_suffix else 'L50',
             'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.',
             'min': 0,
-            'suffix': total_number_contigs_suffix,
+            'suffix': self.total_number_contigs_suffix,
             'scale': 'GnYlRd',
-            'modify': lambda x: x/total_number_contigs_multiplier
+            'modify': lambda x: x / self.total_number_contigs_multiplier
         }
         
         headers['L75'] = {
-            'title': 'L75 ({})'.format(total_number_contifs_suffix) if total_number_contifs_suffix else 'L75',
+            'title': 'L75 ({})'.format(self.total_number_contifs_suffix) if self.total_number_contifs_suffix else 'L75',
             'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.',
             'min': 0,
-            'suffix': total_number_contigs_suffix,
+            'suffix': self.total_number_contigs_suffix,
             'scale': 'GnYlRd',
-            'mofidy': lambda x: x/total_number_contigs_multiplier
+            'mofidy': lambda x: x / self.total_number_contigs_multiplier
         }
         headers['Largest contig'] = {
-            'title': 'Largest contig ({})'.format(contig_length_suffix),
+            'title': 'Largest contig ({})'.format(self.contig_length_suffix),
             'description': 'The size of the largest contig of the assembly',
             'min': 0,
-            'suffix': contig_length_suffix,
+            'suffix': self.contig_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / contig_length_multiplier
+            'modify': lambda x: x / self.contig_length_multiplier
         }
         
         headers['Total length'] = {
-            'title': 'Length ({})'.format(total_length_suffix),
+            'title': 'Length ({})'.format(self.total_length_suffix),
             'description': 'The total number of bases in the assembly.',
             'min': 0,
-            'suffix': total_length_suffix,
+            'suffix': self.total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / total_length_multiplier
+            'modify': lambda x: x / self.total_length_multiplier
         }
 
         headers['# misassemblies'] = {
