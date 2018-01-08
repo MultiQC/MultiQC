@@ -51,21 +51,21 @@ class MultiqcModule(BaseMultiqcModule):
         # print number of verifyBAMID reports found and parsed
         log.info("Found {} reports".format(len(self.verify_data)))
 
-        # Write parsed report data to a file
+        # Write parsed report data to a file	
         self.write_data_file(self.verify_data, 'multiqc_verifybamid')
 
         # Basic Stats Table
         self.peddy_general_stats_table()
 
 
-    def parse_selfsm(self, f):
-        """ Go through selfSM file and create a dictionary with the sample name as a key, """
-        #create a dictionary to populate from this sample's file
-        parsed_data = dict()
-        # set a empty variable which denotes if the headers have been read
-        headers = None
-        # for each line in the file
-        for l in f['f'].splitlines():
+def parse_selfsm(self, f):
+    """ Go through selfSM file and create a dictionary with the sample name as a key, """
+    #create a dictionary to populate from this sample's file
+    parsed_data = dict()
+    # set a empty variable which denotes if the headers have been read
+    headers = None
+    # for each line in the file
+    for l in f['f'].splitlines():
             # split the line on tab
             s = l.split("\t")
             # if we haven't already read the header line
@@ -80,23 +80,23 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data[s[0]] = dict()
                 # for each item in list of items in the row
                 for i, v in enumerate(s):
-                    # if it's not the first element (if it's not the name)
+                # if it's not the first element (if it's not the name)
                     if i != 0:
                         # try and convert the value into a float
                         try:
-                           # and add to the dictionary the key as the corrsponding item from the header and the value from the list
-                           parsed_data[s[0]][headers[i]] = float(v)
-                        # if can't convert to float...
+                        # and add to the dictionary the key as the corrsponding item from the header and the value from the list
+                            parsed_data[s[0]][headers[i]] = float(v)
+                            #if can't convert to float...
                         except ValueError:
-                            # add to the dictionary the key as the corrsponding item from the header and the value from the list
+                        # add to the dictionary the key as the corrsponding item from the header and the value from the list
                             parsed_data[s[0]][headers[i]] = v
-        # nothing has been parsed return None
-        if len(parsed_data) == 0:
-            return None
-        # else return the dictionary
-        return parsed_data
+    # nothing has been parsed return None
+    if len(parsed_data) == 0:
+        return None
+    # else return the dictionary
+    return parsed_data
 
-   def peddy_general_stats_table(self):
+    def peddy_general_stats_table(self):
         """ Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report """
 
         # create a dictionary to hold the columns to add to the general stats table
@@ -104,10 +104,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # add the FREEMIX column. set the title and description
         headers['FREEMIX'] = {
-            'title': 'contamination_prediction',
-            'description': 'VerifyBamID predicted level of contamination',
+        	'title': 'contamination_prediction',
+        	'description': 'VerifyBamID predicted level of contamination',
         }
         # pass the data dictionary and header dictionary to function to add to table.
         self.general_stats_addcols(self.verify_data, headers)
 
-    
+	
