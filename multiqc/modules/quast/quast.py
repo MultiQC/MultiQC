@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         headers['L50'] = {
-            'title': 'L50 ({})'.format(self.total_number_contifs_suffix) if self.total_number_contifs_suffix else 'L50',
+            'title': 'L50 ({})'.format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else 'L50',
             'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.',
             'min': 0,
             'suffix': self.total_number_contigs_suffix,
