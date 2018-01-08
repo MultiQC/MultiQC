@@ -449,10 +449,12 @@ table_html = table.plot(data, headers, config)
 
 ### Table colour scales
 
-Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
-![color brewer](images/cbrewer_scales.png)
-
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
 Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
+
+The following scales are available:
+
+![color brewer](images/cbrewer_scales.png)
 
 
 ## Beeswarm plots (dot plots)
