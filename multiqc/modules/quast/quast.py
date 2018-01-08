@@ -108,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
     def quast_general_stats_table(self):
         """ Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report """
-        qconfig = getattr(config, quast_config, {})
+        qconfig = getattr(config, "quast_config", {})
 
         contig_length_multiplier= qconfig.get('contig_length_multiplier', 0.001)
         contig_length_suffix= qconfig.get('contig_length_suffix', 'Kbp')
@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def quast_table(self):
         """ Write some more statistics about the assemblies in a table. """
-        qconfig = getattr(config, quast_config, {})
+        qconfig = getattr(config, "quast_config", {})
 
         contig_length_multiplier= qconfig.get('contig_length_multiplier', 0.001)
         contig_length_suffix= qconfig.get('contig_length_suffix', 'Kbp')
