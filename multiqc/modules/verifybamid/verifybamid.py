@@ -6,7 +6,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 from multiqc import config
-from multiqc.plots import scatter
+from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -20,9 +20,9 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Verify BAM ID', anchor='verifybamid',
+        super(MultiqcModule, self).__init__(name='verifyBAMID', anchor='verifybamid',
         href='https://genome.sph.umich.edu/wiki/VerifyBamID',
-        info="blah")
+        info="detect sample contamination and/or sample swap")
         
         # dictionary to hold all data for each sample
         self.verifybamid_data = dict()
@@ -52,8 +52,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file	
         self.write_data_file(self.verifybamid_data, 'multiqc_verifybamid')
 
-        # Basic Stats Table
+        # add to General Stats Table
         self.verifybamid_general_stats_table()
+
+        # add section with the values from the verify BAM ID output
+        self.verifybamid_table()
 
 
     def parse_selfsm(self, f):
@@ -106,14 +109,130 @@ class MultiqcModule(BaseMultiqcModule):
         #SEQ_ID RG  CHIP_ID #SNPS   #READS  AVG_DP  FREEMIX FREELK1 FREELK0 FREE_RH FREE_RA CHIPMIX CHIPLK1 CHIPLK0 CHIP_RH CHIP_RA DPREF   RDPHET  RDPALT
         #,see https://genome.sph.umich.edu/wiki/VerifyBamID#Interpreting_output_files
 
+        # add the CHIPMIX column. set the title and description
+        headers['CHIPMIX'] = {
+            'title': 'Contamination Prediction - sequence and array',
+            'description': 'VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable) (0-1 scale)',
+            'format': '{:,.5f}' 
+        }
+
         # add the FREEMIX column. set the title and description
         headers['FREEMIX'] = {
-            'title': 'Contamination Prediction',
+            'title': 'Contamination Prediction - sequence only',
             'description': 'VerifyBamID: FREEMIX -   Sequence-only estimate of contamination (0-1 scale).',
-            'format': '{:,.7f}' 
+            'format': '{:,.5f}' 
         }
         
         # pass the data dictionary and header dictionary to function to add to table.
         self.general_stats_addcols(self.verifybamid_data, headers)
+
+        
+    def verifybamid_table(self):
+        """
+        Create a table with all the columns from verify BAM ID
+        """
+        # create empty dictionary
+        data = dict()
+        # for each smaple name and the corresponding dictionary
+        for s_name, d in self.verifybamid_data.items():
+            # create a entry in data dictionary where key is sample namd and value an empty dictionary
+            data[s_name]={}
+            # for each column for this sample
+            for column in d:
+                # add the column name to the sample dictionary and the associated value
+                data[s_name][column] = d[column]
+
+        # create an ordered dictionary to preserve the order of columns
+        headers = OrderedDict()
+        # add each column and the title and description (taken from verifyBAMID website)
+        headers['#SEQ_ID']={
+            'title': 'Sample Name',
+            'description': 'Sample ID of the sequenced sample. Obtained from @RG header / SM tag in the BAM file',
+        }
+        headers['RG']={
+            'title': 'Read Group',
+            'description': 'ReadGroup ID of sequenced lane. For [outPrefix].selfSM and [outPrefix].bestSM, these values are "ALL',
+        }
+        headers['CHIP_ID'] = {
+            'title': 'Chip ID',
+            'description': 'ReadGroup ID of sequenced lane. For [outPrefix].selfSM and [outPrefix].bestSM, these values are "ALL',
+        }
+        headers['#SNPS']= {
+            'title': '#SNPS',
+            'description': '# of SNPs passing the criteria from the VCF file',
+        }
+        headers['#READS']= {
+            'title': '#Reads',
+            'description': 'Total # of reads loaded from the BAM file',
+        }
+        headers['AVG_DP']= {
+            'title': 'Average Depth',
+            'description': 'Average sequencing depth at the sites in the VCF file',
+        }
+        # specify the number of decimal points to display
+        headers['FREEMIX']= {
+            'title': 'FREEMIX',
+            'description': 'Sequence-only estimate of contamination (0-1 scale)',
+            'format': '{:,.5f}' 
+        }
+        headers['FREELK1']= {
+            'title': 'FREEELK1',
+            'description': 'Maximum log-likelihood of the sequence reads given estimated contamination under sequence-only method',
+        }
+        headers['FREELK0']= {
+            'title': 'FREELK0',
+            'description': 'Log-likelihood of the sequence reads given no contamination under sequence-only method',
+        }
+        headers['FREE_RH']= {
+            'title': 'FREE_RH',
+            'description': 'Estimated reference bias parameter Pr(refBase|HET) (when --free-refBias or --free-full is used)',
+        }
+        headers['FREE_RA']= {
+            'title': 'FREE_RA',
+            'description': 'Estimated reference bias parameter Pr(refBase|HOMALT) (when --free-refBias or --free-full is used)',
+        }
+        # specify the number of decimal points to display
+        headers['CHIPMIX']= {
+            'title': 'CHIPMIX',
+            'description': 'Sequence+array estimate of contamination (NA if the external genotype is unavailable) (0-1 scale)',
+            'format': '{:,.5f}' 
+        }
+        headers[ 'CHIPLK1']= {
+            'title': 'CHIPLK1',
+            'description': 'Maximum log-likelihood of the sequence reads given estimated contamination under sequence+array method (NA if the external genotypes are unavailable)',
+        }
+        headers['CHIPLK0']= {
+            'title': 'CHIPLK0',
+            'description': ' Log-likelihood of the sequence reads given no contamination under sequence+array method (NA if the external genotypes are unavailable)',
+        }
+        headers['CHIP_RH']= {
+            'title': 'CHIP_RH',
+            'description': 'Estimated reference bias parameter Pr(refBase|HET) (when --chip-refBias or --chip-full is used)',
+        }
+        headers['CHIP_RA']= {
+            'title': 'CHIP_RA',
+            'description': 'Estimated reference bias parameter Pr(refBase|HOMALT) (when --chip-refBias or --chip-full is used)',
+        }
+        headers['DPREF']= {
+            'title': 'DPREF',
+            'description': 'Depth (Coverage) of HomRef site (based on the genotypes of (SELF_SM/BEST_SM), passing mapQ, baseQual, maxDepth thresholds.',
+        }
+        headers['RDPHET']= {
+            'title': 'RDPHET',
+            'description': 'DPHET/DPREF, Relative depth to HomRef site at Heterozygous site.',
+        }
+        headers['RDPALT'] = {
+            'title': 'RDPALT',
+            'description': 'DPHET/DPREF, Relative depth to HomRef site at HomAlt site.',
+        }
+
+        # if data was found
+        if len(data) > 0:
+            # senf the plot to add section function with data dict and headers
+            self.add_section (
+                anchor = 'verifybamid-table',
+                plot = table.plot(data,headers)
+            )
+
 
 	
