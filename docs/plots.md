@@ -363,7 +363,7 @@ default values to customise the output of all table columns.
 The default header keys are:
 ```python
 single_header = {
-    'namespace': '',                # Name for grouping in table
+    'namespace': '',                # Name for grouping. Prepends desc and is in Config Columns modal
     'title': '[ dict key ]',        # Short title, table column title
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
@@ -383,7 +383,7 @@ single_header = {
 A third parameter can be specified with settings for the whole table:
 ```python
 table_config = {
-    'namespace': '',                         # Module / section that table is in. Prepends header descriptions.
+    'namespace': '',                         # Name for grouping. Prepends desc and is in Config Columns modal
     'id': '<random string>',                 # ID used for the table
     'table_title': '<table id>',             # Title of the table. Used in the column config modal
     'save_file': False,                      # Whether to save the table data to a file

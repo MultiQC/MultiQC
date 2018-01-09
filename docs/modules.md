@@ -418,7 +418,7 @@ self.general_stats_addcols(data, headers)
 Here are all options for headers, with defaults:
 ```python
 headers['name'] = {
-    'namespace': '',                # Module name. Auto-generated for General Statistics.
+    'namespace': '',                # Module name. Auto-generated for core modules in General Statistics.
     'title': '[ dict key ]',        # Short title, table column title
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
@@ -434,7 +434,9 @@ headers['name'] = {
 ```
 * `namespace`
   * This prepends the column title in the mouse hover: _Namespace: Title_.
-    It's automatically generated for the General Statistics table.
+  * The 'Configure Columns' modal displays this under the 'Group' column.
+  * It's automatically generated for core modules in the General Statistics table,
+    though this can be overwritten (useful for example with custom-content).
 * `scale`
   * Colour scales are the names of ColorBrewer palettes. See below for available scales.
   * Add `-rev` to the name of a colour scale to reverse it
@@ -471,12 +473,18 @@ that should be used to allow users to change the multiplier for read counts: `re
 Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
 `base_count_desc`.
 
-The colour scales are from [ColorBrewer2](http://colorbrewer2.org/) and are named as follows:
-![color brewer](images/cbrewer_scales.png)
-
 A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
 the function and uses this. However, sometimes it can be useful to overwrite this.
+
+
+### Table colour scales
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
+Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
+
+The following scales are available:
+
+![color brewer](images/cbrewer_scales.png)
 
 ## Step 4 - Writing data to a file
 In addition to printing data to the General Stats, MultiQC modules typically
