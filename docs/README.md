@@ -67,6 +67,7 @@ MultiQC Modules:
     Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
+    verifyBAMID: modules/verifybamid.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:
