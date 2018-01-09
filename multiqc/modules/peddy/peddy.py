@@ -70,13 +70,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.peddy_general_stats_table()
 
         # PCA plot
-        self.peddy_pca_plot()
+        #self.peddy_pca_plot()
 
         # Relatedness plot
-        self.peddy_relatedness_plot()
+        #self.peddy_relatedness_plot()
         
         # hetcheck plot
-        self.peddy_het_check_plot()
+        #self.peddy_het_check_plot()
 
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
