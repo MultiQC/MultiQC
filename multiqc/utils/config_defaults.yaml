@@ -63,14 +63,14 @@ table_cond_formatting_colours:
 table_cond_formatting_rules:
     all_columns:
         pass:
-            - eq: 'pass'
-            - eq: 'true'
+            - s_eq: 'pass'
+            - s_eq: 'true'
         warn:
-            - eq: 'warn'
-            - eq: 'unknown'
+            - s_eq: 'warn'
+            - s_eq: 'unknown'
         fail:
-            - eq: 'fail'
-            - eq: 'false'
+            - s_eq: 'fail'
+            - s_eq: 'false'
 decimalPoint_format: null
 thousandsSep_format: null
 section_comments: {}
