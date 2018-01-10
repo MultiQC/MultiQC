@@ -78,6 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
         # hetcheck plot
         #self.peddy_het_check_plot()
 
+
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
         parsed_data = dict()
@@ -122,10 +123,10 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
                         try:
-                            # add the pattern as a suffic to key
+                            # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
                         except ValueError:
-                            # add the pattern as a suffic to key
+                            # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i] + "_" + pattern] = v
         if len(parsed_data) == 0:
             return None
@@ -217,7 +218,6 @@ class MultiqcModule(BaseMultiqcModule):
         """plot the het_check scatter plot"""
         # empty dictionary to add sample names, and dictionary of values
         data = {}
-        
         # for each sample, and list in self.peddy_data
         for s_name, d in self.peddy_data.items():
             # check the sample contains the required columns
@@ -228,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'y': d['het_ratio_het_check']
                 }
 
-        pconfig = {
+                pconfig = {
             'id': 'peddy_het_check_plot',
             'title': 'Peddy: Het Check',
             'xlab': 'median depth',
@@ -240,4 +240,6 @@ class MultiqcModule(BaseMultiqcModule):
             description = "Proportion of sites that were heterozygous against median depth. A high proportion of heterozygous sites suggests contamination, a low proportion suggests consanguinity",
             helptext = "See <a href='https://peddy.readthedocs.io/en/latest/output.html#het-check'> here</a> for more details ",
             anchor = 'peddy-hetcheck-plot',
-            plot = scatter.plot(data, pconfig))
+            plot = scatter.plot(data, pconfig)
+        )
+      
