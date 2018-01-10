@@ -22,8 +22,9 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 """
 
 from setuptools import setup, find_packages
+import sys
 
-version = '1.3'
+version = '1.4dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -31,6 +32,23 @@ print("""-----------------------------------
 -----------------------------------
 
 """.format(version))
+
+install_requires = [
+        'click',
+        'future>0.14.0',
+        'networkx<2',
+        'lzstring',
+        'jinja2>=2.9',
+        'matplotlib',
+        'markdown',
+        'numpy',
+        'pyyaml',
+        'requests',
+        'simplejson',
+        'spectra'
+    ]
+if sys.version_info < (3, 4):
+    install_requires.append('enum34')
 
 setup(
     name = 'multiqc',
@@ -47,21 +65,7 @@ setup(
     include_package_data = True,
     zip_safe = False,
     scripts = ['scripts/multiqc'],
-    install_requires = [
-        'click',
-        'future>0.14.0',
-        'networkx<2',
-        'lzstring',
-        'jinja2>=2.9',
-        'matplotlib',
-        'markdown',
-        'numpy',
-        'pyyaml',
-        'requests',
-        'simplejson',
-        'spectra',
-        'enum34'
-    ],
+    install_requires = install_requires,
     entry_points = {
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
@@ -111,6 +115,7 @@ setup(
             'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
+            'sargasso = multiqc.modules.sargasso:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',

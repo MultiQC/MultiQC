@@ -61,6 +61,7 @@ MultiQC Modules:
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
+    Sargasso: modules/sargasso.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md

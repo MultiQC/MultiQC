@@ -31,70 +31,70 @@ class estimateReadFilteringMixin():
             header["M Entries"] = {
                 'title': 'M entries',
                 'description': 'Number of entries in the file (millions)'}
-            header["% Aligned"] = {
+            header["pct_Aligned"] = {
                 'title': '% Aligned',
                 'description': 'Percent of aligned entries',
                 'scale': 'YlGn',
                 'min': 0,
                 'max': 100
             }
-            header["% Filtered"] = {
+            header["pct_Filtered"] = {
                 'title': '% Tot. Filtered',
                 'description': 'Percent of alignment that would be filtered for any reason.',
                 'scale': 'OrRd',
                 'min': 0,
                 'max': 100
             }
-            header["% Blacklisted"] = {
+            header["pct_Blacklisted"] = {
                 'title': '% Blacklisted',
                 'description': 'Percent of alignments falling (at least partially) inside a blacklisted region',
                 'scale': 'YlOrRd',
                 'min': 0,
                 'max': 100
             }
-            header["% MAPQ"] = {
+            header["pct_MAPQ"] = {
                 'title': '% MAPQ', 'description':
                 'Percent of alignments having MAPQ scores below the specified threshold',
                 'scale': 'YlOrBn',
                 'min': 0,
                 'max': 100
             }
-            header["% Missing Flags"] = {
+            header["pct_Missing_Flags"] = {
                 'title': '% Missing Flags',
                 'description': 'Percent of alignments lacking at least on flag specified by --samFlagInclude',
                 'scale': 'PuRd',
                 'min': 0,
                 'max': 100
             }
-            header["% Forbidden Flags"] = {
+            header["pct_Forbidden_Flags"] = {
                 'title': '% Forbidden Flags',
                 'description': 'Percent of alignments having at least one flag specified by --samFlagExclude',
                 'scale': 'OrRd',
                 'min': 0,
                 'max': 100
             }
-            header["% deepTools Dupes"] = {
+            header["pct_deepTools_Dupes"] = {
                 'title': '% deepTools Dupes',
                 'description': 'Percent of alignments marked by deepTools as being duplicates',
                 'scale': 'PuRd',
                 'min': 0,
                 'max': 100
             }
-            header["% Duplication"] = {
+            header["pct_Duplication"] = {
                 'title': '% Duplication',
                 'description': 'Percent of alignments originally marked as being duplicates',
                 'scale': 'OrRd',
                 'min': 0,
                 'max': 100
             }
-            header["% Singletons"] = {
+            header["pct_Singletons"] = {
                 'title': '% Singletons',
                  'description': 'Percent of alignments that are singletons (i.e., paired-end reads where the mates don\'t align as a pair',
                  'scale': 'OrRd',
                  'min': 0,
                  'max': 100
                 }
-            header["% Strand Filtered"] = {
+            header["pct_Strand_Filtered"] = {
                 'title': '% Strand Filtered',
                 'description': 'Percent of alignments arising from the wrong strand',
                 'scale': 'OrRd',
@@ -102,25 +102,29 @@ class estimateReadFilteringMixin():
                 'max': 100
             }
 
-            d = dict()
+            tdata = dict()
             for k, v in self.deeptools_estimateReadFiltering.items():
-                d[k] = {'M Entries': v['total'] / 1000000.0,
-                        '% Aligned': 100. * v['mapped'] / float(v['total']),
-                        '% Filtered': 100. * v['filtered'] / float(v['total']),
-                        '% Blacklisted': 100. * v['blacklisted'] / float(v['total']),
-                        '% Below MAPQ': 100. * v['mapq'] / float(v['total']),
-                        '% Missing Flags': 100. * v['required flags'] / float(v['total']),
-                        '% Forbidden Flags': 100. * v['excluded flags'] / float(v['total']),
-                        '% deepTools Dupes': 100. * v['internal dupes'] / float(v['total']),
-                        '% Duplication': 100. * v['dupes'] / float(v['total']),
-                        '% Singletons': 100. * v['singletons'] / float(v['total']),
-                        '% Strand Filtered': 100. * v['strand'] / float(v['total'])}
+                tdata[k] = {
+                    'M Entries': v['total'] / 1000000.0,
+                    'pct_Aligned': 100. * v['mapped'] / float(v['total']),
+                    'pct_Filtered': 100. * v['filtered'] / float(v['total']),
+                    'pct_Blacklisted': 100. * v['blacklisted'] / float(v['total']),
+                    'pct_Below_MAPQ': 100. * v['mapq'] / float(v['total']),
+                    'pct_Missing_Flags': 100. * v['required flags'] / float(v['total']),
+                    'pct_Forbidden_Flags': 100. * v['excluded flags'] / float(v['total']),
+                    'pct_deepTools_Dupes': 100. * v['internal dupes'] / float(v['total']),
+                    'pct_Duplication': 100. * v['dupes'] / float(v['total']),
+                    'pct_Singletons': 100. * v['singletons'] / float(v['total']),
+                    'pct_Strand_Filtered': 100. * v['strand'] / float(v['total'])
+                }
 
             config = {'namespace': 'deepTools bamPEFragmentSize'}
-            self.add_section(name="Filtering metrics",
-                             anchor="estimateReadFiltering",
-                             description="Estimated percentages of alignments filtered independently for each setting in `estimateReadFiltering`",
-                             plot=table.plot(d, header, config))
+            self.add_section(
+                name = "Filtering metrics",
+                anchor = "estimateReadFiltering",
+                description = "Estimated percentages of alignments filtered independently for each setting in `estimateReadFiltering`",
+                plot = table.plot(tdata, header, config)
+            )
 
         return len(self.deeptools_estimateReadFiltering)
 

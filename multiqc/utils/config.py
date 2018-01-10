@@ -57,6 +57,7 @@ creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
+megaqc_access_token = os.environ.get('MEGAQC_ACCESS_TOKEN')
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']

@@ -49,10 +49,10 @@ class plotFingerprintMixin():
 
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
             config = dict(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.0, xlab='rank', ylab='Fraction w.r.t. bin with highest coverage')
-            config['id'] = 'plotFingerprint'
+            config['id'] = 'deeptools_fingerprint_plot'
             config['title'] = 'Fingerprint'
             self.add_section(name="Fingerprint",
-                             anchor="plotFingerprint",
+                             anchor="deeptools_fingerprint",
                              description="Signal fingerprint according to plotFingerprint",
                              plot=linegraph.plot(self.deeptools_plotFingerprintOutRawCounts, config))
 

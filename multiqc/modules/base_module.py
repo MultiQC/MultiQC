@@ -96,6 +96,9 @@ class BaseMultiqcModule(object):
                     logger.debug("{} - Skipping '{}' as didn't match module path filters".format(sp_key, f['fn']))
                     continue
 
+            # Make a note of the filename so that we can report it if something crashes
+            report.last_found_file = os.path.join(f['root'],f['fn'])
+
             # Make a sample name from the filename
             f['s_name'] = self.clean_s_name(f['fn'], f['root'])
             if filehandles or filecontents:

@@ -144,6 +144,10 @@ logger = config.logger
                     is_flag = True,
                     help = "Use only interactive plots (HighCharts Javascript)"
 )
+@click.option('--lint', 'lint',
+                    is_flag = True,
+                    help = "Use strict linting (validation) to help code development"
+)
 @click.option('--pdf', 'make_pdf',
                     is_flag = True,
                     help = "Creates PDF report with 'simple' template. Requires Pandoc to be installed."
@@ -171,7 +175,7 @@ logger = config.logger
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, view_tags, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
-plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
+plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -270,6 +274,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         config.plots_force_flat = True
     if plots_interactive:
         config.plots_force_interactive = True
+    if lint:
+        config.lint = True
     if make_pdf:
         config.template = 'simple'
     if sample_names:
@@ -286,6 +292,8 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     if make_pdf:
         logger.info('--pdf specified. Using non-interactive HTML template.')
     logger.info("Template    : {}".format(config.template))
+    if lint:
+        logger.info('--lint specified. Being strict with validation.')
 
     # Add files if --file-list option is given
     if file_list:
@@ -396,6 +404,13 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         pass # No subdirectory variable given
 
 
+    # Add custom content section names
+    try:
+        if 'custom_content' in run_module_names:
+            run_module_names.extend(config.custom_data.keys())
+    except AttributeError:
+        pass # custom_data not in config
+
     # Get the list of files to search
     report.get_filelist(run_module_names)
 
@@ -453,9 +468,11 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
         except:
             # Flag the error, but carry on
             logger.error("Oops! The '{}' MultiQC module broke... \n".format(this_module) + \
-                      (' '*20)+"Please copy the following traceback and report it at " + \
+                      "  Please copy the following traceback and report it at " + \
                       "https://github.com/ewels/MultiQC/issues \n" + \
-                      (' '*20)+"(if possible, include a log file that triggers the error) \n" + \
+                      "  If possible, please include a log file that triggers the error - " + \
+                      "the last file found was:\n" + \
+                      "    {}\n".format(report.last_found_file) + \
                       ('='*60)+"\nModule {} raised an exception: {}".format(
                           this_module, traceback.format_exc()) + ('='*60))
             sys_exit_code = 1
@@ -495,6 +512,12 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     for i in empty_keys:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
+    # Add general-stats IDs to table row headers
+    for idx, h in enumerate(report.general_stats_headers):
+        for k in h.keys():
+            if 'rid' not in h[k]:
+                h[k]['rid'] = re.sub(r'\W+', '_', k).strip().strip('_')
+            report.general_stats_headers[idx][k]['rid'] = 'mqc-generalstats-{}'.format(h[k]['rid'])
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0:
         pconfig = {
@@ -664,7 +687,7 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
                 '--standalone',
                 config.output_fn,
                 '--output', pdf_fn_name,
-                '--latex-engine=xelatex',
+                '--pdf-engine=xelatex',
                 '-V', 'documentclass=article',
                 '-V', 'geometry=margin=1in',
                 '-V', 'title='
@@ -687,6 +710,10 @@ plots_flat, plots_interactive, make_pdf, config_file, cl_config, verbose, quiet,
     plugin_hooks.mqc_trigger('execution_finish')
 
     logger.info("MultiQC complete")
+
+    if lint and len(report.lint_errors) > 0:
+        logger.error("Found {} linting errors!\n{}".format(len(report.lint_errors), "\n".join(report.lint_errors)))
+        sys_exit_code = 1
 
     # Move the log file into the data directory
     log.move_tmp_log(logger)
