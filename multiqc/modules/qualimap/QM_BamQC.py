@@ -84,6 +84,7 @@ def parse_genome_results(self, f):
         'mean_insert_size': r"mean insert size = ([\d,\.]+)",
         'median_insert_size': r"median insert size = ([\d,\.]+)",
         'mean_mapping_quality': r"mean mapping quality = ([\d,\.]+)",
+        'general_error_rate': r"general error rate = ([\d,\.]+)",
     }
     d = dict()
     for k, r in regexes.items():
@@ -93,7 +94,6 @@ def parse_genome_results(self, f):
                 d[k] = float(r_search.group(1).replace(',',''))
             except ValueError:
                 d[k] = r_search.group(1)
-
     # Check we have an input filename
     if 'bam_file' not in d:
         log.debug("Couldn't find an input filename in genome_results file {}".format(f['fn']))
@@ -108,6 +108,7 @@ def parse_genome_results(self, f):
         self.general_stats_data[s_name]['mapped_reads'] = d['mapped_reads']
         d['percentage_aligned'] = (d['mapped_reads'] / d['total_reads'])*100
         self.general_stats_data[s_name]['percentage_aligned'] = d['percentage_aligned']
+        self.general_stats_data[s_name]['general_error_rate'] = d['general_error_rate']*100
     except KeyError:
         pass
 
@@ -545,6 +546,16 @@ def general_stats_headers (self):
         'description': 'Number of reads ({})'.format(config.read_count_desc),
         'scale': 'Blues',
         'shared_key': 'read_count',
+        'hidden': True
+    }
+    self.general_stats_headers['general_error_rate'] = {
+        'title': 'Error rate',
+        'description': 'Alignment error rate. Total edit distance (SAM NM field) over the number of mapped bases',
+        'max': 100,
+        'min': 0,
+        'suffix': '%',
+        'scale': 'OrRd',
+        'format': '{0:.2f}',
         'hidden': True
     }
 

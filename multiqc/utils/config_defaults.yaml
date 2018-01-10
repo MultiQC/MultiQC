@@ -54,9 +54,27 @@ collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 table_columns_placement: {}
+table_cond_formatting_colours:
+    - blue: '#337ab7'
+    - lbue: '#5bc0de'
+    - pass: '#5cb85c'
+    - warn: '#f0ad4e'
+    - fail: '#d9534f'
+table_cond_formatting_rules:
+    all_columns:
+        pass:
+            - s_eq: 'pass'
+            - s_eq: 'true'
+        warn:
+            - s_eq: 'warn'
+            - s_eq: 'unknown'
+        fail:
+            - s_eq: 'fail'
+            - s_eq: 'false'
 decimalPoint_format: null
 thousandsSep_format: null
 section_comments: {}
+lint: False
 
 fn_ignore_dirs:
     - 'multiqc_data'
@@ -266,6 +284,9 @@ module_order:
             - DNA
             - RNA
             - chip
+    - sargasso:
+        module_tag:
+            - RNA
 
     # Post-alignment processing
     - homer:

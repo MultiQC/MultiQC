@@ -622,6 +622,15 @@ input.form-control[type=color]{
 .mqc_table tbody tr td .wrapper .val {
     z-index: -1;
 }
+.mqc_table tbody tr td .wrapper .val .label {
+    font-size: 100%;
+    display: inline-block;
+    min-width: 10px;
+    padding: 3px 7px;
+    font-size: 12px;
+    vertical-align: middle;
+    border-radius: 10px;
+}
 .mqc-table-responsive.mqc-table-collapse {
     max-height: 500px;
 }

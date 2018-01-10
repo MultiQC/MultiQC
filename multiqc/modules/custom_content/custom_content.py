@@ -64,7 +64,9 @@ def custom_module_classes():
     # Now go through each of the file search patterns
     bm = BaseMultiqcModule()
     for k in search_patterns:
+        num_sp_found_files = 0
         for f in bm.find_log_files(k):
+            num_sp_found_files += 1
             # Handle any exception without messing up for remaining custom content files
             try:
                 f_extension = os.path.splitext(f['fn'])[1]
@@ -159,6 +161,10 @@ def custom_module_classes():
                 log.error("Uncaught exception raised for file '{}'".format(f['fn']))
                 log.exception(e)
 
+        # Give log message if no files found for search pattern
+        if num_sp_found_files == 0 and k != 'custom_content':
+            log.debug("No samples found: custom content ({})".format(k))
+
     # Filter to strip out ignored sample names
     for k in cust_mods:
         cust_mods[k]['data'] = bm.ignore_samples(cust_mods[k]['data'])
@@ -215,6 +221,10 @@ def custom_module_classes():
     mod_order = getattr(config, 'custom_content', {}).get('order', [])
     sorted_modules = [m for m in parsed_modules if m.anchor not in mod_order ]
     sorted_modules.extend([m for k in mod_order for m in parsed_modules if m.anchor == k ])
+
+    # If we only have General Stats columns then there are no module outputs
+    if len(sorted_modules) == 0:
+        raise UserWarning
 
     return sorted_modules
 
