@@ -8,7 +8,7 @@
     * Parses output from Sargasso - a tool to separate mixed-species RNA-seq reads according to their species of origin
     * Module written by [@hxin](https://github.com/hxin/)
 
-* [**VerifyBAMID**](https://genome.sph.umich.edu/wiki/VerifyBamID)
+* [**verifyBAMID**](https://genome.sph.umich.edu/wiki/VerifyBamID)
     * Parses output from VerifyBAMID - a tool to detect contamination in BAM files.
     * Adds the CHIPMIX and FREEMIX columns to the general statistics table.
     * Module written by [@aledj2](https://github.com/aledj2/)
