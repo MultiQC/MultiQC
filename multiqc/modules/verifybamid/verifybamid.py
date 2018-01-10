@@ -127,14 +127,14 @@ class MultiqcModule(BaseMultiqcModule):
 
 		# add the CHIPMIX column. set the title and description
 		headers['CHIPMIX'] = dict(self.defaults, **{
-			'title': 'Contamination S+A',
+			'title': 'Contamination (S+A)',
 			'description': 'VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable) (0-1 scale)',
 			'hidden': self.hide_chip_columns
 			})
 
 		# add the FREEMIX column. set the title and description
 		headers['FREEMIX'] = dict(self.defaults, **{
-			'title': 'Contamination (Seq)',
+			'title': 'Contamination (S)',
 			'description': 'VerifyBamID: FREEMIX -   Sequence-only estimate of contamination (0-1 scale).',
 			})
 		
