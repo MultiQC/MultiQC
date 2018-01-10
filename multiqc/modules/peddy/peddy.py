@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['sex_het_ratio'] = {
             'title': 'Sex / Het Ratio',
         }
-        headers['error'] = {
+        headers['error_sex_check'] = {
             'title': 'Sex Error',
             'description': 'Error in sample sex prediction',
         }
