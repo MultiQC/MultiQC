@@ -139,14 +139,14 @@ class MultiqcModule(BaseMultiqcModule):
         family_ids = [ x.get('family_id') for x in self.peddy_data.values() ]
 
         headers = OrderedDict()
-        headers['family_id'] = {
-            'title': 'Family ID',
-            'hidden': True if all([v == family_ids[0] for v in family_ids]) else False
-        }
-        headers['ancestry-prediction'] = {
-            'title': 'Ancestry',
-            'description': 'Ancestry Prediction',
-        }
+        #headers['family_id'] = {
+        #    'title': 'Family ID',
+        #    'hidden': True if all([v == family_ids[0] for v in family_ids]) else False
+        #}
+        #headers['ancestry-prediction'] = {
+        #    'title': 'Ancestry',
+        #    'description': 'Ancestry Prediction',
+        #}
         headers['sex_het_ratio'] = {
             'title': 'Sex / Het Ratio',
         }
@@ -213,11 +213,12 @@ class MultiqcModule(BaseMultiqcModule):
                 <span style="color: #2B9F2B;">greather than 0.5</span>.""",
                 plot = scatter.plot(data, pconfig)
             )
-            
+
     def peddy_het_check_plot(self):
         """plot the het_check scatter plot"""
         # empty dictionary to add sample names, and dictionary of values
         data = {}
+
         # for each sample, and list in self.peddy_data
         for s_name, d in self.peddy_data.items():
             # check the sample contains the required columns
@@ -228,18 +229,23 @@ class MultiqcModule(BaseMultiqcModule):
                     'y': d['het_ratio_het_check']
                 }
 
-                pconfig = {
+
+        pconfig = {
             'id': 'peddy_het_check_plot',
             'title': 'Peddy: Het Check',
             'xlab': 'median depth',
             'ylab': 'proportion het calls',
-            }
-    
+        }
+
         self.add_section (
             name = 'Het Check',
-            description = "Proportion of sites that were heterozygous against median depth. A high proportion of heterozygous sites suggests contamination, a low proportion suggests consanguinity",
-            helptext = "See <a href='https://peddy.readthedocs.io/en/latest/output.html#het-check'> here</a> for more details ",
+            description = "Proportion of sites that were heterozygous against median depth.",
+            helptext = """
+            A high proportion of heterozygous sites suggests contamination, a low proportion suggests consanguinity.
+            
+            See [the main peddy documentation](https://peddy.readthedocs.io/en/latest/output.html#het-check) for more details about the `het_check` command.
+            """,
             anchor = 'peddy-hetcheck-plot',
             plot = scatter.plot(data, pconfig)
         )
-      
+

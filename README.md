@@ -149,6 +149,7 @@ Code contributions from:
 [@avilella](https://github.com/avilella),
 [@boulund](https://github.com/boulund),
 [@bschiffthaler](https://github.com/bschiffthaler),
+[@Cashalow](https://github.com/Cashalow/),
 [@dakl](https://github.com/dakl),
 [@ehsueh](https://github.com/ehsueh)
 [@epruesse](https://github.com/epruesse),

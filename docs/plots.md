@@ -363,7 +363,7 @@ default values to customise the output of all table columns.
 The default header keys are:
 ```python
 single_header = {
-    'namespace': '',                # Name for grouping in table
+    'namespace': '',                # Name for grouping. Prepends desc and is in Config Columns modal
     'title': '[ dict key ]',        # Short title, table column title
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
@@ -383,7 +383,7 @@ single_header = {
 A third parameter can be specified with settings for the whole table:
 ```python
 table_config = {
-    'namespace': '',                         # Module / section that table is in. Prepends header descriptions.
+    'namespace': '',                         # Name for grouping. Prepends desc and is in Config Columns modal
     'id': '<random string>',                 # ID used for the table
     'table_title': '<table id>',             # Title of the table. Used in the column config modal
     'save_file': False,                      # Whether to save the table data to a file
@@ -395,9 +395,6 @@ table_config = {
 ```
 Header keys such as `max`, `min` and `scale` can also be specified in the table config.
 These will then be applied to all columns.
-
-Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
-![color brewer](images/cbrewer_scales.png)
 
 A very basic example is shown below:
 ```python
@@ -449,6 +446,16 @@ config = {
 }
 table_html = table.plot(data, headers, config)
 ```
+
+### Table colour scales
+
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
+Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
+
+The following scales are available:
+
+![color brewer](images/cbrewer_scales.png)
+
 
 ## Beeswarm plots (dot plots)
 Beeswarm plots work from the exact same data structure as tables, so the

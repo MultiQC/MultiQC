@@ -23,6 +23,12 @@
     * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
 * **QoRTs**
     * Added support for new style of output generated in the v1.3.0 release
+* **Qualimap**
+    * New `Error rate` column in General Statistics table, added by [@Cashalow](https://github.com/Cashalow/)
+        * Hidden by default - customise your MultiQC config to always show this column (see [docs](http://multiqc.info/docs/#hiding-columns))
+* **QUAST**
+    * New option to customise the default display of contig count and length (eg. `bp` instead of `Mbp`).
+    * See [documentation](http://multiqc.info/docs/#quast). Written by [@ewels](https://github.com/ewels/) and [@Cashalow](https://github.com/Cashalow/)
 * **RSeQC**
     * Removed normalisation in Junction Saturation plot. Now raw counts instead of % of total junctions.
 
@@ -37,7 +43,8 @@
 
 #### Bug Fixes
 * Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
-* Updated pandoc command used in `--pdf` to work with new releases of Pandoc.
+* Updated pandoc command used in `--pdf` to work with new releases of Pandoc
+* Made config `table_columns_visible` module name key matching case insensitive to make less frustrating
 
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
