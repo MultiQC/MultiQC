@@ -168,13 +168,31 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Calculate Percents and averages
         for lane in run_data:
-            run_data[lane]["percent_Q30"] = (float(run_data[lane]["yieldQ30"]) / float(run_data[lane]["total_yield"])) * 100.0
-            run_data[lane]["percent_perfectIndex"] = (float(run_data[lane]["perfectIndex"]) / float(run_data[lane]["total"])) * 100.0
-            run_data[lane]["mean_qscore"] = float(run_data[lane]["qscore_sum"]) / float(run_data[lane]["total_yield"])
+            try:
+                run_data[lane]["percent_Q30"] = (float(run_data[lane]["yieldQ30"]) / float(run_data[lane]["total_yield"])) * 100.0
+            except:
+                run_data[lane]["percent_Q30"] = "NA"
+            try:
+                run_data[lane]["percent_perfectIndex"] = (float(run_data[lane]["perfectIndex"]) / float(run_data[lane]["total"])) * 100.0
+            except:
+                run_data[lane]["percent_perfectIndex"] = "NA"
+            try:
+                run_data[lane]["mean_qscore"] = float(run_data[lane]["qscore_sum"]) / float(run_data[lane]["total_yield"])
+            except:
+                run_data[lane]["mean_qscore"] = "NA"
             for sample, d in run_data[lane]["samples"].items():
-                run_data[lane]["samples"][sample]["percent_Q30"] = (float(d["yieldQ30"]) / float(d["total_yield"])) * 100.0
-                run_data[lane]["samples"][sample]["percent_perfectIndex"] = (float(d["perfectIndex"]) / float(d["total"])) * 100.0
-                run_data[lane]["samples"][sample]["mean_qscore"] = float(d["qscore_sum"]) / float(d["total_yield"])
+                try
+                    run_data[lane]["samples"][sample]["percent_Q30"] = (float(d["yieldQ30"]) / float(d["total_yield"])) * 100.0
+                except:
+                    run_data[lane]["samples"][sample]["percent_Q30"] = "NA"
+                try:
+                    run_data[lane]["samples"][sample]["percent_perfectIndex"] = (float(d["perfectIndex"]) / float(d["total"])) * 100.0
+                except:
+                    run_data[lane]["samples"][sample]["percent_perfectIndex"] = "NA"
+                try:
+                    run_data[lane]["samples"][sample]["mean_qscore"] = float(d["qscore_sum"]) / float(d["total_yield"])
+                except:
+                    run_data[lane]["samples"][sample]["mean_qscore"] = "NA"
 
     def split_data_by_lane_and_sample(self):
         for runId in self.bcl2fastq_data.keys():
