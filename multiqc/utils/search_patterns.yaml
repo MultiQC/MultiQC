@@ -133,6 +133,8 @@ deeptools/plotFingerprintOutRawCounts:
 deeptools/plotFingerprintOutQualityMetrics:
     contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
     num_lines: 1
+dragen_markdups/mappingmetrics:
+    fn: '*.mapping_metrics.csv'
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:
