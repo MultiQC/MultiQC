@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
 				# for each sample extracted from the file
 				for s_name in parsed_data:
 					# if there are duplicate sample names
-					if s_name in self. verifybamid_data:
+					if s_name in self.verifybamid_data:
 						# write this to log
 						log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
 					# add the sample as a key to the verifybamid_data dictionary and the dictionary of values as the value
