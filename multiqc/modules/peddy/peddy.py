@@ -153,6 +153,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['error_sex_check'] = {
             'title': 'Sex Error',
             'description': 'Error in sample sex prediction',
+            'scale':False,
         }
         self.general_stats_addcols(self.peddy_data, headers)
 
