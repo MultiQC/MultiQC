@@ -139,14 +139,14 @@ class MultiqcModule(BaseMultiqcModule):
         family_ids = [ x.get('family_id') for x in self.peddy_data.values() ]
 
         headers = OrderedDict()
-        #headers['family_id'] = {
-        #    'title': 'Family ID',
-        #    'hidden': True if all([v == family_ids[0] for v in family_ids]) else False
-        #}
-        #headers['ancestry-prediction'] = {
-        #    'title': 'Ancestry',
-        #    'description': 'Ancestry Prediction',
-        #}
+        headers['family_id'] = {
+            'title': 'Family ID',
+            'hidden': True if all([v == family_ids[0] for v in family_ids]) else False
+        }
+        headers['ancestry-prediction'] = {
+            'title': 'Ancestry',
+            'description': 'Ancestry Prediction',
+        }
         headers['sex_het_ratio'] = {
             'title': 'Sex / Het Ratio',
         }
