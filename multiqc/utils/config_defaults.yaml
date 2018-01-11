@@ -178,6 +178,7 @@ fn_clean_exts:
     - '.qahist'
     - '.qhist'
     - '.rpkm'
+    - '.selfSM'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -287,6 +288,10 @@ module_order:
     - sargasso:
         module_tag:
             - RNA
+    - verifybamid:
+        module_tag:
+            - DNA
+    
 
     # Post-alignment processing
     - homer:

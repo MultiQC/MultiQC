@@ -48,7 +48,7 @@ Currently, supported tools include:
 |[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Sargasso][sargasso]|
 |[SortMeRNA][sortmerna]           |                        |                           |[Supernova][supernova] |
 |[Trimmomatic][trimmomatic]       |                        |                           |[VCFTools][vcftools] |
-|[Illumina InterOp][interop]      |                        |                           |                      |
+|[Illumina InterOp][interop]      |                        |                           |[verifyBAMID][verifybamid]                      |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -231,3 +231,4 @@ MultiQC is released under the GPL v3 or later licence.
 [tophat]:         http://multiqc.info/docs/#tophat
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [vcftools]:       http://multiqc.info/docs/#vcftools
+[verifyBAMID]:    http://multiqc.info/docs/#verifybamid
