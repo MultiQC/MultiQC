@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
 	def __init__(self):
 		# Initialise the parent object
 		super(MultiqcModule, self).__init__(name='dragen_markdups', anchor='dragen_markdups',
-		info="display the % of duplicate reads from dragen ")
+		info="display the % of duplicate reads from dragen")
 		
 		# dictionary to hold all data for each sample
 		self.dragen_markdups = dict()
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 				if s_name in self.dragen_markdups:
 					# write this to log
 					log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-				# add the sample as a key to the verifybamid_data dictionary and the dictionary of values as the value
+				# add the sample as a key to the dictionary and the dictionary of values as the value
 				self.dragen_markdups[s_name] = parsed_data[s_name]
 				# add data source to multiqc_sources.txt 
 				self.add_data_source(f)
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
 		if len(self.dragen_markdups) == 0:
 			raise UserWarning
 
-		# print number of verifyBAMID reports found and parsed
+		# print number of mapping_metrics files found and parsed
 		log.info("Found {} reports".format(len(self.dragen_markdups)))
 
 		# Write parsed report data to a file	
@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 	def parse_mapping_metrics(self, f, s_name):
-		""" Go through mapping,etrics.csv file and create a dictionary with the sample name as a key, """
+		""" Go through mapping_metrics.csv file and create a dictionary with the sample name as a key, """
 		#create a dictionary to populate from this sample's file
 		parsed_data = dict()
 
@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
 		return parsed_data
 
 	def dragen_markdups_general_stats_table(self):
-		""" Take the percentage_duplicates column and add it to thegeneral stats table at the top of the report """
+		""" Take the percentage_duplicates column and add it to the general stats table at the top of the report"""
 
 		# create a dictionary to hold the columns to add to the general stats table
 		headers = OrderedDict()
