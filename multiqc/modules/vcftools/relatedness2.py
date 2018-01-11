@@ -32,17 +32,24 @@ class Relatedness2Mixin():
         found in the graph with the Highlight tab.
         '''
 
+        idx = 0
         for name, m in matrices.items():
+            idx += 1
             self.add_section(
                 name = 'Relatedness2',
-                anchor = 'vcftools-relatedness2',
+                anchor = 'vcftools-relatedness2-{}'.format(idx),
                 description = "**Input:** `{}`.\n\n Heatmap of `RELATEDNESS_PHI` values from the output of vcftools relatedness2.".format(name),
                 helptext = helptext,
                 plot = heatmap.plot(
                     m.data,
                     xcats = m.x_labels,
                     ycats = m.y_labels,
-                    pconfig = {'square': True, 'decimalPlaces': 7, 'title': 'VCFTools: Relatedness2'}
+                    pconfig = {
+                        'id': 'vcftools-relatedness2-heatmap-{}'.format(idx),
+                        'title': 'VCFTools: Relatedness2',
+                        'square': True,
+                        'decimalPlaces': 7
+                    }
                 )
             )
 

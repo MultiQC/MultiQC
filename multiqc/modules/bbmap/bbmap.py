@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
                    for sample in self.mod_data[file_type]):
                 self.add_section(
                     name = file_types[file_type]['title']+' summary table',
-                    anchor =  'bbmap-' + file_type,
+                    anchor =  'bbmap-' + file_type + '-table',
                     description = file_types[file_type]['descr'],
                     helptext = file_types[file_type]['help_text'],
                     plot = self.make_basic_table(file_type)
@@ -154,6 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
                 in self.mod_data[file_type].items()
         }
         table_headers = {column_header: {
+                    'rid': '{}_{}_bbmstheader'.format(file_type, column_header),
                     'title': column_header,
                     'description': description,
                 }
@@ -161,6 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
                 in file_types[file_type]['kv_descriptions'].items()
         }
         tconfig = {
+            'id': file_type + '_bbm_table',
             'namespace': 'BBTools'
         }
         for sample in table_data:

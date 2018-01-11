@@ -209,6 +209,8 @@ report_section_order:
 ```
 
 ## Customising tables
+
+### Hiding columns
 Report tables such as the General Statistics table can get quite wide. To help with this,
 columns in the report can be hidden. Some MultiQC modules include columns which are hidden
 by default, others may be uninteresting to some users.
@@ -229,6 +231,7 @@ table_columns_visible:
 Note that you can set these to `True` to show columns that would otherwise be hidden
 by default.
 
+### Column order
 In the same way, you can force a column to appear at the start or end of the table, or
 indeed impose a custom ordering on all the columns, by setting the `table_columns_placement`.
 High values push columns to the right hand side of the table and low to the left. The default
@@ -244,6 +247,70 @@ table_columns_placement:
 
 In this case, since the default placement weighting is `1000`, the `reads_mapped` will end up as the
 leftmost column and the other two will and up as the final columns on the right of the table.
+
+### Conditional formatting
+It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting. Rules can be applied to every table column, or to specific columns only, using that column's unique ID.
+
+The default rules are as follows:
+
+```yaml
+table_cond_formatting_rules:
+    all_columns:
+        pass:
+            - s_eq: 'pass'
+            - s_eq: 'true'
+        warn:
+            - s_eq: 'warn'
+            - s_eq: 'unknown'
+        fail:
+            - s_eq: 'fail'
+            - s_eq: 'false'
+```
+
+These make any table cells that match the string `pass` or `true` have text with a green background, orange for `warn`, red for `fail` and so on. There can be multiple tests for each style of formatting - if there is a match for any, it will be applied. The following comparison operators are available:
+
+* `s_eq` - String exactly equals (case insensitive)
+* `s_contains` - String contains (case insensitive)
+* `s_ne` - String does not equal (case insensitive)
+* `eq` - Value equals
+* `ne` - Value does not equal
+* `gt` - Value is greater than
+* `lt` - Value is less than
+
+To have matches for a specific column, use that column's ID instead of `all_columns`. For example:
+
+```yaml
+table_cond_formatting_rules:
+    mqc-generalstats-uniquely_mapped_percent:
+        pass:
+            - gt: 80
+        warn:
+            - lt: 80
+        fail:
+            - lt: 70
+```
+
+Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by default, so that anything matching both `warn` and `fail` will be formatted as `fail` for example. This can be customised with `table_cond_formatting_colours` (see below).
+
+To find the unique ID for your column, right click a table cell in a report and inspect it's HTML (_Inpsect_ in Chrome). It should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
+
+> I know this isn't the same method of IDs as above and isn't super easy to do. Sorry!
+
+It's possible to highlight matches in any number of colours. MultiQC comes with the following defaults:
+
+```yaml
+table_cond_formatting_colours:
+    - blue: '#337ab7'
+    - lbue: '#5bc0de'
+    - pass: '#5cb85c'
+    - warn: '#f0ad4e'
+    - fail: '#d9534f'
+```
+
+These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example http://htmlcolorcodes.com/
+
+Note that the different sets of rules are formatted in order. So if a value matches both `pass` and `fail` then it will be formatted as a `fail`
+
 
 ## Number base (multiplier)
 To make numbers in the General Statistics table easier to read and compare quickly,

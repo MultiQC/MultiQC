@@ -76,7 +76,8 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = report.save_htmlid(re.sub(r'\W+', '_', k))
+                if 'rid' not in headers[idx][k]:
+                    headers[idx][k]['rid'] = report.save_htmlid(re.sub(r'\W+', '_', k).strip().strip('_'))
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[idx][k].get('shared_key', None)
@@ -117,11 +118,14 @@ class datatable (object):
                     headers[idx][k]['colour'] = sectcols[cidx]
 
                 # Overwrite hidden if set in user config
-                try:
-                    # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
-                    headers[idx][k]['hidden'] = not config.table_columns_visible[ headers[idx][k]['namespace'] ][k]
-                except KeyError:
-                    pass
+                for ns in config.table_columns_visible.keys():
+                    # Make namespace key case insensitive
+                    if ns.lower() == headers[idx][k]['namespace'].lower():
+                        try:
+                            # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
+                            headers[idx][k]['hidden'] = not config.table_columns_visible[ns][k]
+                        except KeyError:
+                            pass
 
                 # Also overwite placement if set in config
                 try:

@@ -170,12 +170,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['Yield'] = {
+            'rid': 'summary_Yield',
             'title': '{} Bp Yield'.format(config.base_count_prefix),
             'description': 'The number of bases sequenced ({})'.format(config.base_count_desc),
             'scale': 'PuOr',
             'shared_key': 'base_count'
         }
         headers['Aligned'] = {
+            'rid': 'summary_Aligned',
             'title': 'Aligned (%)',
             'description': 'The percentage of the sample that aligned to the PhiX genome',
             'min': 0,
@@ -192,10 +194,12 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd'
         }
         headers['Intensity C1'] = {
+            'rid': 'summary_Intensity_C1',
             'title': 'Intensity Cycle 1',
             'description': 'The intensity statistic at cycle 1.',
         }
         headers['%>=Q30'] = {
+            'rid': 'summary_Q30',
             'title': '% >= Q30',
             'description': 'Percentage of reads with quality phred score of 30 or above',
             'min': 0,
@@ -362,6 +366,7 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'read_count'
         }
         headers['% Read Identified (PF)'] = {
+            'rid': 'summary_reads_identified_pf',
             'title': '% Reads Identified (PF)',
             'description': 'The total fraction of passing filter reads assigned to an index.',
             'suffix': '%',

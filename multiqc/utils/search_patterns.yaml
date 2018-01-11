@@ -133,6 +133,8 @@ deeptools/plotFingerprintOutRawCounts:
 deeptools/plotFingerprintOutQualityMetrics:
     contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
     num_lines: 1
+dragen_markdups/mappingmetrics:
+    fn: '*.mapping_metrics.csv'
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:
@@ -319,6 +321,8 @@ samtools/idxstats:
 samtools/rmdup:
     contents: '[bam_rmdup'
     shared: true
+sargasso:
+    fn: 'overall_filtering_summary.txt'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
     shared: true
@@ -381,3 +385,5 @@ vcftools/tstv_by_qual:
     fn: '*.TsTv.qual'
 vcftools/tstv_summary:
     fn: '*.TsTv.summary'
+verifybamid/selfsm:
+    fn: '*.selfSM'

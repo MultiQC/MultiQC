@@ -61,11 +61,13 @@ MultiQC Modules:
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
+    Sargasso: modules/sargasso.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
+    verifyBAMID: modules/verifybamid.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:
