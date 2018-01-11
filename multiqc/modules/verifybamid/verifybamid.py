@@ -28,12 +28,10 @@ class MultiqcModule(BaseMultiqcModule):
 
 		# default values for columns
 		self.col_config_defaults = {
-			'max': 100,
-			'min': 0,
 			'suffix': '%',
 			'format': '{:,.3f}',
 			'modify': lambda x:x * 100.0 if x != "NA" else x,
-			'scale': 'OrRd',
+			'scale': False
 		}
 
 
