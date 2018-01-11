@@ -2,6 +2,8 @@
 
 ## MultiQC v1.4dev
 
+A slightly earlier-than-expected release due to a new problem with dependency packages that is breaking MultiQC installations since 2018-01-11.
+
 #### New Modules:
 
 * [**Sargasso**](http://statbio.github.io/Sargasso/)
@@ -42,6 +44,9 @@
     * Hopefully this will help with debugging / finding dodgy input data
 
 #### Bug Fixes
+* Addressed new dependency error with conflicting package requirements
+    * There was a conflict between the `networkx`, `colormath` and `spectra` releases.
+    * I previously forced certain software versions to get around this, but `spectra` has now updated with the unfortunate effect of introducing a new dependency clash that halts installation.
 * Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
 * Updated pandoc command used in `--pdf` to work with new releases of Pandoc
 * Made config `table_columns_visible` module name key matching case insensitive to make less frustrating
