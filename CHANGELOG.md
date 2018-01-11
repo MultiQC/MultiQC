@@ -1,5 +1,10 @@
 # MultiQC Version History
 
+## MultiQC v1.5dev
+
+_..nothing yet!.._
+
+
 ## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11
 
 A slightly earlier-than-expected release due to a new problem with dependency packages that is breaking MultiQC installations since 2018-01-11.
