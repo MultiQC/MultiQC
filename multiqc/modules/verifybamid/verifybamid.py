@@ -157,8 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
 		if not self.hide_chip_columns:
 			headers['CHIP_ID'] = {
 				'title': 'Chip ID',
-				'description': 'ReadGroup ID of sequenced lane.',
-				'hidden': self.hide_chip_columns,
+				'description': 'ReadGroup ID of sequenced lane.'
 			}
 		headers['#SNPS'] = {
 			'title': 'SNPS',
@@ -219,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
 				'title': 'Contamination S+A',
 				'description': 'VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable) (0-1 scale)'
 			})
-			headers[ 'CHIPLK1'] = {
+			headers['CHIPLK1'] = {
 				'title': 'CHIPLK1',
 				'description': 'Maximum log-likelihood of the sequence reads given estimated contamination under sequence+array method (NA if the external genotypes are unavailable)'
 			}
