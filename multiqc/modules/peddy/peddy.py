@@ -122,6 +122,10 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data[s_name] = dict()
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
+                        if headers[i] == "error_sex_check" and v == False:
+                            v == True
+                        if headers[i] == "error_sex_check" and v == True:
+                            v ==False
                         try:
                             # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
