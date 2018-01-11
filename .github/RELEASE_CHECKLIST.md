@@ -16,7 +16,8 @@ This checklist is for my own reference, as I forget the steps every time.
     * Spot any previously unnoticed bugs and fix
 8. Release on PyPI:
     ```bash
-    python setup.py sdist upload
+    python setup.py sdist bdist_wheel
+    twine upload dist/*.tar.gz
     ```
 9. Test that it pip installs:
     ```bash

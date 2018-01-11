@@ -1,16 +1,16 @@
 # MultiQC Version History
 
-## MultiQC v1.4dev
+## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11
+
+A slightly earlier-than-expected release due to a new problem with dependency packages that is breaking MultiQC installations since 2018-01-11.
 
 #### New Modules:
-
 * [**Sargasso**](http://statbio.github.io/Sargasso/)
     * Parses output from Sargasso - a tool to separate mixed-species RNA-seq reads according to their species of origin
     * Module written by [@hxin](https://github.com/hxin/)
-
-* [**verifyBAMID**](https://genome.sph.umich.edu/wiki/VerifyBamID)
+* [**VerifyBAMID**](https://genome.sph.umich.edu/wiki/VerifyBamID)
     * Parses output from VerifyBAMID - a tool to detect contamination in BAM files.
-    * Adds the CHIPMIX and FREEMIX columns to the general statistics table.
+    * Adds the `CHIPMIX` and `FREEMIX` columns to the general statistics table.
     * Module written by [@aledj2](https://github.com/aledj2/)
 
 #### Module updates:
@@ -37,11 +37,15 @@
     * If you want to make values that match a criteria stand out more, you can now write custom rules and formatting instructions for tables.
     * For instructions, see [the documentation](http://multiqc.info/docs/#conditional-formatting)
 * New `--lint` option which is strict about best-practices for writing new modules
-    * Useful when writing new modules and code as throws warnings
+    * Useful when writing new modules and code as it throws warnings
+    * Currently only implemented for bar plots and a few other places. More linting coming soon...
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
     * Hopefully this will help with debugging / finding dodgy input data
 
 #### Bug Fixes
+* Addressed new dependency error with conflicting package requirements
+    * There was a conflict between the `networkx`, `colormath` and `spectra` releases.
+    * I previously forced certain software versions to get around this, but `spectra` has now updated with the unfortunate effect of introducing a new dependency clash that halts installation.
 * Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
 * Updated pandoc command used in `--pdf` to work with new releases of Pandoc
 * Made config `table_columns_visible` module name key matching case insensitive to make less frustrating
