@@ -76,7 +76,8 @@ class MultiqcModule(BaseMultiqcModule):
         #self.peddy_relatedness_plot()
         
         # hetcheck plot
-        self.peddy_het_check_plot()
+        #self.peddy_het_check_plot()
+
 
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
@@ -122,10 +123,10 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
                         try:
-                            # add the pattern as a suffic to key
+                            # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
                         except ValueError:
-                            # add the pattern as a suffic to key
+                            # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i] + "_" + pattern] = v
         if len(parsed_data) == 0:
             return None
