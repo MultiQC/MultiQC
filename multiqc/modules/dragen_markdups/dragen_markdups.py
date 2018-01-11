@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 	def parse_mapping_metrics(self, f, s_name):
-		""" Go through mapping_metrics.csv file and create a dictionary with the sample name as a key, """
+		""" Go through mapping_metrics.csv file and create a dictionary with the sample name as a key"""
 		#create a dictionary to populate from this sample's file
 		parsed_data = dict()
 
