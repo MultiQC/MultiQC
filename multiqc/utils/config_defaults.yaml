@@ -179,6 +179,7 @@ fn_clean_exts:
     - '.qhist'
     - '.rpkm'
     - '.selfSM'
+    - '.mapping_metrics.csv'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -289,6 +290,9 @@ module_order:
         module_tag:
             - RNA
     - verifybamid:
+        module_tag:
+            - DNA
+    - dragen_markdups:
         module_tag:
             - DNA
     
