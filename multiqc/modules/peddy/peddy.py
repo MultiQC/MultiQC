@@ -122,10 +122,6 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data[s_name] = dict()
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
-                        if headers[i] == "error_sex_check" and v == False:
-                            v == True
-                        if headers[i] == "error_sex_check" and v == True:
-                            v ==False
                         try:
                             # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
@@ -155,9 +151,8 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Sex / Het Ratio',
         }
         headers['error_sex_check'] = {
-            'title': 'Sex Error',
+            'title': 'Correct Sex',
             'description': 'Error in sample sex prediction',
-            'scale':False,
         }
         self.general_stats_addcols(self.peddy_data, headers)
 
