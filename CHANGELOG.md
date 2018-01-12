@@ -2,7 +2,12 @@
 
 ## MultiQC v1.5dev
 
-_..nothing yet!.._
+#### Module updates:
+* **bcl2fastq**
+    * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
+* **Peddy**
+    * Switch `Sex error` logic to `Correct sex` for better highlighting ([@aledj2](https://github.com/aledj2))
+
 
 
 ## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11
