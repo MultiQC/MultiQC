@@ -83,7 +83,6 @@ setup(
             'conpair = multiqc.modules.conpair:MultiqcModule',
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
-            'dragen_markdups = multiqc.modules.dragen_markdups:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
             'deeptools = multiqc.modules.deeptools:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',

@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 			'suffix': '%',
 			'format': '{:,.3f}',
 			'modify': lambda x:x * 100.0 if x != "NA" else x,
-			'scale': False
+			'scale': 'OrRd'
 		}
 
 
