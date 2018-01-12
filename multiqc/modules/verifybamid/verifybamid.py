@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 		# default values for columns
 		self.col_config_defaults = {
-			'max': 100,		
+			'max': 100,
 			'min': 0,
 			'suffix': '%',
 			'format': '{:,.3f}',

@@ -74,10 +74,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Relatedness plot
         self.peddy_relatedness_plot()
-        
+
         # hetcheck plot
         self.peddy_het_check_plot()
-
 
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
@@ -123,10 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
                         if headers[i] == "error" and pattern == "sex_check":
-                            if v == "True":
-                                v = "False"
-                            elif v == "False":
-                                v = "True"
+                            v = "True" if v == "False" else "False"
                         try:
                             # add the pattern as a suffix to key
                             parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
@@ -234,7 +230,6 @@ class MultiqcModule(BaseMultiqcModule):
                     'y': d['het_ratio_het_check']
                 }
 
-
         pconfig = {
             'id': 'peddy_het_check_plot',
             'title': 'Peddy: Het Check',
@@ -253,4 +248,3 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'peddy-hetcheck-plot',
             plot = scatter.plot(data, pconfig)
         )
-

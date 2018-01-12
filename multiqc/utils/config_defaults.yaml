@@ -291,7 +291,7 @@ module_order:
     - verifybamid:
         module_tag:
             - DNA
-
+    
 
     # Post-alignment processing
     - homer:
