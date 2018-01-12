@@ -105,6 +105,15 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'Bu',
             'format': '{:,.0f}'
         }
+        headers['rRNA rate'] = {
+            'title': '% rRNA Alignment',
+            'description': ' rRNA reads (non-duplicate and duplicate reads) per total reads',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'Reds',
+            'modify': lambda x: float(x) * 100.0
+        }
 
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 

@@ -7,6 +7,8 @@
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
 * **Peddy**
     * Switch `Sex error` logic to `Correct sex` for better highlighting ([@aledj2](https://github.com/aledj2))
+* **RNA-SeQC**
+    * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
 
 
 
