@@ -36,7 +36,6 @@ print("""-----------------------------------
 install_requires = [
         'click',
         'future>0.14.0',
-        'networkx>=2',
         'lzstring',
         'jinja2>=2.9',
         'matplotlib',
