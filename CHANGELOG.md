@@ -10,6 +10,8 @@
 * **RNA-SeQC**
     * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
 
+#### New MultiQC Features:
+* Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
 
 
 ## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11

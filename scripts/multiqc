@@ -107,12 +107,12 @@ logger = config.logger
                     help = "Supply a file containing a list of file paths to be searched, one per row"
 )
 @click.option('-e', '--exclude', metavar='[module name]',
-                    type = click.Choice(['general_stats']+list(config.avail_modules.keys())),
+                    type = click.Choice(sorted(['general_stats']+list(config.avail_modules.keys()))),
                     multiple = True,
                     help = "Do not use this module. Can specify multiple times."
 )
 @click.option('-m', '--module', metavar='[module name]',
-                    type = click.Choice(config.avail_modules),
+                    type = click.Choice(sorted(config.avail_modules.keys())),
                     multiple = True,
                     help = "Use only this module. Can specify multiple times."
 )
