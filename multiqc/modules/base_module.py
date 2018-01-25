@@ -89,15 +89,14 @@ class BaseMultiqcModule(object):
             return
 
         for f in report.files[sp_key]:
+            # Make a note of the filename so that we can report it if something crashes
+            report.last_found_file = os.path.join(f['root'], f['fn'])
 
             # If path_filters is given, skip unless match
             if path_filters is not None and len(path_filters) > 0:
-                if not all([ fnmatch.fnmatch(f['fn'], pf) for pf in path_filters ]):
+                if not all([fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters]):
                     logger.debug("{} - Skipping '{}' as didn't match module path filters".format(sp_key, f['fn']))
                     continue
-
-            # Make a note of the filename so that we can report it if something crashes
-            report.last_found_file = os.path.join(f['root'],f['fn'])
 
             # Make a sample name from the filename
             f['s_name'] = self.clean_s_name(f['fn'], f['root'])
