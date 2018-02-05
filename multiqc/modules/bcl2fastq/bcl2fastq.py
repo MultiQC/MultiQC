@@ -458,4 +458,9 @@ class MultiqcModule(BaseMultiqcModule):
                     bar_data[barcode] = OrderedDict(
                         [(pbc, count) for pbc in paste_key]
                     )
+        bar_data = OrderedDict(sorted(
+            iteritems(bar_data),
+            key=lambda x: sum(x[1].values()),
+            reverse=True
+        ))
         return bar_data
