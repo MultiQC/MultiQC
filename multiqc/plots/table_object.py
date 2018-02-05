@@ -118,11 +118,14 @@ class datatable (object):
                     headers[idx][k]['colour'] = sectcols[cidx]
 
                 # Overwrite hidden if set in user config
-                try:
-                    # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
-                    headers[idx][k]['hidden'] = not config.table_columns_visible[ headers[idx][k]['namespace'] ][k]
-                except KeyError:
-                    pass
+                for ns in config.table_columns_visible.keys():
+                    # Make namespace key case insensitive
+                    if ns.lower() == headers[idx][k]['namespace'].lower():
+                        try:
+                            # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
+                            headers[idx][k]['hidden'] = not config.table_columns_visible[ns][k]
+                        except KeyError:
+                            pass
 
                 # Also overwite placement if set in config
                 try:

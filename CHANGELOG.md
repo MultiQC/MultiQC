@@ -1,29 +1,73 @@
 # MultiQC Version History
 
-## MultiQC v1.4dev
+## MultiQC v1.5dev
+
+#### Module updates:
+* **bcl2fastq**
+    * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
+* **Homer**
+    * Made parsing of `tagInfo.txt` file more resilient to variations in file format so that it works with new versions of Homer.
+    * Kept order of chromosomes in coverage plot consistent.
+* **Peddy**
+    * Switch `Sex error` logic to `Correct sex` for better highlighting ([@aledj2](https://github.com/aledj2))
+* **Picard**
+    * Updated module and search patterns to recognise new output format from Picard version >= 2.16
+* **RNA-SeQC**
+    * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
+
+#### New MultiQC Features:
+* Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
+
+
+## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11
+
+A slightly earlier-than-expected release due to a new problem with dependency packages that is breaking MultiQC installations since 2018-01-11.
 
 #### New Modules:
 * [**Sargasso**](http://statbio.github.io/Sargasso/)
     * Parses output from Sargasso - a tool to separate mixed-species RNA-seq reads according to their species of origin
     * Module written by [@hxin](https://github.com/hxin/)
+* [**VerifyBAMID**](https://genome.sph.umich.edu/wiki/VerifyBamID)
+    * Parses output from VerifyBAMID - a tool to detect contamination in BAM files.
+    * Adds the `CHIPMIX` and `FREEMIX` columns to the general statistics table.
+    * Module written by [@aledj2](https://github.com/aledj2/)
 
 #### Module updates:
 * **MACS2**
     * Updated to work with output from older versions of MACS2 by [@avilella](https://github.com/avilella/)
+* **Peddy**
+    * Add het check plot to suggest potential contamination by [@aledj2](https://github.com/aledj2)
 * **Picard**
     * Picard HsMetrics `HS_PENALTY` plot now has correct axis labels
     * InsertSizeMetrics switches commas for points if it can't convert floats. Should help some european users.
+* **QoRTs**
+    * Added support for new style of output generated in the v1.3.0 release
+* **Qualimap**
+    * New `Error rate` column in General Statistics table, added by [@Cashalow](https://github.com/Cashalow/)
+        * Hidden by default - customise your MultiQC config to always show this column (see [docs](http://multiqc.info/docs/#hiding-columns))
+* **QUAST**
+    * New option to customise the default display of contig count and length (eg. `bp` instead of `Mbp`).
+    * See [documentation](http://multiqc.info/docs/#quast). Written by [@ewels](https://github.com/ewels/) and [@Cashalow](https://github.com/Cashalow/)
 * **RSeQC**
     * Removed normalisation in Junction Saturation plot. Now raw counts instead of % of total junctions.
 
 #### New MultiQC Features:
+* Conditional formatting / highlighting of cell contents in tables
+    * If you want to make values that match a criteria stand out more, you can now write custom rules and formatting instructions for tables.
+    * For instructions, see [the documentation](http://multiqc.info/docs/#conditional-formatting)
 * New `--lint` option which is strict about best-practices for writing new modules
-    * Useful when writing new modules and code as throws warnings
+    * Useful when writing new modules and code as it throws warnings
+    * Currently only implemented for bar plots and a few other places. More linting coming soon...
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
     * Hopefully this will help with debugging / finding dodgy input data
 
 #### Bug Fixes
+* Addressed new dependency error with conflicting package requirements
+    * There was a conflict between the `networkx`, `colormath` and `spectra` releases.
+    * I previously forced certain software versions to get around this, but `spectra` has now updated with the unfortunate effect of introducing a new dependency clash that halts installation.
 * Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
+* Updated pandoc command used in `--pdf` to work with new releases of Pandoc
+* Made config `table_columns_visible` module name key matching case insensitive to make less frustrating
 
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03

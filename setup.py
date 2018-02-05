@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = '1.4dev'
+version = '1.5dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -36,7 +36,6 @@ print("""-----------------------------------
 install_requires = [
         'click',
         'future>0.14.0',
-        'networkx<2',
         'lzstring',
         'jinja2>=2.9',
         'matplotlib',
@@ -45,7 +44,7 @@ install_requires = [
         'pyyaml',
         'requests',
         'simplejson',
-        'spectra'
+        'spectra>=0.0.10'
     ]
 if sys.version_info < (3, 4):
     install_requires.append('enum34')
@@ -125,7 +124,8 @@ setup(
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
-            'vcftools = multiqc.modules.vcftools:MultiqcModule'
+            'vcftools = multiqc.modules.vcftools:MultiqcModule',
+            'verifybamid = multiqc.modules.verifybamid:MultiqcModule'
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

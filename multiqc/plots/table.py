@@ -162,11 +162,44 @@ def make_table (dt):
                 # Percentage suffixes etc
                 valstring += header.get('suffix', '')
 
+                # Conditional formatting
+                cmatches = { cfck: False for cfc in config.table_cond_formatting_colours for cfck in cfc }
+                # Find general rules followed by column-specific rules
+                for cfk in ['all_columns', rid]:
+                    if cfk in config.table_cond_formatting_rules:
+                        # Loop through match types
+                        for ftype in cmatches.keys():
+                            # Loop through array of comparison types
+                            for cmp in config.table_cond_formatting_rules[cfk].get(ftype, []):
+                                try:
+                                    # Each comparison should be a dict with single key: val
+                                    if 's_eq' in cmp and str(cmp['s_eq']).lower() == str(val).lower():
+                                        cmatches[ftype] = True
+                                    if 's_contains' in cmp and str(cmp['s_contains']).lower() in str(val).lower():
+                                        cmatches[ftype] = True
+                                    if 's_ne' in cmp and str(cmp['s_ne']).lower() != str(val).lower():
+                                        cmatches[ftype] = True
+                                    if 'eq' in cmp and cmp['eq'] == val:
+                                        cmatches[ftype] = True
+                                    if 'ne' in cmp and cmp['ne'] != val:
+                                        cmatches[ftype] = True
+                                    if 'gt' in cmp and cmp['gt'] < val:
+                                        cmatches[ftype] = True
+                                    if 'lt' in cmp and cmp['lt'] > val:
+                                        cmatches[ftype] = True
+                                except:
+                                    log.warn("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
+                # Apply HTML in order of config keys
+                for cfc in config.table_cond_formatting_colours:
+                    for cfck in cfc: # should always be one, but you never know
+                        if cmatches[cfck]:
+                            valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(cfc[cfck], valstring)
+
                 # Build HTML
                 if not header['scale']:
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
+                    t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=valstring)
                 else:
                     if c_scale is not None:
                         col = ' background-color:{};'.format(c_scale.get_colour(val))

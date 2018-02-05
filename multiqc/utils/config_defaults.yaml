@@ -54,6 +54,23 @@ collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 table_columns_placement: {}
+table_cond_formatting_colours:
+    - blue: '#337ab7'
+    - lbue: '#5bc0de'
+    - pass: '#5cb85c'
+    - warn: '#f0ad4e'
+    - fail: '#d9534f'
+table_cond_formatting_rules:
+    all_columns:
+        pass:
+            - s_eq: 'pass'
+            - s_eq: 'true'
+        warn:
+            - s_eq: 'warn'
+            - s_eq: 'unknown'
+        fail:
+            - s_eq: 'fail'
+            - s_eq: 'false'
 decimalPoint_format: null
 thousandsSep_format: null
 section_comments: {}
@@ -161,6 +178,7 @@ fn_clean_exts:
     - '.qahist'
     - '.qhist'
     - '.rpkm'
+    - '.selfSM'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -270,6 +288,10 @@ module_order:
     - sargasso:
         module_tag:
             - RNA
+    - verifybamid:
+        module_tag:
+            - DNA
+    
 
     # Post-alignment processing
     - homer:

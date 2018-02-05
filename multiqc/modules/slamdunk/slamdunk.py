@@ -465,7 +465,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Conversion rates per read',
             anchor = 'slamdunk_overall_rates',
             description = """This plot shows the individual conversion rates over all reads.
-                        It shows these conversion rates strand-specific: This means for a properly labelled
+                        It shows these conversion rates strand-specific: This means for a properly labeled
                         sample you would see a T&gt;C excess on the plus-strand and an A&gt;G excess on the minus strand
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#rates" target="_blank">slamdunk docs</a>).""",
             plot = bargraph.plot([self.rates_data_plus,self.rates_data_minus], cats, pconfig)
@@ -526,14 +526,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig_nontc = {
             'id': 'slamdunk_nontcperreadpos_plot',
-            'title': 'Slamdunk: Non-T>C mutations over reads',
-            'ylab': 'Percent mutated %',
+            'title': 'Slamdunk: Non-T>C mismatches over reads',
+            'ylab': 'Percent mismatches %',
             'xlab': 'Position in read',
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>Pos {point.x}</b>: {point.y:.2f} %',
-            'data_labels': [{'name': 'Forward reads +', 'ylab': 'Percent mutated %'},
-                            {'name': 'Reverse reads -', 'ylab': 'Percent mutated %'}]
+            'data_labels': [{'name': 'Forward reads +', 'ylab': 'Percent mismatches %'},
+                            {'name': 'Reverse reads -', 'ylab': 'Percent mismatches %'}]
         }
 
         pconfig_tc = {
@@ -549,9 +549,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section (
-            name = 'Non T&gt;C mutations over read positions',
+            name = 'Non T&gt;C mismatches over read positions',
             anchor = 'slamdunk_nontcperreadpos',
-            description = """This plot shows the distribution of non T&gt;C mutations across read positions
+            description = """This plot shows the distribution of non T&gt;C mismatches across read positions
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#tcperreadpos" target="_blank">slamdunk docs</a>).""",
             plot = linegraph.plot([self.nontc_per_readpos_plus, self.nontc_per_readpos_minus], pconfig_nontc)
         )
@@ -569,21 +569,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig_nontc = {
             'id': 'slamdunk_slamdunk_nontcperutrpos_plot',
-            'title': 'Slamdunk: Non-T>C mutations over UTR ends',
-            'ylab': 'Percent mutated %',
-            'xlab': 'Position in UTR from 3\' end',
+            'title': 'Slamdunk: Non-T>C mutations over 3\' UTR ends',
+            'ylab': 'Percent mismatches %',
+            'xlab': 'Position in the static last 250bp window of 3\' UTR',
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>Pos {point.x}</b>: {point.y:.2f} %',
-            'data_labels': [{'name': 'UTRs on plus strand', 'ylab': 'Percent mutated %'},
-                            {'name': 'UTRs on minus strand', 'ylab': 'Percent mutated %'}]
+            'data_labels': [{'name': 'UTRs on plus strand', 'ylab': 'Percent mismatches %'},
+                            {'name': 'UTRs on minus strand', 'ylab': 'Percent mismatches %'}]
         }
 
         pconfig_tc = {
             'id': 'slamdunk_slamdunk_tcperutrpos_plot',
-            'title': 'Slamdunk: T>C conversions over UTR ends',
+            'title': 'Slamdunk: T>C conversions over 3\' UTR ends',
             'ylab': 'Percent converted %',
-            'xlab': 'Position in UTR from 3\' end',
+            'xlab': 'Position in the static last 250bp window of 3\' UTR',
             'xDecimals': False,
             'ymin': 0,
             'tt_label': '<b>Pos {point.x}</b>: {point.y:.2f} %',
@@ -592,9 +592,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section (
-            name = 'Non T&gt;C mutations over UTR positions',
+            name = 'Non T&gt;C mismatches over UTR positions',
             anchor = 'slamdunk_nontcperutrpos',
-            description = """This plot shows the distribution of non T&gt;C mutations across UTR positions for the last 200 bp from the 3\' UTR end
+            description = """This plot shows the distribution of non T&gt;C mismatches across UTR positions for the last 250 bp from the 3\' UTR end
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
             plot = linegraph.plot([self.nontc_per_utrpos_plus, self.nontc_per_utrpos_minus], pconfig_nontc)
         )
@@ -602,7 +602,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'T&gt;C conversions over UTR positions',
             anchor = 'tcperutrpos',
-            description = """This plot shows the distribution of T&gt;C conversions across UTR positions for the last 200 bp from the 3\' UTR end
+            description = """This plot shows the distribution of T&gt;C conversions across UTR positions for the last 250 bp from the 3\' UTR end
                         (see the <a href="http://t-neumann.github.io/slamdunk/docs.html#tcperutrpos" target="_blank">slamdunk docs</a>).""",
             plot = linegraph.plot([self.tc_per_utrpos_plus, self.tc_per_utrpos_minus], pconfig_tc)
         )
