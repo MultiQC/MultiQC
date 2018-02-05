@@ -80,6 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         s_name = None
         cutadapt_version = '1.7'
+        log_section = None
         for l in fh:
             # New log starting
             if 'cutadapt' in l:
@@ -110,9 +111,6 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name in self.cutadapt_data:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.cutadapt_data[s_name] = dict()
-                self.cutadapt_length_counts[s_name] = dict()
-                self.cutadapt_length_exp[s_name] = dict()
-                self.cutadapt_length_obsexp[s_name] = dict()
 
             if s_name is not None:
                 self.add_data_source(f, s_name)
@@ -123,20 +121,30 @@ class MultiqcModule(BaseMultiqcModule):
                     if match:
                         self.cutadapt_data[s_name][k] = int(match.group(1).replace(',', ''))
 
+                # Starting a new section
+                if '===' in l:
+                    log_section = l.strip().strip('=').strip()
+
                 # Histogram showing lengths trimmed
                 if 'length' in l and 'count' in l and 'expect' in l:
+                    plot_sname = s_name
+                    if log_section is not None:
+                        plot_sname = '{} - {}'.format(s_name, log_section)
+                    self.cutadapt_length_counts[plot_sname] = dict()
+                    self.cutadapt_length_exp[plot_sname] = dict()
+                    self.cutadapt_length_obsexp[plot_sname] = dict()
                     # Nested loop to read this section while the regex matches
                     for l in fh:
                         r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", l)
                         if r_seqs:
                             a_len = int(r_seqs.group(1))
-                            self.cutadapt_length_counts[s_name][a_len] = int(r_seqs.group(2))
-                            self.cutadapt_length_exp[s_name][a_len] = float(r_seqs.group(3))
+                            self.cutadapt_length_counts[plot_sname][a_len] = int(r_seqs.group(2))
+                            self.cutadapt_length_exp[plot_sname][a_len] = float(r_seqs.group(3))
                             if float(r_seqs.group(3)) > 0:
-                                self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2)) / float(r_seqs.group(3))
+                                self.cutadapt_length_obsexp[plot_sname][a_len] = float(r_seqs.group(2)) / float(r_seqs.group(3))
                             else:
                                 # Cheating, I know. Infinity is difficult to plot.
-                                self.cutadapt_length_obsexp[s_name][a_len] = float(r_seqs.group(2))
+                                self.cutadapt_length_obsexp[plot_sname][a_len] = float(r_seqs.group(2))
                         else:
                             break
 
