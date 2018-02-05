@@ -323,36 +323,23 @@ class TagDirReportMixin():
         """ Parse HOMER tagdirectory taginfo.txt file to extract statistics in the first 11 lines. """
         # General Stats Table
         tag_info = dict()
-        counter = 0
         for l in f['f']:
-            if counter == 1:
-                s = l.split("\t")
-                tag_info['UniqPositions'] = float(s[1].strip())
-                tag_info['TotalPositions'] = float(s[2].strip())
-            if counter == 4:
-                s = l.split("\t")
-                tag_info['fragmentLengthEstimate'] = float(s[0].strip().split("=")[1])
-            if counter == 5:
-                s = l.split("\t")
-                tag_info['peakSizeEstimate'] = float(s[0].strip().split("=")[1])
-            if counter == 6:
-                s = l.split("\t")
-                tag_info['tagsPerBP'] = float(s[0].strip().split("=")[1])
-            if counter == 7:
-                s = l.split("\t")
-                tag_info['averageTagsPerPosition'] = float(s[0].strip().split("=")[1])
-            if counter == 8:
-                s = l.split("\t")
-                tag_info['averageTagLength'] = float(s[0].strip().split("=")[1])
-            if counter == 9:
-                s = l.split("\t")
-                tag_info['gsizeEstimate'] = float(s[0].strip().split("=")[1])
-            if counter == 10:
-                s = l.split("\t")
-                tag_info['averageFragmentGCcontent'] = float(s[0].strip().split("=")[1])
-            if counter == 11:
-                break
-            counter = counter + 1
+            s = l.split("=")
+            if len(s) > 1:
+                if s[0].strip() == 'genome':
+                    ss = s[1].split("\t")
+                    if len(ss) > 2:
+                        tag_info['genome'] = ss[0].strip()
+                        try:
+                            tag_info['UniqPositions'] = float(ss[1].strip())
+                            tag_info['TotalPositions'] = float(ss[2].strip())
+                        except:
+                            tag_info['UniqPositions'] = ss[1].strip()
+                            tag_info['TotalPositions'] = ss[2].strip()
+                try:
+                    tag_info[s[0].strip()] = float(s[1].strip())
+                except ValueError:
+                    tag_info[s[0].strip()] = s[1].strip()
         return tag_info
 
 
@@ -360,30 +347,26 @@ class TagDirReportMixin():
 
     def parse_tag_info_chrs(self, f, convChr=True):
         """ Parse HOMER tagdirectory taginfo.txt file to extract chromosome coverage. """
-        parsed_data_total = dict()
-        parsed_data_uniq = dict()
+        parsed_data_total = OrderedDict()
+        parsed_data_uniq = OrderedDict()
         remove = ["hap", "random", "chrUn", "cmd", "EBV", "GL", "NT_"]
-        ## skip first 11 lines
-        counter = 0
         for l in f['f']:
-            ## skip first 11 lines
-            if counter < 11:
-                counter = counter + 1
-                continue
             s = l.split("\t")
-
             key = s[0].strip()
-
-            if len(s) > 1:
-                if convChr:
-                    if any(x in key for x in remove):
-                        continue
-
+            # skip header
+            if '=' in l or len(s) != 3:
+                continue
+            if convChr:
+                if any(x in key for x in remove):
+                    continue
+            try:
                 vT = float(s[1].strip())
                 vU = float(s[2].strip())
+            except ValueError:
+                continue
 
-                parsed_data_total[key] = vT
-                parsed_data_uniq[key] = vU
+            parsed_data_total[key] = vT
+            parsed_data_uniq[key] = vU
 
         return [parsed_data_total, parsed_data_uniq]
 

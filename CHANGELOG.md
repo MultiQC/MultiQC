@@ -5,6 +5,9 @@
 #### Module updates:
 * **bcl2fastq**
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
+* **Homer**
+    * Made parsing of `tagInfo.txt` file more resilient to variations in file format so that it works with new versions of Homer.
+    * Kept order of chromosomes in coverage plot consistent.
 * **Peddy**
     * Switch `Sex error` logic to `Correct sex` for better highlighting ([@aledj2](https://github.com/aledj2))
 * **Picard**
