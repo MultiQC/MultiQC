@@ -209,37 +209,48 @@ peddy/ped_check:
 peddy/sex_check:
     fn: '*.sex_check.csv'
 picard/alignment_metrics:
-    contents: 'picard.analysis.AlignmentSummaryMetrics'
+    contents_re: 'picard'
+    contents: 'AlignmentSummaryMetrics'
     shared: true
 picard/basedistributionbycycle:
-    contents: 'picard.analysis.BaseDistributionByCycleMetrics'
+    contents_re: 'picard'
+    contents: 'BaseDistributionByCycleMetrics'
     shared: true
 picard/gcbias:
-    contents: 'picard.analysis.GcBias'
+    contents_re: 'picard'
+    contents: 'GcBias'
     shared: true
 picard/hsmetrics:
-    contents: 'picard.analysis.directed.HsMetrics'
+    contents_re: 'picard'
+    contents: 'HsMetrics'
     shared: true
 picard/insertsize:
-    contents: 'picard.analysis.InsertSizeMetrics'
+    contents_re: 'picard'
+    contents: 'InsertSizeMetrics'
     shared: true
 picard/markdups:
-    contents: 'picard.sam.DuplicationMetrics'
+    contents_re: 'picard'
+    contents: 'DuplicationMetrics'
     shared: true
 picard/oxogmetrics:
-    contents: 'picard.analysis.CollectOxoGMetrics'
+    contents_re: 'picard'
+    contents: 'CollectOxoGMetrics'
     shared: true
 picard/pcr_metrics:
-    contents: 'picard.analysis.directed.TargetedPcrMetrics'
+    contents_re: 'picard'
+    contents: 'TargetedPcrMetrics'
     shared: true
 picard/rnaseqmetrics:
-    contents_re: '.*picard\.analysis\.Collect[Rr]na[Ss]eq[Mm]etrics.*'
+    contents: 'picard'
+    contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
     shared: true
 picard/rrbs_metrics:
-    contents: 'picard.analysis.RrbsSummaryMetrics'
+    contents_re: 'picard'
+    contents: 'RrbsSummaryMetrics'
     shared: true
 picard/wgs_metrics:
-    contents: 'picard.analysis.CollectWgsMetrics$WgsMetrics'
+    contents_re: 'picard'
+    contents: 'CollectWgsMetrics'
     shared: true
 preseq:
     - contents: 'EXPECTED_DISTINCT'

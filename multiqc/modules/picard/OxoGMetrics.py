@@ -42,7 +42,7 @@ def parse_reports(self):
 
 
             if s_name is not None:
-                if 'picard.analysis.CollectOxoGMetrics$CpcgMetrics' in l and '## METRICS CLASS' in l:
+                if 'CollectOxoGMetrics$CpcgMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
                     context_col = keys.index('CONTEXT')
                 elif keys:
@@ -110,4 +110,3 @@ def parse_reports(self):
 
     # Return the number of detected samples to the parent module
     return len(self.picard_OxoGMetrics_data)
-

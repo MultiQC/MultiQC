@@ -69,8 +69,7 @@ def parse_reports(self):
         commadecimal = None
         for l in f['f']:
             # New log starting
-            if 'CalculateHsMetrics' in l or \
-               'CollectHsMetrics' in l and 'INPUT' in l:
+            if 'CalculateHsMetrics' in l or 'CollectHsMetrics' in l and 'INPUT' in l:
                 s_name = None
                 keys = None
 
@@ -82,7 +81,7 @@ def parse_reports(self):
                     parsed_data[s_name] = dict()
 
             if s_name is not None:
-                if 'picard.analysis.directed.HsMetrics' in l and '## METRICS CLASS' in l:
+                if 'HsMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
                 elif keys:
                     vals = l.strip("\n").split("\t")

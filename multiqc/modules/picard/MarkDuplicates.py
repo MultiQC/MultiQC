@@ -24,7 +24,7 @@ def parse_reports(self):
         s_name = None
         for l in f['f']:
             # New log starting
-            if 'picard.sam.markduplicates' in l.lower() and 'input' in l.lower():
+            if 'markduplicates' in l.lower() and 'input' in l.lower():
                 s_name = None
 
                 # Pull sample name from input
@@ -34,7 +34,7 @@ def parse_reports(self):
                     s_name = self.clean_s_name(s_name, f['root'])
 
             if s_name is not None:
-                if 'picard.sam.DuplicationMetrics' in l and '## METRICS CLASS' in l:
+                if 'DuplicationMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_dupMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='DuplicationMetrics')
@@ -115,4 +115,3 @@ def parse_reports(self):
 
     # Return the number of detected samples to the parent module
     return len(self.picard_dupMetrics_data)
-
