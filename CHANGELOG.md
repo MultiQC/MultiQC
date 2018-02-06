@@ -16,6 +16,8 @@
     * Updated module and search patterns to recognise new output format from Picard version >= 2.16
 * **RNA-SeQC**
     * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
+* **RSeqC**
+    * Fixed a dodgy plot title (Read GC content)
 
 #### New MultiQC Features:
 * Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.

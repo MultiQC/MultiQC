@@ -52,7 +52,7 @@ def parse_reports(self):
         # Add line graph to section
         pconfig = {
             'id': 'rseqc_read_gc_plot',
-            'title': 'RSeQC: Gene Body Coverage',
+            'title': 'RSeQC: Read GC Content',
             'ylab': 'Number of Reads',
             'xlab': "GC content (%)",
             'xmin': 0,
@@ -73,6 +73,3 @@ def parse_reports(self):
 
     # Return number of samples found
     return len(self.read_gc)
-
-
-
