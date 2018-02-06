@@ -7,6 +7,8 @@
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
 * **Cutadapt**
     * Refactor parsing code to collect all length trimming plots
+* **HiCExplorer**
+    * Updated to work with v2.0 release.
 * **Homer**
     * Made parsing of `tagInfo.txt` file more resilient to variations in file format so that it works with new versions of Homer.
     * Kept order of chromosomes in coverage plot consistent.
