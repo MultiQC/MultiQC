@@ -209,47 +209,36 @@ peddy/ped_check:
 peddy/sex_check:
     fn: '*.sex_check.csv'
 picard/alignment_metrics:
-    contents_re: 'picard'
     contents: 'AlignmentSummaryMetrics'
     shared: true
 picard/basedistributionbycycle:
-    contents_re: 'picard'
     contents: 'BaseDistributionByCycleMetrics'
     shared: true
 picard/gcbias:
-    contents_re: 'picard'
     contents: 'GcBias'
     shared: true
 picard/hsmetrics:
-    contents_re: 'picard'
     contents: 'HsMetrics'
     shared: true
 picard/insertsize:
-    contents_re: 'picard'
     contents: 'InsertSizeMetrics'
     shared: true
 picard/markdups:
-    contents_re: 'picard'
     contents: 'DuplicationMetrics'
     shared: true
 picard/oxogmetrics:
-    contents_re: 'picard'
     contents: 'CollectOxoGMetrics'
     shared: true
 picard/pcr_metrics:
-    contents_re: 'picard'
     contents: 'TargetedPcrMetrics'
     shared: true
 picard/rnaseqmetrics:
-    contents: 'picard'
     contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
     shared: true
 picard/rrbs_metrics:
-    contents_re: 'picard'
     contents: 'RrbsSummaryMetrics'
     shared: true
 picard/wgs_metrics:
-    contents_re: 'picard'
     contents: 'CollectWgsMetrics'
     shared: true
 preseq:
