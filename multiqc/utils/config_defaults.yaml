@@ -157,8 +157,6 @@ fn_clean_exts:
     - '.concordance'
     - '.contamination'
     - '.BEST.results'
-    - '_summary'
-    - '.summary'
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
@@ -197,6 +195,8 @@ fn_clean_trim:
     - '.json'
     - '_mqc'
     - 'short_summary_'
+    - '_summary'
+    - '.summary'
     - '.align'
     - '.h5'
     - '_matrix'
@@ -291,7 +291,7 @@ module_order:
     - verifybamid:
         module_tag:
             - DNA
-    
+
 
     # Post-alignment processing
     - homer:
