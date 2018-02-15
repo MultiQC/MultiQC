@@ -26,6 +26,9 @@
 #### New MultiQC Features:
 * Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
 
+#### Bug Fixes
+* Fixed edge-case bug where certain combinations of `output_fn_name` and `data_dir_name` could trigger a crash
+
 
 ## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11
 
