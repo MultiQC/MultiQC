@@ -368,7 +368,7 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
     elif modules_from_tags:
         run_modules = [ m for m in run_modules if list(m.keys())[0] in modules_from_tags ]
         logger.info("Only using modules with '{}' tag".format(', '.join(module_tag)))
-    elif exclude:
+    if exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
             config.skip_generalstats = True

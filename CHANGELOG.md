@@ -27,6 +27,7 @@
 * Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
 
 #### Bug Fixes
+* Excluding modules now works in combination with using module tags.
 * Fixed edge-case bug where certain combinations of `output_fn_name` and `data_dir_name` could trigger a crash
 
 
