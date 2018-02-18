@@ -18,6 +18,8 @@
     * Switch `Sex error` logic to `Correct sex` for better highlighting ([@aledj2](https://github.com/aledj2))
 * **Picard**
     * Updated module and search patterns to recognise new output format from Picard version >= 2.16 and GATK output.
+* **Qualimap BamQC**
+    * Fixed bug where start of _Genome Fraction_ could have a step if target is 100% covered.
 * **RNA-SeQC**
     * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
 * **RSeqC**
