@@ -190,10 +190,13 @@ def make_table (dt):
                                 except:
                                     logger.warn("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
                 # Apply HTML in order of config keys
+                bgcol = None
                 for cfc in config.table_cond_formatting_colours:
                     for cfck in cfc: # should always be one, but you never know
                         if cmatches[cfck]:
-                            valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(cfc[cfck], valstring)
+                            bgcol = cfc[cfck]
+                if bgcol is not None:
+                    valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(bgcol, valstring)
 
                 # Build HTML
                 if not header['scale']:
