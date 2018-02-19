@@ -23,7 +23,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(file)
 
-        print self.mod_data
         if len(self.mod_data) == 0:
             raise UserWarning
         self.colors = ["#1f77b4",
