@@ -18,11 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.mod_data = dict()
         for file in self.find_log_files('hicexplorer'):
             s_name = file['root'] + "_" + file['s_name']
+            print("s_name: {}".format(s_name))
             self.mod_data[s_name] = self.parse_logs(file['f'])
-            self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + self.mod_data[s_name]['File'][0], file['root'])
+            print("foo: {}".format(self.clean_s_name(file['root'] + "_" + self.mod_data[s_name]['File'][0], file['root'])))
+            self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + s_name + "_" + self.mod_data[s_name]['File'][0], file['root'])
 
             self.add_data_source(file)
 
+        print self.mod_data
         if len(self.mod_data) == 0:
             raise UserWarning
         self.colors = ["#1f77b4",
