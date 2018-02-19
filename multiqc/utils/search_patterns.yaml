@@ -82,6 +82,24 @@ biobloomtools:
     num_lines: 2
 bismark/align:
     fn: '*_[SP]E_report.txt'
+biscuit/mapq:
+    fn: '*_mapq_table'
+biscuit/markdup:
+    fn: '*_markdup_report.txt'
+biscuit/coverage:
+    - fn: '*_cpg_dist_table'
+    - fn: '*_bga_table'
+    - fn: '*_bga_q40_table'
+    - fn: '*_cpg_table'
+    - fn: '*_cpg_q40_table'
+    - fn: '*_cv_table'
+    - fn: '*_cpg_cv_table'
+    - fn: '*_dup_report.txt'
+biscuit/retention:
+    - fn: '*_totalBaseConversionRate.tsv'
+    - fn: '*_totalReadConversionRate.tsv'
+    - fn: '*_CpHRetentionByReadPos.tsv'
+    - fn: '*_freqOfTotalRetentionPerRead.tsv'
 bismark/dedup:
     fn: '*.deduplication_report.txt'
 bismark/meth_extract:
