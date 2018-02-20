@@ -10,7 +10,7 @@ matrix:
 # commands to install dependencies
 install:
   - python setup.py install
-  - git clone https://github.com/ewels/MultiQC_TestData.git test_data
+  - git clone https://github.com/zwdzwd/MultiQC_TestData.git test_data
   - cd test_data
   - mkdir empty_dir
 # commands to run tests
