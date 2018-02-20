@@ -192,7 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs_coverage(self, f, fn):
 
         data = {}
-        if fn.endswith('_cpg_dist_table'):
+        if fn.endswith('_cpg_dist_table.txt'):
             
             for ctg in ['TotalCpGs', 'ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
                 m = re.search(r'%s\t(\d+)\t(\d+)\t(\d+)' % ctg, f, re.MULTILINE)
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
             m = re.search(r'ten CpGs\t(\d+)', f, re.MULTILINE)
             data['cgi_coverage']['ten'] = float(m.group(1))/num_cgi*100
 
-        elif fn.endswith('_cpg_cv_table'):
+        elif fn.endswith('_cpg_cv_table.txt'):
 
             m = re.search(r'_cpg\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)', f, re.MULTILINE)
             data['cpg'] = {'mu': float(m.group(1)),
@@ -230,7 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
                                  'sigma': float(m.group(2)),
                                  'cv': float(m.group(3))}
             
-        elif fn.endswith('_all_cv_table'):
+        elif fn.endswith('_all_cv_table.txt'):
 
             m = re.search(r'_all\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)', f, re.MULTILINE)
             data['all'] = {'mu': float(m.group(1)),
@@ -292,7 +292,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # base coverage
         basecov = OrderedDict()
-        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_bga_table')])
+        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_bga_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage',
@@ -306,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
                     basecov[ss[:-10]] = {}
                 basecov[ss[:-10]]['all'] = dd[1]/dd[0]*100
 
-        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_bga_q40_table')])
+        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_bga_q40_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40',
@@ -333,7 +333,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # cpg coverage
         cpgcov = OrderedDict()
-        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_table')])
+        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage',
@@ -347,7 +347,7 @@ class MultiqcModule(BaseMultiqcModule):
                     cpgcov[ss[:-10]] = {}
                 cpgcov[ss[:-10]]['all'] = dd[1]/dd[0]*100            
 
-        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_q40_table')])
+        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_q40_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage Q40',
@@ -373,7 +373,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # cpg distribution
-        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_dist_table')])
+        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_dist_table.txt')])
         if len(mdata)>0:
             hdr = OrderedDict()
             pd = OrderedDict()
@@ -418,7 +418,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
         
         # base uniformity
-        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_all_cv_table')])
+        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_all_cv_table.txt')])
         if len(mdata)>0:
             pd = OrderedDict()
             for ss, dd in mdata.iteritems():
@@ -475,7 +475,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # cpg uniformity
-        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_cv_table')])
+        mdata = dict([(k,v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_cv_table.txt')])
         if len(mdata)>0:
             pd = OrderedDict()
             for ss, dd in mdata.iteritems():
@@ -551,14 +551,14 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs_retention(self, f, fn):
 
         data = {}
-        if fn.endswith('_totalBaseConversionRate.tsv') or fn.endswith('_totalReadConversionRate.tsv'):
+        if fn.endswith('_totalBaseConversionRate.txt') or fn.endswith('_totalReadConversionRate.txt'):
             m = re.match(r'([\d.]+)\t([\d.]+)\t([\d.]+)\t([\d.]+)', f.splitlines()[1])
             data['ca'] = float(m.group(1))*100
             data['cc'] = float(m.group(2))*100
             data['cg'] = float(m.group(3))*100
             data['ct'] = float(m.group(4))*100
 
-        elif fn.endswith('_freqOfTotalRetentionPerRead.tsv'):
+        elif fn.endswith('_freqOfTotalRetentionPerRead.txt'):
 
             data = OrderedDict([('CA',{}),('CC',{}),('CG',{}),('CT',{})])
             for i,l in enumerate(f.splitlines()):
@@ -575,7 +575,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if (k > 10):
                         data[ctxt].pop(k, None)
 
-        elif fn.endswith('_CpHRetentionByReadPos.tsv'):
+        elif fn.endswith('_CpHRetentionByReadPos.txt'):
             r1 = {'C':{}, 'R':{}}
             r2 = {'C':{}, 'R':{}}
             for l in f.splitlines():
@@ -601,7 +601,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def chart_biscuit_retention(self):
 
-        mdata = dict([(k,v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_totalReadConversionRate.tsv')])
+        mdata = dict([(k,v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_totalReadConversionRate.txt')])
         if len(mdata) > 0:
             pd = dict([(ss[:-28],dd) for ss, dd in mdata.iteritems()])
             self.add_section(
@@ -616,7 +616,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ]))
             )
 
-        mdata = dict([(k,v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_totalBaseConversionRate.tsv')])
+        mdata = dict([(k,v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_totalBaseConversionRate.txt')])
         if len(mdata) > 0:
             pd = dict([(ss[:-28],dd) for ss, dd in mdata.iteritems()])
             self.add_section(
@@ -631,7 +631,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ]))
             )
 
-        mdata = dict([(k,v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_freqOfTotalRetentionPerRead.tsv')])
+        mdata = dict([(k,v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_freqOfTotalRetentionPerRead.txt')])
         if len(mdata) > 0:
             pd = dict([(ss[:-32], dd['CA']) for ss, dd in mdata.iteritems()])
             self.add_section(
@@ -665,7 +665,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
-        mdata = dict([(k,v['1']) for k, v in self.mdata['retention'].iteritems() if k.endswith('_CpHRetentionByReadPos.tsv')])
+        mdata = dict([(k,v['1']) for k, v in self.mdata['retention'].iteritems() if k.endswith('_CpHRetentionByReadPos.txt')])
         if len(mdata) > 0 and all([len(v)>0 for v in mdata.itervalues()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 1',
@@ -674,7 +674,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(mdata, {'ylab': 'CpH Retention Rate', 'xlab': 'Position in Read'})
             )
 
-        mdata = dict([(k,v['2']) for k, v in self.mdata['retention'].iteritems() if k.endswith('_CpHRetentionByReadPos.tsv')])
+        mdata = dict([(k,v['2']) for k, v in self.mdata['retention'].iteritems() if k.endswith('_CpHRetentionByReadPos.txt')])
         if len(mdata) > 0 and all([len(v)>0 for v in mdata.itervalues()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 2',
