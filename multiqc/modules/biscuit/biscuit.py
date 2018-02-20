@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
     def biscuit_stats_table(self):
 
         pd = {}
-        for sid, dd in self.mdata['mapq'].iteritems():
+        for sid, dd in self.mdata['mapq'].items():
             if not sid.endswith('_mapq_table.txt'):
                 continue
             sid = sid.replace('_mapq_table.txt','')
@@ -104,12 +104,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # fraction of optimally mapped reads
         pd = {}
-        for sid, dd in self.mdata['mapq'].iteritems():
+        for sid, dd in self.mdata['mapq'].items():
             if not sid.endswith('_mapq_table.txt'):
                 continue
             sid = sid.replace('_mapq_table.txt','');
             pd[sid] = {'OAligned':0, 'SAligned':0, 'UAligned':1}
-            for mapq, cnt in dd.iteritems():
+            for mapq, cnt in dd.items():
                 if mapq == 'unmapped':
                     pd[sid]['UAligned'] += int(cnt)
                 elif int(mapq) >= 40:
@@ -129,14 +129,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # mapping quality distribution
         total = {}
-        for sid, dd in self.mdata['mapq'].iteritems():
+        for sid, dd in self.mdata['mapq'].items():
             if not sid.endswith('_mapq_table.txt'):
                 continue
             sid = sid.replace('_mapq_table.txt','')
             total[sid] = sum([int(cnt) for _, cnt in dd.items() if _ != "unmapped"])
 
         pd = {}
-        for sid, dd in self.mdata['mapq'].iteritems():
+        for sid, dd in self.mdata['mapq'].items():
             if not sid.endswith('_mapq_table.txt'):
                 continue
             sid = sid.replace('_mapq_table.txt','')
@@ -156,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # mapping strand distribution
-        pd = dict([(k.replace('_strand_table.txt', ''),v) for k,v in self.mdata['mapq'].iteritems() if k.endswith('_strand_table.txt')])
+        pd = dict([(k.replace('_strand_table.txt', ''),v) for k,v in self.mdata['mapq'].items() if k.endswith('_strand_table.txt')])
 
         self.add_section(
             name='Mapping Strand Distribution',
@@ -205,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def chart_biscuit_markdup(self):
 
-        mdata = dict([(sid.replace('_markdup_report.txt',''), {'Duplication Rate':dd['dupRatePE']}) for sid, dd in self.mdata['markdup'].iteritems()])
+        mdata = dict([(sid.replace('_markdup_report.txt',''), {'Duplication Rate':dd['dupRatePE']}) for sid, dd in self.mdata['markdup'].items()])
         if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.itervalues()]):
             self.add_section(
                 name = 'Read Duplication Rate PE',
@@ -214,7 +214,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = table.plot(mdata, {'Duplication Rate':{'suffix':'%','min':0,'max':100}})
             )
 
-        mdata = dict([(sid.replace('_markdup_report.txt',''), {'Duplication Rate':dd['dupRateSE']}) for sid, dd in self.mdata['markdup'].iteritems()])
+        mdata = dict([(sid.replace('_markdup_report.txt',''), {'Duplication Rate':dd['dupRateSE']}) for sid, dd in self.mdata['markdup'].items()])
         if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.itervalues()]):
             self.add_section(
                 name = 'Read Duplication Rate SE',
@@ -344,7 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # base coverage
         basecov = OrderedDict()
-        mdata = dict([(k.replace('_covdist_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_table.txt')])
+        mdata = dict([(k.replace('_covdist_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage',
@@ -353,13 +353,13 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )
             
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 if sid not in basecov:
                     basecov[sid] = {}
                 basecov[sid]['all'] = dd[1]/dd[0]*100
 
         # base coverage uniq
-        mdata = dict([(k.replace('_covdist_q40_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_q40_table.txt')])
+        mdata = dict([(k.replace('_covdist_q40_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40',
@@ -368,7 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )
 
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 if sid not in basecov:
                     basecov[sid] = {}
                 basecov[sid]['uniq'] = dd[1]/dd[0]*100
@@ -386,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # base coverage low GC content
-        mdata = dict([(k.replace('_covdist_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_q40_botgc_table.txt')])
+        mdata = dict([(k.replace('_covdist_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_botgc_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40, low GC content',
@@ -396,7 +396,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # base coverage high GC content
-        mdata = dict([(k.replace('_covdist_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_q40_topgc_table.txt')])
+        mdata = dict([(k.replace('_covdist_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_topgc_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40, high GC content',
@@ -407,7 +407,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         # cpg coverage
         cpgcov = OrderedDict()
-        mdata = dict([(k.replace('_covdist_cpg_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_cpg_table.txt')])
+        mdata = dict([(k.replace('_covdist_cpg_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage',
@@ -416,13 +416,13 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(mdata, {'ylab':'Million CpGs'})
             )
 
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 if sid not in cpgcov:
                     cpgcov[sid] = {}
                 cpgcov[sid]['all'] = dd[1]/dd[0]*100            
 
         # cpg coverage uniq
-        mdata = dict([(k.replace('_covdist_cpg_q40_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_cpg_q40_table.txt')])
+        mdata = dict([(k.replace('_covdist_cpg_q40_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage Q40',
@@ -431,7 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(mdata, {'ylab':'Million CpGs'})
             )
 
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 if sid not in cpgcov:
                     cpgcov[sid] = {}
                 cpgcov[sid]['uniq'] = dd[1]/dd[0]*100
@@ -449,7 +449,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # cpg coverage low GC content
-        mdata = dict([(k.replace('_covdist_cpg_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_cpg_q40_botgc_table.txt')])
+        mdata = dict([(k.replace('_covdist_cpg_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_botgc_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage Q40, Low GC Content Region',
@@ -459,7 +459,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # cpg coverage high GC content
-        mdata = dict([(k.replace('_covdist_cpg_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_covdist_cpg_q40_topgc_table.txt')])
+        mdata = dict([(k.replace('_covdist_cpg_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_topgc_table.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40, High GC Content Region',
@@ -469,7 +469,7 @@ class MultiqcModule(BaseMultiqcModule):
             )        
 
         # cpg distribution
-        mdata = dict([(k.replace('_cpg_dist_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_dist_table.txt')])
+        mdata = dict([(k.replace('_cpg_dist_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_cpg_dist_table.txt')])
         if len(mdata)>0:
             hdr = OrderedDict()
             pd = OrderedDict()
@@ -485,7 +485,7 @@ class MultiqcModule(BaseMultiqcModule):
             hdr['Repeat']['description'] = 'Repeat-Masked CpGs'
             hdr['Genic']['description']  = 'Genic CpGs'
             hdr['CGI']['description']    = 'CpG Island CpGs'
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 pd[sid] = OrderedDict()
                 for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
                     ctg1 = ctg.replace('CpGs','')
@@ -498,7 +498,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = table.plot(pd, hdr)
             )
 
-            pd = dict([(sid, dd['cgi_coverage']) for sid, dd in mdata.iteritems()])
+            pd = dict([(sid, dd['cgi_coverage']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpG Island Coverage',
                 anchor = 'biscuit-coverage',
@@ -516,10 +516,10 @@ class MultiqcModule(BaseMultiqcModule):
             )
         
         # base uniformity
-        mdata = dict([(k.replace('_all_cv_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_all_cv_table.txt')])
+        mdata = dict([(k.replace('_all_cv_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_all_cv_table.txt')])
         if len(mdata)>0:
             pd = OrderedDict()
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 pd[sid] = OrderedDict()
                 for ctg in ['all','all_topgc','all_botgc']:
                     if ctg in dd:
@@ -536,7 +536,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
             pd = OrderedDict()
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 pd[sid] = OrderedDict()
                 for ctg in ['all','all_topgc','all_botgc']:
                     if ctg in dd:
@@ -553,7 +553,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
             pd = OrderedDict()
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 pd[sid] = OrderedDict()
                 for ctg in ['all','all_topgc','all_botgc']:
                     if ctg in dd:
@@ -570,10 +570,10 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # cpg uniformity
-        mdata = dict([(k.replace('_cpg_cv_table.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_cpg_cv_table.txt')])
+        mdata = dict([(k.replace('_cpg_cv_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_cpg_cv_table.txt')])
         if len(mdata)>0:
             pd = OrderedDict()
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 pd[sid] = OrderedDict()
                 for ctg in ['cpg','cpg_topgc','cpg_botgc']:
                     if ctg in dd:
@@ -590,7 +590,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
             pd = OrderedDict()
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 pd[sid] = OrderedDict()
                 for ctg in ['cpg','cpg_topgc','cpg_botgc']:
                     if ctg in dd:
@@ -607,7 +607,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
             pd = OrderedDict()
-            for sid, dd in mdata.iteritems():
+            for sid, dd in mdata.items():
                 pd[sid] = OrderedDict()
                 for ctg in ['cpg','cpg_topgc','cpg_botgc']:
                     if ctg in dd:
@@ -624,7 +624,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # duplication uniformity
-        mdata = dict([(k.replace('_dup_report.txt',''),v) for k, v in self.mdata['coverage'].iteritems() if k.endswith('_dup_report.txt')])
+        mdata = dict([(k.replace('_dup_report.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_dup_report.txt')])
         if len(mdata)>0:
             self.add_section(
                 name = 'Base Coverage by Read Duplication',
@@ -688,9 +688,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def chart_biscuit_retention(self):
 
-        mdata = dict([(k.replace('_totalReadConversionRate.txt',''),v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_totalReadConversionRate.txt')])
+        mdata = dict([(k.replace('_totalReadConversionRate.txt',''),v) for k, v in self.mdata['retention'].items() if k.endswith('_totalReadConversionRate.txt')])
         if len(mdata) > 0:
-            pd = dict([(sid,dd) for sid, dd in mdata.iteritems()])
+            pd = dict([(sid,dd) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'Cytosine Retention',
                 anchor = 'biscuit-retention',
@@ -703,9 +703,9 @@ class MultiqcModule(BaseMultiqcModule):
                 ]))
             )
 
-        mdata = dict([(k.replace('_totalBaseConversionRate.txt',''),v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_totalBaseConversionRate.txt')])
+        mdata = dict([(k.replace('_totalBaseConversionRate.txt',''),v) for k, v in self.mdata['retention'].items() if k.endswith('_totalBaseConversionRate.txt')])
         if len(mdata) > 0:
-            pd = dict([(sid,dd) for sid, dd in mdata.iteritems()])
+            pd = dict([(sid,dd) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'Base Averaged Cytosine Retention',
                 anchor = 'biscuit-retention',
@@ -718,9 +718,9 @@ class MultiqcModule(BaseMultiqcModule):
                 ]))
             )
 
-        mdata = dict([(k.replace('_freqOfTotalRetentionPerRead.txt',''),v) for k, v in self.mdata['retention'].iteritems() if k.endswith('_freqOfTotalRetentionPerRead.txt')])
+        mdata = dict([(k.replace('_freqOfTotalRetentionPerRead.txt',''),v) for k, v in self.mdata['retention'].items() if k.endswith('_freqOfTotalRetentionPerRead.txt')])
         if len(mdata) > 0:
-            pd = dict([(sid, dd['CA']) for sid, dd in mdata.iteritems()])
+            pd = dict([(sid, dd['CA']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpA Retention in Each Read',
                 anchor = 'biscuit-retention',
@@ -728,7 +728,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
-            pd = dict([(sid, dd['CC']) for sid, dd in mdata.iteritems()])
+            pd = dict([(sid, dd['CC']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpC Retention in Each Read',
                 anchor = 'biscuit-retention',
@@ -736,7 +736,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
-            pd = dict([(sid, dd['CG']) for sid, dd in mdata.iteritems()])
+            pd = dict([(sid, dd['CG']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpG Retention in Each Read',
                 anchor = 'biscuit-retention',
@@ -744,7 +744,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
-            pd = dict([(sid, dd['CT']) for sid, dd in mdata.iteritems()])
+            pd = dict([(sid, dd['CT']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpT Retention in Each Read',
                 anchor = 'biscuit-retention',
@@ -752,7 +752,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
-        mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].iteritems() if k.endswith('_CpHRetentionByReadPos.txt')])
+        mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
         if len(mdata) > 0 and all([len(v)>0 for v in mdata.itervalues()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 1',
@@ -761,7 +761,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(mdata, {'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
             )
 
-        mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].iteritems() if k.endswith('_CpHRetentionByReadPos.txt')])
+        mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
         if len(mdata) > 0 and all([len(v)>0 for v in mdata.itervalues()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 2',
