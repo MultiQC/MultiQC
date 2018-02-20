@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
             if not sid.endswith('_mapq_table.txt'):
                 continue
             sid = sid.replace('_mapq_table.txt','')
-            allreads = sum([int(_) for _ in dd.itervalues()])
+            allreads = sum([int(_) for _ in dd.values()])
             pd[sid] = {'%aligned':float(allreads-int(dd['unmapped']))/allreads*100}
         self.general_stats_addcols(pd, {'%aligned':{'title':'% Aligned', 'max':100, 'min':0, 'suffix':'%','scale':'Greens'}})
 
@@ -206,7 +206,7 @@ class MultiqcModule(BaseMultiqcModule):
     def chart_biscuit_markdup(self):
 
         mdata = dict([(sid.replace('_markdup_report.txt',''), {'Duplication Rate':dd['dupRatePE']}) for sid, dd in self.mdata['markdup'].items()])
-        if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.itervalues()]):
+        if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.values()]):
             self.add_section(
                 name = 'Read Duplication Rate PE',
                 anchor = 'biscuit-markdup',
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         mdata = dict([(sid.replace('_markdup_report.txt',''), {'Duplication Rate':dd['dupRateSE']}) for sid, dd in self.mdata['markdup'].items()])
-        if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.itervalues()]):
+        if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.values()]):
             self.add_section(
                 name = 'Read Duplication Rate SE',
                 anchor = 'biscuit-markdup',
@@ -753,7 +753,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
-        if len(mdata) > 0 and all([len(v)>0 for v in mdata.itervalues()]):
+        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 1',
                 anchor = 'biscuit-retention',
@@ -762,7 +762,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
-        if len(mdata) > 0 and all([len(v)>0 for v in mdata.itervalues()]):
+        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 2',
                 anchor = 'biscuit-retention',
