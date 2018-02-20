@@ -211,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Read Duplication Rate PE',
                 anchor = 'biscuit-markdup-PE',
                 description = "<p>This plot shows paired-end (PE) read duplication rate.</p>",
-                plot = table.plot(mdata, {'Duplication Rate':{'suffix':'%','min':0,'max':100}})
+                plot = table.plot(mdata, {'Duplication Rate':{'id':'dup-pe','suffix':'%','min':0,'max':100}})
             )
 
         mdata = dict([(sid.replace('_markdup_report.txt',''), {'Duplication Rate':dd['dupRateSE']}) for sid, dd in self.mdata['markdup'].items()])
@@ -220,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Read Duplication Rate SE',
                 anchor = 'biscuit-markdup-SE',
                 description = "<p>This plot shows single-end (SE) read duplication rate.</p>",
-                plot = table.plot(mdata, {'Duplication Rate':{'suffix':'%','min':0,'max':100}})
+                plot = table.plot(mdata, {'Duplication Rate':{'id':'dup-se','suffix':'%','min':0,'max':100}})
             )
 
     def parse_logs_coverage(self, f, fn):
@@ -350,7 +350,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage',
                 anchor = 'biscuit-coverage-base',
                 description = "<p>This plot shows the cummulative base coverage.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'cov-all','ylab':'Million Bases'})
             )
             
             for sid, dd in mdata.items():
@@ -365,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40',
                 anchor = 'biscuit-coverage-base-q40',
                 description = "<p>This plot shows the cummulative base coverage, mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'cov-q40','ylab':'Million Bases'})
             )
 
             for sid, dd in mdata.items():
@@ -380,8 +380,8 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-base-table',
                 description = '<p>The fraction of genome covered by at least one read.</p>',
                 plot = table.plot(basecov, {
-                    'all':{'title':'All Reads','max':100,'min':0,'suffix':'%'},
-                    'uniq':{'title':'Uniquely Mapped Reads','max':100,'min':0,'suffix':'%'},
+                    'all':{'id':'cov-table-all','title':'All Reads','max':100,'min':0,'suffix':'%'},
+                    'uniq':{'id':'cov-table-uniq','title':'Uniquely Mapped Reads','max':100,'min':0,'suffix':'%'},
                 })
             )
 
@@ -392,7 +392,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, low GC content',
                 anchor = 'biscuit-coverage-base-lowGC',
                 description = "<p>This plot shows the cummulative base coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'cov-botgc','ylab':'Million Bases'})
             )
 
         # base coverage high GC content
@@ -402,7 +402,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, high GC content',
                 anchor = 'biscuit-coverage-base-highGC',
                 description = "<p>This plot shows the cummulative base coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'cov-topgc','ylab':'Million Bases'})
             )
         
         # cpg coverage
@@ -413,7 +413,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative CpG Coverage',
                 anchor = 'biscuit-coverage-cpg',
                 description = "<p>This plot shows the cummulative CpG coverage.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million CpGs'})
+                plot = linegraph.plot(mdata, {'id':'cov-cpg','ylab':'Million CpGs'})
             )
 
             for sid, dd in mdata.items():
@@ -428,7 +428,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative CpG Coverage Q40',
                 anchor = 'biscuit-coverage-cpg-q40',
                 description = "<p>This plot shows the cummulative CpG coverage, mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million CpGs'})
+                plot = linegraph.plot(mdata, {'id':'cov-cpg-q40','ylab':'Million CpGs'})
             )
 
             for sid, dd in mdata.items():
@@ -443,8 +443,8 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-cpg-table',
                 description = '<p>The fraction of CpGs covered by at least one read.</p>',
                 plot = table.plot(cpgcov, {
-                    'all':{'title':'All Reads','max':100,'min':0,'suffix':'%'},
-                    'uniq':{'title':'Uniquely Mapped Reads','max':100,'min':0,'suffix':'%'},
+                    'all':{'id':'cpg-cov-table-all','title':'All Reads','max':100,'min':0,'suffix':'%'},
+                    'uniq':{'id':'cpg-cov-table-uniq','title':'Uniquely Mapped Reads','max':100,'min':0,'suffix':'%'},
                 })
             )
 
@@ -455,7 +455,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative CpG Coverage Q40, Low GC Content Region',
                 anchor = 'biscuit-coverage-cpg-lowGC',
                 description = "<p>This plot shows the cummulative CpG coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'cov-cpg-lowgc','ylab':'Million Bases'})
             )
 
         # cpg coverage high GC content
@@ -465,7 +465,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, High GC Content Region',
                 anchor = 'biscuit-coverage-cpg-highGC',
                 description = "<p>This plot shows the cummulative CpG coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'cov-cpg-topgc','ylab':'Million Bases'})
             )        
 
         # cpg distribution
@@ -504,13 +504,13 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-cgi',
                 description = "<p>Each row shows the percentage of CpG islands (out of all CpG islands in the genome) that are covered in different numbers of CpGs. Coverage is based on reads with mapQ >= 40.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('one', {'title':'>=1', 'suffix':'%',
+                    ('one', {'id':'cgi-cov1','title':'>=1', 'suffix':'%',
                              'description':'CpG islands with at least one CpG covered'}),
-                    ('three', {'title':'>=2', 'suffix':'%',
+                    ('three', {'id':'cgi-cov3','title':'>=2', 'suffix':'%',
                                'description':'CpG islands with at least three CpGs covered'}),
-                    ('five', {'title':'>=5', 'suffix':'%',
+                    ('five', {'id':'cgi-cov5','title':'>=5', 'suffix':'%',
                               'description':'CpG islands with at least five CpGs covered'}),
-                    ('ten', {'title':'>=10', 'suffix':'%',
+                    ('ten', {'id':'cgi-cov10','title':'>=10', 'suffix':'%',
                              'description':'CpG islands with at least ten CpGs covered'}),
                 ]))
             )
@@ -529,9 +529,9 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-unif',
                 description = "<p>This plot shows sequence depth uniformity measured in Coefficient of Variation (mu/sigma), mapQ>40 only. GC contents were measured on 100bp non-overlapping windows.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('all', {'title':'Genome','description':'Whole Genome Average'}),
-                    ('all_topgc', {'title':'Highest GC','description':'Top Decile in GC Content'}),
-                    ('all_botgc', {'title':'Lowest GC','description':'Bottom Decile in GC Content'})
+                    ('all', {'id':'depth-unif','title':'Genome','description':'Whole Genome Average'}),
+                    ('all_topgc', {'id':'depth-unif-topgc','title':'Highest GC','description':'Top Decile in GC Content'}),
+                    ('all_botgc', {'id':'depth-unif-botgc','title':'Lowest GC','description':'Bottom Decile in GC Content'})
                 ]))
             )
 
@@ -546,9 +546,9 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-depth-mean',
                 description = "<p>This plot shows sequence depth mean, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('all', {'title':'Genome','description':'Whole Genome Average'}),
-                    ('all_topgc', {'title':'Highest GC','description':'Top Decile in GC Content'}),
-                    ('all_botgc', {'title':'Lowest GC','description':'Bottom Decile in GC Content'})
+                    ('all', {'id':'depth-mean','title':'Genome','description':'Whole Genome Average'}),
+                    ('all_topgc', {'id':'depth-mean-topgc','title':'Highest GC','description':'Top Decile in GC Content'}),
+                    ('all_botgc', {'id':'depth-mean-botgc','title':'Lowest GC','description':'Bottom Decile in GC Content'})
                 ]))
             )
 
@@ -563,9 +563,9 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-depth-sigma',
                 description = "<p>This plot shows sequence depth SD, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('all', {'title':'Genome','description':'Whole Genome Average'}),
-                    ('all_topgc', {'title':'Highest GC','description':'Top Decile in GC Content'}),
-                    ('all_botgc', {'title':'Lowest GC','description':'Bottom Decile in GC Content'})
+                    ('all', {'id':'depth-sigma','title':'Genome','description':'Whole Genome Average'}),
+                    ('all_topgc', {'id':'depth-sigma-topgc','title':'Highest GC','description':'Top Decile in GC Content'}),
+                    ('all_botgc', {'id':'depth-sigma-botgc','title':'Lowest GC','description':'Bottom Decile in GC Content'})
                 ]))
             )
 
@@ -583,9 +583,9 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-cpg-depth-unif',
                 description = "<p>This plot shows CpG sequence depth uniformity measured in Coefficient of Variation (mu/sigma), mapQ>40 only. GC contents were measured on 100bp non-overlapping windows.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('cpg', {'title':'All CpGs','description':'All CpG Average'}),
-                    ('cpg_topgc', {'title':'Highest GC','description':'Top Decile in GC Content'}),
-                    ('cpg_botgc', {'title':'Lowest GC','description':'Bottom Decile in GC Content'})
+                    ('cpg', {'id':'cpg-depth-unif','title':'All CpGs','description':'All CpG Average'}),
+                    ('cpg_topgc', {'id':'cpg-depth-unif-topgc','title':'Highest GC','description':'Top Decile in GC Content'}),
+                    ('cpg_botgc', {'id':'cpg-depth-unif-botgc','title':'Lowest GC','description':'Bottom Decile in GC Content'})
                 ]))
             )
 
@@ -600,9 +600,9 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-cpg-depth-mean',
                 description = "<p>This plot shows CpG sequence depth mean, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('cpg', {'title':'All CpGs','description':'All CpG Average'}),
-                    ('cpg_topgc', {'title':'Highest GC','description':'Top Decile in GC Content'}),
-                    ('cpg_botgc', {'title':'Lowest GC','description':'Bottom Decile in GC Content'})
+                    ('cpg', {'id':'cpg-depth-mean','title':'All CpGs','description':'All CpG Average'}),
+                    ('cpg_topgc', {'id':'cpg-depth-mean-topgc','title':'Highest GC','description':'Top Decile in GC Content'}),
+                    ('cpg_botgc', {'id':'cpg-depth-mean-botgc','title':'Lowest GC','description':'Bottom Decile in GC Content'})
                 ]))
             )
 
@@ -617,9 +617,9 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-cpg-depth-sigma',
                 description = "<p>This plot shows CpG sequence depth SD, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('cpg', {'title':'All CpGs','description':'All CpG Average'}),
-                    ('cpg_topgc', {'title':'Highest GC','description':'Top Decile in GC Content'}),
-                    ('cpg_botgc', {'title':'Lowest GC','description':'Bottom Decile in GC Content'})
+                    ('cpg', {'id':'cpg-depth-sigma','title':'All CpGs','description':'All CpG Average'}),
+                    ('cpg_topgc', {'id':'cpg-depth-sigma-topgc','title':'Highest GC','description':'Top Decile in GC Content'}),
+                    ('cpg_botgc', {'id':'cpg-depth-sigma-botgc','title':'Lowest GC','description':'Bottom Decile in GC Content'})
                 ]))
             )
 
@@ -631,12 +631,12 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-coverage-dup',
                 description = "<p>This table shows base coverage by duplicate reads as a percentage of coverage by all reads.</p>",
                 plot = table.plot(mdata, OrderedDict([
-                    ('all', {'title':'Genome', 'suffix':'%', 'description':'Fraction of coverage by duplicate reads'}),
-                    ('topGC', {'title':'HighGC', 'suffix':'%', 'description':'Fraction of coverage in top decile in GC content by duplicate reads'}),
-                    ('botGC', {'title':'LowGC', 'suffix':'%', 'description':'Fraction of coverage in bottom decile in GC content by duplicate reads'}),
-                    ('all-q40', {'title':'Genome-uniq', 'suffix':'%', 'description':'Fraction of coverage by duplicate reads with mapq>=40'}),
-                    ('topGC-q40', {'title':'HighGC-uniq', 'suffix':'%', 'description':'Fraction of coverage in top decile in GC content by duplicate reads with mapq>=40'}),
-                    ('botGC-q40', {'title':'LowGC-uniq', 'suffix':'%', 'description':'Fraction of coverage in bottom decile in GC content by duplicate reads with mapq>=40'}),
+                    ('all', {'id':'cov-dup-all', 'title':'Genome', 'suffix':'%', 'description':'Fraction of coverage by duplicate reads'}),
+                    ('topGC', {'id':'cov-dup-topgc', 'title':'HighGC', 'suffix':'%', 'description':'Fraction of coverage in top decile in GC content by duplicate reads'}),
+                    ('botGC', {'id':'cov-dup-botgc', 'title':'LowGC', 'suffix':'%', 'description':'Fraction of coverage in bottom decile in GC content by duplicate reads'}),
+                    ('all-q40', {'id':'cov-all-q40', 'title':'Genome-uniq', 'suffix':'%', 'description':'Fraction of coverage by duplicate reads with mapq>=40'}),
+                    ('topGC-q40', {'id':'cov-dup-topgc-q40', 'title':'HighGC-uniq', 'suffix':'%', 'description':'Fraction of coverage in top decile in GC content by duplicate reads with mapq>=40'}),
+                    ('botGC-q40', {'id':'cov-dup-botgc-q40', 'title':'LowGC-uniq', 'suffix':'%', 'description':'Fraction of coverage in bottom decile in GC content by duplicate reads with mapq>=40'}),
                 ]))
             )
 
@@ -696,10 +696,10 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-retention',
                 description = "<p>This plot shows cytosine retention rate by averaging retention level from each cytosine mapped in each read.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('ca', {'title':'CpA','description':'CpA dinucleotide context','suffix':'%'}),
-                    ('cc', {'title':'CpC','description':'CpC dinucleotide context','suffix':'%'}),
-                    ('cg', {'title':'CpG','description':'CpG dinucleotide context','suffix':'%'}),
-                    ('ct', {'title':'CpT','description':'CpT dinucleotide context','suffix':'%'})
+                    ('ca', {'id':'ret-cpa','title':'CpA','description':'CpA dinucleotide context','suffix':'%'}),
+                    ('cc', {'id':'ret-cpc','title':'CpC','description':'CpC dinucleotide context','suffix':'%'}),
+                    ('cg', {'id':'ret-cpg','title':'CpG','description':'CpG dinucleotide context','suffix':'%'}),
+                    ('ct', {'id':'ret-cpt','title':'CpT','description':'CpT dinucleotide context','suffix':'%'})
                 ]))
             )
 
@@ -711,10 +711,10 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-retention-average',
                 description = "<p>This plot shows cytosine retention rate by averaging retention level from all cytosine bases.</p>",
                 plot = table.plot(pd, OrderedDict([
-                    ('ca', {'title':'CpA','description':'CpA dinucleotide context','suffix':'%'}),
-                    ('cc', {'title':'CpC','description':'CpC dinucleotide context','suffix':'%'}),
-                    ('cg', {'title':'CpG','description':'CpG dinucleotide context','suffix':'%'}),
-                    ('ct', {'title':'CpT','description':'CpT dinucleotide context','suffix':'%'})
+                    ('ca', {'id':'ret-ave-cpa','title':'CpA','description':'CpA dinucleotide context','suffix':'%'}),
+                    ('cc', {'id':'ret-ave-cpc','title':'CpC','description':'CpC dinucleotide context','suffix':'%'}),
+                    ('cg', {'id':'ret-ave-cpg','title':'CpG','description':'CpG dinucleotide context','suffix':'%'}),
+                    ('ct', {'id':'ret-ave-cpt','title':'CpT','description':'CpT dinucleotide context','suffix':'%'})
                 ]))
             )
 
@@ -725,7 +725,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpA Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpa',
                 description = "<p>This plot shows the distribution of the number of retained CpA cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'CpA-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
             pd = dict([(sid, dd['CC']) for sid, dd in mdata.items()])
@@ -733,7 +733,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpC Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpc',
                 description = "<p>This plot shows the distribution of the number of retained CpC cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'CpC-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
             pd = dict([(sid, dd['CG']) for sid, dd in mdata.items()])
@@ -741,7 +741,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpG Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpg',
                 description = "<p>This plot shows the distribution of the number of retained CpG cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'CpG-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
             pd = dict([(sid, dd['CT']) for sid, dd in mdata.items()])
@@ -749,7 +749,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpT Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpt',
                 description = "<p>This plot shows the distribution of the number of retained CpT cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'CpT-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
         mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
@@ -758,7 +758,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpH Retention by Position in Read 1',
                 anchor = 'biscuit-retention-cph-read1',
                 description = "<p>This plot shows the distribution of CpH retention rate in read 1.</p>",
-                plot = linegraph.plot(mdata, {'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+                plot = linegraph.plot(mdata, {'id': 'cph-read1', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
             )
 
         mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
@@ -767,5 +767,5 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpH Retention by Position in Read 2',
                 anchor = 'biscuit-retention-cph-read2',
                 description = "<p>This plot shows the distribution of CpH retention rate in read 2.</p>",
-                plot = linegraph.plot(mdata, {'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+                plot = linegraph.plot(mdata, {'id': 'cph-read2', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
             )
