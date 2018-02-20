@@ -209,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.values()]):
             self.add_section(
                 name = 'Read Duplication Rate PE',
-                anchor = 'biscuit-markdup',
+                anchor = 'biscuit-markdup-PE',
                 description = "<p>This plot shows paired-end (PE) read duplication rate.</p>",
                 plot = table.plot(mdata, {'Duplication Rate':{'suffix':'%','min':0,'max':100}})
             )
@@ -218,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0 and all([dd['Duplication Rate'] is not None for dd in mdata.values()]):
             self.add_section(
                 name = 'Read Duplication Rate SE',
-                anchor = 'biscuit-markdup',
+                anchor = 'biscuit-markdup-SE',
                 description = "<p>This plot shows single-end (SE) read duplication rate.</p>",
                 plot = table.plot(mdata, {'Duplication Rate':{'suffix':'%','min':0,'max':100}})
             )
@@ -348,7 +348,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-base',
                 description = "<p>This plot shows the cummulative base coverage.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )
@@ -363,7 +363,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-base-q40',
                 description = "<p>This plot shows the cummulative base coverage, mapQ>40 only.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )
@@ -377,7 +377,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(basecov)>0:
             self.add_section(
                 name = 'Base Coverage',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-base-table',
                 description = '<p>The fraction of genome covered by at least one read.</p>',
                 plot = table.plot(basecov, {
                     'all':{'title':'All Reads','max':100,'min':0,'suffix':'%'},
@@ -390,7 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40, low GC content',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-base-lowGC',
                 description = "<p>This plot shows the cummulative base coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )
@@ -400,7 +400,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40, high GC content',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-base-highGC',
                 description = "<p>This plot shows the cummulative base coverage of high GC content region (top 10%), mapQ>40 only.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )
@@ -411,7 +411,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg',
                 description = "<p>This plot shows the cummulative CpG coverage.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million CpGs'})
             )
@@ -426,7 +426,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage Q40',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-q40',
                 description = "<p>This plot shows the cummulative CpG coverage, mapQ>40 only.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million CpGs'})
             )
@@ -440,7 +440,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(cpgcov)>0:
             self.add_section(
                 name = 'CpG Coverage',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-table',
                 description = '<p>The fraction of CpGs covered by at least one read.</p>',
                 plot = table.plot(cpgcov, {
                     'all':{'title':'All Reads','max':100,'min':0,'suffix':'%'},
@@ -453,7 +453,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative CpG Coverage Q40, Low GC Content Region',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-lowGC',
                 description = "<p>This plot shows the cummulative CpG coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )
@@ -463,7 +463,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage Q40, High GC Content Region',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-highGC',
                 description = "<p>This plot shows the cummulative CpG coverage of high GC content region (top 10%), mapQ>40 only.</p>",
                 plot = linegraph.plot(mdata, {'ylab':'Million Bases'})
             )        
@@ -474,7 +474,7 @@ class MultiqcModule(BaseMultiqcModule):
             hdr = OrderedDict()
             pd = OrderedDict()
             sid = 'Genome'
-            dd = mdata.values()[0]
+            dd = list(mdata.values())[0]
             pd[sid] = OrderedDict()
             for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
                 ctg1 = ctg.replace('CpGs','')
@@ -493,7 +493,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(
                 name = 'CpG Coverage Distribution',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-dist',
                 description = "<p>The top row shows how CpGs breaks down to different categories. Each other row shows the how CpGs uniquely covered by the given data breaks down to these categories. It is the fraction of CpGs in the given category out of all CpGs covered by the data.</p>",
                 plot = table.plot(pd, hdr)
             )
@@ -501,7 +501,7 @@ class MultiqcModule(BaseMultiqcModule):
             pd = dict([(sid, dd['cgi_coverage']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpG Island Coverage',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cgi',
                 description = "<p>Each row shows the percentage of CpG islands (out of all CpG islands in the genome) that are covered in different numbers of CpGs. Coverage is based on reads with mapQ >= 40.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('one', {'title':'>=1', 'suffix':'%',
@@ -526,7 +526,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pd[sid][ctg] = dd[ctg]['cv']
             self.add_section(
                 name = 'Sequence Depth Uniformity',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-unif',
                 description = "<p>This plot shows sequence depth uniformity measured in Coefficient of Variation (mu/sigma), mapQ>40 only. GC contents were measured on 100bp non-overlapping windows.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('all', {'title':'Genome','description':'Whole Genome Average'}),
@@ -543,7 +543,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pd[sid][ctg] = dd[ctg]['mu']
             self.add_section(
                 name = 'Sequence Depth Mean',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-depth-mean',
                 description = "<p>This plot shows sequence depth mean, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('all', {'title':'Genome','description':'Whole Genome Average'}),
@@ -560,7 +560,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pd[sid][ctg] = dd[ctg]['sigma']
             self.add_section(
                 name = 'Sequence Depth Sigma',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-depth-sigma',
                 description = "<p>This plot shows sequence depth SD, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('all', {'title':'Genome','description':'Whole Genome Average'}),
@@ -580,7 +580,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pd[sid][ctg] = dd[ctg]['cv']
             self.add_section(
                 name = 'CpG Sequence Depth Uniformity',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-depth-unif',
                 description = "<p>This plot shows CpG sequence depth uniformity measured in Coefficient of Variation (mu/sigma), mapQ>40 only. GC contents were measured on 100bp non-overlapping windows.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('cpg', {'title':'All CpGs','description':'All CpG Average'}),
@@ -597,7 +597,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pd[sid][ctg] = dd[ctg]['mu']
             self.add_section(
                 name = 'CpG Sequence Depth Mean',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-depth-mean',
                 description = "<p>This plot shows CpG sequence depth mean, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('cpg', {'title':'All CpGs','description':'All CpG Average'}),
@@ -614,7 +614,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pd[sid][ctg] = dd[ctg]['sigma']
             self.add_section(
                 name = 'CpG Sequence Depth Sigma',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-cpg-depth-sigma',
                 description = "<p>This plot shows CpG sequence depth SD, mapQ>40 only.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('cpg', {'title':'All CpGs','description':'All CpG Average'}),
@@ -628,7 +628,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata)>0:
             self.add_section(
                 name = 'Base Coverage by Read Duplication',
-                anchor = 'biscuit-coverage',
+                anchor = 'biscuit-coverage-dup',
                 description = "<p>This table shows base coverage by duplicate reads as a percentage of coverage by all reads.</p>",
                 plot = table.plot(mdata, OrderedDict([
                     ('all', {'title':'Genome', 'suffix':'%', 'description':'Fraction of coverage by duplicate reads'}),
@@ -708,7 +708,7 @@ class MultiqcModule(BaseMultiqcModule):
             pd = dict([(sid,dd) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'Base Averaged Cytosine Retention',
-                anchor = 'biscuit-retention',
+                anchor = 'biscuit-retention-average',
                 description = "<p>This plot shows cytosine retention rate by averaging retention level from all cytosine bases.</p>",
                 plot = table.plot(pd, OrderedDict([
                     ('ca', {'title':'CpA','description':'CpA dinucleotide context','suffix':'%'}),
@@ -723,7 +723,7 @@ class MultiqcModule(BaseMultiqcModule):
             pd = dict([(sid, dd['CA']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpA Retention in Each Read',
-                anchor = 'biscuit-retention',
+                anchor = 'biscuit-retention-read-cpa',
                 description = "<p>This plot shows the distribution of the number of retained CpA cytosine in each read, up to 10.</p>",
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
@@ -731,7 +731,7 @@ class MultiqcModule(BaseMultiqcModule):
             pd = dict([(sid, dd['CC']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpC Retention in Each Read',
-                anchor = 'biscuit-retention',
+                anchor = 'biscuit-retention-read-cpc',
                 description = "<p>This plot shows the distribution of the number of retained CpC cytosine in each read, up to 10.</p>",
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
@@ -739,7 +739,7 @@ class MultiqcModule(BaseMultiqcModule):
             pd = dict([(sid, dd['CG']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpG Retention in Each Read',
-                anchor = 'biscuit-retention',
+                anchor = 'biscuit-retention-read-cpg',
                 description = "<p>This plot shows the distribution of the number of retained CpG cytosine in each read, up to 10.</p>",
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
@@ -747,7 +747,7 @@ class MultiqcModule(BaseMultiqcModule):
             pd = dict([(sid, dd['CT']) for sid, dd in mdata.items()])
             self.add_section(
                 name = 'CpT Retention in Each Read',
-                anchor = 'biscuit-retention',
+                anchor = 'biscuit-retention-read-cpt',
                 description = "<p>This plot shows the distribution of the number of retained CpT cytosine in each read, up to 10.</p>",
                 plot = linegraph.plot(pd, {'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
@@ -756,7 +756,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 1',
-                anchor = 'biscuit-retention',
+                anchor = 'biscuit-retention-cph-read1',
                 description = "<p>This plot shows the distribution of CpH retention rate in read 1.</p>",
                 plot = linegraph.plot(mdata, {'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
             )
@@ -765,7 +765,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
             self.add_section(
                 name = 'CpH Retention by Position in Read 2',
-                anchor = 'biscuit-retention',
+                anchor = 'biscuit-retention-cph-read2',
                 description = "<p>This plot shows the distribution of CpH retention rate in read 2.</p>",
                 plot = linegraph.plot(mdata, {'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
             )
