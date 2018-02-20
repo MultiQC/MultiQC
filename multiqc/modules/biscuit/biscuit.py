@@ -659,13 +659,8 @@ class MultiqcModule(BaseMultiqcModule):
                 fields = l.strip().split('\t')
                 if fields[0] not in data:
                     return {}
-                data[fields[0]][int(fields[1])] = int(fields[2])
-
-            # remove count greater than 10
-            for ctxt in ['CA','CC','CG','CT']:
-                for k in data[ctxt].keys():
-                    if (k > 10):
-                        data[ctxt].pop(k, None)
+                if int(fields[1]) <= 10: # remove counts greater than 10
+                    data[fields[0]][int(fields[1])] = int(fields[2])
 
         elif fn.endswith('_CpHRetentionByReadPos.txt'):
             r1 = {'C':{}, 'R':{}}
