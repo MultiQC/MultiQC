@@ -420,7 +420,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, high GC content',
                 anchor = 'biscuit-coverage-base-highGC',
                 description = "<p>This plot shows the cummulative base coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_highGC','title':'BISCUIT: Base Coverage','ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_highGC','ylab':'Million Bases'})
             )
         
         # cpg coverage
