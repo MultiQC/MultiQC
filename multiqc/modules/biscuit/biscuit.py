@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Beta Value Distribution',
             anchor = 'biscuit-beta',
-            plot = linegraph.plot(self.mdata['beta'], {'ylab':'Count of cytosine in CpG context','xlab':'Beta Value (%)'})
+            plot = linegraph.plot(self.mdata['beta'], {'id':'biscuit_beta','ylab':'Count of cytosine in CpG context','xlab':'Beta Value (%)'})
         )
         
     def parse_logs_mapq(self, f, fn):
@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Mapping Quality',
             anchor = 'biscuit-mapq',
             description = "<p>This plot shows the distribution of Primary Mapping Quality.</p>",
-            plot = linegraph.plot(pd, {'ylab': '% Primary Mapped Reads','xlab': 'Mapping Quality'})
+            plot = linegraph.plot(pd, {'id':'biscuit_mapq','ylab': '% Primary Mapped Reads','xlab': 'Mapping Quality'})
         )
 
         # mapping strand distribution
@@ -420,7 +420,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, high GC content',
                 anchor = 'biscuit-coverage-base-highGC',
                 description = "<p>This plot shows the cummulative base coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_highgC','ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_highGC','title':'BISCUIT: Base Coverage','ylab':'Million Bases'})
             )
         
         # cpg coverage
