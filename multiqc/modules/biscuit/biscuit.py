@@ -368,7 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage',
                 anchor = 'biscuit-coverage-base',
                 description = "<p>This plot shows the cummulative base coverage.</p>",
-                plot = linegraph.plot(mdata, {'id':'cov-all','ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base','ylab':'Million Bases'})
             )
             
             for sid, dd in mdata.items():
@@ -383,7 +383,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40',
                 anchor = 'biscuit-coverage-base-q40',
                 description = "<p>This plot shows the cummulative base coverage, mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'cov-q40','ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_q40','ylab':'Million Bases'})
             )
 
             for sid, dd in mdata.items():
@@ -410,7 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, low GC content',
                 anchor = 'biscuit-coverage-base-lowGC',
                 description = "<p>This plot shows the cummulative base coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'cov-botgc','ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_lowGC','ylab':'Million Bases'})
             )
 
         # base coverage high GC content
@@ -420,7 +420,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, high GC content',
                 anchor = 'biscuit-coverage-base-highGC',
                 description = "<p>This plot shows the cummulative base coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'cov-topgc','ylab':'Million Bases'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_highgC','ylab':'Million Bases'})
             )
         
         # cpg coverage
@@ -431,7 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative CpG Coverage',
                 anchor = 'biscuit-coverage-cpg',
                 description = "<p>This plot shows the cummulative CpG coverage.</p>",
-                plot = linegraph.plot(mdata, {'id':'cov-cpg','ylab':'Million CpGs'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg','ylab':'Million CpGs'})
             )
 
             for sid, dd in mdata.items():
@@ -446,7 +446,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative CpG Coverage Q40',
                 anchor = 'biscuit-coverage-cpg-q40',
                 description = "<p>This plot shows the cummulative CpG coverage, mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'cov-cpg-q40','ylab':'Million CpGs'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg_q40','ylab':'Million CpGs'})
             )
 
             for sid, dd in mdata.items():
@@ -473,7 +473,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative CpG Coverage Q40, Low GC Content Region',
                 anchor = 'biscuit-coverage-cpg-lowGC',
                 description = "<p>This plot shows the cummulative CpG coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases', 'id':'cov-cpg-lowgc'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg_lowGC', 'ylab':'Million Bases', 'id':'cov-cpg-lowgc'})
             )
 
         # cpg coverage high GC content
@@ -483,7 +483,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'Cumulative Base Coverage Q40, High GC Content Region',
                 anchor = 'biscuit-coverage-cpg-highGC',
                 description = "<p>This plot shows the cummulative CpG coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'ylab':'Million Bases', 'id':'cov-cpg-topgc'})
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg_highGC', 'ylab':'Million Bases', 'id':'cov-cpg-topgc'})
             )        
 
         # cpg distribution
@@ -743,7 +743,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpA Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpa',
                 description = "<p>This plot shows the distribution of the number of retained CpA cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'CpA-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpa', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
             pd = dict([(sid, dd['CC']) for sid, dd in mdata.items()])
@@ -751,7 +751,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpC Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpc',
                 description = "<p>This plot shows the distribution of the number of retained CpC cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'CpC-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpc', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
             pd = dict([(sid, dd['CG']) for sid, dd in mdata.items()])
@@ -759,7 +759,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpG Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpg',
                 description = "<p>This plot shows the distribution of the number of retained CpG cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'CpG-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpg', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
             pd = dict([(sid, dd['CT']) for sid, dd in mdata.items()])
@@ -767,7 +767,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpT Retention in Each Read',
                 anchor = 'biscuit-retention-read-cpt',
                 description = "<p>This plot shows the distribution of the number of retained CpT cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'CpT-retention', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpt', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
             )
 
         mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
@@ -776,7 +776,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpH Retention by Position in Read 1',
                 anchor = 'biscuit-retention-cph-read1',
                 description = "<p>This plot shows the distribution of CpH retention rate in read 1.</p>",
-                plot = linegraph.plot(mdata, {'id': 'cph-read1', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cph_read1', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
             )
 
         mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
@@ -785,5 +785,5 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpH Retention by Position in Read 2',
                 anchor = 'biscuit-retention-cph-read2',
                 description = "<p>This plot shows the distribution of CpH retention rate in read 2.</p>",
-                plot = linegraph.plot(mdata, {'id': 'cph-read2', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cph_read2', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
             )
