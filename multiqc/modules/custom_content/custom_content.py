@@ -255,6 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig['sortRows'] = pconfig.get('sortRows', False)
             headers = mod['config'].get('headers')
             self.add_section( plot = table.plot(mod['data'], headers, pconfig) )
+            self.write_data_file( mod['data'], "multiqc_{}".format(modname.lower().replace(' ', '_')) )
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':

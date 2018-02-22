@@ -7,6 +7,8 @@
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
 * **BUSCO**
     * Fixed configuration bug that made all sample names become `'short'`
+* **Custom Content**
+    * Parsed tables now exported to `multiqc_data` files
 * **Cutadapt**
     * Refactor parsing code to collect all length trimming plots
 * **HiCExplorer**
