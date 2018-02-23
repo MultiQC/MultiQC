@@ -102,6 +102,7 @@ biscuit/coverage:
     - fn: '*_dup_report.txt'
 biscuit/retention:
     - fn: '*_CpHRetentionByReadPos.txt'
+    - fn: '*_CpGRetentionByReadPos.txt'
     - fn: '*_freqOfTotalRetentionPerRead.txt'
     - fn: '*_totalBaseConversionRate.txt'
     - fn: '*_totalReadConversionRate.txt'

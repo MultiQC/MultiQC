@@ -680,7 +680,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if int(fields[1]) <= 10: # remove counts greater than 10
                     data[fields[0]][int(fields[1])] = int(fields[2])
 
-        elif fn.endswith('_CpHRetentionByReadPos.txt'):
+        elif fn.endswith('_CpHRetentionByReadPos.txt') or fn.endswith('_CpGRetentionByReadPos.txt'):
             r1 = {'C':{}, 'R':{}}
             r2 = {'C':{}, 'R':{}}
             for l in f.splitlines():
@@ -786,4 +786,22 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-retention-cph-read2',
                 description = "<p>This plot shows the distribution of CpH retention rate in read 2.</p>",
                 plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cph_read2', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+            )
+
+        mdata = dict([(k.replace('_CpGRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpGRetentionByReadPos.txt')])
+        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
+            self.add_section(
+                name = 'CpG Retention by Position in Read 1',
+                anchor = 'biscuit-retention-cpg-read1',
+                description = "<p>This plot (aka. mbias plot) shows the distribution of CpG retention rate in read 1.</p>",
+                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cpg_read1', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+            )
+
+        mdata = dict([(k.replace('_CpGRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpGRetentionByReadPos.txt')])
+        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
+            self.add_section(
+                name = 'CpG Retention by Position in Read 2',
+                anchor = 'biscuit-retention-cpg-read2',
+                description = "<p>This plot (aka. mbias plot) shows the distribution of CpG retention rate in read 2.</p>",
+                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cpg_read2', 'ylab': 'CpG Retention Rate (%)', 'xlab': 'Position in Read'})
             )
