@@ -315,7 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 max_x = self.trim_tail(molecules, 100000)
             except IndexError:
-                log.debug('The file histogram file is empty. Skipping molecule lenght section')
+                log.debug('The histogram file is empty. Skipping molecule length section')
                 return
             # Add molecules plot
             config_molecules = {
@@ -342,7 +342,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 max_x = self.trim_tail(kmers, 50)
             except IndexError:
-                log.debug('The file histogram file is empty. Skipping kmers section')
+                log.debug('The histogram file is empty. Skipping kmers section')
                 return
             # Add kmers plot
             config_kmers = {
