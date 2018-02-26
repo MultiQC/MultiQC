@@ -29,11 +29,18 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'Mb',
                 'scale': 'YlGn'
         }
+        self.headers['% missing 10Kb'] = {
+                'rid': 'pct_missing_10Kb',
+                'description': '% of base assembly missing from scaffolds >= 10 kb',
+                'suffix': '%',
+                'scale': 'YlGn',
+        }
         self.headers['# Long scaffs'] = {
                 'rid': 'num_long_scaffs',
                 'description': 'number of scaffolds >= 10 kb',
                 'scale': 'YlGn',
                 'format': '{:,.0f}',
+                'hidden': True
         }
         self.headers['Scaff N50'] = {
                 'description': 'N50 scaffold size (in kilobases)',
@@ -82,6 +89,12 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'M',
                 'scale': 'PuBu',
         }
+        self.headers['Raw coverage'] = {
+                'description': 'raw coverage; ideal ~56',
+                'suffix': 'x',
+                'scale': 'PuBu',
+                'hidden': True
+        }
         self.headers['Coverage'] = {
                 'description': 'effective read coverage; ideal ~42 for nominal 56x cov',
                 'suffix': 'x',
@@ -113,11 +126,44 @@ class MultiqcModule(BaseMultiqcModule):
                 'scale': 'OrRd',
                 'hidden': True
         }
+        self.headers['BC usage'] = {
+                'description': 'fraction of barcodes used; between 0 and 1',
+                'scale': 'OrRd',
+                'hidden': True
+        }
+        self.headers['Est size'] = {
+                'description': 'estimated genome size',
+                'modify': lambda x: x / 1000000.0,
+                'suffix': 'Mb',
+                'scale': 'YlGn',
+                'hidden': True
+        }
+        self.headers['% repeats'] = {
+                'rid': 'pct_repeats',
+                'description': 'Estimated repetitive fraction (of genome)',
+                'scale': 'YlGn',
+                'suffix': '%',
+                'hidden': True
+        }
+        self.headers['% AT'] = {
+                'rid': 'pct_AT',
+                'description': 'high AT index (of genome)',
+                'scale': 'YlGn',
+                'suffix': '%',
+                'hidden': True
+        }
         self.headers['Het dist'] = {
                 'description': 'mean distance between heterozygous SNPs (in kilobases)',
                 'modify': lambda x: x / 1000.0,
                 'suffix': 'Kb',
+                'scale': 'YlGn',
+                'format': '{:,.0f}',
+                'hidden': True
+        }
+        self.headers['p10'] = {
+                'description': 'molecule count extending 10 kb on both sides',
                 'scale': 'BuGn',
+                'hidden': True
         }
         self.headers['% missing BC'] = {
                 'rid': 'pct_missing_BC',
@@ -221,7 +267,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         ### Write the report
         self.write_data_file(reports, 'multiqc_supernova')
-
         config_table = {
             'id': 'supernova_table',
             'namespace': 'supernova'
@@ -266,8 +311,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Conditional sections
         if len(molecules) > 0:
-            # Remove the long tail
-            max_x = self.trim_tail(molecules, 100000)
+            # Remove the long tail, or fail if this is a legacy empty json file
+            try:
+                max_x = self.trim_tail(molecules, 100000)
+            except IndexError:
+                log.debug('The file histogram file is empty. Skipping molecule lenght section')
+                return
             # Add molecules plot
             config_molecules = {
                 'id': 'supernova_molecules',
@@ -289,9 +338,12 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = linegraph.plot(molecules, config_molecules)
             )
         if len(kmers) > 0:
-            # Remove the long tail
-            max_x = self.trim_tail(kmers, 50)
-
+            # Remove the long tail, or fail if this is a legacy empty json file
+            try:
+                max_x = self.trim_tail(kmers, 50)
+            except IndexError:
+                log.debug('The file histogram file is empty. Skipping kmers section')
+                return
             # Add kmers plot
             config_kmers = {
                 'id': 'supernova_kmers',
@@ -336,7 +388,14 @@ class MultiqcModule(BaseMultiqcModule):
             'rpb_N50': 'Barcode N50',
             'scaffold_N50': 'Scaff N50',
             'scaffolds_10kb_plus': '# Long scaffs',
-            'valid_bc_perc': '% missing BC'
+            'valid_bc_perc': '% missing BC',
+            'm10': '% missing 10Kb',
+            'high_AT_index': '% AT',
+            'raw_coverage': 'Raw coverage',
+            'barcode_fraction': 'BC usage',
+            'repfrac': 'Repeats',
+            'est_genome_size': 'Est size',
+            'p10': 'p10'
         }
 
         try:
@@ -395,7 +454,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'CONTIG N50': 'Contig N50',
                 'PHASEBLOCK N50': 'Phase N50',
                 'SCAFFOLD N50': 'Scaff N50',
-                'ASSEMBLY SIZE': 'Asm size'
+                'ASSEMBLY SIZE': 'Asm size',
+                'MISSING 10KB': '% missing 10Kb',
+                'HIGH AT FRACTION': '% AT',
+                'RAW COV': 'Raw coverage',
+                'BARCODE FRACTION': 'BC usage',
+                'REPETITIVE FRAC': 'Repeats',
+                'EST GENOME SIZE': 'Est size',
+                'P10': 'p10'
         }
 
         data = {}
@@ -421,7 +487,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if stat_val[1] in exp.keys():
                         data[stats[stat_type]] = float(stat_val[0]) * exp[stat_val[1]]
                     else:
-                        data[stats[stat_type]] = stat_val[0]
+                        data[stats[stat_type]] = float(stat_val[0])
                 except ValueError:
                     log.debug('Error in parsing sample {}, on line "{}"'.format(sid, stat_val))
 
