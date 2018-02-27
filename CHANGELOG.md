@@ -26,6 +26,8 @@
     * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
 * **RSeqC**
     * Fixed a dodgy plot title (Read GC content)
+* **Supernova**
+    * Added support for Supernova 2.0 reports. Fixed a TypeError bug when using txt reports only. Also a bug when parsing empty histogram files.
 
 #### New MultiQC Features:
 * Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
