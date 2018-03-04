@@ -204,6 +204,8 @@ def search_file (pattern, f):
 
     # Search by file contents
     if pattern.get('contents') is not None or pattern.get('contents_re') is not None:
+        if pattern.get('contents_re') is not None:
+            repattern = re.compile(pattern['contents_re'])
         try:
             with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
                 l = 1
@@ -217,7 +219,7 @@ def search_file (pattern, f):
                             break
                     # Search by file contents (regex)
                     elif pattern.get('contents_re') is not None:
-                        if re.match( pattern['contents_re'], line):
+                        if re.search(repattern, line):
                             contents_matched = True
                             if pattern.get('fn') is None and pattern.get('fn_re') is None:
                                 return True
