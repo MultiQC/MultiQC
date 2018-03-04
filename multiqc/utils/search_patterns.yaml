@@ -199,7 +199,8 @@ macs2:
 methylQA:
     fn: '*.report'
 disambiguate:
-    contents_re: '.*unique species A pairs.*'
+    contents: 'unique species A pairs'
+    num_lines: 2
 peddy/summary_table:
     fn: '*.peddy.ped'
 peddy/het_check:
