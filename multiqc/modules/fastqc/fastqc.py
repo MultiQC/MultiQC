@@ -317,7 +317,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'fastqc_per_sequence_quality_scores_plot',
             'title': 'FastQC: Per Sequence Quality Scores',
-            'ylab': 'Percentage',
+            'ylab': 'Count',
             'xlab': 'Mean Sequence Quality (Phred Score)',
             'ymin': 0,
             'xmin': 0,
