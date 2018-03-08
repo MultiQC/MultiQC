@@ -83,6 +83,7 @@ setup(
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
+            'dedup = multiqc.modules.dedup:MultiqcModule',
             'deeptools = multiqc.modules.deeptools:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
