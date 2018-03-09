@@ -78,6 +78,7 @@ setup(
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
+            'clipandmerge = multiqc.modules.clipandmerge:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
