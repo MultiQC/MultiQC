@@ -431,6 +431,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - afterqc:
+        module_tag:
+            - RNA
+            - DNA
     - fastqc:
         module_tag:
             - RNA
