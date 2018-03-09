@@ -35,6 +35,7 @@
 
 #### New MultiQC Features:
 * Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
+* Linting now checks for presence in `config.module_order` and tags.
 
 #### Bug Fixes
 * Excluding modules now works in combination with using module tags.
