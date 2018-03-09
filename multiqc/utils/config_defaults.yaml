@@ -403,6 +403,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - clipandmerge:
+        module_tag:
+            - DNA
+            - ancient
     - cutadapt:
         module_tag:
             - RNA
