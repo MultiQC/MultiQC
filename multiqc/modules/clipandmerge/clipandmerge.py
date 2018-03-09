@@ -56,17 +56,23 @@ class MultiqcModule(BaseMultiqcModule):
             'usable_not_merged_forward': r"Number of usable not merged forward reads:\s+(\d+)",
             'usable_not_merged_reverse': r"Number of usable not merged reverse reads:\s+(\d+)",
             'usable_forward_no_pairing_reverse': r"Number of usable forward reads with no pairing reverse read:\s+(\d+)",
-            'usable_reverse_no_pairing_forward': r"Number of usable reverse reads with no pairing forward read:\s+(\d+)"
+            'usable_reverse_no_pairing_forward': r"Number of usable reverse reads with no pairing forward read:\s+(\d+)",
+            'identifier' : r"SampleID:\s+(\S+)"
         }
+
         parsed_data = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
-                parsed_data[k] = float(r_search.group(1))
+                try:
+                    parsed_data[k] = float(r_search.group(1))
+                except ValueError:
+                    parsed_data[k] = r_search.group(1)
         
         if len(parsed_data) > 0:
-            # TODO: When tool prints input BAM filename, use that instead
             s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
+            if 'identifier' in parsed_data:
+                s_name = self.clean_s_name(parsed_data['identifier'], f['root'])
             self.clipandmerge_data[s_name] = parsed_data
 
     def clipandmerge_general_stats_table(self):
