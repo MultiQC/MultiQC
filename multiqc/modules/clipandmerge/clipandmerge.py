@@ -50,23 +50,16 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_clipandmerge_log(self, f):
         regexes = {
-            'total_reads': r"Total reads:\s+(\d+)",
-            'reverse_removed': r"Reverse removed:\s+(\d+)",
-            'forward_removed': r"Forward removed:\s+(\d+)",
-            'merged_removed': r"Merged removed:\s+(\d+)",
-            'total_removed': r"Total removed:\s+(\d+)",
-            'duplication_rate': r"Duplication Rate:\s+([\d\.]+)",
+            'usable_reads': r"Number of usable reads in the output file(s):\s+(\d+)",
+            'merged_reads': r"Number of usable merged reads:\s+(\d+)",
+            'percentage': r"Percentage of usable merged reads: \s+(\d+)"
         }
+
         parsed_data = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
-
-        try:
-            parsed_data['not_removed'] = parsed_data['total_reads'] - parsed_data['reverse_removed'] - parsed_data['forward_removed'] - parsed_data['merged_removed']
-        except KeyError:
-            log.debug('Could not calculate "not_removed"')
 
         if len(parsed_data) > 0:
             # TODO: When tool prints input BAM filename, use that instead
@@ -78,15 +71,14 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['duplication_rate'] = {
-            'title': 'Duplication Rate',
-            'description': 'Percentage of reads categorised as a technical duplicate',
+        headers['percentage'] = {
+            'title': 'Percent merged reads',
+            'description': 'Percentage of reads merged',
             'min': 0,
             'max': 100,
             'suffix': '%',
             'scale': 'OrRd',
-            'format': '{:,.0f}',
-            'modify': lambda x: x * 100.0
+            'format': '{:,.2f}',
         }
         self.general_stats_addcols(self.clipandmerge_data, headers)
 
@@ -95,15 +87,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['not_removed'] = { 'name': 'Not Removed' }
-        keys['reverse_removed'] = { 'name': 'Reverse Removed' }
-        keys['forward_removed'] =   { 'name': 'Forward Removed' }
-        keys['merged_removed'] =   { 'name': 'Merged Removed' }
+        keys['usable_reads'] = { 'name': 'Usable reads after Clip&Merge' }
+        keys['merged_reads'] = { 'name': 'Merged Reads' }
 
         # Config for the plot
         config = {
             'id': 'clipandmerge_rates',
-            'title': 'ClipAndMerge: Deduplicated Reads',
+            'title': 'ClipAndMerge: Read merging results',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False
