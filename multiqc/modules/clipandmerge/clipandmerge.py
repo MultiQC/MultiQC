@@ -50,17 +50,15 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_clipandmerge_log(self, f):
         regexes = {
-            'usable_reads': r"Number of usable reads in the output file(s):\s+(\d+)",
+            'usable_reads': r"Number of usable reads in the output file\(s\):\s+(\d+)",
             'merged_reads': r"Number of usable merged reads:\s+(\d+)",
-            'percentage': r"Percentage of usable merged reads: \s+(\d+)"
+            'percentage': r"Percentage of usable merged reads:\s+(\d+\.\d+)"
         }
-
         parsed_data = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
-
         if len(parsed_data) > 0:
             # TODO: When tool prints input BAM filename, use that instead
             s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
