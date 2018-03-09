@@ -346,7 +346,21 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
     config.module_order = [ m if type(m) is dict else {m:{}} for m in config.module_order ]
     mod_keys = [ list(m.keys())[0] for m in config.module_order ]
 
-    #Get the avaiable tags to decide which modules to run.
+    # Lint the module configs
+    if config.lint:
+        for m in config.avail_modules.keys():
+            if m not in mod_keys:
+                errmsg = "LINT: Module '{}' not found in config.module_order".format(m)
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
+            else:
+                for mo in config.module_order:
+                    if m != 'custom_content' and m in mo.keys() and 'module_tag' not in mo[m]:
+                        errmsg = "LINT: Module '{}' in config.module_order did not have 'module_tag' config".format(m)
+                        logger.error(errmsg)
+                        report.lint_errors.append(errmsg)
+
+    # Get the avaiable tags to decide which modules to run.
     modules_from_tags = set()
     if config.module_tag is not None:
         tags = config.module_tag
