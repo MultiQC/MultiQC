@@ -98,7 +98,8 @@ busco:
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
 clipandmerge:
-    contents: 'ClipAndMerge (v. *)'
+    fn_re: '\.(txt|log|stats)'
+    contents: 'ClipAndMerge (v'
 clusterflow/logs:
     fn: '*_clusterFlow.txt'
     shared: true
