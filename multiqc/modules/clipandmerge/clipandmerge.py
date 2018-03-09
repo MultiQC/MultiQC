@@ -52,13 +52,18 @@ class MultiqcModule(BaseMultiqcModule):
         regexes = {
             'usable_reads': r"Number of usable reads in the output file\(s\):\s+(\d+)",
             'merged_reads': r"Number of usable merged reads:\s+(\d+)",
-            'percentage': r"Percentage of usable merged reads:\s+(\d+\.\d+)"
+            'percentage': r"Percentage of usable merged reads:\s+(\d+\.\d+)",
+            'usable_not_merged_forward': r"Number of usable not merged forward reads:\s+(\d+)",
+            'usable_not_merged_reverse': r"Number of usable not merged reverse reads:\s+(\d+)",
+            'usable_forward_no_pairing_reverse': r"Number of usable forward reads with no pairing reverse read:\s+(\d+)",
+            'usable_reverse_no_pairing_forward': r"Number of usable reverse reads with no pairing forward read:\s+(\d+)"
         }
         parsed_data = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
+        
         if len(parsed_data) > 0:
             # TODO: When tool prints input BAM filename, use that instead
             s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
@@ -85,8 +90,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['usable_reads'] = { 'name': 'Usable reads after Clip&Merge' }
         keys['merged_reads'] = { 'name': 'Merged Reads' }
+        keys['usable_not_merged_forward'] = { 'name': 'Usable, but not merged forward reads'}
+        keys['usable_not_merged_reverse'] = { 'name': 'Usable, but not merged reverse reads'}
+        keys['usable_forward_no_pairing_reverse'] = { 'name': 'Usable forward reads, without pairing reverse read'}
+        keys['usable_reverse_no_pairing_forward'] = { 'name': 'Usable reverse reads, without pairing forward read'}
 
         # Config for the plot
         config = {
