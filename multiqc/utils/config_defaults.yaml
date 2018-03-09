@@ -323,6 +323,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - dedup:
+        module_tag:
+            - DNA
+            - ancient
     - picard:
         module_tag:
             - DNA
@@ -330,7 +334,7 @@ module_order:
     - prokka:
         module_tag:
             - prokarytotic
-            - Denovo
+            - denovo
     - samblaster:
         module_tag:
             - DNA

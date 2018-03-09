@@ -2,6 +2,10 @@
 
 ## MultiQC v1.5dev
 
+#### New Modules:
+* [**DeDup**](http://www.github.com/apeltzer/DeDup) - New module!
+    * DeDup: Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
+
 #### Module updates:
 * **bcl2fastq**
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
