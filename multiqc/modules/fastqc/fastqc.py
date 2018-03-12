@@ -419,7 +419,6 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'fastqc_per_sequence_gc_content_plot',
             'title': 'FastQC: Per Sequence GC Content',
-            'ylab': 'Count',
             'xlab': '% GC',
             'ymin': 0,
             'xmax': 100,

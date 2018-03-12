@@ -15,6 +15,8 @@
     * Parsed tables now exported to `multiqc_data` files
 * **Cutadapt**
     * Refactor parsing code to collect all length trimming plots
+* **FastQC**
+    * Fixed starting y-axis label for GC-content lineplot being incorrect.
 * **HiCExplorer**
     * Updated to work with v2.0 release.
 * **Homer**
