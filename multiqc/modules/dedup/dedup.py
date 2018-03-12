@@ -50,6 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_dedup_log(self, f):
         regexes = {
+            'input_file': r"Input file:\s+(\S+)",
             'total_reads': r"Total reads:\s+(\d+)",
             'reverse_removed': r"Reverse removed:\s+(\d+)",
             'forward_removed': r"Forward removed:\s+(\d+)",
@@ -61,16 +62,19 @@ class MultiqcModule(BaseMultiqcModule):
         for k, r in regexes.items():
             r_search = re.search(r, f['f'], re.MULTILINE)
             if r_search:
-                parsed_data[k] = float(r_search.group(1))
-
+                try:
+                    parsed_data[k] = float(r_search.group(1))
+                except ValueError:
+                    parsed_data[k] = r_search.group(1)
         try:
             parsed_data['not_removed'] = parsed_data['total_reads'] - parsed_data['reverse_removed'] - parsed_data['forward_removed'] - parsed_data['merged_removed']
         except KeyError:
             log.debug('Could not calculate "not_removed"')
 
         if len(parsed_data) > 0:
-            # TODO: When tool prints input BAM filename, use that instead
             s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
+            if 'input_file' in parsed_data:
+                s_name = self.clean_s_name(parsed_data['input_file'], f['root'])
             self.dedup_data[s_name] = parsed_data
 
     def dedup_general_stats_table(self):
@@ -104,6 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id': 'dedup_rates',
             'title': 'DeDup: Deduplicated Reads',
+            'description': 'Read categories that were either not removed (= unique reads) or removed (= duplicates).'
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False
