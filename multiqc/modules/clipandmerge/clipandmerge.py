@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['percentage'] = {
-            'title': 'Percent merged reads',
+            'title': '% merged',
             'description': 'Percentage of reads merged',
             'min': 0,
             'max': 100,
@@ -97,10 +97,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['merged_reads'] = { 'name': 'Merged Reads' }
-        keys['usable_not_merged_forward'] = { 'name': 'Usable, but not merged forward reads'}
-        keys['usable_not_merged_reverse'] = { 'name': 'Usable, but not merged reverse reads'}
-        keys['usable_forward_no_pairing_reverse'] = { 'name': 'Usable forward reads, without pairing reverse read'}
-        keys['usable_reverse_no_pairing_forward'] = { 'name': 'Usable reverse reads, without pairing forward read'}
+        keys['usable_not_merged_forward'] = { 'name': 'Usable, not merged (forward)'}
+        keys['usable_not_merged_reverse'] = { 'name': 'Usable, not merged (reverse)'}
+        keys['usable_forward_no_pairing_reverse'] = { 'name': 'Usable forward-only'}
+        keys['usable_reverse_no_pairing_forward'] = { 'name': 'Usable reverse-only'}
 
         # Config for the plot
         config = {
