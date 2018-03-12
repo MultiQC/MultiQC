@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'max': 100,
             'suffix': '%',
-            'scale': 'OrRd',
+            'scale': 'Greens',
             'format': '{:,.2f}',
         }
         self.general_stats_addcols(self.clipandmerge_data, headers)
