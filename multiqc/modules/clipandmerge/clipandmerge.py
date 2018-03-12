@@ -106,6 +106,8 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id': 'clipandmerge_rates',
             'title': 'ClipAndMerge: Read merging results',
+            'description': 'In detail read categories as stated by Clip&Merge',
+            'helptext': 'For a detailed idea what the categories mean, please look up the Clip&Merge documentation at https://github.com/apeltzer/ClipAndMerge',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False
