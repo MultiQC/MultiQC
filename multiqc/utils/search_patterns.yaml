@@ -99,6 +99,7 @@ custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
 clipandmerge:
     contents: 'ClipAndMerge ('
+    num_lines: 5
 clusterflow/logs:
     fn: '*_clusterFlow.txt'
     shared: true
