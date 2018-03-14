@@ -45,7 +45,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.dedup_general_stats_table()
 
         # Alignment Rate Plot
-        self.add_section( plot = self.dedup_alignment_plot() )
+        self.add_section(
+            description = 'This plot shows read categories that were either not removed (unique reads) or removed (duplicates).',
+            plot = self.dedup_alignment_plot()
+        )
 
 
     def parse_dedup_log(self, f):
@@ -108,7 +111,6 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id': 'dedup_rates',
             'title': 'DeDup: Deduplicated Reads',
-            'description': 'Read categories that were either not removed (= unique reads) or removed (= duplicates).'
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False

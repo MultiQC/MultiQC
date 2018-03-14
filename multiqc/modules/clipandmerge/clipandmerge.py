@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.clipandmerge_general_stats_table()
 
         # Alignment Rate Plot
-        self.add_section( plot = self.clipandmerge_alignment_plot() )
+        self.add_section(plot = self.clipandmerge_alignment_plot())
 
 
     def parse_clipandmerge_log(self, f):
@@ -68,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[k] = float(r_search.group(1))
                 except ValueError:
                     parsed_data[k] = r_search.group(1)
-        
+
         if len(parsed_data) > 0:
             s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
             if 'identifier' in parsed_data:
@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['percentage'] = {
-            'title': '% merged',
+            'title': '% Merged',
             'description': 'Percentage of reads merged',
             'min': 0,
             'max': 100,
@@ -106,8 +106,6 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id': 'clipandmerge_rates',
             'title': 'ClipAndMerge: Read merging results',
-            'description': 'In detail read categories as stated by Clip&Merge',
-            'helptext': 'For a detailed idea what the categories mean, please look up the Clip&Merge documentation at https://github.com/apeltzer/ClipAndMerge',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'hide_zero_cats': False
