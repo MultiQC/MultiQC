@@ -156,16 +156,19 @@ class MultiqcModule(BaseMultiqcModule):
                     run_data[lane]["samples"][sample]["trimmed_bases"] += readMetric["TrimmedBases"]
             undeterminedYieldQ30 = 0
             undeterminedQscoreSum = 0
+            undeterminedTrimmedBases = 0
             if "Undetermined" in conversionResult:
                 for readMetric in conversionResult["Undetermined"]["ReadMetrics"]:
                     undeterminedYieldQ30 += readMetric["YieldQ30"]
                     undeterminedQscoreSum += readMetric["QualityScoreSum"]
+                    undeterminedTrimmedBases += readMetric["TrimmedBases"]
                 run_data[lane]["samples"]["undetermined"] = {
                     "total": conversionResult["Undetermined"]["NumberReads"],
                     "total_yield": conversionResult["Undetermined"]["Yield"],
                     "perfectIndex": 0,
                     "yieldQ30": undeterminedYieldQ30,
-                    "qscore_sum": undeterminedQscoreSum
+                    "qscore_sum": undeterminedQscoreSum,
+                    "trimmed_bases": undeterminedTrimmedBases
                 }
 
         # Calculate Percents and averages
@@ -298,7 +301,8 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'scale': 'RdYlGn',
-            'suffix': '%'
+            'suffix': '%',
+            'hidden': True if all(data[s]['trimmedPercent'] == 0 for s in data) else False
         }
         self.general_stats_addcols(data, headers)
 
