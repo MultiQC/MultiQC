@@ -296,11 +296,11 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%'
         }
         headers['trimmedPercent'] = {
-            'title': '% Reads trimmed',
+            'title': '% Bases trimmed',
             'description': 'Percent of bases trimmed',
             'max': 100,
             'min': 0,
-            'scale': 'RdYlGn',
+            'scale': 'Reds',
             'suffix': '%',
             'hidden': True if all(data[s]['trimmedPercent'] == 0 for s in data) else False
         }
