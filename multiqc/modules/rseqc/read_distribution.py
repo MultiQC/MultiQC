@@ -51,7 +51,6 @@ def parse_reports(self):
                 d['{}_tags_kb'.format(k)] = float(r_search.group(2))
 
         d['other_intergenic_tag_count'] = d['total_tags']-d['total_assigned_tags']
-        d['other_intergenic_total_bases'] = 0
 
         # Calculate some percentages for parsed file
         if 'total_tags' in d:
@@ -110,4 +109,3 @@ def parse_reports(self):
 
     # Return number of samples found
     return len(self.read_dist)
-

@@ -1,11 +1,15 @@
 # MultiQC Version History
 
 ## MultiQC v1.5dev
+
 #### New Modules:
 * [**DeDup**](http://www.github.com/apeltzer/DeDup) - New module!
     * DeDup: Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
+    * Module written by [@apeltzer](https://github.com/apeltzer),
 * [**Clip&Merge**](http://github.com/apeltzer/ClipAndMerge) - New module!
     * Clip&Merge: Adapter clipping and read merging for ancient DNA analysis
+    * Module written by [@apeltzer](https://github.com/apeltzer),
+
 #### Module updates:
 * **bcl2fastq**
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
@@ -31,6 +35,7 @@
 * **RNA-SeQC**
     * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
 * **RSeqC**
+    * Fixed read distribution plot by adding category for `other_intergenic` (thanks to [@moxgreen](https://github.com/moxgreen))
     * Fixed a dodgy plot title (Read GC content)
 * **Supernova**
     * Added support for Supernova 2.0 reports. Fixed a TypeError bug when using txt reports only. Also a bug when parsing empty histogram files.
