@@ -50,6 +50,8 @@
 * Fixed edge-case bug where certain combinations of `output_fn_name` and `data_dir_name` could trigger a crash
 * Conditional formatting - values are now longer double-labelled
 * Made config option `extra_series` work in scatter plots the same way that it works for line plots
+* Locked the `matplotlib` version to `v2.1.0` and below
+    * Due to [two](https://github.com/matplotlib/matplotlib/issues/10476) [bugs](https://github.com/matplotlib/matplotlib/issues/10784) that appeared in `v2.2.0` - will remove this constraint when there's a new release that works again.
 
 
 ## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11
