@@ -137,7 +137,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "perfectIndex": 0,
                     "filename": os.path.join(myfile['root'],myfile["fn"]),
                     "yieldQ30": 0,
-                    "qscore_sum": 0
+                    "qscore_sum": 0,
+                    "trimmed_bases": 0
                 }
                 run_data[lane]["total"] += demuxResult["NumberReads"]
                 run_data[lane]["total_yield"] += demuxResult["Yield"]
@@ -152,6 +153,7 @@ class MultiqcModule(BaseMultiqcModule):
                     run_data[lane]["qscore_sum"] += readMetric["QualityScoreSum"]
                     run_data[lane]["samples"][sample]["yieldQ30"] += readMetric["YieldQ30"]
                     run_data[lane]["samples"][sample]["qscore_sum"] += readMetric["QualityScoreSum"]
+                    run_data[lane]["samples"][sample]["trimmed_bases"] += readMetric["TrimmedBases"]
             undeterminedYieldQ30 = 0
             undeterminedQscoreSum = 0
             if "Undetermined" in conversionResult:
@@ -193,6 +195,10 @@ class MultiqcModule(BaseMultiqcModule):
                     run_data[lane]["samples"][sample]["mean_qscore"] = float(d["qscore_sum"]) / float(d["total_yield"])
                 except ZeroDivisionError:
                     run_data[lane]["samples"][sample]["mean_qscore"] = "NA"
+                try:
+                    run_data[lane]["samples"][sample]["percent_trimmed"] = (float(d["trimmed_bases"]) / float(d["total_yield"])) * 100.0
+                except ZeroDivisionError:
+                    run_data[lane]["samples"][sample]["percent_trimmed"] = "NA"
 
     def split_data_by_lane_and_sample(self):
         for runId in self.bcl2fastq_data.keys():
@@ -216,7 +222,8 @@ class MultiqcModule(BaseMultiqcModule):
                             "total_yield": 0,
                             "perfectIndex": 0,
                             "yieldQ30": 0,
-                            "qscore_sum": 0
+                            "qscore_sum": 0,
+                            "trimmed_bases":0
                         }
                     if not sample in self.bcl2fastq_bysample_lane:
                         self.bcl2fastq_bysample_lane[sample] = dict()
@@ -226,6 +233,8 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bcl2fastq_bysample[sample]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
                     self.bcl2fastq_bysample[sample]["yieldQ30"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["yieldQ30"]
                     self.bcl2fastq_bysample[sample]["qscore_sum"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["qscore_sum"]
+                    self.bcl2fastq_bysample[sample]["trimmed_bases"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["trimmed_bases"]
+
                     try:
                         self.bcl2fastq_bysample[sample]["percent_Q30"] = (float(self.bcl2fastq_bysample[sample]["yieldQ30"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])) * 100.0
                     except ZeroDivisionError:
@@ -242,6 +251,10 @@ class MultiqcModule(BaseMultiqcModule):
                         self.bcl2fastq_bysample[sample]["mean_qscore"] = float(self.bcl2fastq_bysample[sample]["qscore_sum"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])
                     except ZeroDivisionError:
                         self.bcl2fastq_bysample[sample]["mean_qscore"] = "NA"
+                    try:
+                        self.bcl2fastq_bysample[sample]["percent_trimmed"] = float(self.bcl2fastq_bysample[sample]["trimmed_bases"]) / float(self.bcl2fastq_bysample[sample]["total_yield"]) * 100.0
+                    except ZeroDivisionError:
+                        self.bcl2fastq_bysample[sample]["mean_qscore"] = "NA"
                     if sample != "undetermined":
                         if not sample in self.source_files:
                             self.source_files[sample] = []
@@ -254,7 +267,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "total": self.bcl2fastq_bysample[key]["total"],
                 "perfectPercent": '{0:.1f}'.format(
                     float( 100.0 * self.bcl2fastq_bysample[key]["perfectIndex"] / self.bcl2fastq_bysample[key]["total"] )
-                )
+                ),
+                "trimmedPercent": self.bcl2fastq_bysample[key]['percent_trimmed']
             } for key in self.bcl2fastq_bysample.keys()
         }
         headers = OrderedDict()
@@ -273,6 +287,14 @@ class MultiqcModule(BaseMultiqcModule):
         headers['perfectPercent'] = {
             'title': '% Perfect Index',
             'description': 'Percent of reads with perfect index (0 mismatches)',
+            'max': 100,
+            'min': 0,
+            'scale': 'RdYlGn',
+            'suffix': '%'
+        }
+        headers['trimmedPercent'] = {
+            'title': '% Reads trimmed',
+            'description': 'Percent of bases trimmed',
             'max': 100,
             'min': 0,
             'scale': 'RdYlGn',
