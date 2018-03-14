@@ -50,6 +50,9 @@ def parse_reports(self):
                 d['{}_tag_count'.format(k)] = int(r_search.group(2))
                 d['{}_tags_kb'.format(k)] = float(r_search.group(2))
 
+        d['other_intergenic_tag_count'] = d['total_tags']-d['total_assigned_tags']
+        d['other_intergenic_total_bases'] = 0
+
         # Calculate some percentages for parsed file
         if 'total_tags' in d:
             t = float(d['total_tags'])
@@ -86,6 +89,7 @@ def parse_reports(self):
         keys['tes_down_1kb_tag_count'] = {'name': "TES_down_1kb"}
         keys['tes_down_5kb_tag_count'] = {'name': "TES_down_5kb"}
         keys['tes_down_10kb_tag_count'] = {'name': "TES_down_10kb"}
+        keys['other_intergenic_tag_count'] = {'name': "Other_intergenic"}
 
         # Config for the plot
         pconfig = {
