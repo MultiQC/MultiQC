@@ -13,6 +13,7 @@
 #### Module updates:
 * **bcl2fastq**
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
+    * Add parsing of `TrimmedBases` and new General Stats column for % bases trimmed ([@matthdsm](https://github.com/matthdsm)).
 * **BUSCO**
     * Fixed configuration bug that made all sample names become `'short'`
 * **Custom Content**
