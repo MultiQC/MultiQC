@@ -1,5 +1,5 @@
 ---
-Name: Clip&Merge
+Name: ClipAndMerge
 URL: http://www.github.com/apeltzer/ClipAndMerge
 Description: >
     adapter clipping and read merging in ancient DNA analysis
