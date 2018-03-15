@@ -16,6 +16,7 @@ This checklist is for my own reference, as I forget the steps every time.
     * Spot any previously unnoticed bugs and fix
 8. Release on PyPI:
     ```bash
+    rm -rf dist/
     python setup.py sdist bdist_wheel
     twine upload dist/*.tar.gz
     ```

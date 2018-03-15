@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## MultiQC v1.5dev
+## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
 
 #### New Modules:
 * [**DeDup**](http://www.github.com/apeltzer/DeDup) - New module!
