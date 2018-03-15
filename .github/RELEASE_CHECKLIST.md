@@ -37,21 +37,27 @@ This checklist is for my own reference, as I forget the steps every time.
     git checkout master
     git pull upstream master
     git push
-    git branch -d multiqc
-    # Rebuild test environment
-    ./simulate-travis.py --bootstrap /tmp/miniconda --overwrite
+    git branch -D multiqc
     # Build new conda recipe from PyPI to automatically collect new dependencies
     git checkout -b multiqc
     cd recipes
-    rm -r multiqc
+    # Do the conda skeleton to copy the dependencies
+    mkdir mqctemp && cd mqctemp && atom .
     conda skeleton pypi multiqc
+    # Update with new release header - see https://goo.gl/ZfRnmj
+    cd ../multiqc && atom .
+    # Get the sha256sum of the release
+    curl -OL https://github.com/ewels/MultiQC/archive/v1.5.tar.gz
+    shasum --algorithm 256 v1.5.tar.gz
     # Switch out download for GitHub release and remove all other cruft
+    # commit changes
+    cd ../../
+    git commit -am "MultiQC version 1.5 release"
     # Test locally
-    cd ../
-    ./simulate-travis.py --packages multiqc --force
+    docker pull bioconda/bioconda-utils-build-env
+    circleci build
     # Push updates
-    git commit -am "MultiQC update"
-    git push origin multiqc
+    git push -u origin multiqc
     # Submit a Pull Request and merge
     ```
 14. Tell UPPMAX about the new version and ask for the module system to be updated.
