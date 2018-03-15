@@ -21,12 +21,10 @@ This checklist is for my own reference, as I forget the steps every time.
     ```
 9. Test that it pip installs:
     ```bash
-    conda create --name testing python pip
-    source activate testing
+    conda create --name testing --yes python pip && source activate testing
     pip install multiqc
     multiqc .
-    source deactivate
-    conda remove --name testing --all
+    source deactivate && conda remove --name testing --all --yes && conda clean --all --yes
     ```
 10. Commit and push version updates
 11. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
@@ -36,7 +34,7 @@ This checklist is for my own reference, as I forget the steps every time.
     # Update to latest bioconda
     cd ../bioconda-recipes
     git checkout master
-    git pull upsream master
+    git pull upstream master
     git push
     git branch -d multiqc
     # Rebuild test environment
