@@ -24,9 +24,9 @@ install:
   # Install everything
   - "%CMD_IN_ENV% conda update --yes --quiet conda"
   - 'pip install --disable-pip-version-check --user --upgrade pip'
-  - "%CMD_IN_ENV% conda install --yes jinja2 simplejson pyyaml click numpy matplotlib"
+  - "%CMD_IN_ENV% conda install --yes jinja2 simplejson pyyaml click numpy matplotlib<=2.1.0"
   - 'pip install "networkx<2"'
-  - "pip install spectra"
+  - "pip install spectra>=0.0.10"
   - "python setup.py install"
   # Download and extract test data and get ready
   - "curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip"
