@@ -31,7 +31,7 @@ except ImportError:
 
 from multiqc import __version__
 from multiqc.plots import table
-from multiqc.utils import report, plugin_hooks, megaqc, util_functions, config, log
+from multiqc.utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
 
 @click.command(
@@ -276,6 +276,7 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         config.plots_force_interactive = True
     if lint:
         config.lint = True
+        lint_helpers.run_tests()
     if make_pdf:
         config.template = 'simple'
     if sample_names:

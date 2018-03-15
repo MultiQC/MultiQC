@@ -14,6 +14,7 @@ MultiQC Modules:
     BioBloom Tools: modules/biobloomtools.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
+    ClipAndMerge: modules/clipandmerge.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
     Flexbar: modules/flexbar.md
