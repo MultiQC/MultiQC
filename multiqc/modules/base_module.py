@@ -94,7 +94,7 @@ class BaseMultiqcModule(object):
 
             # If path_filters is given, skip unless match
             if path_filters is not None and len(path_filters) > 0:
-                if not all([fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters]):
+                if not any([fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters]):
                     logger.debug("{} - Skipping '{}' as didn't match module path filters".format(sp_key, f['fn']))
                     continue
 

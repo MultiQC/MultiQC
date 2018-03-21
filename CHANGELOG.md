@@ -2,7 +2,8 @@
 
 ## MultiQC v1.6dev
 
-_..nothing yet.._
+#### Bug Fixes
+* Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
