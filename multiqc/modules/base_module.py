@@ -95,19 +95,19 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                exlusion_criteria = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
-                if any(exlusion_criteria):
-                    logger.debug("{} - Skipping '{}' as it matched the an exclusion path_filter".format(sp_key, f['fn']))
+                exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
+                if any(exlusion_hits):
+                    logger.debug("{} - Skipping '{}' as it matched the path_filter_exclude".format(sp_key, f['fn']))
                     continue
 
             # Filter out files based on inclusion patterns
             if path_filters and len(path_filters) > 0:
-                inclusion_criteria = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
-                if not any(inclusion_criteria):
-                    logger.debug("{} - Skipping '{}' as it didn't match a module path_filter".format(sp_key, f['fn']))
+                inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
+                if not any(inclusion_hits):
+                    logger.debug("{} - Skipping '{}' as it didn't match the path_filter".format(sp_key, f['fn']))
                     continue
                 else:
-                    logger.debug("{} - Selecting '{}' as it matched a module path_filter".format(sp_key, f['fn']))
+                    logger.debug("{} - Selecting '{}' as it matched the path_filter".format(sp_key, f['fn']))
 
             # Make a sample name from the filename
             f['s_name'] = self.clean_s_name(f['fn'], f['root'])
