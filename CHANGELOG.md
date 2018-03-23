@@ -2,6 +2,9 @@
 
 ## MultiQC v1.6dev
 
+#### New MultiQC Features:
+* Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
+
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
 

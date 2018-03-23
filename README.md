@@ -151,6 +151,7 @@ Code contributions from:
 [@boulund](https://github.com/boulund),
 [@bschiffthaler](https://github.com/bschiffthaler),
 [@Cashalow](https://github.com/Cashalow/),
+[@cpavanrun](https://github.com/cpavanrun),
 [@dakl](https://github.com/dakl),
 [@ehsueh](https://github.com/ehsueh)
 [@epruesse](https://github.com/epruesse),
