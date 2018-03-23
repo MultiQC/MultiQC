@@ -140,11 +140,22 @@ top_modules:
             - '*_special.txt'
             - '*_others.txt'
     - moduleName:
-        name: 'Module (all)'
+        name: 'Module (not-special)'
+        path_filters_exclude:
+            - '*_special.txt'
 ```
-These overwrite the defaults that are hardcoded in the module code. `path_filters` is the
-exception, which filters the file searches for a given list of glob filename patterns.
-The available options are:
+These overwrite the defaults that are hardcoded in the module code. `path_filters` and `path_filters_exclude` being the exception. These filter the file searches for a given list of glob filename patterns:
+
+| Pattern | Meaning                             |
+|---------|-------------------------------------|
+| \*       | matches everything                 |
+| ?       | matches any single character        |
+| [seq]   | matches any character in seq        |
+| [!seq]  | matches any character not in seq    |
+
+Note that exclusion superseeds inclusion for the path filters.
+
+The other available configuration options are:
 
 * `name`: Section name
 * `anchor`: Section report ID
