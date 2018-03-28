@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
                  'title':'BISCUIT: Mapping Summary',
                  'ylab':'Number of Reads',
                  'cpswitch_c_active': True,
-                 'cpswitch_counts_label': '% Reads'
+                 'cpswitch_counts_label': '# Reads'
             })
         )
 
@@ -184,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
                  'title':'BISCUIT: Mapping Strand Distribution',
                  'ylab':'Number of Reads',
                  'cpswitch_c_active': True,
-                 'cpswitch_counts_label': '% Reads'
+                 'cpswitch_counts_label': '# Reads'
             })
         )
 
@@ -714,10 +714,34 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-retention',
                 description = "<p>This plot shows cytosine retention rate by averaging retention level from each cytosine mapped in each read.</p>",
                 plot = table.plot(*_uniquify_ID(pd, OrderedDict([
-                    ('ca', {'id':'ret-cpa','title':'CpA','description':'CpA dinucleotide context','suffix':'%'}),
-                    ('cc', {'id':'ret-cpc','title':'CpC','description':'CpC dinucleotide context','suffix':'%'}),
-                    ('cg', {'id':'ret-cpg','title':'CpG','description':'CpG dinucleotide context','suffix':'%'}),
-                    ('ct', {'id':'ret-cpt','title':'CpT','description':'CpT dinucleotide context','suffix':'%'})
+                    ('ca', {'id':'ret-cpa',
+                            'title':'CpA',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpA dinucleotide context',
+                            'suffix':'%'}),
+                    ('cc', {'id':'ret-cpc',
+                            'title':'CpC',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpC dinucleotide context',
+                            'suffix':'%'}),
+                    ('cg', {'id':'ret-cpg',
+                            'title':'CpG',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpG dinucleotide context',
+                            'suffix':'%'}),
+                    ('ct', {'id':'ret-cpt',
+                            'title':'CpT',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpT dinucleotide context',
+                            'suffix':'%'})
                 ]), 'biscuit-retention'))
             )
 
@@ -729,10 +753,34 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor = 'biscuit-retention-average',
                 description = "<p>This plot shows cytosine retention rate by averaging retention level from all cytosine bases.</p>",
                 plot = table.plot(*_uniquify_ID(pd, OrderedDict([
-                    ('ca', {'id':'ret-ave-cpa','title':'CpA','description':'CpA dinucleotide context','suffix':'%'}),
-                    ('cc', {'id':'ret-ave-cpc','title':'CpC','description':'CpC dinucleotide context','suffix':'%'}),
-                    ('cg', {'id':'ret-ave-cpg','title':'CpG','description':'CpG dinucleotide context','suffix':'%'}),
-                    ('ct', {'id':'ret-ave-cpt','title':'CpT','description':'CpT dinucleotide context','suffix':'%'})
+                    ('ca', {'id':'ret-cpa',
+                            'title':'CpA',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpA dinucleotide context',
+                            'suffix':'%'}),
+                    ('cc', {'id':'ret-cpc',
+                            'title':'CpC',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpC dinucleotide context',
+                            'suffix':'%'}),
+                    ('cg', {'id':'ret-cpg',
+                            'title':'CpG',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpG dinucleotide context',
+                            'suffix':'%'}),
+                    ('ct', {'id':'ret-cpt',
+                            'title':'CpT',
+                            'format':'{:,.2g}',
+                            'min':0,
+                            'max':100,
+                            'description':'CpT dinucleotide context',
+                            'suffix':'%'})
                 ]), 'biscuit-retention-average'))
             )
 
@@ -794,7 +842,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = 'CpG Retention by Position in Read 1',
                 anchor = 'biscuit-retention-cpg-read1',
                 description = "<p>This plot (aka. mbias plot) shows the distribution of CpG retention rate in read 1.</p>",
-                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cpg_read1', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cpg_read1', 'ylab': 'CpG Retention Rate (%)', 'xlab': 'Position in Read'})
             )
 
         mdata = dict([(k.replace('_CpGRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpGRetentionByReadPos.txt')])
