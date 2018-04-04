@@ -96,7 +96,17 @@ class MultiqcModule(BaseMultiqcModule):
 
                 if line[0] != cols[0]:
                     # It's not the table header, it must be a key-value row
-                    if len(line) != 2:
+                    if len(line) == 3 and file_type == "stats":
+                        # This is a special case for the 'stats' file type:
+                        # The first line _might_ have three columns if processing paired-end reads, 
+                        # but we don't care about the first line.
+                        # The third line is always three columns, which is what we really want.
+                        if line[0] == "File": 
+                            continue
+                        kv["% filtered"] = float(line[2].strip("%"))
+                        kv[line[0]] = line[1] 
+                        continue
+                    elif len(line) != 2:
                         # Not two items? Wrong!
                         log.error("Expected key value pair in %s/%s:%d but found '%s'",
                                   root, s_name, line_number, repr(line))
@@ -139,10 +149,11 @@ class MultiqcModule(BaseMultiqcModule):
         plot_title = file_types[file_type]['title']
         plot_func = file_types[file_type]['plot_func']
         plot_params = file_types[file_type]['plot_params']
-        return plot_func(samples,
-                    file_type,
-                    plot_title=plot_title,
-                    plot_params=plot_params)
+        if plot_func:
+            return plot_func(samples,
+                        file_type,
+                        plot_title=plot_title,
+                        plot_params=plot_params)
 
 
     def make_basic_table(self, file_type):
@@ -153,14 +164,15 @@ class MultiqcModule(BaseMultiqcModule):
                 for sample, items
                 in self.mod_data[file_type].items()
         }
-        table_headers = {column_header: {
+        table_headers = {}
+        for column_header, (description, header_options) in file_types[file_type]['kv_descriptions'].items():
+            table_headers[column_header] = {
                     'rid': '{}_{}_bbmstheader'.format(file_type, column_header),
                     'title': column_header,
                     'description': description,
-                }
-                for column_header, description
-                in file_types[file_type]['kv_descriptions'].items()
-        }
+            }
+            table_headers[column_header].update(header_options)
+
         tconfig = {
             'id': file_type + '_bbm_table',
             'namespace': 'BBTools'
