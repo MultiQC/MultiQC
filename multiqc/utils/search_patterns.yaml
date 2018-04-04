@@ -169,6 +169,10 @@ hicexplorer:
     num_lines: 5
 hicup:
     fn: 'HiCUP_summary_report*'
+hicpro:
+    - fn: '*.mmapstat'
+    - fn: '*.mergestat'
+    - fn: '*.mRSstat'
 hisat2:
     contents: 'HISAT2 summary stats:'
     shared: true

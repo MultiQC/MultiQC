@@ -30,6 +30,7 @@ MultiQC Modules:
     Bowtie 2: modules/bowtie2.md
     BBMap: modules/bbmap.md
     HiCUP: modules/hicup.md
+    HiCPro: modules/hicpro.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
     Salmon: modules/salmon.md

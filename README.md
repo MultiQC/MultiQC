@@ -36,14 +36,14 @@ Currently, supported tools include:
 |[AfterQC][afterqc]               |[Bismark][bismark]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
 |[Bcl2fastq][bcl2fastq]           |[Bowtie][bowtie-1]      |[GATK][gatk]               |[Disambiguate][disambiguate]|
 |[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]    |[HOMER][homer]             |[goleft][goleft]|
-|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]|
+|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]	   |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]|
 |[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[MACS2][macs2]             |[methylQA][methylqa]|
 |[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[Picard][picard]           |[Peddy][peddy]|
 |[leeHom][leehom]                 |[Salmon][salmon]        |[Prokka][prokka]           |[Preseq][preseq]|
 |[InterOp][interop]               |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[QoRTs][qorts]|
 |[FastQC][fastqc]                 |[STAR][star]            |[Samtools][samtools]       |[Qualimap][qualimap]|
 |[FastQ Screen][fastq-screen]     |[Tophat][tophat]        |[SnpEff][snpeff]           |[QUAST][quast]|
-|[Flexbar][flexbar]               ||[Subread featureCounts][featurecounts]             |[RNA-SeQC][rna_seqc]|
+|[Flexbar][flexbar]               |[HiCPro][hicpro]	   |[Subread featureCounts][featurecounts]             |[RNA-SeQC][rna_seqc]|
 |[Jellyfish][jellyfish]           |                        |[RSEM][rsem]               |[RSeQC][rseqc]|
 |[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Sargasso][sargasso]|
 |[SortMeRNA][sortmerna]           |                        |                           |[Supernova][supernova] |

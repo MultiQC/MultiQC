@@ -12,6 +12,9 @@
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
 
 #### New Modules:
+* [**HiCPro**](https://github.com/nservant/HiC-Pro) - New module!
+    * HiCPro: Quality controls and processing of Hi-C
+    * Module written by [@nservant](https://github.com/nservant),
 * [**DeDup**](http://www.github.com/apeltzer/DeDup) - New module!
     * DeDup: Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
     * Module written by [@apeltzer](https://github.com/apeltzer),
