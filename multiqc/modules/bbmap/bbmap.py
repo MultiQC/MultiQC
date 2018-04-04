@@ -106,16 +106,15 @@ class MultiqcModule(BaseMultiqcModule):
                             continue
                         kv["% filtered"] = float(line[2].strip("%"))
                         kv[line[0]] = line[1] 
-                        continue
                     elif len(line) != 2:
                         # Not two items? Wrong!
                         log.error("Expected key value pair in %s/%s:%d but found '%s'",
                                   root, s_name, line_number, repr(line))
                         log.error("Table header should begin with '%s'",
                                   cols[0])
-                        continue
-                    # save key value pair
-                    kv[line[0]] = line[1]
+                    else:
+                        # save key value pair
+                        kv[line[0]] = line[1]
                 else:
                     # It should be the table header. Verify:
                     if line != cols:
