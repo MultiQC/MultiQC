@@ -160,7 +160,6 @@ fn_clean_exts:
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
-    - '.stats'
     - '.aqhist'
     - '.bhist'
     - '.bincov'
@@ -190,6 +189,7 @@ fn_clean_trim:
     - '_val'
     - '.idxstats'
     - '_trimmed'
+    - '.trimmed'
     - '.csv'
     - '.yaml'
     - '.yml'
@@ -201,6 +201,7 @@ fn_clean_trim:
     - '.align'
     - '.h5'
     - '_matrix'
+    - '.stats'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
