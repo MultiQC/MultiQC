@@ -146,10 +146,10 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         samples = self.mod_data[file_type]
-        plot_title = file_types[file_type]['title']
-        plot_func = file_types[file_type]['plot_func']
-        plot_params = file_types[file_type]['plot_params']
         if plot_func:
+            plot_title = file_types[file_type]['title']
+            plot_func = file_types[file_type]['plot_func']
+            plot_params = file_types[file_type]['plot_params']
             return plot_func(samples,
                         file_type,
                         plot_title=plot_title,
