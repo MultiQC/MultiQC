@@ -53,13 +53,14 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("section %s has %d entries", file_type,
                           len(self.mod_data[file_type]))
 
-                self.add_section(
-                    name = file_types[file_type]['title'],
-                    anchor =  'bbmap-' + file_type,
-                    description = file_types[file_type]['descr'],
-                    helptext = file_types[file_type]['help_text'],
-                    plot = self.plot(file_type)
-                )
+                if file_types[file_type]['plot_func']:
+                    self.add_section(
+                        name = file_types[file_type]['title'],
+                        anchor =  'bbmap-' + file_type,
+                        description = file_types[file_type]['descr'],
+                        helptext = file_types[file_type]['help_text'],
+                        plot = self.plot(file_type)
+                    )
 
             if any(self.mod_data[file_type][sample]['kv']
                    for sample in self.mod_data[file_type]):
@@ -146,14 +147,13 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         samples = self.mod_data[file_type]
-        if file_types[file_type]['plot_func']:
-            plot_title = file_types[file_type]['title']
-            plot_func = file_types[file_type]['plot_func']
-            plot_params = file_types[file_type]['plot_params']
-            return plot_func(samples,
-                        file_type,
-                        plot_title=plot_title,
-                        plot_params=plot_params)
+        plot_title = file_types[file_type]['title']
+        plot_func = file_types[file_type]['plot_func']
+        plot_params = file_types[file_type]['plot_params']
+        return plot_func(samples,
+                    file_type,
+                    plot_title=plot_title,
+                    plot_params=plot_params)
 
 
     def make_basic_table(self, file_type):
