@@ -160,6 +160,7 @@ fn_clean_exts:
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
+    - '.stats'
     - '.aqhist'
     - '.bhist'
     - '.bincov'
