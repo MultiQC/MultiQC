@@ -52,6 +52,7 @@ def get_filelist(run_module_names):
     """
     # Prep search patterns
     spatterns = [{},{},{},{},{},{},{}]
+    epatterns = [{}, {}]
     ignored_patterns = []
     for key, sps in config.sp.items():
         mod_name = key.split('/', 1)[0]
@@ -63,7 +64,20 @@ def get_filelist(run_module_names):
             sps = [sps]
 
         # Warn if we have any unrecognised search pattern keys
-        unrecognised_keys = [y for x in sps for y in x.keys() if y not in ['fn', 'fn_re', 'contents', 'contents_re', 'num_lines', 'shared', 'max_filesize']]
+        expected_sp_keys = [
+            'fn',
+            'fn_re',
+            'contents',
+            'contents_re',
+            'num_lines',
+            'shared',
+            'max_filesize',
+            'exclude_fn',
+            'exclude_fn_re',
+            'exclude_contents',
+            'exclude_contents_re'
+        ]
+        unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
             logger.warn("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
 
@@ -120,8 +134,10 @@ def get_filelist(run_module_names):
             for key, sps in patterns.items():
                 for sp in sps:
                     if search_file (sp, f):
-                        # Looks good! Remember this file
-                        files[key].append(f)
+                        # Check that we shouldn't exclude this file
+                        if not exclude_file(sp, f):
+                            # Looks good! Remember this file
+                            files[key].append(f)
                         # Don't keep searching this file for other modules
                         if not sp.get('shared', False):
                             return
@@ -234,6 +250,46 @@ def search_file (pattern, f):
                 return False
 
     return fn_matched and contents_matched
+
+def exclude_file(sp, f):
+    """
+    Exclude discovered files if they match the special exclude_
+    search pattern keys
+    """
+    # Make everything a list if it isn't already
+    for k in sp:
+        if k in ['exclude_fn', 'exclude_fn_re' 'exclude_contents', 'exclude_contents_re']:
+            if not isinstance(sp[k], list):
+                sp[k] = [sp[k]]
+
+    # Search by file name (glob)
+    if 'exclude_fn' in sp:
+        for pat in sp['exclude_fn']:
+            if fnmatch.fnmatch(f['fn'], pat):
+                return True
+
+    # Search by file name (regex)
+    if 'exclude_fn_re' in sp:
+        for pat in sp['exclude_fn_re']:
+            if re.match( pat, f['fn']):
+                return True
+
+    # Search the contents of the file
+    if 'exclude_contents' in sp or 'exclude_contents_re' in sp:
+        # Compile regex patterns if we have any
+        if 'exclude_contents_re' in sp:
+            sp['exclude_contents_re'] = [re.compile(pat) for pat in sp['exclude_contents_re']]
+        with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
+            for line in fh:
+                if 'exclude_contents' in sp:
+                    for pat in sp['exclude_contents']:
+                        if pat in line:
+                            return True
+                if 'exclude_contents_re' in sp:
+                    for pat in sp['exclude_contents_re']:
+                        if re.search(pat, line):
+                            return True
+    return False
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])
