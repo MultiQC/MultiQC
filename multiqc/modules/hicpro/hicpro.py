@@ -38,10 +38,10 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
 
         # Find all files for mymod
-        #for myfile in self.find_log_files('hicpro'):
-        #    print( myfile['fn'] )      # Filename    
-        #    print( myfile['s_name'] )  # Sample name (from cleaned filename)
-        #    print( myfile['root'] )    # Directory file was in
+        for myfile in self.find_log_files('hicpro'):
+            print( myfile['fn'] )      # Filename    
+            print( myfile['s_name'] )  # Sample name (from cleaned filename)
+            print( myfile['root'] )    # Directory file was in
     
         log.info("Found {} reports".format(len(self.hicpro_data)))
         
@@ -55,9 +55,17 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Read Mapping',
             anchor = 'hicpro-mapping',
+            description = 'todo - description',
+            helptext = 'todo - help',
             plot = self.hicpro_mapping_chart()
         )
 
+        self.add_section (
+            name = 'Read Pairing',
+            anchor = 'hicpro-pairing',
+            plot = self.hicpro_pairing_chart()
+        )
+        
         self.add_section (
             name = 'Read Pair Filtering',
             anchor = 'hicup-filtering',
@@ -82,19 +90,24 @@ class MultiqcModule(BaseMultiqcModule):
              plot = self.hicpro_insertsize_chart()
         )
 
-        
 
     def parse_hicpro_stats(self, f):
         """ Parse a HiCPro stat file """
         s_name = os.path.basename(f['root'])
-        data = {}
+
+        ## Check if data already exists
+        if s_name in self.hicpro_data.keys():
+            data = self.hicpro_data[s_name]
+        else:
+            data = {}
+
         for l in f['f'].splitlines():
             if not l.startswith('#'):
                 s = l.split("\t")
-                data[s[0]] = s[1]
+                data[s[0]] = int(s[1])
                 
         if s_name in self.hicpro_data:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug("Duplicated sample name found! Overwriting: {}".format(s_name))
 
         self.add_data_source(f, s_name)
         self.hicpro_data[s_name] = data
@@ -128,12 +141,11 @@ class MultiqcModule(BaseMultiqcModule):
     #         'scale': 'YlGn-rev',
     #         'modify': lambda x: 100 - x
     #     }
-         headers['Valid_Pairs'] = {
-             'title': '{} Valid'.format(config.read_count_prefix),
-             'description': 'Valid Pairs ({})'.format(config.read_count_desc),
+         headers['Valid_interaction_pairs'] = {
+             'title': '{} Valid', #.format(config.read_count_prefix),
+             'description': 'Valid Pairs ({})', #.format(config.read_count_desc),
              'min': 0,
              'scale': 'PuRd',
-             'modify': lambda x: x * config.read_count_multiplier,
              'shared_key': 'read_count'
          }
     #     headers['Percentage_Valid'] = {
@@ -163,84 +175,115 @@ class MultiqcModule(BaseMultiqcModule):
          self.general_stats_addcols(self.hicpro_data, headers, 'HiC-Pro')
 
     def hicpro_mapping_chart (self):
-        """ Generate the HiCUP Aligned reads plot """
+        """ Generate the HiC-Pro Aligned reads plot """
 
         # Specify the order of the different possible categories
-    #     keys = OrderedDict()
-    #     keys['Unique_Alignments_Read']   = { 'color': '#2f7ed8', 'name': 'Unique Alignments' }
-    #     keys['Multiple_Alignments_Read'] = { 'color': '#492970', 'name': 'Multiple Alignments' }
-    #     keys['Failed_To_Align_Read']     = { 'color': '#0d233a', 'name': 'Failed To Align' }
-    #     keys['Too_Short_To_Map_Read']    = { 'color': '#f28f43', 'name': 'Too short to map' }
+        keys = OrderedDict()
+        keys['Full_Alignments_Read']   = { 'color': '#2f7ed8', 'name': 'Full reads Alignments' }
+        keys['Trimmed_Alignments_Read'] = { 'color': '#492970', 'name': 'Trimmed reads Alignments' }
+        keys['Failed_To_Align_Read']     = { 'color': '#0d233a', 'name': 'Failed To Align' }
+    
+        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
+        data = {}
+        for s_name in self.hicpro_data:
+            data['{} Read 1'.format(s_name)] = {}
+            data['{} Read 2'.format(s_name)] = {}
+            data['{} Read 1'.format(s_name)]['Full_Alignments_Read'] = self.hicpro_data[s_name]['global']
+            data['{} Read 2'.format(s_name)]['Full_Alignments_Read'] = self.hicpro_data[s_name]['global']
+            data['{} Read 1'.format(s_name)]['Trimmed_Alignments_Read'] = self.hicpro_data[s_name]['local']
+            data['{} Read 2'.format(s_name)]['Trimmed_Alignments_Read'] = self.hicpro_data[s_name]['local']
+            data['{} Read 1'.format(s_name)]['Failed_To_Align_Read'] = int(self.hicpro_data[s_name]['total']) - int(self.hicpro_data[s_name]['mapped'])
+            data['{} Read 2'.format(s_name)]['Failed_To_Align_Read'] = int(self.hicpro_data[s_name]['total']) - int(self.hicpro_data[s_name]['mapped'])
 
-    #     # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
-    #     data = {}
-    #     for s_name in self.hicup_data:
-    #         data['{} Read 1'.format(s_name)] = {}
-    #         data['{} Read 2'.format(s_name)] = {}
-    #         data['{} Read 1'.format(s_name)]['Unique_Alignments_Read'] = self.hicup_data[s_name]['Unique_Alignments_Read_1']
-    #         data['{} Read 2'.format(s_name)]['Unique_Alignments_Read'] = self.hicup_data[s_name]['Unique_Alignments_Read_2']
-    #         data['{} Read 1'.format(s_name)]['Multiple_Alignments_Read'] = self.hicup_data[s_name]['Multiple_Alignments_Read_1']
-    #         data['{} Read 2'.format(s_name)]['Multiple_Alignments_Read'] = self.hicup_data[s_name]['Multiple_Alignments_Read_2']
-    #         data['{} Read 1'.format(s_name)]['Failed_To_Align_Read'] = self.hicup_data[s_name]['Failed_To_Align_Read_1']
-    #         data['{} Read 2'.format(s_name)]['Failed_To_Align_Read'] = self.hicup_data[s_name]['Failed_To_Align_Read_2']
-    #         data['{} Read 1'.format(s_name)]['Too_Short_To_Map_Read'] = self.hicup_data[s_name]['Too_Short_To_Map_Read_1']
-    #         data['{} Read 2'.format(s_name)]['Too_Short_To_Map_Read'] = self.hicup_data[s_name]['Too_Short_To_Map_Read_2']
+        # Config for the plot
+        config = {
+            'id': 'hicpro_mapping_stats_plot',
+            'title': 'HiC-Pro: Mapping Statistics',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
 
-    #     # Config for the plot
-    #     config = {
-    #         'id': 'hicup_mapping_stats_plot',
-    #         'title': 'HiCUP: Mapping Statistics',
-    #         'ylab': '# Reads',
-    #         'cpswitch_counts_label': 'Number of Reads'
-    #     }
+        return bargraph.plot(data, keys, config)
 
-    #     return bargraph.plot(data, keys, config)
+    def hicpro_pairing_chart (self):
+        """ Generate Pairing chart """
 
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['Unique_Pairs'] = { 'color': '#2f7ed8', 'name': 'Uniquely Aligned' }
+        keys['Low_Qual_Pairs'] = { 'color': '#492970', 'name': 'Low Quality' }
+        keys['Singleton_Pairs'] = { 'color': '#0d233a', 'name': 'Singleton' }
+        keys['Multi_Pairs'] = { 'color': '#0d233a', 'name': 'Multi Aligned' }
+        keys['Failed_To_Align_Pairs'] = { 'color': '#0d233a', 'name': 'Failed To Align' }
+    
+        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
+        data = {}
+        for s_name in self.hicpro_data:
+            print ( self.hicpro_data[s_name] )
+            data['{} Pairs'.format(s_name)] = {}
+            data['{} Pairs'.format(s_name)]['Failed_To_Align_Pairs'] = self.hicpro_data[s_name]['Unmapped_pairs']
+            data['{} Pairs'.format(s_name)]['Low_Qual_Pairs'] = self.hicpro_data[s_name]['Low_qual_pairs']
+            data['{} Pairs'.format(s_name)]['Unique_Pairs'] = self.hicpro_data[s_name]['Unique_paired_alignments']
+            data['{} Pairs'.format(s_name)]['Multi_Pairs'] = self.hicpro_data[s_name]['Multiple_pairs_alignments']
+            data['{} Pairs'.format(s_name)]['Singleton_Pairs'] = self.hicpro_data[s_name]['Pairs_with_singleton']
+
+        # Config for the plot
+        config = {
+        'id': 'hicpro_pairing_stats_plot',
+            'title': 'HiC-Pro: Pairing Statistics',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+
+        return bargraph.plot(data, keys, config)
+
+        
     def hicpro_filtering_chart (self):
         """ Generate the HiC-Pro filtering plot """
 
-    #     # Specify the order of the different possible categories
-    #     keys = OrderedDict()
-    #     keys['Valid_Pairs'] =            { 'color': '#2f7ed8', 'name': 'Valid Pairs' }
-    #     keys['Same_Fragment_Internal'] = { 'color': '#0d233a', 'name': 'Same Fragment - Internal' }
-    #     keys['Same_Circularised'] =      { 'color': '#910000', 'name': 'Same Fragment - Circularised' }
-    #     keys['Same_Dangling_Ends'] =     { 'color': '#8bbc21', 'name': 'Same Fragment - Dangling Ends' }
-    #     keys['Re_Ligation'] =            { 'color': '#1aadce', 'name': 'Re-ligation' }
-    #     keys['Contiguous_Sequence'] =    { 'color': '#f28f43', 'name': 'Contiguous Sequence' }
-    #     keys['Wrong_Size'] =             { 'color': '#492970', 'name': 'Wrong Size' }
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['Valid_interaction_pairs_FF'] = { 'name': 'Valid Pairs FF' }
+        keys['Valid_interaction_pairs_RR'] = { 'name': 'Valid Pairs RR' }
+        keys['Valid_interaction_pairs_RF'] = { 'name': 'Valid Pairs RF' }
+        keys['Valid_interaction_pairs_FR'] = { 'name': 'Valid Pairs FR' }
+        keys['Self_Circle_pairs'] = { 'name': 'Same Fragment - Self-Circle' }
+        keys['Dangling_ends_pairs'] = { 'name': 'Same Fragment - Dangling Ends' }
+        keys['Religation_pairs'] = { 'name': 'Re-ligation' }
+        keys['Dumped_pairs'] = { 'name': 'Dumped pairs' }
 
-    #     # Config for the plot
-    #     config = {
-    #         'id': 'hicup_filtering_plot',
-    #         'title': 'HiCUP: Filtering Statistics',
-    #         'ylab': '# Read Pairs',
-    #         'cpswitch_counts_label': 'Number of Read Pairs',
-    #         'cpswitch_c_active': False
-    #     }
-
-    #     return bargraph.plot(self.hicup_data, keys, config)
+        # Config for the plot
+        config = {
+            'id': 'hicpro_filtering_plot',
+            'title': 'HiC-Pro: Filtering Statistics',
+            'ylab': '# Read Pairs',
+            'cpswitch_counts_label': 'Number of Read Pairs',
+            'cpswitch_c_active': False
+        }
+        
+        return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_rmdup_chart (self):
         """ Generate the HiC-Pro interaction plot """
 
-    #     # Specify the order of the different possible categories
-    #     keys = OrderedDict()
-    #     keys['Deduplication_Cis_Close_Uniques'] = { 'color': '#2f7ed8', 'name': 'Unique: cis < 10Kbp' }
-    #     keys['Deduplication_Cis_Far_Uniques']   = { 'color': '#0d233a', 'name': 'Unique: cis > 10Kbp' }
-    #     keys['Deduplication_Trans_Uniques']     = { 'color': '#492970', 'name': 'Unique: trans' }
-    #     keys['Duplicate_Read_Pairs']            = { 'color': '#f28f43', 'name': 'Duplicate read pairs' }
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['cis_shortRange'] = { 'color': '#2f7ed8', 'name': 'Unique: cis < 10Kbp' }
+        keys['cis_longRange'] = { 'color': '#0d233a', 'name': 'Unique: cis > 10Kbp' }
+        keys['trans_interaction']  = { 'color': '#492970', 'name': 'Unique: trans' }
+        keys['valid_interaction_rmdup'] = { 'color': '#f28f43', 'name': 'Duplicate read pairs' }
 
-    #     # Config for the plot
-    #     config = {
-    #         'id': 'hicup_dedup_plot',
-    #         'title': 'HiCUP: De-Duplication Statistics',
-    #         'ylab': '# Di-Tags',
-    #         'cpswitch_counts_label': 'Number of Di-Tags',
-    #         'cpswitch_c_active': False
-    #     }
-
-    #     return bargraph.plot(self.hicup_data, keys, config)
-
+        # Config for the plot
+        config = {
+            'id': 'hicpro_rmdup_plot',
+            'title': 'HiC-Pro: Contact Statistics',
+            'ylab': '# Pairs',
+            'cpswitch_counts_label': 'Number of Pairs',
+            'cpswitch_c_active': False
+        }
+        
+        return bargraph.plot(self.hicpro_data, keys, config)
+  
     def hicpro_as_chart (self):
         """ Generate Allele-specific plot"""
 

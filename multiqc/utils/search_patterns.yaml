@@ -171,6 +171,7 @@ hicup:
     fn: 'HiCUP_summary_report*'
 hicpro:
     - fn: '*.mmapstat'
+    - fn: '*.pairstat'
     - fn: '*.mergestat'
     - fn: '*.mRSstat'
 hisat2:
