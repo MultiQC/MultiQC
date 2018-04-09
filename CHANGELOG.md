@@ -9,6 +9,8 @@
 
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
+* Fixed bug that could prevent Tophat from correctly parsing sample sample names
+    * Fix by [@lparsons](https://github.com/lparsons)
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
