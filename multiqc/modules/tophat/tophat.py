@@ -30,7 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('tophat'):
             parsed_data = self.parse_tophat_log(f['f'])
             if parsed_data is not None:
-                if f['s_name'] == "align_summary.txt":
+                if (f['s_name'] == "align" or
+                        f['s_name'] == 'align_summary.txt'):
                     s_name = os.path.basename(f['root'])
                 else:
                     s_name = f['s_name'].split("align_summary.txt",1)[0]
