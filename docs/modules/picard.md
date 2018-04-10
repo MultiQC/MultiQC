@@ -22,6 +22,7 @@ Supported commands:
 * `RnaSeqMetrics`
 * `AlignmentSummaryMetrics`
 * `RrbsSummaryMetrics`
+* `ValidateSamFile`
 
 #### Coverage Levels
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and
@@ -44,4 +45,12 @@ picard_config:
     general_stats_target_coverage:
         - 10
         - 50
+```
+
+#### ValidateSamFile Search Pattern
+Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filesnames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config:
+```yaml
+sp:
+    picard/sam_file_validation:
+        fn: '*.file_validation.txt'
 ```
