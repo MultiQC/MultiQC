@@ -89,9 +89,22 @@ bismark/bam2nuc:
     fn: '*.nucleotide_stats.txt'
 bowtie1:
     contents: '# reads processed:'
+    exclude_fn:
+        # Tophat log files
+        - 'bowtie.left_kept_reads.log'
+        - 'bowtie.left_kept_reads.m2g_um.log'
+        - 'bowtie.left_kept_reads.m2g_um_seg1.log'
+        - 'bowtie.left_kept_reads.m2g_um_seg2.log'
+        - 'bowtie.right_kept_reads.log'
+        - 'bowtie.right_kept_reads.m2g_um.log'
+        - 'bowtie.right_kept_reads.m2g_um_seg1.log'
+        - 'bowtie.right_kept_reads.m2g_um_seg2.log'
     shared: true
 bowtie2:
     contents: 'reads; of these:'
+    exclude_contents:
+        - 'bisulfite'
+        - 'Hi-C Pro'
     shared: true
 busco:
     fn: 'short_summary_*'

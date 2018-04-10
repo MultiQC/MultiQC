@@ -4,9 +4,13 @@
 
 #### New MultiQC Features:
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
+* New `exclude_*` keys for file search patterns
+    * Have a subset of patterns to exclude otherwise detected files with, by filename or contents
 
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
+* Fixed bug that could prevent Tophat from correctly parsing sample sample names
+    * Fix by [@lparsons](https://github.com/lparsons)
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15

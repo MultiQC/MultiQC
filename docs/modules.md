@@ -197,6 +197,14 @@ The following search criteria sub-keys can then be used:
 * `contents_re`
   * A regex to match within the file contents (checked line by line)
   * NB: Regex must match entire line (add `.*` to start and end of pattern to avoid this)
+* `exclude_fn`
+  * A glob filename pattern which will exclude a file if matched
+* `exclude_fn_re`
+  * A regex filename pattern which will exclude a file if matched
+* `exclude_contents`
+  * A string which will exclude the file if matched within the file contents (checked line by line)
+* `exclude_contents_re`
+  * A regex which will exclude the file if matched within the file contents (checked line by line)
 * `num_lines`
   * The number of lines to search through for the `contents` string. Default: all lines.
 * `shared`
@@ -206,6 +214,9 @@ The following search criteria sub-keys can then be used:
 
 Please try to use `num_lines` and `max_filesize` where possible as they will speed up
 MultiQC execution time.
+
+Note that `exclude_` keys are tested after a file is detected with one or
+more of the other patterns.
 
 For example, two typical modules could specify search patterns as follows:
 
@@ -236,6 +247,21 @@ myothermod:
       contents: 'What are these files anyway?'
 ```
 Here, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
+
+You can match subsets of files by using `exclude_` keys as follows:
+
+```yaml
+mymod:
+    fn: '*.myprog.txt'
+    exclude_fn: 'not_these_*'
+myothermod:
+    fn: 'mylog.txt'
+    exclude_contents:
+        - 'trimmed'
+        - 'sorted'
+```
+Note that the `exclude_` patterns can have either a single value or a list of values.
+They are always considered using OR logic - any matches will reject the file.
 
 Remember that users can overwrite these defaults in their own config files.
 This is helpful as people have weird and wonderful processing pipelines with
