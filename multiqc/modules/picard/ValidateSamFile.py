@@ -307,7 +307,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
                 <li class="list-group-item list-group-item-danger" >
                     <span class="label label-danger">Fail</span> - {} {sample} {has} file-validity <strong>ERRORS</strong> (and possibly warnings).
                 </li>
-                '''.format(error_count, sample='samples' if error_count > 1 else 'samples', has='have' if error_count > 1 else 'has')
+                '''.format(error_count, sample='samples' if error_count > 1 else 'sample', has='have' if error_count > 1 else 'has')
             )
     if only_warning_count:
         note_html.append(
