@@ -101,6 +101,7 @@ setup(
             'interop = multiqc.modules.interop:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
+			'kat = multiqc.modules.kat:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',

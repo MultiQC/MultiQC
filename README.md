@@ -45,7 +45,8 @@ Currently, supported tools include:
 |[FastQ Screen][fastq-screen]     |[Tophat][tophat]        |[SnpEff][snpeff]           |[QUAST][quast]|
 |[Flexbar][flexbar]               ||[Subread featureCounts][featurecounts]             |[RNA-SeQC][rna_seqc]|
 |[Jellyfish][jellyfish]           |                        |[RSEM][rsem]               |[RSeQC][rseqc]|
-|[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Sargasso][sargasso]|
+|[KAT][kat]                       |                        |[THetA2][theta2]           ||
+|[Skewer][skewer]                 |                        |                           |[Sargasso][sargasso]|
 |[SortMeRNA][sortmerna]           |                        |                           |[Supernova][supernova] |
 |[Trimmomatic][trimmomatic]       |                        |                           |[VCFTools][vcftools] |
 |[Illumina InterOp][interop]      |                        |                           |[VerifyBAMID][verifybamid]                      |
