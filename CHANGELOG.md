@@ -2,6 +2,10 @@
 
 ## MultiQC v1.6dev
 
+#### Module updates:
+* **Picard**
+    * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
+
 #### New MultiQC Features:
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
 * New `exclude_*` keys for file search patterns
