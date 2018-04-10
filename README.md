@@ -207,6 +207,7 @@ MultiQC is released under the GPL v3 or later licence.
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
 [interop]:        http://multiqc.info/docs/#interop
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[kat]:            http://multiqc.info/docs/#kat
 [leehom]:         http://multiqc.info/docs/#leehom
 [macs2]:          http://multiqc.info/docs/#macs2
 [methylqa]:       http://multiqc.info/docs/#methylqa
