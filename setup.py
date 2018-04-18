@@ -38,8 +38,7 @@ install_requires = [
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        # mpl version restraint can be removed when https://github.com/matplotlib/matplotlib/issues/10784 fixed
-        'matplotlib<=2.1.0',
+        'matplotlib>=2.1.1',
         'markdown',
         'numpy',
         'pyyaml',
