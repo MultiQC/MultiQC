@@ -58,16 +58,16 @@ class MultiqcModule(BaseMultiqcModule):
                             self.peddy_data[s_name].update(parsed_data[s_name])
                         except KeyError:
                             self.peddy_data[s_name] = parsed_data[s_name]
-        # parse background PCA JSON file
-        for pattern in ['background_pca']:
-            sp_key = 'peddy/{}'.format(pattern)
-            for f in self.find_log_files(sp_key):
-                background = sj.loads(f['f'])
-                PC1 = [x["PC1"] for x in background]
-                PC2 = [x["PC2"] for x in background]
-                ancestry = [x["ancestry"] for x in background]
-                self.peddy_data["background_pca"] =  {
-                    "PC1": PC1, "PC2": PC2, "ancestry": ancestry}
+        # parse background PCA JSON file, this is identitical for all peddy runs,
+        # so just parse the first one we find
+        for f in self.find_log_files("peddy/background_pca"):
+            background = sj.loads(f['f'])
+            PC1 = [x["PC1"] for x in background]
+            PC2 = [x["PC2"] for x in background]
+            ancestry = [x["ancestry"] for x in background]
+            self.peddy_data["background_pca"] =  {
+                "PC1": PC1, "PC2": PC2, "ancestry": ancestry}
+            break
 
         # Filter to strip out ignored sample names
         self.peddy_data = self.ignore_samples(self.peddy_data)
