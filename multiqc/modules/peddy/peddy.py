@@ -5,7 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import simplejson as sj
+import json
 
 from multiqc import config
 from multiqc.plots import scatter
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         # parse background PCA JSON file, this is identitical for all peddy runs,
         # so just parse the first one we find
         for f in self.find_log_files("peddy/background_pca"):
-            background = sj.loads(f['f'])
+            background = json.loads(f['f'])
             PC1 = [x["PC1"] for x in background]
             PC2 = [x["PC2"] for x in background]
             ancestry = [x["ancestry"] for x in background]
@@ -196,7 +196,19 @@ class MultiqcModule(BaseMultiqcModule):
         }
         default_color = '#000000'
         default_background_color = 'rgb(211,211,211,0.05)'
-        data = dict()
+        data = OrderedDict()
+
+        # plot the background data first, so it doesn't hide the actual data points
+        d = self.peddy_data.pop("background_pca", {})
+        if d:
+            background = [{'x': pc1,
+                        'y': pc2,
+                        'color': default_background_color,
+                        'name': ancestry,
+                        'marker_size': 1}
+                        for pc1, pc2, ancestry in zip(d['PC1'], d['PC2'], d['ancestry'])]
+            data["background"] = background
+
         for s_name, d in self.peddy_data.items():
             if 'PC1_het_check' in d and 'PC2_het_check' in d:
                 data[s_name] = {
@@ -204,14 +216,6 @@ class MultiqcModule(BaseMultiqcModule):
                     'y': d['PC2_het_check'],
                     'color': ancestry_colors.get(d['ancestry-prediction'], default_color)
                 }
-            if s_name == "background_pca":
-                background = [{'x': pc1,
-                               'y': pc2,
-                               'color': default_background_color,
-                               'name': ancestry,
-                               'marker_size': 1}
-                              for pc1, pc2, ancestry in zip(d['PC1'], d['PC2'], d['ancestry'])]
-                data["background"] = background
 
         pconfig = {
             'id': 'peddy_pca_plot',
