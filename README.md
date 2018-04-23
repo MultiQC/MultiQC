@@ -153,7 +153,7 @@ Code contributions from:
 [@Cashalow](https://github.com/Cashalow/),
 [@cpavanrun](https://github.com/cpavanrun),
 [@dakl](https://github.com/dakl),
-[@ehsueh](https://github.com/ehsueh)
+[@ehsueh](https://github.com/ehsueh),
 [@epruesse](https://github.com/epruesse),
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@HLWiencko](https://github.com/HLWiencko),
@@ -161,13 +161,14 @@ Code contributions from:
 [@joachimwolff](https://github.com/joachimwolff),
 [@jrderuiter](https://github.com/jrderuiter),
 [@lpantano](https://github.com/lpantano),
-[@matthdsm](https://github.com/matthdsm)
+[@matthdsm](https://github.com/matthdsm),
 [@MaxUlysse](https://github.com/MaxUlysse),
 [@mlusignan](https://github.com/mlusignan),
 [@moonso](https://github.com/moonso),
-[@noirot](https://github.com/noirot)
+[@noirot](https://github.com/noirot),
 [@rdali](https://github.com/rdali),
 [@rlegendre](https://github.com/rlegendre),
+[@Rotholandus](https://github.com/Rotholandus),
 [@robinandeer](https://github.com/robinandeer),
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
