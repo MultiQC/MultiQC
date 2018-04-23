@@ -39,12 +39,12 @@ def view_all_tags(ctx, param, value):
     avail_tags = dict()
     print("\nMultiQC Available module tag groups:\n")
     for mod_dict in filter(lambda mod:isinstance(mod, dict), config.module_order):
-            mod_key, mod_val = list(mod_dict.items())[0]
-            tags = list(mod_val.get('module_tag', []))
-            for t in tags:
-                if t not in avail_tags:
-                    avail_tags[t] = []
-                avail_tags[t].append(mod_key)
+        mod_key, mod_val = list(mod_dict.items())[0]
+        tags = list(mod_val.get('module_tag', []))
+        for t in tags:
+            if t not in avail_tags:
+                avail_tags[t] = []
+            avail_tags[t].append(mod_key)
     for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
         print (" - {}:".format(t))
         for ttgs in avail_tags[t]:
@@ -101,7 +101,7 @@ def view_all_tags(ctx, param, value):
                     multiple = True,
                     help = "Use only modules which tagged with this keyword, eg. RNA"
 )
-@click.option( '--view_tags',
+@click.option( '--view-tags', '--view_tags',
                     is_flag = True,
                     callback=view_all_tags,
                     expose_value=False,
@@ -177,7 +177,7 @@ def view_all_tags(ctx, param, value):
                     multiple=True,
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
-@click.option('--cl_config',
+@click.option('--cl-config', '--cl_config',
                     type = str,
                     multiple = True,
                     help = "Specify MultiQC config YAML on the command line"
