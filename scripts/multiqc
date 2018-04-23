@@ -36,6 +36,9 @@ logger = config.logger
 
 # Callback function to view available tags and modules
 def view_all_tags(ctx, param, value):
+    # To make sure this function executed only when the flag was called
+    if not value or ctx.resilient_parsing:
+        return
     avail_tags = dict()
     print("\nMultiQC Available module tag groups:\n")
     for mod_dict in filter(lambda mod:isinstance(mod, dict), config.module_order):
