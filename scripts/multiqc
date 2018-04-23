@@ -39,7 +39,7 @@ def view_all_tags(ctx, param, value):
     avail_tags = dict()
     print("\nMultiQC Available module tag groups:\n")
     for mod_dict in filter(lambda mod:isinstance(mod, dict), config.module_order):
-            mod_key, mod_val = list(mod_dict.items())[0]
+            mod_key, mod_val = mod_dict.items()[0]
             tags = list(mod_val.get('module_tag', []))
             for t in tags:
                 if t not in avail_tags:
