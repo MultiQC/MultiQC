@@ -84,7 +84,7 @@ logger = config.logger
                     multiple = True,
                     help = "Use only modules which tagged with this keyword, eg. RNA"
 )
-@click.option( '--view-tags',
+@click.option( '--view-tags', '--view_tags',
                     is_flag = True,
                     help = "View the available tags and which modules they load"
 )
@@ -157,7 +157,7 @@ logger = config.logger
                     multiple=True,
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
-@click.option('--cl-config',
+@click.option('--cl-config', '--cl_config',
                     type = str,
                     multiple = True,
                     help = "Specify MultiQC config YAML on the command line"
