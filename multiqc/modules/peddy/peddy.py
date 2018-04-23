@@ -92,6 +92,8 @@ class MultiqcModule(BaseMultiqcModule):
         # hetcheck plot
         self.peddy_het_check_plot()
 
+        self.peddy_sex_check_plot()
+
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
         parsed_data = dict()
@@ -299,4 +301,35 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             anchor = 'peddy-hetcheck-plot',
             plot = scatter.plot(data, pconfig)
+        )
+
+    def peddy_sex_check_plot(self):
+        data = {}
+        sex_index = {"female": 0, "male": 1}
+
+        for s_name, d in self.peddy_data.items():
+            if 'sex_het_ratio' in d and 'ped_sex_sex_check' in d:
+                data[s_name] = {
+                    'x': sex_index[d['ped_sex_sex_check']],
+                    'y': d["sex_het_ratio"]
+                }
+
+        pconfig = {
+            'id': 'peddy_sex_check_plot',
+            'title': 'Peddy: Sex Check',
+            'xlab': 'Sex From Ped',
+            'ylab': 'Sex Het Ratio',
+            'categories': ["Female", "Male"]
+        }
+
+        self.add_section(
+            name = 'Sex Check',
+            description = "Predicted sex against heterozygosity ratio",
+            helptext = """
+            Higher values of Sex Het Ratio suggests the sample is female, low values suggest male.
+
+            See [the main peddy documentation](http://peddy.readthedocs.io/en/latest/#sex-check) for more details about the `het_check` command.
+            """,
+            anchor='peddy-sexcheck-plot',
+            plot=scatter.plot(data, pconfig)
         )
