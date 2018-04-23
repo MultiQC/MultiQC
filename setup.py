@@ -101,6 +101,7 @@ setup(
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
+            'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
