@@ -24,6 +24,7 @@ Many of these updates are thanks to the efforts of people who attended the [NASP
 * Command line options all now use mid-word hyphens (not a mix of hyphens and underscores)
     * Old underscore terms still maintained for backwards compatibility
 * Flag `--view-tags` now works without requiring an "analysis directory".
+* Removed Python dependency for `enum34` ([@boulund](https://github.com/boulund))
 
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
