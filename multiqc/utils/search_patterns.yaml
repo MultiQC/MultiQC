@@ -227,6 +227,8 @@ peddy/ped_check:
     fn: '*.ped_check.csv'
 peddy/sex_check:
     fn: '*.sex_check.csv'
+peddy/background_pca:
+    fn: '*.background_pca.json'
 picard/alignment_metrics:
     contents: 'AlignmentSummaryMetrics'
     shared: true
