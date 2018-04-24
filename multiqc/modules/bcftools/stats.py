@@ -153,7 +153,7 @@ class StatsReportMixin():
             )
 
             # Make histograms of variant quality
-            if len(self.bcftools_stats_variant_quality_count_snp) > 0:
+            if len(self.bcftools_stats_vqc_snp) > 0:
                 pconfig = {
                     'id': 'bcftools_stats_variant_quality',
                     'title': 'Bcftools Stats: Variant Quality Count',
