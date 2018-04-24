@@ -174,12 +174,10 @@ class StatsReportMixin():
                     name = 'Variant Quality',
                     anchor = 'bcftools-stats_variant_quality_plot',
                     plot = linegraph.plot (
-                    [self.bcftools_stats_vqc_snp,
-                    self.bcftools_stats_vqc_transi,
-                    self.bcftools_stats_vqc_transv,
-                    self.bcftools_stats_vqc_indels],
-                    pconfig
-                    )
+                        [self.bcftools_stats_vqc_snp,
+                        self.bcftools_stats_vqc_transi,
+                        self.bcftools_stats_vqc_transv,
+                        self.bcftools_stats_vqc_indels], pconfig)
                 )
 
             # Make line graph of indel lengths
