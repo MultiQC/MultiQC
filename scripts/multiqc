@@ -34,26 +34,6 @@ from multiqc.plots import table
 from multiqc.utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
 
-# Callback function to view available tags and modules
-def view_all_tags(ctx, param, value):
-    # To make sure this function executed only when the flag was called
-    if not value or ctx.resilient_parsing:
-        return
-    avail_tags = dict()
-    print("\nMultiQC Available module tag groups:\n")
-    for mod_dict in filter(lambda mod:isinstance(mod, dict), config.module_order):
-        mod_key, mod_val = list(mod_dict.items())[0]
-        tags = list(mod_val.get('module_tag', []))
-        for t in tags:
-            if t not in avail_tags:
-                avail_tags[t] = []
-            avail_tags[t].append(mod_key)
-    for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-        print (" - {}:".format(t))
-        for ttgs in avail_tags[t]:
-            print ("   - {}".format(ttgs))
-    ctx.exit()
-
 @click.command(
     context_settings = dict( help_option_names = ['-h', '--help'] )
 )
@@ -106,9 +86,9 @@ def view_all_tags(ctx, param, value):
 )
 @click.option( '--view-tags', '--view_tags',
                     is_flag = True,
-                    callback=view_all_tags,
-                    expose_value=False,
-                    is_eager=True,
+                    callback = util_functions.view_all_tags,
+                    expose_value = False,
+                    is_eager = True,
                     help = "View the available tags and which modules they load"
 )
 @click.option('-x', '--ignore',

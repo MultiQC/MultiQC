@@ -2,15 +2,28 @@
 
 ## MultiQC v1.6dev
 
+#### Module updates:
+* **BCFtools**
+    * New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
+* **Peddy**
+    * Background samples now shown in ancestry PCA plot ([@roryk](https://github.com/roryk))
+    * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
+* **QUAST**
+    * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
+* **Tophat**
+    * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
+
 #### New MultiQC Features:
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
 * New `exclude_*` keys for file search patterns
     * Have a subset of patterns to exclude otherwise detected files with, by filename or contents
+* Command line options all now use mid-word hyphens (not a mix of hyphens and underscores)
+    * Old underscore terms still maintained for backwards compatibility
+* Flag `--view-tags` now works without requiring an "analysis directory".
 
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
-* Fixed bug that could prevent Tophat from correctly parsing sample sample names
-    * Fix by [@lparsons](https://github.com/lparsons)
+* Empty sample names from cleaning are now no longer allowed
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
