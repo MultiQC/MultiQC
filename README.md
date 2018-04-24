@@ -172,7 +172,7 @@ Code contributions from:
 [@sachalau](https://github.com/sachalau/),
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
-[@wkretzsch](https://github.com/wkretzsch),
+[@winni2k](https://github.com/winni2k),
 
 and many others. Thanks for your support!
 

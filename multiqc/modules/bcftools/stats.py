@@ -31,10 +31,10 @@ class StatsReportMixin():
 
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
-        self.bcftools_stats_variant_quality_count_snp = dict()
-        self.bcftools_stats_variant_quality_count_transi = dict()
-        self.bcftools_stats_variant_quality_count_transv = dict()
-        self.bcftools_stats_variant_quality_count_indels = dict()
+        self.bcftools_stats_vqc_snp = dict()
+        self.bcftools_stats_vqc_transi = dict()
+        self.bcftools_stats_vqc_transv = dict()
+        self.bcftools_stats_vqc_indels = dict()
         depth_data = dict()
         for f in self.find_log_files('bcftools/stats'):
             s_names = list()
@@ -49,10 +49,10 @@ class StatsReportMixin():
                     self.add_data_source(f, s_name, section='stats')
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
-                    self.bcftools_stats_variant_quality_count_snp[s_name] = dict()
-                    self.bcftools_stats_variant_quality_count_transi[s_name] = dict()
-                    self.bcftools_stats_variant_quality_count_transv[s_name] = dict()
-                    self.bcftools_stats_variant_quality_count_indels[s_name] = dict()
+                    self.bcftools_stats_vqc_snp[s_name] = dict()
+                    self.bcftools_stats_vqc_transi[s_name] = dict()
+                    self.bcftools_stats_vqc_transv[s_name] = dict()
+                    self.bcftools_stats_vqc_indels[s_name] = dict()
                     depth_data[s_name] = OrderedDict()
                     self.bcftools_stats_indels[s_name][0] = None # Avoid joining line across missing 0
 
@@ -113,14 +113,10 @@ class StatsReportMixin():
                 if s[0] == "QUAL" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     quality = float(s[2].strip())
-                    count_snp = float(s[3].strip())
-                    count_transi = float(s[4].strip())
-                    count_transv = float(s[5].strip())
-                    count_indels = float(s[6].strip())
-                    self.bcftools_stats_variant_quality_count_snp[s_name][quality] = count_snp
-                    self.bcftools_stats_variant_quality_count_transi[s_name][quality] = count_transi
-                    self.bcftools_stats_variant_quality_count_transv[s_name][quality] = count_transv
-                    self.bcftools_stats_variant_quality_count_indels[s_name][quality] = count_indels
+                    self.bcftools_stats_vqc_snp[s_name][quality] = float(s[3].strip())
+                    self.bcftools_stats_vqc_transi[s_name][quality] = float(s[4].strip())
+                    self.bcftools_stats_vqc_transv[s_name][quality] = float(s[5].strip())
+                    self.bcftools_stats_vqc_indels[s_name][quality] = float(s[6].strip())
 
         # Filter to strip out ignored sample names
         self.bcftools_stats = self.ignore_samples(self.bcftools_stats)
@@ -157,9 +153,9 @@ class StatsReportMixin():
             )
 
             # Make histograms of variant quality
-            if len(self.bcftools_stats_variant_quality_count_snp) > 0:
+            if len(self.bcftools_stats_vqc_snp) > 0:
                 pconfig = {
-                    'id': 'bcftools_stats_variant_quality',
+                    'id': 'bcftools_stats_vqc',
                     'title': 'Bcftools Stats: Variant Quality Count',
                     'ylab': 'Count',
                     'xlab': 'Quality',
@@ -177,7 +173,11 @@ class StatsReportMixin():
                 self.add_section (
                     name = 'Variant Quality',
                     anchor = 'bcftools-stats_variant_quality_plot',
-                    plot = linegraph.plot([self.bcftools_stats_variant_quality_count_snp, self.bcftools_stats_variant_quality_count_transi, self.bcftools_stats_variant_quality_count_transv, self.bcftools_stats_variant_quality_count_indels], pconfig)
+                    plot = linegraph.plot (
+                        [self.bcftools_stats_vqc_snp,
+                        self.bcftools_stats_vqc_transi,
+                        self.bcftools_stats_vqc_transv,
+                        self.bcftools_stats_vqc_indels], pconfig)
                 )
 
             # Make line graph of indel lengths
@@ -189,7 +189,6 @@ class StatsReportMixin():
                     'xlab': 'InDel Length (bp)',
                     'xDecimals': False,
                     'ymin': 0,
-                    # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
                 }
                 self.add_section (
                     name = 'Indel Distribution',
