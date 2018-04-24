@@ -2,9 +2,13 @@
 
 ## MultiQC v1.6dev
 
+Many of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session.
+
 #### Module updates:
 * **BCFtools**
     * New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
+* **FastQ Screen**
+    * Samples in large-sample-number plot are now sorted alphabetically ([@hassanfa](https://github.com/hassanfa)
 * **Peddy**
     * Background samples now shown in ancestry PCA plot ([@roryk](https://github.com/roryk))
     * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
