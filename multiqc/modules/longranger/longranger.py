@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'On target',
                 'description': 'Fraction of aligned bases mapped with the target regions in targeted mode. Only bases inside the intervals of target BED file are counted.',
                 'suffix': '%',
-                'modify': lambda x: 0 if len(x)==0 else float(x) * 100.0
+                'modify': lambda x: 0 if x=="" else float(x) * 100.0
         }
         self.headers['r1_q20_bases_fract'] = {
                 'scale': 'PuBu',
