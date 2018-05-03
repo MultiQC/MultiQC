@@ -286,10 +286,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.longranger_data) == 0:
             raise UserWarning
+        log.info("Found {} reports".format(len(self.longranger_data.keys())))
 
-
-        ### Write the report
-        self.write_data_file(self.longranger_data, 'multiqc_longranger')
+        ### Write the table
         config_table = {
             'id': 'longranger_table',
             'namespace': 'longranger'
@@ -305,8 +304,6 @@ class MultiqcModule(BaseMultiqcModule):
                     'number. E.g., `longranger#1` and `longranger#2`.',
             plot = table.plot(self.longranger_data, self.headers, config_table)
         )
-
-        log.info("Found {} reports".format(len(self.longranger_data.keys())))
 
         # Write parsed report data to a file
         self.write_data_file(self.longranger_data, 'multiqc_longranger')

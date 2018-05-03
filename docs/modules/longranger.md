@@ -9,7 +9,7 @@ Currently supported Longranger pipelines:
   * `wgs`
   * `targeted`
 
-After running e.g.: 
+Usage:
 ```bash
 longranger wgs --fastqs=/path/to/fastq --id=NA12878
 multiqc /path/to/NA12878
