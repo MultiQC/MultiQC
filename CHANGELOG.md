@@ -29,6 +29,7 @@ Many of these updates are thanks to the efforts of people who attended the [NASP
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
 * Empty sample names from cleaning are now no longer allowed
+* Stop prepend_dirs set in the config from getting clobbered by an unpassed CLI option ([@tsnowlan](https://github.com/tsnowlan))
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
