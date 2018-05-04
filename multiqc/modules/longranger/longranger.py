@@ -29,12 +29,6 @@ class MultiqcModule(BaseMultiqcModule):
         "and structural variant calling.")
 
         self.headers = OrderedDict()
-        self.headers['longranger_version'] = {
-                'scale': False,
-                'title': 'Version',
-                'description': 'The version of the Long Ranger software used to generate the results.',
-                'hidden': True
-        }
         self.headers['instrument_ids'] = {
                 'scale': False,
                 'title': 'Instrument ID',
@@ -42,22 +36,21 @@ class MultiqcModule(BaseMultiqcModule):
                 'hidden': True
         }
         self.headers['gems_detected'] = {
-                'scale': 'RdYlGn',
-                'title': '# gems',
+                'scale': 'OrRd',
+                'title': 'M Gems',
                 'modify': lambda x: float(x) / 1000000.0,
-                'suffix': 'M',
-                'description': 'The number of Chromium GEMs that were collected and which generated a non-trivial number of read-pairs.'
+                'description': 'The number of Chromium GEMs that were collected and which generated a non-trivial number of read-pairs. (millions)'
         }
         self.headers['mean_dna_per_gem'] = {
-                'scale': 'RdYlGn',
+                'scale': 'OrRd',
                 'title': 'DNA per gem',
                 'modify': lambda x: float(x) / 1000000.0,
-                'suffix': 'M',
+                'suffix': 'Mbp',
                 'description': 'The average number of base pairs of genomic DNA loaded into each GEM. This metric is based on the observed extents of read-pairs on each molecule.',
                 'hidden': True
         }
         self.headers['bc_on_whitelist'] = {
-                'scale': 'RdYlGn',
+                'scale': 'BuPu',
                 'title': 'Valid BCs',
                 'modify': lambda x: float(x) * 100.0,
                 'suffix': '%',
@@ -65,13 +58,13 @@ class MultiqcModule(BaseMultiqcModule):
                 'hidden': True
         }
         self.headers['bc_mean_qscore'] = {
-                'scale': 'RdYlGn',
+                'scale': 'BuPu',
                 'title': 'BC Qscore',
                 'description': 'The mean base quality value on the barcode bases.',
                 'hidden': True
         }
         self.headers['n50_linked_reads_per_molecule'] = {
-                'scale': 'RdYlGn',
+                'scale': 'BuGn',
                 'title': 'N50 read per mol.',
                 'description': 'The N50 number of read-pairs per input DNA molecule. Equivalently, half of read-pairs came from molecules with this many or greater read-pairs, and half came from molecules with fewer read pairs.',
                 'hidden': True
@@ -89,15 +82,15 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'ng'
         }
         self.headers['genes_phased_lt_100kb'] = {
-                'scale': 'RdYlGn',
-                'title': '# genes phased < 100kb',
+                'scale': 'YlOrRd',
+                'title': 'genes phased < 100kb',
                 'description': 'Fraction of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.',
                 'hidden': True,
                 'modify': lambda x: float(x) * 100.0,
                 'suffix': '%'
         }
         self.headers['longest_phase_block'] = {
-                'scale': 'RdYlGn',
+                'scale': 'YlOrRd',
                 'title': 'Longest phased',
                 'modify': lambda x: float(x) / 1000000.0,
                 'suffix': 'Mbp',
@@ -105,21 +98,21 @@ class MultiqcModule(BaseMultiqcModule):
                 'hidden': True
         }
         self.headers['n50_phase_block'] = {
-                'scale': 'RdYlGn',
+                'scale': 'YlOrRd',
                 'title': 'N50 phased',
                 'modify': lambda x: float(x) / 1000000.0,
                 'suffix': 'Mbp',
                 'description': 'N50 length of the called phase blocks, in base pairs.'
         }
         self.headers['molecule_length_mean'] = {
-                'scale': 'RdYlGn',
+                'scale': 'YlGn',
                 'title': 'Mol size',
                 'modify': lambda x: float(x) / 1000.0,
                 'suffix': 'Kbp',
                 'description': 'The length-weighted mean input DNA length in base pairs.'
         }
         self.headers['molecule_length_stddev'] = {
-                'scale': 'RdYlGn',
+                'scale': 'YlGn',
                 'title': 'Mol stddev',
                 'modify': lambda x: float(x) / 1000.0,
                 'suffix': 'Kbp',
@@ -128,10 +121,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.headers['number_reads'] = {
                 'scale': 'PuBu',
-                'title': '# Reads',
+                'title': 'M Reads',
                 'modify': lambda x: float(x) / 1000000.0,
-                'suffix': 'M',
-                'description': 'Total number of reads supplied to Long Ranger.'
+                'description': 'Total number of reads supplied to Long Ranger. (millions)'
         }
         self.headers['median_insert_size'] = {
                 'scale': 'PuBu',
@@ -148,10 +140,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'suffix': 'X'
         }
         self.headers['zero_coverage'] = {
-                'scale': 'PuBu-rev',
+                'scale': 'RdGy-rev',
                 'title': 'Zero cov',
                 'modify': lambda x: float(x) * 100.0,
                 'suffix': '%',
+                'min': 2.0,
                 'description': 'Fraction of non-N bases in the genome with zero coverage.'
         }
         self.headers['mapped_reads'] = {
@@ -162,77 +155,38 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Number of input reads that were mapped.'
         }
         self.headers['pcr_duplication'] = {
-                'scale': 'PuBu-rev',
+                'scale': 'RdGy-rev',
                 'title': 'PCR Dup',
                 'description': 'Fraction of reads marked as PCR duplicates. To be marked as PCR duplicates, reads must have the same mapping extents on the genome and the same 10x barcode.',
                 'suffix': '%',
+                'min': 15.0,
                 'modify': lambda x: float(x) * 100.0
         }
         self.headers['on_target_bases'] = {
-                'scale': 'PuBu',
+                'scale': 'Greens',
                 'title': 'On target',
                 'description': 'Fraction of aligned bases mapped with the target regions in targeted mode. Only bases inside the intervals of target BED file are counted.',
                 'suffix': '%',
                 'modify': lambda x: 0 if x=="" else float(x) * 100.0
         }
-        self.headers['r1_q20_bases_fract'] = {
-                'scale': 'PuBu',
-                'title': 'R1 Q20',
-                'description': 'Fraction of bases in R1 with base quality >= 20.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
         self.headers['r1_q30_bases_fracts'] = {
-                'scale': 'PuBu',
+                'scale': 'Purples',
                 'title': 'R1 Q30',
                 'description': 'Fraction of bases in R1 with base quality >= 30.',
                 'hidden': True,
                 'suffix': '%',
                 'modify': lambda x: float(x) * 100.0
         }
-        self.headers['r2_q20_bases_fract'] = {
-                'scale': 'PuBu',
-                'title': 'R2 Q20',
-                'description': 'Fraction of bases in R2 with base quality >= 20.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
         self.headers['r2_q30_bases_fract'] = {
-                'scale': 'PuBu',
+                'scale': 'Purples',
                 'title': 'R2 Q30',
                 'description': 'Fraction of bases in R2 with base quality >= 30.',
                 'hidden': True,
                 'suffix': '%',
                 'modify': lambda x: float(x) * 100.0
         }
-        self.headers['si_q20_bases_fract'] = {
-                'scale': 'PuBu',
-                'title': 'SI Q20',
-                'description': 'Fraction of bases in the sample index with base quality >= 20.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
-        self.headers['si_q30_bases_fract'] = {
-                'scale': 'PuBu',
-                'title': 'SI Q30',
-                'description': 'Fraction of bases in the sample index with base quality >= 30.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
-        self.headers['bc_q20_bases_fract'] = {
-                'scale': 'PuBu',
-                'title': 'BC Q20',
-                'description': 'Fraction of bases in the barcode with base quality >= 20.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
         self.headers['bc_q30_bases_fract'] = {
-                'scale': 'PuBu',
+                'scale': 'Purples',
                 'title': 'BC Q30',
                 'description': 'Fraction of bases in the barcode with base quality >= 30.',
                 'hidden': True,
@@ -240,20 +194,20 @@ class MultiqcModule(BaseMultiqcModule):
                 'modify': lambda x: float(x) * 100.0
         }
         self.headers['snps_phased'] = {
-                'scale': 'YlGn',
+                'scale': 'PuRd',
                 'title': 'SNPs phased',
                 'description': 'Fraction of called SNPs that were phased.',
                 'modify': lambda x: float(x) * 100.0,
                 'suffix': '%',
         }
         self.headers['large_sv_calls'] = {
-                'scale': 'YlGn',
+                'scale': 'PuRd',
                 'title': 'Large SVs',
                 'description': 'Large structural variants called by Longranger. Not including blacklisted regions.',
                 'format': '{:,.0f}'
         }
         self.headers['short_deletion_calls'] = {
-                'scale': 'YlGn',
+                'scale': 'PuRd',
                 'title': 'Short dels',
                 'description': 'Short deletions called by Longranger.',
                 'format': '{:,.0f}',
@@ -281,6 +235,19 @@ class MultiqcModule(BaseMultiqcModule):
             
             self.longranger_data[sid] = data 
 
+        # Optionally add a longranger versions column
+        longranger_versions = set([d['longranger_version'] for d in self.longranger_data.values()])
+        version_str = ''
+        if len(longranger_versions) == 1:
+            version_str = " All samples were processed using Longranger version {}".format(list(longranger_versions)[0])
+        else:
+            self.headers['longranger_version'] = {
+                    'scale': False,
+                    'title': 'Version',
+                    'description': 'The version of the Longranger software used to generate the results.',
+                    'hidden': True
+            }
+
         # Filter to strip out ignored sample names
         self.longranger_data = self.ignore_samples(self.longranger_data)
 
@@ -297,7 +264,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Longranger statistics',
             anchor = 'longranger-table',
             description = 'Statistics gathered from Longranger reports. ' \
-                    'There are more columns available but they are hidden by default.',
+                    'There are more columns available but they are hidden by default.' + version_str,
             helptext = 'Parses the files `summary.csv` and `_invocation` found in the ' \
                     'output directory of Longranger. If `_invocation` is not found ' \
                     'the sample IDs will be missing and they will be given a running ' \
