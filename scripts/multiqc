@@ -231,7 +231,8 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         config.title = title
     if report_comment is not None:
         config.report_comment = report_comment
-    config.prepend_dirs = dirs
+    if dirs is True:
+        config.prepend_dirs = dirs
     if dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
