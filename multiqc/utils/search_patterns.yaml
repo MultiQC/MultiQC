@@ -104,7 +104,7 @@ bowtie2:
     contents: 'reads; of these:'
     exclude_contents:
         - 'bisulfite'
-        - 'Hi-C Pro'
+        - 'HiC-Pro'
     shared: true
 busco:
     fn: 'short_summary_*'
