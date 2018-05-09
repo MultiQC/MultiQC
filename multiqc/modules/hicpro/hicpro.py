@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+## Nicolas Servant
+## April 2018
 
 """ MultiQC module to parse output from HiCPro """
 
@@ -90,29 +92,31 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section (
-            name = 'Capture Statistics',
-            anchor = 'hicpro-capture',
-            plot = self.hicpro_capture_chart()
-        )
-        
-        self.add_section (
-            name = 'Allele-specific analysis',
-            anchor = 'hicpro-asan',
-            plot = self.hicpro_as_chart()
-        )
-        
-        self.add_section (
             name = 'Contact Statistics',
             anchor = 'hicpro-rmdup',
             description = 'Contacts statistics after duplicates removal.',
             helptext = 'Description of contact frequency after duplicates removal. Intra-chromosomal (*cis*) interaction are expected to be more frequent than inter-chromosomal contacts (*trans*)',
             plot = self.hicpro_contact_chart()
         )
-       
+
+        #self.add_section (
+        #     name = 'Length Distribution',
+        #     anchor = 'hicpro-lengths',
+        #     plot = self.hicpro_insertsize_chart()
+        #)
+
+        #self.add_section (
+        #     name = 'Capture Statistics',
+        #     anchor = 'hicpro-capture',
+        #     plot = self.hicpro_capture_chart()
+        #)
+    
         self.add_section (
-             name = 'Length Distribution',
-             anchor = 'hicpro-lengths',
-             plot = self.hicpro_insertsize_chart()
+            name = 'Allele-specific analysis',
+            anchor = 'hicpro-asan',
+            description = 'Assignment of valid interactions (afer duplicates removal) to parental alleles.'
+            helptext = 'Description of allele-specific contacts. Valid interactions (0-1 and 1-1, resp. 0-2, 2-2) are used to build the genome1 (resp. genome2) parental maps.'
+            plot = self.hicpro_as_chart()
         )
 
 
@@ -316,7 +320,26 @@ class MultiqcModule(BaseMultiqcModule):
   
     def hicpro_as_chart (self):
         """ Generate Allele-specific plot"""
+        
+        keys = OrderedDict()
+        keys['Valid_pairs_from_ref_genome_(1-1)'] = { 'color': '#0039e6', 'name': 'Genome1 specific read pairs (1-1)' }
+        keys['Valid_pairs_from_ref_genome_with_one_unassigned_mate_(0-1/1-0)'] = { 'color': '#809fff', 'name': 'Genome1 with one unassigned mate (0-1/1-0)' }
+        keys['Valid_pairs_from_alt_genome_(2-2)']  = { 'color': '#009933', 'name': 'Genome2 specific read pairs (2-2)' }
+        keys['Valid_pairs_from_alt_genome_with_one_unassigned_mate_(0-2/2-0)'] = { 'color': '#a9a2a2', 'name': 'Genome2 with one unassigned mate (0-2/2-0)' }
+        keys['Valid_pairs_from_alt_and_ref_genome_(1-2/2-1)'] = { 'color': '#a9a2a2', 'name': 'Trans homologuous read pairs (1-2/2/1)' }
+        keys['Valid_pairs_with_both_unassigned_mated_(0-0)'] = { 'color': '#a9a2a2', 'name': 'Unassigned read pairs' }
+        keys['Valid_pairs_with_at_least_one_conflicting_mate_(3-)'] = { 'color': '#a9a2a2', 'name': 'Conflicting read pairs' }
 
+        # Config for the plot
+        config = {
+            'id': 'hicpro_asan_plot',
+            'title': 'HiC-Pro: Allele-specific Statistics',
+            'ylab': '# Pairs',
+            'cpswitch_counts_label': 'Number of Pairs',
+            'cpswitch_c_active': False
+        }
+        
+                
     def hicpro_capture_chart (self):
         """ Generate capture plot"""
 

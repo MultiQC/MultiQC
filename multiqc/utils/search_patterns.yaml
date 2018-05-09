@@ -187,6 +187,7 @@ hicpro:
     - fn: '*.pairstat'
     - fn: '*.mergestat'
     - fn: '*.mRSstat'
+    - fn: '*.assplit.stat'
 hisat2:
     contents: 'HISAT2 summary stats:'
     shared: true
