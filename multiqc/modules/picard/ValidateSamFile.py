@@ -115,36 +115,36 @@ def _parse_reports_by_type(self):
 
     data = dict()
 
-    for f in self.find_log_files('picard/sam_file_validation', filehandles=True):
-        sample = f['s_name']
+    for file_meta in self.find_log_files('picard/sam_file_validation', filehandles=True):
+        sample = file_meta['s_name']
 
         if sample in data:
             log.debug("Duplicate sample name found! Overwriting: {}".format(sample))
 
-        filehandle = f['f']
+        filehandle = file_meta['f']
         first_line = filehandle.readline().rstrip()
         filehandle.seek(0)  # Rewind reading of the file
 
         if 'No errors found' in first_line:
-            sample_data = _parse_no_error_report(f)
+            sample_data = _parse_no_error_report()
         elif first_line.startswith('ERROR') or first_line.startswith('WARNING'):
-            sample_data = _parse_verbose_report(f)
+            sample_data = _parse_verbose_report(filehandle)
         else:
-            sample_data = _parse_summary_report(f)
+            sample_data = _parse_summary_report(filehandle)
 
         data[sample] = sample_data
 
     return data
 
 
-def _parse_no_error_report(file):
+def _parse_no_error_report():
     return _default_data_entry()
 
 
-def _parse_verbose_report(file):
+def _parse_verbose_report(filehandle):
     sample_data = _default_data_entry()
     errors = warnings = 0
-    for line in file['f']:
+    for line in filehandle:
         if line.startswith('WARNING:'):
             warnings += 1
         elif line.startswith('ERROR:'):
@@ -161,9 +161,9 @@ def _parse_verbose_report(file):
     return sample_data
 
 
-def _parse_summary_report(file):
+def _parse_summary_report(filehandle):
     sample_data = _default_data_entry()
-    for problem_type, name, count in _histogram_data(file['f']):
+    for problem_type, name, count in _histogram_data(filehandle):
         sample_data[name] = count
         sample_data[problem_type+'_count'] += count
 
@@ -198,7 +198,7 @@ def _add_section_to_report(self, data):
 
     # Count samples that have errors and/or warnings
     pass_count = error_count = only_warning_count = 0
-    for _, sample_data in data.items():
+    for sample_data in data.values():
         if sample_data['file_validation_status'] == 'fail':
             error_count += 1
         elif sample_data['file_validation_status'] == 'warn':
@@ -225,7 +225,8 @@ def _add_section_to_report(self, data):
     self.add_section(
             name='SAM/BAM File Validation',
             anchor='picard_validatesamfile',
-            description='This tool reports on the validity of a SAM or BAM file relative to the SAM-format specification.',
+            description=('This tool reports on the validity of a SAM or BAM '
+                         'file relative to the SAM-format specification.'),
             helptext='''
             A detailed table is only shown if a errors or warnings are found. Details about the errors and warnings are only shown if a SUMMARY report was parsed.
 
@@ -242,19 +243,16 @@ def _add_data_to_general_stats(self, data):
 
     self.general_stats_headers.update(headers)
 
+    header_names = ('ERROR_count', 'WARNING_count', 'file_validation_status')
+
     general_data = dict()
     for sample in data:
-        general_data[sample] = {key: data[sample][key] for key in ('ERROR_count', 'WARNING_count', 'file_validation_status')}
-
+        general_data[sample] = {column: data[sample][column] for column in header_names}
         if sample not in self.general_stats_data:
-                self.general_stats_data[sample] = dict()
-
+            self.general_stats_data[sample] = dict()
         if data[sample]['file_validation_status'] != 'pass':
             headers['file_validation_status']['hidden'] = False
-
         self.general_stats_data[sample].update(general_data[sample])
-
-    self.general_stats_addcols(data=general_data, headers=headers)
 
 
 def _get_general_stats_headers():
@@ -336,7 +334,7 @@ def _generate_detailed_table(data):
     headers = _get_general_stats_headers()
 
     # Only add headers for errors/warnings we have found
-    for _, problems in data.items():
+    for problems in data.values():
         for problem in problems:
             if problem not in headers and problem in WARNING_DESCRIPTIONS:
                 headers['WARNING_count']['hidden'] = False
