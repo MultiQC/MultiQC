@@ -248,6 +248,10 @@ def _add_data_to_general_stats(self, data):
 
         if sample not in self.general_stats_data:
                 self.general_stats_data[sample] = dict()
+
+        if data[sample]['file_validation_status'] != 'pass':
+            headers['file_validation_status']['hidden'] = False
+
         self.general_stats_data[sample].update(general_data[sample])
 
     self.general_stats_addcols(data=general_data, headers=headers)
@@ -260,14 +264,14 @@ def _get_general_stats_headers():
     headers = OrderedDict()
 
     headers['file_validation_status'] = {
-        'title': "File-Validation Status",
-        'description': 'pass/warn/fail',
-        'hidden': False,
+        'title': "Validation",
+        'description': 'ValidateSamFile (File Validation)',
+        'hidden': True,
     }
 
     headers['WARNING_count'] = {
-        'title': "# Validation Warnings",
-        'description': 'number of warnings',
+        'title': "# Warnings",
+        'description': 'ValidateSamFile (number of warnings)',
         'scale': 'Oranges',
         'shared_key': 'ValidateSamEntries',
         'colour': '255,237,160',
@@ -276,8 +280,8 @@ def _get_general_stats_headers():
     }
 
     headers['ERROR_count'] = {
-        'title': "# Validation Errors",
-        'description': 'number of errors',
+        'title': "# Errors",
+        'description': 'ValidateSamFile (number of errors)',
         'scale': 'Reds',
         'shared_key': 'ValidateSamEntries',
         'colour': '252,146,114',
@@ -293,31 +297,31 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
         Generates and returns the HTML note that provides a summary of validation status.
     """
 
-    note_html = ['<div class="progress" style="height: 20px;">']
+    note_html = ['<div class="progress">']
 
     if error_count:
         note_html.append(
                 '''
                   <div class="progress-bar progress-bar-danger" style="width: {error_percent}%">
-                   {error_count} {sample}
+                   {error_count}
                   </div>
-                '''.format(error_count=error_count, error_percent=(error_count/total_count)*100, sample='samples' if error_count > 1 else 'sample', has='have' if error_count > 1 else 'has')
+                '''.format(error_count=error_count, error_percent=(error_count/total_count)*100, sample='samples' if error_count > 1 else 'sample')
             )
     if only_warning_count:
         note_html.append(
                 '''
                 <div class="progress-bar progress-bar-warning" style="width: {warning_percent}%">
-                    {only_warning_count} {sample}
+                    {only_warning_count}
                 </div>
-                '''.format(only_warning_count=only_warning_count, warning_percent=(only_warning_count/total_count)*100, sample='samples' if only_warning_count > 1 else 'sample', has='have' if only_warning_count > 1 else 'has')
+                '''.format(only_warning_count=only_warning_count, warning_percent=(only_warning_count/total_count)*100)
             )
     if pass_count:
         note_html.append(
                 '''
                 <div class="progress-bar progress-bar-success" style="width: {pass_percent}%">
-                    {pass_count} {sample}
+                    {pass_count}
                 </div>
-                '''.format(pass_count=pass_count, pass_percent=(pass_count/total_count)*100, sample='samples' if pass_count > 1 else 'sample')
+                '''.format(pass_count=pass_count, pass_percent=(pass_count/total_count)*100)
             )
 
     note_html.append('</div>')
@@ -330,31 +334,30 @@ def _generate_detailed_table(data):
         Generates and retuns the HTML table that overviews the details found.
     """
     headers = _get_general_stats_headers()
-    headers['file_validation_status']['hidden'] = True
-    headers['ERROR_count']['hidden'] = False
-    headers['WARNING_count']['hidden'] = False
 
     # Only add headers for errors/warnings we have found
     for _, problems in data.items():
         for problem in problems:
             if problem not in headers and problem in WARNING_DESCRIPTIONS:
-                    headers[problem] = {
-                        'description': WARNING_DESCRIPTIONS[problem],
-                        'namespace': 'WARNING',
-                        'colour': '255,237,160',
-                        'scale': 'Set3',
-                        'max': 1,
-                        'format': '{:.0f}',
-                    }
+                headers['WARNING_count']['hidden'] = False
+                headers[problem] = {
+                    'description': WARNING_DESCRIPTIONS[problem],
+                    'namespace': 'WARNING',
+                    'scale': headers['WARNING_count']['scale'],
+                    'format': '{:.0f}',
+                    'shared_key': 'warnings',
+                    'hidden': True,  # Hide by default; to unclutter things.
+                }
             if problem not in headers and problem in ERROR_DESCRIPTIONS:
-                    headers[problem] = {
-                        'description': ERROR_DESCRIPTIONS[problem],
-                        'namespace': 'ERROR',
-                        'colour': '252,146,114',
-                        'scale': 'RdYlGn-rev',
-                        'max': 1,
-                        'format': '{:.0f}',
-                    }
+                headers['ERROR_count']['hidden'] = False
+                headers[problem] = {
+                    'description': ERROR_DESCRIPTIONS[problem],
+                    'namespace': 'ERROR',
+                    'scale': headers['ERROR_count']['scale'],
+                    'format': '{:.0f}',
+                    'shared_key': 'errors',
+                    'hidden': True,  # Hide by default; to unclutter things.
+                }
 
     table_config = {
         'table_title': 'Picard: SAM/BAM File Validation',
