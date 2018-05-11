@@ -48,9 +48,9 @@ picard_config:
 ```
 
 #### ValidateSamFile Search Pattern
-Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filesnames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config:
+Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
 ```yaml
 sp:
     picard/sam_file_validation:
-        fn: '*.file_validation.txt'
+        fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 ```

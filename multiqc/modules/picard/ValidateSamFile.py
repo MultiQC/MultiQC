@@ -126,11 +126,11 @@ def _parse_reports_by_type(self):
         filehandle.seek(0)  # Rewind reading of the file
 
         if 'No errors found' in first_line:
-                sample_data = _parse_no_error_report(f)
+            sample_data = _parse_no_error_report(f)
         elif first_line.startswith('ERROR') or first_line.startswith('WARNING'):
-                sample_data = _parse_verbose_report(f)
+            sample_data = _parse_verbose_report(f)
         else:
-                sample_data = _parse_summary_report(f)
+            sample_data = _parse_summary_report(f)
 
         data[sample] = sample_data
 
