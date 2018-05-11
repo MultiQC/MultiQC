@@ -268,8 +268,8 @@ def _get_general_stats_headers():
     headers['WARNING_count'] = {
         'title': "# Validation Warnings",
         'description': 'number of warnings',
-        'scale': 'Set3',
-        'max': 1,
+        'scale': 'Oranges',
+        'shared_key': 'ValidateSamEntries',
         'colour': '255,237,160',
         'format': '{:.0f}',
         'hidden': True,
@@ -278,8 +278,8 @@ def _get_general_stats_headers():
     headers['ERROR_count'] = {
         'title': "# Validation Errors",
         'description': 'number of errors',
-        'scale': 'RdYlGn-rev',
-        'max': 1,
+        'scale': 'Reds',
+        'shared_key': 'ValidateSamEntries',
         'colour': '252,146,114',
         'format': '{:.0f}',
         'hidden': True,
@@ -293,34 +293,34 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
         Generates and returns the HTML note that provides a summary of validation status.
     """
 
-    note_html = ['<ul class="list-group">']
+    note_html = ['<div class="progress" style="height: 20px;">']
 
     if error_count:
         note_html.append(
                 '''
-                <li class="list-group-item list-group-item-danger" >
-                    <span class="label label-danger">Fail</span> - {} {sample} {has} file-validity <strong>ERRORS</strong> (and possibly warnings).
-                </li>
-                '''.format(error_count, sample='samples' if error_count > 1 else 'sample', has='have' if error_count > 1 else 'has')
+                  <div class="progress-bar progress-bar-danger" style="width: {error_percent}%">
+                   {error_count} {sample}
+                  </div>
+                '''.format(error_count=error_count, error_percent=(error_count/total_count)*100, sample='samples' if error_count > 1 else 'sample', has='have' if error_count > 1 else 'has')
             )
     if only_warning_count:
         note_html.append(
                 '''
-                <li class="list-group-item list-group-item-warning">
-                    <span class="label label-warning">Warning</span> - {} {sample} {has} only file-validity <em>WARNINGS</em>.
-                </li>
-                '''.format(only_warning_count, sample='samples' if only_warning_count > 1 else 'sample', has='have' if only_warning_count > 1 else 'has')
+                <div class="progress-bar progress-bar-warning" style="width: {warning_percent}%">
+                    {only_warning_count} {sample}
+                </div>
+                '''.format(only_warning_count=only_warning_count, warning_percent=(only_warning_count/total_count)*100, sample='samples' if only_warning_count > 1 else 'sample', has='have' if only_warning_count > 1 else 'has')
             )
     if pass_count:
         note_html.append(
                 '''
-                <li class="list-group-item list-group-item-success">
-                    <span class="label label-success">Pass</span> - {}/{} {sample} passed.
-                </li>
-                '''.format(pass_count, total_count, sample='samples' if total_count > 1 else 'sample')
+                <div class="progress-bar progress-bar-success" style="width: {pass_percent}%">
+                    {pass_count} {sample}
+                </div>
+                '''.format(pass_count=pass_count, pass_percent=(pass_count/total_count)*100, sample='samples' if pass_count > 1 else 'sample')
             )
 
-    note_html.append('</ul>')
+    note_html.append('</div>')
 
     return "\n".join(note_html)
 
