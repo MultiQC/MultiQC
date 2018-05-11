@@ -23,7 +23,7 @@ install:
   - "python --version"
   # Install everything
   - "%CMD_IN_ENV% conda update --yes --quiet conda"
-  - 'pip install --disable-pip-version-check --user --upgrade pip'
+  - 'python -m pip install --upgrade pip'
   - "%CMD_IN_ENV% conda install --yes jinja2 simplejson pyyaml click numpy matplotlib<=2.1.0"
   - 'pip install "networkx<2"'
   - "pip install spectra>=0.0.10"

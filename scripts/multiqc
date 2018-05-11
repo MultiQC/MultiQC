@@ -84,8 +84,11 @@ logger = config.logger
                     multiple = True,
                     help = "Use only modules which tagged with this keyword, eg. RNA"
 )
-@click.option( '--view_tags',
+@click.option( '--view-tags', '--view_tags',
                     is_flag = True,
+                    callback = util_functions.view_all_tags,
+                    expose_value = False,
+                    is_eager = True,
                     help = "View the available tags and which modules they load"
 )
 @click.option('-x', '--ignore',
@@ -157,7 +160,7 @@ logger = config.logger
                     multiple=True,
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
-@click.option('--cl_config',
+@click.option('--cl-config', '--cl_config',
                     type = str,
                     multiple = True,
                     help = "Specify MultiQC config YAML on the command line"
@@ -173,7 +176,7 @@ logger = config.logger
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, view_tags, module, exclude, outdir,
+def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
 plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -220,26 +223,6 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
                 logger.debug('Latest MultiQC version is {}'.format(remote_version))
         except Exception as e:
             logger.debug('Could not connect to multiqc.info for version check: {}'.format(e))
-
-    # View available tags and modules and exit
-    if view_tags:
-        avail_tags = dict()
-        print("\nMultiQC Available module tag groups:\n")
-        for mod_dict in config.module_order:
-            if type(mod_dict) is dict:
-                mod_key = list(mod_dict.keys())[0]
-                mod = mod_dict[mod_key]
-                if 'module_tag' in mod:
-                    tags = mod['module_tag'] if type(mod['module_tag']) is list else list(mod['module_tag'])
-                    for t in tags:
-                        if t not in avail_tags:
-                            avail_tags[t] = []
-                        avail_tags[t].append(mod_key)
-        for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-            print (" - {}:".format(t))
-            for ttgs in avail_tags[t]:
-                print ("   - {}".format(ttgs))
-        sys.exit(0)
 
     # Set up key variables (overwrite config vars from command line)
     if template is not None:
