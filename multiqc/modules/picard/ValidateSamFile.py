@@ -138,14 +138,10 @@ def _parse_reports_by_type(self):
 
 
 def _parse_no_error_report(file):
-    log.debug("Parsing {} as an error-free ValidateSamFile report.".format(file['fn']))
-
     return _default_data_entry()
 
 
 def _parse_verbose_report(file):
-    log.debug("Parsing {} as a VERBOSE ValidateSamFile report.".format(file['fn']))
-
     sample_data = _default_data_entry()
     errors = warnings = 0
     for line in file['f']:
@@ -166,8 +162,6 @@ def _parse_verbose_report(file):
 
 
 def _parse_summary_report(file):
-    log.debug("Parsing {} as a SUMMARY ValidateSamFile report.".format(file['fn']))
-
     sample_data = _default_data_entry()
     for problem_type, name, count in _histogram_data(file['f']):
         sample_data[name] = count
