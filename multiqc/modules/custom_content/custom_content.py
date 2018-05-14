@@ -202,10 +202,12 @@ def custom_module_classes():
                         hs[k] = v
                 gsheaders = hs
 
-            # Add namespace if not specified
-            for k in gsheaders:
-                if 'namespace' not in gsheaders[k]:
-                    gsheaders[k]['namespace'] = c_id
+            # Add namespace and description if not specified
+            for h in gsheaders:
+                if 'namespace' not in gsheaders[h]:
+                    gsheaders[h]['namespace'] = mod['config'].get('namespace', k)
+                if 'description' not in gsheaders[k]:
+                    gsheaders[h]['description'] = mod['config'].get('description', "General stat for custom module {}".format(k))
 
             bm.general_stats_addcols(mod['data'], gsheaders)
 
@@ -399,6 +401,15 @@ def _parse_txt(f, conf):
                     first_row_str += 1
 
     all_numeric = all([ type(l) == float for l in d[i][1:] for i in range(1, len(d)) ])
+
+    # General stat info files - expected to be have atleast 2 rows (first row always being the header)
+    # and have atleast 2 columns (first column always being sample name)
+    if conf.get('plot_type') == 'generalstats' and len(d) >= 2 and ncols >= 2:
+        data = defaultdict(dict)
+        for i,l in enumerate(d[1:], 1):
+            for j,v in enumerate(l[1:], 1):
+                data[l[0]][d[0][j]] = v
+        return (data, conf)
 
     # Heatmap: Number of headers == number of lines
     if conf.get('plot_type') is None and first_row_str == len(lines) and all_numeric:
