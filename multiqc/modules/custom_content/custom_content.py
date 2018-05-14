@@ -191,8 +191,8 @@ def custom_module_classes():
                 headers = list(headers)
                 headers.sort()
                 gsheaders = OrderedDict()
-                for k in headers:
-                    gsheaders[k] = dict()
+                for h in headers:
+                    gsheaders[h] = dict()
 
             # Headers is a list of dicts
             if type(gsheaders) == list:
@@ -206,8 +206,6 @@ def custom_module_classes():
             for h in gsheaders:
                 if 'namespace' not in gsheaders[h]:
                     gsheaders[h]['namespace'] = mod['config'].get('namespace', k)
-                if 'description' not in gsheaders[k]:
-                    gsheaders[h]['description'] = mod['config'].get('description', "General stat for custom module {}".format(k))
 
             bm.general_stats_addcols(mod['data'], gsheaders)
 
