@@ -44,7 +44,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Basic Stats Table
         self.featurecounts_stats_table()
-
+	
+	#additional print statement
+        #print ("hahahahahahah")
+        #print (self.featurecounts_data)
+        #print (self.featurecounts_keys)
         # Assignment bar plot
         self.add_section( plot = self.featureCounts_chart() )
 
@@ -129,7 +133,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def featureCounts_chart (self):
         """ Make the featureCounts assignment rates plot """
-
+        # additional print statement
+        #print (self)
         # Config for the plot
         config = {
             'id': 'featureCounts_assignment_plot',

@@ -66,6 +66,7 @@ setup(
     entry_points = {
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
+            'NuGEN_dedup = multiqc.modules.NuGEN_dedup:MultiqcModule',
             'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
             'bbmap = multiqc.modules.bbmap:MultiqcModule',

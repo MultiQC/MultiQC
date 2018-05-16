@@ -87,6 +87,8 @@ def plot (data, cats=None, pconfig=None):
         cats = [cats]
     else:
         try: # Py2
+            #print (cats)
+            #print (cats[0])
             if type(cats[0]) is str or type(cats[0]) is unicode:
                 cats = [cats]
         except NameError: # Py3
