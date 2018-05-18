@@ -31,7 +31,7 @@ class mqc_colour_scale(object):
 		if float(minval) == float(maxval):
 			self.minval = float(minval)
 			self.maxval = float(minval) + 1.0
-		elif minval > maxval:
+		elif float(minval) > float(maxval):
 			self.minval = float(maxval)
 			self.maxval = float(minval)
 		else:
