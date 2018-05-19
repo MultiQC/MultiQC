@@ -247,33 +247,31 @@ class MultiqcModule(BaseMultiqcModule):
                     except ZeroDivisionError:
                         self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = "NA"
                     try:
-                        self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = (float(self.bcl2fastq_bysample[sample]["perfectIndex"]) / float(self.bcl2fastq_bysample[sample]["total"])) * 100.0
-                    except ZeroDivisionError:
-                        self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = "NA"
-                    try:
                         self.bcl2fastq_bysample[sample]["mean_qscore"] = float(self.bcl2fastq_bysample[sample]["qscore_sum"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])
                     except ZeroDivisionError:
                         self.bcl2fastq_bysample[sample]["mean_qscore"] = "NA"
                     try:
                         self.bcl2fastq_bysample[sample]["percent_trimmed"] = float(self.bcl2fastq_bysample[sample]["trimmed_bases"]) / float(self.bcl2fastq_bysample[sample]["total_yield"]) * 100.0
                     except ZeroDivisionError:
-                        self.bcl2fastq_bysample[sample]["mean_qscore"] = "NA"
+                        self.bcl2fastq_bysample[sample]["percent_trimmed"] = "NA"
                     if sample != "undetermined":
                         if not sample in self.source_files:
                             self.source_files[sample] = []
                         self.source_files[sample].append(self.bcl2fastq_data[runId][lane]["samples"][sample]["filename"])
 
     def add_general_stats(self):
-        data = {
-            key: {
+        data = {}
+        for key in self.bcl2fastq_bysample.keys():
+            try:
+                perfectPercent = float( 100.0 * self.bcl2fastq_bysample[key]["perfectIndex"] / self.bcl2fastq_bysample[key]["total"] )
+            except ZeroDivisionError:
+                perfectPercent = 0
+            data[key] = {
                 "yieldQ30": self.bcl2fastq_bysample[key]["yieldQ30"],
                 "total": self.bcl2fastq_bysample[key]["total"],
-                "perfectPercent": '{0:.1f}'.format(
-                    float( 100.0 * self.bcl2fastq_bysample[key]["perfectIndex"] / self.bcl2fastq_bysample[key]["total"] )
-                ),
+                "perfectPercent": '{0:.1f}'.format(perfectPercent),
                 "trimmedPercent": self.bcl2fastq_bysample[key]['percent_trimmed']
-            } for key in self.bcl2fastq_bysample.keys()
-        }
+            }
         headers = OrderedDict()
         headers['total'] = {
             'title': '{} Clusters'.format(config.read_count_prefix),

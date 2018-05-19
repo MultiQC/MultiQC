@@ -33,6 +33,7 @@ MultiQC Modules:
     HiCUP: modules/hicup.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
+    Long Ranger: modules/longranger.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md

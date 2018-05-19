@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
+import os
 import logging
 import re
 
@@ -54,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Get input filename
             match = re.search(r'\[quant\] will process (pair|file) 1: (\S+)', l)
             if match:
-                s_name = self.clean_s_name(match.group(2), f['root'])
+                s_name = self.clean_s_name(os.path.basename(match.group(2)), f['root'])
 
             if s_name is not None:
                 # Alignment rates

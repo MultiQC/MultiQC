@@ -38,8 +38,7 @@ install_requires = [
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        # mpl version restraint can be removed when https://github.com/matplotlib/matplotlib/issues/10784 fixed
-        'matplotlib<=2.1.0',
+        'matplotlib>=2.1.1',
         'markdown',
         'numpy',
         'pyyaml',
@@ -47,8 +46,6 @@ install_requires = [
         'simplejson',
         'spectra>=0.0.10'
     ]
-if sys.version_info < (3, 4):
-    install_requires.append('enum34')
 
 setup(
     name = 'multiqc',
@@ -103,6 +100,7 @@ setup(
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'kat = multiqc.modules.kat:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
+            'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
