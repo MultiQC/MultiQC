@@ -17,6 +17,8 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * **Peddy**
     * Background samples now shown in ancestry PCA plot ([@roryk](https://github.com/roryk))
     * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
+* **Picard**
+    * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
 * **QUAST**
     * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
 * **Tophat**

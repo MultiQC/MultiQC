@@ -267,6 +267,8 @@ picard/rnaseqmetrics:
 picard/rrbs_metrics:
     contents: 'RrbsSummaryMetrics'
     shared: true
+picard/sam_file_validation:
+    fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 picard/wgs_metrics:
     contents: 'CollectWgsMetrics'
     shared: true
