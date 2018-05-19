@@ -43,7 +43,7 @@ Currently, supported tools include:
 |[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[QoRTs][qorts]|
 |[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]|
 |[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]|
-|[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts] [featurecounts]|[RNA-SeQC][rna_seqc]|
+|[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
 |[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RSeQC][rseqc]|
 |[Skewer][skewer]                 |                         |[THetA2][theta2]           |[Sargasso][sargasso]|
 |[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova] |
