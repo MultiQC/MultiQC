@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from itertools import chain
 
+from multiqc.utils import config
+
 from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
@@ -47,9 +49,36 @@ file_types = {
         'help_text': '',
         'kvrows': ['Total', 'Matched'],
         'kv_descriptions': {
-            'Total': ('Total number of reads processed', {'hidden': True}),
-            'Matched': ('Total number of reads matching adapters/contaminants', {'hidden': True}),
-            '% filtered': ('Proportion of reads filtered, matching adapters/contaminants', {'hidden': False}),
+            'Total': (
+                'Total number of reads processed',
+                {
+                    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
+                    'shared_key': 'read_count',
+                    'modify': lambda x: x * config.read_count_multiplier,
+                    'scale': 'PuBu',
+                    'hidden': True
+                }
+            ),
+            'Matched': (
+                'Total number of reads matching adapters/contaminants',
+                {
+                    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
+                    'shared_key': 'read_count',
+                    'modify': lambda x: x * config.read_count_multiplier,
+                    'scale': 'Reds',
+                    'hidden': True
+                }
+            ),
+            'Percent filtered': (
+                'Proportion of reads filtered, matching adapters/contaminants',
+                {
+                    'max': 100,
+                    'min': 0,
+                    'scale': 'OrRd',
+                    'suffix': '%',
+                    'hidden': False
+                }
+            ),
         },
         'cols': odict[
             'Name':str,

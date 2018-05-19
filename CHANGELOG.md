@@ -12,6 +12,8 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 #### Module updates:
 * **BCFtools**
     * New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
+* **BBMap**
+    * Support added for BBDuk kmer-based adapter/contaminant filtering summary stats ([@boulund](https://github.com/boulund)
 * **FastQ Screen**
     * Samples in large-sample-number plot are now sorted alphabetically ([@hassanfa](https://github.com/hassanfa)
 * **Peddy**

@@ -99,13 +99,13 @@ class MultiqcModule(BaseMultiqcModule):
                     # It's not the table header, it must be a key-value row
                     if len(line) == 3 and file_type == "stats":
                         # This is a special case for the 'stats' file type:
-                        # The first line _might_ have three columns if processing paired-end reads, 
+                        # The first line _might_ have three columns if processing paired-end reads,
                         # but we don't care about the first line.
                         # The third line is always three columns, which is what we really want.
-                        if line[0] == "File": 
+                        if line[0] == "File":
                             continue
-                        kv["% filtered"] = float(line[2].strip("%"))
-                        kv[line[0]] = line[1] 
+                        kv["Percent filtered"] = float(line[2].strip("%"))
+                        kv[line[0]] = line[1]
                     elif len(line) != 2:
                         # Not two items? Wrong!
                         log.error("Expected key value pair in %s/%s:%d but found '%s'",
