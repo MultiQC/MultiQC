@@ -228,7 +228,7 @@ def _add_section_to_report(self, data):
             description=('This tool reports on the validity of a SAM or BAM '
                          'file relative to the SAM-format specification.'),
             helptext='''
-            A detailed table is only shown if a errors or warnings are found. Details about the errors and warnings are only shown if a SUMMARY report was parsed.
+            A detailed table is only shown if errors or warnings are found. Details about the errors and warnings are only shown if a `SUMMARY` report was parsed.
 
             For more information on the warnings, errors and possible fixes please read [this broadinstitute article](https://software.broadinstitute.org/gatk/documentation/article.php?id=7571).''',
             plot="\n".join(plot_html),
@@ -263,8 +263,7 @@ def _get_general_stats_headers():
 
     headers['file_validation_status'] = {
         'title': "Validation",
-        'description': 'ValidateSamFile (File Validation)',
-        'hidden': True,
+        'description': 'ValidateSamFile (File Validation)'
     }
 
     headers['WARNING_count'] = {
@@ -291,37 +290,26 @@ def _get_general_stats_headers():
 
 
 def _generate_overview_note(pass_count, only_warning_count, error_count, total_count):
-    """
-        Generates and returns the HTML note that provides a summary of validation status.
-    """
+    """ Generates and returns the HTML note that provides a summary of validation status. """
 
     note_html = ['<div class="progress">']
-
-    if error_count:
-        note_html.append(
-                '''
-                  <div class="progress-bar progress-bar-danger" style="width: {error_percent}%">
-                   {error_count}
-                  </div>
-                '''.format(error_count=error_count, error_percent=(error_count/total_count)*100, sample='samples' if error_count > 1 else 'sample')
+    pbars = [
+        [ float(error_count), 'danger', 'had errors' ],
+        [ float(only_warning_count), 'warning', 'had warnings' ],
+        [ float(pass_count), 'success', 'passed' ]
+    ]
+    for b in pbars:
+        if b[0]:
+            note_html.append(
+                '<div class="progress-bar progress-bar-{pbcol}" style="width: {pct}%" data-toggle="tooltip" title="{count} {sample} {txt}">{count}</div>'. \
+                format(
+                    pbcol = b[1],
+                    count = int(b[0]),
+                    pct = (b[0]/float(total_count))*100.0,
+                    txt = b[2],
+                    sample = 'samples' if b[0] > 1 else 'sample'
+                )
             )
-    if only_warning_count:
-        note_html.append(
-                '''
-                <div class="progress-bar progress-bar-warning" style="width: {warning_percent}%">
-                    {only_warning_count}
-                </div>
-                '''.format(only_warning_count=only_warning_count, warning_percent=(only_warning_count/total_count)*100)
-            )
-    if pass_count:
-        note_html.append(
-                '''
-                <div class="progress-bar progress-bar-success" style="width: {pass_percent}%">
-                    {pass_count}
-                </div>
-                '''.format(pass_count=pass_count, pass_percent=(pass_count/total_count)*100)
-            )
-
     note_html.append('</div>')
 
     return "\n".join(note_html)
