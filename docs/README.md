@@ -32,6 +32,7 @@ MultiQC Modules:
     HiCUP: modules/hicup.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
+    Long Ranger: modules/longranger.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
@@ -49,7 +50,6 @@ MultiQC Modules:
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
-    Longranger: modules/longranger.md
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
     Peddy: modules/peddy.md
