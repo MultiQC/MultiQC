@@ -353,6 +353,10 @@ module_order:
     - vcftools:
         module_tag:
             - DNA
+    - longranger:
+        module_tag:
+            - DNA
+            - WGS
 
     # Alignment tool stats
     - bbmap:

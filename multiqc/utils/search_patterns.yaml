@@ -212,6 +212,14 @@ kallisto:
 leehom:
     contents: 'Adapter dimers/chimeras'
     shared: true
+longranger/summary:
+    fn: '*summary.csv'
+    contents: 'longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule'
+    num_lines: 2
+longranger/invocation:
+    fn: '_invocation'
+    contents: 'call PHASER_SVCALLER_CS('
+    max_filesize: 2048
 macs2:
     fn: '*_peaks.xls'
 methylQA:
