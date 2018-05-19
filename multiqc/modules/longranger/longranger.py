@@ -11,7 +11,7 @@ import csv
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table
+from multiqc.plots import table, bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -22,196 +22,207 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Longranger', anchor='longranger',
+        super(MultiqcModule, self).__init__(name='Long Ranger', anchor='longranger',
         href="https://www.10xgenomics.com/",
         info="A set of analysis pipelines that perform sample demultiplexing, "
         "barcode processing, alignment, quality control, variant calling, phasing, "
         "and structural variant calling.")
 
         self.headers = OrderedDict()
-        self.headers['instrument_ids'] = {
-                'scale': False,
-                'title': 'Instrument ID',
-                'description': 'The list of instrument IDs used to generate the input reads.',
-                'hidden': True
-        }
-        self.headers['gems_detected'] = {
-                'scale': 'OrRd',
-                'title': 'M Gems',
-                'modify': lambda x: float(x) / 1000000.0,
-                'description': 'The number of Chromium GEMs that were collected and which generated a non-trivial number of read-pairs. (millions)'
-        }
-        self.headers['mean_dna_per_gem'] = {
-                'scale': 'OrRd',
-                'title': 'DNA per gem',
-                'modify': lambda x: float(x) / 1000000.0,
-                'suffix': 'Mbp',
-                'description': 'The average number of base pairs of genomic DNA loaded into each GEM. This metric is based on the observed extents of read-pairs on each molecule.',
-                'hidden': True
-        }
-        self.headers['bc_on_whitelist'] = {
-                'scale': 'BuPu',
-                'title': 'Valid BCs',
-                'modify': lambda x: float(x) * 100.0,
-                'suffix': '%',
-                'description': 'The fraction of reads that carried a valid 10x barcode sequence.',
-                'hidden': True
-        }
-        self.headers['bc_mean_qscore'] = {
-                'scale': 'BuPu',
-                'title': 'BC Qscore',
-                'description': 'The mean base quality value on the barcode bases.',
-                'hidden': True
-        }
-        self.headers['n50_linked_reads_per_molecule'] = {
-                'scale': 'BuGn',
-                'title': 'N50 read per mol.',
-                'description': 'The N50 number of read-pairs per input DNA molecule. Equivalently, half of read-pairs came from molecules with this many or greater read-pairs, and half came from molecules with fewer read pairs.',
-                'hidden': True
-        }
-        self.headers['corrected_loaded_mass_ng'] = {
-                'scale': 'RdYlGn',
-                'title': 'Loaded',
-                'description': 'The estimated number of nanograms of DNA loaded into the input well of the Chromium chip. This metric is calculated by measuring the mean amount of DNA covered by input molecules in each GEM, then multiplying by the ratio of the chip input to the sample volume in each GEM.',
-                'suffix': 'ng'
-        }
-        self.headers['loaded_mass_ng'] = {
-                'scale': 'RdYlGn',
-                'title': 'Loaded',
-                'description': 'This metric was found to overestimate the true loading by a factor of 1.6, due primarily to denaturation of the input DNA.',
-                'suffix': 'ng'
-        }
-        self.headers['genes_phased_lt_100kb'] = {
-                'scale': 'YlOrRd',
-                'title': 'genes phased < 100kb',
-                'description': 'Fraction of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.',
-                'hidden': True,
-                'modify': lambda x: float(x) * 100.0,
-                'suffix': '%'
-        }
-        self.headers['longest_phase_block'] = {
-                'scale': 'YlOrRd',
-                'title': 'Longest phased',
-                'modify': lambda x: float(x) / 1000000.0,
-                'suffix': 'Mbp',
-                'description': 'Size of the longest phase block, in base pairs',
-                'hidden': True
-        }
-        self.headers['n50_phase_block'] = {
-                'scale': 'YlOrRd',
-                'title': 'N50 phased',
-                'modify': lambda x: float(x) / 1000000.0,
-                'suffix': 'Mbp',
-                'description': 'N50 length of the called phase blocks, in base pairs.'
-        }
-        self.headers['molecule_length_mean'] = {
-                'scale': 'YlGn',
-                'title': 'Mol size',
-                'modify': lambda x: float(x) / 1000.0,
-                'suffix': 'Kbp',
-                'description': 'The length-weighted mean input DNA length in base pairs.'
-        }
-        self.headers['molecule_length_stddev'] = {
-                'scale': 'YlGn',
-                'title': 'Mol stddev',
-                'modify': lambda x: float(x) / 1000.0,
-                'suffix': 'Kbp',
-                'description': 'The length-weighted standard deviation of the input DNA length distribution in base pairs.',
-                'hidden': True
-        }
-        self.headers['number_reads'] = {
-                'scale': 'PuBu',
-                'title': 'M Reads',
-                'modify': lambda x: float(x) / 1000000.0,
-                'description': 'Total number of reads supplied to Long Ranger. (millions)'
-        }
-        self.headers['median_insert_size'] = {
-                'scale': 'PuBu',
-                'title': 'Insert size',
-                'suffix': 'bp',
-                'description': 'Median insert size of aligned read pairs.',
-                'format': '{:,.0f}',
-                'hidden': True
-        }
-        self.headers['mean_depth'] = {
-                'scale': 'PuBu',
-                'title': 'Depth',
-                'description': 'Mean read depth, including PCR duplicate reads. In WGS mode, this is measured across the genome; in targeted mode, this is the measure inside targeted regions.',
-                'suffix': 'X'
-        }
-        self.headers['zero_coverage'] = {
-                'scale': 'RdGy-rev',
-                'title': 'Zero cov',
-                'modify': lambda x: float(x) * 100.0,
-                'suffix': '%',
-                'min': 2.0,
-                'description': 'Fraction of non-N bases in the genome with zero coverage.'
-        }
-        self.headers['mapped_reads'] = {
-                'scale': 'PuBu',
-                'title': 'Mapped',
-                'modify': lambda x: float(x) * 100.0,
-                'suffix': '%',
-                'description': 'Number of input reads that were mapped.'
-        }
-        self.headers['pcr_duplication'] = {
-                'scale': 'RdGy-rev',
-                'title': 'PCR Dup',
-                'description': 'Fraction of reads marked as PCR duplicates. To be marked as PCR duplicates, reads must have the same mapping extents on the genome and the same 10x barcode.',
-                'suffix': '%',
-                'min': 15.0,
-                'modify': lambda x: float(x) * 100.0
-        }
-        self.headers['on_target_bases'] = {
-                'scale': 'Greens',
-                'title': 'On target',
-                'description': 'Fraction of aligned bases mapped with the target regions in targeted mode. Only bases inside the intervals of target BED file are counted.',
-                'suffix': '%',
-                'modify': lambda x: 0 if x=="" else float(x) * 100.0
-        }
-        self.headers['r1_q30_bases_fracts'] = {
-                'scale': 'Purples',
-                'title': 'R1 Q30',
-                'description': 'Fraction of bases in R1 with base quality >= 30.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
-        self.headers['r2_q30_bases_fract'] = {
-                'scale': 'Purples',
-                'title': 'R2 Q30',
-                'description': 'Fraction of bases in R2 with base quality >= 30.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
-        self.headers['bc_q30_bases_fract'] = {
-                'scale': 'Purples',
-                'title': 'BC Q30',
-                'description': 'Fraction of bases in the barcode with base quality >= 30.',
-                'hidden': True,
-                'suffix': '%',
-                'modify': lambda x: float(x) * 100.0
-        }
-        self.headers['snps_phased'] = {
-                'scale': 'PuRd',
-                'title': 'SNPs phased',
-                'description': 'Fraction of called SNPs that were phased.',
-                'modify': lambda x: float(x) * 100.0,
-                'suffix': '%',
-        }
         self.headers['large_sv_calls'] = {
-                'scale': 'PuRd',
                 'title': 'Large SVs',
                 'description': 'Large structural variants called by Longranger. Not including blacklisted regions.',
-                'format': '{:,.0f}'
+                'format': '{:,.0f}',
+                'scale': 'PuRd'
         }
         self.headers['short_deletion_calls'] = {
-                'scale': 'PuRd',
                 'title': 'Short dels',
                 'description': 'Short deletions called by Longranger.',
                 'format': '{:,.0f}',
+                'scale': 'PuRd',
                 'hidden': True
+        }
+        self.headers['genes_phased_lt_100kb'] = {
+                'title': 'genes phased < 100kb',
+                'description': 'Percentage of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.',
+                'modify': lambda x: float(x) * 100.0,
+                'suffix': '%',
+                'scale': 'YlOrRd',
+                'hidden': True
+        }
+        self.headers['longest_phase_block'] = {
+                'title': 'Longest phased',
+                'description': 'Size of the longest phase block, in base pairs',
+                'scale': 'YlOrRd',
+                'modify': lambda x: float(x) / 1000000.0,
+                'suffix': 'Mbp',
+                'hidden': True
+        }
+        self.headers['n50_phase_block'] = {
+                'title': 'N50 phased',
+                'description': 'N50 length of the called phase blocks, in base pairs.',
+                'modify': lambda x: float(x) / 1000000.0,
+                'suffix': 'Mbp',
+                'scale': 'YlOrRd',
+                'hidden': True
+        }
+        self.headers['snps_phased'] = {
+                'title': 'SNPs phased',
+                'description': 'Percentage of called SNPs that were phased.',
+                'modify': lambda x: float(x) * 100.0,
+                'suffix': '%',
+                'scale': 'PuRd',
+                'hidden': True
+        }
+        self.headers['median_insert_size'] = {
+                'title': 'Insert size',
+                'description': 'Median insert size of aligned read pairs.',
+                'format': '{:,.0f}',
+                'suffix': 'bp',
+                'scale': 'PuBu',
+                'hidden': True
+        }
+        self.headers['on_target_bases'] = {
+                'title': 'On target',
+                'description': 'Percentage of aligned bases mapped with the target regions in targeted mode. Only bases inside the intervals of target BED file are counted.',
+                'suffix': '%',
+                'modify': lambda x: 0 if x=="" else float(x) * 100.0,
+                'scale': 'Greens'
+        }
+        self.headers['zero_coverage'] = {
+                'title': 'Zero cov',
+                'description': 'Percentage of non-N bases in the genome with zero coverage.',
+                'modify': lambda x: float(x) * 100.0,
+                'suffix': '%',
+                'max': 100.0,
+                'min': 0.0,
+                'scale': 'RdGy-rev'
+        }
+        self.headers['mean_depth'] = {
+                'title': 'Depth',
+                'description': 'Mean read depth, including PCR duplicate reads. In WGS mode, this is measured across the genome; in targeted mode, this is the measure inside targeted regions.',
+                'suffix': 'X',
+                'scale': 'PuBu'
+        }
+        self.headers['pcr_duplication'] = {
+                'title': 'PCR Dup',
+                'description': 'Percentage of reads marked as PCR duplicates. To be marked as PCR duplicates, reads must have the same mapping extents on the genome and the same 10x barcode.',
+                'suffix': '%',
+                'min': 15.0,
+                'modify': lambda x: float(x) * 100.0,
+                'scale': 'RdGy-rev',
+                'hidden': True
+        }
+        self.headers['mapped_reads'] = {
+                'title': 'Mapped',
+                'modify': lambda x: float(x) * 100.0,
+                'suffix': '%',
+                'description': 'Percentage of input reads that were mapped to the reference genome.',
+                'scale': 'PuBu',
+                'hidden': True
+        }
+        self.headers['number_reads'] = {
+                'title': 'M Reads',
+                'modify': lambda x: float(x) / 1000000.0,
+                'description': 'Total number of reads supplied to Long Ranger. (millions)',
+                'scale': 'PuBu',
+                'hidden': True
+        }
+        self.headers['molecule_length_mean'] = {
+                'title': 'Mol size',
+                'description': 'The length-weighted mean input DNA length in base pairs.',
+                'modify': lambda x: float(x) / 1000.0,
+                'suffix': 'Kbp',
+                'scale': 'YlGn'
+        }
+        self.headers['molecule_length_stddev'] = {
+                'title': 'Mol stddev',
+                'description': 'The length-weighted standard deviation of the input DNA length distribution in base pairs.',
+                'modify': lambda x: float(x) / 1000.0,
+                'suffix': 'Kbp',
+                'scale': 'YlGn',
+                'hidden': True
+        }
+        self.headers['n50_linked_reads_per_molecule'] = {
+                'title': 'N50 read per mol.',
+                'description': 'The N50 number of read-pairs per input DNA molecule. Half of read-pairs came from molecules with this many or greater read-pairs.',
+                'scale': 'BuGn',
+                'hidden': True
+        }
+        self.headers['r1_q30_bases_fract'] = {
+                'title': '% R1 >= Q30',
+                'description': 'Percentage of bases in R1 with base quality >= 30.',
+                'hidden': True,
+                'suffix': '%',
+                'modify': lambda x: float(x) * 100.0,
+                'scale': 'Purples'
+        }
+        self.headers['r2_q30_bases_fract'] = {
+                'title': '% R2 >= Q30',
+                'description': 'Percentage of bases in R2 with base quality >= 30.',
+                'suffix': '%',
+                'modify': lambda x: float(x) * 100.0,
+                'scale': 'Purples',
+                'hidden': True
+        }
+        self.headers['bc_on_whitelist'] = {
+                'title': 'Valid BCs',
+                'description': 'The Percentage of reads that carried a valid 10x barcode sequence.',
+                'modify': lambda x: float(x) * 100.0,
+                'suffix': '%',
+                'scale': 'BuPu',
+                'hidden': True,
+        }
+        self.headers['bc_q30_bases_fract'] = {
+                'title': 'BC Q30',
+                'description': 'Percentage of bases in the barcode with base quality >= 30.',
+                'suffix': '%',
+                'modify': lambda x: float(x) * 100.0,
+                'scale': 'Purples',
+                'hidden': True
+        }
+        self.headers['bc_mean_qscore'] = {
+                'title': 'BC Qscore',
+                'description': 'The mean base quality value on the barcode bases.',
+                'scale': 'BuPu',
+                'hidden': True
+        }
+        self.headers['mean_dna_per_gem'] = {
+                'title': 'DNA per gem',
+                'description': 'The average number of base pairs of genomic DNA loaded into each GEM. This metric is based on the observed extents of read-pairs on each molecule.',
+                'modify': lambda x: float(x) / 1000000.0,
+                'suffix': 'Mbp',
+                'scale': 'OrRd',
+                'hidden': True
+        }
+        self.headers['gems_detected'] = {
+                'title': 'M Gems',
+                'description': 'The number of Chromium GEMs that were collected and which generated a non-trivial number of read-pairs. (millions)',
+                'modify': lambda x: float(x) / 1000000.0,
+                'scale': 'OrRd',
+        }
+        self.headers['corrected_loaded_mass_ng'] = {
+                'title': 'Loaded (corrected)',
+                'description': 'The estimated number of nanograms of DNA loaded into the input well of the Chromium chip. This metric is calculated by measuring the mean amount of DNA covered by input molecules in each GEM, then multiplying by the ratio of the chip input to the sample volume in each GEM.',
+                'suffix': 'ng',
+                'scale': 'RdYlGn'
+        }
+        self.headers['loaded_mass_ng'] = {
+                'title': 'Loaded',
+                'description': 'This metric was found to overestimate the true loading by a factor of 1.6, due primarily to denaturation of the input DNA.',
+                'suffix': 'ng',
+                'scale': 'RdYlGn'
+        }
+        self.headers['instrument_ids'] = {
+                'title': 'Instrument ID',
+                'description': 'The list of instrument IDs used to generate the input reads.',
+                'scale': False,
+                'hidden': True
+        }
+        self.headers['longranger_version'] = {
+                'title': 'Long Ranger Version',
+                'description': 'The version of the Longranger software used to generate the results.',
+                'scale': False
         }
 
         ### Parse the data
@@ -220,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('longranger/invocation'):
             sid = self.parse_invocation(f['f'])
             self.paths_dict[os.path.basename(f['root'])] = sid
-        
+
         running_name = 1
         for f in self.find_log_files('longranger/summary'):
             data = self.parse_summary(f['f'])
@@ -230,23 +241,10 @@ class MultiqcModule(BaseMultiqcModule):
             if base_updir in self.paths_dict.keys():
                 sid = self.paths_dict[base_updir]
             else:
-                log.debug('Did not find _invocation file')
+                log.debug('Did not find _invocation file: {}'.format(f['fn']))
                 running_name += 1
-            
-            self.longranger_data[sid] = data 
 
-        # Optionally add a longranger versions column
-        longranger_versions = set([d['longranger_version'] for d in self.longranger_data.values()])
-        version_str = ''
-        if len(longranger_versions) == 1:
-            version_str = " All samples were processed using Longranger version {}".format(list(longranger_versions)[0])
-        else:
-            self.headers['longranger_version'] = {
-                    'scale': False,
-                    'title': 'Version',
-                    'description': 'The version of the Longranger software used to generate the results.',
-                    'hidden': True
-            }
+            self.longranger_data[sid] = data
 
         # Filter to strip out ignored sample names
         self.longranger_data = self.ignore_samples(self.longranger_data)
@@ -255,30 +253,118 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         log.info("Found {} reports".format(len(self.longranger_data.keys())))
 
+        # Write parsed report data to a file
+        self.write_data_file(self.longranger_data, 'multiqc_longranger')
+
+        # Add a longranger versions column if not all the same
+        longranger_versions = set([d['longranger_version'] for d in self.longranger_data.values()])
+        version_str = ''
+        if len(longranger_versions) == 1:
+            version_str = " All samples were processed using Longranger version {}".format(list(longranger_versions)[0])
+            del(self.headers['longranger_version'])
+
         ### Write the table
         config_table = {
             'id': 'longranger_table',
             'namespace': 'longranger'
         }
         self.add_section (
-            name = 'Longranger statistics',
-            anchor = 'longranger-table',
+            name = 'Run stats',
+            anchor = 'longranger-run-stats',
             description = 'Statistics gathered from Longranger reports. ' \
                     'There are more columns available but they are hidden by default.' + version_str,
-            helptext = 'Parses the files `summary.csv` and `_invocation` found in the ' \
-                    'output directory of Longranger. If `_invocation` is not found ' \
-                    'the sample IDs will be missing and they will be given a running ' \
-                    'number. E.g., `longranger#1` and `longranger#2`.',
+            helptext = '''Parses the files `summary.csv` and `_invocation` found in the
+                    output directory of Longranger. If `_invocation` is not found
+                    the sample IDs will be missing and they will be given a running
+                    number. E.g., `longranger#1` and `longranger#2`.''',
             plot = table.plot(self.longranger_data, self.headers, config_table)
         )
 
-        # Write parsed report data to a file
-        self.write_data_file(self.longranger_data, 'multiqc_longranger')
+        ### Bar plot of phasing stats
+        snps_phased_pct = {}
+        genes_phased_pct = {}
+        for s_name in self.longranger_data:
+            snps_phased_pct[s_name] = { 'snps_phased_pct': float(self.longranger_data[s_name]['snps_phased']) * 100.0 }
+            genes_phased_pct[s_name] = { 'genes_phased_pct': float(self.longranger_data[s_name]['genes_phased_lt_100kb']) * 100.0 }
+        phase_plot_cats = [ OrderedDict(), OrderedDict(), OrderedDict() ]
+        phase_plot_cats[0]['longest_phase_block'] = { 'name': 'Longest Phase Block' }
+        phase_plot_cats[0]['n50_phase_block'] = { 'name': 'N50 of Phase Blocks' }
+        phase_plot_cats[1]['snps_phased_pct'] = { 'name': '% SNPs Phased' }
+        phase_plot_cats[2]['genes_phased_pct'] = { 'name': '% Genes < 100kbp in a single phase block' }
+        self.add_section (
+            name = 'Phasing',
+            anchor = 'longranger-phasing',
+            description = 'Phasing performance from Long Ranger. Genes are only considered if &le; 100kbp in length and with at least one heterozygous SNP.',
+            helptext = '''
+                    * Longest phased
+                        * Size of the longest phase block, in base pairs
+                    * N50 phased
+                        * N50 length of the called phase blocks, in base pairs.
+                    * % SNPs phased
+                        * Percentage of called SNPs that were phased.
+                    * % Genes Phased
+                        * Percentage of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.
+                    ''',
+            plot = bargraph.plot(
+                [self.longranger_data, snps_phased_pct, genes_phased_pct],
+                phase_plot_cats,
+                {
+                    'id': 'longranger-phasing-plot',
+                    'title': 'Long Ranger: Phasing Statistics',
+                    'data_labels': [
+                        {'name': 'N50 Phased', 'ylab': 'N50 of called phase blocks (bp)'},
+                        {'name': '% SNPs Phased', 'ylab': '% SNPs Phased', 'ymax':100},
+                        {'name': '% Genes Phased', 'ylab': '% Genes Phased', 'ymax':100}
+                    ],
+                    'cpswitch': False,
+                    'stacking': None,
+                    'ylab': 'N50 of called phase blocks (bp)'
+                }
+            )
+        )
 
+        ### Bar plot of mapping statistics
+        mapping_counts_data = {}
+        for s_name in self.longranger_data:
+            mapped_reads = float(self.longranger_data[s_name]['number_reads']) * float(self.longranger_data[s_name]['mapped_reads'])
+            unmapped_reads = float(self.longranger_data[s_name]['number_reads']) - mapped_reads
+            dup_reads =  mapped_reads * float(self.longranger_data[s_name]['pcr_duplication'])
+            unique_reads =  mapped_reads - dup_reads
+            mapping_counts_data[s_name] = {
+                'unique_reads': unique_reads,
+                'dup_reads': dup_reads,
+                'unmapped_reads': unmapped_reads
+            }
+        mapping_counts_cats = OrderedDict()
+        mapping_counts_cats['unique_reads'] = {
+            'name': 'Uniquely Aligned Reads',
+            'color': '#437bb1'
+        }
+        mapping_counts_cats['dup_reads'] = {
+            'name': 'PCR Duplicate Aligned Reads',
+            'color': '#7cb5ec'
+        }
+        mapping_counts_cats['unmapped_reads'] = {
+            'name': 'Unaligned Reads',
+            'color': '#7f0000'
+        }
+        self.add_section (
+            name = 'Alignment',
+            anchor = 'longranger-alignment',
+            description = 'Long Ranger alignment against the reference genome. To be marked as PCR duplicates, reads must have the same mapping extents on the genome and the same 10x barcode.',
+            plot = bargraph.plot(mapping_counts_data, mapping_counts_cats,
+                {
+                    'id': 'longranger-alignment-plot',
+                    'title': 'Long Ranger: Alignment Statistics',
+                    'ylab': 'Reads Counts',
+                    'cpswitch_counts_label': 'Read Counts',
+                }
+            )
+        )
 
     def parse_invocation(self, content):
         sid_pat = re.compile('    sample_id = \"(.*)\",')
-        
+
         sid = None
         for l in content.splitlines():
             sid_m = re.match(sid_pat,l)
@@ -287,11 +373,14 @@ class MultiqcModule(BaseMultiqcModule):
         return sid
 
     def parse_summary(self, content):
-        
+
         out_dict = OrderedDict()
         lines = content.splitlines()
         data = list(zip(lines[0].strip().split(','), lines[1].strip().split(',')))
         for i,j in data:
-            out_dict[i] = j
-            
+            try:
+                out_dict[i] = float(j)
+            except ValueError:
+                out_dict[i] = j
+
         return out_dict

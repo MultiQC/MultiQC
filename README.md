@@ -30,25 +30,25 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
-|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing | Post-alignment QC    |
-|---------------------------------|-------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]        |
-|[AfterQC][afterqc]               |[Bismark][bismark]       |[Bcftools][bcftools]       |[Conpair][conpair]    |
+|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing | Post-alignment QC          |
+|---------------------------------|-------------------------|---------------------------|----------------------------|
+|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]              |
+|[AfterQC][afterqc]               |[Bismark][bismark]       |[Bcftools][bcftools]       |[Conpair][conpair]          |
 |[Bcl2fastq][bcl2fastq]           |[Bowtie][bowtie-1]       |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]     |[HOMER][homer]             |[goleft][goleft]|
-|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]           |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]|
-|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]         |[MACS2][macs2]             |[methylQA][methylqa]|
-|[Cutadapt][cutadapt]             |[Kallisto][kallisto]     |[Picard][picard]           |[Peddy][peddy]|
-|[leeHom][leehom]                 |[Long Ranger][longranger]|[Prokka][prokka]           |[Preseq][preseq]|
-|[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[QoRTs][qorts]|
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]|
-|[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]|
-|[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
-|[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RSeQC][rseqc]|
-|[Skewer][skewer]                 |                         |[THetA2][theta2]           |[Sargasso][sargasso]|
-|[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova] |
-|[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools] |
-|[Illumina InterOp][interop]      |                         |                           |[VerifyBAMID][verifybamid]                      |
+|[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]     |[HOMER][homer]             |[goleft][goleft]            |
+|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]           |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]  |
+|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]         |[MACS2][macs2]             |[methylQA][methylqa]        |
+|[Cutadapt][cutadapt]             |[Kallisto][kallisto]     |[Picard][picard]           |[Peddy][peddy]              |
+|[leeHom][leehom]                 |[Long Ranger][longranger]|[Prokka][prokka]           |[Preseq][preseq]            |
+|[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[QoRTs][qorts]              |
+|[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
+|[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
+|[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]      |
+|[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
+|[Skewer][skewer]                 |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
+|[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova]      |
+|[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools]        |
+|[Illumina InterOp][interop]      |                         |                           |[VerifyBAMID][verifybamid]  |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
