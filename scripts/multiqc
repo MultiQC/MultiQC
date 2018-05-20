@@ -516,7 +516,8 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         for k in h.keys():
             if 'rid' not in h[k]:
                 h[k]['rid'] = re.sub(r'\W+', '_', k).strip().strip('_')
-            report.general_stats_headers[idx][k]['rid'] = report.save_htmlid('mqc-generalstats-{}'.format(h[k]['rid']))
+            ns_html = re.sub(r'\W+', '_', h[k]['namespace']).strip().strip('_').lower()
+            report.general_stats_headers[idx][k]['rid'] = report.save_htmlid('mqc-generalstats-{}-{}'.format(ns_html, h[k]['rid']))
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0:
         pconfig = {
