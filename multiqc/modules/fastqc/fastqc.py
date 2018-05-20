@@ -73,7 +73,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Get the sample groups for PE data / trimmed data
         self.fastqc_pair_groups = self.group_samples(self.fastqc_data.keys(), 'read_pairs')
-        self.fastqc_trimmed_groups = self.group_samples(self.fastqc_pair_groups, 'pre_post_trimming')
+        self.fastqc_trimmed_pair_groups = self.group_samples(self.fastqc_pair_groups, 'pre_post_trimming')
+        self.fastqc_trimmed_groups = self.group_samples(self.fastqc_data.keys(), 'pre_post_trimming')
         self.fastqc_trimmed_pairs = self.group_samples(self.fastqc_data.keys(), 'trimmed_read_pairs')
 
         if len(self.fastqc_data) == 0:
@@ -263,7 +264,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Take only the trimmed data for the General Stats Table
         trimmed_samples = False
-        for g_name, s_names in self.fastqc_trimmed_groups.items():
+        for g_name, s_names in self.fastqc_trimmed_pair_groups.items():
             if len(s_names) > 1:
                 # We expect these groups to contain trimmed and not trimmed.
                 # The non-trimmed sample names will be the same as the group,
@@ -1066,8 +1067,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig['data_labels'] = list()
         # Special case - 2 classes could be R1/R2 or Raw/Trimmed
         if len(data) == 2:
-            fastqc_trimmed_only_groups = self.group_samples(self.fastqc_data.keys(), 'pre_post_trimming')
-            if len(self.fastqc_pair_groups) < len(fastqc_trimmed_only_groups):
+            if len(self.fastqc_pair_groups) < len(self.fastqc_trimmed_groups):
                 pconfig['data_labels'] = [ {'name': 'Read 1'}, {'name': 'Read 2'} ]
             else:
                 pconfig['data_labels'] = [ {'name': 'Raw'}, {'name': 'Trimmed'} ]
