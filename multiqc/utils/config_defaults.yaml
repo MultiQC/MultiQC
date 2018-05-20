@@ -111,8 +111,22 @@ sample_merge_groups:
     read_pairs:
         - type: regex
           pattern: '_[12]$'
+        - type: regex
+          pattern: '_R[12][\._\- \Z]'
     pre_post_trimming:
         - '_trimmed'
+        - '_val'
+        - '_val_1'
+        - '_val_2'
+    trimmed_read_pairs:
+        - type: regex
+          pattern: '_[12]$'
+        - type: regex
+          pattern: '_R[12][\._\- \Z]'
+        - '_trimmed'
+        - '_val'
+        - '_val_1'
+        - '_val_2'
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
@@ -196,8 +210,6 @@ fn_clean_trim:
     - '.r'
     - '_val'
     - '.idxstats'
-    - '_trimmed'
-    - '.trimmed'
     - '.csv'
     - '.yaml'
     - '.yml'

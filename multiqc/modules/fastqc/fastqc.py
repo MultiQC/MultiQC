@@ -15,6 +15,7 @@ from collections import OrderedDict
 import io
 import json
 import logging
+import math
 import os
 import re
 import zipfile
@@ -70,8 +71,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
 
-        # Get the sample groups for PE data
-        self.fastqc_s_groups = self.group_samples(self.fastqc_data.keys(), 'read_pairs')
+        # Get the sample groups for PE data / trimmed data
+        self.fastqc_pair_groups = self.group_samples(self.fastqc_data.keys(), 'read_pairs')
+        self.fastqc_trimmed_groups = self.group_samples(self.fastqc_pair_groups, 'pre_post_trimming')
+        self.fastqc_trimmed_pairs = self.group_samples(self.fastqc_data.keys(), 'trimmed_read_pairs')
 
         if len(self.fastqc_data) == 0:
             raise UserWarning
@@ -219,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Merge Read 1 + Read 2 data
         gdata = dict()
         merged_samples = False
-        for g_name, s_names in self.fastqc_s_groups.items():
+        for g_name, s_names in self.fastqc_pair_groups.items():
             if len(s_names) == 1:
                 gdata[s_names[0]] = data[s_names[0]]
             else:
@@ -258,16 +261,39 @@ class MultiqcModule(BaseMultiqcModule):
                             num_fails += 1
                 gdata[g_name]['percent_fails'] = (float(num_fails)/float(num_statuses))*100.0
 
+        # Take only the trimmed data for the General Stats Table
+        trimmed_samples = False
+        for g_name, s_names in self.fastqc_trimmed_groups.items():
+            if len(s_names) > 1:
+                # We expect these groups to contain trimmed and not trimmed.
+                # The non-trimmed sample names will be the same as the group,
+                # so we keep the one that's different.
+                s_names_trimmed = [s for s in s_names if s != g_name]
+                # Only continue if we have one result as expected
+                if len(s_names_trimmed) == 1:
+                    trimmed_samples = True
+                    # Save this data temporarily
+                    rowdata = gdata[s_names_trimmed[0]]
+                    # Remove the whole group from general stats
+                    for s_name in s_names:
+                        del(gdata[s_name])
+                    # Add our chosen row back again
+                    gdata[g_name] = rowdata
+
         # Are sequence lengths interesting?
         seq_lengths = [x['avg_sequence_length'] for x in data.values()]
         hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
 
-        ms_d = ', averaged across read pairs' if merged_samples else ''
+        extra_desc = ''
+        if merged_samples:
+            extra_desc += ', averaged across read pairs.'
+        if trimmed_samples:
+            extra_desc += ' Values from trimmed data shown.'
 
         headers = OrderedDict()
         headers['percent_duplicates'] = {
             'title': '% Dups',
-            'description': '% Duplicate Reads{}'.format(ms_d),
+            'description': '% Duplicate Reads{}'.format(extra_desc),
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -275,7 +301,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['percent_gc'] = {
             'title': '% GC',
-            'description': 'Average % GC Content{}'.format(ms_d),
+            'description': 'Average % GC Content{}'.format(extra_desc),
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -284,7 +310,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['avg_sequence_length'] = {
             'title': 'Length',
-            'description': 'Average Sequence Length (bp){}'.format(ms_d),
+            'description': 'Average Sequence Length (bp){}'.format(extra_desc),
             'min': 0,
             'suffix': ' bp',
             'scale': 'RdYlGn',
@@ -293,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['percent_fails'] = {
             'title': '% Failed',
-            'description': 'Percentage of modules failed in FastQC report (includes those not plotted here){}'.format(ms_d),
+            'description': 'Percentage of modules failed in FastQC report (includes those not plotted here){}'.format(extra_desc),
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -303,7 +329,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['total_sequences'] = {
             'title': '{} Seqs'.format(config.read_count_prefix),
-            'description': 'Total Sequences ({}){}'.format(config.read_count_desc, ms_d),
+            'description': 'Total Sequences ({}){}'.format(config.read_count_desc, extra_desc),
             'min': 0,
             'scale': 'Blues',
             'modify': lambda x: x * config.read_count_multiplier,
@@ -314,6 +340,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def read_count_plot (self):
         """ Stacked bar plot showing counts of reads """
+
+        # Main plot config
         pconfig = {
             'id': 'fastqc_sequence_counts_plot',
             'title': 'FastQC: Sequence Counts',
@@ -321,6 +349,8 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of reads',
             'hide_zero_cats': False
         }
+
+        # Calculate the number of unique and duplicate reads if we can
         pdata = dict()
         has_dups = False
         has_total = False
@@ -335,6 +365,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # Older versions of FastQC don't have duplicate reads
                 pdata[s_name] = { 'Total Sequences': pd['Total Sequences'] }
                 has_total = True
+
+        # Split by Read 1/2, Raw/Trimmed
+        pdata, pconfig = self.split_fastqc_data_by_group(pdata, pconfig)
+
+        # Configure the cats and config according to what we found
         pcats = list()
         duptext = ''
         if has_total:
@@ -345,6 +380,8 @@ class MultiqcModule(BaseMultiqcModule):
         if has_total and not has_dups:
             pconfig['use_legend'] = False
             pconfig['cpswitch'] = False
+
+        # Add the report section
         self.add_section (
             name = 'Sequence Counts',
             anchor = 'fastqc_sequence_counts',
@@ -381,10 +418,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_quality not found in FastQC reports')
             return None
 
-        # Split into Read 1 and Read 2
-        data = self.split_data_by_group(self.fastqc_s_groups, data)
-        data_labels = [ {'name': 'Read {}'.format(i+1)} for i in range(len(data)) ]
-
         pconfig = {
             'id': 'fastqc_per_base_sequence_quality_plot',
             'title': 'FastQC: Mean Quality Scores',
@@ -398,9 +431,12 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 28, 'to': 100, 'color': '#c3e6c3'},
                 {'from': 20, 'to': 28, 'color': '#e6dcc3'},
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
-            ],
-            'data_labels': data_labels
+            ]
         }
+
+        # Split by Read 1/2, Raw/Trimmed
+        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+
         self.add_section (
             name = 'Sequence Quality Histograms',
             anchor = 'fastqc_per_base_sequence_quality',
@@ -450,6 +486,10 @@ class MultiqcModule(BaseMultiqcModule):
                 {'from': 0, 'to': 20, 'color': '#e6c3c3'},
             ]
         }
+
+        # Split by Read 1/2, Raw/Trimmed
+        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+
         self.add_section (
             name = 'Per Sequence Quality Scores',
             anchor = 'fastqc_per_sequence_quality_scores',
@@ -699,6 +739,9 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
 
+        # Split by Read 1/2, Raw/Trimmed
+        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+
         self.add_section (
             name = 'Per Base N Content',
             anchor = 'fastqc_per_base_n_content',
@@ -759,6 +802,9 @@ class MultiqcModule(BaseMultiqcModule):
                 'colors': self.get_status_cols('sequence_length_distribution'),
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
+            # Split by Read 1/2, Raw/Trimmed
+            data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+
             self.add_section (
                 name = 'Sequence Length Distribution',
                 anchor = 'fastqc_sequence_length_distribution',
@@ -799,6 +845,9 @@ class MultiqcModule(BaseMultiqcModule):
             'colors': self.get_status_cols('sequence_duplication_levels'),
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
+
+        # Split by Read 1/2, Raw/Trimmed
+        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
 
         self.add_section (
             name = 'Sequence Duplication Levels',
@@ -875,6 +924,9 @@ class MultiqcModule(BaseMultiqcModule):
         if max([ x['total_overrepresented'] for x in data.values()]) < 1:
             plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(len(data))
         else:
+            # Split by Read 1/2, Raw/Trimmed
+            data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+
             plot_html = bargraph.plot(data, cats, pconfig)
 
         self.add_section (
@@ -1007,3 +1059,21 @@ class MultiqcModule(BaseMultiqcModule):
             status = self.fastqc_data[s_name]['statuses'].get(section, 'default')
             colours[s_name] = self.status_colours[status]
         return colours
+
+    def split_fastqc_data_by_group(self, data, pconfig={}):
+        # Split into Read 1 and Read 2 / Raw and Trimmed
+        data = self.split_data_by_group(self.fastqc_trimmed_pairs, data)
+        pconfig['data_labels'] = list()
+        # Special case - 2 classes could be R1/R2 or Raw/Trimmed
+        if len(data) == 2:
+            fastqc_trimmed_only_groups = self.group_samples(self.fastqc_data.keys(), 'pre_post_trimming')
+            if len(self.fastqc_pair_groups) < len(fastqc_trimmed_only_groups):
+                pconfig['data_labels'] = [ {'name': 'Read 1'}, {'name': 'Read 2'} ]
+            else:
+                pconfig['data_labels'] = [ {'name': 'Raw'}, {'name': 'Trimmed'} ]
+        else:
+            for i in range(len(data)):
+                read_num = math.ceil((i+2)/2)
+                read_type = '(trimmed)' if i % 2 else '(raw)'
+                pconfig['data_labels'].append({'name': 'Read {} {}'.format(read_num, read_type)})
+        return data, pconfig
