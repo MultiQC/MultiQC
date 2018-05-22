@@ -8,7 +8,6 @@ adapterRemoval:
 afterqc:
     fn: '*.json'
     contents: 'allow_mismatch_in_poly'
-    shared: true
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true
