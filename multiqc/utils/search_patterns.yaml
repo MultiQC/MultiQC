@@ -4,13 +4,15 @@
 
 adapterRemoval:
     fn: '*.settings'
-    shared: true
+    contents: 'AdapterRemoval'
+    num_lines: 1
 afterqc:
     fn: '*.json'
     contents: 'allow_mismatch_in_poly'
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true
+    num_lines: 2
 bbmap/stats:
     contents: '#Name	Reads	ReadsPct'
     num_lines: 4
@@ -112,7 +114,8 @@ bowtie2:
     shared: true
 busco:
     fn: 'short_summary_*'
-    shared: true
+    contents: 'BUSCO version is:'
+    num_lines: 1
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
 clipandmerge:
@@ -123,7 +126,8 @@ clusterflow/logs:
     shared: true
 clusterflow/runfiles:
     fn: '*.run'
-    shared: true
+    contents: 'Cluster Flow Run File'
+    num_lines: 2
 conpair/concordance:
     contents: 'markers (coverage per marker threshold : '
     num_lines: 3
@@ -344,7 +348,7 @@ rseqc/infer_experiment:
       max_filesize: 500000
 salmon/meta:
     fn: 'meta_info.json'
-    shared: true
+    contents: 'salmon_version'
 salmon/fld:
     fn: 'flenDist.txt'
 samblaster:
