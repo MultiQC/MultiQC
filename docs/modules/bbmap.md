@@ -9,8 +9,10 @@ Description: >
 The BBMap module produces summary statistics from the
 [BBMap](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
 The module can summarise data from the following BBMap output files
-(descriptions from `bbmap.sh` help output):
+(descriptions from command line help output):
 
+* `stats`
+    * BBDuk filtering statistics.
 * `covstats` _(not yet implemented)_
     * Per-scaffold coverage info.
 * `rpkm` _(not yet implemented)_

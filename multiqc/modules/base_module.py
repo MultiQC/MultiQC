@@ -185,6 +185,7 @@ class BaseMultiqcModule(object):
         :config.prepend_dirs: boolean, whether to prepend dir name to s_name
         :return: The cleaned sample name, ready to be used
         """
+        s_name_original = s_name
         if root is None:
             root = ''
         if config.prepend_dirs:
@@ -227,6 +228,8 @@ class BaseMultiqcModule(object):
 
         # Remove trailing whitespace
         s_name = s_name.strip()
+        if s_name == '':
+            s_name = s_name_original
 
         return s_name
 

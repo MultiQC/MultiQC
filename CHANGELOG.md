@@ -2,15 +2,49 @@
 
 ## MultiQC v1.6dev
 
+Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
+
+#### New Modules:
+* [**Long Ranger**](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
+    * Works with data from the 10X Genomics Chromium. Performs sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
+
+#### Module updates:
+* **BCFtools**
+    * New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
+* **BBMap**
+    * Support added for BBDuk kmer-based adapter/contaminant filtering summary stats ([@boulund](https://github.com/boulund)
+* **FastQC**
+    * New read count plot, split into unique and duplicate reads if possible.
+    * Help text added for all sections, mostly copied from the excellent FastQC help.
+* **FastQ Screen**
+    * Samples in large-sample-number plot are now sorted alphabetically ([@hassanfa](https://github.com/hassanfa)
+* **Peddy**
+    * Background samples now shown in ancestry PCA plot ([@roryk](https://github.com/roryk))
+    * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
+* **Picard**
+    * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
+* **QUAST**
+    * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
+* **Tophat**
+    * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
+
 #### New MultiQC Features:
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
 * New `exclude_*` keys for file search patterns
     * Have a subset of patterns to exclude otherwise detected files with, by filename or contents
+* Command line options all now use mid-word hyphens (not a mix of hyphens and underscores)
+    * Old underscore terms still maintained for backwards compatibility
+* Flag `--view-tags` now works without requiring an "analysis directory".
+* Removed Python dependency for `enum34` ([@boulund](https://github.com/boulund))
+* Columns can be added to `General Stats` table for custom content/module.
 
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
-* Fixed bug that could prevent Tophat from correctly parsing sample sample names
-    * Fix by [@lparsons](https://github.com/lparsons)
+* Empty sample names from cleaning are now no longer allowed
+* Stop prepend_dirs set in the config from getting clobbered by an unpassed CLI option ([@tsnowlan](https://github.com/tsnowlan))
+* Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
+* Prevent tables from clobbering sorted row orders.
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
