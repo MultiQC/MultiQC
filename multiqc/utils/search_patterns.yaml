@@ -184,7 +184,7 @@ hicup:
     fn: 'HiCUP_summary_report*'
 hicpro:
     - fn: '*.mmapstat'
-    - fn: '*.pairstat'
+    - fn: '*.mpairstat'
     - fn: '*.mergestat'
     - fn: '*.mRSstat'
     - fn: '*.assplit.stat'

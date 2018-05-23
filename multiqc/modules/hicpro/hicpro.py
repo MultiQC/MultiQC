@@ -36,13 +36,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Update current statistics
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
-            data['duplicates'] = data['valid_interaction'] - data['valid_interaction_rmdup']
+            #data['duplicates'] = data['valid_interaction'] - data['valid_interaction_rmdup']
             data['percent_mapped_R1'] = float(data['mapped_R1']) / float(data['total_R1']) * 100
             data['percent_mapped_R2'] = float(data['mapped_R2']) / float(data['total_R2']) * 100
             data['paired_reads'] = int(data['Unique_paired_alignments'] + data['Multiple_pairs_alignments'])
-            data['pourcent_paired_reads'] = float(data['paired_reads'] + data['total_R1']) * 100
+            data['percent_paired_reads'] = float(data['paired_reads'] + data['total_R1']) * 100
             data['percent_valid'] = float(data['valid_interaction']) / float(data['Reported_pairs']) * 100
-            data['percent_valid_rm'] = float(data['valid_interaction_rmdup']) / float(data['Reported_pairs']) * 100  
+            data['percent_valid_interaction_rmdup'] = float(data['valid_interaction_rmdup']) / float(data['Reported_pairs']) * 100  
             
         # Filter to strip out ignored sample names
         self.hicpro_data = self.ignore_samples(self.hicpro_data)
@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
          """ Add HiC-Pro stats to the general stats table """
          headers = OrderedDict()
          headers['total_R1'] = {
-             'title': '{} Total'.format(config.read_count_prefix),
+             'title': 'Total',
              'description' : 'Total Number of Read Pairs',
              'min' : '0',
              'scale' : 'RdYlBu',
@@ -158,8 +158,8 @@ class MultiqcModule(BaseMultiqcModule):
          }
 
          headers['mapped_R1'] = {
-             'title': '{} Mapped [R1]'.format(config.read_count_prefix),
-             'description' : 'Total mapped reads [R1] ({})'.format(config.read_count_desc),
+             'title': 'Aligned [R1]',
+             'description' : 'Total number of aligned reads [R1] ({})'.format(config.read_count_desc),
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
@@ -168,7 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
 
          headers['percent_mapped_R1'] = {
              'title': '% Aligned [R1]',
-             'description': 'Percentage of Aligned Reads [R1]',
+             'description': 'Percentage of aligned reads [R1] (%)',
              'max': 100,
              'min': 0,
              'suffix': '%',
@@ -176,8 +176,8 @@ class MultiqcModule(BaseMultiqcModule):
          }
 
          headers['mapped_R2'] = {
-             'title': '{} Mapped [R2]'.format(config.read_count_prefix),
-             'description' : 'Total mapped reads [R2] ({})'.format(config.read_count_desc),
+             'title': 'Aligned [R2]',
+             'description' : 'Total number of aligned reads [R2] ({})'.format(config.read_count_desc),
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
@@ -186,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
 
          headers['percent_mapped_R2'] = {
              'title': '% Aligned [R2]',
-             'description': 'Percentage of Aligned Reads [R2]',
+             'description': 'Percentage of aligned reads [R2] (%)',
              'max': 100,
              'min': 0,
              'suffix': '%',
@@ -194,8 +194,8 @@ class MultiqcModule(BaseMultiqcModule):
          }
 
          headers['paired_reads'] = {
-             'title': '{} Paired reads'.format(config.read_count_prefix),
-             'description' : 'Total paired reads ({})'.format(config.read_count_desc),
+             'title': 'Paired reads',
+             'description' : 'Total number of paired reads ({})'.format(config.read_count_desc),
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
@@ -203,8 +203,8 @@ class MultiqcModule(BaseMultiqcModule):
          }
 
          headers['percent_paired_reads'] = {
-             'title': '% Paired',
-             'description': 'Percentage of Paired Reads',
+             'title': '% Paired reads',
+             'description': 'Percentage of paired reads (%)',
              'max': 100,
              'min': 0,
              'suffix': '%',
@@ -222,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
          
          headers['percent_valid'] = {
              'title': '% Valid Pairs',
-             'description': 'Percent of valid pairs',
+             'description': 'Percentage of valid pairs over reported ones (%)',
              'max': 100,
              'min': 0,
              'suffix': '%',
@@ -238,9 +238,9 @@ class MultiqcModule(BaseMultiqcModule):
              'shared_key': 'read_count'
          }
          
-         headers['percent_valid_rmdup'] = {
+         headers['percent_valid_interaction_rmdup'] = {
              'title': '% Valid Pairs Unique',
-             'description': 'Percent of valid pairs after duplicates removal',
+             'description': 'Percent of valid pairs over reported ones after duplicates removal (%)',
              'max': 100,
              'min': 0,
              'suffix': '%',
