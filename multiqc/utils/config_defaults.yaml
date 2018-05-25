@@ -375,6 +375,9 @@ module_order:
     - hicup:
         module_tag:
             - hi-c
+    - hicpro:
+        module_tag:
+            - hi-c
     - salmon:
         module_tag:
             - RNA

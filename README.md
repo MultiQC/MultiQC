@@ -30,6 +30,7 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
+
 |Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing | Post-alignment QC          |
 |---------------------------------|-------------------------|---------------------------|----------------------------|
 |[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]              |
@@ -44,11 +45,12 @@ Currently, supported tools include:
 |[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
 |[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
 |[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]      |
-|[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
+|[Jellyfish][jellyfish]           |[HiCPro][hicpro]         |[RSEM][rsem]               |[RSeQC][rseqc]              |
 |[Skewer][skewer]                 |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
 |[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova]      |
 |[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools]        |
 |[Illumina InterOp][interop]      |                         |                           |[VerifyBAMID][verifybamid]  |
+
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
