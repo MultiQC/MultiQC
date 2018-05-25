@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
          }
 
          headers['percent_paired_reads'] = {
-             'title': '% Paired reads',
+             'title': '% Reported Read Pairs',
              'description': 'Percentage of paired reads (%)',
              'max': 100,
              'min': 0,
