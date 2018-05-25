@@ -36,11 +36,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Update current statistics
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
-            #data['duplicates'] = data['valid_interaction'] - data['valid_interaction_rmdup']
+            data['duplicates'] = data['valid_interaction'] - data['valid_interaction_rmdup']
             data['percent_mapped_R1'] = float(data['mapped_R1']) / float(data['total_R1']) * 100
             data['percent_mapped_R2'] = float(data['mapped_R2']) / float(data['total_R2']) * 100
-            data['paired_reads'] = int(data['Unique_paired_alignments'] + data['Multiple_pairs_alignments'])
-            data['percent_paired_reads'] = float(data['paired_reads'] + data['total_R1']) * 100
+            data['paired_reads'] = int(data['Reported_pairs'])
+            data['percent_paired_reads'] = float(data['Reported_pairs']) / float(data['total_R1']) * 100
             data['percent_valid'] = float(data['valid_interaction']) / float(data['Reported_pairs']) * 100
             data['percent_valid_interaction_rmdup'] = float(data['valid_interaction_rmdup']) / float(data['Reported_pairs']) * 100  
             
@@ -194,8 +194,8 @@ class MultiqcModule(BaseMultiqcModule):
          }
 
          headers['paired_reads'] = {
-             'title': 'Paired reads',
-             'description' : 'Total number of paired reads ({})'.format(config.read_count_desc),
+             'title': 'Reported Read Pairs',
+             'description' : 'Total number of reported read pairs ({})'.format(config.read_count_desc),
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
@@ -226,14 +226,14 @@ class MultiqcModule(BaseMultiqcModule):
              'max': 100,
              'min': 0,
              'suffix': '%',
-            'scale': 'YlGn'
+             'scale': 'YlGn'
          }
          
          headers['valid_interaction_rmdup'] = {
              'title': '{} Valid Pairs Unique'.format(config.read_count_prefix),
              'description': 'Number of valid pairs after duplicates removal ({})'.format(config.read_count_desc),
              'min': 0,
-             'scale': 'PuRd',
+             'scale': 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
              'shared_key': 'read_count'
          }
@@ -244,8 +244,8 @@ class MultiqcModule(BaseMultiqcModule):
              'max': 100,
              'min': 0,
              'suffix': '%',
-             'scale': 'YlGn-rev',
-             'modify': lambda x: 100 - x
+             'scale': 'YlGn'
+             #'modify': lambda x: 100 - x
          }
      
          self.general_stats_addcols(self.hicpro_data, headers, 'HiC-Pro')
@@ -334,8 +334,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'hicpro_filtering_plot',
             'title': 'HiC-Pro: Filtering Statistics',
             'ylab': '# Read Pairs',
-            'cpswitch_counts_label': 'Number of Read Pairs',
-            'cpswitch_c_active': False
+            'cpswitch_counts_label': 'Number of Read Pairs'
         }
         
         return bargraph.plot(self.hicpro_data, keys, config)
@@ -355,8 +354,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'hicpro_contact_plot',
             'title': 'HiC-Pro: Contact Statistics',
             'ylab': '# Pairs',
-            'cpswitch_counts_label': 'Number of Pairs',
-            'cpswitch_c_active': False
+            'cpswitch_counts_label': 'Number of Pairs'
         }
         
         return bargraph.plot(self.hicpro_data, keys, config)
@@ -378,8 +376,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'hicpro_asan_plot',
             'title': 'HiC-Pro: Allele-specific Statistics',
             'ylab': '# Pairs',
-            'cpswitch_counts_label': 'Number of Pairs',
-            'cpswitch_c_active': False
+            'cpswitch_counts_label': 'Number of Pairs'
         }
 
         return bargraph.plot(self.hicpro_data, keys, config)
