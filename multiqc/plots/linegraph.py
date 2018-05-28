@@ -80,38 +80,45 @@ def plot (data, pconfig=None):
 
     # Generate the data dict structure expected by HighCharts series
     plotdata = list()
-    for d in data:
+    for data_index, d in enumerate(data):
         thisplotdata = list()
+
         for s in sorted(d.keys()):
+
+            # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
+            series_config = pconfig.copy()
+            if 'data_labels' in pconfig:
+                series_config.update(pconfig['data_labels'][data_index])
+
             pairs = list()
             maxval = 0
-            if 'categories' in pconfig:
-                pconfig['categories'] = list()
+            if 'categories' in series_config:
+                series_config['categories'] = list()
                 for k in d[s].keys():
-                    pconfig['categories'].append(k)
+                    series_config['categories'].append(k)
                     pairs.append(d[s][k])
                     maxval = max(maxval, d[s][k])
             else:
                 for k in sorted(d[s].keys()):
                     if k is not None:
-                        if 'xmax' in pconfig and float(k) > float(pconfig['xmax']):
+                        if 'xmax' in series_config and float(k) > float(series_config['xmax']):
                             continue
-                        if 'xmin' in pconfig and float(k) < float(pconfig['xmin']):
+                        if 'xmin' in series_config and float(k) < float(series_config['xmin']):
                             continue
                     if d[s][k] is not None:
-                        if 'ymax' in pconfig and float(d[s][k]) > float(pconfig['ymax']):
+                        if 'ymax' in series_config and float(d[s][k]) > float(series_config['ymax']):
                             continue
-                        if 'ymin' in pconfig and float(d[s][k]) < float(pconfig['ymin']):
+                        if 'ymin' in series_config and float(d[s][k]) < float(series_config['ymin']):
                             continue
                     pairs.append([k, d[s][k]])
                     try:
                         maxval = max(maxval, d[s][k])
                     except TypeError:
                         pass
-            if maxval > 0 or pconfig.get('hide_empty') is not True:
+            if maxval > 0 or series_config.get('hide_empty') is not True:
                 this_series = { 'name': s, 'data': pairs }
                 try:
-                    this_series['color'] = pconfig['colors'][s]
+                    this_series['color'] = series_config['colors'][s]
                 except:
                     pass
                 thisplotdata.append(this_series)
