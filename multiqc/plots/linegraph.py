@@ -87,7 +87,7 @@ def plot (data, pconfig=None):
 
             # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
-            if 'data_labels' in pconfig and type(pconfig['data_labels'][data_index] is dict: # if not a dict: only dataset name is provided
+            if 'data_labels' in pconfig and type(pconfig['data_labels'][data_index]) is dict:  # if not a dict: only dataset name is provided
                 series_config.update(pconfig['data_labels'][data_index])
 
             pairs = list()
