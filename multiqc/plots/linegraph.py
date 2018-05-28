@@ -93,9 +93,9 @@ def plot (data, pconfig=None):
             pairs = list()
             maxval = 0
             if 'categories' in series_config:
-                series_config['categories'] = list()
+                pconfig['categories'] = list()
                 for k in d[s].keys():
-                    series_config['categories'].append(k)
+                    pconfig['categories'].append(k)
                     pairs.append(d[s][k])
                     maxval = max(maxval, d[s][k])
             else:
