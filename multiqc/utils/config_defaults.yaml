@@ -33,12 +33,12 @@ data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
 data_format: 'tsv'
 module_tag: []
-
 force: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: ' | '
 file_list: false
+
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: true
@@ -76,6 +76,7 @@ thousandsSep_format: null
 section_comments: {}
 lint: False
 
+ignore_symlinks: false
 fn_ignore_dirs:
     - 'multiqc_data'
     - 'icarus_viewers'       # quast

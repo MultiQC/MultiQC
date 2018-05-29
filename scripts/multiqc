@@ -101,6 +101,10 @@ logger = config.logger
                     multiple = True,
                     help = "Ignore sample names (glob expression)"
 )
+@click.option('--ignore-symlinks', 'ignore_symlinks',
+                    is_flag = True,
+                    help = "Ignore symlinked directories and files"
+)
 @click.option('--sample-names', 'sample_names',
                     type = click.Path(exists=True, readable=True),
                     help = "File containing alternative sample names"
@@ -177,8 +181,8 @@ logger = config.logger
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
-ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
-plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
+ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
+export_plots, plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -248,6 +252,8 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         config.make_data_dir = False
     if force:
         config.force = True
+    if ignore_symlinks:
+        config.ignore_symlinks = True
     if zip_data_dir:
         config.zip_data_dir = True
     if data_format is not None:
