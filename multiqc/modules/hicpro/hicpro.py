@@ -24,9 +24,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='HiCPro', anchor='hicpro',
         href='https://github.com/nservant/HiC-Pro',
-        info="is an efficient and flexible pipeline for Hi-C data processing.")
+        info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.")
 
-        log.info("Enter HiC-Pro MultiQC module!")
+        #log.info("Enter HiC-Pro MultiQC module!")
         
         # Find and load any HiC-Pro summary reports
         self.hicpro_data = dict()
@@ -50,13 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.hicpro_data) == 0:
             raise UserWarning
 
-        # Find all files for mymod
-        #for myfile in self.find_log_files('hicpro'):
-        #    print( myfile['fn'] )      # Filename    
-        #    print( myfile['s_name'] )  # Sample name (from cleaned filename)
-        #    print( myfile['root'] )    # Directory file was in
-    
-        log.info("Found {} reports".format(len(self.hicpro_data)))
+        log.info("Found {} HiC-Pro reports".format(len(self.hicpro_data)))
         
         # Write parsed data to a file
         self.write_data_file(self.hicpro_data, 'multiqc_hicpro')
