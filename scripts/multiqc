@@ -159,6 +159,10 @@ logger = config.logger
                     is_flag = True,
                     help = "Creates PDF report with 'simple' template. Requires Pandoc to be installed."
 )
+@click.option('--no-megaqc-upload', 'no_megaqc_upload',
+                    is_flag = True,
+                    help = "Don't upload generated report to MegaQC, even if MegaQC options are found"
+)
 @click.option('-c', '--config', 'config_file',
                     type = click.Path(exists=True, readable=True),
                     multiple=True,
@@ -182,7 +186,7 @@ logger = config.logger
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
-export_plots, plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
+export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -269,6 +273,10 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, config_file, cl_con
         lint_helpers.run_tests()
     if make_pdf:
         config.template = 'simple'
+    if no_megaqc_upload:
+        config.megaqc_upload = False
+    else:
+        config.megaqc_upload = True
     if sample_names:
         config.load_sample_names(sample_names)
     if module_tag is not None:
@@ -546,7 +554,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, config_file, cl_con
     plugin_hooks.mqc_trigger('before_report_generation')
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
-    if config.data_dump_file or config.megaqc_url:
+    if (config.data_dump_file or config.megaqc_url) and config.megaqc_upload:
         multiqc_json_dump = megaqc.multiqc_dump_json(report)
         if config.data_dump_file:
             util_functions.write_data_file(multiqc_json_dump, 'multiqc_data', False, 'json')
