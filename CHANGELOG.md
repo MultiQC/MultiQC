@@ -41,6 +41,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * Removed Python dependency for `enum34` ([@boulund](https://github.com/boulund))
 * Columns can be added to `General Stats` table for custom content/module.
 * New `--ignore-symlinks` flag which will ignore symlinked directories and files.
+* New `--no-megaqc-upload` flag which disables automatically uploading data to MegaQC
 
 #### Bug Fixes
 * Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
