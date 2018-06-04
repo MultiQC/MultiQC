@@ -446,6 +446,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+	- fastp:
+        module_tag:
+            - RNA
+            - DNA
     - fastqc:
         module_tag:
             - RNA
