@@ -446,7 +446,7 @@ module_order:
         module_tag:
             - RNA
             - DNA
-	- fastp:
+    - fastp:
         module_tag:
             - RNA
             - DNA
