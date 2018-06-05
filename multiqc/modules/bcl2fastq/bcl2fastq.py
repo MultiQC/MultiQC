@@ -20,7 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             name='bcl2fastq',
             anchor='bcl2fastq',
             href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",
-            info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis."
+            info="can be used to both demultiplex data and convert BCL files"
+                 " to FASTQ file formats for downstream analysis."
         )
 
         # Gather data from all json files
@@ -125,7 +126,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Undetermined barcode by lane",
             anchor="undetermine_by_lane",
-            description="Count of the most abundant undetermined barcodes by lanes",
+            description="Count of the top ten most abundant undetermined"
+                        " barcodes by lanes",
             plot=bargraph.plot(
                 self.get_bar_data_from_undertemined(self.bcl2fastq_bylane),
                 None,
@@ -171,11 +173,11 @@ class MultiqcModule(BaseMultiqcModule):
             unknown_barcode = content['UnknownBarcodes'][l - 1]['Barcodes']
             run_data[lane]['unknown_barcodes'] = unknown_barcode
             for demuxResult in conversionResult.get("DemuxResults", []):
-                sample = demuxResult["SampleName"]
+                sample = demuxResult["SampleId"]
                 if sample in run_data[lane]["samples"]:
                     log.debug(
                         "Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(
-                            self.prepend_runid(runId, lane),sample
+                            self.prepend_runid(runId, lane), sample
                         )
                     )
                 run_data[lane]["samples"][sample] = {
