@@ -26,25 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any Bowtie reports
         self.bowtie_data = dict()
-        fn_ignore = [
-            # Tophat log files
-            'bowtie.left_kept_reads.log',
-            'bowtie.left_kept_reads.m2g_um.log',
-            'bowtie.left_kept_reads.m2g_um_seg1.log',
-            'bowtie.left_kept_reads.m2g_um_seg2.log',
-            'bowtie.right_kept_reads.log',
-            'bowtie.right_kept_reads.m2g_um.log',
-            'bowtie.right_kept_reads.m2g_um_seg1.log',
-            'bowtie.right_kept_reads.m2g_um_seg2.log'
-        ]
         for f in self.find_log_files('bowtie1'):
-            if f['fn'] in fn_ignore:
-                log.debug('Skipping file because looks like tophat log: {}/{}'.format(f['root'], f['fn']))
-                continue
-            # Check that this isn't actually Bismark using bowtie
-            if f['f'].find('bisulfite', 0) >= 0:
-                log.debug('Skipping file because looks like Bismark log: {}/{}'.format(f['root'], f['fn']))
-                continue
             self.parse_bowtie_logs(f)
 
         # Filter to strip out ignored sample names

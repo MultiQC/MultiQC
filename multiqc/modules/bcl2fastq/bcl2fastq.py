@@ -214,27 +214,52 @@ class MultiqcModule(BaseMultiqcModule):
                     lsample["R{}_trimmed_bases".format(r)] += readMetric["TrimmedBases"]
             undeterminedYieldQ30 = 0
             undeterminedQscoreSum = 0
+            undeterminedTrimmedBases = 0
             if "Undetermined" in conversionResult:
                 for readMetric in conversionResult["Undetermined"]["ReadMetrics"]:
                     undeterminedYieldQ30 += readMetric["YieldQ30"]
                     undeterminedQscoreSum += readMetric["QualityScoreSum"]
+                    undeterminedTrimmedBases += readMetric["TrimmedBases"]
                 run_data[lane]["samples"]["undetermined"] = {
                     "total": conversionResult["Undetermined"]["NumberReads"],
                     "total_yield": conversionResult["Undetermined"]["Yield"],
                     "perfectIndex": 0,
                     "yieldQ30": undeterminedYieldQ30,
-                    "qscore_sum": undeterminedQscoreSum
+                    "qscore_sum": undeterminedQscoreSum,
+                    "trimmed_bases": undeterminedTrimmedBases
                 }
 
         # Calculate Percents and averages
         for lane_id, lane in iteritems(run_data):
-            lane["percent_Q30"] = (float(lane["yieldQ30"]) / float(lane["total_yield"])) * 100.0
-            lane["percent_perfectIndex"] = (float(lane["perfectIndex"]) / float(lane["total"])) * 100.0
-            lane["mean_qscore"] = float(lane["qscore_sum"]) / float(lane["total_yield"])
+            try:
+                lane["percent_Q30"] = (float(lane["yieldQ30"])
+                    / float(lane["total_yield"])) * 100.0
+            except ZeroDivisionError:
+                lane["percent_Q30"] = "NA"
+            try:
+                lane["percent_perfectIndex"] = (float(lane["perfectIndex"])
+                    / float(lane["total"])) * 100.0
+            except ZeroDivisionError:
+                lane["percent_perfectIndex"] = "NA"
+            try:
+                lane["mean_qscore"] = float(lane["qscore_sum"]) / float(lane["total_yield"])
+            except ZeroDivisionError:
+                lane["mean_qscore"] = "NA"
             for sample_id, sample in iteritems(lane["samples"]):
-                sample["percent_Q30"] = (float(sample["yieldQ30"]) / float(sample["total_yield"])) * 100.0
-                sample["percent_perfectIndex"] = (float(sample["perfectIndex"]) / float(sample["total"])) * 100.0
-                sample["mean_qscore"] = float(sample["qscore_sum"]) / float(sample["total_yield"])
+                try:
+                    sample["percent_Q30"] = (float(sample["yieldQ30"])
+                        / float(sample["total_yield"])) * 100.0
+                except ZeroDivisionError:
+                    sample["percent_Q30"] = "NA"
+                try:
+                    sample["percent_perfectIndex"] = (float(sample["perfectIndex"])
+                        / float(sample["total"])) * 100.0
+                except ZeroDivisionError:
+                    sample["percent_perfectIndex"] = "NA"
+                try:
+                    sample["mean_qscore"] = float(sample["qscore_sum"]) / float(sample["total_yield"])
+                except ZeroDivisionError:
+                    sample["mean_qscore"]
 
     def split_data_by_lane_and_sample(self):
         for run_id, r in iteritems(self.bcl2fastq_data):
@@ -283,9 +308,20 @@ class MultiqcModule(BaseMultiqcModule):
                         s["R2_trimmed_bases"] += sample["R2_trimmed_bases"]
                     except KeyError:
                         pass
-                    s["percent_Q30"] = (float(s["yieldQ30"]) / float(s["total_yield"])) * 100.0
-                    s["percent_perfectIndex"] = (float(s["perfectIndex"]) / float(s["total"])) * 100.0
-                    s["mean_qscore"] = (float(s["qscore_sum"]) / float(s["total_yield"]))
+                    try:
+                        s["percent_Q30"] = (float(s["yieldQ30"])
+                            / float(s["total_yield"])) * 100.0
+                    except ZeroDivisionError:
+                        s["percent_Q30"] = "NA"
+                    try:
+                        s["percent_perfectIndex"] = (float(s["perfectIndex"])
+                            / float(s["total"])) * 100.0
+                    except ZeroDivisionError:
+                        s["percent_perfectIndex"] = "NA"
+                    try:
+                        s["mean_qscore"] = (float(s["qscore_sum"]) / float(s["total_yield"]))
+                    except ZeroDivisionError:
+                        s["mean_qscore"] = "NA"
                     if sample_id != "undetermined":
                         if sample_id not in self.source_files:
                             self.source_files[sample_id] = []
@@ -332,6 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "R1_trimmed_bases": sample["R1_trimmed_bases"],
                 "R2_trimmed_bases": sample["R2_trimmed_bases"]
             }
+
         headers = OrderedDict()
         headers['total'] = {
             'title': '{} Clusters'.format(config.read_count_prefix),

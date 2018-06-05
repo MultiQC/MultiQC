@@ -14,6 +14,7 @@ MultiQC Modules:
     BioBloom Tools: modules/biobloomtools.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
+    ClipAndMerge: modules/clipandmerge.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
     Flexbar: modules/flexbar.md
@@ -31,6 +32,7 @@ MultiQC Modules:
     HiCUP: modules/hicup.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
+    Long Ranger: modules/longranger.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
@@ -40,6 +42,7 @@ MultiQC Modules:
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
     Disambiguate: modules/disambiguate.md
+    DeDup: modules/dedup.md
     deepTools: modules/deeptools.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md

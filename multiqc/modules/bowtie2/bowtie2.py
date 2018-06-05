@@ -30,12 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.num_se = 0
         self.num_pe = 0
         for f in self.find_log_files('bowtie2', filehandles=True):
-            # Check that this isn't actually Bismark using bowtie
-            if f['f'].read().find('bisulfite', 0) < 0:
-                f['f'].seek(0)
-                self.parse_bowtie2_logs(f)
-            else:
-                log.debug('Skipping "{}" as looks like a bismark log file (contains word "bisulfite")'.format(f['fn']))
+            self.parse_bowtie2_logs(f)
 
         # Filter to strip out ignored sample names
         self.bowtie2_data = self.ignore_samples(self.bowtie2_data)

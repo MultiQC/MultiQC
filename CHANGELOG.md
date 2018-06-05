@@ -1,22 +1,109 @@
 # MultiQC Version History
 
-## MultiQC v1.5dev
+## MultiQC v1.6dev
+
+Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
+
+#### New Modules:
+* [**Long Ranger**](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
+    * Works with data from the 10X Genomics Chromium. Performs sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
+
+#### Module updates:
+* **BCFtools**
+    * New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
+* **BBMap**
+    * Support added for BBDuk kmer-based adapter/contaminant filtering summary stats ([@boulund](https://github.com/boulund)
+* **FastQC**
+    * New read count plot, split into unique and duplicate reads if possible.
+    * Help text added for all sections, mostly copied from the excellent FastQC help.
+* **FastQ Screen**
+    * Samples in large-sample-number plot are now sorted alphabetically ([@hassanfa](https://github.com/hassanfa)
+* **Peddy**
+    * Background samples now shown in ancestry PCA plot ([@roryk](https://github.com/roryk))
+    * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
+* **Picard**
+    * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
+* **QUAST**
+    * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
+* **RNA-SeQC**
+    * Don't create the report section for Gene Body Coverage if no data is given
+* **Tophat**
+    * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
+
+#### New MultiQC Features:
+* Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
+* New `exclude_*` keys for file search patterns
+    * Have a subset of patterns to exclude otherwise detected files with, by filename or contents
+* Command line options all now use mid-word hyphens (not a mix of hyphens and underscores)
+    * Old underscore terms still maintained for backwards compatibility
+* Flag `--view-tags` now works without requiring an "analysis directory".
+* Removed Python dependency for `enum34` ([@boulund](https://github.com/boulund))
+* Columns can be added to `General Stats` table for custom content/module.
+* New `--ignore-symlinks` flag which will ignore symlinked directories and files.
+* New `--no-megaqc-upload` flag which disables automatically uploading data to MegaQC
+
+#### Bug Fixes
+* Fix path_filters for top_modules/module_order configuration only selecting if *all* globs match. It now filters searches that match *any* glob.
+* Empty sample names from cleaning are now no longer allowed
+* Stop prepend_dirs set in the config from getting clobbered by an unpassed CLI option ([@tsnowlan](https://github.com/tsnowlan))
+* Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
+* Prevent tables from clobbering sorted row orders.
+* Fix linegraph and scatter plots data conversion (sporadically the incorrect `ymax` was used to drop data points) ([@cpavanrun](https://github.com/cpavanrun))
+
+
+## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
+
+#### New Modules:
+* [**DeDup**](http://www.github.com/apeltzer/DeDup) - New module!
+    * DeDup: Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
+    * Module written by [@apeltzer](https://github.com/apeltzer),
+* [**Clip&Merge**](http://github.com/apeltzer/ClipAndMerge) - New module!
+    * Clip&Merge: Adapter clipping and read merging for ancient DNA analysis
+    * Module written by [@apeltzer](https://github.com/apeltzer),
 
 #### Module updates:
 * **bcl2fastq**
     * Catch `ZeroDivisionError` exceptions when there are 0 reads ([@aledj2](https://github.com/aledj2))
+    * Add parsing of `TrimmedBases` and new General Stats column for % bases trimmed ([@matthdsm](https://github.com/matthdsm)).
+* **BUSCO**
+    * Fixed configuration bug that made all sample names become `'short'`
+* **Custom Content**
+    * Parsed tables now exported to `multiqc_data` files
+* **Cutadapt**
+    * Refactor parsing code to collect all length trimming plots
+* **FastQC**
+    * Fixed starting y-axis label for GC-content lineplot being incorrect.
+* **HiCExplorer**
+    * Updated to work with v2.0 release.
 * **Homer**
     * Made parsing of `tagInfo.txt` file more resilient to variations in file format so that it works with new versions of Homer.
     * Kept order of chromosomes in coverage plot consistent.
 * **Peddy**
     * Switch `Sex error` logic to `Correct sex` for better highlighting ([@aledj2](https://github.com/aledj2))
 * **Picard**
-    * Updated module and search patterns to recognise new output format from Picard version >= 2.16
+    * Updated module and search patterns to recognise new output format from Picard version >= 2.16 and GATK output.
+* **Qualimap BamQC**
+    * Fixed bug where start of _Genome Fraction_ could have a step if target is 100% covered.
 * **RNA-SeQC**
     * Added rRNA alignment stats to summary table [@Rolandde](https://github.com/Rolandde)
+* **RSeqC**
+    * Fixed read distribution plot by adding category for `other_intergenic` (thanks to [@moxgreen](https://github.com/moxgreen))
+    * Fixed a dodgy plot title (Read GC content)
+* **Supernova**
+    * Added support for Supernova 2.0 reports. Fixed a TypeError bug when using txt reports only. Also a bug when parsing empty histogram files.
 
 #### New MultiQC Features:
 * Invalid choices for `--module` or `--exclude` now list the available modules alphabetically.
+* Linting now checks for presence in `config.module_order` and tags.
+
+#### Bug Fixes
+* Excluding modules now works in combination with using module tags.
+* Fixed edge-case bug where certain combinations of `output_fn_name` and `data_dir_name` could trigger a crash
+* Conditional formatting - values are now longer double-labelled
+* Made config option `extra_series` work in scatter plots the same way that it works for line plots
+* Locked the `matplotlib` version to `v2.1.0` and below
+    * Due to [two](https://github.com/matplotlib/matplotlib/issues/10476) [bugs](https://github.com/matplotlib/matplotlib/issues/10784) that appeared in `v2.2.0` - will remove this constraint when there's a new release that works again.
 
 
 ## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11

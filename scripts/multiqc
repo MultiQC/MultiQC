@@ -31,7 +31,7 @@ except ImportError:
 
 from multiqc import __version__
 from multiqc.plots import table
-from multiqc.utils import report, plugin_hooks, megaqc, util_functions, config, log
+from multiqc.utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
 
 @click.command(
@@ -84,8 +84,11 @@ logger = config.logger
                     multiple = True,
                     help = "Use only modules which tagged with this keyword, eg. RNA"
 )
-@click.option( '--view_tags',
+@click.option( '--view-tags', '--view_tags',
                     is_flag = True,
+                    callback = util_functions.view_all_tags,
+                    expose_value = False,
+                    is_eager = True,
                     help = "View the available tags and which modules they load"
 )
 @click.option('-x', '--ignore',
@@ -97,6 +100,10 @@ logger = config.logger
                     type = str,
                     multiple = True,
                     help = "Ignore sample names (glob expression)"
+)
+@click.option('--ignore-symlinks', 'ignore_symlinks',
+                    is_flag = True,
+                    help = "Ignore symlinked directories and files"
 )
 @click.option('--sample-names', 'sample_names',
                     type = click.Path(exists=True, readable=True),
@@ -152,12 +159,16 @@ logger = config.logger
                     is_flag = True,
                     help = "Creates PDF report with 'simple' template. Requires Pandoc to be installed."
 )
+@click.option('--no-megaqc-upload', 'no_megaqc_upload',
+                    is_flag = True,
+                    help = "Don't upload generated report to MegaQC, even if MegaQC options are found"
+)
 @click.option('-c', '--config', 'config_file',
                     type = click.Path(exists=True, readable=True),
                     multiple=True,
                     help = "Specific config file to load, after those in MultiQC dir / home dir / working dir."
 )
-@click.option('--cl_config',
+@click.option('--cl-config', '--cl_config',
                     type = str,
                     multiple = True,
                     help = "Specify MultiQC config YAML on the command line"
@@ -173,9 +184,9 @@ logger = config.logger
 )
 @click.version_option(__version__)
 
-def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, view_tags, module, exclude, outdir,
-ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, export_plots,
-plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, quiet, **kwargs):
+def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
+ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
+export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -221,26 +232,6 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         except Exception as e:
             logger.debug('Could not connect to multiqc.info for version check: {}'.format(e))
 
-    # View available tags and modules and exit
-    if view_tags:
-        avail_tags = dict()
-        print("\nMultiQC Available module tag groups:\n")
-        for mod_dict in config.module_order:
-            if type(mod_dict) is dict:
-                mod_key = list(mod_dict.keys())[0]
-                mod = mod_dict[mod_key]
-                if 'module_tag' in mod:
-                    tags = mod['module_tag'] if type(mod['module_tag']) is list else list(mod['module_tag'])
-                    for t in tags:
-                        if t not in avail_tags:
-                            avail_tags[t] = []
-                        avail_tags[t].append(mod_key)
-        for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-            print (" - {}:".format(t))
-            for ttgs in avail_tags[t]:
-                print ("   - {}".format(ttgs))
-        sys.exit(0)
-
     # Set up key variables (overwrite config vars from command line)
     if template is not None:
         config.template = template
@@ -248,7 +239,8 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         config.title = title
     if report_comment is not None:
         config.report_comment = report_comment
-    config.prepend_dirs = dirs
+    if dirs is True:
+        config.prepend_dirs = dirs
     if dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
@@ -264,6 +256,8 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         config.make_data_dir = False
     if force:
         config.force = True
+    if ignore_symlinks:
+        config.ignore_symlinks = True
     if zip_data_dir:
         config.zip_data_dir = True
     if data_format is not None:
@@ -276,8 +270,13 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         config.plots_force_interactive = True
     if lint:
         config.lint = True
+        lint_helpers.run_tests()
     if make_pdf:
         config.template = 'simple'
+    if no_megaqc_upload:
+        config.megaqc_upload = False
+    else:
+        config.megaqc_upload = True
     if sample_names:
         config.load_sample_names(sample_names)
     if module_tag is not None:
@@ -346,7 +345,21 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
     config.module_order = [ m if type(m) is dict else {m:{}} for m in config.module_order ]
     mod_keys = [ list(m.keys())[0] for m in config.module_order ]
 
-    #Get the avaiable tags to decide which modules to run.
+    # Lint the module configs
+    if config.lint:
+        for m in config.avail_modules.keys():
+            if m not in mod_keys:
+                errmsg = "LINT: Module '{}' not found in config.module_order".format(m)
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
+            else:
+                for mo in config.module_order:
+                    if m != 'custom_content' and m in mo.keys() and 'module_tag' not in mo[m]:
+                        errmsg = "LINT: Module '{}' in config.module_order did not have 'module_tag' config".format(m)
+                        logger.error(errmsg)
+                        report.lint_errors.append(errmsg)
+
+    # Get the avaiable tags to decide which modules to run.
     modules_from_tags = set()
     if config.module_tag is not None:
         tags = config.module_tag
@@ -368,7 +381,7 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
     elif modules_from_tags:
         run_modules = [ m for m in run_modules if list(m.keys())[0] in modules_from_tags ]
         logger.info("Only using modules with '{}' tag".format(', '.join(module_tag)))
-    elif exclude:
+    if exclude:
         logger.info("Excluding modules '{}'".format("', '".join(exclude)))
         if 'general_stats' in exclude:
             config.skip_generalstats = True
@@ -517,7 +530,8 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         for k in h.keys():
             if 'rid' not in h[k]:
                 h[k]['rid'] = re.sub(r'\W+', '_', k).strip().strip('_')
-            report.general_stats_headers[idx][k]['rid'] = 'mqc-generalstats-{}'.format(h[k]['rid'])
+            ns_html = re.sub(r'\W+', '_', h[k]['namespace']).strip().strip('_').lower()
+            report.general_stats_headers[idx][k]['rid'] = report.save_htmlid('mqc-generalstats-{}-{}'.format(ns_html, h[k]['rid']))
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0:
         pconfig = {
@@ -540,7 +554,7 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
     plugin_hooks.mqc_trigger('before_report_generation')
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
-    if config.data_dump_file or config.megaqc_url:
+    if (config.data_dump_file or config.megaqc_url) and config.megaqc_upload:
         multiqc_json_dump = megaqc.multiqc_dump_json(report)
         if config.data_dump_file:
             util_functions.write_data_file(multiqc_json_dump, 'multiqc_data', False, 'json')
@@ -587,7 +601,8 @@ plots_flat, plots_interactive, lint, make_pdf, config_file, cl_config, verbose, 
         else:
             # Make directories for data_dir
             logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
-            os.makedirs(config.data_dir)
+            if not os.path.exists(config.data_dir):
+                os.makedirs(config.data_dir)
             # Modules have run, so data directory should be complete by now. Move its contents.
             for f in os.listdir(config.data_tmp_dir):
                 fn = os.path.join(config.data_tmp_dir, f)

@@ -27,7 +27,7 @@ def read_sample_name(line_iter, clean_fn):
             new_line = new_line.strip()
             if 'BaseDistributionByCycle' in new_line and 'INPUT' in new_line:
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT=(\[?[^\s]+\]?)", new_line)
+                fn_search = re.search(r"INPUT=?\s*(\[?[^\s]+\]?)", new_line, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip('[]'))
                     s_name = clean_fn(s_name)
@@ -208,4 +208,3 @@ def parse_reports(self):
 
     # Return the number of detected samples to the parent module
     return len(self.picard_baseDistributionByCycle_data)
-

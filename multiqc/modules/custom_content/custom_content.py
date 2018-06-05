@@ -191,8 +191,8 @@ def custom_module_classes():
                 headers = list(headers)
                 headers.sort()
                 gsheaders = OrderedDict()
-                for k in headers:
-                    gsheaders[k] = dict()
+                for h in headers:
+                    gsheaders[h] = dict()
 
             # Headers is a list of dicts
             if type(gsheaders) == list:
@@ -202,10 +202,10 @@ def custom_module_classes():
                         hs[k] = v
                 gsheaders = hs
 
-            # Add namespace if not specified
-            for k in gsheaders:
-                if 'namespace' not in gsheaders[k]:
-                    gsheaders[k]['namespace'] = c_id
+            # Add namespace and description if not specified
+            for h in gsheaders:
+                if 'namespace' not in gsheaders[h]:
+                    gsheaders[h]['namespace'] = mod['config'].get('namespace', k)
 
             bm.general_stats_addcols(mod['data'], gsheaders)
 
@@ -255,6 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig['sortRows'] = pconfig.get('sortRows', False)
             headers = mod['config'].get('headers')
             self.add_section( plot = table.plot(mod['data'], headers, pconfig) )
+            self.write_data_file( mod['data'], "multiqc_{}".format(modname.lower().replace(' ', '_')) )
 
         # Bar plot
         elif mod['config'].get('plot_type') == 'bargraph':
@@ -398,6 +399,15 @@ def _parse_txt(f, conf):
                     first_row_str += 1
 
     all_numeric = all([ type(l) == float for l in d[i][1:] for i in range(1, len(d)) ])
+
+    # General stat info files - expected to be have atleast 2 rows (first row always being the header)
+    # and have atleast 2 columns (first column always being sample name)
+    if conf.get('plot_type') == 'generalstats' and len(d) >= 2 and ncols >= 2:
+        data = defaultdict(dict)
+        for i,l in enumerate(d[1:], 1):
+            for j,v in enumerate(l[1:], 1):
+                data[l[0]][d[0][j]] = v
+        return (data, conf)
 
     # Heatmap: Number of headers == number of lines
     if conf.get('plot_type') is None and first_row_str == len(lines) and all_numeric:

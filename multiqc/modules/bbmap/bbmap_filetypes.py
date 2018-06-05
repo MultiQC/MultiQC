@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from itertools import chain
 
+from multiqc.utils import config
+
 from .plot_basic_hist import plot_basic_hist
 from .plot_aqhist import plot_aqhist
 from .plot_bhist import plot_bhist
@@ -19,6 +21,7 @@ class slice2OrderedDict(object):
 odict = slice2OrderedDict()
 
 section_order = [
+    'stats',
     'covhist',
     'covstats',
     'bincov',
@@ -40,6 +43,50 @@ section_order = [
     'statsfile',
 ]
 file_types = {
+    'stats': {
+        'title': 'BBDuk filtering statistics',
+        'descr': 'Proportion of reads that matched adapters/contaminants.',
+        'help_text': '',
+        'kvrows': ['Total', 'Matched'],
+        'kv_descriptions': {
+            'Total': (
+                'Total number of reads processed',
+                {
+                    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
+                    'shared_key': 'read_count',
+                    'modify': lambda x: x * config.read_count_multiplier,
+                    'scale': 'PuBu',
+                    'hidden': True
+                }
+            ),
+            'Matched': (
+                'Total number of reads matching adapters/contaminants',
+                {
+                    'description': 'Aligned Reads ({})'.format(config.read_count_desc),
+                    'shared_key': 'read_count',
+                    'modify': lambda x: x * config.read_count_multiplier,
+                    'scale': 'Reds',
+                    'hidden': True
+                }
+            ),
+            'Percent filtered': (
+                'Proportion of reads filtered, matching adapters/contaminants',
+                {
+                    'max': 100,
+                    'min': 0,
+                    'scale': 'OrRd',
+                    'suffix': '%',
+                    'hidden': False
+                }
+            ),
+        },
+        'cols': odict[
+            'Name':str,
+            'Reads':int,
+            'ReadsPct':lambda v: float(v.strip("%"))],
+        'plot_func': None,  ## Plotting for 'stats' not implemented
+        'plot_params': {},
+    },
     'aqhist': {
         'title': 'Read quality',
         'descr': 'Histogram of average read qualities (`aqhist`). '
@@ -161,10 +208,10 @@ file_types = {
         'help_text': '',
         'kvrows': ['Mean', 'Median', 'Mode', 'STDev'],
         'kv_descriptions': {
-            'Mean': 'Average GC content',
-            'Median': 'Median GC content',
-            'Mode': 'The most commonly occuring value of the GC content distribution',
-            'STDev': 'Standard deviation of average GC content'
+            'Mean': ('Average GC content', {}),
+            'Median': ('Median GC content', {}),
+            'Mode': ('The most commonly occuring value of the GC content distribution', {}),
+            'STDev': ('Standard deviation of average GC content', {}),
         },
         'cols': odict['GC':float, 'Count':int ],
         'plot_func': plot_basic_hist,
@@ -183,14 +230,14 @@ file_types = {
                    'Mode_reads', 'Mode_bases',
                    'STDev_reads', 'STDev_bases' ],
         'kv_descriptions': {
-            'Mean_reads': 'Average percent identity of aligned reads',
-            'Mean_bases': 'Average percent identity of aligned bases',
-            'Median_reads': 'Median percent identity of aligned reads',
-            'Median_bases': 'Median percent identity of aligned bases',
-            'Mode_reads': 'The most commonly occuring average value amongst aligned reads (i.e. the mode of the distribution)',
-            'Mode_bases': 'The most commonly occuring average value amongst aligned bases (i.e. the mode of the distribution)',
-            'STDev_reads': 'The standard deviation of the average percent identity distribution for aligned reads',
-            'STDev_bases': 'The standard deviation of the average percent identity distribution for aligned bases',
+            'Mean_reads': ('Average percent identity of aligned reads', {}),
+            'Mean_bases': ('Average percent identity of aligned bases', {}),
+            'Median_reads': ('Median percent identity of aligned reads', {}),
+            'Median_bases': ('Median percent identity of aligned bases', {}),
+            'Mode_reads': ('The most commonly occuring average value amongst aligned reads (i.e. the mode of the distribution)', {}),
+            'Mode_bases': ('The most commonly occuring average value amongst aligned bases (i.e. the mode of the distribution)', {}),
+            'STDev_reads': ('The standard deviation of the average percent identity distribution for aligned reads', {}),
+            'STDev_bases': ('The standard deviation of the average percent identity distribution for aligned bases', {}),
         },
         'cols': odict[
             'Identity':float, 'Reads':int, 'Bases':int
@@ -211,10 +258,10 @@ file_types = {
                      'shorter than the sum of the length of the reads pairs.',
         'kvrows': ['Mean', 'Median', 'STDev', 'PercentOfPairs'],
         'kv_descriptions': {
-            'Mean': 'Average insert length',
-            'Median': 'Median insert length',
-            'STDev': 'Standard deviation of insert size length distribution',
-            'PercentOfPairs': '',
+            'Mean': ('Average insert length', {}),
+            'Median': ('Median insert length', {}),
+            'STDev': ('Standard deviation of insert size length distribution', {}),
+            'PercentOfPairs': ('', {}),
         },
         'cols': odict['InsertSize':int, 'Count':int ],
         'plot_func': plot_ihist,
@@ -261,8 +308,8 @@ file_types = {
         'help_text': '',
         'kvrows': ['Deviation', 'DeviationSub' ],
         'kv_descriptions': {
-            'Deviation': '',
-            'DeviationSub': '',
+            'Deviation': ('', {}),
+            'DeviationSub': ('', {}),
         },
         'cols': odict[
             'Quality':int, 'Match':int, 'Sub':int, 'Ins':int, 'Del':int,
@@ -296,10 +343,10 @@ file_types = {
         'help_text': '',
         'kvrows': ['File', 'Reads', 'Mapped', 'RefSequences' ],
         'kv_descriptions': {
-            'File': '',
-            'Reads': '',
-            'Mapped': '',
-            'RefSequences': '',
+            'File': ('', {}),
+            'Reads': ('', {}),
+            'Mapped': ('', {}),
+            'RefSequences': ('', {}),
         },
         'cols': odict[
             'Name':str,

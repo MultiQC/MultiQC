@@ -33,12 +33,12 @@ data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
 data_format: 'tsv'
 module_tag: []
-
 force: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: ' | '
 file_list: false
+
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: true
@@ -76,6 +76,7 @@ thousandsSep_format: null
 section_comments: {}
 lint: False
 
+ignore_symlinks: false
 fn_ignore_dirs:
     - 'multiqc_data'
     - 'icarus_viewers'       # quast
@@ -157,8 +158,6 @@ fn_clean_exts:
     - '.concordance'
     - '.contamination'
     - '.BEST.results'
-    - '_summary'
-    - '.summary'
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
@@ -191,15 +190,19 @@ fn_clean_trim:
     - '_val'
     - '.idxstats'
     - '_trimmed'
+    - '.trimmed'
     - '.csv'
     - '.yaml'
     - '.yml'
     - '.json'
     - '_mqc'
     - 'short_summary_'
+    - '_summary'
+    - '.summary'
     - '.align'
     - '.h5'
     - '_matrix'
+    - '.stats'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -291,7 +294,6 @@ module_order:
     - verifybamid:
         module_tag:
             - DNA
-    
 
     # Post-alignment processing
     - homer:
@@ -323,6 +325,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - dedup:
+        module_tag:
+            - DNA
+            - ancient
     - picard:
         module_tag:
             - DNA
@@ -330,7 +336,7 @@ module_order:
     - prokka:
         module_tag:
             - prokarytotic
-            - Denovo
+            - denovo
     - samblaster:
         module_tag:
             - DNA
@@ -349,6 +355,10 @@ module_order:
     - vcftools:
         module_tag:
             - DNA
+    - longranger:
+        module_tag:
+            - DNA
+            - WGS
 
     # Alignment tool stats
     - bbmap:
@@ -399,6 +409,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - clipandmerge:
+        module_tag:
+            - DNA
+            - ancient
     - cutadapt:
         module_tag:
             - RNA
@@ -424,6 +438,10 @@ module_order:
             - RNA
             - DNA
     - fastq_screen:
+        module_tag:
+            - RNA
+            - DNA
+    - afterqc:
         module_tag:
             - RNA
             - DNA

@@ -72,7 +72,7 @@ def plot (data, cats=None, pconfig=None):
                 report.lint_errors.append(errmsg)
         # Check plot title format
         if not re.match( r'^[^:]*\S: \S[^:]*$', pconfig.get('title', '')):
-            errmsg = "LINT: {}Bargraph title did not match format 'Module: Plot Name' (found '{}')".format(modname, pconfig.get('title', ''))
+            errmsg = "LINT: {} Bargraph title did not match format 'Module: Plot Name' (found '{}')".format(modname, pconfig.get('title', ''))
             logger.error(errmsg)
             report.lint_errors.append(errmsg)
 

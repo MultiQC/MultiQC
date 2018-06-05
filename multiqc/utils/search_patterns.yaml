@@ -10,6 +10,9 @@ afterqc:
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true
+bbmap/stats:
+    contents: '#Name	Reads	ReadsPct'
+    num_lines: 4
 bbmap/aqhist:
     contents: '#Quality	count1	fraction1	count2	fraction2'
     num_lines: 1
@@ -89,14 +92,30 @@ bismark/bam2nuc:
     fn: '*.nucleotide_stats.txt'
 bowtie1:
     contents: '# reads processed:'
+    exclude_fn:
+        # Tophat log files
+        - 'bowtie.left_kept_reads.log'
+        - 'bowtie.left_kept_reads.m2g_um.log'
+        - 'bowtie.left_kept_reads.m2g_um_seg1.log'
+        - 'bowtie.left_kept_reads.m2g_um_seg2.log'
+        - 'bowtie.right_kept_reads.log'
+        - 'bowtie.right_kept_reads.m2g_um.log'
+        - 'bowtie.right_kept_reads.m2g_um_seg1.log'
+        - 'bowtie.right_kept_reads.m2g_um_seg2.log'
     shared: true
 bowtie2:
     contents: 'reads; of these:'
+    exclude_contents:
+        - 'bisulfite'
+        - 'Hi-C Pro'
     shared: true
 busco:
     fn: 'short_summary_*'
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
+clipandmerge:
+    contents: 'ClipAndMerge ('
+    num_lines: 5
 clusterflow/logs:
     fn: '*_clusterFlow.txt'
     shared: true
@@ -112,6 +131,8 @@ cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
     shared: true
+dedup:
+    fn: 'dedup.log'
 deeptools/bamPEFragmentSize:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
     num_lines: 1
@@ -194,12 +215,21 @@ kallisto:
 leehom:
     contents: 'Adapter dimers/chimeras'
     shared: true
+longranger/summary:
+    fn: '*summary.csv'
+    contents: 'longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule'
+    num_lines: 2
+longranger/invocation:
+    fn: '_invocation'
+    contents: 'call PHASER_SVCALLER_CS('
+    max_filesize: 2048
 macs2:
     fn: '*_peaks.xls'
 methylQA:
     fn: '*.report'
 disambiguate:
-    contents_re: '.*unique species A pairs.*'
+    contents: 'unique species A pairs'
+    num_lines: 2
 peddy/summary_table:
     fn: '*.peddy.ped'
 peddy/het_check:
@@ -208,48 +238,41 @@ peddy/ped_check:
     fn: '*.ped_check.csv'
 peddy/sex_check:
     fn: '*.sex_check.csv'
+peddy/background_pca:
+    fn: '*.background_pca.json'
 picard/alignment_metrics:
-    contents_re: 'picard'
     contents: 'AlignmentSummaryMetrics'
     shared: true
 picard/basedistributionbycycle:
-    contents_re: 'picard'
     contents: 'BaseDistributionByCycleMetrics'
     shared: true
 picard/gcbias:
-    contents_re: 'picard'
     contents: 'GcBias'
     shared: true
 picard/hsmetrics:
-    contents_re: 'picard'
     contents: 'HsMetrics'
     shared: true
 picard/insertsize:
-    contents_re: 'picard'
     contents: 'InsertSizeMetrics'
     shared: true
 picard/markdups:
-    contents_re: 'picard'
     contents: 'DuplicationMetrics'
     shared: true
 picard/oxogmetrics:
-    contents_re: 'picard'
     contents: 'CollectOxoGMetrics'
     shared: true
 picard/pcr_metrics:
-    contents_re: 'picard'
     contents: 'TargetedPcrMetrics'
     shared: true
 picard/rnaseqmetrics:
-    contents: 'picard'
     contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
     shared: true
 picard/rrbs_metrics:
-    contents_re: 'picard'
     contents: 'RrbsSummaryMetrics'
     shared: true
+picard/sam_file_validation:
+    fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 picard/wgs_metrics:
-    contents_re: 'picard'
     contents: 'CollectWgsMetrics'
     shared: true
 preseq:
@@ -365,11 +388,11 @@ star/genecounts:
     fn: '*ReadsPerGene.out.tab'
 supernova/report:
     fn: '*report*.txt'
-    num_lines: 40
+    num_lines: 100
     contents: '- assembly checksum ='
 supernova/summary:
     fn: 'summary.json'
-    num_lines: 50
+    num_lines: 120
     contents: '"lw_mean_mol_len":'
 supernova/molecules:
     fn: 'histogram_molecules.json'

@@ -179,21 +179,24 @@ def make_table (dt):
                                         cmatches[ftype] = True
                                     if 's_ne' in cmp and str(cmp['s_ne']).lower() != str(val).lower():
                                         cmatches[ftype] = True
-                                    if 'eq' in cmp and cmp['eq'] == val:
+                                    if 'eq' in cmp and float(cmp['eq']) == float(val):
                                         cmatches[ftype] = True
-                                    if 'ne' in cmp and cmp['ne'] != val:
+                                    if 'ne' in cmp and float(cmp['ne']) != float(val):
                                         cmatches[ftype] = True
-                                    if 'gt' in cmp and cmp['gt'] < val:
+                                    if 'gt' in cmp and float(cmp['gt']) < float(val):
                                         cmatches[ftype] = True
-                                    if 'lt' in cmp and cmp['lt'] > val:
+                                    if 'lt' in cmp and float(cmp['lt']) > float(val):
                                         cmatches[ftype] = True
                                 except:
-                                    log.warn("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
+                                    logger.warn("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
                 # Apply HTML in order of config keys
+                bgcol = None
                 for cfc in config.table_cond_formatting_colours:
                     for cfck in cfc: # should always be one, but you never know
                         if cmatches[cfck]:
-                            valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(cfc[cfck], valstring)
+                            bgcol = cfc[cfck]
+                if bgcol is not None:
+                    valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(bgcol, valstring)
 
                 # Build HTML
                 if not header['scale']:

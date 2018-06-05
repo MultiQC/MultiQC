@@ -5,6 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
+import json
 
 from multiqc import config
 from multiqc.plots import scatter
@@ -12,6 +13,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -31,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.peddy_length_exp = dict()
         self.peddy_length_obsexp = dict()
 
+        # parse peddy summary file
         for f in self.find_log_files('peddy/summary_table'):
             parsed_data = self.parse_peddy_summary(f)
             if parsed_data is not None:
@@ -40,12 +43,13 @@ class MultiqcModule(BaseMultiqcModule):
                         self.peddy_data[s_name].update(parsed_data[s_name])
                     except KeyError:
                         self.peddy_data[s_name] = parsed_data[s_name]
-
+        # parse peddy CSV files
         for pattern in ['het_check', 'ped_check', 'sex_check']:
             sp_key = 'peddy/{}'.format(pattern)
             for f in self.find_log_files(sp_key):
                 # some columns have the same name in het_check and sex_check (median_depth)
-                # pass pattern to parse_peddy_csv so the column names can include pattern to avoid being overwritten
+                # pass pattern to parse_peddy_csv so the column names can include pattern to
+                # avoid being overwritten
                 parsed_data = self.parse_peddy_csv(f, pattern)
                 if parsed_data is not None:
                     for s_name in parsed_data:
@@ -54,6 +58,16 @@ class MultiqcModule(BaseMultiqcModule):
                             self.peddy_data[s_name].update(parsed_data[s_name])
                         except KeyError:
                             self.peddy_data[s_name] = parsed_data[s_name]
+        # parse background PCA JSON file, this is identitical for all peddy runs,
+        # so just parse the first one we find
+        for f in self.find_log_files("peddy/background_pca"):
+            background = json.loads(f['f'])
+            PC1 = [x["PC1"] for x in background]
+            PC2 = [x["PC2"] for x in background]
+            ancestry = [x["ancestry"] for x in background]
+            self.peddy_data["background_pca"] =  {
+                "PC1": PC1, "PC2": PC2, "ancestry": ancestry}
+            break
 
         # Filter to strip out ignored sample names
         self.peddy_data = self.ignore_samples(self.peddy_data)
@@ -78,6 +92,11 @@ class MultiqcModule(BaseMultiqcModule):
         # hetcheck plot
         self.peddy_het_check_plot()
 
+<<<<<<< HEAD
+=======
+        self.peddy_sex_check_plot()
+
+>>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
         parsed_data = dict()
@@ -148,30 +167,74 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Ancestry',
             'description': 'Ancestry Prediction',
         }
+        headers['ancestry-prob'] = {
+            'title': 'P(Ancestry)',
+            'description': 'Probability predicted ancestry is correct.'
+        }
         headers['sex_het_ratio'] = {
             'title': 'Sex / Het Ratio',
         }
         headers['error_sex_check'] = {
             'title': 'Correct Sex',
             'description': 'Displays False if error in sample sex prediction',
+<<<<<<< HEAD
+=======
+        }
+        headers['predicted_sex'] = {
+            'title': 'Sex',
+            'description': 'Predicted sex'
+>>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe
         }
         self.general_stats_addcols(self.peddy_data, headers)
 
     def peddy_pca_plot(self):
+        ancestry_colors = {
+            'SAS': 'rgb(68,1,81,1)',
+            'EAS': 'rgb(59,81,139,1)',
+            'AMR': 'rgb(33,144,141,1)',
+            'AFR': 'rgb(92,200,99,1)',
+            'EUR': 'rgb(253,231,37,1)'
+        }
+        background_ancestry_colors = {
+            'SAS': 'rgb(68,1,81,0.1)',
+            'EAS': 'rgb(59,81,139,0.1)',
+            'AMR': 'rgb(33,144,141,0.1)',
+            'AFR': 'rgb(92,200,99,0.1)',
+            'EUR': 'rgb(253,231,37,0.1)'
+        }
+        default_color = '#000000'
+        default_background_color = 'rgb(211,211,211,0.05)'
+        data = OrderedDict()
 
-        data = dict()
+        # plot the background data first, so it doesn't hide the actual data points
+        d = self.peddy_data.pop("background_pca", {})
+        if d:
+            background = [{'x': pc1,
+                        'y': pc2,
+                        'color': default_background_color,
+                        'name': ancestry,
+                        'marker_size': 1}
+                        for pc1, pc2, ancestry in zip(d['PC1'], d['PC2'], d['ancestry'])]
+            data["background"] = background
+
         for s_name, d in self.peddy_data.items():
             if 'PC1_het_check' in d and 'PC2_het_check' in d:
                 data[s_name] = {
                     'x': d['PC1_het_check'],
                     'y': d['PC2_het_check'],
+<<<<<<< HEAD
+=======
+                    'color': ancestry_colors.get(d['ancestry-prediction'], default_color)
+>>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe
                 }
 
         pconfig = {
             'id': 'peddy_pca_plot',
             'title': 'Peddy: PCA Plot',
             'xlab': 'PC1',
-            'ylab': 'PC2'
+            'ylab': 'PC2',
+            'marker_size': 5,
+            'marker_line_width': 0
         }
 
         if len(data) > 0:
@@ -248,3 +311,37 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'peddy-hetcheck-plot',
             plot = scatter.plot(data, pconfig)
         )
+<<<<<<< HEAD
+=======
+
+    def peddy_sex_check_plot(self):
+        data = {}
+        sex_index = {"female": 0, "male": 1}
+
+        for s_name, d in self.peddy_data.items():
+            if 'sex_het_ratio' in d and 'ped_sex_sex_check' in d:
+                data[s_name] = {
+                    'x': sex_index[d['ped_sex_sex_check']],
+                    'y': d["sex_het_ratio"]
+                }
+
+        pconfig = {
+            'id': 'peddy_sex_check_plot',
+            'title': 'Peddy: Sex Check',
+            'xlab': 'Sex From Ped',
+            'ylab': 'Sex Het Ratio',
+            'categories': ["Female", "Male"]
+        }
+
+        self.add_section(
+            name = 'Sex Check',
+            description = "Predicted sex against heterozygosity ratio",
+            helptext = """
+            Higher values of Sex Het Ratio suggests the sample is female, low values suggest male.
+
+            See [the main peddy documentation](http://peddy.readthedocs.io/en/latest/#sex-check) for more details about the `het_check` command.
+            """,
+            anchor='peddy-sexcheck-plot',
+            plot=scatter.plot(data, pconfig)
+        )
+>>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe

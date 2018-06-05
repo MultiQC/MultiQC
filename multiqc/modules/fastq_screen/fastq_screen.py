@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
         # First, sum the different types of alignment counts
         data = OrderedDict()
         cats = OrderedDict()
-        for s_name in self.fq_screen_data:
+        for s_name in sorted(self.fq_screen_data):
             data[s_name] = OrderedDict()
             sum_alignments = 0
             for org in self.fq_screen_data[s_name]:

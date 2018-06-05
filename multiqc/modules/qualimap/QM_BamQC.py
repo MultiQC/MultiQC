@@ -571,6 +571,9 @@ def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresho
             bases_within_threshs[dt[c]] = bases_within_threshs[dt[c - 1]]
         if depth >= dt[c]:
             bases_within_threshs[dt[c]] += bases_by_depth[depth]
+    while c + 1 < len(dt):
+        c += 1
+        bases_within_threshs[dt[c]] = total_size
     for t in dt:
         bs = bases_within_threshs[t]
         if total_size > 0:

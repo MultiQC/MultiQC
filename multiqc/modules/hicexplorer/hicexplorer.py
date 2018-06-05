@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
         for file in self.find_log_files('hicexplorer'):
             s_name = file['root'] + "_" + file['s_name']
             self.mod_data[s_name] = self.parse_logs(file['f'])
-            self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + self.mod_data[s_name]['File'][0], file['root'])
+            self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + s_name + "_" + self.mod_data[s_name]['File'][0], file['root'])
 
             self.add_data_source(file)
 
@@ -51,17 +51,17 @@ class MultiqcModule(BaseMultiqcModule):
         keys_categorization_of_reads_considered = ['Pairs mappable, unique and high quality', 'One mate unmapped',
                                                    'One mate not unique', 'One mate low quality']
         keys_mappable_unique_and_high_quality = ['Pairs used', 'Self ligation (removed)', 'Same fragment', 'Self circle',
-                                                'Dangling end', 'One mate not close to rest site', 'Duplicated pairs']
+                                                 'Dangling end', 'One mate not close to rest site', 'Duplicated pairs']
         keys_list_contact_distance = ['Short range', 'Long range', 'Inter chromosomal']
         keys_list_read_orientation = ['Inward pairs', 'Outward pairs', 'Left pairs', 'Right pairs', 'Inter chromosomal']
 
         # prepare the detail report section
         self.add_section(
-            name = 'Mapping statistics',
-            anchor = 'hicexplorer_categorization_of_considered_reads',
-            plot = self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads', 'categorization'),
-            description = 'This shows how the sequenced read pairs were mapped and those filtered due to mapping problems.',
-            helptext = '''
+            name='Mapping statistics',
+            anchor='hicexplorer_categorization_of_considered_reads',
+            plot=self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads', 'categorization'),
+            description='This shows how the sequenced read pairs were mapped and those filtered due to mapping problems.',
+            helptext='''
                 * **Pairs mappable, unique and high quality**
                     * The count of reads that were considered as valid reads and were not one of the following:
                 * **One mate unmapped**
@@ -74,12 +74,12 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name = 'Read filtering',
-            anchor = 'hicexplorer_pairs_categorized',
-            plot = self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads - Pairs mappable, unique and high quality', 'mapping'),
-            description = 'This figure contains the number of reads that were finally used to build the '
+            name='Read filtering',
+            anchor='hicexplorer_pairs_categorized',
+            plot=self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads - Pairs mappable, unique and high quality', 'mapping'),
+            description='This figure contains the number of reads that were finally used to build the '
             'Hi-C matrix along with the reads that where filtered out.',
-            helptext = """
+            helptext="""
             * **Dangling ends**
                 * These are reads that start with the restriction site and constitute reads that were digested but no ligated.
             * **Same fragment**
@@ -92,11 +92,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name = 'Contact distance',
-            anchor = 'hicexplorer_contact_distance',
-            plot = self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Contact distance', 'contact_distance'),
-            description = 'This figure contains information about the distance and location of the valid pairs used.',
-            helptext = '''
+            name='Contact distance',
+            anchor='hicexplorer_contact_distance',
+            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Contact distance', 'contact_distance'),
+            description='This figure contains information about the distance and location of the valid pairs used.',
+            helptext='''
             * **Long range**
                 * Pairs with a distance greater than 20 kilobases
             * **Short range**
@@ -107,11 +107,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name = 'Read orientation',
-            anchor = 'hicexplorer_read_orientation',
-            plot = self.hicexplorer_create_plot(keys_list_read_orientation, 'HiCExplorer: Read orientation', 'orientation'),
-            description = 'This figure contains information about the orientation of the read pairs.',
-            helptext = '''
+            name='Read orientation',
+            anchor='hicexplorer_read_orientation',
+            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'HiCExplorer: Read orientation', 'orientation'),
+            description='This figure contains information about the orientation of the read pairs.',
+            helptext='''
                 * **Inward pairs**
                     * First mate is a forward read, second is reverse.
                     * `--------------->              <----------------`
@@ -161,15 +161,19 @@ class MultiqcModule(BaseMultiqcModule):
     def hicexplorer_basic_statistics(self):
         """Create the general statistics for HiCExplorer."""
         data = {}
-
         for file in self.mod_data:
+            max_distance_key = 'Max rest. site distance'
             total_pairs = self.mod_data[file]['Pairs considered'][0]
+            try:
+                self.mod_data[file][max_distance_key][0]
+            except KeyError:
+                max_distance_key = 'Max library insert size'
             data_ = {
                 'Pairs considered': self.mod_data[file]['Pairs considered'][0],
                 'Pairs used': self.mod_data[file]['Pairs used'][0] / total_pairs,
                 'Mapped': self.mod_data[file]['One mate unmapped'][0] / total_pairs,
                 'Min rest. site distance': self.mod_data[file]['Min rest. site distance'][0],
-                'Max rest. site distance': self.mod_data[file]['Max rest. site distance'][0],
+                max_distance_key: self.mod_data[file][max_distance_key][0],
             }
             data[self.mod_data[file]['File'][0]] = data_
         headers = OrderedDict()
@@ -199,12 +203,13 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.0f}',
             'suffix': ' bp'
         }
-        headers['Max rest. site distance'] = {
+        headers[max_distance_key] = {
             'title': 'Max RE dist',
-            'description': 'Maximum restriction site distance (bp)',
+            'description': max_distance_key + ' (bp)',
             'format': '{:.0f}',
             'suffix': ' bp'
         }
+
         self.general_stats_addcols(data, headers)
 
     def hicexplorer_create_plot(self, pKeyList, pTitle, pId):
@@ -223,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data['{}'.format(self.mod_data[data_]['File'][0])][key_] = self.mod_data[data_][key_][0]
 
         config = {
-            'id': 'hicexplorer_'+pId+'_plot',
+            'id': 'hicexplorer_' + pId + '_plot',
             'title': pTitle,
             'ylab': 'Number of Reads',
             'cpswitch_counts_label': 'Number of Reads'
