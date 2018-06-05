@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\multiqc",
+    "\\multiqc\\modules",
+    "\\multiqc\\modules\\fastp",
+    "\\multiqc\\utils",
+    "\\scripts"
+  ],
+  "SelectedNode": "\\multiqc\\modules\\fastp\\fastp.py",
+  "PreviewInSolutionExplorer": false
+}
