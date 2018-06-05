@@ -92,11 +92,8 @@ class MultiqcModule(BaseMultiqcModule):
         # hetcheck plot
         self.peddy_het_check_plot()
 
-<<<<<<< HEAD
-=======
         self.peddy_sex_check_plot()
 
->>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe
     def parse_peddy_summary(self, f):
         """ Go through log file looking for peddy output """
         parsed_data = dict()
@@ -177,13 +174,10 @@ class MultiqcModule(BaseMultiqcModule):
         headers['error_sex_check'] = {
             'title': 'Correct Sex',
             'description': 'Displays False if error in sample sex prediction',
-<<<<<<< HEAD
-=======
         }
         headers['predicted_sex'] = {
             'title': 'Sex',
             'description': 'Predicted sex'
->>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe
         }
         self.general_stats_addcols(self.peddy_data, headers)
 
@@ -222,10 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = {
                     'x': d['PC1_het_check'],
                     'y': d['PC2_het_check'],
-<<<<<<< HEAD
-=======
                     'color': ancestry_colors.get(d['ancestry-prediction'], default_color)
->>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe
                 }
 
         pconfig = {
@@ -311,8 +302,6 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'peddy-hetcheck-plot',
             plot = scatter.plot(data, pconfig)
         )
-<<<<<<< HEAD
-=======
 
     def peddy_sex_check_plot(self):
         data = {}
@@ -344,4 +333,3 @@ class MultiqcModule(BaseMultiqcModule):
             anchor='peddy-sexcheck-plot',
             plot=scatter.plot(data, pconfig)
         )
->>>>>>> f9a435f1d6f31f449dedcb74db80ea1e7beeafbe
