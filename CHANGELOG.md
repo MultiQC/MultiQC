@@ -28,6 +28,8 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
 * **RNA-SeQC**
     * Don't create the report section for Gene Body Coverage if no data is given
+* **Samtools**
+    * Fixed edge case bug where MultiQC could crash if a sample had zero count coverage with idxstats.
 * **Tophat**
     * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
 
