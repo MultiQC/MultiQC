@@ -44,7 +44,8 @@ install_requires = [
         'pyyaml',
         'requests',
         'simplejson',
-        'spectra>=0.0.10'
+        'spectra>=0.0.10',
+        'unicodecsv>=0.14.1'
     ]
 
 setup(
@@ -90,6 +91,7 @@ setup(
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
+            'happy = multiqc.modules.happy:MultiqcModule',
             'hicexplorer = multiqc.modules.hicexplorer:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
