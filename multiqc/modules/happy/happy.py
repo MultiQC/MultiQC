@@ -5,7 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import json
-import unicodecsv as csv
+import csv
 import logging
 import re
 
