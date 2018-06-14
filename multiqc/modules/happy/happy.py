@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
                     hdesc = "{}/{} - {}".format(vtype, vfilt, METRICS[metric])
                     self.general_stats_header[hname] = {
                         "title": htitle,
-                        "hidden": vfilt == "ALL",
+                        "hidden": metric != "F1_Score",
                         "format": "{:.4f}",
                         "min": 0,
                         "max": 1,
@@ -142,42 +142,49 @@ def gen_headers():
         "title": "Truth: Total",
         "description": "Total number of truth variants",
         "format": None,
+        "hidden": True,
     }
 
     h["TRUTH.TP"] = {
         "title": "Truth: True Positive",
         "description": "Number of true-positive calls in truth representation (counted via the truth sample column)",
         "format": None,
+        "hidden": True,
     }
 
     h["TRUTH.FN"] = {
         "title": "Truth: False Negative",
         "description": "Number of false-negative calls = calls in truth without matching query call",
         "format": None,
+        "hidden": True,
     }
 
     h["QUERY.TOTAL"] = {
         "title": "Query: Total",
         "description": "Total number of query calls",
         "format": None,
+        "hidden": True,
     }
 
     h["QUERY.TP"] = {
         "title": "Query: True Positive",
         "description": "Number of true positive calls in query representation (counted via the query sample column)",
         "format": None,
+        "hidden": True,
     }
 
     h["QUERY.FP"] = {
         "title": "Query: False Positive",
         "description": "Number of false-positive calls in the query file (mismatched query calls within the confident regions)",
         "format": None,
+        "hidden": True,
     }
 
     h["QUERY.UNK"] = {
         "title": "Query: Unknown",
         "description": "Number of query calls outside the confident regions",
         "format": None,
+        "hidden": True,
     }
 
     h["FP.gt"] = {
