@@ -24,6 +24,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
 * **Picard**
     * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
+    * WGSMetrics now add the mean and standard-deviation coverage to the general stats table (hidden) ([@cpavanrun](https://github.com/cpavanrun))
 * **QUAST**
     * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
 * **RNA-SeQC**
