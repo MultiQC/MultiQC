@@ -61,8 +61,9 @@ class MultiqcModule(BaseMultiqcModule):
             log.warn("Could not parse fastp JSON: '{}'".format(f['fn']))
             return None
 
+        # Parse filtering_result
         if 'filtering_result' in parsed_json:
-            summaryk = 'filtering_result'
+            filteredk = 'filtering_result'
         else:
             log.warn("fastp JSON did not have a 'filtering_result' key, skipping: '{}'".format(f['fn']))
             return None
@@ -70,29 +71,39 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f['s_name']
         self.add_data_source(f, s_name)
         self.fastp_data[s_name] = {}
-        for k in parsed_json[summaryk]:
+        for k in parsed_json[filteredk]:
                 try:
-                    self.fastp_data[s_name][k] = float(parsed_json[summaryk][k])
+                    self.fastp_data[s_name][k] = float(parsed_json[filteredk][k])
                 except ValueError:
-                    self.fastp_data[s_name][k] = parsed_json[summaryk][k]
-        #try:
-        #    self.fastp_data[s_name]['pct_good_bases'] = (self.fastp_data[s_name]['good_bases'] / self.fastp_data[s_name]['total_bases']) * 100.0
-        #except keyerror:
-        #    pass
+                    self.fastp_data[s_name][k] = parsed_json[filteredk][k]
+
+        # Parse after_filtering
+        if 'summary' in parsed_json:
+            summaryk = 'summary'
+        else:
+            log.warn("fastp JSON did not have a 'summary' key, skipping: '{}'".format(f['fn']))
+            return None
+        
+        subkey = 'after_filtering'
+        for k in parsed_json[summaryk][subkey]:
+                try:
+                    self.fastp_data[s_name][k] = float(parsed_json[summaryk][subkey][k])
+                except ValueError:
+                    self.fastp_data[s_name][k] = parsed_json[summaryk][subkey][k]
 
     def fastp_general_stats_table(self):
         """ Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report """
 
         headers = OrderedDict()
-        #headers['pct_good_bases'] = {
-        #    'title': '% Good Bases',
-        #    'description': 'Percent Good Bases',
-        #    'max': 100,
-        #    'min': 0,
-        #    'suffix': '%',
-        #    'scale': 'BuGn',
-        #}
+        headers['total_reads'] = {
+            'title': 'Total',
+            'description': 'Total reads after filtering',
+            'min': 0,
+            'modify': lambda x: x * config.read_count_multiplier,
+            'scale': 'Blues',
+            'shared_key': 'read_count'
+        }
         headers['passed_filter_reads'] = {
             'title': '{} PF reads'.format(config.read_count_prefix),
             'description': 'Reads passing filter ({})'.format(config.read_count_desc),
