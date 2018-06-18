@@ -96,13 +96,11 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table at the top of the report """
 
         headers = OrderedDict()
-        headers['total_reads'] = {
-            'title': 'Total',
-            'description': 'Total reads after filtering',
+        headers['gc_content'] = {
+            'title': 'GC content',
+            'description': 'GC content after filtering',
             'min': 0,
-            'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'Blues',
-            'shared_key': 'read_count'
+            'scale': 'Blues'
         }
         headers['passed_filter_reads'] = {
             'title': '{} PF reads'.format(config.read_count_prefix),
