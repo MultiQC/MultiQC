@@ -77,6 +77,19 @@ class MultiqcModule(BaseMultiqcModule):
                 except ValueError:
                     self.fastp_data[s_name][k] = parsed_json[filteredk][k]
 
+        # Parse duplication
+        if 'duplication' in parsed_json:
+            duplicationk = 'duplication'
+        else:
+            log.warn("fastp JSON did not have a 'duplication' key, skipping: '{}'".format(f['fn']))
+            return None
+        
+        for k in parsed_json[duplicationk]:
+                try:
+                    self.fastp_data[s_name][k] = parsed_json[duplicationk][k]
+                except ValueError:
+                    self.fastp_data[s_name][k] = parsed_json[duplicationk][k]
+
         # Parse after_filtering
         if 'summary' in parsed_json:
             summaryk = 'summary'
@@ -102,13 +115,27 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'Blues'
         }
-        headers['passed_filter_reads'] = {
-            'title': '{} PF reads'.format(config.read_count_prefix),
-            'description': 'Reads passing filter ({})'.format(config.read_count_desc),
+        headers['rate'] = {
+            'title': 'Duplication',
+            'description': 'Duplication rate',
+            'min': 0,
+            'scale': 'Blues'
+        }
+        headers['q30_rate'] = {
+            'title': '{} Q30 reads'.format(config.read_count_prefix),
+            'description': 'Reads > Q30 after filtering ({})'.format(config.read_count_desc),
             'min': 0,
             'modify': lambda x: x * config.read_count_multiplier,
             'scale': 'GnBu',
             'shared_key': 'read_count'
+        }
+        headers['q30_bases'] = {
+            'title': '{} Q30 bases'.format(config.base_count_prefix),
+            'description': 'Bases > Q30 after filtering ({})'.format(config.base_count_desc),
+            'min': 0,
+            'modify': lambda x: x * config.base_count_multiplier,
+            'scale': 'GnBu',
+            'shared_key': 'base_count'
         }
         headers['low_quality_reads'] = {
             'title': '{} Low quality'.format(config.read_count_prefix),
