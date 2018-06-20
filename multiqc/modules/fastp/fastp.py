@@ -123,7 +123,26 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastp_data[s_name]['pct_surviving'] = (self.fastp_data[s_name]['total_reads'] / self.fastp_data[s_name]['pre_reads']) * 100.0
         except KeyError:
             pass
+
+        # Parse adapter_cutting
+        if 'adapter_cutting' in parsed_json:
+            adapterk = 'adapter_cutting'
+        else:
+            log.warn("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
+            return None
         
+        for k in parsed_json[adapterk]:
+                try:
+                    self.fastp_data[s_name][k] = parsed_json[adapterk][k]
+                except ValueError:
+                    self.fastp_data[s_name][k] = parsed_json[adapterk][k]
+
+        try:
+            self.fastp_data[s_name]['pct_adapter'] = (self.fastp_data[s_name]['adapter_trimmed_reads'] / self.fastp_data[s_name]['pre_reads']) * 100.0
+        except KeyError:
+            pass
+
+
     def fastp_general_stats_table(self):
         """ Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report """
@@ -189,6 +208,15 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'Blues',
             'shared_key': 'read_count'
         }
+        headers['pct_adapter'] = {
+            'title': '% Adapter',
+            'description': 'Percentage adapter-trimmed reads',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'BuGn',
+        }
+
         self.general_stats_addcols(self.fastp_data, headers)
 
     #def fastp_qc_bad_reads_chart(self):
