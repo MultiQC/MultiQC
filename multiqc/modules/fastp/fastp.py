@@ -104,11 +104,39 @@ class MultiqcModule(BaseMultiqcModule):
                 except ValueError:
                     self.fastp_data[s_name][k] = parsed_json[summaryk][subkey][k]
 
+        # Parse data required to calculate Pct reads surviving
+        if 'summary' in parsed_json:
+            summaryk = 'summary'
+        else:
+            log.warn("fastp JSON did not have a 'summary' key, skipping: '{}'".format(f['fn']))
+            return None
+        
+        subkey = 'before_filtering'
+        subsubkey = 'total_reads'
+        #pre_reads = 'pre_reads'
+        try:
+            self.fastp_data[s_name]['pre_reads'] = float(parsed_json[summaryk][subkey][subsubkey])
+        except ValueError:
+            self.fastp_data[s_name]['pre_reads'] = parsed_json[summaryk][subkey][subsubkey]
+
+        try:
+            self.fastp_data[s_name]['pct_surviving'] = (self.fastp_data[s_name]['total_reads'] / self.fastp_data[s_name]['pre_reads']) * 100.0
+        except KeyError:
+            pass
+        
     def fastp_general_stats_table(self):
         """ Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report """
 
         headers = OrderedDict()
+        headers['pct_surviving'] = {
+            'title': '% PF',
+            'description': 'Percent reads passing filter',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'BuGn',
+        }
         headers['gc_content'] = {
             'title': 'GC content',
             'description': 'GC content after filtering',
