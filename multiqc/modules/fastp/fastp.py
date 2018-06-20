@@ -45,13 +45,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.fastp_general_stats_table()
 
-        # Alignment bar plot
-        #self.add_section (
-        #    name = 'Bad Reads',
-        #    anchor = 'fastp',
-        #    description = 'Filtering statistics of sampled reads.',
-        #    plot = self.fastp_bad_reads_chart()
-        #)
+        # Filtering statistics bar plot
+        self.add_section (
+           name = 'Filtered Reads',
+           anchor = 'fastp',
+           description = 'Filtering statistics of sampled reads.',
+           plot = self.fastp_filtered_reads_chart()
+        )
 
     def parse_fastp_log(self, f):
         """ Parse the JSON output from fastp and save the summary statistics """
@@ -219,25 +219,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(self.fastp_data, headers)
 
-    #def fastp_qc_bad_reads_chart(self):
-    #    """ Function to generate the fastp bad reads bar plot """
-    #    # Specify the order of the different possible categories
-    #    keys = OrderedDict()
-    #    keys['good_reads'] =                     { 'name': 'Good Reads' }
-    #    keys['bad_reads_with_bad_barcode'] =     { 'name': 'Bad Barcode' }
-    #    keys['bad_reads_with_bad_overlap'] =     { 'name': 'Bad Overlap' }
-    #    keys['bad_reads_with_bad_read_length'] = { 'name': 'Bad Read Length' }
-    #    keys['bad_reads_with_low_quality'] =     { 'name': 'Low Quality' }
-    #    keys['bad_reads_with_polyX'] =           { 'name': 'PolyX' }
-    #    keys['bad_reads_with_reads_in_bubble'] = { 'name': 'Reads In Bubble' }
-    #    keys['bad_reads_with_too_many_N'] =      { 'name': 'Too many N' }
+    def fastp_filtered_reads_chart(self):
+       """ Function to generate the fastp filtered reads bar plot """
+       # Specify the order of the different possible categories
+       keys = OrderedDict()
+       keys['passed_filter_reads'] =  { 'name': 'Passed Filter' }
+       keys['low_quality_reads'] =    { 'name': 'Low Quality' }
+       keys['too_many_N_reads'] =     { 'name': 'Too Many N' }
+       keys['too_short_reads'] =      { 'name': 'Too short' }
 
-    #    # Config for the plot
-    #    pconfig = {
-    #        'id': 'fastp_bad_reads_plot',
-    #        'title': 'fastp: Filtered Reads',
-    #        'ylab': '# Reads',
-    #        'cpswitch_counts_label': 'Number of Reads',
-    #        'hide_zero_cats': False,
-    #    }
-    #    return bargraph.plot(self.fastp_data, keys, pconfig)
+       # Config for the plot
+       pconfig = {
+           'id': 'fastp_filtered_reads_plot',
+           'title': 'fastp: Filtered Reads',
+           'ylab': '# Reads',
+           'cpswitch_counts_label': 'Number of Reads',
+           'hide_zero_cats': False,
+       }
+       return bargraph.plot(self.fastp_data, keys, pconfig)
