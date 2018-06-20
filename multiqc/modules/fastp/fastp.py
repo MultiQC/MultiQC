@@ -231,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
        # Config for the plot
        pconfig = {
            'id': 'fastp_filtered_reads_plot',
-           'title': 'fastp: Filtered Reads',
+           'title': 'Fastp: Filtered Reads',
            'ylab': '# Reads',
            'cpswitch_counts_label': 'Number of Reads',
            'hide_zero_cats': False,
