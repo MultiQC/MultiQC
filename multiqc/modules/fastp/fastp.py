@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any fastp reports
         self.fastp_data = dict()
+        self.fastp_all_data = dict() # to save whole JSON
         for f in self.find_log_files('fastp', filehandles=True):
             self.parse_fastp_log(f)
 
@@ -40,7 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.fastp_data)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.fastp_data, 'multiqc_fastp')
+        ## Parse whole JSON to save all its content
+        self.write_data_file(self.fastp_all_data, 'multiqc_fastp')
 
         # Basic Stats Table
         self.fastp_general_stats_table()
@@ -141,6 +143,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastp_data[s_name]['pct_adapter'] = (self.fastp_data[s_name]['adapter_trimmed_reads'] / self.fastp_data[s_name]['pre_reads']) * 100.0
         except KeyError:
             pass
+
+        self.fastp_all_data[s_name] = parsed_json
 
 
     def fastp_general_stats_table(self):
