@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Filtering statistics bar plot
         self.add_section (
            name = 'Filtered Reads',
-           anchor = 'fastp',
+           anchor = 'fastp-filtered-reads-chart',
            description = 'Filtering statistics of sampled reads.',
            plot = self.fastp_filtered_reads_chart()
         )
