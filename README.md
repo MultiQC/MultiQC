@@ -43,7 +43,7 @@ Currently, supported tools include:
 |[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[QoRTs][qorts]              |
 |[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
 |[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
-|[FastQ Screen][fastq-screen]     |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
+|[Fastp][fastp]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
 |[Flexbar][flexbar]               |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
 |[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
 |[Skewer][skewer]                 |                         |                           |[Supernova][supernova]      |
@@ -197,6 +197,7 @@ MultiQC is released under the GPL v3 or later licence.
 [disambiguate]:   http://multiqc.info/docs/#disambiguate
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
+[fastp]:          http://multiqc.info/docs/#fastp
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
