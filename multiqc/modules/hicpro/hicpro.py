@@ -2,7 +2,7 @@
 ## Nicolas Servant
 ## April 2018
 
-""" MultiQC module to parse output from HiCPro """
+""" MultiQC module to parse output from HiC-Pro """
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -17,12 +17,12 @@ from multiqc.modules.base_module import BaseMultiqcModule
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
-    """ HiCPro module, parses log and stats files saved by HiCPro. """
+    """ HiC-Pro module, parses log and stats files saved by HiC-Pro. """
 
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='HiCPro', anchor='hicpro',
+        super(MultiqcModule, self).__init__(name='HiC-Pro', anchor='hicpro',
         href='https://github.com/nservant/HiC-Pro',
         info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.")
 
@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def parse_hicpro_stats(self, f):
-        """ Parse a HiCPro stat file """
+        """ Parse a HiC-Pro stat file """
         s_name = os.path.basename(f['root'])
 
         ## Check if data already exists
