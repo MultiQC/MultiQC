@@ -85,12 +85,11 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             log.warn("fastp JSON did not have a 'duplication' key, skipping: '{}'".format(f['fn']))
             return None
-        
-        for k in parsed_json[duplicationk]:
-                try:
-                    self.fastp_data[s_name][k] = parsed_json[duplicationk][k]
-                except ValueError:
-                    self.fastp_data[s_name][k] = parsed_json[duplicationk][k]
+             
+        try:
+            self.fastp_data[s_name]['pct_duplication'] = float(parsed_json[duplicationk]['rate'] * 100.0)
+        except ValueError:
+            self.fastp_data[s_name]['pct_duplication'] = parsed_json[duplicationk]['rate'] * 100.0
 
         # Parse after_filtering
         if 'summary' in parsed_json:
@@ -166,11 +165,13 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'Blues'
         }
-        headers['rate'] = {
-            'title': 'Duplication',
-            'description': 'Duplication rate',
+        headers['pct_duplication'] = {
+            'title': '% Duplication',
+            'description': 'Duplication rate in filtered reads',
+            'max': 100,
             'min': 0,
-            'scale': 'Blues'
+            'suffix': '%',
+            'scale': 'RdYlGn-rev'
         }
         headers['q30_rate'] = {
             'title': '{} Q30 reads'.format(config.read_count_prefix),
