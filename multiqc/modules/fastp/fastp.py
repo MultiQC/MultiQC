@@ -193,7 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Low quality reads ({})'.format(config.read_count_desc),
             'min': 0,
             'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'Blues',
+            'scale': 'RdYlGn-rev',
             'shared_key': 'read_count'
         }
         headers['too_many_N_reads'] = {
@@ -201,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Reads with too many N',
             'min': 0,
             'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'Blues',
+            'scale': 'RdYlGn-rev',
             'shared_key': 'read_count'
         }
         headers['too_short_reads'] = {
@@ -209,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Reads too short',
             'min': 0,
             'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'Blues',
+            'scale': 'RdYlGn-rev',
             'shared_key': 'read_count'
         }
         headers['pct_adapter'] = {
@@ -218,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'BuGn',
+            'scale': 'RdYlGn-rev',
         }
 
         self.general_stats_addcols(self.fastp_data, headers)
