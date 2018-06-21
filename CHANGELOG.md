@@ -19,15 +19,20 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Help text added for all sections, mostly copied from the excellent FastQC help.
 * **FastQ Screen**
     * Samples in large-sample-number plot are now sorted alphabetically ([@hassanfa](https://github.com/hassanfa)
+* **MACS2**
+    * Output is now more tolerant of missing data (no plot if no data)
 * **Peddy**
     * Background samples now shown in ancestry PCA plot ([@roryk](https://github.com/roryk))
     * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
 * **Picard**
     * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
+    * WGSMetrics now add the mean and standard-deviation coverage to the general stats table (hidden) ([@cpavanrun](https://github.com/cpavanrun))
 * **QUAST**
     * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
 * **RNA-SeQC**
     * Don't create the report section for Gene Body Coverage if no data is given
+* **Samtools**
+    * Fixed edge case bug where MultiQC could crash if a sample had zero count coverage with idxstats.
 * **Tophat**
     * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
 
