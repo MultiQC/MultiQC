@@ -49,7 +49,7 @@ Currently, supported tools include:
 |[Skewer][skewer]                 |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
 |[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova]      |
 |[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools]        |
-|[Illumina InterOp][interop]      |                         |                           |[VerifyBAMID][verifybamid]  |
+|                                 |                         |                           |[VerifyBAMID][verifybamid]  |
 
 
 
