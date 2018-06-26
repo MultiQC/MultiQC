@@ -303,7 +303,6 @@ class MultiqcModule(BaseMultiqcModule):
             data['{} Pairs'.format(s_name)]['Multi_Pairs'] = self.hicpro_data[s_name]['Multiple_pairs_alignments']
             data['{} Pairs'.format(s_name)]['Singleton_Pairs'] = self.hicpro_data[s_name]['Pairs_with_singleton']
 
-        print ( data )
         # Config for the plot
         config = {
         'id': 'hicpro_pairing_stats_plot',
