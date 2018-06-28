@@ -153,12 +153,12 @@ class MultiqcModule(BaseMultiqcModule):
         for conversionResult in content.get("ConversionResults", []):
             l = conversionResult["LaneNumber"]
             lane = 'L{}'.format(l)
-            if lane in run_data:
-                log.debug(
-                    "Duplicate runId/lane combination found! Overwriting: {}".format(
-                        self.prepend_runid(runId, lane)
-                    )
-                )
+            #if lane in run_data:
+            #    log.debug(
+            #        "Duplicate runId/lane combination found! Overwriting: {}".format(
+            #            self.prepend_runid(runId, lane)
+            #        )
+            #    )
             run_data[lane] = {
                 "total": 0,
                 "total_yield": 0,
@@ -184,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "total": 0,
                     "total_yield": 0,
                     "perfectIndex": 0,
-                    "filename": os.path.join(myfile['root'], myfile["fn"]),
+                    #"filename": os.path.join(myfile['root'], myfile["fn"]),
                     "yieldQ30": 0,
                     "qscore_sum": 0,
                     "R1_yield": 0,
@@ -259,7 +259,7 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     sample["mean_qscore"] = float(sample["qscore_sum"]) / float(sample["total_yield"])
                 except ZeroDivisionError:
-                    sample["mean_qscore"]
+                    sample["mean_qscore"] = "NA"
 
     def split_data_by_lane_and_sample(self):
         for run_id, r in iteritems(self.bcl2fastq_data):
