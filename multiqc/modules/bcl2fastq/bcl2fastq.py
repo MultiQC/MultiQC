@@ -410,13 +410,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '{} R1 trimmed'.format(config.base_count_prefix),
             'description': 'Number of bases trimmed ({})'.format(config.base_count_desc),
             'scale': 'RdYlGn',
-            'shared_key': 'R1_trimmed_count'
+            'modify': lambda x: x * 0.000001
         }
         headers['R2_trimmed_bases'] = {
             'title': '{} R2 trimmed'.format(config.base_count_prefix),
             'description': 'Number of bases trimmed ({})'.format(config.base_count_desc),
             'scale': 'RdYlGn',
-            'shared_key': 'R2_trimmed_count'
+            'modify': lambda x: x * 0.000001
         }
         self.general_stats_addcols(data, headers)
 
