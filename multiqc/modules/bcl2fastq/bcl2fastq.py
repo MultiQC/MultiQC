@@ -153,12 +153,12 @@ class MultiqcModule(BaseMultiqcModule):
         for conversionResult in content.get("ConversionResults", []):
             l = conversionResult["LaneNumber"]
             lane = 'L{}'.format(l)
-            #if lane in run_data:
-            #    log.debug(
-            #        "Duplicate runId/lane combination found! Overwriting: {}".format(
-            #            self.prepend_runid(runId, lane)
-            #        )
-            #    )
+            if lane in run_data:
+                log.debug(
+                    "Duplicate runId/lane combination found! Overwriting: {}".format(
+                        self.prepend_runid(runId, lane)
+                    )
+                )
             run_data[lane] = {
                 "total": 0,
                 "total_yield": 0,
@@ -184,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "total": 0,
                     "total_yield": 0,
                     "perfectIndex": 0,
-                    #"filename": os.path.join(myfile['root'], myfile["fn"]),
+                    "filename": os.path.join(myfile['root'], myfile["fn"]),
                     "yieldQ30": 0,
                     "qscore_sum": 0,
                     "R1_yield": 0,
