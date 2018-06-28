@@ -164,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Ancestry',
             'description': 'Ancestry Prediction',
         }
-        headers['ancestry-prob'] = {
+        headers['ancestry-prob_het_check'] = {
             'title': 'P(Ancestry)',
             'description': 'Probability predicted ancestry is correct.'
         }
@@ -175,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Correct Sex',
             'description': 'Displays False if error in sample sex prediction',
         }
-        headers['predicted_sex'] = {
+        headers['predicted_sex_sex_check'] = {
             'title': 'Sex',
             'description': 'Predicted sex'
         }
