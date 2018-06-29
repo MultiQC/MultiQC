@@ -465,7 +465,7 @@ module_order:
             - RNA
             - DNA
             - methylation
-- mirtop:
+    - mirtop:
         module_tag:
             - RNA
 
