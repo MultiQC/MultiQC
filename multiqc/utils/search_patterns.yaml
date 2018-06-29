@@ -230,6 +230,8 @@ methylQA:
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
+mirtop:
+    contents: 'category, sample, counts'
 peddy/summary_table:
     fn: '*.peddy.ped'
 peddy/het_check:
