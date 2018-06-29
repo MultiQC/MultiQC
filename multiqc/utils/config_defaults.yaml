@@ -465,3 +465,7 @@ module_order:
             - RNA
             - DNA
             - methylation
+- mirtop:
+        module_tag:
+            - RNA
+
