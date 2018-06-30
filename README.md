@@ -38,18 +38,19 @@ Currently, supported tools include:
 |[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]     |[HOMER][homer]             |[goleft][goleft]            |
 |[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]           |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]  |
 |[Cluster Flow][clusterflow]      |[HISAT2][hisat2]         |[MACS2][macs2]             |[methylQA][methylqa]        |
-|[Cutadapt][cutadapt]             |[Kallisto][kallisto]     |[Picard][picard]           |[mirtop][mirtop]            |
-|[leeHom][leehom]                 |[Long Ranger][longranger]|[Prokka][prokka]           |[Peddy][peddy]              |
-|[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[Preseq][preseq]            |
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[QoRTs][qorts]              |
-|[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[Qualimap][qualimap]        |
-|[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[QUAST][quast]            |
-|[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RNA-SeQC][rna_seqc]        |
-|[Skewer][skewer]                 |                         |[THetA2][theta2]           |[RSeQC][rseqc]              |
-|[SortMeRNA][sortmerna]           |                         |                           |[Sargasso][sargasso]        |
-|[Trimmomatic][trimmomatic]       |                         |                           |[Supernova][supernova]      |
-|                                 |                         |                           |[VCFTools][vcftools]        |
-|                                 |                         |                           |[VerifyBAMID][verifybamid]  |
+|[Cutadapt][cutadapt]             |[Kallisto][kallisto]     |[Picard][picard]           |[Peddy][peddy]              |
+|[leeHom][leehom]                 |[Long Ranger][longranger]|[Prokka][prokka]           |[Preseq][preseq]            |
+|[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[QoRTs][qorts]              |
+|[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
+|[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
+|[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]      |
+|[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
+|[KAT][kat]                       |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
+|[Skewer][skewer]                 |                         |                           |[Supernova][supernova]      |
+|[SortMeRNA][sortmerna]           |                         |                           |[VCFTools][vcftools]        |
+|[Trimmomatic][trimmomatic]       |                         |                           |[VerifyBAMID][verifybamid]  |
+|                                 |                         |                           |                            |
+
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -209,6 +210,7 @@ MultiQC is released under the GPL v3 or later licence.
 [interop]:        http://multiqc.info/docs/#interop
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[kat]:            http://multiqc.info/docs/#kat
 [leehom]:         http://multiqc.info/docs/#leehom
 [longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2

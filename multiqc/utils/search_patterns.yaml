@@ -212,6 +212,8 @@ jellyfish:
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
+kat:
+    fn: '*.dist_analysis.json'
 leehom:
     contents: 'Adapter dimers/chimeras'
     shared: true
