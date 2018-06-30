@@ -63,87 +63,55 @@ class MultiqcModule(BaseMultiqcModule):
             log.warn("Could not parse fastp JSON: '{}'".format(f['fn']))
             return None
 
-        # Parse filtering_result
-        if 'filtering_result' in parsed_json:
-            filteredk = 'filtering_result'
-        else:
-            log.warn("fastp JSON did not have a 'filtering_result' key, skipping: '{}'".format(f['fn']))
-            return None
+        self.add_data_source(f, f['s_name'])
+        self.fastp_data[f['s_name']] = {}
+        self.fastp_all_data[f['s_name']] = parsed_json
 
-        s_name = f['s_name']
-        self.add_data_source(f, s_name)
-        self.fastp_data[s_name] = {}
-        for k in parsed_json[filteredk]:
-                try:
-                    self.fastp_data[s_name][k] = float(parsed_json[filteredk][k])
-                except ValueError:
-                    self.fastp_data[s_name][k] = parsed_json[filteredk][k]
+        # Parse filtering_result
+        try:
+            for k in parsed_json['filtering_result']:
+                self.fastp_data[f['s_name']][k] = float(parsed_json['filtering_result'][k])
+        except KeyError:
+            log.debug("fastp JSON did not have 'filtering_result' key: '{}'".format(f['fn']))
 
         # Parse duplication
-        if 'duplication' in parsed_json:
-            duplicationk = 'duplication'
-        else:
-            log.warn("fastp JSON did not have a 'duplication' key, skipping: '{}'".format(f['fn']))
-            return None
-             
         try:
-            self.fastp_data[s_name]['pct_duplication'] = float(parsed_json[duplicationk]['rate'] * 100.0)
-        except ValueError:
-            self.fastp_data[s_name]['pct_duplication'] = parsed_json[duplicationk]['rate'] * 100.0
+            self.fastp_data[f['s_name']]['pct_duplication'] = float(parsed_json['duplication']['rate'] * 100.0)
+        except KeyError:
+            log.debug("fastp JSON did not have a 'duplication' key: '{}'".format(f['fn']))
 
         # Parse after_filtering
-        if 'summary' in parsed_json:
-            summaryk = 'summary'
-        else:
-            log.warn("fastp JSON did not have a 'summary' key, skipping: '{}'".format(f['fn']))
-            return None
-        
-        subkey = 'after_filtering'
-        for k in parsed_json[summaryk][subkey]:
-                try:
-                    self.fastp_data[s_name][k] = float(parsed_json[summaryk][subkey][k])
-                except ValueError:
-                    self.fastp_data[s_name][k] = parsed_json[summaryk][subkey][k]
+        try:
+            for k in parsed_json['summary']['after_filtering']:
+                self.fastp_data[f['s_name']][k] = float(parsed_json['summary']['after_filtering'][k])
+        except KeyError:
+            log.debug("fastp JSON did not have a 'summary'-'after_filtering' keys: '{}'".format(f['fn']))
+
 
         # Parse data required to calculate Pct reads surviving
-        if 'summary' in parsed_json:
-            summaryk = 'summary'
-        else:
-            log.warn("fastp JSON did not have a 'summary' key, skipping: '{}'".format(f['fn']))
-            return None
-        
-        subkey = 'before_filtering'
-        subsubkey = 'total_reads'
-        #pre_reads = 'pre_reads'
         try:
-            self.fastp_data[s_name]['pre_reads'] = float(parsed_json[summaryk][subkey][subsubkey])
-        except ValueError:
-            self.fastp_data[s_name]['pre_reads'] = parsed_json[summaryk][subkey][subsubkey]
+            self.fastp_data[f['s_name']]['pre_reads'] = float(parsed_json['summary']['before_filtering']['total_reads'])
+        except KeyError:
+            log.debug("Could not find pre-filtering # reads: '{}'".format(f['fn']))
 
         try:
-            self.fastp_data[s_name]['pct_surviving'] = (self.fastp_data[s_name]['total_reads'] / self.fastp_data[s_name]['pre_reads']) * 100.0
+            self.fastp_data[f['s_name']]['pct_surviving'] = (float(self.fastp_data[f['s_name']]['total_reads']) / float(self.fastp_data[f['s_name']]['pre_reads'])) * 100.0
         except KeyError:
-            pass
+            log.debug("Could not calculate 'pct_surviving': {}".format(f['fn']))
 
         # Parse adapter_cutting
-        if 'adapter_cutting' in parsed_json:
-            adapterk = 'adapter_cutting'
-        else:
-            log.warn("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
-            return None
-        
-        for k in parsed_json[adapterk]:
-                try:
-                    self.fastp_data[s_name][k] = parsed_json[adapterk][k]
-                except ValueError:
-                    self.fastp_data[s_name][k] = parsed_json[adapterk][k]
+        for k in parsed_json['adapter_cutting']:
+            try:
+                self.fastp_data[f['s_name']][k] = float(parsed_json['adapter_cutting'][k])
+            except (ValueError, TypeError):
+                pass
+            except KeyError:
+                log.debug("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
 
         try:
-            self.fastp_data[s_name]['pct_adapter'] = (self.fastp_data[s_name]['adapter_trimmed_reads'] / self.fastp_data[s_name]['pre_reads']) * 100.0
+            self.fastp_data[f['s_name']]['pct_adapter'] = (float(self.fastp_data[f['s_name']]['adapter_trimmed_reads']) / float(self.fastp_data[f['s_name']]['pre_reads'])) * 100.0
         except KeyError:
-            pass
-
-        self.fastp_all_data[s_name] = parsed_json
+            log.debug("Could not calculate 'pct_adapter': {}".format(f['fn']))
 
 
     def fastp_general_stats_table(self):
