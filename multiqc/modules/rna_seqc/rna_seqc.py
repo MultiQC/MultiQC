@@ -197,6 +197,17 @@ class MultiqcModule(BaseMultiqcModule):
     def coverage_lineplot (self):
         """ Make HTML for coverage line plots """
         # Add line graph to section
+        data = list()
+        data_labels = list()
+        if len(self.rna_seqc_norm_high_cov) > 0:
+            data.append(self.rna_seqc_norm_high_cov)
+            data_labels.append({'name': 'High Expressed'})
+        if len(self.rna_seqc_norm_medium_cov) > 0:
+            data.append(self.rna_seqc_norm_medium_cov)
+            data_labels.append({'name': 'Medium Expressed'})
+        if len(self.rna_seqc_norm_low_cov) > 0:
+            data.append(self.rna_seqc_norm_low_cov)
+            data_labels.append({'name': 'Low Expressed'})
         pconfig = {
             'id': 'rna_seqc_mean_coverage_plot',
             'title': 'RNA-SeQC: Gene Body Coverage',
@@ -205,22 +216,15 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'xmax': 100,
             'tt_label': "<strong>{point.x}% from 5'</strong>: {point.y:.2f}",
-            'data_labels': [
-                {'name': 'High Expressed'},
-                {'name': 'Medium Expressed'},
-                {'name': 'Low Expressed'}
-            ]
+            'data_labels': data_labels
         }
-        self.add_section (
-            name = 'Gene Body Coverage',
-            anchor = 'rseqc-rna_seqc_mean_coverage',
-            helptext = 'The metrics are calculated across the transcripts with tiered expression levels.',
-            plot = linegraph.plot( [
-                self.rna_seqc_norm_high_cov,
-                self.rna_seqc_norm_medium_cov,
-                self.rna_seqc_norm_low_cov
-                ], pconfig)
-        )
+        if len(data) > 0:
+            self.add_section (
+                name = 'Gene Body Coverage',
+                anchor = 'rseqc-rna_seqc_mean_coverage',
+                helptext = 'The metrics are calculated across the transcripts with tiered expression levels.',
+                plot = linegraph.plot(data, pconfig)
+            )
 
     def parse_correlation(self, f):
         """ Parse RNA-SeQC correlation matrices """

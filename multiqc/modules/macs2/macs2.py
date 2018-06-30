@@ -111,6 +111,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data['{}: Treatment'.format(s_name)]['fragments_filtered'] = d['treatment_fragments_total'] - d['treatment_fragments_after_filtering']
                 data['{}: Treatment'.format(s_name)]['fragments_not_filtered'] = d['treatment_fragments_after_filtering']
 
+        # Check that we have something to plot
+        if len(data) == 0:
+            return
+
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['fragments_not_filtered'] = { 'color': '#437BB1', 'name': 'Remaining fragments' }

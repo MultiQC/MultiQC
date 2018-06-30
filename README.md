@@ -49,7 +49,7 @@ Currently, supported tools include:
 |[Skewer][skewer]                 |                         |                           |[Supernova][supernova]      |
 |[SortMeRNA][sortmerna]           |                         |                           |[VCFTools][vcftools]        |
 |[Trimmomatic][trimmomatic]       |                         |                           |[VerifyBAMID][verifybamid]  |
-|[Illumina InterOp][interop]      |                         |                           |                            |
+|                                 |                         |                           |                            |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
