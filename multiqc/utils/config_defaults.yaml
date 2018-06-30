@@ -402,6 +402,9 @@ module_order:
             - RNA
 
     # Pre-alignment QC
+    - kat:
+        module_tag:
+            - DNA
     - leehom:
         module_tag:
             - RNA

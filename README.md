@@ -46,10 +46,10 @@ Currently, supported tools include:
 |[Fastp][fastp]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
 |[Flexbar][flexbar]               |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
 |[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
-|[Skewer][skewer]                 |                         |                           |[Supernova][supernova]      |
-|[SortMeRNA][sortmerna]           |                         |                           |[VCFTools][vcftools]        |
-|[Trimmomatic][trimmomatic]       |                         |                           |[VerifyBAMID][verifybamid]  |
-|[Illumina InterOp][interop]      |                         |                           |                            |
+|[KAT][kat]                       |                         |                           |[Supernova][supernova]      |
+|[Skewer][skewer]                 |                         |                           |[VCFTools][vcftools]        |
+|[SortMeRNA][sortmerna]           |                         |                           |[VerifyBAMID][verifybamid]  |
+|[Trimmomatic][trimmomatic]       |                         |                           |                            |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -210,6 +210,7 @@ MultiQC is released under the GPL v3 or later licence.
 [interop]:        http://multiqc.info/docs/#interop
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[kat]:            http://multiqc.info/docs/#kat
 [leehom]:         http://multiqc.info/docs/#leehom
 [longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2
