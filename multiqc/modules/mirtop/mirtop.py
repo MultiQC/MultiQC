@@ -41,7 +41,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.mirtop_data, 'multiqc_mirtop')
         #log.info(self.mirtop_data)
 
-        # Assignment bar plot
+        # Create very basic summary table
+        self.mirtop_stats_table()
+
+        # Create comprehensive beeswarm plots of all stats 
         self.add_section (
              name = 'IsomiR Summary Statistics',
              anchor = 'mirtop-stats',
@@ -66,6 +69,9 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data[s[1]] = float(s[3])
                     s_name = s[2]
 
+        #Calculate additional summary stats (percentage isomirs, total reads) 
+        parsed_data['read_count'] = parsed_data['isomiR_sum'] + parsed_data['ref_miRNA_sum']
+        parsed_data['isomiR_perc'] = (parsed_data['isomiR_sum'] / parsed_data['read_count'])*100
         # Add to the main dictionary
         if len(parsed_data) > 1:
             self.add_data_source(f, s_name)
@@ -76,34 +82,36 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['percent_assigned'] = {
-            'title': '% Assigned',
-            'description': '% Assigned reads',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'RdYlGn'
-        }
-        headers['Assigned'] = {
-            'title': '{} Assigned'.format(config.read_count_prefix),
-            'description': 'Assigned reads ({})'.format(config.read_count_desc),
-            'min': 0,
+        headers['isomiR_sum'] = {
+            'title': 'IsomiR reads',
+            'description': 'read count summed over all isomiRs in sample',
             'scale': 'PuBu',
-            'modify': lambda x: float(x) * config.read_count_multiplier,
-            'shared_key': 'read_count'
         }
+        headers['ref_miRNA_sum'] = {
+            'title': 'Reference reads',
+            'description': 'read count summed over all reads mapping to the reference form of a miRNA',
+            'scale': 'PuBu'#,
+            #'shared_key': 'read_count'
+        }
+        headers['read_count'] = {
+            'title': 'Total reads',
+            'description': 'all aligned reads',
+            'scale': 'PuBu'#,
+            #'shared_key': 'read_count'
+        } 
+        headers['isomiR_perc'] = {
+            'title': 'IsomiR %',
+            'description': 'percentage of reads mapping to non-canonical forms of a microRNA',
+            'min':0,
+            'max':100,
+            'suffix':'%',
+            'scale': 'RdYlGn'#,
+            #'shared_key': 'read_count'
+        }
+
+
+
         self.general_stats_addcols(self.mirtop_data, headers)
 
 
-    def mirtop_chart (self):
-        """ Make the mirtop assignment rates plot """
 
-        # Config for the plot
-        config = {
-            'id': 'mirtop_assignment_plot',
-            'title': 'mirtop: Assignments',
-            'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads'
-        }
-
-        return bargraph.plot(self.mirtop_data, self.mirtop_keys, config)
