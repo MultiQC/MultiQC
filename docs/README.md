@@ -52,6 +52,7 @@ MultiQC Modules:
     HTSeq: modules/htseq.md
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
+    mirtop: modules/mirtop.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
