@@ -8,7 +8,7 @@ import logging
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         ## Parse whole JSON to save all its content
         self.write_data_file(self.fastp_all_data, 'multiqc_fastp')
 
-        # Basic Stats Table
+        # General Stats Table
         self.fastp_general_stats_table()
 
         # Filtering statistics bar plot
@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse filtering_result
         try:
             for k in parsed_json['filtering_result']:
-                self.fastp_data[f['s_name']][k] = float(parsed_json['filtering_result'][k])
+                self.fastp_data[f['s_name']]['filtering_result_{}'.format(k)] = float(parsed_json['filtering_result'][k])
         except KeyError:
             log.debug("fastp JSON did not have 'filtering_result' key: '{}'".format(f['fn']))
 
@@ -83,33 +83,33 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse after_filtering
         try:
             for k in parsed_json['summary']['after_filtering']:
-                self.fastp_data[f['s_name']][k] = float(parsed_json['summary']['after_filtering'][k])
+                self.fastp_data[f['s_name']]['after_filtering_{}'.format(k)] = float(parsed_json['summary']['after_filtering'][k])
         except KeyError:
             log.debug("fastp JSON did not have a 'summary'-'after_filtering' keys: '{}'".format(f['fn']))
 
 
         # Parse data required to calculate Pct reads surviving
         try:
-            self.fastp_data[f['s_name']]['pre_reads'] = float(parsed_json['summary']['before_filtering']['total_reads'])
+            self.fastp_data[f['s_name']]['before_filtering_total_reads'] = float(parsed_json['summary']['before_filtering']['total_reads'])
         except KeyError:
             log.debug("Could not find pre-filtering # reads: '{}'".format(f['fn']))
 
         try:
-            self.fastp_data[f['s_name']]['pct_surviving'] = (float(self.fastp_data[f['s_name']]['total_reads']) / float(self.fastp_data[f['s_name']]['pre_reads'])) * 100.0
+            self.fastp_data[f['s_name']]['pct_surviving'] = (float(self.fastp_data[f['s_name']]['after_filtering_total_reads']) / float(self.fastp_data[f['s_name']]['before_filtering_total_reads'])) * 100.0
         except KeyError:
             log.debug("Could not calculate 'pct_surviving': {}".format(f['fn']))
 
         # Parse adapter_cutting
         for k in parsed_json['adapter_cutting']:
             try:
-                self.fastp_data[f['s_name']][k] = float(parsed_json['adapter_cutting'][k])
+                self.fastp_data[f['s_name']]['adapter_cutting_{}'.format(k)] = float(parsed_json['adapter_cutting'][k])
             except (ValueError, TypeError):
                 pass
             except KeyError:
                 log.debug("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
 
         try:
-            self.fastp_data[f['s_name']]['pct_adapter'] = (float(self.fastp_data[f['s_name']]['adapter_trimmed_reads']) / float(self.fastp_data[f['s_name']]['pre_reads'])) * 100.0
+            self.fastp_data[f['s_name']]['pct_adapter'] = (float(self.fastp_data[f['s_name']]['adapter_cutting_adapter_trimmed_reads']) / float(self.fastp_data[f['s_name']]['before_filtering_total_reads'])) * 100.0
         except KeyError:
             log.debug("Could not calculate 'pct_adapter': {}".format(f['fn']))
 
@@ -119,20 +119,6 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table at the top of the report """
 
         headers = OrderedDict()
-        headers['pct_surviving'] = {
-            'title': '% PF',
-            'description': 'Percent reads passing filter',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'BuGn',
-        }
-        headers['gc_content'] = {
-            'title': 'GC content',
-            'description': 'GC content after filtering',
-            'min': 0,
-            'scale': 'Blues'
-        }
         headers['pct_duplication'] = {
             'title': '% Duplication',
             'description': 'Duplication rate in filtered reads',
@@ -141,45 +127,40 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%',
             'scale': 'RdYlGn-rev'
         }
-        headers['q30_rate'] = {
+        headers['after_filtering_q30_rate'] = {
             'title': '{} Q30 reads'.format(config.read_count_prefix),
             'description': 'Reads > Q30 after filtering ({})'.format(config.read_count_desc),
             'min': 0,
             'modify': lambda x: x * config.read_count_multiplier,
             'scale': 'GnBu',
-            'shared_key': 'read_count'
+            'shared_key': 'read_count',
+            'hidden': True
         }
-        headers['q30_bases'] = {
+        headers['after_filtering_q30_bases'] = {
             'title': '{} Q30 bases'.format(config.base_count_prefix),
             'description': 'Bases > Q30 after filtering ({})'.format(config.base_count_desc),
             'min': 0,
             'modify': lambda x: x * config.base_count_multiplier,
             'scale': 'GnBu',
-            'shared_key': 'base_count'
+            'shared_key': 'base_count',
+            'hidden': True
         }
-        headers['low_quality_reads'] = {
-            'title': '{} Low quality'.format(config.read_count_prefix),
-            'description': 'Low quality reads ({})'.format(config.read_count_desc),
+        headers['after_filtering_gc_content'] = {
+            'title': 'GC content',
+            'description': 'GC content after filtering',
+            'max': 100,
             'min': 0,
-            'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'RdYlGn-rev',
-            'shared_key': 'read_count'
+            'suffix': '%',
+            'scale': 'Blues',
+            'modify': lambda x: x * 100.0
         }
-        headers['too_many_N_reads'] = {
-            'title': 'Too many N',
-            'description': 'Reads with too many N',
+        headers['pct_surviving'] = {
+            'title': '% PF',
+            'description': 'Percent reads passing filter',
+            'max': 100,
             'min': 0,
-            'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'RdYlGn-rev',
-            'shared_key': 'read_count'
-        }
-        headers['too_short_reads'] = {
-            'title': 'Too short',
-            'description': 'Reads too short',
-            'min': 0,
-            'modify': lambda x: x * config.read_count_multiplier,
-            'scale': 'RdYlGn-rev',
-            'shared_key': 'read_count'
+            'suffix': '%',
+            'scale': 'BuGn',
         }
         headers['pct_adapter'] = {
             'title': '% Adapter',
@@ -196,10 +177,10 @@ class MultiqcModule(BaseMultiqcModule):
        """ Function to generate the fastp filtered reads bar plot """
        # Specify the order of the different possible categories
        keys = OrderedDict()
-       keys['passed_filter_reads'] =  { 'name': 'Passed Filter' }
-       keys['low_quality_reads'] =    { 'name': 'Low Quality' }
-       keys['too_many_N_reads'] =     { 'name': 'Too Many N' }
-       keys['too_short_reads'] =      { 'name': 'Too short' }
+       keys['filtering_result_passed_filter_reads'] =  { 'name': 'Passed Filter' }
+       keys['filtering_result_low_quality_reads'] =    { 'name': 'Low Quality' }
+       keys['filtering_result_too_many_N_reads'] =     { 'name': 'Too Many N' }
+       keys['filtering_result_too_short_reads'] =      { 'name': 'Too short' }
 
        # Config for the plot
        pconfig = {
