@@ -45,10 +45,11 @@ Currently, supported tools include:
 |[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
 |[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]      |
 |[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
-|[Skewer][skewer]                 |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
-|[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova]      |
-|[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools]        |
-|                                 |                         |                           |[VerifyBAMID][verifybamid]  |
+|[KAT][kat]                       |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
+|[Skewer][skewer]                 |                         |                           |[Supernova][supernova]      |
+|[SortMeRNA][sortmerna]           |                         |                           |[VCFTools][vcftools]        |
+|[Trimmomatic][trimmomatic]       |                         |                           |[VerifyBAMID][verifybamid]  |
+|                                 |                         |                           |                            |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -208,6 +209,7 @@ MultiQC is released under the GPL v3 or later licence.
 [interop]:        http://multiqc.info/docs/#interop
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[kat]:            http://multiqc.info/docs/#kat
 [leehom]:         http://multiqc.info/docs/#leehom
 [longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2
