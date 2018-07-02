@@ -58,25 +58,50 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Duplication rate plot
-        self.add_section (
-            name = 'Duplication Rates',
-            anchor = 'fastp-duprates',
-            description = 'Duplication rates of sampled reads.',
-            plot = linegraph.plot(
-                self.fastp_duplication_plotdata,
-                {
-                    'id': 'fastp-duprates-plot',
-                    'title': 'Fastp: Duplication Rate',
-                    'xlab': 'Duplication level',
-                    'ylab': 'Read percent',
-                    'yCeiling': 100,
-                    'ymin': 0,
-                    'yLabelFormat': '{value}%',
-                    'tt_label': '{point.x}: {point.y:.2f}%',
-                    'xDecimals': False
-                }
+        if len(self.fastp_duplication_plotdata) > 0:
+            self.add_section (
+                name = 'Duplication Rates',
+                anchor = 'fastp-duprates',
+                description = 'Duplication rates of sampled reads.',
+                plot = linegraph.plot(
+                    self.fastp_duplication_plotdata,
+                    {
+                        'id': 'fastp-duprates-plot',
+                        'title': 'Fastp: Duplication Rate',
+                        'xlab': 'Duplication level',
+                        'ylab': 'Read percent',
+                        'yCeiling': 100,
+                        'ymin': 0,
+                        'yLabelFormat': '{value}%',
+                        'tt_label': '{point.x}: {point.y:.2f}%',
+                        'xDecimals': False
+                    }
+                )
             )
-        )
+
+        # Insert size plot
+        if len(self.fastp_insert_size_data) > 0:
+            self.add_section (
+                name = 'Insert Sizes',
+                anchor = 'fastp-insert-size',
+                description = 'Insert size estimation of sampled reads.',
+                plot = linegraph.plot(
+                    self.fastp_insert_size_data,
+                    {
+                        'id': 'fastp-insert-size-plot',
+                        'title': 'Fastp: Insert Size Distribution',
+                        'xlab': 'Insert size',
+                        'ylab': 'Read percent',
+                        'yCeiling': 100,
+                        'ymin': 0,
+                        'yLabelFormat': '{value}%',
+                        'tt_label': '{point.x}: {point.y:.2f}%',
+                        'xDecimals': False,
+                        'smooth_points': 300,
+                        'smooth_points_sumcounts': False
+                    }
+                )
+            )
 
     def parse_fastp_log(self, f):
         """ Parse the JSON output from fastp and save the summary statistics """
@@ -158,6 +183,22 @@ class MultiqcModule(BaseMultiqcModule):
                 self.fastp_duplication_plotdata[s_name][i+1] = (float(v) / float(total_reads)) * 100.0
         except KeyError:
             log.debug("No duplication rate plot data: {}".format(f['fn']))
+
+        # Duplication rate plot data
+        try:
+            # First count the total read count in the dup analysis
+            total_reads = 0
+            max_i = 0
+            for i, v in enumerate(parsed_json['insert_size']['histogram']):
+                total_reads += v
+                if float(v) > 0:
+                    max_i = i
+            # Calculate percentages
+            for i, v in enumerate(parsed_json['insert_size']['histogram']):
+                if i <= max_i:
+                    self.fastp_insert_size_data[s_name][i+1] = (float(v) / float(total_reads)) * 100.0
+        except KeyError:
+            log.debug("No insert size plot data: {}".format(f['fn']))
 
 
     def fastp_general_stats_table(self):
