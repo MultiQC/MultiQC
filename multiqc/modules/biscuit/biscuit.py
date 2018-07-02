@@ -388,7 +388,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # base coverage
         basecov = OrderedDict()
-        cpgcov = OrderedDict()
         mdata = [
             dict([(k.replace('_covdist_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_table.txt')]),
             dict([(k.replace('_covdist_q40_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_table.txt')]),
@@ -428,37 +427,27 @@ class MultiqcModule(BaseMultiqcModule):
                 basecov[sid]['uniq'] = dd[1]/dd[0]*100
 
             for sid, dd in mdata[4].items():
-                if sid not in cpgcov:
-                    cpgcov[sid] = {}
-                cpgcov[sid]['all'] = dd[1]/dd[0]*100            
+                if sid not in basecov:
+                    basecov[sid] = {}
+                basecov[sid]['cpg_all'] = dd[1]/dd[0]*100            
 
             for sid, dd in mdata[5].items():
-                if sid not in cpgcov:
-                    cpgcov[sid] = {}
-                cpgcov[sid]['uniq'] = dd[1]/dd[0]*100
+                if sid not in basecov:
+                    basecov[sid] = {}
+                basecov[sid]['cpg_uniq'] = dd[1]/dd[0]*100
 
         # base coverage >=1x table
         if len(basecov)>0:
             self.add_section(
                 name = 'Base Coverage',
                 anchor = 'biscuit-coverage-base-table',
-                description = '<p>The fraction of genome covered by at least one read.</p>',
+                description = '<p>The fraction covered by at least one read.</p>',
                 plot = table.plot(basecov, {
-                    'all':{'id':'cov-table-all','title':'All Reads','max':100,'min':0,'suffix':'%'},
-                    'uniq':{'id':'cov-table-uniq','title':'Uniquely Mapped Reads','max':100,'min':0,'suffix':'%'},
+                    'all':{'title':'Genome (All)','max':100,'min':0,'suffix':'%'},
+                    'uniq':{'title':'Genome (Unique)','max':100,'min':0,'suffix':'%'},
+                    'cpg_all':{'title':'CpG (All)','max':100,'min':0,'suffix':'%'},
+                    'cpg_uniq':{'title':'CpG (Unique)','max':100,'min':0,'suffix':'%'},
                 })
-            )
-
-        # cpg coverage >= 1x table
-        if len(cpgcov)>0:
-            self.add_section(
-                name = 'CpG Coverage',
-                anchor = 'biscuit-coverage-cpg-table',
-                description = '<p>The fraction of CpGs covered by at least one read.</p>',
-                plot = table.plot(*_uniquify_ID(cpgcov, {
-                    'all':{'title':'All Reads','max':100,'min':0,'suffix':'%'},
-                    'uniq':{'title':'Uniquely Mapped Reads','max':100,'min':0,'suffix':'%'},
-                }, 'biscuit-coverage-cpg-table'))
             )
 
         # cpg distribution
@@ -761,36 +750,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         mdata = dict([(k.replace('_freqOfTotalRetentionPerRead.txt',''),v) for k, v in self.mdata['retention'].items() if k.endswith('_freqOfTotalRetentionPerRead.txt')])
         if len(mdata) > 0:
-            pd = dict([(sid, dd['CA']) for sid, dd in mdata.items()])
+            pd = [
+                dict([(sid, dd['CA']) for sid, dd in mdata.items()]),
+                dict([(sid, dd['CC']) for sid, dd in mdata.items()]),
+                dict([(sid, dd['CG']) for sid, dd in mdata.items()]),
+                dict([(sid, dd['CT']) for sid, dd in mdata.items()]),
+            ]
             self.add_section(
-                name = 'CpA Retention in Each Read',
-                anchor = 'biscuit-retention-read-cpa',
-                description = "<p>This plot shows the distribution of the number of retained CpA cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpa', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
-            )
-
-            pd = dict([(sid, dd['CC']) for sid, dd in mdata.items()])
-            self.add_section(
-                name = 'CpC Retention in Each Read',
-                anchor = 'biscuit-retention-read-cpc',
-                description = "<p>This plot shows the distribution of the number of retained CpC cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpc', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
-            )
-
-            pd = dict([(sid, dd['CG']) for sid, dd in mdata.items()])
-            self.add_section(
-                name = 'CpG Retention in Each Read',
-                anchor = 'biscuit-retention-read-cpg',
-                description = "<p>This plot shows the distribution of the number of retained CpG cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpg', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
-            )
-
-            pd = dict([(sid, dd['CT']) for sid, dd in mdata.items()])
-            self.add_section(
-                name = 'CpT Retention in Each Read',
-                anchor = 'biscuit-retention-read-cpt',
-                description = "<p>This plot shows the distribution of the number of retained CpT cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {'id': 'biscuit_retention_read_cpt', 'ylab': 'Number of Reads', 'xlab': 'Number of Retention within Read'})
+                name = 'Cytosine Retention in Each Read',
+                anchor = 'biscuit-retention-read',
+                description = "<p>This plot shows the distribution of the number of retained cytosine in each read, up to 10.</p>",
+                plot = linegraph.plot(pd, {
+                    'id': 'biscuit_retention_read_cpa', 
+                    'xlab': 'Number of Retention within Read',
+                    'data_labels': [
+                        {'name': 'CpA', 'ylab': 'Number of Reads'},
+                        {'name': 'CpC', 'ylab': 'Number of Reads'},
+                        {'name': 'CpG', 'ylab': 'Number of Reads'},
+                        {'name': 'CpT', 'ylab': 'Number of Reads'},
+                    ]})
             )
 
         mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
