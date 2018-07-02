@@ -155,8 +155,7 @@ deeptools/plotFingerprintOutQualityMetrics:
     contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
     num_lines: 1
 fastp:
-    fn: '*.json'
-    contents: 'fastp'
+    fn: 'fastp.json'
 fastq_screen:
     fn: '*_screen.txt'
 fastqc/data:

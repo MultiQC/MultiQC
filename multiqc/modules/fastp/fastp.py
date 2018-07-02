@@ -8,7 +8,7 @@ import logging
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -28,7 +28,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any fastp reports
         self.fastp_data = dict()
-        self.fastp_all_data = dict() # to save whole JSON
+        self.fastp_duplication_plotdata = dict()
+        self.fastp_insert_size_data = dict()
+        self.fastp_all_data = dict()
         for f in self.find_log_files('fastp', filehandles=True):
             self.parse_fastp_log(f)
 
@@ -55,6 +57,27 @@ class MultiqcModule(BaseMultiqcModule):
            plot = self.fastp_filtered_reads_chart()
         )
 
+        # Duplication rate plot
+        self.add_section (
+            name = 'Duplication Rates',
+            anchor = 'fastp-duprates',
+            description = 'Duplication rates of sampled reads.',
+            plot = linegraph.plot(
+                self.fastp_duplication_plotdata,
+                {
+                    'id': 'fastp-duprates-plot',
+                    'title': 'Fastp: Duplication Rate',
+                    'xlab': 'Duplication level',
+                    'ylab': 'Read percent',
+                    'yCeiling': 100,
+                    'ymin': 0,
+                    'yLabelFormat': '{value}%',
+                    'tt_label': '{point.x}: {point.y:.2f}%',
+                    'xDecimals': False
+                }
+            )
+        )
+
     def parse_fastp_log(self, f):
         """ Parse the JSON output from fastp and save the summary statistics """
         try:
@@ -63,55 +86,78 @@ class MultiqcModule(BaseMultiqcModule):
             log.warn("Could not parse fastp JSON: '{}'".format(f['fn']))
             return None
 
-        self.add_data_source(f, f['s_name'])
-        self.fastp_data[f['s_name']] = {}
-        self.fastp_all_data[f['s_name']] = parsed_json
+        # Fetch a sample name from the command
+        s_name = f['s_name']
+        cmd = parsed_json['command'].split()
+        for i,v in enumerate(cmd):
+            if v == '-i':
+                s_name = self.clean_s_name(cmd[i+1], f['root'])
+        if s_name == 'fastp':
+            log.warn('Could not parse sample name from fastp command: {}'.format(f['fn']))
+
+        self.add_data_source(f, s_name)
+        self.fastp_data[s_name] = {}
+        self.fastp_duplication_plotdata[s_name] = {}
+        self.fastp_insert_size_data[s_name] = {}
+        self.fastp_all_data[s_name] = parsed_json
 
         # Parse filtering_result
         try:
             for k in parsed_json['filtering_result']:
-                self.fastp_data[f['s_name']]['filtering_result_{}'.format(k)] = float(parsed_json['filtering_result'][k])
+                self.fastp_data[s_name]['filtering_result_{}'.format(k)] = float(parsed_json['filtering_result'][k])
         except KeyError:
             log.debug("fastp JSON did not have 'filtering_result' key: '{}'".format(f['fn']))
 
         # Parse duplication
         try:
-            self.fastp_data[f['s_name']]['pct_duplication'] = float(parsed_json['duplication']['rate'] * 100.0)
+            self.fastp_data[s_name]['pct_duplication'] = float(parsed_json['duplication']['rate'] * 100.0)
         except KeyError:
             log.debug("fastp JSON did not have a 'duplication' key: '{}'".format(f['fn']))
 
         # Parse after_filtering
         try:
             for k in parsed_json['summary']['after_filtering']:
-                self.fastp_data[f['s_name']]['after_filtering_{}'.format(k)] = float(parsed_json['summary']['after_filtering'][k])
+                self.fastp_data[s_name]['after_filtering_{}'.format(k)] = float(parsed_json['summary']['after_filtering'][k])
         except KeyError:
             log.debug("fastp JSON did not have a 'summary'-'after_filtering' keys: '{}'".format(f['fn']))
 
 
         # Parse data required to calculate Pct reads surviving
         try:
-            self.fastp_data[f['s_name']]['before_filtering_total_reads'] = float(parsed_json['summary']['before_filtering']['total_reads'])
+            self.fastp_data[s_name]['before_filtering_total_reads'] = float(parsed_json['summary']['before_filtering']['total_reads'])
         except KeyError:
             log.debug("Could not find pre-filtering # reads: '{}'".format(f['fn']))
 
         try:
-            self.fastp_data[f['s_name']]['pct_surviving'] = (float(self.fastp_data[f['s_name']]['after_filtering_total_reads']) / float(self.fastp_data[f['s_name']]['before_filtering_total_reads'])) * 100.0
+            self.fastp_data[s_name]['pct_surviving'] = (self.fastp_data[s_name]['after_filtering_total_reads'] / self.fastp_data[s_name]['before_filtering_total_reads']) * 100.0
         except KeyError:
             log.debug("Could not calculate 'pct_surviving': {}".format(f['fn']))
 
         # Parse adapter_cutting
         for k in parsed_json['adapter_cutting']:
             try:
-                self.fastp_data[f['s_name']]['adapter_cutting_{}'.format(k)] = float(parsed_json['adapter_cutting'][k])
+                self.fastp_data[s_name]['adapter_cutting_{}'.format(k)] = float(parsed_json['adapter_cutting'][k])
             except (ValueError, TypeError):
                 pass
             except KeyError:
                 log.debug("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
 
         try:
-            self.fastp_data[f['s_name']]['pct_adapter'] = (float(self.fastp_data[f['s_name']]['adapter_cutting_adapter_trimmed_reads']) / float(self.fastp_data[f['s_name']]['before_filtering_total_reads'])) * 100.0
+            self.fastp_data[s_name]['pct_adapter'] = (self.fastp_data[s_name]['adapter_cutting_adapter_trimmed_reads'] / self.fastp_data[s_name]['before_filtering_total_reads']) * 100.0
         except KeyError:
             log.debug("Could not calculate 'pct_adapter': {}".format(f['fn']))
+
+        # Duplication rate plot data
+        try:
+            # First count the total read count in the dup analysis
+            total_reads = 0
+            for v in parsed_json['duplication']['histogram']:
+                total_reads += v
+            # Calculate percentages
+            for i, v in enumerate(parsed_json['duplication']['histogram']):
+                self.fastp_duplication_plotdata[s_name][i+1] = (float(v) / float(total_reads)) * 100.0
+        except KeyError:
+            log.debug("No duplication rate plot data: {}".format(f['fn']))
 
 
     def fastp_general_stats_table(self):
@@ -174,20 +220,20 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.fastp_data, headers)
 
     def fastp_filtered_reads_chart(self):
-       """ Function to generate the fastp filtered reads bar plot """
-       # Specify the order of the different possible categories
-       keys = OrderedDict()
-       keys['filtering_result_passed_filter_reads'] =  { 'name': 'Passed Filter' }
-       keys['filtering_result_low_quality_reads'] =    { 'name': 'Low Quality' }
-       keys['filtering_result_too_many_N_reads'] =     { 'name': 'Too Many N' }
-       keys['filtering_result_too_short_reads'] =      { 'name': 'Too short' }
+        """ Function to generate the fastp filtered reads bar plot """
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['filtering_result_passed_filter_reads'] =  { 'name': 'Passed Filter' }
+        keys['filtering_result_low_quality_reads'] =    { 'name': 'Low Quality' }
+        keys['filtering_result_too_many_N_reads'] =     { 'name': 'Too Many N' }
+        keys['filtering_result_too_short_reads'] =      { 'name': 'Too short' }
 
-       # Config for the plot
-       pconfig = {
-           'id': 'fastp_filtered_reads_plot',
-           'title': 'Fastp: Filtered Reads',
-           'ylab': '# Reads',
-           'cpswitch_counts_label': 'Number of Reads',
-           'hide_zero_cats': False,
-       }
-       return bargraph.plot(self.fastp_data, keys, pconfig)
+        # Config for the plot
+        pconfig = {
+            'id': 'fastp_filtered_reads_plot',
+            'title': 'Fastp: Filtered Reads',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads',
+            'hide_zero_cats': False,
+        }
+        return bargraph.plot(self.fastp_data, keys, pconfig)
