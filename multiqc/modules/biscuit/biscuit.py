@@ -749,60 +749,45 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         mdata = dict([(k.replace('_freqOfTotalRetentionPerRead.txt',''),v) for k, v in self.mdata['retention'].items() if k.endswith('_freqOfTotalRetentionPerRead.txt')])
-        if len(mdata) > 0:
-            pd = [
-                dict([(sid, dd['CA']) for sid, dd in mdata.items()]),
-                dict([(sid, dd['CC']) for sid, dd in mdata.items()]),
-                dict([(sid, dd['CG']) for sid, dd in mdata.items()]),
-                dict([(sid, dd['CT']) for sid, dd in mdata.items()]),
-            ]
-            self.add_section(
-                name = 'Cytosine Retention in Each Read',
-                anchor = 'biscuit-retention-read',
-                description = "<p>This plot shows the distribution of the number of retained cytosine in each read, up to 10.</p>",
-                plot = linegraph.plot(pd, {
-                    'id': 'biscuit_retention_read_cpa', 
-                    'xlab': 'Number of Retention within Read',
-                    'data_labels': [
-                        {'name': 'CpA', 'ylab': 'Number of Reads'},
-                        {'name': 'CpC', 'ylab': 'Number of Reads'},
-                        {'name': 'CpG', 'ylab': 'Number of Reads'},
-                        {'name': 'CpT', 'ylab': 'Number of Reads'},
-                    ]})
+        pd = [
+            dict([(sid, dd['CA']) for sid, dd in mdata.items()]),
+            dict([(sid, dd['CC']) for sid, dd in mdata.items()]),
+            dict([(sid, dd['CG']) for sid, dd in mdata.items()]),
+            dict([(sid, dd['CT']) for sid, dd in mdata.items()]),
+        ]
+        self.add_section(
+            name = 'Cytosine Retention in Each Read',
+            anchor = 'biscuit-retention-read',
+            description = "<p>This plot shows the distribution of the number of retained cytosine in each read, up to 10.</p>",
+            plot = linegraph.plot(pd, {
+                'id': 'biscuit_retention_read_cpa', 
+                'xlab': 'Number of Retention within Read',
+                'data_labels': [
+                    {'name': 'CpA', 'ylab': 'Number of Reads'},
+                    {'name': 'CpC', 'ylab': 'Number of Reads'},
+                    {'name': 'CpG', 'ylab': 'Number of Reads'},
+                    {'name': 'CpT', 'ylab': 'Number of Reads'},
+                ]})
             )
 
-        mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
-        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
-            self.add_section(
-                name = 'CpH Retention by Position in Read 1',
-                anchor = 'biscuit-retention-cph-read1',
-                description = "<p>This plot shows the distribution of CpH retention rate in read 1.</p>",
-                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cph_read1', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
+        mdata = [
+            dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')]),
+            dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')]),
+            dict([(k.replace('_CpGRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpGRetentionByReadPos.txt')]),
+            dict([(k.replace('_CpGRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpGRetentionByReadPos.txt')]),
+        ]
+        self.add_section(
+            name = 'CpH Retention by Position in Read',
+            anchor = 'biscuit-retention-cytosine',
+            description = "<p>This plot (aka. mbias plot) shows the distribution of cytosine retention rate in read.</p>",
+            plot = linegraph.plot(mdata, {
+                'id': 'biscuit_retention_cytosine',
+                'xlab': 'Position in Read', 'ymin':0, 'ymax':100, 'yMinRange':0, 'yFloor':0,
+                'data_labels': [
+                    {'name': 'CpH Read 1', 'ylab': 'CpH Retention Rate (%)', 'ymin':0, 'ymax':100},
+                    {'name': 'CpH Read 2', 'ylab': 'CpH Retention Rate (%)', 'ymin':0, 'ymax':100},
+                    {'name': 'CpG Read 1', 'ylab': 'CpG Retention Rate (%)', 'ymin':0, 'ymax':100},
+                    {'name': 'CpG Read 2', 'ylab': 'CpG Retention Rate (%)', 'ymin':0, 'ymax':100},
+                ]})
             )
 
-        mdata = dict([(k.replace('_CpHRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpHRetentionByReadPos.txt')])
-        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
-            self.add_section(
-                name = 'CpH Retention by Position in Read 2',
-                anchor = 'biscuit-retention-cph-read2',
-                description = "<p>This plot shows the distribution of CpH retention rate in read 2.</p>",
-                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cph_read2', 'ylab': 'CpH Retention Rate (%)', 'xlab': 'Position in Read'})
-            )
-
-        mdata = dict([(k.replace('_CpGRetentionByReadPos.txt',''),v['1']) for k, v in self.mdata['retention'].items() if k.endswith('_CpGRetentionByReadPos.txt')])
-        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
-            self.add_section(
-                name = 'CpG Retention by Position in Read 1',
-                anchor = 'biscuit-retention-cpg-read1',
-                description = "<p>This plot (aka. mbias plot) shows the distribution of CpG retention rate in read 1.</p>",
-                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cpg_read1', 'ylab': 'CpG Retention Rate (%)', 'xlab': 'Position in Read'})
-            )
-
-        mdata = dict([(k.replace('_CpGRetentionByReadPos.txt',''),v['2']) for k, v in self.mdata['retention'].items() if k.endswith('_CpGRetentionByReadPos.txt')])
-        if len(mdata) > 0 and all([len(v)>0 for v in mdata.values()]):
-            self.add_section(
-                name = 'CpG Retention by Position in Read 2',
-                anchor = 'biscuit-retention-cpg-read2',
-                description = "<p>This plot (aka. mbias plot) shows the distribution of CpG retention rate in read 2.</p>",
-                plot = linegraph.plot(mdata, {'id': 'biscuit_retention_cpg_read2', 'ylab': 'CpG Retention Rate (%)', 'xlab': 'Position in Read'})
-            )
