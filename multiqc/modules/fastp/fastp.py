@@ -28,9 +28,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any fastp reports
         self.fastp_data = dict()
+        self.fastp_qual_plotdata = dict()
         self.fastp_duplication_plotdata = dict()
         self.fastp_insert_size_data = dict()
         self.fastp_all_data = dict()
+        for k in ['read1_before_filtering','read2_before_filtering','read1_after_filtering','read2_after_filtering']:
+            self.fastp_qual_plotdata[k] = dict()
+
         for f in self.find_log_files('fastp', filehandles=True):
             self.parse_fastp_log(f)
 
@@ -103,6 +107,15 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             )
 
+        # Base quality plot
+        self.add_section (
+            name = 'Sequence Quality',
+            anchor = 'fastp-seq-quality',
+            description = 'Average sequencing quality over each base of all reads.',
+            plot = self.fastp_read_qual_plot()
+        )
+
+
     def parse_fastp_log(self, f):
         """ Parse the JSON output from fastp and save the summary statistics """
         try:
@@ -125,6 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastp_duplication_plotdata[s_name] = {}
         self.fastp_insert_size_data[s_name] = {}
         self.fastp_all_data[s_name] = parsed_json
+        for k in ['read1_before_filtering','read2_before_filtering','read1_after_filtering','read2_after_filtering']:
+            self.fastp_qual_plotdata[k][s_name] = {}
 
         # Parse filtering_result
         try:
@@ -199,6 +214,14 @@ class MultiqcModule(BaseMultiqcModule):
                     self.fastp_insert_size_data[s_name][i+1] = (float(v) / float(total_reads)) * 100.0
         except KeyError:
             log.debug("No insert size plot data: {}".format(f['fn']))
+
+        # Read quality data
+        for k in ['read1_before_filtering','read2_before_filtering','read1_after_filtering','read2_after_filtering']:
+            try:
+                for i, v in enumerate(parsed_json[k]['quality_curves']['mean']):
+                    self.fastp_qual_plotdata[k][s_name][i+1] = float(v)
+            except KeyError:
+                log.debug("Read quality {} not found: {}".format(k, f['fn']))
 
 
     def fastp_general_stats_table(self):
@@ -278,3 +301,21 @@ class MultiqcModule(BaseMultiqcModule):
             'hide_zero_cats': False,
         }
         return bargraph.plot(self.fastp_data, keys, pconfig)
+
+    def fastp_read_qual_plot(self):
+        """ Make the read quality plot for Fastp """
+        pconfig = {
+            'id': 'fastp-seq-quality-plot',
+            'title': 'Fastp: Sequence Quality',
+            'xlab': 'Read Position',
+            'ylab': 'R1 Before filtering: Sequence Quality',
+            'ymin': 0,
+            'xDecimals': False,
+            'data_labels': [
+                {'name': 'Read 1: Before filtering', 'ylab': 'R1 Before filtering: Sequence Quality'},
+                {'name': 'Read 2: Before filtering', 'ylab': 'R2 Before filtering: Sequence Quality'},
+                {'name': 'Read 1: After filtering', 'ylab': 'R1 After filtering: Sequence Quality'},
+                {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Sequence Quality'},
+            ]
+        }
+        return linegraph.plot(self.fastp_qual_plotdata.values(), pconfig)
