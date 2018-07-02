@@ -85,6 +85,7 @@ bismark/align:
 biscuit/mapq:
     - fn: '*_mapq_table.txt'
     - fn: '*_strand_table.txt'
+    - fn: '*_isize_score_table.txt'
 biscuit/markdup:
     fn: '*_markdup_report.txt'
 biscuit/coverage:

@@ -77,10 +77,15 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs_beta(self, f, fn):
 
+        sumcounts = 0
+        for l in f.splitlines():
+            fields = l.split('\t')
+            sumcounts += int(fields[1])
+        
         data = {}
         for l in f.splitlines():
             fields = l.split('\t')
-            data[int(fields[0])] = int(fields[1])
+            data[int(fields[0])] = int(fields[1]) / float(sumcounts)
             
         return data
 
@@ -89,9 +94,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Beta Value Distribution',
             anchor = 'biscuit-beta',
-            plot = linegraph.plot(self.mdata['beta'], {'id':'biscuit_beta','ylab':'Count of cytosine in CpG context','xlab':'Beta Value (%)'})
+            plot = linegraph.plot(self.mdata['beta'], {'id':'biscuit_beta','ylab':'Fraction of cytosine in CpG context','xlab':'Beta Value (%)'})
         )
-        
+
     def parse_logs_mapq(self, f, fn):
 
         data = {}
@@ -105,6 +110,17 @@ class MultiqcModule(BaseMultiqcModule):
                 m = re.search(r'strand\t([+-]*)\t(\d+)', l)
                 if m is not None:
                     data[m.group(1)] = int(m.group(2))
+
+        if fn.endswith('_isize_score_table.txt'):
+            data['I'] = {}      # insert size
+            data['S'] = {}      # SW-score
+
+            for l in f.splitlines():
+                fields = l.split()
+                if fields[0] == 'I':
+                    data[fields[0]][int(fields[1])] = float(fields[2]) * 100
+                elif fields[0] == 'S':
+                    data[fields[0]][fields[1]] = float(fields[2])
                 
         return data
     
@@ -186,6 +202,16 @@ class MultiqcModule(BaseMultiqcModule):
                  'cpswitch_c_active': True,
                  'cpswitch_counts_label': '# Reads'
             })
+        )
+
+        # insert size distribution
+        pd = dict([(k.replace('_isize_score_table.txt', ''),v['I']) for k,v in self.mdata['mapq'].items() if k.endswith('_isize_score_table.txt')])
+
+        self.add_section(
+            name="Insert Size Distribution",
+            anchor='biscuit-isize',
+            description = '<p>This plot shows distribution of insert size filtering low quality mapping.</p>',
+            plot = linegraph.plot(pd, {'id':'biscuit_isize','ylab': '% Reads','xlab': 'Insert Size'})
         )
 
     def parse_logs_markdup(self, f, fn):
