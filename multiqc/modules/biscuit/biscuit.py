@@ -388,34 +388,54 @@ class MultiqcModule(BaseMultiqcModule):
 
         # base coverage
         basecov = OrderedDict()
-        mdata = dict([(k.replace('_covdist_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_table.txt')])
+        cpgcov = OrderedDict()
+        mdata = [
+            dict([(k.replace('_covdist_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_table.txt')]),
+            dict([(k.replace('_covdist_q40_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_table.txt')]),
+            dict([(k.replace('_covdist_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_botgc_table.txt')]),
+            dict([(k.replace('_covdist_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_topgc_table.txt')]),
+            dict([(k.replace('_covdist_cpg_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_table.txt')]),
+            dict([(k.replace('_covdist_cpg_q40_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_table.txt')]),
+            dict([(k.replace('_covdist_cpg_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_botgc_table.txt')]),
+            dict([(k.replace('_covdist_cpg_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_topgc_table.txt')]),
+        ]
         if len(mdata)>0:
             self.add_section(
                 name = 'Cumulative Base Coverage',
                 anchor = 'biscuit-coverage-base',
-                description = "<p>This plot shows the cummulative base coverage.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base','ylab':'Million Bases'})
+                description = "<p>This plot shows the cummulative base coverage. High and low GC content region are the top and bottom 10% 100bp window in GC content.</p>",
+                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base',
+                    'data_labels': [
+                        {'name': 'All', 'ylab':'Million Bases'}, 
+                        {'name': 'Q40', 'ylab':'Million Bases'}, 
+                        {'name': 'Q40 low GC', 'ylab':'Million Bases'}, 
+                        {'name': 'Q40 high GC', 'ylab':'Million Bases'}, 
+                        {'name': 'CpG (all)', 'ylab':'Million CpGs'}, 
+                        {'name': 'CpG Q40', 'ylab':'Million CpGs'}, 
+                        {'name': 'CpG Q40 low GC', 'ylab':'Million CpGs'}, 
+                        {'name': 'CpG Q40 high GC', 'ylab':'Million CpGs'}, 
+                    ]})
             )
             
-            for sid, dd in mdata.items():
+            for sid, dd in mdata[0].items():
                 if sid not in basecov:
                     basecov[sid] = {}
                 basecov[sid]['all'] = dd[1]/dd[0]*100
 
-        # base coverage uniq
-        mdata = dict([(k.replace('_covdist_q40_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_table.txt')])
-        if len(mdata)>0:
-            self.add_section(
-                name = 'Cumulative Base Coverage Q40',
-                anchor = 'biscuit-coverage-base-q40',
-                description = "<p>This plot shows the cummulative base coverage, mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_q40','ylab':'Million Bases'})
-            )
-
-            for sid, dd in mdata.items():
+            for sid, dd in mdata[1].items():
                 if sid not in basecov:
                     basecov[sid] = {}
                 basecov[sid]['uniq'] = dd[1]/dd[0]*100
+
+            for sid, dd in mdata[4].items():
+                if sid not in cpgcov:
+                    cpgcov[sid] = {}
+                cpgcov[sid]['all'] = dd[1]/dd[0]*100            
+
+            for sid, dd in mdata[5].items():
+                if sid not in cpgcov:
+                    cpgcov[sid] = {}
+                cpgcov[sid]['uniq'] = dd[1]/dd[0]*100
 
         # base coverage >=1x table
         if len(basecov)>0:
@@ -429,57 +449,6 @@ class MultiqcModule(BaseMultiqcModule):
                 })
             )
 
-        # base coverage low GC content
-        mdata = dict([(k.replace('_covdist_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_botgc_table.txt')])
-        if len(mdata)>0:
-            self.add_section(
-                name = 'Cumulative Base Coverage Q40, low GC content',
-                anchor = 'biscuit-coverage-base-lowGC',
-                description = "<p>This plot shows the cummulative base coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_lowGC','ylab':'Million Bases'})
-            )
-
-        # base coverage high GC content
-        mdata = dict([(k.replace('_covdist_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_q40_topgc_table.txt')])
-        if len(mdata)>0:
-            self.add_section(
-                name = 'Cumulative Base Coverage Q40, high GC content',
-                anchor = 'biscuit-coverage-base-highGC',
-                description = "<p>This plot shows the cummulative base coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base_highGC','ylab':'Million Bases'})
-            )
-        
-        # cpg coverage
-        cpgcov = OrderedDict()
-        mdata = dict([(k.replace('_covdist_cpg_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_table.txt')])
-        if len(mdata)>0:
-            self.add_section(
-                name = 'Cumulative CpG Coverage',
-                anchor = 'biscuit-coverage-cpg',
-                description = "<p>This plot shows the cummulative CpG coverage.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg','ylab':'Million CpGs'})
-            )
-
-            for sid, dd in mdata.items():
-                if sid not in cpgcov:
-                    cpgcov[sid] = {}
-                cpgcov[sid]['all'] = dd[1]/dd[0]*100            
-
-        # cpg coverage uniq
-        mdata = dict([(k.replace('_covdist_cpg_q40_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_table.txt')])
-        if len(mdata)>0:
-            self.add_section(
-                name = 'Cumulative CpG Coverage Q40',
-                anchor = 'biscuit-coverage-cpg-q40',
-                description = "<p>This plot shows the cummulative CpG coverage, mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg_q40','ylab':'Million CpGs'})
-            )
-
-            for sid, dd in mdata.items():
-                if sid not in cpgcov:
-                    cpgcov[sid] = {}
-                cpgcov[sid]['uniq'] = dd[1]/dd[0]*100
-
         # cpg coverage >= 1x table
         if len(cpgcov)>0:
             self.add_section(
@@ -491,26 +460,6 @@ class MultiqcModule(BaseMultiqcModule):
                     'uniq':{'title':'Uniquely Mapped Reads','max':100,'min':0,'suffix':'%'},
                 }, 'biscuit-coverage-cpg-table'))
             )
-
-        # cpg coverage low GC content
-        mdata = dict([(k.replace('_covdist_cpg_q40_botgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_botgc_table.txt')])
-        if len(mdata)>0:
-            self.add_section(
-                name = 'Cumulative CpG Coverage Q40, Low GC Content Region',
-                anchor = 'biscuit-coverage-cpg-lowGC',
-                description = "<p>This plot shows the cummulative CpG coverage of low GC content region (bottom 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg_lowGC', 'ylab':'Million Bases', 'id':'cov-cpg-lowgc'})
-            )
-
-        # cpg coverage high GC content
-        mdata = dict([(k.replace('_covdist_cpg_q40_topgc_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_covdist_cpg_q40_topgc_table.txt')])
-        if len(mdata)>0:
-            self.add_section(
-                name = 'Cumulative Base Coverage Q40, High GC Content Region',
-                anchor = 'biscuit-coverage-cpg-highGC',
-                description = "<p>This plot shows the cummulative CpG coverage of high GC content region (top 10%), mapQ>40 only.</p>",
-                plot = linegraph.plot(mdata, {'id':'biscuit_coverage_cpg_highGC', 'ylab':'Million Bases', 'id':'cov-cpg-topgc'})
-            )        
 
         # cpg distribution
         mdata = dict([(k.replace('_cpg_dist_table.txt',''),v) for k, v in self.mdata['coverage'].items() if k.endswith('_cpg_dist_table.txt')])
