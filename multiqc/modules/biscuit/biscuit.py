@@ -153,7 +153,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ('OAligned', {'name':'Optimally Aligned Reads', 'color': '#8bbc21'}),
                 ('SAligned', {'name':'Suboptimally Aligned Reads', 'color': '#f7a35c'}),
                 ('UAligned', {'name':'Unaligned Reads', 'color': '#000000'})
-            ]), {'id':'biscuit_mapping',
+            ]), {'id':'biscuit_mapping_summary',
                  'title':'BISCUIT: Mapping Summary',
                  'ylab':'Number of Reads',
                  'cpswitch_c_active': True,
