@@ -107,7 +107,6 @@ biscuit/retention:
     - fn: '*_freqOfTotalRetentionPerRead.txt'
     - fn: '*_totalBaseConversionRate.txt'
     - fn: '*_totalReadConversionRate.txt'
-biscuit/beta:
     - fn: '*_beta_table.txt'
 bismark/dedup:
     fn: '*.deduplication_report.txt'
