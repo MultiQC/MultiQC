@@ -23,17 +23,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='fastp', anchor='fastp',
-        href='https://github.com/OpenGene/fastp',
-        info="An ultra-fast all-in-one FASTQ preprocessor (QC/adapters/trimming/filtering/splitting...)")
+            href='https://github.com/OpenGene/fastp',
+            info="An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)")
 
         # Find and load any fastp reports
         self.fastp_data = dict()
-        self.fastp_qual_plotdata = dict()
         self.fastp_duplication_plotdata = dict()
         self.fastp_insert_size_data = dict()
         self.fastp_all_data = dict()
+        self.fastp_qual_plotdata = dict()
+        self.fastp_gc_content_data = dict()
+        self.fastp_n_content_data = dict()
         for k in ['read1_before_filtering','read2_before_filtering','read1_after_filtering','read2_after_filtering']:
             self.fastp_qual_plotdata[k] = dict()
+            self.fastp_gc_content_data[k] = dict()
+            self.fastp_n_content_data[k] = dict()
 
         for f in self.find_log_files('fastp', filehandles=True):
             self.parse_fastp_log(f)
@@ -115,6 +119,22 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.fastp_read_qual_plot()
         )
 
+        # GC content plot
+        self.add_section (
+            name = 'GC Content',
+            anchor = 'fastp-seq-content-gc',
+            description = 'Average GC content over each base of all reads.',
+            plot = self.fastp_read_gc_plot()
+        )
+
+        # N content plot
+        self.add_section (
+            name = 'N content',
+            anchor = 'fastp-seq-content-n',
+            description = 'Average N content over each base of all reads.',
+            plot = self.fastp_read_n_plot()
+        )
+
 
     def parse_fastp_log(self, f):
         """ Parse the JSON output from fastp and save the summary statistics """
@@ -140,6 +160,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastp_all_data[s_name] = parsed_json
         for k in ['read1_before_filtering','read2_before_filtering','read1_after_filtering','read2_after_filtering']:
             self.fastp_qual_plotdata[k][s_name] = {}
+            self.fastp_gc_content_data[k][s_name] = {}
+            self.fastp_n_content_data[k][s_name] = {}
 
         # Parse filtering_result
         try:
@@ -215,13 +237,22 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError:
             log.debug("No insert size plot data: {}".format(f['fn']))
 
-        # Read quality data
         for k in ['read1_before_filtering','read2_before_filtering','read1_after_filtering','read2_after_filtering']:
+            # Read quality data
             try:
                 for i, v in enumerate(parsed_json[k]['quality_curves']['mean']):
                     self.fastp_qual_plotdata[k][s_name][i+1] = float(v)
             except KeyError:
                 log.debug("Read quality {} not found: {}".format(k, f['fn']))
+
+            # GC and N content plots
+            try:
+                for i, v in enumerate(parsed_json[k]['content_curves']['GC']):
+                    self.fastp_gc_content_data[k][s_name][i+1] = float(v) * 100.0
+                for i, v in enumerate(parsed_json[k]['content_curves']['N']):
+                    self.fastp_n_content_data[k][s_name][i+1] = float(v) * 100.0
+            except KeyError:
+                log.debug("Content curve data {} not found: {}".format(k, f['fn']))
 
 
     def fastp_general_stats_table(self):
@@ -319,3 +350,47 @@ class MultiqcModule(BaseMultiqcModule):
             ]
         }
         return linegraph.plot(self.fastp_qual_plotdata.values(), pconfig)
+
+    def fastp_read_gc_plot(self):
+        """ Make the read GC plot for Fastp """
+        pconfig = {
+            'id': 'fastp-seq-content-gc-plot',
+            'title': 'Fastp: Read GC Content',
+            'xlab': 'Read Position',
+            'ylab': 'R1 Before filtering: Base Content Percent',
+            'yCeiling': 100,
+            'yMinRange': 5,
+            'ymin': 0,
+            'xDecimals': False,
+            'yLabelFormat': '{value}%',
+            'tt_label': '{point.x}: {point.y:.2f}%',
+            'data_labels': [
+                {'name': 'Read 1: Before filtering', 'ylab': 'R1 Before filtering: Base Content Percent'},
+                {'name': 'Read 2: Before filtering', 'ylab': 'R2 Before filtering: Base Content Percent'},
+                {'name': 'Read 1: After filtering', 'ylab': 'R1 After filtering: Base Content Percent'},
+                {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Base Content Percent'},
+            ]
+        }
+        return linegraph.plot(self.fastp_gc_content_data.values(), pconfig)
+
+    def fastp_read_n_plot(self):
+        """ Make the read N content plot for Fastp """
+        pconfig = {
+            'id': 'fastp-seq-content-n-plot',
+            'title': 'Fastp: Read N Content',
+            'xlab': 'Read Position',
+            'ylab': 'R1 Before filtering: Base Content Percent',
+            'yCeiling': 100,
+            'yMinRange': 5,
+            'ymin': 0,
+            'xDecimals': False,
+            'yLabelFormat': '{value}%',
+            'tt_label': '{point.x}: {point.y:.2f}%',
+            'data_labels': [
+                {'name': 'Read 1: Before filtering', 'ylab': 'R1 Before filtering: Base Content Percent'},
+                {'name': 'Read 2: Before filtering', 'ylab': 'R2 Before filtering: Base Content Percent'},
+                {'name': 'Read 1: After filtering', 'ylab': 'R1 After filtering: Base Content Percent'},
+                {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Base Content Percent'},
+            ]
+        }
+        return linegraph.plot(self.fastp_n_content_data.values(), pconfig)
