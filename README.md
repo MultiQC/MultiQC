@@ -155,6 +155,7 @@ Code contributions from:
 [@dakl](https://github.com/dakl),
 [@ehsueh](https://github.com/ehsueh),
 [@epruesse](https://github.com/epruesse),
+[@florianduclot](https://github.com/florianduclot/),
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@HLWiencko](https://github.com/HLWiencko),
 [@iimog](https://github.com/iimog),

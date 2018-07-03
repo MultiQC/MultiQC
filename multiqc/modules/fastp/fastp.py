@@ -349,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Sequence Quality'},
             ]
         }
-        return linegraph.plot(self.fastp_qual_plotdata.values(), pconfig)
+        return linegraph.plot(list(self.fastp_qual_plotdata.values()), pconfig)
 
     def fastp_read_gc_plot(self):
         """ Make the read GC plot for Fastp """
@@ -371,7 +371,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Base Content Percent'},
             ]
         }
-        return linegraph.plot(self.fastp_gc_content_data.values(), pconfig)
+        return linegraph.plot(list(self.fastp_gc_content_data.values()), pconfig)
 
     def fastp_read_n_plot(self):
         """ Make the read N content plot for Fastp """
@@ -393,4 +393,4 @@ class MultiqcModule(BaseMultiqcModule):
                 {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Base Content Percent'},
             ]
         }
-        return linegraph.plot(self.fastp_n_content_data.values(), pconfig)
+        return linegraph.plot(list(self.fastp_n_content_data.values()), pconfig)
