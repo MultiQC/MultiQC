@@ -4,8 +4,8 @@
 
 from __future__ import print_function
 import logging
-
 import numpy as np
+from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -202,7 +202,7 @@ def _parse_preseq_logs(f):
         log.debug("First line of preseq file {} did not look right".format(f['fn']))
         return None, None
 
-    data = {}
+    data = dict()
     for l in lines:
         s = l.split()
         # Sometimes the Expected_distinct count drops to 0, not helpful
@@ -217,10 +217,10 @@ def _modify_raw_data(sample_data, is_basepairs):
     """ Modify counts or base pairs according to `read_count_multiplier`
         or `base_count_multiplier`.
     """
-    return {
-        _modify_raw_val(x, is_basepairs): _modify_raw_val(y, is_basepairs)
+    return OrderedDict(
+        (_modify_raw_val(x, is_basepairs), _modify_raw_val(y, is_basepairs))
         for x, y in sample_data.items()
-    }
+    )
 
 
 def _modify_raw_val(val, is_basepairs):
@@ -237,10 +237,10 @@ def _counts_to_coverages(sample_data, counts_in_1x):
     if not counts_in_1x:
         return {None: None}
 
-    return {
-        _count_to_coverage(x, counts_in_1x): _count_to_coverage(y, counts_in_1x)
+    return OrderedDict(
+        (_count_to_coverage(x, counts_in_1x), _count_to_coverage(y, counts_in_1x))
         for x, y in sample_data.items()
-    }
+    )
 
 
 def _count_to_coverage(val, counts_in_1x):
