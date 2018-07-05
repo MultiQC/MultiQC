@@ -128,13 +128,13 @@ class MultiqcModule(BaseMultiqcModule):
 		if not self.hide_chip_columns:
 			headers['CHIPMIX'] = dict(self.col_config_defaults, **{
 				'title': 'Contamination (S+A)',
-				'description': 'VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable) (0-1 scale)'
+				'description': 'VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable)'
 			})
 
 		# add the FREEMIX column. set the title and description
 		headers['FREEMIX'] = dict(self.col_config_defaults, **{
 			'title': 'Contamination (S)',
-			'description': 'VerifyBamID: FREEMIX -   Sequence-only estimate of contamination (0-1 scale).',
+			'description': 'VerifyBamID: FREEMIX -   Sequence-only estimate of contamination.',
 		})
 
 		# pass the data dictionary and header dictionary to function to add to table.
@@ -185,7 +185,7 @@ class MultiqcModule(BaseMultiqcModule):
 		# use default columns
 		headers['FREEMIX'] = dict(self.col_config_defaults, **{
 			'title': 'Contamination (Seq)',
-			'description': 'VerifyBamID: FREEMIX -   Sequence-only estimate of contamination (0-1 scale).',
+			'description': 'VerifyBamID: FREEMIX -   Sequence-only estimate of contamination.',
 		})
 		headers['FREELK1'] = {
 			'title': 'FREEELK1',
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
 		if not self.hide_chip_columns:
 			headers['CHIPMIX'] = dict(self.col_config_defaults, **{
 				'title': 'Contamination S+A',
-				'description': 'VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable) (0-1 scale)'
+				'description': 'VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable)'
 			})
 			headers['CHIPLK1'] = {
 				'title': 'CHIPLK1',

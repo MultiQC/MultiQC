@@ -38,6 +38,8 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Fixed edge case bug where MultiQC could crash if a sample had zero count coverage with idxstats.
 * **Tophat**
     * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
+* **VerifyBamID**
+    * Change column header help text for contamination to match percentage output ([@chapmanb](https://github.com/chapmanb))
 
 #### New MultiQC Features:
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
