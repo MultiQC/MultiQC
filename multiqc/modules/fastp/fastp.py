@@ -198,7 +198,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse adapter_cutting
         try:
             for k in parsed_json['adapter_cutting']:
-                self.fastp_data[s_name]['adapter_cutting_{}'.format(k)] = float(parsed_json['adapter_cutting'][k])
+                try:
+                    self.fastp_data[s_name]['adapter_cutting_{}'.format(k)] = float(parsed_json['adapter_cutting'][k])
+                except (ValueError, TypeError):
+                    pass
         except KeyError:
             log.debug("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
 
@@ -365,8 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Fastp: Read GC Content',
             'xlab': 'Read Position',
             'ylab': 'R1 Before filtering: Base Content Percent',
-            'yCeiling': 100,
-            'yMinRange': 5,
+            'ymax': 100,
             'ymin': 0,
             'xDecimals': False,
             'yLabelFormat': '{value}%',
