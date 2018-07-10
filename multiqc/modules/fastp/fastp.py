@@ -196,13 +196,11 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Could not calculate 'pct_surviving': {}".format(f['fn']))
 
         # Parse adapter_cutting
-        for k in parsed_json['adapter_cutting']:
-            try:
+        try:
+            for k in parsed_json['adapter_cutting']:
                 self.fastp_data[s_name]['adapter_cutting_{}'.format(k)] = float(parsed_json['adapter_cutting'][k])
-            except (ValueError, TypeError):
-                pass
-            except KeyError:
-                log.debug("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
+        except KeyError:
+            log.debug("fastp JSON did not have a 'adapter_cutting' key, skipping: '{}'".format(f['fn']))
 
         try:
             self.fastp_data[s_name]['pct_adapter'] = (self.fastp_data[s_name]['adapter_cutting_adapter_trimmed_reads'] / self.fastp_data[s_name]['before_filtering_total_reads']) * 100.0
@@ -221,9 +219,9 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError:
             log.debug("No duplication rate plot data: {}".format(f['fn']))
 
-        # Duplication rate plot data
+        # Insert size plot data
         try:
-            # First count the total read count in the dup analysis
+            # First count the total read count in the insert size analysis
             total_reads = 0
             max_i = 0
             for i, v in enumerate(parsed_json['insert_size']['histogram']):
@@ -253,6 +251,18 @@ class MultiqcModule(BaseMultiqcModule):
                     self.fastp_n_content_data[k][s_name][i+1] = float(v) * 100.0
             except KeyError:
                 log.debug("Content curve data {} not found: {}".format(k, f['fn']))
+
+
+        # Remove empty dicts
+        if len(self.fastp_data[s_name]) == 0:
+            del self.fastp_data[s_name]
+        if len(self.fastp_duplication_plotdata[s_name]) == 0:
+            del self.fastp_duplication_plotdata[s_name]
+        if len(self.fastp_insert_size_data[s_name]) == 0:
+            del self.fastp_insert_size_data[s_name]
+        if len(self.fastp_all_data[s_name]) == 0:
+            del self.fastp_all_data[s_name]
+        # Don't delete dicts with subkeys, messes up multi-panel plots
 
 
     def fastp_general_stats_table(self):
@@ -335,6 +345,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def fastp_read_qual_plot(self):
         """ Make the read quality plot for Fastp """
+        data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_qual_plotdata, 'Sequence Quality')
         pconfig = {
             'id': 'fastp-seq-quality-plot',
             'title': 'Fastp: Sequence Quality',
@@ -342,17 +353,13 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'R1 Before filtering: Sequence Quality',
             'ymin': 0,
             'xDecimals': False,
-            'data_labels': [
-                {'name': 'Read 1: Before filtering', 'ylab': 'R1 Before filtering: Sequence Quality'},
-                {'name': 'Read 2: Before filtering', 'ylab': 'R2 Before filtering: Sequence Quality'},
-                {'name': 'Read 1: After filtering', 'ylab': 'R1 After filtering: Sequence Quality'},
-                {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Sequence Quality'},
-            ]
+            'data_labels': data_labels
         }
-        return linegraph.plot(list(self.fastp_qual_plotdata.values()), pconfig)
+        return linegraph.plot(pdata, pconfig)
 
     def fastp_read_gc_plot(self):
         """ Make the read GC plot for Fastp """
+        data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_gc_content_data, 'Base Content Percent')
         pconfig = {
             'id': 'fastp-seq-content-gc-plot',
             'title': 'Fastp: Read GC Content',
@@ -364,17 +371,13 @@ class MultiqcModule(BaseMultiqcModule):
             'xDecimals': False,
             'yLabelFormat': '{value}%',
             'tt_label': '{point.x}: {point.y:.2f}%',
-            'data_labels': [
-                {'name': 'Read 1: Before filtering', 'ylab': 'R1 Before filtering: Base Content Percent'},
-                {'name': 'Read 2: Before filtering', 'ylab': 'R2 Before filtering: Base Content Percent'},
-                {'name': 'Read 1: After filtering', 'ylab': 'R1 After filtering: Base Content Percent'},
-                {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Base Content Percent'},
-            ]
+            'data_labels': data_labels
         }
-        return linegraph.plot(list(self.fastp_gc_content_data.values()), pconfig)
+        return linegraph.plot(pdata, pconfig)
 
     def fastp_read_n_plot(self):
         """ Make the read N content plot for Fastp """
+        data_labels, pdata = self.filter_pconfig_pdata_subplots(self.fastp_n_content_data, 'Base Content Percent')
         pconfig = {
             'id': 'fastp-seq-content-n-plot',
             'title': 'Fastp: Read N Content',
@@ -386,11 +389,22 @@ class MultiqcModule(BaseMultiqcModule):
             'xDecimals': False,
             'yLabelFormat': '{value}%',
             'tt_label': '{point.x}: {point.y:.2f}%',
-            'data_labels': [
-                {'name': 'Read 1: Before filtering', 'ylab': 'R1 Before filtering: Base Content Percent'},
-                {'name': 'Read 2: Before filtering', 'ylab': 'R2 Before filtering: Base Content Percent'},
-                {'name': 'Read 1: After filtering', 'ylab': 'R1 After filtering: Base Content Percent'},
-                {'name': 'Read 2: After filtering', 'ylab': 'R2 After filtering: Base Content Percent'},
-            ]
+            'data_labels': data_labels
         }
-        return linegraph.plot(list(self.fastp_n_content_data.values()), pconfig)
+        return linegraph.plot(pdata, pconfig)
+
+    def filter_pconfig_pdata_subplots(self, data, label):
+        data_labels = []
+        pdata = []
+        config = {
+            'read1_before_filtering': {'name': 'Read 1: Before filtering', 'ylab': 'R1 Before filtering: {}'.format(label)},
+            'read1_after_filtering':  {'name': 'Read 1: After filtering',  'ylab': 'R1 After filtering: {}'.format(label)},
+            'read2_before_filtering': {'name': 'Read 2: Before filtering', 'ylab': 'R2 Before filtering: {}'.format(label)},
+            'read2_after_filtering':  {'name': 'Read 2: After filtering',  'ylab': 'R2 After filtering: {}'.format(label)},
+        }
+        for k in config:
+            if sum([len(data[k][x]) for x in data[k]]) > 0:
+                data_labels.append(config[k])
+                pdata.append(data[k])
+
+        return data_labels, pdata
