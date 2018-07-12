@@ -99,7 +99,7 @@ class IdxstatsReportMixin():
                     try:
                         pdata[s_name][k] = self.samtools_idxstats[s_name][k]
                         pdata_norm[s_name][k] = float(self.samtools_idxstats[s_name][k]) / sample_mapped[s_name]
-                    except KeyError:
+                    except (KeyError, ZeroDivisionError):
                         pdata[s_name][k] = 0
                         pdata_norm[s_name][k] = 0
 
@@ -162,4 +162,3 @@ def parse_single_report(f):
         except (IndexError, ValueError):
             pass
     return parsed_data
-

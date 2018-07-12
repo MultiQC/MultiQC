@@ -96,7 +96,22 @@ def parse_reports(self):
             'suffix': 'X',
             'scale': 'GnBu',
         }
-
+        self.general_stats_headers['MEAN_COVERAGE'] = {
+            'title': 'Mean Coverage',
+            'description': 'The mean coverage in bases of the genome territory, after all filters are applied.',
+            'min': 0,
+            'suffix': 'X',
+            'scale': 'GnBu',
+            'hidden': True,
+        }
+        self.general_stats_headers['SD_COVERAGE'] = {
+            'title': 'Median Coverage',
+            'description': 'The standard deviation coverage in bases of the genome territory, after all filters are applied.',
+            'min': 0,
+            'suffix': 'X',
+            'scale': 'GnBu',
+            'hidden': True,
+        }
         # user configurable coverage level
         try:
             covs = config.picard_config['general_stats_target_coverage']

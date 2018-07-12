@@ -17,9 +17,11 @@ MultiQC Modules:
     ClipAndMerge: modules/clipandmerge.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
+    Fastp: modules/fastp.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
+    KAT: modules/kat.md
     leeHom: modules/leehom.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
