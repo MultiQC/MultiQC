@@ -4,12 +4,15 @@
 
 adapterRemoval:
     fn: '*.settings'
+    contents: 'AdapterRemoval'
+    num_lines: 1
 afterqc:
     fn: '*.json'
     contents: 'allow_mismatch_in_poly'
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true
+    num_lines: 2
 bbmap/stats:
     contents: '#Name	Reads	ReadsPct'
     num_lines: 4
@@ -111,6 +114,8 @@ bowtie2:
     shared: true
 busco:
     fn: 'short_summary_*'
+    contents: 'BUSCO version is:'
+    num_lines: 1
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
 clipandmerge:
@@ -121,6 +126,8 @@ clusterflow/logs:
     shared: true
 clusterflow/runfiles:
     fn: '*.run'
+    contents: 'Cluster Flow Run File'
+    num_lines: 2
 conpair/concordance:
     contents: 'markers (coverage per marker threshold : '
     num_lines: 3
@@ -166,6 +173,7 @@ fastqc/theoretical_gc:
     fn: '*fastqc_theoretical_gc*'
 featurecounts:
     fn: '*.summary'
+    shared: true
 flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
     shared: true
@@ -231,6 +239,7 @@ macs2:
     fn: '*_peaks.xls'
 methylQA:
     fn: '*.report'
+    shared: true
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
@@ -308,8 +317,10 @@ qualimap/rnaseq/coverage:
     fn: 'coverage_profile_along_genes_(total).txt'
 quast:
     fn: 'report.tsv'
+    shared: true
 rna_seqc/metrics:
     fn: 'metrics.tsv'
+    shared: true
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
@@ -341,6 +352,7 @@ rseqc/infer_experiment:
       max_filesize: 500000
 salmon/meta:
     fn: 'meta_info.json'
+    contents: 'salmon_version'
 salmon/fld:
     fn: 'flenDist.txt'
 samblaster:
@@ -410,6 +422,7 @@ theta2:
     fn: '*.BEST.results'
 tophat:
     fn: '*align_summary.txt'
+    shared: true
 trimmomatic:
     contents: 'Trimmomatic'
     shared: true
