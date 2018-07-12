@@ -60,6 +60,8 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
 * Prevent tables from clobbering sorted row orders.
 * Fix linegraph and scatter plots data conversion (sporadically the incorrect `ymax` was used to drop data points) ([@cpavanrun](https://github.com/cpavanrun))
+* Adjusted multiple file search patterns to make them more specific
+    * Prevents the wrong module from accidentally slurping up output from a different tool. By [@cpavanrun](https://github.com/cpavanrun) (see [PR #727](https://github.com/ewels/MultiQC/pull/727))
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
