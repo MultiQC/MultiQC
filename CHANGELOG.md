@@ -30,6 +30,9 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * **Picard**
     * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
     * WGSMetrics now add the mean and standard-deviation coverage to the general stats table (hidden) ([@cpavanrun](https://github.com/cpavanrun))
+* **Preseq**
+    * New config option to plot preseq plots with unique old coverage on the y axis instead of read count
+    * Code refactoring by [@vladsaveliev](https://github.com/vladsaveliev)
 * **QUAST**
     * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
 * **RNA-SeQC**
