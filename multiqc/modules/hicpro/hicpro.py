@@ -30,19 +30,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicpro_data = dict()
         for k in ['mmapstat','mpairstat','mergestat','mRSstat','assplit']:
             for f in self.find_log_files('hicpro/{}'.format(k)):
-                self.parse_hicpro_stats(f)
+                self.parse_hicpro_stats(f, k)
         
         # Update current statistics
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
             data['duplicates'] = data['valid_interaction'] - data['valid_interaction_rmdup']
+            data['percent_duplicates'] = float(data['duplicates']) / float(data['valid_interaction']) * 100.0
             data['percent_mapped_R1'] = float(data['mapped_R1']) / float(data['total_R1']) * 100.0
             data['percent_mapped_R2'] = float(data['mapped_R2']) / float(data['total_R2']) * 100.0
             data['paired_reads'] = int(data['Reported_pairs'])
             data['percent_paired_reads'] = float(data['Reported_pairs']) / float(data['total_R1']) * 100.0
-            data['percent_valid'] = float(data['valid_interaction']) / float(data['Reported_pairs']) * 100.0
-            data['percent_valid_interaction_rmdup'] = float(data['valid_interaction_rmdup']) / float(data['Reported_pairs']) * 100.0  
-
+            data['percent_valid'] = float(data['valid_interaction']) / float(data['total_R1']) * 100.0
             data['Failed_To_Align_Read_R1'] = int(data['total_R1']) - int(data['mapped_R1'])
             data['Failed_To_Align_Read_R2'] = int(data['total_R2']) - int(data['mapped_R2'])
 
@@ -118,19 +117,19 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext = '''
                 Description of allele-specific contacts. Valid interactions (0-1 and 1-1, resp. 0-2, 2-2) 
                 are used to build the genome1 (resp. genome2) parental maps.''',
-                plot = self.hicpro_as_chart()
+                plot = allele_plot
             )
             
 
 
-    def parse_hicpro_stats(self, f):
+    def parse_hicpro_stats(self, f, rsection):
         """ Parse a HiC-Pro stat file """
         s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
 
         if s_name not in self.hicpro_data.keys():
             self.hicpro_data[s_name] = {}
 
-        self.add_data_source(f, s_name)
+        self.add_data_source(f, s_name, section=rsection)
         for l in f['f'].splitlines():
             if not l.startswith('#'):
                 s = l.split("\t")
@@ -141,29 +140,68 @@ class MultiqcModule(BaseMultiqcModule):
     def hicpro_stats_table(self):
          """ Add HiC-Pro stats to the general stats table """
          headers = OrderedDict()
-         headers['total_R1'] = {
-             'title': 'Total',
-             'description' : 'Total Number of Read Pairs',
-             'min' : '0',
-             'scale' : 'RdYlBu',
-             'modify': lambda x: x * config.read_count_multiplier,
-             'shared_key' : 'read_count',
-             'hidden': False
+                
+         headers['percent_duplicates'] = {
+             'title': '% Duplicates',
+             'description': 'Percent of duplicated valid pairs (%)',
+             'max': 100,
+             'min': 0,
+             'suffix': '%',
+             'scale': 'YlOrRd',
+             'hidden': True
          }
-
-         headers['mapped_R1'] = {
-             'title': 'Aligned [R1]',
-             'description' : 'Total number of aligned reads [R1] ({})'.format(config.read_count_desc),
-             'min' : '0',
-             'scale' : 'RdYlBu',
+            
+         headers['valid_interaction_rmdup'] = {
+             'title': '{} Valid Pairs Unique'.format(config.read_count_prefix),
+             'description': 'Number of valid pairs after duplicates removal ({})'.format(config.read_count_desc),
+             'min': 0,
+             'scale': 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_key' : 'read_count',
+             'shared_key': 'read_count',
+         }
+                 
+         headers['percent_valid'] = {
+             'title': '% Valid Pairs',
+             'description': 'Percentage of valid pairs over reported ones (%)',
+             'max': 100,
+             'min': 0,
+             'suffix': '%',
+             'scale': 'YlGn',
              'hidden': True
          }
 
-         headers['percent_mapped_R1'] = {
-             'title': '% Aligned [R1]',
-             'description': 'Percentage of aligned reads [R1] (%)',
+         headers['valid_interaction'] = {
+             'title': '{} Valid Pairs'.format(config.read_count_prefix),
+             'description': 'Number of valid pairs ({})'.format(config.read_count_desc),
+             'min': 0,
+             'scale': 'RdYlBu',
+             'modify': lambda x: x * config.read_count_multiplier,
+             'shared_key': 'read_count',
+             'hidden': True
+         }
+ 
+         headers['percent_paired_reads'] = {
+             'title': '% Reported',
+             'description': 'Percentage of paired reads (%) passing the mapping filters',
+             'max': 100,
+             'min': 0,
+             'suffix': '%',
+             'scale': 'YlGn',
+             'hidden': True
+         }
+
+         headers['paired_reads'] = {
+             'title': 'Reported Read Pairs',
+             'description' : 'Total number of read pairs ({}) passing the mapping filters'.format(config.read_count_desc),
+             'min' : '0',
+             'scale' : 'RdYlBu',
+             'modify': lambda x: x * config.read_count_multiplier,
+             'shared_key' : 'read_count',
+         }
+
+         headers['percent_mapped_R2'] = {
+             'title': '% Aligned [R2]',
+             'description': 'Percentage of aligned reads [R2] (%)',
              'max': 100,
              'min': 0,
              'suffix': '%',
@@ -181,9 +219,9 @@ class MultiqcModule(BaseMultiqcModule):
              'hidden': True
          }
 
-         headers['percent_mapped_R2'] = {
-             'title': '% Aligned [R2]',
-             'description': 'Percentage of aligned reads [R2] (%)',
+         headers['percent_mapped_R1'] = {
+             'title': '% Aligned [R1]',
+             'description': 'Percentage of aligned reads [R1] (%)',
              'max': 100,
              'min': 0,
              'suffix': '%',
@@ -191,66 +229,25 @@ class MultiqcModule(BaseMultiqcModule):
              'hidden': True
          }
 
-         headers['paired_reads'] = {
-             'title': 'Reported Read Pairs',
-             'description' : 'Total number of reported read pairs ({})'.format(config.read_count_desc),
+         headers['mapped_R1'] = {
+             'title': 'Aligned [R1]',
+             'description' : 'Total number of aligned reads [R1] ({})'.format(config.read_count_desc),
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
              'shared_key' : 'read_count',
              'hidden': True
          }
-
-         headers['percent_paired_reads'] = {
-             'title': '% Reported Read Pairs',
-             'description': 'Percentage of paired reads (%)',
-             'max': 100,
-             'min': 0,
-             'suffix': '%',
-             'scale': 'YlGn',
-             'hidden': False
-         }
-
-         headers['valid_interaction'] = {
-             'title': '{} Valid Pairs'.format(config.read_count_prefix),
-             'description': 'Number of valid pairs ({})'.format(config.read_count_desc),
-             'min': 0,
-             'scale': 'RdYlBu',
+         
+         headers['total_R1'] = {
+             'title': 'Total',
+             'description' : 'Total Number of Read Pairs',
+             'min' : '0',
+             'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_key': 'read_count',
-             'hidden': True
+             'shared_key' : 'read_count',
          }
-         
-         headers['percent_valid'] = {
-             'title': '% Valid Pairs',
-             'description': 'Percentage of valid pairs over reported ones (%)',
-             'max': 100,
-             'min': 0,
-             'suffix': '%',
-             'scale': 'YlGn',
-             'hidden': True
-         }
-         
-         headers['valid_interaction_rmdup'] = {
-             'title': '{} Valid Pairs Unique'.format(config.read_count_prefix),
-             'description': 'Number of valid pairs after duplicates removal ({})'.format(config.read_count_desc),
-             'min': 0,
-             'scale': 'RdYlBu',
-             'modify': lambda x: x * config.read_count_multiplier,
-             'shared_key': 'read_count',
-             'hidden': True
-         }
-         
-         headers['percent_valid_interaction_rmdup'] = {
-             'title': '% Valid Pairs Unique',
-             'description': 'Percent of valid pairs over reported ones after duplicates removal (%)',
-             'max': 100,
-             'min': 0,
-             'suffix': '%',
-             'scale': 'YlGn',
-             'hidden': False
-         }
-     
+
          self.general_stats_addcols(self.hicpro_data, headers, 'HiC-Pro')
 
 
@@ -258,18 +255,15 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the HiC-Pro Aligned reads plot """
 
         # Specify the order of the different possible categories
-        keys = [OrderedDict(), OrderedDict()]
-        keys[0]['Full_Alignments_Read']   = { 'color': '#005ce6', 'name': 'Full reads Alignments' }
-        keys[0]['Trimmed_Alignments_Read'] = { 'color': '#3385ff', 'name': 'Trimmed reads Alignments' }
-        keys[0]['Failed_To_Align_Read']     = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
-        keys[1]['Full_Alignments_Read']   = { 'color': '#005ce6', 'name': 'Full reads Alignments' }
-        keys[1]['Trimmed_Alignments_Read'] = { 'color': '#3385ff', 'name': 'Trimmed reads Alignments' }
-        keys[1]['Failed_To_Align_Read']     = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
-                           
+        keys = OrderedDict()
+        keys['Full_Alignments_Read']   = { 'color': '#005ce6', 'name': 'Full reads Alignments' }
+        keys['Trimmed_Alignments_Read'] = { 'color': '#3385ff', 'name': 'Trimmed reads Alignments' }
+        keys['Failed_To_Align_Read']     = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
+                               
         data = [{},{}]
         for s_name in self.hicpro_data:
             for r in [1,2]:
-                data[r-1][s_name] = {
+                data[r-1]['{} [R{}]'.format(s_name, r)] = {
                     'Full_Alignments_Read': self.hicpro_data[s_name]['global_R{}'.format(r)],
                     'Trimmed_Alignments_Read': self.hicpro_data[s_name]['local_R{}'.format(r)],
                     'Failed_To_Align_Read': int(self.hicpro_data[s_name]['total_R{}'.format(r)]) - int(self.hicpro_data[s_name]['mapped_R{}'.format(r)])
@@ -280,10 +274,14 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'hicpro_mapping_stats_plot',
             'title': 'HiC-Pro: Mapping Statistics',
             'ylab': '# Reads',
-            'data_labels': ['Read 1', 'Read 2']
+            'ylab': '# Reads: Read 1',
+            'data_labels': [
+                {'name': 'Read 1', 'ylab': '# Reads: Read 1'},
+                {'name': 'Read 2', 'ylab': '# Reads: Read 2'}
+            ]
         }
 
-        return bargraph.plot(data, keys, config)
+        return bargraph.plot(data, [keys, keys], config)
 
     def hicpro_pairing_chart (self):
         """ Generate Pairing chart """
