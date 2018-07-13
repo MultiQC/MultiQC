@@ -26,8 +26,6 @@ class MultiqcModule(BaseMultiqcModule):
         href='https://github.com/nservant/HiC-Pro',
         info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.")
 
-        #log.info("Enter HiC-Pro MultiQC module!")
-        
         # Find and load any HiC-Pro summary reports
         self.hicpro_data = dict()
         for k in ['mmapstat','mpairstat','mergestat','mRSstat','assplit']:
@@ -128,9 +126,6 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_hicpro_stats(self, f):
         """ Parse a HiC-Pro stat file """
         s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
-
-        #if s_name in self.hicpro_data:
-        #    log.debug("Duplicated sample name found! Overwriting: {}".format(s_name))
 
         if s_name not in self.hicpro_data.keys():
             self.hicpro_data[s_name] = {}
@@ -263,7 +258,6 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the HiC-Pro Aligned reads plot """
 
         # Specify the order of the different possible categories
-        #keys = OrderedDict()
         keys = [OrderedDict(), OrderedDict()]
         keys[0]['Full_Alignments_Read']   = { 'color': '#005ce6', 'name': 'Full reads Alignments' }
         keys[0]['Trimmed_Alignments_Read'] = { 'color': '#3385ff', 'name': 'Trimmed reads Alignments' }
