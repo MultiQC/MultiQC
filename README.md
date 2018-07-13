@@ -178,6 +178,8 @@ Code contributions from:
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@winni2k](https://github.com/winni2k),
+[@wkretzsch](https://github.com/wkretzsch),
+[@nservant](https://github.com/nservant),
 
 and many others. Thanks for your support!
 

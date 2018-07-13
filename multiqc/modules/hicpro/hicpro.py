@@ -2,7 +2,7 @@
 ## Nicolas Servant
 ## April 2018
 
-""" MultiQC module to parse output from HiCPro """
+""" MultiQC module to parse output from HiC-Pro """
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -17,32 +17,37 @@ from multiqc.modules.base_module import BaseMultiqcModule
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
-    """ HiCPro module, parses log and stats files saved by HiCPro. """
+    """ HiC-Pro module, parses log and stats files saved by HiC-Pro. """
 
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='HiCPro', anchor='hicpro',
+        super(MultiqcModule, self).__init__(name='HiC-Pro', anchor='hicpro',
         href='https://github.com/nservant/HiC-Pro',
-        info="is an efficient and flexible pipeline for Hi-C data processing.")
+        info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.")
 
-        log.info("Enter HiC-Pro MultiQC module!")
+        #log.info("Enter HiC-Pro MultiQC module!")
         
         # Find and load any HiC-Pro summary reports
         self.hicpro_data = dict()
-        for f in self.find_log_files('hicpro'):
-            self.parse_hicpro_stats(f)
-
+        for k in ['mmapstat','mpairstat','mergestat','mRSstat','assplit']:
+            for f in self.find_log_files('hicpro/{}'.format(k)):
+                self.parse_hicpro_stats(f)
+        
         # Update current statistics
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
             data['duplicates'] = data['valid_interaction'] - data['valid_interaction_rmdup']
-            data['percent_mapped_R1'] = float(data['mapped_R1']) / float(data['total_R1']) * 100
-            data['percent_mapped_R2'] = float(data['mapped_R2']) / float(data['total_R2']) * 100
+            data['percent_mapped_R1'] = float(data['mapped_R1']) / float(data['total_R1']) * 100.0
+            data['percent_mapped_R2'] = float(data['mapped_R2']) / float(data['total_R2']) * 100.0
             data['paired_reads'] = int(data['Reported_pairs'])
-            data['percent_paired_reads'] = float(data['Reported_pairs']) / float(data['total_R1']) * 100
-            data['percent_valid'] = float(data['valid_interaction']) / float(data['Reported_pairs']) * 100
-            data['percent_valid_interaction_rmdup'] = float(data['valid_interaction_rmdup']) / float(data['Reported_pairs']) * 100  
+            data['percent_paired_reads'] = float(data['Reported_pairs']) / float(data['total_R1']) * 100.0
+            data['percent_valid'] = float(data['valid_interaction']) / float(data['Reported_pairs']) * 100.0
+            data['percent_valid_interaction_rmdup'] = float(data['valid_interaction_rmdup']) / float(data['Reported_pairs']) * 100.0  
+
+            data['Failed_To_Align_Read_R1'] = int(data['total_R1']) - int(data['mapped_R1'])
+            data['Failed_To_Align_Read_R2'] = int(data['total_R2']) - int(data['mapped_R2'])
+
             
         # Filter to strip out ignored sample names
         self.hicpro_data = self.ignore_samples(self.hicpro_data)
@@ -50,13 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.hicpro_data) == 0:
             raise UserWarning
 
-        # Find all files for mymod
-        #for myfile in self.find_log_files('hicpro'):
-        #    print( myfile['fn'] )      # Filename    
-        #    print( myfile['s_name'] )  # Sample name (from cleaned filename)
-        #    print( myfile['root'] )    # Directory file was in
-    
-        log.info("Found {} reports".format(len(self.hicpro_data)))
+        log.info("Found {} HiC-Pro reports".format(len(self.hicpro_data)))
         
         # Write parsed data to a file
         self.write_data_file(self.hicpro_data, 'multiqc_hicpro')
@@ -69,8 +68,11 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Read Mapping',
             anchor = 'hicpro-mapping',
             description = 'Alignment of reads in single-end mode.',
-            helptext = 'HiC-Pro uses a two steps mapping strategy. End-to-end mapping is first performed (*Full reads Alignments*). \
-            Unmapped reads are then trimmed at their ligatation site, and the 5\' end is re-aligned on the reference genome (*Trimmed Reads Alignments*)',
+            helptext = '''
+            HiC-Pro uses a two steps mapping strategy. End-to-end mapping is first
+            performed (*Full reads Alignments*). Unmapped reads are then trimmed
+            at their ligation site, and the 5\' end is re-aligned on the reference
+            genome (*Trimmed Reads Alignments*)''',
             plot = self.hicpro_mapping_chart()
         )
 
@@ -78,8 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Read Pairing',
             anchor = 'hicpro-pairing',
             description = 'Pairing of single-end mapping.',
-            helptext = 'HiC-Pro combines aligned reads as pairs. Singleton, low quality pairs or pairs involving multi-mapped reads are usually discarded. \
-            Note that the filtering at pairing level can change accrding to the parameters used.',
+            helptext = '''
+            HiC-Pro combines aligned reads as pairs. Singleton, low quality pairs or 
+            pairs involving multi-mapped reads are usually discarded. Note that the filtering 
+            at pairing level can change accrding to the parameters used.''',
             plot = self.hicpro_pairing_chart()
         )
         
@@ -87,10 +91,13 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Read Pair Filtering',
             anchor = 'hicpro-filtering',
             description = 'Filtering of read pairs.',
-            helptext = 'Aligned read pairs are filtered to select valid 3C products from two different restriction fragments. \
-            Read pairs coming from the same fragments, such as self-ligation or unligated (danging-end) fragments, are discarded. \
-            Ligation products involving neighboring restriction fragment (religation) are also discarded. \
-            Finaly, as the ligation should be a random process, valid read pairs from all orientations (R=Reverse, F=forward) are expected to be observed at the same proportion.',
+            helptext = '''
+            Aligned read pairs are filtered to select valid 3C products from two 
+            different restriction fragments. Read pairs coming from the same fragments, 
+            such as self-ligation or unligated (danging-end) fragments, are discarded.
+            Ligation products involving neighboring restriction fragment (religation) are also discarded.
+            Finaly, as the ligation should be a random process, valid read pairs from all 
+            orientations (R=Reverse, F=forward) are expected to be observed at the same proportion.''',
             plot = self.hicpro_filtering_chart()
         )
 
@@ -98,52 +105,43 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Contact Statistics',
             anchor = 'hicpro-rmdup',
             description = 'Contacts statistics after duplicates removal.',
-            helptext = 'Description of contact frequency after duplicates removal. Intra-chromosomal (*cis*) interaction are expected to be more frequent than inter-chromosomal contacts (*trans*)',
+            helptext = '''
+            Description of contact frequency after duplicates removal. Intra-chromosomal 
+            (*cis*) interaction are expected to be more frequent than inter-chromosomal contacts (*trans*)''',
             plot = self.hicpro_contact_chart()
         )
 
-        #self.add_section (
-        #     name = 'Length Distribution',
-        #     anchor = 'hicpro-lengths',
-        #     plot = self.hicpro_insertsize_chart()
-        #)
-
-        #self.add_section (
-        #     name = 'Capture Statistics',
-        #     anchor = 'hicpro-capture',
-        #     plot = self.hicpro_capture_chart()
-        #)
-    
-        self.add_section (
-            name = 'Allele-specific analysis',
-            anchor = 'hicpro-asan',
-            description = 'Assignment of valid interactions (afer duplicates removal) to parental alleles.',
-            helptext = 'Description of allele-specific contacts. Valid interactions (0-1 and 1-1, resp. 0-2, 2-2) are used to build the genome1 (resp. genome2) parental maps.',
-            plot = self.hicpro_as_chart()
-        )
+        allele_plot = self.hicpro_as_chart()
+        if allele_plot:
+            self.add_section (
+                name = 'Allele-specific analysis',
+                anchor = 'hicpro-asan',
+                description = 'Assignment of valid interactions (afer duplicates removal) to parental alleles.',
+                helptext = '''
+                Description of allele-specific contacts. Valid interactions (0-1 and 1-1, resp. 0-2, 2-2) 
+                are used to build the genome1 (resp. genome2) parental maps.''',
+                plot = self.hicpro_as_chart()
+            )
+            
 
 
     def parse_hicpro_stats(self, f):
-        """ Parse a HiCPro stat file """
-        s_name = os.path.basename(f['root'])
+        """ Parse a HiC-Pro stat file """
+        s_name = self.clean_s_name(os.path.basename(f['root']), os.path.dirname(f['root']))
 
-        ## Check if data already exists
-        if s_name in self.hicpro_data.keys():
-            data = self.hicpro_data[s_name]
-        else:
-            data = {}
+        #if s_name in self.hicpro_data:
+        #    log.debug("Duplicated sample name found! Overwriting: {}".format(s_name))
 
+        if s_name not in self.hicpro_data.keys():
+            self.hicpro_data[s_name] = {}
+
+        self.add_data_source(f, s_name)
         for l in f['f'].splitlines():
             if not l.startswith('#'):
                 s = l.split("\t")
-                data[s[0]] = int(s[1])
-                
-        if s_name in self.hicpro_data:
-            log.debug("Duplicated sample name found! Overwriting: {}".format(s_name))
-
-        self.add_data_source(f, s_name)
-        self.hicpro_data[s_name] = data
-
+                if s[0] in self.hicpro_data[s_name]:
+                    log.debug("Duplicated keys found! Overwriting: {}".format(s[0]))
+                self.hicpro_data[s_name][s[0]] = int(s[1])
 
     def hicpro_stats_table(self):
          """ Add HiC-Pro stats to the general stats table """
@@ -154,7 +152,8 @@ class MultiqcModule(BaseMultiqcModule):
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_keys' : 'read_count'
+             'shared_key' : 'read_count',
+             'hidden': False
          }
 
          headers['mapped_R1'] = {
@@ -163,7 +162,8 @@ class MultiqcModule(BaseMultiqcModule):
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_keys' : 'read_count'
+             'shared_key' : 'read_count',
+             'hidden': True
          }
 
          headers['percent_mapped_R1'] = {
@@ -172,7 +172,8 @@ class MultiqcModule(BaseMultiqcModule):
              'max': 100,
              'min': 0,
              'suffix': '%',
-             'scale': 'YlGn'
+             'scale': 'YlGn',
+             'hidden': True
          }
 
          headers['mapped_R2'] = {
@@ -181,7 +182,8 @@ class MultiqcModule(BaseMultiqcModule):
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_keys' : 'read_count'
+             'shared_key' : 'read_count',
+             'hidden': True
          }
 
          headers['percent_mapped_R2'] = {
@@ -190,7 +192,8 @@ class MultiqcModule(BaseMultiqcModule):
              'max': 100,
              'min': 0,
              'suffix': '%',
-             'scale': 'YlGn'
+             'scale': 'YlGn',
+             'hidden': True
          }
 
          headers['paired_reads'] = {
@@ -199,7 +202,8 @@ class MultiqcModule(BaseMultiqcModule):
              'min' : '0',
              'scale' : 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_keys' : 'read_count'
+             'shared_key' : 'read_count',
+             'hidden': True
          }
 
          headers['percent_paired_reads'] = {
@@ -208,7 +212,8 @@ class MultiqcModule(BaseMultiqcModule):
              'max': 100,
              'min': 0,
              'suffix': '%',
-             'scale': 'YlGn'
+             'scale': 'YlGn',
+             'hidden': False
          }
 
          headers['valid_interaction'] = {
@@ -217,7 +222,8 @@ class MultiqcModule(BaseMultiqcModule):
              'min': 0,
              'scale': 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_key': 'read_count'
+             'shared_key': 'read_count',
+             'hidden': True
          }
          
          headers['percent_valid'] = {
@@ -226,7 +232,8 @@ class MultiqcModule(BaseMultiqcModule):
              'max': 100,
              'min': 0,
              'suffix': '%',
-             'scale': 'YlGn'
+             'scale': 'YlGn',
+             'hidden': True
          }
          
          headers['valid_interaction_rmdup'] = {
@@ -235,7 +242,8 @@ class MultiqcModule(BaseMultiqcModule):
              'min': 0,
              'scale': 'RdYlBu',
              'modify': lambda x: x * config.read_count_multiplier,
-             'shared_key': 'read_count'
+             'shared_key': 'read_count',
+             'hidden': True
          }
          
          headers['percent_valid_interaction_rmdup'] = {
@@ -244,8 +252,8 @@ class MultiqcModule(BaseMultiqcModule):
              'max': 100,
              'min': 0,
              'suffix': '%',
-             'scale': 'YlGn'
-             #'modify': lambda x: 100 - x
+             'scale': 'YlGn',
+             'hidden': False
          }
      
          self.general_stats_addcols(self.hicpro_data, headers, 'HiC-Pro')
@@ -255,29 +263,30 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the HiC-Pro Aligned reads plot """
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys['Full_Alignments_Read']   = { 'color': '#005ce6', 'name': 'Full reads Alignments' }
-        keys['Trimmed_Alignments_Read'] = { 'color': '#3385ff', 'name': 'Trimmed reads Alignments' }
-        keys['Failed_To_Align_Read']     = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
-    
-        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
-        data = {}
+        #keys = OrderedDict()
+        keys = [OrderedDict(), OrderedDict()]
+        keys[0]['Full_Alignments_Read']   = { 'color': '#005ce6', 'name': 'Full reads Alignments' }
+        keys[0]['Trimmed_Alignments_Read'] = { 'color': '#3385ff', 'name': 'Trimmed reads Alignments' }
+        keys[0]['Failed_To_Align_Read']     = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
+        keys[1]['Full_Alignments_Read']   = { 'color': '#005ce6', 'name': 'Full reads Alignments' }
+        keys[1]['Trimmed_Alignments_Read'] = { 'color': '#3385ff', 'name': 'Trimmed reads Alignments' }
+        keys[1]['Failed_To_Align_Read']     = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
+                           
+        data = [{},{}]
         for s_name in self.hicpro_data:
-            data['{} Read 1'.format(s_name)] = {}
-            data['{} Read 2'.format(s_name)] = {}
-            data['{} Read 1'.format(s_name)]['Full_Alignments_Read'] = self.hicpro_data[s_name]['global_R1']
-            data['{} Read 2'.format(s_name)]['Full_Alignments_Read'] = self.hicpro_data[s_name]['global_R2']
-            data['{} Read 1'.format(s_name)]['Trimmed_Alignments_Read'] = self.hicpro_data[s_name]['local_R1']
-            data['{} Read 2'.format(s_name)]['Trimmed_Alignments_Read'] = self.hicpro_data[s_name]['local_R2']
-            data['{} Read 1'.format(s_name)]['Failed_To_Align_Read'] = int(self.hicpro_data[s_name]['total_R1']) - int(self.hicpro_data[s_name]['mapped_R1'])
-            data['{} Read 2'.format(s_name)]['Failed_To_Align_Read'] = int(self.hicpro_data[s_name]['total_R2']) - int(self.hicpro_data[s_name]['mapped_R2'])
-
+            for r in [1,2]:
+                data[r-1][s_name] = {
+                    'Full_Alignments_Read': self.hicpro_data[s_name]['global_R{}'.format(r)],
+                    'Trimmed_Alignments_Read': self.hicpro_data[s_name]['local_R{}'.format(r)],
+                    'Failed_To_Align_Read': int(self.hicpro_data[s_name]['total_R{}'.format(r)]) - int(self.hicpro_data[s_name]['mapped_R{}'.format(r)])
+                }
+        
         # Config for the plot
         config = {
             'id': 'hicpro_mapping_stats_plot',
             'title': 'HiC-Pro: Mapping Statistics',
             'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads'
+            'data_labels': ['Read 1', 'Read 2']
         }
 
         return bargraph.plot(data, keys, config)
@@ -287,31 +296,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        keys['Unique_Pairs'] = { 'color': '#005ce6', 'name': 'Uniquely Aligned' }
-        keys['Low_Qual_Pairs'] = { 'color': '#ff8533', 'name': 'Low Quality' }
-        keys['Singleton_Pairs'] = { 'color': ' #ff9933', 'name': 'Singleton' }
-        keys['Multi_Pairs'] = { 'color': '#e67300', 'name': 'Multi Aligned' }
-        keys['Failed_To_Align_Pairs'] = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
+        keys['Unique_paired_alignments'] = { 'color': '#005ce6', 'name': 'Uniquely Aligned' }
+        keys['Low_qual_Pairs'] = { 'color': '#ff8533', 'name': 'Low Quality' }
+        keys['Pairs_with_singleton'] = { 'color': ' #ff9933', 'name': 'Singleton' }
+        keys['Multiple_pairs_alignments'] = { 'color': '#e67300', 'name': 'Multi Aligned' }
+        keys['Unmapped_airs'] = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
     
-        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
-        data = {}
-        for s_name in self.hicpro_data:
-            data['{} Pairs'.format(s_name)] = {}
-            data['{} Pairs'.format(s_name)]['Failed_To_Align_Pairs'] = self.hicpro_data[s_name]['Unmapped_pairs']
-            data['{} Pairs'.format(s_name)]['Low_Qual_Pairs'] = self.hicpro_data[s_name]['Low_qual_pairs']
-            data['{} Pairs'.format(s_name)]['Unique_Pairs'] = self.hicpro_data[s_name]['Unique_paired_alignments']
-            data['{} Pairs'.format(s_name)]['Multi_Pairs'] = self.hicpro_data[s_name]['Multiple_pairs_alignments']
-            data['{} Pairs'.format(s_name)]['Singleton_Pairs'] = self.hicpro_data[s_name]['Pairs_with_singleton']
-
         # Config for the plot
         config = {
-        'id': 'hicpro_pairing_stats_plot',
+            'id': 'hicpro_pairing_stats_plot',
             'title': 'HiC-Pro: Pairing Statistics',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(data, keys, config)
+        return bargraph.plot(self.hicpro_data, keys, config)
 
         
     def hicpro_filtering_chart (self):
@@ -370,6 +369,14 @@ class MultiqcModule(BaseMultiqcModule):
         keys['Valid_pairs_with_both_unassigned_mated_(0-0)'] = { 'color': '#cccccc', 'name': 'Unassigned read pairs' }
         keys['Valid_pairs_with_at_least_one_conflicting_mate_(3-)'] = { 'color': '#a9a2a2', 'name': 'Conflicting read pairs' }
 
+        # check allele-specific analysis was run
+        num_samples = 0
+        for s_name in self.hicpro_data:
+            for k in keys:
+                num_samples += sum([1 if k in self.hicpro_data[s_name] else 0])
+        if num_samples == 0:
+            return False
+        
         # Config for the plot
         config = {
             'id': 'hicpro_asan_plot',
@@ -379,13 +386,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(self.hicpro_data, keys, config)
-
-                
-    def hicpro_capture_chart (self):
-        """ Generate capture plot"""
-
-    def hicpro_insertsize_chart (self):
-        """ Generate insert size histogram"""
 
 
 

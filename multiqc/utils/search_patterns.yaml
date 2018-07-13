@@ -195,12 +195,16 @@ hicexplorer:
     num_lines: 5
 hicup:
     fn: 'HiCUP_summary_report*'
-hicpro:
-    - fn: '*.mmapstat'
-    - fn: '*.mpairstat'
-    - fn: '*.mergestat'
-    - fn: '*.mRSstat'
-    - fn: '*.assplit.stat'
+hicpro/mmapstat:
+    fn: '*.mmapstat'
+hicpro/mpairstat:
+    fn: '*.mpairstat'
+hicpro/mergestat:
+    fn: '*.mergestat'
+hicpro/mRSstat:
+    fn: '*.mRSstat'
+hicpro/assplit:
+    fn: '*.assplit.stat'
 hisat2:
     contents: 'HISAT2 summary stats:'
     shared: true
