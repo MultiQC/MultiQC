@@ -30,6 +30,7 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
+
 |Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing | Post-alignment QC          |
 |---------------------------------|-------------------------|---------------------------|----------------------------|
 |[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]              |
@@ -44,12 +45,13 @@ Currently, supported tools include:
 |[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
 |[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
 |[Fastp][fastp]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
-|[Flexbar][flexbar]               |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
+|[Flexbar][flexbar]               |[HiCPro][hicpro]         |[RSEM][rsem]               |[RSeQC][rseqc]              |
 |[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
 |[KAT][kat]                       |                         |                           |[Supernova][supernova]      |
 |[Skewer][skewer]                 |                         |                           |[VCFTools][vcftools]        |
 |[SortMeRNA][sortmerna]           |                         |                           |[VerifyBAMID][verifybamid]  |
 |[Trimmomatic][trimmomatic]       |                         |                           |                            |
+
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -176,6 +178,8 @@ Code contributions from:
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@winni2k](https://github.com/winni2k),
+[@wkretzsch](https://github.com/wkretzsch),
+[@nservant](https://github.com/nservant),
 
 and many others. Thanks for your support!
 

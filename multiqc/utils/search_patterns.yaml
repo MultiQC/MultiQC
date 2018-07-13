@@ -110,7 +110,7 @@ bowtie2:
     contents: 'reads; of these:'
     exclude_contents:
         - 'bisulfite'
-        - 'Hi-C Pro'
+        - 'HiC-Pro'
     shared: true
 busco:
     fn: 'short_summary_*'
@@ -195,6 +195,16 @@ hicexplorer:
     num_lines: 5
 hicup:
     fn: 'HiCUP_summary_report*'
+hicpro/mmapstat:
+    fn: '*.mmapstat'
+hicpro/mpairstat:
+    fn: '*.mpairstat'
+hicpro/mergestat:
+    fn: '*.mergestat'
+hicpro/mRSstat:
+    fn: '*.mRSstat'
+hicpro/assplit:
+    fn: '*.assplit.stat'
 hisat2:
     contents: 'HISAT2 summary stats:'
     shared: true
