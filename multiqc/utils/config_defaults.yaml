@@ -73,6 +73,7 @@ table_cond_formatting_rules:
             - s_eq: 'false'
 decimalPoint_format: null
 thousandsSep_format: null
+remove_sections: []
 section_comments: {}
 lint: False
 

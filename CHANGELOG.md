@@ -45,6 +45,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Change column header help text for contamination to match percentage output ([@chapmanb](https://github.com/chapmanb))
 
 #### New MultiQC Features:
+* New config option `remove_sections` to skip specific report sections from modules
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
 * New `exclude_*` keys for file search patterns
     * Have a subset of patterns to exclude otherwise detected files with, by filename or contents
