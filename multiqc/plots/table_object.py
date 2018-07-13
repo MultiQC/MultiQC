@@ -3,6 +3,7 @@
 """ MultiQC datatable class, used by tables and beeswarm plots """
 
 from collections import defaultdict, OrderedDict
+import inspect
 import logging
 import re
 
@@ -20,6 +21,16 @@ class datatable (object):
             headers = []
         if pconfig is None:
             pconfig = {}
+
+        if config.lint:
+            # Get module name
+            modname = ''
+            callstack = inspect.stack()
+            for n in callstack:
+                if 'multiqc/modules/' in n[1] and 'base_module.py' not in n[1]:
+                    callpath = n[1].split('multiqc/modules/',1)[-1]
+                    modname = '>{}< '.format(callpath)
+                    break
 
         # Given one dataset - turn it into a list
         if type(data) is not list:
@@ -74,6 +85,10 @@ class datatable (object):
                 if n == 0:
                     empties.append(k)
             for k in empties:
+                if config.lint:
+                    errmsg = "LINT: {}Table column had no data '{}'".format(modname, k)
+                    logger.error(errmsg)
+                    report.lint_errors.append(errmsg)
                 keys = [j for j in keys if j != k]
                 del headers[idx][k]
 
