@@ -5,6 +5,9 @@
 Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
 
 #### New Modules:
+* [**fastp**](https://github.com/OpenGene/fastp)
+    * An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+    * Module started by [@florianduclot](https://github.com/florianduclot/) and completed by [@ewels](https://github.com/ewels/)
 * [**Long Ranger**](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
     * Works with data from the 10X Genomics Chromium. Performs sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
@@ -23,7 +26,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Output is now more tolerant of missing data (no plot if no data)
 * **Peddy**
     * Background samples now shown in ancestry PCA plot ([@roryk](https://github.com/roryk))
-    * New plot showing sex checks versus het ratios ([@oyvinev](https://github.com/oyvinev))
+    * New plot showing sex checks versus het ratios, supporting unknowns ([@oyvinev](https://github.com/oyvinev))
 * **Picard**
     * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
     * WGSMetrics now add the mean and standard-deviation coverage to the general stats table (hidden) ([@cpavanrun](https://github.com/cpavanrun))
@@ -35,6 +38,8 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Fixed edge case bug where MultiQC could crash if a sample had zero count coverage with idxstats.
 * **Tophat**
     * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
+* **VerifyBamID**
+    * Change column header help text for contamination to match percentage output ([@chapmanb](https://github.com/chapmanb))
 
 #### New MultiQC Features:
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
@@ -55,6 +60,8 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
 * Prevent tables from clobbering sorted row orders.
 * Fix linegraph and scatter plots data conversion (sporadically the incorrect `ymax` was used to drop data points) ([@cpavanrun](https://github.com/cpavanrun))
+* Adjusted multiple file search patterns to make them more specific
+    * Prevents the wrong module from accidentally slurping up output from a different tool. By [@cpavanrun](https://github.com/cpavanrun) (see [PR #727](https://github.com/ewels/MultiQC/pull/727))
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15

@@ -164,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Ancestry',
             'description': 'Ancestry Prediction',
         }
-        headers['ancestry-prob'] = {
+        headers['ancestry-prob_het_check'] = {
             'title': 'P(Ancestry)',
             'description': 'Probability predicted ancestry is correct.'
         }
@@ -175,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Correct Sex',
             'description': 'Displays False if error in sample sex prediction',
         }
-        headers['predicted_sex'] = {
+        headers['predicted_sex_sex_check'] = {
             'title': 'Sex',
             'description': 'Predicted sex'
         }
@@ -305,12 +305,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def peddy_sex_check_plot(self):
         data = {}
-        sex_index = {"female": 0, "male": 1}
+        sex_index = {"female": 0, "male": 1, "unknown": 2}
 
         for s_name, d in self.peddy_data.items():
             if 'sex_het_ratio' in d and 'ped_sex_sex_check' in d:
                 data[s_name] = {
-                    'x': sex_index[d['ped_sex_sex_check']],
+                    'x': sex_index.get(d['ped_sex_sex_check'], 2),
                     'y': d["sex_het_ratio"]
                 }
 
@@ -319,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Peddy: Sex Check',
             'xlab': 'Sex From Ped',
             'ylab': 'Sex Het Ratio',
-            'categories': ["Female", "Male"]
+            'categories': ["Female", "Male", "Unknown"]
         }
 
         self.add_section(
