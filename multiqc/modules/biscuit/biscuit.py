@@ -146,7 +146,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Mapping Summary',
             anchor = 'biscuit-mapping',
-            description = 'This shows the fraction of optimally aligned reads, which is defined by mapQ >= 40. A good library should have high fraction of reads optimally aligned.',
+            description = 'This shows the fraction of optimally aligned reads, which is defined by mapQ >= 40.',
+            helptext = 'A good library should have high fraction of reads optimally aligned. Suboptimally aligned reads include both nonunique alignments and imperfect alignments.',
             plot = bargraph.plot(pd, OrderedDict([
                 ('OAligned', {'name':'Optimally Aligned Reads'}),
                 ('SAligned', {'name':'Suboptimally Aligned Reads'}),
