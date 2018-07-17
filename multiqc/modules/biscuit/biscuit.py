@@ -188,37 +188,51 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs_align_strand(self, f, fn): # _strand_table.txt
 
-        data = {}
+        data = {'read1':{},'read2':{}}
         for l in f.splitlines()[1:]:
-            m = re.search(r'strand\t([+-]*)\t(\d+)', l)
+            m = re.search(r'strand\t([12])([+-]*)\t(\d+)', l)
             if m is not None:
-                data[m.group(1)] = int(m.group(2))
+                if m.group(1) == '1':
+                    data['read1'][m.group(2)] = int(m.group(3))
+                if m.group(1) == '2':
+                    data['read2'][m.group(2)] = int(m.group(3))
 
         return data
 
     def chart_align_strand(self):
 
         # mapping strand distribution
-        pd = {}
+        pd1 = {}
+        pd2 = {}
         for sid, dd in self.mdata['align_strand'].items():
             sid = sid.replace('_strand_table','')
-            pd[sid] = dd
+            pd1[sid] = dd['read1']
+            pd2[sid] = dd['read2']
 
         self.add_section(
             name='Mapping Strand Distribution',
             anchor='biscuit-strands',
             description = "This plot shows the distribution of strand of mapping and strand of bisulfite conversion.",
             helptext="Most bisulfite libraries has read 1 goes to parent `++` or `--` and read 2 goes to daughter/synthesized `+-` or `-+`. PBAT or most single-cell/low input libraries typically don't observe this rule.",
-            plot = bargraph.plot(pd, OrderedDict([
-                ('++', {'name':'Waston-Aligned, Waston-Bisulfite Conversion', 'color': '#F53855'}),
-                ('+-', {'name':'Waston-Aligned, Crick-Bisulfite Conversion', 'color': '#E37B40'}),
-                ('-+', {'name':'Crick-Aligned, Waston-Bisulfite Conversion', 'color': '#46B29D'}),
-                ('--', {'name':'Crick-Aligned, Crick-Bisulfite Conversion', 'color': '#324D5C'})
-            ]), {'id':'biscuit_strands',
+            plot = bargraph.plot([pd1, pd2], 
+                [OrderedDict([
+                    ('++', {'name':'++: Waston-Aligned, Waston-Bisulfite Conversion', 'color': '#F53855'}),
+                    ('+-', {'name':'+-: Waston-Aligned, Crick-Bisulfite Conversion', 'color': '#E37B40'}),
+                    ('-+', {'name':'-+: Crick-Aligned, Waston-Bisulfite Conversion', 'color': '#46B29D'}),
+                    ('--', {'name':'--: Crick-Aligned, Crick-Bisulfite Conversion', 'color': '#324D5C'}),]),
+                OrderedDict([
+                    ('++', {'name':'++: Waston-Aligned, Waston-Bisulfite Conversion', 'color': '#F53855'}),
+                    ('+-', {'name':'+-: Waston-Aligned, Crick-Bisulfite Conversion', 'color': '#E37B40'}),
+                    ('-+', {'name':'-+: Crick-Aligned, Waston-Bisulfite Conversion', 'color': '#46B29D'}),
+                    ('--', {'name':'--: Crick-Aligned, Crick-Bisulfite Conversion', 'color': '#324D5C'})])], 
+                {'id':'biscuit_strands',
                  'title':'BISCUIT: Mapping Strand Distribution',
                  'ylab':'Number of Reads',
                  'cpswitch_c_active': True,
-                 'cpswitch_counts_label': '# Reads'
+                 'cpswitch_counts_label': '# Reads',
+                 'data_labels': [
+                    {'name': 'Read 1', },
+                    {'name': 'Read 2', }]
             })
         )
 
