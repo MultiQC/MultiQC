@@ -208,6 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
             name='Mapping Strand Distribution',
             anchor='biscuit-strands',
             description = "This plot shows the distribution of strand of mapping and strand of bisulfite conversion.",
+            helptext="Most bisulfite libraries has read 1 goes to parent `++` or `--` and read 2 goes to daughter/synthesized `+-` or `-+`. PBAT or most single-cell/low input libraries typically don't observe this rule.",
             plot = bargraph.plot(pd, OrderedDict([
                 ('++', {'name':'Waston-Aligned, Waston-Bisulfite Conversion', 'color': '#F53855'}),
                 ('+-', {'name':'Waston-Aligned, Crick-Bisulfite Conversion', 'color': '#E37B40'}),
@@ -320,6 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'BISCUIT Cumulative Base Coverage',
             anchor = 'biscuit-coverage-base',
             description = "This plot shows the cummulative base coverage. High and low GC content region are the top and bottom 10% 100bp window in GC content.",
+            helptext = "Q40 means only reads mapped with mapping quality (Q) greater than or equal to 40 are considered.",
             plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base',
                 'title': 'Cumulative Base Coverage',
                 'xLabelFormat':'{value}X',
@@ -361,7 +363,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         self.add_section(
-            name = 'Coverage by At Least One Read',
+            name = 'BISCUIT Coverage by At Least One Read',
             anchor = 'biscuit-coverage-base-table',
             description = 'The fraction of genome/genomic CpGs covered by at least one read.',
             plot = table.plot(basecov, {
