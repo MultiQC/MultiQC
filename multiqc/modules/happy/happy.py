@@ -31,28 +31,15 @@ class MultiqcModule(BaseMultiqcModule):
             name='hap.py',
             anchor='happy',
             href='https://github.com/Illumina/hap.py',
-            info=' is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets.'
+            info=""" is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets. """ +
+                 """The default shown fields should give the best overview of quality, but there are many other hidden """ +
+                 """fields available. No plots are generated, as hap.py is generally run on single control samples (NA12878, etc.)""" +
+                 """<br/><br/>""" +
+                 """Ideally, precision, recall and F1 Score should all be as close to 1 as possible."""
         )
 
-        self.general_stats_header = OrderedDict()
-        self.general_stats_data = dict()
         self.happy_seen = set()
         self.happy_data = dict()
-
-        for vtype in VAR_TYPES:
-            for vfilt in VAR_FILTERS:
-                for metric in METRICS:
-                    hname = "{}/{}_METRIC.{}".format(vtype, vfilt, metric)
-                    htitle = "{}/{} {}".format(vtype, vfilt, metric.replace('_', ' '))
-                    hdesc = "{}/{} - {}".format(vtype, vfilt, METRICS[metric])
-                    self.general_stats_header[hname] = {
-                        "title": htitle,
-                        "hidden": metric != "F1_Score",
-                        "format": "{:.4f}",
-                        "min": 0,
-                        "max": 1,
-                        "description": hdesc
-                    }
 
         n_files = 0
         for f in self.find_log_files("happy", filehandles=True):
@@ -65,8 +52,6 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} hap.py log file(s)".format(n_files))
         if n_files == 0:
             raise UserWarning
-
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_header)
 
         if len(self.happy_data) > 0:
             self.write_data_file(self.happy_data, 'multiqc_happy_data', data_format="json")
@@ -88,7 +73,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warn("Duplicate sample name found in {}! Overwriting: {}".format(log_file['root'], log_file['s_name']))
         else:
             self.happy_seen.add(samp)
-            self.general_stats_data[samp] = dict()
 
         rdr = csv.DictReader(log_file['f'])
         for row in rdr:
@@ -97,9 +81,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.happy_data[row_id] = {"sample_id": samp}
             for fn in rdr.fieldnames:
                 self.happy_data[row_id][fn] = row[fn]
-                if 'METRIC' in fn:
-                    gs_id = "{}/{}_{}".format(row["Type"], row["Filter"], fn)
-                    self.general_stats_data[samp][gs_id] = row[fn]
 
         return 1
 
