@@ -341,13 +341,13 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         ymin = default_ylimits[0]
         if 'ymin' in pconfig:
             ymin = pconfig['ymin']
-        elif 'yCeiling' in pconfig:
-            ymin = min(pconfig['yCeiling'], default_ylimits[0])
+        elif 'yFloor' in pconfig:
+            ymin = max(pconfig['yFloor'], default_ylimits[0])
         ymax = default_ylimits[1]
         if 'ymax' in pconfig:
             ymax = pconfig['ymax']
-        elif 'yFloor' in pconfig:
-            ymax = max(pconfig['yCeiling'], default_ylimits[1])
+        elif 'yCeiling' in pconfig:
+            ymax = min(pconfig['yCeiling'], default_ylimits[1])
         if (ymax - ymin) < pconfig.get('yMinRange', 0):
             ymax = ymin + pconfig['yMinRange']
         axes.set_ylim((ymin, ymax))
