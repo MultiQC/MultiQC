@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             'singleton': dict(),
             'collapsed': dict(),
             'collapsed_truncated': dict(),
-            'discarged': dict(),
+            'discarded': dict(),
             'all': dict(),
         }
 
