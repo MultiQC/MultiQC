@@ -346,25 +346,29 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero division is possible
             try:
                 percent_R1_Q30 = '{0:.1f}'.format(
-                    float( 100.0 * sample["R1_Q30"] / sample["R1_yield"] )
+                    float(100.0 * sample["R1_Q30"] / sample["R1_yield"])
                 )
             except ZeroDivisionError:
                 percent_R1_Q30 = '0.0'
             try:
                 percent_R2_Q30 = '{0:.1f}'.format(
-                    float( 100.0 * sample["R2_Q30"] / sample["R2_yield"] )
+                    float(100.0 * sample["R2_Q30"] / sample["R2_yield"])
                 )
             except ZeroDivisionError:
                 percent_R2_Q30 = '0.0'
+            try:
+                perfect_percent = '{0:.1f}'.format(
+                    float(100.0 * sample["perfectIndex"] / sample["total"])
+                )
+            except ZeroDivisionError:
+                perfect_percent = '0.0'
 
             data[sample_id] = {
                 "yieldQ30": sample["yieldQ30"],
                 "percent_R1_Q30": percent_R1_Q30,
                 "percent_R2_Q30": percent_R2_Q30,
                 "total": sample["total"],
-                "perfectPercent": '{0:.1f}'.format(
-                    float( 100.0 * sample["perfectIndex"] / sample["total"] )
-                ),
+                "perfectPercent": perfect_percent,
                 "R1_trimmed_bases": sample["R1_trimmed_bases"],
                 "R2_trimmed_bases": sample["R2_trimmed_bases"]
             }
