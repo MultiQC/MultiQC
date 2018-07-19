@@ -30,6 +30,7 @@ it ideal for routine fast quality control.
 
 Currently, supported tools include:
 
+
 |Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing | Post-alignment QC          |
 |---------------------------------|-------------------------|---------------------------|----------------------------|
 |[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]              |
@@ -43,12 +44,14 @@ Currently, supported tools include:
 |[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[QoRTs][qorts]              |
 |[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
 |[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
-|[Flexbar][flexbar]               |[Tophat][tophat]|[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]      |
-|[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[RSeQC][rseqc]              |
-|[Skewer][skewer]                 |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
-|[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova]      |
-|[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools]        |
-|                                 |                         |                           |[VerifyBAMID][verifybamid]  |
+|[Fastp][fastp]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
+|[Flexbar][flexbar]               |[HiCPro][hicpro]         |[RSEM][rsem]               |[RSeQC][rseqc]              |
+|[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
+|[KAT][kat]                       |                         |                           |[Supernova][supernova]      |
+|[Skewer][skewer]                 |                         |                           |[VCFTools][vcftools]        |
+|[SortMeRNA][sortmerna]           |                         |                           |[VerifyBAMID][verifybamid]  |
+|[Trimmomatic][trimmomatic]       |                         |                           |                            |
+
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -154,6 +157,7 @@ Code contributions from:
 [@dakl](https://github.com/dakl),
 [@ehsueh](https://github.com/ehsueh),
 [@epruesse](https://github.com/epruesse),
+[@florianduclot](https://github.com/florianduclot/),
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@HLWiencko](https://github.com/HLWiencko),
 [@iimog](https://github.com/iimog),
@@ -174,6 +178,8 @@ Code contributions from:
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@winni2k](https://github.com/winni2k),
+[@wkretzsch](https://github.com/wkretzsch),
+[@nservant](https://github.com/nservant),
 
 and many others. Thanks for your support!
 
@@ -196,6 +202,7 @@ MultiQC is released under the GPL v3 or later licence.
 [disambiguate]:   http://multiqc.info/docs/#disambiguate
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
+[fastp]:          http://multiqc.info/docs/#fastp
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
 [flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
@@ -208,6 +215,7 @@ MultiQC is released under the GPL v3 or later licence.
 [interop]:        http://multiqc.info/docs/#interop
 [jellyfish]:      http://multiqc.info/docs/#jellyfish
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[kat]:            http://multiqc.info/docs/#kat
 [leehom]:         http://multiqc.info/docs/#leehom
 [longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2

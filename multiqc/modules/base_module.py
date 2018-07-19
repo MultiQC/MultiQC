@@ -139,6 +139,11 @@ class BaseMultiqcModule(object):
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
 
+        # Skip if user has a config to remove this module section
+        if anchor in config.remove_sections:
+            logger.debug("Skipping section '{}' because specified in user config".format(anchor))
+            return
+
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
 
