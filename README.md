@@ -31,26 +31,26 @@ it ideal for routine fast quality control.
 Currently, supported tools include:
 
 
-|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing | Post-alignment QC          |
-|---------------------------------|-------------------------|---------------------------|----------------------------|
-|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]              |
-|[AfterQC][afterqc]               |[Bismark][bismark]       |[Bcftools][bcftools]       |[Conpair][conpair]          |
-|[Bcl2fastq][bcl2fastq]           |[Bowtie][bowtie-1]       |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]     |[HOMER][homer]             |[goleft][goleft]            |
-|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]           |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]  |
-|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]         |[MACS2][macs2]             |[methylQA][methylqa]        |
-|[Cutadapt][cutadapt]             |[Kallisto][kallisto]     |[Picard][picard]           |[Peddy][peddy]              |
-|[leeHom][leehom]                 |[Long Ranger][longranger]|[Prokka][prokka]           |[Preseq][preseq]            |
-|[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]   |[QoRTs][qorts]              |
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
-|[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
-|[Fastp][fastp]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
-|[Flexbar][flexbar]               |[HiCPro][hicpro]         |[RSEM][rsem]               |[RSeQC][rseqc]              |
-|[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
-|[KAT][kat]                       |                         |                           |[Supernova][supernova]      |
-|[Skewer][skewer]                 |                         |                           |[VCFTools][vcftools]        |
-|[SortMeRNA][sortmerna]           |                         |                           |[VerifyBAMID][verifybamid]  |
-|[Trimmomatic][trimmomatic]       |                         |                           |                            |
+|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing            | Post-alignment QC          |
+|---------------------------------|-------------------------|--------------------------------------|----------------------------|
+|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]                  |[BUSCO][busco]              |
+|[AfterQC][afterqc]               |[Bismark][bismark]       |[Bcftools][bcftools]                  |[Conpair][conpair]          |
+|[Bcl2fastq][bcl2fastq]           |[Bowtie][bowtie-1]       |[GATK][gatk]                          |[Disambiguate][disambiguate]|
+|[BBTools][bbmap]                 |[Bowtie 2][bowtie-2]     |[HOMER][homer]                        |[goleft][goleft]            |
+|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]           |[HTSeq][htseq]                        |[HiCExplorer][hicexplorer]  |
+|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]         |[MACS2][macs2]                        |[methylQA][methylqa]        |
+|[Cutadapt][cutadapt]             |[Kallisto][kallisto]     |[Picard][picard]                      |[miRTop][mirtop]            |
+|[leeHom][leehom]                 |[Long Ranger][longranger]|[Prokka][prokka]                      |[Peddy][peddy]              |
+|[InterOp][interop]               |[Salmon][salmon]         |[Samblaster][samblaster]              |[Preseq][preseq]            |
+|[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]                  |[QoRTs][qorts]              |
+|[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]                      |[Qualimap][qualimap]        |
+|[Fastp][fastp]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[QUAST][quast]              |
+|[Flexbar][flexbar]               |[HiCPro][hicpro]         |[RSEM][rsem]                          |[RNA-SeQC][rna_seqc]        |
+|[Jellyfish][jellyfish]           |                         |[THetA2][theta2]                      |[RSeQC][rseqc]              |
+|[KAT][kat]                       |                         |                                      |[Sargasso][sargasso]        |
+|[Skewer][skewer]                 |                         |                                      |[Supernova][supernova]      |
+|[SortMeRNA][sortmerna]           |                         |                                      |[VCFTools][vcftools]        |
+|[Trimmomatic][trimmomatic]       |                         |                                      |[VerifyBAMID][verifybamid]  |
 
 
 
