@@ -17,6 +17,7 @@ MultiQC Modules:
     ClipAndMerge: modules/clipandmerge.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
+    Fastp: modules/fastp.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
@@ -31,6 +32,7 @@ MultiQC Modules:
     Bowtie 2: modules/bowtie2.md
     BBMap: modules/bbmap.md
     HiCUP: modules/hicup.md
+    HiCPro: modules/hicpro.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
     Long Ranger: modules/longranger.md

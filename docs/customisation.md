@@ -112,6 +112,25 @@ Comments can be written in Markdown. The `section_comments` keys should correspo
 of the report section. You can find these by clicking on a navigation link in the report and seeing
 the `#section_id` at the end of the browser URL.
 
+## Removing modules or sections
+If you don't want an entire module to be used in a MultiQC report, use the `-e`/`--exclude`
+command line flags to skip running that tool.
+
+If you would like to remove just one section of a module report, you can do so with the
+`remove_sections` config option as follows:
+
+```yaml
+remove_sections:
+    - section-id-one
+    - second-section-id
+```
+
+The section ID is the string appended to the URL when clicking a report section in the navigation.
+For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
+in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
+appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
+
+
 ## Order of modules
 By default, modules are included in the report as in the order specified in `config.module_order`.
 Any modules found which aren't in this list are appended at the top of the report.

@@ -5,6 +5,9 @@
 Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
 
 #### New Modules:
+* [**fastp**](https://github.com/OpenGene/fastp)
+    * An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+    * Module started by [@florianduclot](https://github.com/florianduclot/) and completed by [@ewels](https://github.com/ewels/)
 * [**Long Ranger**](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
     * Works with data from the 10X Genomics Chromium. Performs sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
@@ -33,6 +36,9 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * **Picard**
     * New submodule to handle `ValidateSamFile` reports ([@cpavanrun](https://github.com/cpavanrun))
     * WGSMetrics now add the mean and standard-deviation coverage to the general stats table (hidden) ([@cpavanrun](https://github.com/cpavanrun))
+* **Preseq**
+    * New config option to plot preseq plots with unique old coverage on the y axis instead of read count
+    * Code refactoring by [@vladsaveliev](https://github.com/vladsaveliev)
 * **QUAST**
     * Null values (`-`) in reports now handled properly. Bargraphs always shown despite varying thresholds. ([@vladsaveliev](https://github.com/vladsaveliev))
 * **RNA-SeQC**
@@ -41,8 +47,11 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Fixed edge case bug where MultiQC could crash if a sample had zero count coverage with idxstats.
 * **Tophat**
     * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
+* **VerifyBamID**
+    * Change column header help text for contamination to match percentage output ([@chapmanb](https://github.com/chapmanb))
 
 #### New MultiQC Features:
+* New config option `remove_sections` to skip specific report sections from modules
 * Add `path_filters_exclude` to exclude certain files when running modules multiple times. You could previously only include certain files.
 * New `exclude_*` keys for file search patterns
     * Have a subset of patterns to exclude otherwise detected files with, by filename or contents
@@ -61,11 +70,16 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
 * Prevent tables from clobbering sorted row orders.
 * Fix linegraph and scatter plots data conversion (sporadically the incorrect `ymax` was used to drop data points) ([@cpavanrun](https://github.com/cpavanrun))
+* Adjusted multiple file search patterns to make them more specific
+    * Prevents the wrong module from accidentally slurping up output from a different tool. By [@cpavanrun](https://github.com/cpavanrun) (see [PR #727](https://github.com/ewels/MultiQC/pull/727))
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
 
 #### New Modules:
+* [**HiCPro**](https://github.com/nservant/HiC-Pro) - New module!
+    * HiCPro: Quality controls and processing of Hi-C
+    * Module written by [@nservant](https://github.com/nservant),
 * [**DeDup**](http://www.github.com/apeltzer/DeDup) - New module!
     * DeDup: Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
     * Module written by [@apeltzer](https://github.com/apeltzer),
