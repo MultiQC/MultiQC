@@ -18,8 +18,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='mirtop',
-        anchor='mirtop', target='Subread mirtop',
+        super(MultiqcModule, self).__init__(name='miRTop',
+        anchor='mirtop', target='mirtop',
         href='https://github.com/miRTop',
         info="is a Command line tool to annotate miRNAs and isomiRs using a standard naming."
         )
@@ -39,7 +39,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write parsed report data to a file
         self.write_data_file(self.mirtop_data, 'multiqc_mirtop')
-        #log.info(self.mirtop_data)
 
         # Create very basic summary table
         self.mirtop_stats_table()
@@ -65,7 +64,6 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             else:
                 if len(s) > 0:
-                    #log.info(s)
                     parsed_data[s[1]] = float(s[3])
                     s_name = s[2]
 
@@ -90,14 +88,12 @@ class MultiqcModule(BaseMultiqcModule):
         headers['ref_miRNA_sum'] = {
             'title': 'Reference reads',
             'description': 'read count summed over all reads mapping to the reference form of a miRNA',
-            'scale': 'PuBu'#,
-            #'shared_key': 'read_count'
+            'scale': 'PuBu'
         }
         headers['read_count'] = {
             'title': 'Total reads',
             'description': 'all aligned reads',
-            'scale': 'PuBu'#,
-            #'shared_key': 'read_count'
+            'scale': 'PuBu'
         } 
         headers['isomiR_perc'] = {
             'title': 'IsomiR %',
@@ -105,13 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min':0,
             'max':100,
             'suffix':'%',
-            'scale': 'RdYlGn'#,
-            #'shared_key': 'read_count'
+            'scale': 'RdYlGn'
         }
 
-
-
         self.general_stats_addcols(self.mirtop_data, headers)
-
-
-
