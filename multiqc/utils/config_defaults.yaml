@@ -478,5 +478,5 @@ module_order:
             - methylation
     - mirtop:
         module_tag:
-            - RNA
+            - miRNA
 
