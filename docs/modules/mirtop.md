@@ -1,5 +1,5 @@
 ---
-Name: mirtop 
+Name: miRTop 
 URL: https://github.com/miRTop
 Description: a Command line tool to annotate miRNAs and isomiRs using a standard naming
 ---
