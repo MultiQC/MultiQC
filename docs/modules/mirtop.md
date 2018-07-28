@@ -1,9 +1,7 @@
 ---
 Name: mirtop 
 URL: https://github.com/miRTop
-Description: >
-
-    a Command line tool to annotate miRNAs and isomiRs using a standard naming
+Description: a Command line tool to annotate miRNAs and isomiRs using a standard naming
 ---
 
 mirtop detects and annotates isomiRs in small-RNA sequence data.
