@@ -296,6 +296,7 @@ module_order:
         module_tag:
             - DNA
 
+
     # Post-alignment processing
     - homer:
         module_tag:

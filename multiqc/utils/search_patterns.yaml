@@ -77,7 +77,7 @@ bcftools/stats:
     contents: 'This file was produced by bcftools stats'
     shared: true
 bcl2fastq:
-    - fn: '*Stats.json'
+    - fn: 'Stats.json'
       contents: 'DemuxResults'
     - num_lines: 300
 biobloomtools:

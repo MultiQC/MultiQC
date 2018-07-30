@@ -24,7 +24,6 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-
 version = '1.6dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
