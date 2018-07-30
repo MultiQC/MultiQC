@@ -1,10 +1,10 @@
-# coding: utf-8
 import json
 import logging
 import operator
 import os
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from future.utils import iteritems
+from itertools import islice
 
 from multiqc import config
 from multiqc.plots import bargraph, table
@@ -170,7 +170,15 @@ class MultiqcModule(BaseMultiqcModule):
             # simplify the population of dictionnaries
             rlane = run_data[lane]
             # Add undetermine barcodes
-            unknown_barcode = content['UnknownBarcodes'][l - 1]['Barcodes']
+            try:
+                unknown_barcode = content['UnknownBarcodes'][l - 1]['Barcodes']
+            except IndexError:
+                unknown_barcode = next(
+                    (item['Barcodes'] for item in content['UnknownBarcodes']
+                     if item['Lane'] == 8),
+                    None
+                )
+
             run_data[lane]['unknown_barcodes'] = unknown_barcode
             for demuxResult in conversionResult.get("DemuxResults", []):
                 sample = demuxResult["SampleId"]
@@ -331,13 +339,16 @@ class MultiqcModule(BaseMultiqcModule):
         """ Python3.6 dictionnaries keep the order but not in other version.
         This function return an `OrderedDict` sorted by barcode count.
         """
-        sorted_barcodes = OrderedDict(
-            sorted(
-                iteritems(lane_unknown_barcode),
-                key=operator.itemgetter(1),
-                reverse=True
+        try:
+            sorted_barcodes = OrderedDict(
+                sorted(
+                    iteritems(lane_unknown_barcode),
+                    key=operator.itemgetter(1),
+                    reverse=True
+                )
             )
-        )
+        except AttributeError:
+            sorted_barcodes=None
         return sorted_barcodes
 
     def add_general_stats(self):
@@ -487,23 +498,27 @@ class MultiqcModule(BaseMultiqcModule):
     def get_bar_data_from_undertemined(self, flowcell):
         """ Get data to plot for undertemined barcodes.
         """
-        bar_data = OrderedDict()
+        bar_data = defaultdict(dict)
         paste_key = list()
+        # get undetermined barcodes for each lanes
         for lane_id, lane in iteritems(flowcell):
             paste_key.append(lane_id)
-            for i, (barcode, count) in enumerate(
-                    iteritems(lane['unknown_barcodes'])):
-                if i > 19:
-                    break
-                try:
+            try:
+                for i, (barcode, count) in enumerate(
+                        iteritems(lane['unknown_barcodes'])):
+                    if i > 19:
+                        break
                     bar_data[barcode][lane_id] = count
-                except KeyError:
-                    bar_data[barcode] = OrderedDict(
-                        [(pbc, count) for pbc in paste_key]
-                    )
+            except AttributeError:
+                pass
+
+        # sort results
         bar_data = OrderedDict(sorted(
             iteritems(bar_data),
             key=lambda x: sum(x[1].values()),
             reverse=True
         ))
+        bar_data = OrderedDict(
+            (key, value) for key, value in islice(iteritems(bar_data), 20)
+        )
         return bar_data
