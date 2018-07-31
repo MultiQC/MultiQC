@@ -124,14 +124,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add section with undetermine barcodes
         self.add_section(
-            name="Undetermined barcode by lane",
+            name="Undetermined barcodes by lane",
             anchor="undetermine_by_lane",
-            description="Count of the top ten most abundant undetermined"
+            description="Count of the top twenty most abundant undetermined"
                         " barcodes by lanes",
             plot=bargraph.plot(
-                self.get_bar_data_from_undertemined(self.bcl2fastq_bylane),
+                self.get_bar_data_from_undetermined(self.bcl2fastq_bylane),
                 None,
                 {
+                    'id': 'bcl2fastq_undetermined',
+                    'title': 'Undetermined barcodes by lane',
+                    'ylab': 'Count',
                     'cpswitch': False,
                     'tt_percentages': False,
                     'use_legend': True,
@@ -495,8 +498,8 @@ class MultiqcModule(BaseMultiqcModule):
                 bar_data[key]["undetermined"] = value["undetermined"]
         return bar_data
 
-    def get_bar_data_from_undertemined(self, flowcell):
-        """ Get data to plot for undertemined barcodes.
+    def get_bar_data_from_undetermined(self, flowcell):
+        """ Get data to plot for undetermined barcodes.
         """
         bar_data = defaultdict(dict)
         paste_key = list()
