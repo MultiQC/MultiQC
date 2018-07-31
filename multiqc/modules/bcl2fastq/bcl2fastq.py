@@ -133,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
                 None,
                 {
                     'id': 'bcl2fastq_undetermined',
-                    'title': 'Undetermined barcodes by lane',
+                    'title': 'bcl2fastq: Undetermined barcodes by lane',
                     'ylab': 'Count',
                     'cpswitch': False,
                     'tt_percentages': False,
