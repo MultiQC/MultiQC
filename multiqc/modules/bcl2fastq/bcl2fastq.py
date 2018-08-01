@@ -498,19 +498,14 @@ class MultiqcModule(BaseMultiqcModule):
                 bar_data[key]["undetermined"] = value["undetermined"]
         return bar_data
 
-    def get_bar_data_from_undetermined(self, flowcell):
+    def get_bar_data_from_undetermined(self, flowcells):
         """ Get data to plot for undetermined barcodes.
         """
         bar_data = defaultdict(dict)
-        paste_key = list()
         # get undetermined barcodes for each lanes
-        for lane_id, lane in iteritems(flowcell):
-            paste_key.append(lane_id)
+        for lane_id, lane in iteritems(flowcells):
             try:
-                for i, (barcode, count) in enumerate(
-                        iteritems(lane['unknown_barcodes'])):
-                    if i > 19:
-                        break
+                for barcode, count in islice(iteritems(lane['unknown_barcodes']), 20):
                     bar_data[barcode][lane_id] = count
             except AttributeError:
                 pass
@@ -521,7 +516,6 @@ class MultiqcModule(BaseMultiqcModule):
             key=lambda x: sum(x[1].values()),
             reverse=True
         ))
-        bar_data = OrderedDict(
+        return OrderedDict(
             (key, value) for key, value in islice(iteritems(bar_data), 20)
         )
-        return bar_data
