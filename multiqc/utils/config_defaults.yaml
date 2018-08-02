@@ -295,7 +295,9 @@ module_order:
     - verifybamid:
         module_tag:
             - DNA
-
+    - mirtrace:
+        module_tag:
+            - smRNA
 
     # Post-alignment processing
     - homer:

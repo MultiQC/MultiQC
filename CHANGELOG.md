@@ -11,6 +11,9 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * [**Long Ranger**](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
     * Works with data from the 10X Genomics Chromium. Performs sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
+* [**miRTrace**](__TBD__)
+    * A quality control software for small RNA sequencing data.
+    * Module written by [@chuan-wang](https://github.com/chuan-wang/)
 
 #### Module updates:
 * **BCFtools**

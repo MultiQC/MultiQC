@@ -50,7 +50,7 @@ Currently, supported tools include:
 |[KAT][kat]                       |                         |                           |[Supernova][supernova]      |
 |[Skewer][skewer]                 |                         |                           |[VCFTools][vcftools]        |
 |[SortMeRNA][sortmerna]           |                         |                           |[VerifyBAMID][verifybamid]  |
-|[Trimmomatic][trimmomatic]       |                         |                           |                            |
+|[Trimmomatic][trimmomatic]       |                         |                           |[miRTrace][mirtrace]        |
 
 
 
@@ -153,6 +153,7 @@ Code contributions from:
 [@avilella](https://github.com/avilella),
 [@boulund](https://github.com/boulund),
 [@bschiffthaler](https://github.com/bschiffthaler),
+[@chuan-wang](https://github.com/chuan-wang),
 [@cpavanrun](https://github.com/cpavanrun),
 [@dakl](https://github.com/dakl),
 [@ehsueh](https://github.com/ehsueh),
@@ -220,6 +221,7 @@ MultiQC is released under the GPL v3 or later licence.
 [longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2
 [methylqa]:       http://multiqc.info/docs/#methylqa
+[mirtrace]:       http://multiqc.info/docs/#mirtrace
 [peddy]:          http://multiqc.info/docs/#peddy
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq
