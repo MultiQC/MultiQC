@@ -86,6 +86,14 @@ class StatsReportMixin():
                 'suffix': '%',
                 'scale': 'RdYlGn'
             }
+            stats_headers['proper_pairs_percent'] = {
+                'title': '% Proper Pairs',
+                'description': '% Proper Pairs',
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'scale': 'RdYlGn'
+            }
             stats_headers['raw_total_sequences'] = {
                 'title': '{} Total seqs'.format(config.read_count_prefix),
                 'description': 'Total sequences in the bam file ({})'.format(config.read_count_desc),
