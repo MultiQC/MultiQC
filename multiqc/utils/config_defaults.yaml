@@ -298,6 +298,7 @@ module_order:
     - mirtrace:
         module_tag:
             - smRNA
+            - miRNA
 
     # Post-alignment processing
     - homer:

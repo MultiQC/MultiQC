@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """ MultiQC module to parse output files from miRTrace """
 
@@ -55,16 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.complexity_data      =   self.ignore_samples(self.complexity_data)
 
         # Warning when no files are found
-        if len(self.summary_data) == 0:
-            raise UserWarning
-
-        if len(self.length_data) == 0:
-            raise UserWarning
-
-        if len(self.contamination_data) == 0:
-            raise UserWarning
-
-        if len(self.complexity_data) == 0:
+        if max(len(self.summary_data), len(self.length_data), len(self.contamination_data), len(self.complexity_data)) == 0:
             raise UserWarning
 
         # Write parsed data to a file
@@ -74,43 +66,44 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.complexity_data, 'multiqc_mirtrace_complexity')
 
         # Report sections
-        self.add_section (
-            name = 'QC Plot',
-            anchor = 'mirtrace_qc',
-            plot = self.mirtrace_qc_plot()
-        )
+        if len(self.summary_data) > 0:
+            self.add_section (
+                name = 'QC Plot',
+                anchor = 'mirtrace_qc',
+                plot = self.mirtrace_qc_plot()
+            )
+            self.add_section (
+                name = 'RNA Categories',
+                anchor = 'mirtrace_rna_categories',
+                plot = self.mirtrace_rna_categories()
+            )
 
-        self.add_section (
-            name = 'Read Length Distribution',
-            anchor = 'mirtrace_length',
-            plot = self.mirtrace_length_plot()
-        )
+        if len(self.length_data) > 0:
+            self.add_section (
+                name = 'Read Length Distribution',
+                anchor = 'mirtrace_length',
+                plot = self.mirtrace_length_plot()
+            )
 
-        self.add_section (
-            name = 'RNA Categories',
-            anchor = 'mirtrace_rna_categories',
-            plot = self.mirtrace_rna_categories()
-        )
+        if len(self.contamination_data) > 0:
+            self.add_section (
+                name = 'Contamination Check',
+                anchor = 'mirtrace_contamination_check',
+                plot = self.mirtrace_contamination_check()
+            )
 
-        self.add_section (
-            name = 'Contamination Check',
-            anchor = 'mirtrace_contamination_check',
-            plot = self.mirtrace_contamination_check()
-        )
-
-        self.add_section (
-            name = 'miRNA Complexity',
-            anchor = 'mirtrace_complexity',
-            plot = self.mirtrace_complexity_plot()
-        )
+        if len(self.complexity_data) > 0:
+            self.add_section (
+                name = 'miRNA Complexity',
+                anchor = 'mirtrace_complexity',
+                plot = self.mirtrace_complexity_plot()
+            )
 
     # Parse a miRTrace results.json file
     def parse_summary(self, f):
 
         try:
             cdict = json.loads(f['f'])
-        except ValueError as e:
-            raise e
 
         if 'results' in cdict.keys():
             for record in cdict['results']:
@@ -132,19 +125,19 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = s_name + '_' + record['filename']
                 self.add_data_source(f, s_name)
                 self.summary_data[s_name] = parsed_data
+        else:
+            log.debug('No valid data {} in miRTrace summary'.format(f['fn']))
+            return None
 
 
     # Parse a miRTrace mirtrace-stats-length.tsv file
     def parse_length(self, f):
         try:
-            with open(f['fn'], 'rb') as file:
-                reader = csv.reader(file, delimiter="\t")
-                header = reader.next()
-                body = {}
-                for row in reader:
-                    body[row[0]]=row[1:len(row)]
-        except ValueError as e:
-            raise e
+            reader = csv.reader(f['f'], delimiter="\t")
+            header = reader.next()
+            body = {}
+            for row in reader:
+                body[row[0]]=row[1:len(row)]
 
         if header[0] == 'LENGTH':
             for record in header[1:len(header)]:
@@ -158,21 +151,18 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name)
                 self.length_data[s_name] = parsed_data
         else:
-            log.debug('No valid data for read length distribution')
+            log.debug('No valid data {} for read length distribution'.format(f['fn']))
             return None
 
 
     # Parse a miRTrace mirtrace-stats-contamination_basic.tsv file
     def parse_contamination(self, f):
         try:
-            with open(f['fn'], 'rb') as file:
-                reader = csv.reader(file, delimiter="\t")
-                header = reader.next()
-                body = {}
-                for row in reader:
-                    body[row[0]]=row[1:len(row)]
-        except ValueError as e:
-            raise e
+            reader = csv.reader(f['f'], delimiter="\t")
+            header = reader.next()
+            body = {}
+            for row in reader:
+                body[row[0]]=row[1:len(row)]
 
         if header[0] == 'CLADE':
             for record in header[1:len(header)]:
@@ -186,21 +176,18 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name)
                 self.contamination_data[s_name] = parsed_data
         else:
-            log.debug('No valid data for contamination check')
+            log.debug('No valid data {} for contamination check'.format(f['fn']))
             return None
 
 
     # Parse a miRTrace mirtrace-stats-mirna-complexity.tsv file
     def parse_complexity(self, f):
         try:
-            with open(f['fn'], 'rb') as file:
-                reader = csv.reader(file, delimiter="\t")
-                header = reader.next()
-                body = {}
-                for row in reader:
-                    body[row[0]]=row[1:len(row)]
-        except ValueError as e:
-            raise e
+            reader = csv.reader(f['f'], delimiter="\t")
+            header = reader.next()
+            body = {}
+            for row in reader:
+                body[row[0]]=row[1:len(row)]
 
         if header[0] == 'DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT':
             for record in header[1:len(header)]:
@@ -214,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name)
                 self.complexity_data[s_name] = parsed_data
         else:
-            log.debug('No valid data for miRNA complexity')
+            log.debug('No valid data {} for miRNA complexity'.format(f['fn']))
             return None
 
     # miRTrace QC Plot
@@ -229,17 +216,6 @@ class MultiqcModule(BaseMultiqcModule):
         keys['low_complexity']              =   { 'color': '#d73027', 'name': 'Reads with low complexity' }
         keys['low_phred']                   =   { 'color': '#a50026', 'name': 'Reads with low PHRED score' }
 
-        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
-        data = {}
-        for s_name in self.summary_data:
-            data[s_name]                                =   {}
-            data[s_name]['adapter_removed_length_ok']   =   self.summary_data[s_name]['adapter_removed_length_ok']
-            data[s_name]['adapter_not_detected']        =   self.summary_data[s_name]['adapter_not_detected']
-            data[s_name]['length_shorter_than_18']      =   self.summary_data[s_name]['length_shorter_than_18']
-            data[s_name]['low_complexity']              =   self.summary_data[s_name]['low_complexity']
-            data[s_name]['low_phred']                   =   self.summary_data[s_name]['low_phred']
-
-
         # Config for the plot
         config = {
             'id': 'mirtrace_qc_plot',
@@ -248,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(data, keys, config)
+        return bargraph.plot(self.summary_data, keys, config)
 
 
     # miRTrace Read Length Distribution
@@ -297,17 +273,6 @@ class MultiqcModule(BaseMultiqcModule):
         keys['reads_artifact']   =   { 'color': '#fb9a99', 'name': 'Artifact' }
         keys['reads_unknown']    =   { 'color': '#d9d9d9', 'name': 'Unknown' }
 
-        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
-        data = {}
-        for s_name in self.summary_data:
-            data[s_name]                                =    {}
-            data[s_name]['reads_mirna']      =   self.summary_data[s_name]['reads_mirna']
-            data[s_name]['reads_rrna']       =   self.summary_data[s_name]['reads_rrna']
-            data[s_name]['reads_trna']       =   self.summary_data[s_name]['reads_trna']
-            data[s_name]['reads_artifact']   =   self.summary_data[s_name]['reads_artifact']
-            data[s_name]['reads_unknown']    =   self.summary_data[s_name]['reads_unknown']
-
-
         # Config for the plot
         config = {
             'id': 'mirtrace_rna_categories_plot',
@@ -316,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(data, keys, config)
+        return bargraph.plot(self.summary_data, keys, config)
 
 
     # miRTrace Contamination Check
@@ -332,14 +297,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys = OrderedDict()
         for clade in self.contamination_data[self.contamination_data.keys()[0]]:
             keys[clade] = { 'color': color_lib[idx], 'name': clade }
-            idx = idx + 1
-
-        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
-        data = {}
-        for s_name in self.contamination_data:
-            data[s_name] = {}
-            for clade in self.contamination_data[self.contamination_data.keys()[0]]:
-                data[s_name][clade] = self.contamination_data[s_name][clade]
+            idx += 1 if idx < 23 else idx = 0
 
         # Config for the plot
         config = {
@@ -350,7 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of detected miRNA'
         }
 
-        return bargraph.plot(data, keys, config)
+        return bargraph.plot(self.contamination_data, keys, config)
 
 
     # miRTrace Read Length Distribution
