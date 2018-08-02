@@ -140,6 +140,8 @@ class MultiqcModule(BaseMultiqcModule):
             body = {}
             for row in reader:
                 body[row[0]]=row[1:len(row)]
+        except ValueError as e:
+            raise e
 
         if header[0] == 'LENGTH':
             for record in header[1:len(header)]:
@@ -165,6 +167,8 @@ class MultiqcModule(BaseMultiqcModule):
             body = {}
             for row in reader:
                 body[row[0]]=row[1:len(row)]
+        except ValueError as e:
+            raise e
 
         if header[0] == 'CLADE':
             for record in header[1:len(header)]:
@@ -190,6 +194,8 @@ class MultiqcModule(BaseMultiqcModule):
             body = {}
             for row in reader:
                 body[row[0]]=row[1:len(row)]
+        except ValueError as e:
+            raise e
 
         if header[0] == 'DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT':
             for record in header[1:len(header)]:
