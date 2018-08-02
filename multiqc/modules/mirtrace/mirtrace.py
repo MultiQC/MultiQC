@@ -304,7 +304,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = OrderedDict()
-        for clade in self.contamination_data[self.contamination_data.keys()[0]]:
+        for clade in self.contamination_data[list(self.contamination_data.keys())[0]]:
             keys[clade] = { 'color': color_lib[idx], 'name': clade }
             if idx < 23:
                 idx += 1
