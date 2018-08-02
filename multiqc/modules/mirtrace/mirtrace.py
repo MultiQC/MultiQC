@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
     # Parse a miRTrace mirtrace-stats-length.tsv file
     def parse_length(self, f):
         try:
-            reader = csv.reader(f['fn'], delimiter="\t")
+            reader = csv.reader(f['f'], delimiter="\t")
             header = reader.next()
             body = {}
             for row in reader:
@@ -162,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
     # Parse a miRTrace mirtrace-stats-contamination_basic.tsv file
     def parse_contamination(self, f):
         try:
-            reader = csv.reader(f['fn'], delimiter="\t")
+            reader = csv.reader(f['f'], delimiter="\t")
             header = reader.next()
             body = {}
             for row in reader:
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
     # Parse a miRTrace mirtrace-stats-mirna-complexity.tsv file
     def parse_complexity(self, f):
         try:
-            reader = csv.reader(f['fn'], delimiter="\t")
+            reader = csv.reader(f['f'], delimiter="\t")
             header = reader.next()
             body = {}
             for row in reader:
