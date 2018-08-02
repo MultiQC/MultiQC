@@ -305,7 +305,10 @@ class MultiqcModule(BaseMultiqcModule):
         keys = OrderedDict()
         for clade in self.contamination_data[self.contamination_data.keys()[0]]:
             keys[clade] = { 'color': color_lib[idx], 'name': clade }
-            idx += 1 if idx < 23 else idx = 0
+            if idx < 23:
+                idx += 1
+            else:
+                idx = 0
 
         # Config for the plot
         config = {
