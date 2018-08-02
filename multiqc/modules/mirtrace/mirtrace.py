@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data['reads_artifact'] = record['stats']['statsRNAType'][3]
                 parsed_data['reads_unknown'] = record['stats']['statsRNAType'][4]
                 if s_name in self.summary_data:
-                    s_name = s_name + '_' + record['filename']
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.summary_data[s_name] = parsed_data
         else:
@@ -134,83 +134,84 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse a miRTrace mirtrace-stats-length.tsv file
     def parse_length(self, f):
-        try:
-            reader = csv.reader(f['f'], delimiter="\t")
-            header = reader.next()
-            body = {}
-            for row in reader:
-                body[row[0]]=row[1:len(row)]
-        except ValueError as e:
-            raise e
+        header =[]
+        body = {}
+        lines = f['f'].splitlines()
+        for l in lines:
+            s = l.split("\t")
+            if len(header) == 0:
+                if s[0] != 'LENGTH':
+                    log.debug('No valid data {} for read length distribution'.format(f['fn']))
+                    return None
+                header = s[1:]
+            else:
+                body[s[0]]=s[1:len(s)]
 
-        if header[0] == 'LENGTH':
-            for record in header[1:len(header)]:
-                s_name = self.clean_s_name(record, f['root'])
-                parsed_data = {}
-                idx = header[1:len(header)].index(record)
-                for length in body:
-                    parsed_data[length] = int(body[length][idx])
-                if s_name in self.length_data:
-                    s_name = s_name + '_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
-                self.add_data_source(f, s_name)
-                self.length_data[s_name] = parsed_data
-        else:
-            log.debug('No valid data {} for read length distribution'.format(f['fn']))
-            return None
+        for record in header[1:len(header)]:
+            s_name = self.clean_s_name(record, f['root'])
+            parsed_data = {}
+            idx = header[1:len(header)].index(record)
+            for length in body:
+                parsed_data[length] = int(body[length][idx])
+            if s_name in self.length_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            self.add_data_source(f, s_name)
+            self.length_data[s_name] = parsed_data
 
 
     # Parse a miRTrace mirtrace-stats-contamination_basic.tsv file
     def parse_contamination(self, f):
-        try:
-            reader = csv.reader(f['f'], delimiter="\t")
-            header = reader.next()
-            body = {}
-            for row in reader:
-                body[row[0]]=row[1:len(row)]
-        except ValueError as e:
-            raise e
+        header =[]
+        body = {}
+        lines = f['f'].splitlines()
+        for l in lines:
+            s = l.split("\t")
+            if len(header) == 0:
+                if s[0] != 'CLADE':
+                    log.debug('No valid data {} for contamination check'.format(f['fn']))
+                    return None
+                header = s[1:]
+            else:
+                body[s[0]]=s[1:len(s)]
 
-        if header[0] == 'CLADE':
-            for record in header[1:len(header)]:
-                s_name = self.clean_s_name(record, f['root'])
-                parsed_data = {}
-                idx = header[1:len(header)].index(record)
-                for clade in body:
-                    parsed_data[clade] = int(body[clade][idx])
-                if s_name in self.contamination_data:
-                    s_name = s_name + '_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
-                self.add_data_source(f, s_name)
-                self.contamination_data[s_name] = parsed_data
-        else:
-            log.debug('No valid data {} for contamination check'.format(f['fn']))
-            return None
+        for record in header[1:len(header)]:
+            s_name = self.clean_s_name(record, f['root'])
+            parsed_data = {}
+            idx = header[1:len(header)].index(record)
+            for clade in body:
+                parsed_data[clade] = int(body[clade][idx])
+            if s_name in self.contamination_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            self.add_data_source(f, s_name)
+            self.contamination_data[s_name] = parsed_data
 
 
     # Parse a miRTrace mirtrace-stats-mirna-complexity.tsv file
     def parse_complexity(self, f):
-        try:
-            reader = csv.reader(f['f'], delimiter="\t")
-            header = reader.next()
-            body = {}
-            for row in reader:
-                body[row[0]]=row[1:len(row)]
-        except ValueError as e:
-            raise e
+        header =[]
+        body = {}
+        lines = f['f'].splitlines()
+        for l in lines:
+            s = l.split("\t")
+            if len(header) == 0:
+                if s[0] != 'DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT':
+                    log.debug('No valid data {} for miRNA complexity'.format(f['fn']))
+                    return None
+                header = s[1:]
+            else:
+                body[s[0]]=s[1:len(s)]
 
-        if header[0] == 'DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT':
-            for record in header[1:len(header)]:
-                s_name = self.clean_s_name(record, f['root'])
-                parsed_data = {}
-                idx = header[1:len(header)].index(record)
-                for depth in body:
-                    parsed_data[depth] = int(body[depth][idx]) if body[depth][idx] else 0
-                if s_name in self.complexity_data:
-                    s_name = s_name + '_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(6))
-                self.add_data_source(f, s_name)
-                self.complexity_data[s_name] = parsed_data
-        else:
-            log.debug('No valid data {} for miRNA complexity'.format(f['fn']))
-            return None
+        for record in header[1:len(header)]:
+            s_name = self.clean_s_name(record, f['root'])
+            parsed_data = {}
+            idx = header[1:len(header)].index(record)
+            for depth in body:
+                parsed_data[depth] = int(body[depth][idx]) if body[depth][idx] else 0
+            if s_name in self.complexity_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            self.add_data_source(f, s_name)
+            self.complexity_data[s_name] = parsed_data
+
 
     # miRTrace QC Plot
     def mirtrace_qc_plot(self):
