@@ -104,6 +104,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         try:
             cdict = json.loads(f['f'])
+        except ValueError as e:
+            raise e
 
         if 'results' in cdict.keys():
             for record in cdict['results']:
