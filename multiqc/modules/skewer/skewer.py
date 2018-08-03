@@ -81,7 +81,6 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '% of Reads',
             'xlab': 'Read Length',
             'xmin': 0,
-            'ymax': 100,
             'ymin': 0,
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }

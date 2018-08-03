@@ -741,7 +741,6 @@ class MultiqcModule(BaseMultiqcModule):
             'categories': True,
             'ylab': '% of Library',
             'xlab': 'Sequence Duplication Level',
-            'ymax': 100,
             'ymin': 0,
             'yMinTickInterval': 0.1,
             'colors': self.get_status_cols('sequence_duplication_levels'),
