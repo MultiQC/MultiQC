@@ -253,6 +253,14 @@ macs2:
 methylQA:
     fn: '*.report'
     shared: true
+mirtrace/summary:
+    fn: 'mirtrace-results.json'
+mirtrace/length:
+    fn: 'mirtrace-stats-length.tsv'
+mirtrace/contaminationbasic:
+    fn: 'mirtrace-stats-contamination_basic.tsv'
+mirtrace/mirnacomplexity:
+    fn: 'mirtrace-stats-mirna-complexity.tsv'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2

@@ -295,10 +295,13 @@ module_order:
     - verifybamid:
         module_tag:
             - DNA
+    - mirtrace:
+        module_tag:
+            - smRNA
+            - miRNA
     - happy:
         module_tag:
             - DNA
-
 
     # Post-alignment processing
     - homer:
