@@ -44,7 +44,11 @@ class MultiqcModule(BaseMultiqcModule):
             data['percent_valid'] = float(data['valid_interaction']) / float(data['total_R1']) * 100.0
             data['Failed_To_Align_Read_R1'] = int(data['total_R1']) - int(data['mapped_R1'])
             data['Failed_To_Align_Read_R2'] = int(data['total_R2']) - int(data['mapped_R2'])
-
+            
+            try:
+                data['valid_pairs_off_target'] = int(data['valid_interaction']) - int(data['valid_pairs_on_target'])
+            except KeyError:
+                pass
             
         # Filter to strip out ignored sample names
         self.hicpro_data = self.ignore_samples(self.hicpro_data)
@@ -93,8 +97,9 @@ class MultiqcModule(BaseMultiqcModule):
             different restriction fragments. Read pairs coming from the same fragments, 
             such as self-ligation or unligated (danging-end) fragments, are discarded.
             Ligation products involving neighboring restriction fragment (religation) are also discarded.
-            Finaly, as the ligation should be a random process, valid read pairs from all 
-            orientations (R=Reverse, F=forward) are expected to be observed at the same proportion.''',
+            Filtered pairs correspond to ligation products discarded based on the range of insert/fragment sizes defined
+            in the analysis. Finally, as the ligation should be a random process, valid read pairs from all 
+            orientations (R=Reverse, F=forward) are expected to be observed in the same proportion.''',
             plot = self.hicpro_filtering_chart()
         )
 
@@ -120,7 +125,17 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = allele_plot
             )
             
-
+        capture_plot = self.hicpro_capture_chart()
+        if capture_plot:
+            self.add_section (
+                name = 'Capture analysis',
+                anchor = 'hicpro-cap',
+                description = 'Selection of interactions overlaping the targeted region(s).',
+                helptext = '''
+                Description of capture efficiency. Valid interactions with either two (capture-capture) or 
+                one (capture-reporter) interactors overlapping with the target(s) are reported.''',
+                plot = capture_plot
+            )
 
     def parse_hicpro_stats(self, f, rsection):
         """ Parse a HiC-Pro stat file """
@@ -140,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
     def hicpro_stats_table(self):
          """ Add HiC-Pro stats to the general stats table """
          headers = OrderedDict()
-                
+
          headers['percent_duplicates'] = {
              'title': '% Duplicates',
              'description': 'Percent of duplicated valid pairs (%)',
@@ -317,7 +332,8 @@ class MultiqcModule(BaseMultiqcModule):
         keys['Self_Cycle_pairs'] = { 'color': '#ffad99', 'name': 'Same Fragment - Self-Circle' }
         keys['Dangling_end_pairs'] = { 'color': '#ff5c33', 'name': 'Same Fragment - Dangling Ends' }
         keys['Religation_pairs'] = { 'color': '#cc2900', 'name': 'Re-ligation' }
-        keys['Dumped_pairs'] = { 'color': '#661400', 'name': 'Dumped pairs' }
+        keys['Filtered_pairs'] = { 'color': '#661400', 'name': 'Filtered pairs' }
+        keys['Dumped_pairs'] = { 'color': '#330a00', 'name': 'Dumped pairs' }
 
         # Config for the plot
         config = {
@@ -379,6 +395,32 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(self.hicpro_data, keys, config)
 
+
+    def hicpro_capture_chart (self):
+        """ Generate Capture Hi-C plot"""
+
+        keys = OrderedDict()
+        keys['valid_pairs_on_target_cap_cap'] = { 'color': '#0039e6', 'name': 'Capture-Capture interactions' }
+        keys['valid_pairs_on_target_cap_rep']  = { 'color': '#809fff', 'name': 'Capture-Reporter interactions' }
+        keys['valid_pairs_off_target'] = { 'color': '#cccccc', 'name': 'Off-target valid pairs' }
+  
+        # Check capture info are available
+        num_samples = 0
+        for s_name in self.hicpro_data:
+            for k in keys:
+                num_samples += sum([1 if k in self.hicpro_data[s_name] else 0])
+        if num_samples == 0:
+            return False
+
+        # Config for the plot
+        config = {
+            'id': 'hicpro_cap_plot',
+            'title': 'HiC-Pro: Capture Statistics',
+            'ylab': '# Pairs',
+            'cpswitch_counts_label': 'Number of Pairs'
+        }
+
+        return bargraph.plot(self.hicpro_data, keys, config)
 
 
         
