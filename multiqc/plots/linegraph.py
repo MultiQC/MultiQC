@@ -341,13 +341,13 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         ymin = default_ylimits[0]
         if 'ymin' in pconfig:
             ymin = pconfig['ymin']
-        elif 'yCeiling' in pconfig:
-            ymin = min(pconfig['yCeiling'], default_ylimits[0])
+        elif 'yFloor' in pconfig:
+            ymin = max(pconfig['yFloor'], default_ylimits[0])
         ymax = default_ylimits[1]
         if 'ymax' in pconfig:
             ymax = pconfig['ymax']
-        elif 'yFloor' in pconfig:
-            ymax = max(pconfig['yCeiling'], default_ylimits[1])
+        elif 'yCeiling' in pconfig:
+            ymax = min(pconfig['yCeiling'], default_ylimits[1])
         if (ymax - ymin) < pconfig.get('yMinRange', 0):
             ymax = ymin + pconfig['yMinRange']
         axes.set_ylim((ymin, ymax))
@@ -362,13 +362,13 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         xmin = default_xlimits[0]
         if 'xmin' in pconfig:
             xmin = pconfig['xmin']
-        elif 'xCeiling' in pconfig:
-            xmin = min(pconfig['xCeiling'], default_xlimits[0])
+        elif 'xFloor' in pconfig:
+            xmin = max(pconfig['xFloor'], default_xlimits[0])
         xmax = default_xlimits[1]
         if 'xmax' in pconfig:
             xmax = pconfig['xmax']
-        elif 'xFloor' in pconfig:
-            xmax = max(pconfig['xCeiling'], default_xlimits[1])
+        elif 'xCeiling' in pconfig:
+            xmax = min(pconfig['xCeiling'], default_xlimits[1])
         if (xmax - xmin) < pconfig.get('xMinRange', 0):
             xmax = xmin + pconfig['xMinRange']
         axes.set_xlim((xmin, xmax))
