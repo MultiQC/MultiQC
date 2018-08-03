@@ -45,6 +45,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Don't create the report section for Gene Body Coverage if no data is given
 * **Samtools**
     * Fixed edge case bug where MultiQC could crash if a sample had zero count coverage with idxstats.
+    * Adds % proper pairs to general stats table
 * **Tophat**
     * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
 * **VerifyBamID**
