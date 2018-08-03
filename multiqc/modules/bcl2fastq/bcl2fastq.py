@@ -184,8 +184,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             run_data[lane]['unknown_barcodes'] = unknown_barcode
             for demuxResult in conversionResult.get("DemuxResults", []):
-                sample = "{}-{}".format(demuxResult["SampleName"],
-                                        demuxResult["SampleId"])
+                sample = "{}-{}".format(demuxResult["SampleId"],
+                                        demuxResult["SampleName"])
                 if sample in run_data[lane]["samples"]:
                     log.debug(
                         "Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(
