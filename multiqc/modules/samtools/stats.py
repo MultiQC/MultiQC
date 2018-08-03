@@ -86,9 +86,9 @@ class StatsReportMixin():
                 'suffix': '%',
                 'scale': 'RdYlGn'
             }
-            stats_headers['proper_pairs_percent'] = {
+            stats_headers['reads_properly_paired_percent'] = {
                 'title': '% Proper Pairs',
-                'description': '% Proper Pairs',
+                'description': '% Properly Paired Reads',
                 'max': 100,
                 'min': 0,
                 'suffix': '%',
