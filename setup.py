@@ -91,6 +91,7 @@ setup(
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
+            'happy = multiqc.modules.happy:MultiqcModule',
             'hicexplorer = multiqc.modules.hicexplorer:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'hicpro = multiqc.modules.hicpro:MultiqcModule',

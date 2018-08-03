@@ -8,6 +8,9 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * [**fastp**](https://github.com/OpenGene/fastp)
     * An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
     * Module started by [@florianduclot](https://github.com/florianduclot/) and completed by [@ewels](https://github.com/ewels/)
+* [**hap.py**](https://github.com/Illumina/hap.py)
+    * Hap.py is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets
+    * Module written by [@tsnowlan](https://github.com/tsnowlan/)
 * [**Long Ranger**](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
     * Works with data from the 10X Genomics Chromium. Performs sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
