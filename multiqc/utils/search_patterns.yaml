@@ -187,6 +187,9 @@ goleft_indexcov/roc:
     fn: '*-indexcov.roc'
 goleft_indexcov/ped:
     fn: '*-indexcov.ped'
+happy:
+    fn: '*.summary.csv'
+    contents: 'Type,Filter,TRUTH'
 htseq:
     contents: '__too_low_aQual'
 hicexplorer:
