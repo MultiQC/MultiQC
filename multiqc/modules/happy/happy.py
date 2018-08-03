@@ -45,44 +45,40 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("happy", filehandles=True):
             f['s_name'] = self.clean_s_name(f['s_name'], f['root'])
 
-            n = self.parse_log(f)
-            if n > 0:
-                n_files += 1
-                self.add_data_source(f)
-        log.info("Found {} hap.py log file(s)".format(n_files))
+            n_files += self.parse_log(f)
+            self.add_data_source(f)
+
         if n_files == 0:
             raise UserWarning
+
+        log.info("Found {} reports".format(n_files))
 
         if len(self.happy_data) > 0:
             self.write_data_file(self.happy_data, 'multiqc_happy_data', data_format="json")
 
-            hp_headers = gen_headers()
-            hp_plot = table.plot(self.happy_data, hp_headers)
             self.add_section(
-                name="hap.py",
-                anchor="happy-plot",
-                plot=hp_plot
+                name = "hap.py",
+                anchor = "happy-plot",
+                plot = table.plot(self.happy_data, gen_headers())
             )
 
-    def parse_log(self, log_file):
-        n = 0
-        log.debug("Processing file {}".format(log_file["root"]))
-        samp = log_file['s_name']
-
-        if samp in self.happy_seen:
-            log.warn("Duplicate sample name found in {}! Overwriting: {}".format(log_file['root'], log_file['s_name']))
+    def parse_log(self, f):
+        filecount = 1
+        if f['s_name'] in self.happy_seen:
+            log.warn("Duplicate sample name found in {}! Overwriting: {}".format(f['root'], f['s_name']))
+            filecount = 0
         else:
-            self.happy_seen.add(samp)
+            self.happy_seen.add(f['s_name'])
 
-        rdr = csv.DictReader(log_file['f'])
+        rdr = csv.DictReader(f['f'])
         for row in rdr:
-            row_id = "{}_{}_{}".format(samp, row["Type"], row["Filter"])
+            row_id = "{}_{}_{}".format(f['s_name'], row["Type"], row["Filter"])
             if row_id not in self.happy_data:
-                self.happy_data[row_id] = {"sample_id": samp}
+                self.happy_data[row_id] = {"sample_id": f['s_name']}
             for fn in rdr.fieldnames:
                 self.happy_data[row_id][fn] = row[fn]
 
-        return 1
+        return filecount
 
 
 def gen_headers():
