@@ -77,6 +77,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * Adjusted behavior of ceiling and floor axis limits
 * Adjusted multiple file search patterns to make them more specific
     * Prevents the wrong module from accidentally slurping up output from a different tool. By [@cpavanrun](https://github.com/cpavanrun) (see [PR #727](https://github.com/ewels/MultiQC/pull/727))
+* Fixed broken report bar plots when `-p`/`--export-plots` was specified (see issue [#801](https://github.com/ewels/MultiQC/issues/801))
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
