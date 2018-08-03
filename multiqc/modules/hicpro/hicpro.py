@@ -44,9 +44,11 @@ class MultiqcModule(BaseMultiqcModule):
             data['percent_valid'] = float(data['valid_interaction']) / float(data['total_R1']) * 100.0
             data['Failed_To_Align_Read_R1'] = int(data['total_R1']) - int(data['mapped_R1'])
             data['Failed_To_Align_Read_R2'] = int(data['total_R2']) - int(data['mapped_R2'])
-            if 'valid_pairs_on_target' in data.keys():
+            
+            try:
                 data['valid_pairs_off_target'] = int(data['valid_interaction']) - int(data['valid_pairs_on_target'])
-
+            except KeyError:
+                pass
             
         # Filter to strip out ignored sample names
         self.hicpro_data = self.ignore_samples(self.hicpro_data)
@@ -96,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
             such as self-ligation or unligated (danging-end) fragments, are discarded.
             Ligation products involving neighboring restriction fragment (religation) are also discarded.
             Filtered pairs correspond to ligation products discarded based on the range of insert/fragment sizes defined
-            in the analysis. Finaly, as the ligation should be a random process, valid read pairs from all 
+            in the analysis. Finally, as the ligation should be a random process, valid read pairs from all 
             orientations (R=Reverse, F=forward) are expected to be observed in the same proportion.''',
             plot = self.hicpro_filtering_chart()
         )
@@ -415,8 +417,8 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'hicpro_cap_plot',
             'title': 'HiC-Pro: Capture Statistics',
             'ylab': '# Pairs',
-                'cpswitch_counts_label': 'Number of Pairs'
-            }
+            'cpswitch_counts_label': 'Number of Pairs'
+        }
 
         return bargraph.plot(self.hicpro_data, keys, config)
 
