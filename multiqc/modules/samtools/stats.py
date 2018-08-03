@@ -92,7 +92,8 @@ class StatsReportMixin():
                 'max': 100,
                 'min': 0,
                 'suffix': '%',
-                'scale': 'RdYlGn'
+                'scale': 'RdYlGn',
+                'hidden': True if (max([x['reads_mapped_and_paired'] for x in self.samtools_stats.values()]) == 0) else False
             }
             stats_headers['reads_MQ0_percent'] = {
                 'title': '% MapQ 0 Reads',
