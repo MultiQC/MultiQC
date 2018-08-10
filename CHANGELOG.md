@@ -2,7 +2,10 @@
 
 ## MultiQC v1.7dev
 
-_..nothing yet.._
+#### New Modules:
+* [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
+    * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
@@ -22,6 +25,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * [**miRTrace**](__TBD__)
     * A quality control software for small RNA sequencing data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+
 
 #### Module updates:
 * **BCFtools**

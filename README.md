@@ -45,9 +45,9 @@ Currently, supported tools include:
 |[FastQC][fastqc]                 |[Slamdunk][slamdunk]     |[Samtools][samtools]       |[Qualimap][qualimap]        |
 |[FastQ Screen][fastq-screen]     |[STAR][star]             |[SnpEff][snpeff]           |[QUAST][quast]              |
 |[Fastp][fastp]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
-|[Flexbar][flexbar]               |[HiCPro][hicpro]         |[RSEM][rsem]               |[RSeQC][rseqc]              |
-|[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[Sargasso][sargasso]        |
-|[KAT][kat]                       |                         |                           |[Supernova][supernova]      |
+|[Flexbar][flexbar]               |[HiCPro][hicpro]         |[Stacks][stacks]           |[RSeQC][rseqc]              |
+|[Jellyfish][jellyfish]           |                         |[RSEM][rsem]               |[Sargasso][sargasso]        |
+|[KAT][kat]                       |                         |[THetA2][theta2]           |[Supernova][supernova]      |
 |[Skewer][skewer]                 |                         |                           |[VCFTools][vcftools]        |
 |[SortMeRNA][sortmerna]           |                         |                           |[VerifyBAMID][verifybamid]  |
 |[Trimmomatic][trimmomatic]       |                         |                           |[miRTrace][mirtrace]        |
