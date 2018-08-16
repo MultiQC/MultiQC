@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['nsc'] = {
             'title': 'NSC',
             'description': 'Normalized strand cross-correlation',
-            'max': 1,
+            'max': 10,
             'min': 0,
             'format': '{:,.2f}',
             'scale': 'RdYlBu-rev'
@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['rsc'] = {
             'title': 'RSC',
             'description': 'Relative strand cross-correlation',
-            'max': 1,
+            'max': 10,
             'min': 0,
             'format': '{:,.2f}',
             'scale': 'RdYlBu-rev'
