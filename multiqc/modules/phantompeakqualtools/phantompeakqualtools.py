@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         headers['nsc'] = {
-            'title': 'NSC,
+            'title': 'NSC',
             'description': 'Normalized strand cross-correlation',
             'max': 1,
             'min': 0,
