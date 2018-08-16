@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse logs
         self.phantompeakqualtools_data = dict()
-        for f in self.find_log_files('phantompeakqualtools', filehandles=True):
+        for f in self.find_log_files('phantompeakqualtools', filehandles=False):
             self.parse_phantompeakqualtools(f)
 
         # Filter to strip out ignored sample names
