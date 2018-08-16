@@ -46,9 +46,9 @@ class MultiqcModule(BaseMultiqcModule):
         lines = f['f'].splitlines()
         for l in lines:
             s = l.split("\t")
-            parse_data['Estimated Fragment Length (bp)'] = int(s[2].split(",")[0])
-            parse_data['NSC'] = float(s[8])
-            parse_data['RSC'] = float(s[9])
+            parsed_data['Estimated Fragment Length (bp)'] = int(s[2].split(",")[0])
+            parsed_data['NSC'] = float(s[8])
+            parsed_data['RSC'] = float(s[9])
         if len(parsed_data) > 0:
             if s_name in self.phantompeakqualtools_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
