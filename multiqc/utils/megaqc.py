@@ -82,7 +82,7 @@ def multiqc_api_post(exported_data):
     gzfh.close()
     request_body = sio_obj.getvalue()
 
-    log.info("Sending data to MegaQC")
+    log.debug("Sending data to MegaQC")
     log.debug("MegaQC URL: {}".format(config.megaqc_url))
     try:
         r = requests.post(config.megaqc_url, headers=headers, data=request_body, timeout=config.megaqc_timeout)

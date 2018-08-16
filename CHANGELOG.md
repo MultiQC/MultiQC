@@ -1,6 +1,11 @@
 # MultiQC Version History
 
-## MultiQC v1.6dev
+## MultiQC v1.7dev
+
+_..nothing yet.._
+
+
+## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
 Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
 
@@ -26,6 +31,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * **FastQC**
     * New read count plot, split into unique and duplicate reads if possible.
     * Help text added for all sections, mostly copied from the excellent FastQC help.
+    * Sequence duplication plot rescaled
 * **FastQ Screen**
     * Samples in large-sample-number plot are now sorted alphabetically ([@hassanfa](https://github.com/hassanfa)
 * **MACS2**
@@ -45,6 +51,9 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Don't create the report section for Gene Body Coverage if no data is given
 * **Samtools**
     * Fixed edge case bug where MultiQC could crash if a sample had zero count coverage with idxstats.
+    * Adds % proper pairs to general stats table
+* **Skewer**
+    * Read length plot rescaled
 * **Tophat**
     * Fixed bug where some samples could be given a blank sample name ([@lparsons](https://github.com/lparsons))
 * **VerifyBamID**
@@ -70,8 +79,10 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * Modules running multiple times now have multiple sets of columns in the General Statistics table again, instead of overwriting one another.
 * Prevent tables from clobbering sorted row orders.
 * Fix linegraph and scatter plots data conversion (sporadically the incorrect `ymax` was used to drop data points) ([@cpavanrun](https://github.com/cpavanrun))
+* Adjusted behavior of ceiling and floor axis limits
 * Adjusted multiple file search patterns to make them more specific
     * Prevents the wrong module from accidentally slurping up output from a different tool. By [@cpavanrun](https://github.com/cpavanrun) (see [PR #727](https://github.com/ewels/MultiQC/pull/727))
+* Fixed broken report bar plots when `-p`/`--export-plots` was specified (see issue [#801](https://github.com/ewels/MultiQC/issues/801))
 
 
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
