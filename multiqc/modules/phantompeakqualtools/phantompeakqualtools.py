@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         lines = f['f'].splitlines()
         for l in lines:
             s = l.split("\t")
-            parsed_data['Estimated Fragment Length (bp)'] = int(s[2].split(",")[0])
+            parsed_data['Estimated_Fragment_Length_bp'] = int(s[2].split(",")[0])
             parsed_data['NSC'] = float(s[8])
             parsed_data['RSC'] = float(s[9])
         if len(parsed_data) > 0:
@@ -58,12 +58,12 @@ class MultiqcModule(BaseMultiqcModule):
     def phantompeakqualtools_general_stats(self):
         """ Add columns to General Statistics table """
         headers = OrderedDict()
-        headers['est_length'] = {
+        headers['Estimated_Fragment_Length_bp'] = {
             'title': 'Estimated Fragment Length (bp)',
             'min': 0,
             'format': '{:,.0f}'
         }
-        headers['nsc'] = {
+        headers['NSC'] = {
             'title': 'NSC',
             'description': 'Normalized strand cross-correlation',
             'max': 10,
@@ -71,7 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.2f}',
             'scale': 'RdYlBu-rev'
         }
-        headers['rsc'] = {
+        headers['RSC'] = {
             'title': 'RSC',
             'description': 'Relative strand cross-correlation',
             'max': 10,
