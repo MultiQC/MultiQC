@@ -2,8 +2,10 @@
 
 ## MultiQC v1.7dev
 
-_..nothing yet.._
-
+#### New Modules:
+* [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
+    * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
+    * Module written by [@chuan-wang](https://github.com/chuan-wang/)
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 

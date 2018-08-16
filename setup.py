@@ -108,6 +108,7 @@ setup(
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
+            'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
