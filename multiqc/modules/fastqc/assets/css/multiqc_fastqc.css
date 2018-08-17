@@ -109,6 +109,9 @@
   width: 120px;
   margin: 0 8px;
 }
+#fastqc_seq_heatmap_key_pos {
+  width: 80px;
+}
 .fastqc_seq_heatmap_key > span, .fastqc_seq_heatmap_key div > span {
   display:inline-block;
   width: 60px;
