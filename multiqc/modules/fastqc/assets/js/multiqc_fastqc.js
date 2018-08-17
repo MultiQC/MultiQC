@@ -329,7 +329,7 @@ $(function () {
         $('#fastqc_seq_heatmap_key_g span').text(seq_g.toFixed(0)+'%');
 
         // Get base pair position from x pos
-        var this_bp = Math.floor((x/c_width)*max_bp);
+        var this_bp = Math.max(1, Math.round((x/c_width)*max_bp));
         $('#fastqc_seq_heatmap_key_pos').text(this_bp+' bp');
     });
 
