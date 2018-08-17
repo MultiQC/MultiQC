@@ -122,16 +122,6 @@ class MultiqcModule(BaseMultiqcModule):
     def strand_shift_correlation_plot(self):
         """ Generate the strand shift correlation plot"""
 
-        data = dict()
-        for s_name in self.correlation_data:
-            try:
-                data[s_name] = {int(i) : self.correlation_data[s_name][i][0] for i in self.correlation_data[s_name]}
-            except KeyError:
-                pass
-        if len(data) == 0:
-            log.debug('No valid data for strand shift correlation plot')
-            return None
-
         config = {
             'id': 'strand_shift_correlation_plot',
             'title': 'phantompeakqualtools: Strand Shift Correlation Plot',
@@ -141,6 +131,38 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 1,
             'xDecimals': False,
             'tt_label': '<b>Strand shift (bp) {point.x}</b>: {point.y} Cross-correlation',
+            'extra_series': []
         }
+
+        data = dict()
+        for s_name in self.correlation_data:
+            try:
+                for i in self.correlation_data[s_name]:
+                    data[s_name] = {int(i) : self.correlation_data[s_name][i][0]}
+                    if self.correlation_data[s_name][i][1] == 'phantom':
+                        config['extra_series'].append({
+                            'name':'phantom peak',
+                            'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
+                            'dashStyle': 'Dash',
+                            'lineWidth': 1,
+                            'color': 'F0FF00',
+                            'marker': { 'enabled': False },
+                            'showInLegend': False,
+                        })
+                    elif self.correlation_data[s_name][i][1] == 'peak':
+                        config['extra_series'].append({
+                            'name':'strand shift peak',
+                            'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
+                            'dashStyle': 'Dash',
+                            'lineWidth': 1,
+                            'color': 'FF0000',
+                            'marker': { 'enabled': False },
+                            'showInLegend': False,
+                        })
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('No valid data for strand shift correlation plot')
+            return None
 
         return linegraph.plot(data, config)
