@@ -59,7 +59,8 @@ class MultiqcModule(BaseMultiqcModule):
         """ Add columns to General Statistics table """
         headers = OrderedDict()
         headers['Estimated_Fragment_Length_bp'] = {
-            'title': 'Estimated Fragment Length (bp)',
+            'title': 'Fragment Length',
+            'description': 'Estimated fragment length (bp)',
             'min': 0,
             'format': '{:,.0f}'
         }
@@ -69,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 10,
             'min': 0,
             'format': '{:,.2f}',
-            'scale': 'RdYlBu-rev'
+            'scale': 'RdYlGn-rev'
         }
         headers['RSC'] = {
             'title': 'RSC',

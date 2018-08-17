@@ -224,7 +224,7 @@ MultiQC is released under the GPL v3 or later licence.
 [methylqa]:       http://multiqc.info/docs/#methylqa
 [mirtrace]:       http://multiqc.info/docs/#mirtrace
 [peddy]:          http://multiqc.info/docs/#peddy
-[phantompeakqualtools]:       http://multiqc.info/docs/#phantompeakqualtools
+[phantompeakqualtools]: http://multiqc.info/docs/#phantompeakqualtools
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq
 [prokka]:         http://multiqc.info/docs/#prokka
