@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse csv for strand correlation plot
         self.correlation_data = dict()
-        for f in self.find_log_files('phantompeakqualtools/csv'):
+        for f in self.find_log_files('phantompeakqualtools/csv', filehandles=False):
             self.parse_correlation(f)
 
         # Filter to strip out ignored sample names
@@ -109,12 +109,12 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_correlation(self, f):
         s_name = self.clean_s_name(f['s_name'], f['root'])
         parsed_data = {}
-        reader = csv.DictReader(f['f'])
-        for row in reader:
-            if(row['x'] != ''):
-                parsed_data['strand−shift'] = int(row['x'])
-                parsed_data['cross-correlation'] = float(row['y'])
-                parsed_data['peak_category'] = row['peak']
+        lines = f['f'].splitlines()
+        for l in lines:
+            s = l.split(",")
+            parsed_data['strand−shift'] = int(s[0])
+            parsed_data['cross-correlation'] = float(s[1])
+            parsed_data['peak_category'] = s[2]
         if len(parsed_data) > 0:
             if s_name in self.correlation_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
