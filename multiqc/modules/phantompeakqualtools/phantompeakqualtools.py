@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 1,
             'xDecimals': False,
             'tt_label': '<b>Strand shift (bp) {point.x}</b>: {point.y} Cross-correlation',
-            'extra_series': []
+            'extra_series': [],
         }
 
         data = dict()
