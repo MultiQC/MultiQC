@@ -111,7 +111,8 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         reader = csv.DictReader(f['f'])
         for row in reader:
-            parsed_data['strand−shift'] = int(float(row['x']))
+            print(row['x'])
+            parsed_data['strand−shift'] = int(row['x'])
             parsed_data['cross-correlation'] = float(row['y'])
             parsed_data['peak_category'] = row['peak']
         if len(parsed_data) > 0:
