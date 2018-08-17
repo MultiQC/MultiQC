@@ -126,6 +126,7 @@ fn_clean_exts:
     - '.log'
     - '.stderr'
     - '.out'
+    - '.spp'
     - '.fa'
     - '.fasta'
     - 'Log.final'
@@ -246,6 +247,9 @@ module_order:
         module_tag:
             - Methylation
             - DNA
+    - phantompeakqualtools:
+        module_tag:
+            - chip
     - qualimap:
         module_tag:
             - DNA
