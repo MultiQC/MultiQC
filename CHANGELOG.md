@@ -2,6 +2,9 @@
 
 ## MultiQC v1.7dev
 
+#### New MultiQC Features:
+* New function for strand shift cross-correlation plot for phantompeakqualtools.
+
 #### New Modules:
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
