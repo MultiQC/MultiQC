@@ -125,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         for s_name in self.correlation_data:
             try:
-                data[s_name] = {self.correlation_data[s_name].keys() : i[0] for i in self.correlation_data[s_name].values()}
+                data[s_name] = {key : value[0] for key, value in self.correlation_data[s_name]}
             except KeyError:
                 pass
         if len(data) == 0:
