@@ -8,7 +8,6 @@ from collections import OrderedDict
 import logging
 import re
 import csv
-import subprocess
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
