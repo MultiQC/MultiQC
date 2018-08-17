@@ -137,11 +137,12 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         for s_name in self.correlation_data:
             try:
+                extra_series = []
                 for i in self.correlation_data[s_name]:
                     data[s_name] = {int(i) : self.correlation_data[s_name][i][0]}
                     if self.correlation_data[s_name][i][1] == 'phantom':
-                        config['extra_series'].append({
-                            'name':'phantom peak',
+                        extra_series.append({
+                            'name':'phantom peak {}'.format(s_name),
                             'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
                             'dashStyle': 'Dash',
                             'lineWidth': 1,
@@ -150,8 +151,8 @@ class MultiqcModule(BaseMultiqcModule):
                             'showInLegend': False,
                         })
                     elif self.correlation_data[s_name][i][1] == 'peak':
-                        config['extra_series'].append({
-                            'name':'strand shift peak',
+                        extra_series.append({
+                            'name':'strand shift peak {}'.format(s_name),
                             'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
                             'dashStyle': 'Dash',
                             'lineWidth': 1,
@@ -159,6 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
                             'marker': { 'enabled': False },
                             'showInLegend': False,
                         })
+                config['extra_series'].append(extra_series)
             except KeyError:
                 pass
         if len(data) == 0:
