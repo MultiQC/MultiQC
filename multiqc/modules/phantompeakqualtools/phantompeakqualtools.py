@@ -8,6 +8,7 @@ from collections import OrderedDict
 import logging
 import re
 import csv
+import subprocess
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -131,36 +132,36 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 1,
             'xDecimals': False,
             'tt_label': '<b>Strand shift (bp) {point.x}</b>: {point.y} Cross-correlation',
-            'extra_series': [],
+            #'extra_series': [],
         }
 
         data = dict()
         for s_name in self.correlation_data:
             try:
-                extra_series = []
+                #extra_series = []
                 for i in self.correlation_data[s_name]:
                     data[s_name] = {int(i) : self.correlation_data[s_name][i][0]}
-                    if self.correlation_data[s_name][i][1] == 'phantom':
-                        extra_series.append({
-                            'name':'phantom peak {}'.format(s_name),
-                            'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
-                            'dashStyle': 'Dash',
-                            'lineWidth': 1,
-                            'color': 'F0FF00',
-                            'marker': { 'enabled': False },
-                            'showInLegend': False,
-                        })
-                    elif self.correlation_data[s_name][i][1] == 'peak':
-                        extra_series.append({
-                            'name':'strand shift peak {}'.format(s_name),
-                            'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
-                            'dashStyle': 'Dash',
-                            'lineWidth': 1,
-                            'color': 'FF0000',
-                            'marker': { 'enabled': False },
-                            'showInLegend': False,
-                        })
-                config['extra_series'].append(extra_series)
+                    #if self.correlation_data[s_name][i][1] == 'phantom':
+                        #extra_series.append({
+                            #'name':'phantom peak {}'.format(s_name),
+                            #'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
+                            #'dashStyle': 'Dash',
+                            #'lineWidth': 1,
+                            #'color': 'F0FF00',
+                            #'marker': { 'enabled': False },
+                            #'showInLegend': False,
+                        #})
+                    #elif self.correlation_data[s_name][i][1] == 'peak':
+                        #extra_series.append({
+                            #'name':'strand shift peak {}'.format(s_name),
+                            #'data': [[i,0], [i,self.correlation_data[s_name][i][0]]],
+                            #'dashStyle': 'Dash',
+                            #'lineWidth': 1,
+                            #'color': 'FF0000',
+                            #'marker': { 'enabled': False },
+                            #'showInLegend': False,
+                        #})
+                #config['extra_series'].append(extra_series)
             except KeyError:
                 pass
         if len(data) == 0:
