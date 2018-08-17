@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
         for row in reader:
             parsed_data['strand−shift'] = int(row['x'])
             parsed_data['cross-correlation'] = float(row['y'])
-            parsed_data['peak_category'] = int(row['x'])
+            parsed_data['peak_category'] = row['peak']
         if len(parsed_data) > 0:
             if s_name in self.correlation_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
