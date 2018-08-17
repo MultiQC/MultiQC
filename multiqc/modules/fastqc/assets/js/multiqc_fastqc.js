@@ -418,10 +418,10 @@ function plot_single_seqcontent(s_name){
     var d = bases[i];
     var base = data[d]['base'].toString().split('-');
     base = parseFloat(base[0]);
-    plot_data[0]['data'].push([base, data[d]['t']]);
-    plot_data[1]['data'].push([base, data[d]['c']]);
-    plot_data[2]['data'].push([base, data[d]['a']]);
-    plot_data[3]['data'].push([base, data[d]['g']]);
+    plot_data[0]['data'].push({x:base, y:data[d]['t'], name:data[d]['base']});
+    plot_data[1]['data'].push({x:base, y:data[d]['c'], name:data[d]['base']});
+    plot_data[2]['data'].push({x:base, y:data[d]['a'], name:data[d]['base']});
+    plot_data[3]['data'].push({x:base, y:data[d]['g'], name:data[d]['base']});
   }
 
   // Create plot div if it doesn't exist, and hide overview
@@ -471,11 +471,13 @@ function plot_single_seqcontent(s_name){
       formatter: function () {
         var texts = [];
         var bars = [];
+        var xlabel = this.x;
         $.each(this.points, function () {
           texts.push('<span style="display: inline-block; border-left: 3px solid '+this.color+'; padding-left:5px; margin-bottom: 2px;"></div>' + this.y.toFixed(1) + this.series.name + '</span>');
           bars.push('<div class="progress-bar" style="width:'+this.y+'%; float:left; font-size:8px; line-height:12px; padding:0; background-color:'+this.color+';">'+this.series.name.replace('%','').trim()+'</div>');
+          if(this.point.name){ xlabel = this.point.name; }
         });
-        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + this.x + ' bp</p>\
+        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + xlabel + ' bp</p>\
             <p>'+texts.join('<br>')+'</p><div class="progress" style="height: 12px; width: 150px; margin:0;">'+bars.join('')+'</div>';
       },
 			useHTML: true,
