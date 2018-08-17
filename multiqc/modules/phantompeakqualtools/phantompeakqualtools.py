@@ -111,10 +111,10 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         reader = csv.DictReader(f['f'])
         for row in reader:
-            print(row['x'])
-            parsed_data['strand−shift'] = int(row['x'])
-            parsed_data['cross-correlation'] = float(row['y'])
-            parsed_data['peak_category'] = row['peak']
+            if(row['x'] != ''):
+                parsed_data['strand−shift'] = int(row['x'])
+                parsed_data['cross-correlation'] = float(row['y'])
+                parsed_data['peak_category'] = row['peak']
         if len(parsed_data) > 0:
             if s_name in self.correlation_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
