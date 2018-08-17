@@ -302,7 +302,7 @@ $(function () {
 
         // Replace the heading above the heatmap
         var pos = findPos(this);
-        var x = e.pageX - pos.x;
+        var x = e.pageX - pos.x + 3;
         var y = e.pageY - pos.y;
 
         // Get label from y position
