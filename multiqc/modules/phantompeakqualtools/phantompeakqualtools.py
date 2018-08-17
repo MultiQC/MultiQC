@@ -111,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         reader = csv.DictReader(f['f'])
         for row in reader:
-            parsed_data['strand−shift'] = int(row['x'])
+            parsed_data['strand−shift'] = int(float(row['x']))
             parsed_data['cross-correlation'] = float(row['y'])
             parsed_data['peak_category'] = row['peak']
         if len(parsed_data) > 0:
@@ -125,13 +125,13 @@ class MultiqcModule(BaseMultiqcModule):
         """ Generate the strand shift correlation plot"""
 
         data = dict()
-        for s_name in self.complexity_data:
+        for s_name in self.correlation_data:
             try:
-                data[s_name] = {int(self.complexity_data[s_name][d]) : int(d) for d in self.complexity_data[s_name]}
+                data[s_name] = {self.correlation_data[s_name]['strand−shift'] : self.correlation_data[s_name]['cross-correlation']}
             except KeyError:
                 pass
         if len(data) == 0:
-            log.debug('No valid data for miRNA complexity')
+            log.debug('No valid data for strand shift correlation plot')
             return None
 
         config = {
