@@ -109,6 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_correlation(self, f):
         s_name = self.clean_s_name(f['s_name'], f['root'])
         parsed_data = {}
+        next(f['f'])
         reader = csv.DictReader(f['f'])
         for row in reader:
             parsed_data[int(row['x'])] = [float(row['y']),row['peak']]
