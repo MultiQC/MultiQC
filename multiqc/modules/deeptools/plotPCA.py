@@ -37,7 +37,7 @@ class plotPCAMixin():
             data = dict()
             for s_name in self.deeptools_plotPCAData:
                 try:
-                    data[s_name] = {self.deeptools_plotPCAData[s_name][1] : self.deeptools_plotPCAData[s_name][2]}
+                    data[s_name] = {x: self.deeptools_plotPCAData[s_name][1], y: self.deeptools_plotPCAData[s_name][2]}
                 except KeyError:
                     pass
             if len(data) == 0:
