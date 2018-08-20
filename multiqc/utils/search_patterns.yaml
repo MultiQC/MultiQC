@@ -161,6 +161,9 @@ deeptools/plotFingerprintOutRawCounts:
 deeptools/plotFingerprintOutQualityMetrics:
     contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
     num_lines: 1
+deeptools/plotPCAData:
+    contents: '#plotPCA --outFileNameData'
+    num_lines: 1
 fastp:
     fn: '*fastp.json'
 fastq_screen:

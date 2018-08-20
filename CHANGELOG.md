@@ -4,6 +4,7 @@
 
 #### New MultiQC Features:
 * New function for strand shift cross-correlation plot for phantompeakqualtools.
+* New submodule to support PCA plot from the plotPCA function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
 
 #### New Modules:
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)

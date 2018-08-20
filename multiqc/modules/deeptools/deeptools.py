@@ -12,12 +12,13 @@ from .estimateReadFiltering import estimateReadFilteringMixin
 from .plotCoverage import plotCoverageMixin
 from .plotEnrichment import plotEnrichmentMixin
 from .plotFingerprint import plotFingerprintMixin
+from .plotPCA import plotPCAMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin):
+class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotPCAMixin):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='deepTools', anchor='deepTools', target='deepTools',
