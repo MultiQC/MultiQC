@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
             log.debug("Found {} and {} deepTools plotFingerprint --outQualityMetrics and --outRawCounts samples, respectively{}".format(n['plotFingerprintOutQualityMetrics'], n['plotFingerprintOutRawCounts'], extra))
 
         # plotPCA
-        n['plotPCA'] = self.parse_plotPCA(()
+        n['plotPCA'] = self.parse_plotPCA()
         if n['plotPCA'] > 0:
             log.debug("Found {} deepTools plotPCA samples".format(n['plotPCA']))
 
