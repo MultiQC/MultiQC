@@ -61,6 +61,11 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
                 extra = ' (you may need to increase the maximum log file size to find plotFingerprint --outRawCounts files)'
             log.debug("Found {} and {} deepTools plotFingerprint --outQualityMetrics and --outRawCounts samples, respectively{}".format(n['plotFingerprintOutQualityMetrics'], n['plotFingerprintOutRawCounts'], extra))
 
+        # plotPCA
+        n['plotPCA'] = self.parse_plotPCA(()
+        if n['plotPCA'] > 0:
+            log.debug("Found {} deepTools plotPCA samples".format(n['plotPCA']))
+
         tot = sum(n.values())
         if tot > 0:
             log.info('Found {} total deepTools samples'.format(tot))
