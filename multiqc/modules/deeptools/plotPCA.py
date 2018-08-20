@@ -66,7 +66,8 @@ class plotPCAMixin():
                     samples.append(s_name)
             else:
                 idx = 0
+                compo = cols[0]
                 for c in cols[1:(len(cols)-1)]:
-                    d[samples[idx]][int(col[0])] = float(c)
+                    d[samples[idx]][int(compo)] = float(c)
                     idx += 1
         return d
