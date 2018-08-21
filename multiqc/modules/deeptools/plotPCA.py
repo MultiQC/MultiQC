@@ -32,22 +32,24 @@ class plotPCAMixin():
                 'title': 'deeptools: PCA Plot',
                 'xlab': 'PC1',
                 'ylab': 'PC2',
-                'tt_label': '<b>PC1 {point.x}</b>: {point.y} PC2',
+                'tt_label': 'PC1 {point.x:.2f}: PC2 {point.y:.2f}',
             }
             data = dict()
             for s_name in self.deeptools_plotPCAData:
                 try:
-                    data[s_name] = {x: self.deeptools_plotPCAData[s_name][1], y: self.deeptools_plotPCAData[s_name][2]}
+                    data[s_name] = {'x': self.deeptools_plotPCAData[s_name][1], 'y': self.deeptools_plotPCAData[s_name][2]}
                 except KeyError:
                     pass
             if len(data) == 0:
                 log.debug('No valid data for PCA plot')
                 return None
 
-            self.add_section(name="PCA plot",
-                             anchor="deeptools_pca",
-                             description="PCA plot with the top two principal components",
-                             plot=scatter.plot(data, config))
+            self.add_section(
+                name="PCA plot",
+                anchor="deeptools_pca",
+                description="PCA plot with the top two principal components",
+                plot=scatter.plot(data, config)
+            )
 
         return len(self.deeptools_plotPCAData)
 
