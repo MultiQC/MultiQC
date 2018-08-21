@@ -13,12 +13,13 @@ from .plotCoverage import plotCoverageMixin
 from .plotEnrichment import plotEnrichmentMixin
 from .plotFingerprint import plotFingerprintMixin
 from .plotPCA import plotPCAMixin
+from .plotCorrelation import plotCorrelationMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotPCAMixin):
+class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotPCAMixin, plotCorrelationMixin):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='deepTools', anchor='deepTools', target='deepTools',
@@ -65,6 +66,11 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
         n['plotPCA'] = self.parse_plotPCA()
         if n['plotPCA'] > 0:
             log.debug("Found {} deepTools plotPCA samples".format(n['plotPCA']))
+
+        # plotCorrelation
+        n['plotCorrelation'] = self.parse_plotCorrelation()
+        if n['plotCorrelation'] > 0:
+            log.debug("Found {} deepTools plotCorrelation samples".format(n['plotCorrelation']))
 
         tot = sum(n.values())
         if tot > 0:
