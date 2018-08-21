@@ -18,7 +18,7 @@ class plotCorrelationMixin():
         """Find plotCorrelation output"""
         self.deeptools_plotCorrelationData = dict()
         for f in self.find_log_files('deeptools/plotCorrelationData', filehandles=False):
-            parsed_data = self.parsePlotCorrelationData(f)
+            parsed_data, samples = self.parsePlotCorrelationData(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCorrelationData:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -50,10 +50,8 @@ class plotCorrelationMixin():
                 'datalabel_colour': '<auto>',
             }
             data = []
-            names = []
-            for s_name in self.deeptools_plotCorrelationData:
+            for s_name in samples:
                 try:
-                    names.append(s_name)
                     data.append(self.deeptools_plotCorrelationData[s_name])
                 except KeyError:
                     pass
@@ -65,13 +63,14 @@ class plotCorrelationMixin():
                 name="Pairwise Correlation plot",
                 anchor="deeptools_correlation",
                 description="pairwise correlations",
-                plot=heatmap.plot(data, names, names, config)
+                plot=heatmap.plot(data, samples, samples, config)
             )
 
         return len(self.deeptools_plotCorrelationData)
 
     def parsePlotCorrelationData(self, f):
         d = dict()
+        samples = []
         for line in f['f'].splitlines():
             cols = line.split('\t')
             if cols[0] == "#plotCorrelation --outFileCorMatrix":
@@ -81,7 +80,8 @@ class plotCorrelationMixin():
             else:
                 c = str(cols[0]).strip("'")
                 s_name = self.clean_s_name(c, f['root'])
+                samples.append(s_name)
                 d[s_name] = []
                 for c in cols[1:len(cols)]:
                     d[s_name].append(float(c))
-        return d
+        return d, samples
