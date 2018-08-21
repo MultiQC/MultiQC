@@ -65,7 +65,7 @@ class plotCorrelationMixin():
                 name="Pairwise Correlation plot",
                 anchor="deeptools_correlation",
                 description="pairwise correlations",
-                plot=heatmap.plot(data, names, config)
+                plot=heatmap.plot(data, names, names, config)
             )
 
         return len(self.deeptools_plotCorrelationData)
