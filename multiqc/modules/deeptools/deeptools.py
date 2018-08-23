@@ -7,7 +7,8 @@ from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # deepTools modules
-from .bamPEFragmentSize import bamPEFragmentSizeMixin
+from .bamPEFragmentSizeTable import bamPEFragmentSizeTableMixin
+from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
 from .estimateReadFiltering import estimateReadFilteringMixin
 from .plotCoverage import plotCoverageMixin
 from .plotEnrichment import plotEnrichmentMixin
@@ -19,7 +20,7 @@ from .plotCorrelation import plotCorrelationMixin
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotPCAMixin, plotCorrelationMixin):
+class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmentSizeDistributionMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotPCAMixin, plotCorrelationMixin):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='deepTools', anchor='deepTools', target='deepTools',
@@ -44,10 +45,15 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeMixin, estimateReadFilte
                 extra = ' (you may need to increase the maximum log file size to find plotCoverage --outRawCounts files)'
             log.debug("Found {} and {} deepTools plotCoverage standard output and --outRawCounts samples, respectively{}".format(n['plotCoverageStdout'], n['plotCoverageOutRawCounts'], extra))
 
-        # bamPEFragmentSize
+        # bamPEFragmentSizeTable
         n['bamPEFragmentSize'] = self.parse_bamPEFragmentSize()
         if n['bamPEFragmentSize'] > 0:
             log.debug("Found {} deepTools 'bamPEFragmentSize --table' samples".format(n['bamPEFragmentSize']))
+
+        # bamPEFragmentSizeDistribution
+        n['bamPEFragmentSizeDistribution'] = self.parse_bamPEFragmentSizeDistribution()
+        if n['bamPEFragmentSizeDistribution'] > 0:
+            log.debug("Found {} deepTools 'bamPEFragmentSize --outRawFragmentLengths' samples".format(n['bamPEFragmentSizeDistribution']))
 
         # plotEnrichment
         n['plotEnrichment'] = self.parse_plotEnrichment()

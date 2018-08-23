@@ -140,8 +140,11 @@ cutadapt:
     shared: true
 dedup:
     fn: 'dedup.log'
-deeptools/bamPEFragmentSize:
+deeptools/bamPEFragmentSizeTable:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
+    num_lines: 1
+deeptools/bamPEFragmentSizeDistribution:
+    contents: '#bamPEFragmentSize'
     num_lines: 1
 deeptools/estimateReadFiltering:
     contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'

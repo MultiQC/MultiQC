@@ -10,6 +10,7 @@ deepTools addresses the challenge of handling the large amounts of data that are
 The MultiQC module for deepTools parses a number of the text files that deepTools can produce. In particular, the following are supported:
 
  - `bamPEFragmentSize --table`
+ - `bamPEFragmentSize --outRawFragmentLengths`
  - `estimateReadFiltering`
  - `plotCoverage ---outRawCounts` (as well as the content written normally to the console)
  - `plotEnrichment --outRawCounts`
