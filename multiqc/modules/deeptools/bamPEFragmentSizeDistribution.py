@@ -31,6 +31,7 @@ class bamPEFragmentSizeDistributionMixin():
                 'title': 'Fragment Size Distribution Plot',
                 'ylab': 'Occurrence',
                 'xlab': 'Fragment Size (bp)',
+                'smooth_points': 50,
                 'xmax': 1000,
                 'xDecimals': False,
                 'tt_label': '<b>Fragment Size (bp) {point.x}</b>: {point.y} Occurrence',
