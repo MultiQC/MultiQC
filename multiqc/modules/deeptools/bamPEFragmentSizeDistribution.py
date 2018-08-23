@@ -35,22 +35,13 @@ class bamPEFragmentSizeDistributionMixin():
                 'tt_label': '<b>Fragment Size (bp) {point.x}</b>: {point.y} Occurrence',
             }
 
-        data = dict()
-        for s_name in self.deeptools_bamPEFragmentSizeDistribution:
-            try:
-                data[s_name] = {int(size) : int(self.deeptools_bamPEFragmentSizeDistribution[s_name][size]) for size in self.deeptools_bamPEFragmentSizeDistribution[s_name]}
-            except KeyError:
-                pass
-        if len(data) == 0:
-            log.debug('No valid data for fragment size distribution')
-            return None
-
             self.add_section (
                 name = 'Fragment Size Distribution',
                 anchor = 'fragment_size_distribution',
                 description="Distribution of paired-end fragment sizes",
-                plot=linegraph.plot(data, config)
+                plot=linegraph.plot(self.deeptools_bamPEFragmentSizeDistribution, config)
             )
+            
         return len(self.deeptools_bamPEFragmentSizeDistribution)
 
     def parseBamPEFDistributionFile(self, f):
