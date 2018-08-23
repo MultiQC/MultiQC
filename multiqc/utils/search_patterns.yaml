@@ -170,6 +170,9 @@ deeptools/plotFingerprintOutQualityMetrics:
 deeptools/plotPCAData:
     contents: '#plotPCA --outFileNameData'
     num_lines: 1
+deeptools/plotProfile:
+    contents: 'bin labels'
+    num_lines: 1
 fastp:
     fn: '*fastp.json'
 fastq_screen:

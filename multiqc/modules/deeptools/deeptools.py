@@ -13,6 +13,7 @@ from .estimateReadFiltering import estimateReadFilteringMixin
 from .plotCoverage import plotCoverageMixin
 from .plotEnrichment import plotEnrichmentMixin
 from .plotFingerprint import plotFingerprintMixin
+from .plotProfile import plotProfileMixin
 from .plotPCA import plotPCAMixin
 from .plotCorrelation import plotCorrelationMixin
 
@@ -20,7 +21,7 @@ from .plotCorrelation import plotCorrelationMixin
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmentSizeDistributionMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotPCAMixin, plotCorrelationMixin):
+class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmentSizeDistributionMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotProfileMixin, plotPCAMixin, plotCorrelationMixin):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='deepTools', anchor='deepTools', target='deepTools',
@@ -67,6 +68,11 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmen
             if n['plotFingerprintOutRawCounts'] == 0:
                 extra = ' (you may need to increase the maximum log file size to find plotFingerprint --outRawCounts files)'
             log.debug("Found {} and {} deepTools plotFingerprint --outQualityMetrics and --outRawCounts samples, respectively{}".format(n['plotFingerprintOutQualityMetrics'], n['plotFingerprintOutRawCounts'], extra))
+
+        # plotProfile
+        n['plotProfile'] = self.parse_plotProfile()
+        if n['plotProfile'] > 0:
+            log.debug("Found {} deepTools plotProfile samples".format(n['plotProfile']))
 
         # plotPCA
         n['plotPCA'] = self.parse_plotPCA()

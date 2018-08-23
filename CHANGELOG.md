@@ -4,9 +4,10 @@
 
 #### New MultiQC Features:
 * New function for strand shift cross-correlation plot for phantompeakqualtools.
-* New submodule to support PCA plot from the plotPCA function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
-* New submodule to support correlation heatmap from the plotCorrelation function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
-* New submodule to support output from the `bamPEFragmentSize --outRawFragmentLengths` function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+* New submodule to support PCA plot based on output from the plotPCA function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+* New submodule to support correlation heatmap based on output from the plotCorrelation function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+* New submodule to support fragment size distribution plot based on output from the `bamPEFragmentSize --outRawFragmentLengths` function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+* New submodule to support sequence distribution profile around genes based on output from the plotProfile function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
 
 #### New Modules:
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
