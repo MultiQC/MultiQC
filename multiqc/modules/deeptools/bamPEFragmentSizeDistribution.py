@@ -31,6 +31,7 @@ class bamPEFragmentSizeDistributionMixin():
                 'title': 'Fragment Size Distribution Plot',
                 'ylab': 'Occurrence',
                 'xlab': 'Fragment Size (bp)',
+                'xmax': 1000,
                 'xDecimals': False,
                 'tt_label': '<b>Fragment Size (bp) {point.x}</b>: {point.y} Occurrence',
             }
@@ -41,7 +42,7 @@ class bamPEFragmentSizeDistributionMixin():
                 description="Distribution of paired-end fragment sizes",
                 plot=linegraph.plot(self.deeptools_bamPEFragmentSizeDistribution, config)
             )
-            
+
         return len(self.deeptools_bamPEFragmentSizeDistribution)
 
     def parseBamPEFDistributionFile(self, f):
