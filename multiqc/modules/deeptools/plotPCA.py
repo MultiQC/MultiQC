@@ -47,7 +47,7 @@ class plotPCAMixin():
             self.add_section(
                 name="PCA plot",
                 anchor="deeptools_pca",
-                description="PCA plot with the top two principal components",
+                description="PCA plot with the top two principal components calculated based on genome-wide distribution of sequence reads",
                 plot=scatter.plot(data, config)
             )
 

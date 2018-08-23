@@ -62,7 +62,7 @@ class plotCorrelationMixin():
             self.add_section(
                 name="Pairwise Correlation plot",
                 anchor="deeptools_correlation",
-                description="pairwise correlations",
+                description="Pairwise correlations of samples based on distribution of sequence reads",
                 plot=heatmap.plot(data, samples, samples, config)
             )
 

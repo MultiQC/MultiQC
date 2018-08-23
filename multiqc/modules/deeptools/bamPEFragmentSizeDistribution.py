@@ -28,7 +28,7 @@ class bamPEFragmentSizeDistributionMixin():
         if len(self.deeptools_bamPEFragmentSizeDistribution) > 0:
             config = {
                 'id': 'fragment_size_distribution_plot',
-                'title': 'Fragment Size Distribution Plot',
+                'title': 'deeptools: Fragment Size Distribution Plot',
                 'ylab': 'Occurrence',
                 'xlab': 'Fragment Size (bp)',
                 'smooth_points': 50,
