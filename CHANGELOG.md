@@ -3,7 +3,6 @@
 ## MultiQC v1.7dev
 
 #### New MultiQC Features:
-* New function for strand shift cross-correlation plot for phantompeakqualtools.
 * New submodule to support PCA plot based on output from the plotPCA function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
 * New submodule to support correlation heatmap based on output from the plotCorrelation function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
 * New submodule to support fragment size distribution plot based on output from the `bamPEFragmentSize --outRawFragmentLengths` function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))

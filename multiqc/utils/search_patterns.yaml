@@ -288,8 +288,6 @@ peddy/background_pca:
     fn: '*.background_pca.json'
 phantompeakqualtools/out:
     fn: '*.spp.out'
-phantompeakqualtools/csv:
-    fn: '*.spp.csv'
 picard/alignment_metrics:
     contents: 'AlignmentSummaryMetrics'
     shared: true
