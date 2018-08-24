@@ -17,7 +17,7 @@ class plotProfileMixin():
         """Find plotProfile output"""
         self.deeptools_plotProfile = dict()
         for f in self.find_log_files('deeptools/plotProfile', filehandles=False):
-            parsed_data, bin_labels = self.parsePlotProfileData(f)
+            parsed_data, bin_labels, converted_bin_labels = self.parsePlotProfileData(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotProfile:
                     log.warning("Replacing duplicate sample {}.".format(k))
@@ -33,13 +33,13 @@ class plotProfileMixin():
                 'xlab': None,
                 'smooth_points': 100,
                 'xPlotBands': [
-                    {'from': bin_labels.index('TES')+1, 'to': len(bin_labels), 'color': '#f7cfcf'},
-                    {'from': bin_labels.index('TSS')+1, 'to': bin_labels.index('TES')+1, 'color': '#ffffe2'},
-                    {'from': 1, 'to': bin_labels.index('TSS')+1, 'color': '#e5fce0'},
+                    {'from': converted_bin_labels[bin_labels.index('TES')], 'to': converted_bin_labels[-1], 'color': '#f7cfcf'},
+                    {'from': converted_bin_labels[bin_labels.index('TSS')], 'to': converted_bin_labels[bin_labels.index('TES')], 'color': '#ffffe2'},
+                    {'from': converted_bin_labels[0], 'to': converted_bin_labels[bin_labels.index('TSS')], 'color': '#e5fce0'},
                 ],
                 'xPlotLines': [
-                    {'width': 1, 'value': bin_labels.index('TES')+1, 'dashStyle': 'Dash', 'color': '#000000'},
-                    {'width': 1, 'value': bin_labels.index('TSS')+1, 'dashStyle': 'Dash', 'color': '#000000'},
+                    {'width': 1, 'value': converted_bin_labels[bin_labels.index('TES')], 'dashStyle': 'Dash', 'color': '#000000'},
+                    {'width': 1, 'value': converted_bin_labels[bin_labels.index('TSS')], 'dashStyle': 'Dash', 'color': '#000000'},
                 ],
             }
 
@@ -73,7 +73,18 @@ class plotProfileMixin():
             else:
                 s_name = self.clean_s_name(cols[0], f['root'])
                 d[s_name] = dict()
-                for i in bins:
-                    d[s_name].update({i:float(cols[i+1])})
 
-        return d, bin_labels
+                factors = {'Kb': 1e3, 'Mb': 1e6, 'Gb': 1e9}
+                convert_factor = 1
+                for k, v in factors.items():
+                    if k in bin_labels[0]:
+                        convert_factor *= v
+                        start = float(bin_labels[0].strip(k)) * convert_factor
+                step = int(abs(start/bin_labels.index('TSS')))
+                end = step*(len(bin_labels)-bin_labels.index('TSS')-1)
+                converted_bin_labels = range((int(start)+step), (int(end)+step), step)
+
+                for i in bins:
+                    d[s_name].update({converted_bin_labels[i-1]:float(cols[i+1])})
+
+        return d, bin_labels, converted_bin_labels
