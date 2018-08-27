@@ -56,10 +56,37 @@ class MultiqcModule(BaseMultiqcModule):
             'retention_rate_bybase': {},
         }
 
+        file_suffixes = [
+            '_mapq_table',
+            '_strand_table',
+            '_markdup_report',
+            '_markdup.bam',
+            '_markdup',
+            '_isize_score_table',
+            '_covdist_table',
+            '_covdist_q40_table',
+            '_covdist_q40_botgc_table',
+            '_covdist_q40_topgc_table',
+            '_covdist_cpg_table',
+            '_covdist_cpg_q40_table',
+            '_covdist_cpg_q40_botgc_table',
+            '_covdist_cpg_q40_topgc_table',
+            '_all_cv_table',
+            '_cpg_cv_table',
+            '_cpg_dist_table',
+            '_beta_table',
+            '_freqOfTotalRetentionPerRead',
+            '_CpHRetentionByReadPos',
+            '_CpGRetentionByReadPos',
+            '_totalReadConversionRate']
+
         # Find and parse alignment reports
         for k in self.mdata:
             for f in self.find_log_files('biscuit/{}'.format(k)):
-                s_name = self.clean_s_name(f['s_name'], f['root']) # this cleans s_name before further processing
+                # this cleans s_name before further processing
+                s_name = self.clean_s_name(f['s_name'], f['root'])
+                for file_suffix in file_suffixes:
+                    s_name = s_name.replace(file_suffix, '')
                 if s_name in self.mdata[k]:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.mdata[k][s_name] = getattr(self, 'parse_logs_%s' % k)(f['f'], f['fn'])
@@ -86,17 +113,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         pd = {}
         for sid, dd in self.mdata['align_mapq'].items():
-            sid = sid.replace('_mapq_table','')
             allreads = sum([int(_) for _ in dd.values()])
             pd[sid] = {'%aligned': float(allreads-int(dd['unmapped']))/allreads*100}
         
         hasPE = False
         hasSE = False
         for sid, dd in self.mdata['markdup_report'].items():
-            sid = sid.replace('_markdup_report','')
-            sid = sid.replace('_markdup.bam','')
-            sid = sid.replace('.bam','')
-            sid = sid.replace('_markdup','')
             if sid not in pd:
                 pd[sid] = {}
             if 'dupRatePE' in dd and dd['dupRatePE'] is not None:
@@ -126,7 +148,6 @@ class MultiqcModule(BaseMultiqcModule):
         # fraction of optimally mapped reads
         pd = {}
         for sid, dd in self.mdata['align_mapq'].items():
-            sid = sid.replace('_mapq_table','')
             pd[sid] = {'OAligned':0, 'SAligned':0, 'UAligned':1}
             for mapq, cnt in dd.items():
                 if mapq == 'unmapped':
@@ -155,12 +176,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Mapping Quality together in one plot
         total = {}
         for sid, dd in self.mdata['align_mapq'].items():
-            sid = sid.replace('_mapq_table','')
             total[sid] = sum([int(cnt) for _, cnt in dd.items() if _ != "unmapped"])
 
         pd_mapping = {}
         for sid, dd in self.mdata['align_mapq'].items():
-            sid = sid.replace('_mapq_table','')
             mapqcnts = []
             for mapq in range(61):
                 if str(mapq) in dd:
@@ -197,7 +216,6 @@ class MultiqcModule(BaseMultiqcModule):
         pd1 = {}
         pd2 = {}
         for sid, dd in self.mdata['align_strand'].items():
-            sid = sid.replace('_strand_table','')
             pd1[sid] = dd['read1']
             pd2[sid] = dd['read2']
 
@@ -247,7 +265,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         pd_isize = {}
         for sid, dd in self.mdata['align_isize'].items():
-            sid = sid.replace('_isize_score_table','')
             pd_isize[sid] = dd['I']
 
         self.add_section(
@@ -314,15 +331,14 @@ class MultiqcModule(BaseMultiqcModule):
         # base coverage
         basecov = OrderedDict()
         mdata = [
-            dict([(k.replace('_covdist_table',''),v) for k, v in self.mdata['covdist'].items()]),
-            dict([(k.replace('_covdist_q40_table',''),v) for k, v in self.mdata['covdist_q40'].items()]),
-            dict([(k.replace('_covdist_q40_botgc_table',''),v) for k, v in self.mdata['covdist_q40_botgc'].items()]),
-            dict([(k.replace('_covdist_q40_topgc_table',''),v) for k, v in self.mdata['covdist_q40_topgc'].items()]),
-            dict([(k.replace('_covdist_cpg_table',''),v) for k, v in self.mdata['covdist_cpg'].items()]),
-            dict([(k.replace('_covdist_cpg_q40_table',''),v) for k, v in self.mdata['covdist_cpg_q40'].items()]),
-            dict([(k.replace('_covdist_cpg_q40_botgc_table',''),v) for k, v in self.mdata['covdist_cpg_q40_botgc'].items()]),
-            dict([(k.replace('_covdist_cpg_q40_topgc_table',''),v) for k, v in self.mdata['covdist_cpg_q40_topgc'].items()]),
-        ]
+            self.mdata['covdist'],
+            self.mdata['covdist_q40'],
+            self.mdata['covdist_q40_botgc'],
+            self.mdata['covdist_q40_topgc'],
+            self.mdata['covdist_cpg'],
+            self.mdata['covdist_cpg_q40'],
+            self.mdata['covdist_cpg_q40_botgc'],
+            self.mdata['covdist_cpg_q40_topgc']]
 
         self.add_section(
             name = 'Cumulative Base Coverage',
@@ -424,16 +440,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # sequencing depth and uniformity
         pd = OrderedDict()
-        mdata = dict([(k.replace('_all_cv_table',''),v) for k, v in self.mdata['qc_cv'].items()])
-        for sid, dd in mdata.items():
+        for sid, dd in self.mdata['qc_cv'].items():
             pd[sid] = OrderedDict()
             for ctg in ['all','all_topgc','all_botgc']:
                 if ctg in dd:
                     pd[sid]['cv_'+ctg] = dd[ctg]['cv']
                     pd[sid]['mu_'+ctg] = dd[ctg]['mu']
 
-        mdata = dict([(k.replace('_cpg_cv_table',''),v) for k, v in self.mdata['qc_cpg_cv'].items()])
-        for sid, dd in mdata.items():
+        for sid, dd in self.mdata['qc_cpg_cv'].items():
             if sid not in pd:
                 pd[sid] = OrderedDict()
             for ctg in ['cpg','cpg_topgc','cpg_botgc']:
@@ -511,18 +525,13 @@ class MultiqcModule(BaseMultiqcModule):
     def chart_qc_cpg_dist(self): 
 
         # cpg distribution
-        mdata = {}
-        for sid, dd in self.mdata['qc_cpg_dist'].items():
-            sid = sid.replace('_cpg_dist_table','')
-            mdata[sid] = dd
-
-        if len(mdata) == 0:
+        if len(self.mdata['qc_cpg_dist']) == 0:
             return 
 
         hdr = OrderedDict()
         pd = OrderedDict()
         sid = 'Genome'
-        dd = list(mdata.values())[0]
+        dd = list(self.mdata['qc_cpg_dist'].values())[0]
         pd[sid] = OrderedDict()
         for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
             ctg1 = ctg.replace('CpGs','')
@@ -533,7 +542,7 @@ class MultiqcModule(BaseMultiqcModule):
         hdr['Repeat']['description'] = 'Repeat-Masked CpGs'
         hdr['Genic']['description']  = 'Genic CpGs'
         hdr['CGI']['description']    = 'CpG Island CpGs'
-        for sid, dd in mdata.items():
+        for sid, dd in self.mdata['qc_cpg_dist'].items():
             pd[sid] = OrderedDict()
             for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
                 ctg1 = ctg.replace('CpGs','')
@@ -546,7 +555,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot = table.plot(pd, hdr)
         )
 
-        pd = dict([(sid, dd['cgi_coverage']) for sid, dd in mdata.items()])
+        pd = dict([(sid, dd['cgi_coverage']) for sid, dd in self.mdata['qc_cpg_dist'].items()])
         self.add_section(
             name = 'CpG Island Coverage',
             anchor = 'biscuit-coverage-cgi',
@@ -654,15 +663,8 @@ class MultiqcModule(BaseMultiqcModule):
     def chart_retention_dist(self):
 
         ## cytosine retention distribution
-        mdata_meth = {}
-        for sid, dd in self.mdata['retention_dist'].items():
-            sid = sid.replace('_beta_table','')
-            mdata_meth[sid] = dd
-
-        mdata = {}
-        for sid, dd in self.mdata['retention_dist_byread'].items():
-            sid = sid.replace('_freqOfTotalRetentionPerRead','')
-            mdata[sid] = dd
+        mdata_meth = self.mdata['retention_dist']
+        mdata = self.mdata['retention_dist_byread']
 
         pd = [
             mdata_meth,
@@ -734,10 +736,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         ## retention vs read position
         mdata = [
-            dict([(k.replace('_CpHRetentionByReadPos',''),v['1']) for k, v in self.mdata['retention_cph_readpos'].items()]),
-            dict([(k.replace('_CpHRetentionByReadPos',''),v['2']) for k, v in self.mdata['retention_cph_readpos'].items()]),
-            dict([(k.replace('_CpGRetentionByReadPos',''),v['1']) for k, v in self.mdata['retention_cpg_readpos'].items()]),
-            dict([(k.replace('_CpGRetentionByReadPos',''),v['2']) for k, v in self.mdata['retention_cpg_readpos'].items()]),
+            dict([(k,v['1']) for k, v in self.mdata['retention_cph_readpos'].items()]),
+            dict([(k,v['2']) for k, v in self.mdata['retention_cph_readpos'].items()]),
+            dict([(k,v['1']) for k, v in self.mdata['retention_cpg_readpos'].items()]),
+            dict([(k,v['2']) for k, v in self.mdata['retention_cpg_readpos'].items()]),
         ]
         self.add_section(
             name = 'Retention vs. Base Position in Read',
