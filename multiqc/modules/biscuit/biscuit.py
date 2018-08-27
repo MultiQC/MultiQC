@@ -8,19 +8,11 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.plots import beeswarm, linegraph, bargraph, table
+from multiqc.plots import linegraph, bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
-
-def _uniquify_ID(data, header, namespace):
-    header2 = dict([(namespace+k, v) for k, v in header.items()])
-    data2 = {}
-    for sid, datum in data.items():
-        data2[sid] = dict([(namespace+k,v) for k, v in datum.items()])
-
-    return (data2, header2)
 
 # Log parsing regexes
 class MultiqcModule(BaseMultiqcModule):
@@ -64,14 +56,16 @@ class MultiqcModule(BaseMultiqcModule):
             'retention_rate_bybase': {},
         }
 
-        # Find and parse bismark alignment reports
+        # Find and parse alignment reports
         for k in self.mdata:
             for f in self.find_log_files('biscuit/{}'.format(k)):
-                d = getattr(self, 'parse_logs_%s' % k)(f['f'], f['fn'])
-                s_name = self.clean_s_name(f['fn'], f['root']) # allow user to specify directory
-                self.mdata[k][s_name] = d
+                s_name = self.clean_s_name(f['s_name'], f['root']) # this cleans s_name before further processing
+                if s_name in self.mdata[k]:
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                self.mdata[k][s_name] = getattr(self, 'parse_logs_%s' % k)(f['f'], f['fn'])
 
-        self.mdata = self.ignore_samples(self.mdata)
+        for dtype in self.mdata:
+            self.mdata[dtype] = self.ignore_samples(self.mdata[dtype])
 
         if sum([len(self.mdata[k]) for k in self.mdata]) == 0:
             raise UserWarning
@@ -80,12 +74,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.biscuit_stats_table()
 
         # Write out to the report
+        log.info("Found {} reports".format(sum([len(self.mdata[k]) for k in self.mdata])))
         for k in self.mdata:
             if len(self.mdata[k]) > 0:
-                self.write_data_file(self.mdata[k], 'multiqc_biscuit_%s' % k)
-                log.info("Found %d %s reports" % (len(self.mdata[k]), k))
+                self.write_data_file(self.mdata[k], 'multiqc_biscuit_{}'.format(k))
+                log.debug("Found %d %s reports" % (len(self.mdata[k]), k))
                 if k != 'markdup':
-                    getattr(self, 'chart_%s' % k)()
+                    getattr(self, 'chart_{}'.format(k))()
 
     def biscuit_stats_table(self):
 
@@ -113,10 +108,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         pheader = OrderedDict()
         pheader['%aligned'] = {'title':'% Aligned', 'max':100, 'min':0, 'suffix':'%','scale':'Greens'}
-        if hasPE:
-            pheader['%dupratePE'] = {'title':'% DupsPE', 'max':100, 'min':0, 'suffix':'%','scale':'Reds'}
-        if hasSE:
-            pheader['%duprateSE'] = {'title':'% DupsSE', 'max':100, 'min':0, 'suffix':'%','scale':'Reds'}
+        pheader['%dupratePE'] = {'title':'% DupsPE', 'max':100, 'min':0, 'suffix':'%','scale':'Reds'}
+        pheader['%duprateSE'] = {'title':'% DupsSE', 'max':100, 'min':0, 'suffix':'%','scale':'Reds'}
         self.general_stats_addcols(pd, pheader)
 
     def parse_logs_align_mapq(self, f, fn): # _mapq_table.txt
@@ -155,7 +148,6 @@ class MultiqcModule(BaseMultiqcModule):
             ]), {'id':'biscuit_mapping_summary',
                  'title':'BISCUIT: Mapping Summary',
                  'ylab':'Number of Reads',
-                 'cpswitch_c_active': False,
                  'cpswitch_counts_label': '# Reads'
             })
         )
@@ -178,11 +170,11 @@ class MultiqcModule(BaseMultiqcModule):
             pd_mapping[sid] = dict(zip(range(61), mapqcnts))
 
         self.add_section(
-            name = 'BISCUIT Mapping Quality Distribution',
+            name = 'Mapping Quality Distribution',
             anchor = 'biscuit-mapq',
             description = "This plot shows the distribution of primary mapping quality.",
             plot = linegraph.plot(pd_mapping,
-                {'id':'biscuit_mapping', 'title': 'Mapping Information', 'ymin': 0, 'yLabelFormat': '{value}%', 
+                {'id':'biscuit_mapping', 'title': 'BISCUIT: Mapping Information', 'ymin': 0, 'yLabelFormat': '{value}%', 
                  'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of reads',
                  'name':'Mapping Quality', 'ylab': '% Primary Mapped Reads','xlab': 'Mapping Quality'}))
 
@@ -259,12 +251,13 @@ class MultiqcModule(BaseMultiqcModule):
             pd_isize[sid] = dd['I']
 
         self.add_section(
-            name = 'BISCUIT Insert Size Distribution',
+            name = 'Insert Size Distribution',
             anchor = 'biscuit-isize',
             description = "This plot shows the distribution of insert size.",
             plot = linegraph.plot(pd_isize, 
-                {'id':'biscuit_isize', 'title': 'Insert Size Distribution',
+                {'id':'biscuit_isize', 'title': 'BISCUIT: Insert Size Distribution',
                  'ymin': 0, 'yLabelFormat': '{value}%', 
+                 'smooth_points': 500,       # limit number of points / smooth data
                  'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of reads', 
                  'ylab': '% Mapped Reads', 'xlab': 'Insert Size'}))
 
@@ -332,12 +325,12 @@ class MultiqcModule(BaseMultiqcModule):
         ]
 
         self.add_section(
-            name = 'BISCUIT Cumulative Base Coverage',
+            name = 'Cumulative Base Coverage',
             anchor = 'biscuit-coverage-base',
             description = "This plot shows the cummulative base coverage. High and low GC content region are the top and bottom 10% 100bp window in GC content.",
             helptext = "Q40 means only reads mapped with mapping quality (Q) greater than or equal to 40 are considered.",
             plot = linegraph.plot(mdata, {'id':'biscuit_coverage_base',
-                'title': 'Cumulative Base Coverage',
+                'title': 'BISCUIT: Cumulative Base Coverage',
                 'xLabelFormat':'{value}X',
                 'xlab': 'Sequencing Depth',
                 'data_labels': [
@@ -377,7 +370,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         self.add_section(
-            name = 'BISCUIT Coverage by At Least One Read',
+            name = 'Coverage by At Least One Read',
             anchor = 'biscuit-coverage-base-table',
             description = 'The fraction of genome/genomic CpGs covered by at least one read.',
             plot = table.plot(basecov, {
@@ -685,7 +678,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot = linegraph.plot(pd, {
                 'id': 'biscuit_retention_read_cpa', 
                 'xlab': 'Number of Retention within Read',
-                'title': 'Retention Distribution',
+                'title': 'BISCUIT: Retention Distribution',
                 'data_labels': [
                     {'name': 'CpG retention', 'ylab': 'Fraction of cytosine in CpG context', 'xlab': 'Retention Level (%)'},
                     {'name': 'Within-read CpA', 'ylab': 'Number of Reads'},
@@ -753,7 +746,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot = linegraph.plot(mdata, {
                 'id': 'biscuit_retention_cytosine',
                 'xlab': 'Position in Read', 'ymin':0, 'ymax':100, 'yMinRange':0, 'yFloor':0,
-                'title': 'Retention vs. Base Position in Read',
+                'title': 'BISCUIT: Retention vs. Base Position in Read',
                 'data_labels': [
                     {'name': 'CpH Read 1', 'ylab': 'CpH Retention Rate (%)', 'ymin':0, 'ymax':100},
                     {'name': 'CpH Read 2', 'ylab': 'CpH Retention Rate (%)', 'ymin':0, 'ymax':100},
@@ -809,7 +802,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Cytosine Retention',
             anchor = 'biscuit-retention',
             description = "This plot shows cytosine retention rate. `r.` stands for read-averaging and `b.` stands for 'base-averaging.",
-            helptext = "**Cytosine retention rate** is 1.0 - **cytosine conversion rate**. Assuming full (complete but not over) bisulfite conversion, **cytosine retention rate** is the average cytosine modification (including 5mC, 5hmC etc) rate.",
+            helptext = "**Cytosine retention rate** is `1.0 - cytosine conversion rate`. Assuming full (complete but not over) bisulfite conversion, **cytosine retention rate** is the average cytosine modification (including 5mC, 5hmC etc) rate.",
             plot = table.plot(pdata, pheader))
 
     def parse_logs_retention_rate_bybase(self, f, fn): # _totalBaseConversionRate.txt
