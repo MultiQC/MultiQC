@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
   
         #output stats file
         self.write_data_file(self.dedup_data, 'multiqc_dedup_cus')
-        
+        #log.info(self.dedup_data)   
         #add col to general stats table
         self.dedup_stats_table()
         
