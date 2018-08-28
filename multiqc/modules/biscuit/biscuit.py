@@ -21,9 +21,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='BISCUIT', anchor='biscuit',
-        href="https://github.com/zwdzwd/biscuit",
-        info="is a tool to map bisulfite converted sequence reads and determine"\
-        " cytosine methylation states.")
+            href="https://github.com/zwdzwd/biscuit",
+            info="is a tool to map bisulfite converted sequence reads and determine"\
+            " cytosine methylation states.")
 
         # Set up data structures
         self.mdata = {
@@ -83,16 +83,21 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse alignment reports
         for k in self.mdata:
             for f in self.find_log_files('biscuit/{}'.format(k)):
+
                 # this cleans s_name before further processing
                 s_name = self.clean_s_name(f['s_name'], f['root'])
+
+                # clean file uncommon suffixes
                 for file_suffix in file_suffixes:
                     s_name = s_name.replace(file_suffix, '')
+
                 if s_name in self.mdata[k]:
                     log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+
                 self.mdata[k][s_name] = getattr(self, 'parse_logs_%s' % k)(f['f'], f['fn'])
 
-        for dtype in self.mdata:
-            self.mdata[dtype] = self.ignore_samples(self.mdata[dtype])
+        for k in self.mdata:
+            self.mdata[k] = self.ignore_samples(self.mdata[k])
 
         if sum([len(self.mdata[k]) for k in self.mdata]) == 0:
             raise UserWarning
@@ -106,8 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(self.mdata[k]) > 0:
                 self.write_data_file(self.mdata[k], 'multiqc_biscuit_{}'.format(k))
                 log.debug("Found %d %s reports" % (len(self.mdata[k]), k))
-                if k != 'markdup':
-                    getattr(self, 'chart_{}'.format(k))()
+                getattr(self, 'chart_{}'.format(k))()
 
     def biscuit_stats_table(self):
 
@@ -116,17 +120,13 @@ class MultiqcModule(BaseMultiqcModule):
             allreads = sum([int(_) for _ in dd.values()])
             pd[sid] = {'%aligned': float(allreads-int(dd['unmapped']))/allreads*100}
         
-        hasPE = False
-        hasSE = False
         for sid, dd in self.mdata['markdup_report'].items():
             if sid not in pd:
                 pd[sid] = {}
             if 'dupRatePE' in dd and dd['dupRatePE'] is not None:
                 pd[sid]['%dupratePE'] = dd['dupRatePE']
-                hasPE = True
             if 'dupRateSE' in dd and dd['dupRateSE'] is not None:
                 pd[sid]['%duprateSE'] = dd['dupRateSE']
-                hasSE = True
 
         pheader = OrderedDict()
         pheader['%aligned'] = {'title':'% Aligned', 'max':100, 'min':0, 'suffix':'%','scale':'Greens'}
@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
             })
         )
 
-        # Mapping Quality together in one plot
+        # Mapping quality together in one plot
         total = {}
         for sid, dd in self.mdata['align_mapq'].items():
             total[sid] = sum([int(cnt) for _, cnt in dd.items() if _ != "unmapped"])
@@ -193,7 +193,9 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'biscuit-mapq',
             description = "This plot shows the distribution of primary mapping quality.",
             plot = linegraph.plot(pd_mapping,
-                {'id':'biscuit_mapping', 'title': 'BISCUIT: Mapping Information', 'ymin': 0, 'yLabelFormat': '{value}%', 
+                {'id':'biscuit_mapping',
+                 'title': 'BISCUIT: Mapping Information', 
+                 'ymin': 0, 'yLabelFormat': '{value}%', 
                  'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of reads',
                  'name':'Mapping Quality', 'ylab': '% Primary Mapped Reads','xlab': 'Mapping Quality'}))
 
