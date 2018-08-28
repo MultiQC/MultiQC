@@ -140,6 +140,10 @@ cutadapt:
     shared: true
 dedup:
     fn: 'dedup.log'
+NuGEN_dedup:
+    fn: '*_dup_log.txt'
+FCount_cus:
+    fn: '*.mergeCount'
 deeptools/bamPEFragmentSize:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
     num_lines: 1

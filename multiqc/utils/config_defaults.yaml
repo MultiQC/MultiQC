@@ -234,6 +234,12 @@ top_modules: []
 module_order:
     # MultiQC general module for catching output from custom scripts
     - 'custom_content'
+    - NuGEN_dedup:
+        module_tag:
+            - RNA
+    - FCount_cus:
+        module_tag:
+            - RNA
     # Post-alignment QC
     - conpair:
         module_tag:
