@@ -73,8 +73,8 @@ class MultiqcModule(BaseMultiqcModule):
             count_info["counts > 100"] = int(s[3])
             
             #information for report section
-            count_info["counts_0_s"] = count_info["counts > 0"]-count_info["counts > 10"]-count_info["counts > 100"]
-            count_info["counts_10_s"] = count_info["counts > 10"]-count_info["counts > 100"]
+            count_info["counts:0-10"] = count_info["counts > 0"]-count_info["counts > 10"]-count_info["counts > 100"]
+            count_info["counts:10-100"] = count_info["counts > 10"]-count_info["counts > 100"]
             
             parsed_data[fileName] = count_info
         
@@ -86,24 +86,26 @@ class MultiqcModule(BaseMultiqcModule):
             'title':'count > 0',
             'description':'Count the genes that appear one or more times after the NuGEN deduplication process',
             'scale': 'RdYlGn-rev',
-            'min': 0
+            'placement' : 1.0,
         }
         headers['counts > 10'] = {
             'title':'count > 10',
             'description':'Count the genes that appear ten or more times after the NuGEN deduplication process',
             'scale': 'RdBu',
-            'hidden': True
+            'hidden': True,
+            'placement' : 2.0,
         }
         headers['counts > 100'] = {
             'title':'count > 100',
             'description':'Count the genes that appear one hundred or more times after the NuGEN deduplication process',
             'scale': 'RdBu',
-            'hidden': True
+            'hidden': True,
+            'placement' : 3.0,
         }
         self.general_stats_addcols(self.FCount_data,headers)
 
     def FCount_barPlot_0(self):
-        keys_FCount = ['counts_0_s','counts_10_s','counts > 100']
+        keys_FCount = ['counts:0-10','counts:10-100','counts > 100']
         config = {
             'id': 'Count_Distribution_StatsPlot',
             'title': 'Counts_Distribution: StatsPlot',
