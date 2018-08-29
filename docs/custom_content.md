@@ -80,7 +80,7 @@ The file format can also be JSON:
 For maximum compatibility with other tools, you can also use comma-separated or tab-separated files.
 Include commented header lines with plot configuration in YAML format:
 
-```yaml
+```bash
 # title: 'Output from my script'
 # description: 'This output is described in the file header. Any MultiQC installation will understand it without prior configuration.'
 # section: 'Custom Data File'
@@ -114,7 +114,6 @@ Finally, the contents of this second dictionary will look the same as the above
 stand-alone `YAML` files. For example:
 
 ```yaml
-# Other MultiQC config stuff here
 custom_data:
     my_data_type:
         id: 'mqc_config_file_section'
@@ -257,10 +256,10 @@ section_anchor: <id>    # Used in report section #soft-links
 section_name: <id>      # Nice name used for the report section header
 section_href: null      # External URL for the data, to find more information
 description: null       # Introductory text to be printed under the section header
-file_format: null       # File format of the data (typically csv / tsv - see below for more information)
+file_format: null       # File format of the data (eg. csv / tsv)
 plot_type: null         # The plot type to visualise the data with.
-                        # - Possible options: generalstats | table | bargraph | linegraph | scatter | heatmap | beeswarm
-pconfig: {}             # Configuration for the plot. See http://multiqc.info/docs/#plotting-functions
+                        # generalstats | table | bargraph | linegraph | scatter | heatmap | beeswarm
+pconfig: {}             # Configuration for the plot.
 ```
 
 Note that any _custom content_ data found with the same section `id` will be merged
@@ -271,21 +270,21 @@ This approach means that it's possible to have a single file containing data for
 samples, but it's also possible to have one file per sample and still have all of them
 summarised.
 
-If you're using `plot_type: 'generalstats'` then a report section will not be created and
+> If you're using `plot_type: 'generalstats'` then a report section will not be created and
 most of the configuration keys above are ignored.
 
-Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
+> Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
 configuration keys (these can't be guessed by data format).
 
 ## Plot configuration
 Configuration of specific plots follows the same syntax as used when writing modules.
 To find out more, please see the later docs. Specifically, the plot config docs for
-[bar graphs](http://multiqc.info/docs/#bar-graphs),
-[line graphs](http://multiqc.info/docs/#line-graphs),
-[scatter plots](http://multiqc.info/docs/#scatter-plots),
-[tables](http://multiqc.info/docs/#creating-a-table),
-[beeswarm plots](http://multiqc.info/docs/#beeswarm-plots-dot-plots) and
-[heatmaps](http://multiqc.info/docs/#heatmaps).
+[bar graphs](#bar-graphs),
+[line graphs](#line-graphs),
+[scatter plots](#scatter-plots),
+[tables](#creating-a-table),
+[beeswarm plots](#beeswarm-plots-dot-plots) and
+[heatmaps](#heatmaps).
 
 Wherever you see `pconfig`, any key can be used within the above syntax.
 
@@ -294,16 +293,16 @@ Because of the way this module works, there are a few specifics that can trip yo
 Most of these should probably be fixed one day. Feel free to complain on gitter or submit a pull request!
 I'll try to keep a list here to help the wary...
 
-#### Differences between Tables and General Stats
+### Differences between Tables and General Stats
 Although they're both tables, note that general stats configures columns with a list
 in the `pconfig` scope (see above example). Files that are just tables use `headers` instead.
 
-#### First columns in tables are special
+### First columns in tables are special
 The first column in every table is reserved for the sample name. As such, it shouldn't contain data.
 All header configuration will be ignored for the first column. The only exception is name:
 this can be tweaked using the somewhat tricky `col1_header` field in the `pconfig` scope (see table docs).
 
-# Linting
+## Linting
 MultiQC has been developed to be as forgiving as possible and will handle lots of
 invalid or ignored configurations. This is useful for most users but can make life
 difficult when getting MultiQC to work with a new custom content format.
@@ -314,3 +313,11 @@ warnings about anything that is not optimally configured. For example:
 ```
 multiqc --lint test_data
 ```
+
+# Examples
+Probably the best way to get to grips with Custom Content is to see some examples.
+The MultiQC automated testing runs with a bunch of different files, and I try to add to
+these all the time. You can see them here: https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content
+
+For example, to see a file which generates a table in a report by itself, you can
+check out [`embedded_config/table_headers_mqc.txt`](https://github.com/ewels/MultiQC_TestData/blob/master/data/custom_content/embedded_config/table_headers_mqc.txt).
