@@ -317,7 +317,9 @@ multiqc --lint test_data
 # Examples
 Probably the best way to get to grips with Custom Content is to see some examples.
 The MultiQC automated testing runs with a bunch of different files, and I try to add to
-these all the time. You can see them here: https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content
+these all the time.
+
+You can see these examples here: https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content
 
 For example, to see a file which generates a table in a report by itself, you can
-check out [`embedded_config/table_headers_mqc.txt`](https://github.com/ewels/MultiQC_TestData/blob/master/data/custom_content/embedded_config/table_headers_mqc.txt).
+have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/ewels/MultiQC_TestData/blob/master/data/custom_content/embedded_config/table_headers_mqc.txt)).
