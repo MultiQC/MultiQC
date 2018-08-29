@@ -38,7 +38,7 @@ install_requires = [
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        'matplotlib>=2.1.1',
+        'matplotlib>=2.1.1,<3.0.0',
         'markdown',
         'numpy',
         'pyyaml',
