@@ -20,17 +20,201 @@ All plot types can be generated using custom content - see the
 [test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
 for examples of how data should be structured.
 
-# Linting
-MultiQC has been developed to be as forgiving as possible and will handle lots of
-invalid or ignored configurations. This is useful for most users but can make life
-difficult when getting MultiQC to work with a new custom content format.
+## Data from a released tool
+If your data comes from a released bioinformatics tool, you shouldn't be using this
+feature of MultiQC! Sure, you can probably get it to work, but it's better if a
+fully-fledged core MultiQC module is written instead. That way, other users of MultiQC
+can also benefit from results parsing.
 
-To help with this, you can run with the `--lint` flag, which will give explicit
-warnings about anything that is not optimally configured. For example:
+Note that proper MultiQC modules are more robust and powerful than this custom-content
+feature. You can also [write modules](http://multiqc.info/docs/#writing-new-modules)
+in [MultiQC plugins](http://multiqc.info/docs/#multiqc-plugins) if they're not suitable for
+general release.
 
+## MultiQC-specific data file
+If you can choose exactly how your data output looks, then the easiest way to parse it
+is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|json|txt|csv|out)`
+then it will be found by any standard MultiQC installation with no additional customisation
+required (v0.9 onwards).
+
+These files contain configuration information specifying how the data should be parsed,
+alongside the data. If you want to use YAML, this is an example of how it should look:
+
+```yaml
+id: 'my_pca_section'
+section_name: 'PCA Analysis'
+description: 'This plot shows the first two components from a principal component analysis.'
+plot_type: 'scatter'
+pconfig:
+    id: 'pca_scatter_plot'
+    title: 'PCA Plot'
+    xlab: 'PC1'
+    ylab: 'PC2'
+data:
+    sample_1: {x: 12, y: 14}
+    sample_2: {x: 8, y: 6 }
+    sample_3: {x: 5, y: 11}
+    sample_4: {x: 9, y: 12}
 ```
-multiqc --lint test_data
+
+The file format can also be JSON:
+```json
+{
+    "id": "custom_data_lineplot",
+    "section_name": "Custom JSON File",
+    "description": "This plot is a self-contained JSON file.",
+    "plot_type": "linegraph",
+    "pconfig": {
+        "id": "custom_data_linegraph",
+        "title": "Output from my JSON file",
+        "ylab": "Number of things",
+        "xDecimals": false
+    },
+    "data": {
+        "sample_1": { "1": 12, "2": 14, "3": 10, "4": 7, "5": 16 },
+        "sample_2": { "1": 9, "2": 11, "3": 15, "4": 18, "5": 21 }
+    }
+}
 ```
+
+For maximum compatibility with other tools, you can also use comma-separated or tab-separated files.
+Include commented header lines with plot configuration in YAML format:
+
+```yaml
+# title: 'Output from my script'
+# description: 'This output is described in the file header. Any MultiQC installation will understand it without prior configuration.'
+# section: 'Custom Data File'
+# format: 'tsv'
+# plot_type: 'bargraph'
+# pconfig:
+#    id: 'custom_bargraph_w_header'
+#    ylab: 'Number of things'
+Category_1    374
+Category_2    229
+Category_3    39
+Category_4    253
+```
+
+If no configuration is given, MultiQC will do its best to guess how to visualise your data appropriately.
+To see examples of typical file structures which are understood, see the
+[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+used to develop this code. Something will be probably be shown, but it may produce unexpected results.
+
+## Data as part of MultiQC config
+If you are already using a MultiQC config file to add data to your report (for example,
+[titles / introductory text](http://multiqc.info/docs/#customising-reports)), you can
+give data within this file too. This can be in any MultiQC config file (for example,
+passed on the command line with `-c my_yaml_file.yaml`). This is useful as you can
+keep everything contained within a single file (including stuff unrelated to this
+specific _custom content_ feature of MultiQC).
+
+To be understood by MultiQC, the `custom_data` key must be found.
+This must contain a section with a unique id, specific to your new report section.
+Finally, the contents of this second dictionary will look the same as the above
+stand-alone `YAML` files. For example:
+
+```yaml
+# Other MultiQC config stuff here
+custom_data:
+    my_data_type:
+        id: 'mqc_config_file_section'
+        section_name: 'My Custom Section'
+        description: 'This data comes from a single multiqc_config.yaml file'
+        plot_type: 'bargraph'
+        pconfig:
+            id: 'barplot_config_only'
+            title: 'MultiQC Config Data Plot'
+            ylab: 'Number of things'
+        data:
+            sample_a:
+                first_thing: 12
+                second_thing: 14
+            sample_b:
+                first_thing: 8
+                second_thing: 6
+            sample_c:
+                first_thing: 11
+                second_thing: 5
+            sample_d:
+                first_thing: 12
+                second_thing: 9
+```
+
+Or to add data to the General Statistics table:
+```yaml
+custom_data:
+    my_genstats:
+        plot_type: 'generalstats'
+        pconfig:
+            - col_1:
+                max: 100
+                min: 0
+                scale: 'RdYlGn'
+                suffix: '%'
+            - col_2:
+                min: 0
+        data:
+            sample_a:
+                col_1: 14.32
+                col_2: 1.2
+            sample_b:
+                col_1: 84.84
+                col_2: 1.9
+```
+> **Note:** Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the order
+> of columns in the General Statistics table.
+
+See the [general statistics docs](http://multiqc.info/docs/#step-3-adding-to-the-general-statistics-table)
+for more information about configuring data for the General Statistics table.
+
+
+## Separate configuration and data files
+It's not always possible or desirable to include MultiQC configuration within a data file.
+If this is the case, you can add to the MultiQC configuration to specify how input files
+should be parsed.
+
+As described in the above [_Data as part of MultiQC config_](#data-as-part-of-multiqc-config) section,
+this configuration should be held within a section called `custom_data` with a section-specific id.
+The only difference is that no `data` subsection is given and a search pattern for the given id must
+be supplied.
+
+Search patterns are added [as with any other module](http://multiqc.info/docs/#module-search-patterns).
+Ensure that the search pattern key is the same as your `custom_data` section ID.
+
+For example, a MultiQC config file could look as follows:
+```yaml
+# Other MultiQC config stuff here
+custom_data:
+    example_files:
+        file_format: 'tsv'
+        section_name: 'Coverage Decay'
+        description: 'This plot comes from files acommpanied by a mutliqc_config.yaml file for configuration'
+        plot_type: 'linegraph'
+        pconfig:
+            id: 'example_coverage_lineplot'
+            title: 'Coverage Decay'
+            ylab: 'X Coverage'
+            ymax: 100
+            ymin: 0
+sp:
+    example_files:
+        fn: 'example_files_*'
+```
+
+And work with the following data file:
+`example_files_Sample_1.txt`:
+```bash
+0	98.22076066
+1	97.96764159
+2	97.78227175
+3	97.61262195
+# [...]
+```
+
+As mentioned above - if no configuration is given, MultiQC will do its best to guess how to visualise
+your data appropriately. To see examples of typical file structures which are understood, see the
+[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+used to develop this code.
 
 # Configuration
 ## Order of sections
@@ -93,223 +277,40 @@ most of the configuration keys above are ignored.
 Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
 configuration keys (these can't be guessed by data format).
 
-# Data formats
-MultiQC can parse custom data from a few different sources, in a number of different
-formats. Which one you use depends on how the data is being produced.
+## Plot configuration
+Configuration of specific plots follows the same syntax as used when writing modules.
+To find out more, please see the later docs. Specifically, the plot config docs for
+[bar graphs](http://multiqc.info/docs/#bar-graphs),
+[line graphs](http://multiqc.info/docs/#line-graphs),
+[scatter plots](http://multiqc.info/docs/#scatter-plots),
+[tables](http://multiqc.info/docs/#creating-a-table),
+[beeswarm plots](http://multiqc.info/docs/#beeswarm-plots-dot-plots) and
+[heatmaps](http://multiqc.info/docs/#heatmaps).
 
-A quick summary of which approach to use looks something like this:
+Wherever you see `pconfig`, any key can be used within the above syntax.
 
-* Additional data when already using custom MultiQC config files
-  * _Data as part of MultiQC config_
-* Data specifically for MultiQC from a custom script
-  * _MultiQC-specific data file_
-* Data from a custom script which is also used by other processes
-  * _Separate configuration and data files_
-  * Add `_mqc.txt` to filename and hope that MultiQC guesses correctly
-* Anything more complicated, or data from a released tool
-  * Write a proper MultiQC module instead.
+## Tricky extras
+Because of the way this module works, there are a few specifics that can trip you up.
+Most of these should probably be fixed one day. Feel free to complain on gitter or submit a pull request!
+I'll try to keep a list here to help the wary...
 
-For more complete examples of the data formats understood by MultiQC, please see the
-[`data/custom_content`](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
-directory in the [MultiQC_TestData](https://github.com/ewels/MultiQC_TestData)
-GitHub repository.
+#### Differences between Tables and General Stats
+Although they're both tables, note that general stats configures columns with a list
+in the `pconfig` scope (see above example). Files that are just tables use `headers` instead.
 
-## Data from a released tool
-If your data comes from a released bioinformatics tool, you shouldn't be using this
-feature of MultiQC! Sure, you can probably get it to work, but it's better if a
-fully-fledged core MultiQC module is written instead. That way, other users of MultiQC
-can also benefit from results parsing.
+#### First columns in tables are special
+The first column in every table is reserved for the sample name. As such, it shouldn't contain data.
+All header configuration will be ignored for the first column. The only exception is name:
+this can be tweaked using the somewhat tricky `col1_header` field in the `pconfig` scope (see table docs).
 
-Note that proper MultiQC modules are more robust and powerful than this custom-content
-feature. You can also [write modules](http://multiqc.info/docs/#writing-new-modules)
-in [MultiQC plugins](http://multiqc.info/docs/#multiqc-plugins) if they're not suitable for
-general release.
+# Linting
+MultiQC has been developed to be as forgiving as possible and will handle lots of
+invalid or ignored configurations. This is useful for most users but can make life
+difficult when getting MultiQC to work with a new custom content format.
 
-## Data as part of MultiQC config
-If you are already using a MultiQC config file to add data to your report (for example,
-[titles / introductory text](http://multiqc.info/docs/#customising-reports)), you can
-give data within this file too. This can be in any MultiQC config file (for example,
-passed on the command line with `-c my_yaml_file.yaml`). This is useful as you can
-keep everything contained within a single file (including stuff unrelated to this
-specific _custom content_ feature of MultiQC).
+To help with this, you can run with the `--lint` flag, which will give explicit
+warnings about anything that is not optimally configured. For example:
 
-If you're not using this file for other MultiQC configuration, you're probably
-better off using a stand-alone YAML file (see [section below](#multiqc-specific-data-file)).
-
-To be understood by MultiQC, the `custom_data` key must be found. This must contain
-a section with a unique id, specific to your new report section. This in turn
-must contain a section called `data`. Other configuration keys can be held alongside this.
-For example:
-
-```yaml
-# Other MultiQC config stuff here
-custom_data:
-    my_data_type:
-        id: 'mqc_config_file_section'
-        section_name: 'My Custom Section'
-        description: 'This data comes from a single multiqc_config.yaml file'
-        plot_type: 'bargraph'
-        pconfig:
-            id: 'barplot_config_only'
-            title: 'MultiQC Config Data Plot'
-            ylab: 'Number of things'
-        data:
-            sample_a:
-                first_thing: 12
-                second_thing: 14
-            sample_b:
-                first_thing: 8
-                second_thing: 6
-            sample_c:
-                first_thing: 11
-                second_thing: 5
-            sample_d:
-                first_thing: 12
-                second_thing: 9
 ```
-
-Or to add data to the General Statistics table:
-```yaml
-custom_data:
-    my_genstats:
-        plot_type: 'generalstats'
-        pconfig:
-            - col_1:
-                max: 100
-                min: 0
-                scale: 'RdYlGn'
-                suffix: '%'
-            - col_2:
-                min: 0
-        data:
-            sample_a:
-                col_1: 14.32
-                col_2: 1.2
-            sample_b:
-                col_1: 84.84
-                col_2: 1.9
+multiqc --lint test_data
 ```
-> **Note:** Use a **list** of headers in `pconfig` (keys prepended with `-`) to specify the order
-> of columns in the table.
-
-See the [general statistics docs](http://multiqc.info/docs/#step-3-adding-to-the-general-statistics-table)
-for more information about configuring data for the General Statistics table.
-
-## MultiQC-specific data file
-If you can choose exactly how your data output looks, then the easiest way to parse it
-is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|json|txt|csv|out)`
-then it will be found by any standard MultiQC installation with no additional customisation
-required (v0.9 onwards).
-
-These files contain configuration information specifying how the data should be parsed, along
-side the data. If using YAML, this looks just the same as if in a MultiQC config file (see above),
-but without having to be within a `custom_data` section:
-
-```yaml
-id: 'my_pca_section'
-section_name: 'PCA Analysis'
-description: 'This plot shows the first two components from a principal component analysis.'
-plot_type: 'scatter'
-pconfig:
-    id: 'pca_scatter_plot'
-    title: 'PCA Plot'
-    xlab: 'PC1'
-    ylab: 'PC2'
-data:
-    sample_1: {x: 12, y: 14}
-    sample_2: {x: 8, y: 6 }
-    sample_3: {x: 5, y: 11}
-    sample_4: {x: 9, y: 12}
-```
-
-The file format can also be JSON:
-```json
-{
-    "id": "custom_data_lineplot",
-    "section_name": "Custom JSON File",
-    "description": "This plot is a self-contained JSON file.",
-    "plot_type": "linegraph",
-    "pconfig": {
-        "id": "custom_data_linegraph",
-        "title": "Output from my JSON file",
-        "ylab": "Number of things",
-        "xDecimals": false
-    },
-    "data": {
-        "sample_1": { "1": 12, "2": 14, "3": 10, "4": 7, "5": 16 },
-        "sample_2": { "1": 9, "2": 11, "3": 15, "4": 18, "5": 21 }
-    }
-}
-```
-
-If you want the data to be easy to use with other tools, you can also use
-comma-separated or tab-separated file. To customise plot output, include commented
-header lines with plot configuration in YAML format:
-
-```bash
-# title: 'Output from my script'
-# description: 'This output is described in the file header. Any MultiQC installation will understand it without prior configuration.'
-# section: 'Custom Data File'
-# format: 'tsv'
-# plot_type: 'bargraph'
-# pconfig:
-#    id: 'custom_bargraph_w_header'
-#    ylab: 'Number of things'
-Category_1    374
-Category_2    229
-Category_3    39
-Category_4    253
-```
-
-If no configuration is given, MultiQC will do its best to guess how to visualise your data appropriately.
-To see examples of typical file structures which are understood, see the
-[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
-used to develop this code. Something will be probably be shown, but it may produce unexpected results.
-
-## Separate configuration and data files
-It's not always possible or desirable to include MultiQC configuration within a data file.
-If this is the case, you can add to the MultiQC configuration to specify how input files
-should be parsed.
-
-As described in the above [_Data as part of MultiQC config_](#data-as-part-of-multiqc-config) section,
-this configuration should be held within a section called `custom_data` with a section-specific id.
-The only difference is that no `data` subsection is given and a search pattern for the given id must
-be supplied.
-
-Search patterns are added [as with any other module](http://multiqc.info/docs/#module-search-patterns).
-Ensure that the search pattern key is the same as your `custom_data` section ID.
-
-For example:
-```yaml
-# Other MultiQC config stuff here
-custom_data:
-    example_files:
-        file_format: 'tsv'
-        section_name: 'Coverage Decay'
-        description: 'This plot comes from files acommpanied by a mutliqc_config.yaml file for configuration'
-        plot_type: 'linegraph'
-        pconfig:
-            id: 'example_coverage_lineplot'
-            title: 'Coverage Decay'
-            ylab: 'X Coverage'
-            ymax: 100
-            ymin: 0
-sp:
-    example_files:
-        fn: 'example_files_*'
-```
-A data file within the MultiQC search directories could then simply look like this:
-
-`example_files_Sample_1.txt`:
-```
-0	98.22076066
-1	97.96764159
-2	97.78227175
-3	97.61262195
-[...]
-```
-
-As mentioned above - if no configuration is given, MultiQC will do its best to guess how to visualise
-your data appropriately. To see examples of typical file structures which are understood, see the
-[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
-used to develop this code.

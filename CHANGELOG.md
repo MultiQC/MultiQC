@@ -14,6 +14,11 @@
     * Fixed bug where read counts and base pair yields were not displaying in tables correctly.
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
 
+#### New MultiQC Features:
+* Documentation for Custom Content reordered to make it a little more sane
+
+#### Bug Fixes:
+* Custom content no longer clobbers `col1_header` table configs
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
