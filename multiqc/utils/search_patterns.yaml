@@ -426,8 +426,9 @@ stacks/populations:
     fn: 'populations.log.distribs'
     contents: 'BEGIN missing_samples_per_loc_prefilters'
 stacks/sumstats:
-    fn: 'populations.sumstats_summary.tsv'
+    fn: '*.sumstats_summary.tsv'
     contents: '# Pop ID	Private	Num_Indv	Var	StdErr	P	Var'
+    max_filesize: 1000000
 star:
     fn: '*Log.final.out'
 star/genecounts:
