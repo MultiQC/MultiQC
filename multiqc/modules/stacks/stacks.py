@@ -95,6 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Mean measure of Fis in this population.'
         }
 
+        num_files = 0
         # Parse gstacks data
         self.cov_data = OrderedDict()
         for f in self.find_log_files('stacks/gstacks'):
@@ -102,6 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(os.path.basename(f['root']), run_name)
             try:
                 self.cov_data.update(self.parse_gstacks(f['f'], s_name, f))
+                num_files += 1
             except:
                 log.error('Could not parse gstacks.distribs file in {}'.format(f['s_name']))
 
@@ -114,6 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
             i,j = self.parse_populations(f['f'], s_name, f)
             try:
                 self.distribs_loci.update(i); self.distribs_snps.update(j)
+                num_files += 1
             except:
                 log.error('Could not parse population.log.distribs file in {}'.format(f['s_name']))
 
@@ -124,6 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(os.path.basename(f['root']), run_name)
             try:
                 self.sumstats_data.update(self.parse_sumstats(f['f'], s_name, f))
+                num_files += 1
             except:
                 log.error('Could not parse populations.sumstats_summary file in {}'.format(f['s_name']))
 
@@ -134,9 +138,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.distribs_snps = self.ignore_samples(self.distribs_snps)
         self.sumstats_data = self.ignore_samples(self.sumstats_data)
 
-        if len(self.cov_data) == 0:
+        if len(self.cov_data) == 0 and len(self.sumstats_data) == 0 and len(self.distribs_loci) == 0:
             raise UserWarning
-        log.info("Found {} reports".format(len(self.cov_data.keys())))
+        log.info("Found {} reports".format(num_files))
 
         # Write parsed report data to a file
         self.write_data_file(self.cov_data, 'multiqc_stacks_cov')
@@ -230,10 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
                 content = l.split("\t")
                 for i in fields:
                     cdict[headers[i]] = content[i]
-                if s_name is not None:
-                    out_dict[s_name+" | "+content[0]] = cdict
-                else:
-                    out_dict[content[0]] = cdict
+                out_dict[s_name] = cdict
 
         return out_dict
 

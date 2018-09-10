@@ -367,6 +367,9 @@ module_order:
         module_tag:
             - DNA
             - WGS
+    - stacks:
+        module_tag:
+            - DNA
 
     # Alignment tool stats
     - bbmap:

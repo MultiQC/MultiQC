@@ -73,6 +73,7 @@ MultiQC Modules:
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md
+    Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md
