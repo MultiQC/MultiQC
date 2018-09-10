@@ -90,26 +90,26 @@ def parse_reports(parent_module):
         # Variant Counts Bargraph
         parent_module.add_section(
             name='Variant Types',
-            anchor='picard-count-variants',
+            anchor='picard-variants-types',
             description='Variants that have been called, looking at variant types. Optionally filtered on label.',
             helptext="""
             Only passing variants are shown (i.e. non-filtered).\n
             SNPs are bi-allelic.\n
             Complex InDels are both an insertion and a deletion.
             """,
-            plot=count_variants_barplot(data)
+            plot=compare_variant_type_plot(data)
         )
 
         # Variant Counts Table
         parent_module.add_section(
             name='Variant Labels',
-            anchor='picard-count-variants',
+            anchor='picard-variants-labels',
             description='Variants that have been called, comparing with known variant sites.',
             helptext="""
             Only passing variants are shown (i.e. non-filtered).\n
             Variants contain bi-allelic SNPs, multi-allelic SNPs, simple and complex inserts and deletions.
             """,
-            plot=compare_variants_plot(data)
+            plot=compare_variants_label_plot(data)
         )
 
     return len(data)
@@ -181,7 +181,7 @@ def stripped(iterator):
         yield item.strip()
 
 
-def count_variants_barplot(data):
+def compare_variant_type_plot(data):
     """ Return HTML for the Variant Counts barplot """
     keys = OrderedDict()
     keys['snps'] = {'name': 'SNPs', 'color': '#7cb5ec'}
@@ -215,7 +215,7 @@ def count_variants_barplot(data):
         }
 
     plot_conf = {
-        'id': 'picard_variantCallingMetrics_variant_plot',
+        'id': 'picard_variantCallingMetrics_variant_type',
         'title': 'Picard: Variants Called',
         'ylab': 'Counts of Variants',
         'hide_zero_cats': False,
@@ -230,7 +230,7 @@ def count_variants_barplot(data):
                          pconfig=plot_conf)
 
 
-def compare_variants_plot(data):
+def compare_variants_label_plot(data):
     """ Return HTML for the Compare variants plot"""
     keys = OrderedDict()
 
@@ -238,7 +238,7 @@ def compare_variants_plot(data):
     keys['total_called_variants_novel'] = {'name': 'Novel Variants'}
 
     pconfig = {
-        'id': 'picard_variantCallingMetrics_compare_table',
+        'id': 'picard_variantCallingMetrics_variant_label',
         'title': 'Picard: Variants Called',
         'ylab': 'Counts of Variants',
      }
