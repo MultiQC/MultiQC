@@ -23,6 +23,7 @@ Supported commands:
 * `AlignmentSummaryMetrics`
 * `RrbsSummaryMetrics`
 * `ValidateSamFile`
+* `VariantCallingMetrics`
 
 #### Coverage Levels
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and

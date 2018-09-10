@@ -8,6 +8,8 @@
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
 
 #### Module updates:
+* **Picard**
+    * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
 * **InterOp**
