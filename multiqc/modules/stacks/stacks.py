@@ -26,25 +26,25 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': '# loci',
                 'description': 'Number of loci built',
                 'format': '{:,.i}',
-                'scale': 'PuBu'
+                'scale': 'RdYlGn'
         }
         self.gsheaders['n_used_fw_reads'] = {
                 'title': 'K reads used',
                 'modify': lambda x: float(x) / 1000.0,
                 'description': 'Number of thousand reads used',
-                'scale': 'PuBu'
+                'scale': 'BuGn'
         }
         self.gsheaders['mean_cov'] = {
                 'title': 'cov',
                 'suffix': 'X',
                 'description': 'Mean sequence coverage at locus',
-                'scale': 'PuRd',
+                'scale': 'BuPu',
         }
         self.gsheaders['mean_cov_ns'] = {
                 'title': 'weighted cov',
                 'suffix': 'X',
                 'description': 'The coverage at each locus is weighted by the number of samples present at that locus (i.e. coverage at shared loci counts more)',
-                'scale': 'PuRd',
+                'scale': 'YlGn',
         }
 
         self.sheaders = OrderedDict()
@@ -56,43 +56,65 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.sheaders['Private'] = {
                 'title': 'Private',
-                'description': 'Number of private alleles in this population.'
+                'description': 'Number of private alleles in this population.',
+                'scale': 'PuBu',
+                'hidden': True
         }
         self.sheaders['Num_Indv'] = {
                 'title': '# Indv',
-                'description': 'Mean number of individuals per locus in this population.'
+                'description': 'Mean number of individuals per locus in this population.',
+                'scale': 'YlGn'
         }
         self.sheaders['P'] = {
                 'title': 'P',
-                'description': 'Mean frequency of the most frequent allele at each locus in this population.'
+                'description': 'Mean frequency of the most frequent allele at each locus in this population.',
+                'scale': 'PuBu',
+                'min': 0,
+                'max': 1
         }
         self.sheaders['Obs_Het'] = {
                 'title': 'Obs Het',
                 'description': 'Mean observed heterozygosity in this population.',
-                'scale': 'PuRd'
+                'scale': 'YlGn',
+                'min': 0,
+                'max': 1,
         }
         self.sheaders['Obs_Hom'] = {
                 'title': 'Obs Hom',
                 'description': 'Mean observed homozygosity in this population.',
-                'scale': 'Greens'
-        }
-        self.sheaders['Exp_Het'] = {
-                'title': 'Exp Het',
-                'description': 'Mean expected heterozygosity in this population.',
-                'scale': 'PuRd'
+                'scale': 'PuBu',
+                'min': 0,
+                'max': 1,
+                'hidden': True
         }
         self.sheaders['Exp_Hom'] = {
                 'title': 'Exp_Hom',
                 'description': 'Mean expected homozygosity in this population.',
-                'scale': 'Greens'
+                'scale': 'YlGn',
+                'min': 0,
+                'max': 1,
+                'hidden': True
+        }
+        self.sheaders['Exp_Het'] = {
+                'title': 'Exp Het',
+                'description': 'Mean expected heterozygosity in this population.',
+                'scale': 'PuBu',
+                'min': 0,
+                'max': 1
         }
         self.sheaders['Pi'] = {
                 'title': 'Pi',
-                'description': 'Mean value of &#960; in this population.'
+                'description': 'Mean value of &#960; in this population.',
+                'scale': 'YlGn',
+                'min': 0,
+                'max': 1
         }
         self.sheaders['Fis'] = {
                 'title': 'Fis',
-                'description': 'Mean measure of Fis in this population.'
+                'description': 'Mean measure of Fis in this population.',
+                'scale': 'PuOr',
+                'min': -1,
+                'max': 1
         }
 
         num_files = 0
