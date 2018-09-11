@@ -4,7 +4,7 @@
 
 #### New Modules:
 * [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
-    * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1.
+    * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 
