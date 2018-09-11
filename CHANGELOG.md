@@ -3,10 +3,26 @@
 ## MultiQC v1.7dev
 
 #### New Modules:
+* [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
+    * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
+    * Module written by [@chuan-wang](https://github.com/chuan-wang/)
 * [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
     * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
 
+#### Module updates:
+* **FastQC**
+    * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
+* **InterOp**
+    * Fixed bug where read counts and base pair yields were not displaying in tables correctly.
+    * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
+
+#### New MultiQC Features:
+* Documentation for Custom Content reordered to make it a little more sane
+
+
+#### Bug Fixes:
+* Custom content no longer clobbers `col1_header` table configs
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 

@@ -274,6 +274,8 @@ peddy/sex_check:
     fn: '*.sex_check.csv'
 peddy/background_pca:
     fn: '*.background_pca.json'
+phantompeakqualtools:
+    fn: '*.spp.out'
 picard/alignment_metrics:
     contents: 'AlignmentSummaryMetrics'
     shared: true

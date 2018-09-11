@@ -302,12 +302,15 @@ $(function () {
 
         // Replace the heading above the heatmap
         var pos = findPos(this);
-        var x = e.pageX - pos.x;
+        var x = e.pageX - pos.x + 3;
         var y = e.pageY - pos.y;
+
         // Get label from y position
         var idx = Math.floor(y/s_height);
         var s_name = sample_names[idx];
         if(s_name === undefined){ return false; }
+
+        // Show the pass/warn/fail status heading for this sample
         var s_status = sample_statuses[s_name];
         var s_status_class = 'label-default';
         if(s_status == 'pass'){ s_status_class = 'label-success'; }
@@ -315,22 +318,31 @@ $(function () {
         if(s_status == 'fail'){ s_status_class = 'label-danger'; }
         $('#fastqc_per_base_sequence_content_plot_div .s_name').html('<span class="glyphicon glyphicon-info-sign"></span> ' + s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
 
-        // Show the sequence base percentages on the bar plots below
-        // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
-        var ctx = this.getContext('2d');
-        var p = ctx.getImageData(x, y, 1, 1).data;
-        var seq_t = (p[0]/255)*100;
-        var seq_a = (p[1]/255)*100;
-        var seq_c = (p[2]/255)*100;
-        var seq_g = 100 - (seq_t + seq_a + seq_c);
-        $('#fastqc_seq_heatmap_key_t span').text(seq_t.toFixed(0)+'%');
-        $('#fastqc_seq_heatmap_key_c span').text(seq_c.toFixed(0)+'%');
-        $('#fastqc_seq_heatmap_key_a span').text(seq_a.toFixed(0)+'%');
-        $('#fastqc_seq_heatmap_key_g span').text(seq_g.toFixed(0)+'%');
-
-        // Get base pair position from x pos
-        var this_bp = Math.floor((x/c_width)*max_bp);
-        $('#fastqc_seq_heatmap_key_pos').text(this_bp+' bp');
+        // Update the key with the raw data for this position
+        var hover_bp = Math.max(1, Math.floor((x/c_width)*max_bp));
+        var thispoint = fastqc_seq_content_data[s_name][hover_bp];
+        if(!thispoint){
+            var nearestkey = 0;
+            var guessdata = null;
+            $.each(fastqc_seq_content_data[s_name], function(bp, v){
+                bp = parseInt(bp);
+                if(bp < hover_bp && bp > nearestkey){
+                    nearestkey = bp;
+                    guessdata = v;
+                }
+            });
+            if(guessdata === null){
+                console.error("Couldn't guess key for "+hover_bp);
+                return false;
+            } else {
+                thispoint = guessdata;
+            }
+        }
+        $('#fastqc_seq_heatmap_key_t span').text(thispoint['t'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_c span').text(thispoint['c'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_a span').text(thispoint['a'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_g span').text(thispoint['g'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_pos').text(thispoint['base']+' bp');
     });
 
     // Remove sample name again when mouse leaves
@@ -418,10 +430,10 @@ function plot_single_seqcontent(s_name){
     var d = bases[i];
     var base = data[d]['base'].toString().split('-');
     base = parseFloat(base[0]);
-    plot_data[0]['data'].push([base, data[d]['t']]);
-    plot_data[1]['data'].push([base, data[d]['c']]);
-    plot_data[2]['data'].push([base, data[d]['a']]);
-    plot_data[3]['data'].push([base, data[d]['g']]);
+    plot_data[0]['data'].push({x:base, y:data[d]['t'], name:data[d]['base']});
+    plot_data[1]['data'].push({x:base, y:data[d]['c'], name:data[d]['base']});
+    plot_data[2]['data'].push({x:base, y:data[d]['a'], name:data[d]['base']});
+    plot_data[3]['data'].push({x:base, y:data[d]['g'], name:data[d]['base']});
   }
 
   // Create plot div if it doesn't exist, and hide overview
@@ -471,11 +483,13 @@ function plot_single_seqcontent(s_name){
       formatter: function () {
         var texts = [];
         var bars = [];
+        var xlabel = this.x;
         $.each(this.points, function () {
           texts.push('<span style="display: inline-block; border-left: 3px solid '+this.color+'; padding-left:5px; margin-bottom: 2px;"></div>' + this.y.toFixed(1) + this.series.name + '</span>');
           bars.push('<div class="progress-bar" style="width:'+this.y+'%; float:left; font-size:8px; line-height:12px; padding:0; background-color:'+this.color+';">'+this.series.name.replace('%','').trim()+'</div>');
+          if(this.point.name){ xlabel = this.point.name; }
         });
-        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + this.x + ' bp</p>\
+        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + xlabel + ' bp</p>\
             <p>'+texts.join('<br>')+'</p><div class="progress" style="height: 12px; width: 150px; margin:0;">'+bars.join('')+'</div>';
       },
 			useHTML: true,

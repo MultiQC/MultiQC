@@ -339,7 +339,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'mirtrace_complexity_plot',
-            'title': 'miRTrace miRNA Complexity Plot',
+            'title': 'miRTrace: miRNA Complexity Plot',
             'ylab': 'Distinct miRNA Count',
             'xlab': 'Number of Sequencing Reads',
             'ymin': 0,

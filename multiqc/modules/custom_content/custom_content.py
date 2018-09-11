@@ -439,7 +439,8 @@ def _parse_txt(f, conf):
         # Set table col_1 header
         if conf.get('plot_type') == 'table' and d[0][0].strip() != '':
             conf['pconfig'] = conf.get('pconfig', {})
-            conf['pconfig']['col1_header'] = d[0][0].strip()
+            if not conf['pconfig'].get('col1_header'):
+                conf['pconfig']['col1_header'] = d[0][0].strip()
         # Return parsed data
         if conf.get('plot_type') == 'bargraph' or conf.get('plot_type') == 'table':
             return (data, conf)
