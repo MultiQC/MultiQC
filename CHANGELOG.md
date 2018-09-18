@@ -19,7 +19,8 @@
 
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs
-
+* The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
+   
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
 Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
