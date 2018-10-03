@@ -130,6 +130,14 @@ For example, the GATK module has a section with the title _"Compare Overlap"_. W
 in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
 
+#### Removing General Statistics
+The General Statistics is a bit of a special case in MultiQC, but there is added code to make it
+behave well with the above mechanism. On the command line, you can specify `-e general_stats`.
+Alternatively, you can set the following config flag in your MultiQC config:
+
+```yaml
+skip_generalstats: true
+```
 
 ## Order of modules
 By default, modules are included in the report as in the order specified in `config.module_order`.
