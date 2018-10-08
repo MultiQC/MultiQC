@@ -3,6 +3,9 @@
 ## MultiQC v1.7dev
 
 #### New Modules:
+* [**BISCUIT**](https://github.com/zwdzwd/biscuit)
+    * BISuilfite-seq CUI Toolkit
+    * Module written by [@zwdzwd](https://github.com/zwdzwd/)
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
