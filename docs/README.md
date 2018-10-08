@@ -27,6 +27,7 @@ MultiQC Modules:
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
+    Biscuit: modules/biscuit.md
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md

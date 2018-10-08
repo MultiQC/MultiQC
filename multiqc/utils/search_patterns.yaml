@@ -83,6 +83,72 @@ bcl2fastq:
 biobloomtools:
     contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
     num_lines: 2
+biscuit/align_mapq:
+    fn: '*_mapq_table.txt'
+    contents: 'BISCUITqc Mapping Quality Table'
+biscuit/align_strand:
+    fn: '*_strand_table.txt'
+    contents: 'BISCUITqc Strand Table'
+biscuit/align_isize:
+    fn: '*_isize_score_table.txt'
+    contents: 'BISCUITqc Insert Size, Score Table'
+biscuit/covdist_cpg:
+    fn: '*_covdist_cpg_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (All)'
+biscuit/covdist_cpg_q40:
+    fn: '*_covdist_cpg_q40_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (Q40)'
+biscuit/covdist_cpg_q40_botgc:
+    fn: '*_covdist_cpg_q40_botgc_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (low GC, Q40)'
+biscuit/covdist_cpg_q40_topgc:
+    fn: '*_covdist_cpg_q40_topgc_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (high GC, Q40)'
+biscuit/covdist:
+    fn: '*_covdist_table.txt'
+    contents: 'BISCUITqc Depth Distribution (All)'
+biscuit/covdist_q40:
+    fn: '*_covdist_q40_table.txt'
+    contents: 'BISCUITqc Depth Distribution (Q40)'
+biscuit/covdist_q40_botgc:
+    fn: '*_covdist_q40_botgc_table.txt'
+    contents: 'BISCUITqc Depth Distribution (low GC, Q40)'
+biscuit/covdist_q40_topgc:
+    fn: '*_covdist_q40_topgc_table.txt'
+    contents: 'BISCUITqc Depth Distribution (high GC, Q40)'
+biscuit/qc_cv:
+    fn: '*_all_cv_table.txt'
+    contents: 'BISCUITqc Uniformity Table'
+biscuit/qc_cpg_cv:
+    fn: '*_cpg_cv_table.txt'
+    contents: 'BISCUITqc CpG Uniformity Table'
+biscuit/qc_cpg_dist:
+    fn: '*_cpg_dist_table.txt'
+    contents: 'BISCUITqc CpG Distribution Table'
+biscuit/dup_report:
+    fn: '*_dup_report.txt'
+    contents: 'BISCUITqc Read Duplication Table'
+biscuit/markdup_report:
+    fn: '*_markdup_report.txt'
+    contents: '[mark_dup] parsed'
+biscuit/retention_cph_readpos:
+    fn: '*_CpHRetentionByReadPos.txt'
+    contents: 'BISCUITqc CpH Retention by Read Position Table'
+biscuit/retention_cpg_readpos:
+    fn: '*_CpGRetentionByReadPos.txt'
+    contents: 'BISCUITqc CpG Retention by Read Position Table'
+biscuit/retention_dist:
+    fn: '*_CpGRetentionDist.txt'
+    contents: 'BISCUITqc Retention Distribution Table'
+biscuit/retention_dist_byread:
+    fn: '*_freqOfTotalRetentionPerRead.txt'
+    contents: 'BISCUITqc Frequency of Total Retention per Read Table'
+biscuit/retention_rate_bybase:
+    fn: '*_totalBaseConversionRate.txt'
+    contents: 'BISCUITqc Conversion Rate by Base Average Table'
+biscuit/retention_rate_byread:
+    fn: '*_totalReadConversionRate.txt'
+    contents: 'BISCUITqc Conversion Rate by Read Average Table'
 bismark/align:
     fn: '*_[SP]E_report.txt'
 bismark/dedup:
