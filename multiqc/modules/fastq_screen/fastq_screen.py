@@ -234,12 +234,10 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'fastq_screen',
             'title': 'FastQ Screen',
-            'cpswitch_c_active': False
+            'cpswitch_c_active': False,
+            'hide_zero_cats': False
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
 
         return bargraph.plot(data, cats, pconfig)
-
-
-

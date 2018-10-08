@@ -10,6 +10,8 @@
 #### Module updates:
 * **AdapterRemoval**
     * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
+* **FastQ Screen**
+    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
 * **InterOp**
