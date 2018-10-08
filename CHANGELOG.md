@@ -3,6 +3,9 @@
 ## MultiQC v1.7dev
 
 #### New Modules:
+* [**BISCUIT**](https://github.com/zwdzwd/biscuit)
+    * BISuilfite-seq CUI Toolkit
+    * Module written by [@zwdzwd](https://github.com/zwdzwd/)
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
@@ -11,6 +14,10 @@
     * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 #### Module updates:
+* **AdapterRemoval**
+    * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
+* **FastQ Screen**
+    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
 * **InterOp**
@@ -23,6 +30,7 @@
 
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs
+* The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
