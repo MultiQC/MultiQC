@@ -8,6 +8,8 @@
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
 
 #### Module updates:
+* **AdapterRemoval**
+    * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
 * **InterOp**
@@ -20,7 +22,7 @@
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs
 * The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
-   
+
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
 Some of these updates are thanks to the efforts of people who attended the [NASPM](https://twitter.com/NordicGenomics) 2018 MultiQC hackathon session. Thanks to everyone who attended!
