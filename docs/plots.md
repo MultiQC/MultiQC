@@ -447,6 +447,12 @@ config = {
 table_html = table.plot(data, headers, config)
 ```
 
+### Table decimal places
+You can customise how many decimal places a number has by using the `format` config
+key for that column. The default format string is `'{:,.1f}'`, which specifies a
+float number with a single decimal place. To remove decimals use `'{:,.0f}'`.
+To have two decimal places, use `'{:,.2f}'`.
+
 ### Table colour scales
 
 Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
