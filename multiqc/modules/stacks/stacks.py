@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_name = os.path.dirname(f['root'])
             s_name = self.clean_s_name(os.path.basename(f['root']), run_name)
             try:
-                self.cov_data.update(self.parse_gstacks(f['f'], s_name, f))
+                self.cov_data.update(self.parse_gstacks(f['f'], s_name))
                 num_files += 1
             except:
                 log.error('Could not parse gstacks.distribs file in {}'.format(f['s_name']))
@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('stacks/populations'):
             run_name = os.path.dirname(f['root'])
             s_name = self.clean_s_name(os.path.basename(f['root']), run_name)
-            i,j = self.parse_populations(f['f'], s_name, f)
+            i,j = self.parse_populations(f['f'], s_name)
             try:
                 self.distribs_loci.update(i); self.distribs_snps.update(j)
                 num_files += 1
@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_name = os.path.dirname(f['root'])
             s_name = self.clean_s_name(os.path.basename(f['root']), run_name)
             try:
-                self.sumstats_data.update(self.parse_sumstats(f['f'], s_name, f))
+                self.sumstats_data.update(self.parse_sumstats(f['f'], s_name))
                 num_files += 1
             except:
                 log.error('Could not parse populations.sumstats_summary file in {}'.format(f['s_name']))
@@ -217,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         )
 
-    def parse_gstacks(self, file_contents, s_name=None, f=None):
+    def parse_gstacks(self, file_contents, s_name):
 
         headers = None
         content = None
@@ -240,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return out_dict
 
-    def parse_sumstats(self, file_contents, s_name=None, f=None):
+    def parse_sumstats(self, file_contents, s_name):
 
         out_dict = dict()
         # ["# Pop ID","Private","Num_Indv","P","Obs_Het","Obs_Hom","Exp_Het","Exp_Hom","Pi","Fis"]
@@ -261,7 +261,7 @@ class MultiqcModule(BaseMultiqcModule):
         return out_dict
 
 
-    def parse_populations(self, file_contents, s_name=None, f=None):
+    def parse_populations(self, file_contents, s_name):
 
         loci_dict = dict()
         snps_dict = dict()
