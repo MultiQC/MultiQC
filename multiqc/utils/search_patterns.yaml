@@ -319,6 +319,9 @@ macs2:
 methylQA:
     fn: '*.report'
     shared: true
+minionqc:
+    fn: 'summary.yaml'
+    contents: 'total.gigabases'
 mirtrace/summary:
     fn: 'mirtrace-results.json'
 mirtrace/length:
