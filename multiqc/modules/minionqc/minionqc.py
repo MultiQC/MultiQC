@@ -68,7 +68,8 @@ class MultiqcModule(BaseMultiqcModule):
         # flatten the nested dictionary part 
         for key_1 in ['reads', 'gigabases']:
             for key_2 in data_dict[key_1]:
-                data_dict[f'{key_1} {key_2}'] = data_dict[key_1][key_2]
+                new_key = '{} {}'.format(key_1, key_2)
+                data_dict[new_key] = data_dict[key_1][key_2]
             data_dict.pop(key_1)    # removes key after flattening
 
         return data_dict
@@ -123,15 +124,15 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.1f}',
         }
         for s in ['>10kb', '>50kb', '>100kb']:
-            headers[f'reads {s}'] = {
-                'title': f'Total reads {s}',
-                'description': f'Total number of reads {s}',
+            headers['reads {}'.format(s)] = {
+                'title': 'Total reads {}'.format(s),
+                'description': 'Total number of reads {}'.format(s),
                 'format': '{:,.0f}',
             }
         for s in ['>10kb', '>50kb', '>100kb']:
-            headers[f'gigabases {s}'] = {
-                'title': f'Bases {s}',
-                'description': f'Total bases from reads {s}',
+            headers['gigabases {}'.format(s)] = {
+                'title': 'Bases {}'.format(s),
+                'description': 'Total bases from reads {}'.format(s),
                 'format': '{:,.3f}',
                 'suffix': ' GB',
                 'hidden': True,
