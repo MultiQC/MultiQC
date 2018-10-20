@@ -5,7 +5,7 @@
 import logging
 import random
 
-from multiqc.utils import report
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
