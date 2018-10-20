@@ -24,6 +24,16 @@ Supported commands:
 * `RrbsSummaryMetrics`
 * `ValidateSamFile`
 
+### InsertSizeMetrics
+By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
+This is to prevent the MultiQC report from being very large with big datasets.
+If you would like to customise this value to get a better resolution you can set the following
+MultiQC config values, with the new maximum number of points:
+```yaml
+picard_config:
+    insertsize_smaooth_points: 10000
+```
+
 #### Coverage Levels
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and
 WgsMetrics _"Fraction of Bases over 30X"_ that are

@@ -7,6 +7,7 @@ import logging
 import os
 import re
 
+from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -158,9 +159,16 @@ def parse_reports(self):
                 for k, v in data.items():
                     data_percent[s_name][k] = (v/total)*100
 
+            # Allow customisation of how smooth the the plot is
+            try:
+                insertsize_smaooth_points = int(config.picard_config['insertsize_smaooth_points'])
+                log.debug("Custom Picard insert size smoothing: {}".format(insertsize_smaooth_points))
+            except (AttributeError, KeyError, ValueError):
+                insertsize_smaooth_points = 500
+
             # Plot the data and add section
             pconfig = {
-                'smooth_points': 500,
+                'smooth_points': insertsize_smaooth_points,
                 'smooth_points_sumcounts': [True, False],
                 'id': 'picard_insert_size',
                 'title': 'Picard: Insert Size',
