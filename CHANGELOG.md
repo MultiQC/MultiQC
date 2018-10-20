@@ -27,6 +27,7 @@
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs
 * The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
+* [Sample name directory prefixes](https://multiqc.info/docs/#sample-names-prefixed-with-directories) are now added _after_ cleanup.
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
