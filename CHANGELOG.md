@@ -28,6 +28,7 @@
 #### New MultiQC Features:
 * Documentation for Custom Content reordered to make it a little more sane
 * You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
+* Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).
 
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs

@@ -333,6 +333,10 @@ table_columns_placement:
 In this case, since the default placement weighting is `1000`, the `reads_mapped` will end up as the
 leftmost column and the other two will and up as the final columns on the right of the table.
 
+The columns are organised by either _namespace_ or table ID, then column ID.
+In the above example, `Samtools` is the namespace in the General Statistics table -
+the text that is at the start of the tooltip. For custom tables, the ID may be easier to use.
+
 ### Conditional formatting
 It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting. Rules can be applied to every table column, or to specific columns only, using that column's unique ID.
 
