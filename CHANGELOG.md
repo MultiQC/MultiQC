@@ -13,6 +13,8 @@
 #### Module updates:
 * **AdapterRemoval**
     * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
+* **Fastp**
+    * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
 * **FastQ Screen**
     * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **FastQC**
