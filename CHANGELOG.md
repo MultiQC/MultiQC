@@ -22,9 +22,12 @@
 * **InterOp**
     * Fixed bug where read counts and base pair yields were not displaying in tables correctly.
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
+* **Picard**
+    * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
 
 #### New MultiQC Features:
 * Documentation for Custom Content reordered to make it a little more sane
+* You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
 
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs

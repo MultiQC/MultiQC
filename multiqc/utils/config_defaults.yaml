@@ -76,6 +76,7 @@ thousandsSep_format: null
 remove_sections: []
 section_comments: {}
 lint: False
+custom_plot_config: {}
 
 ignore_symlinks: false
 fn_ignore_dirs:
