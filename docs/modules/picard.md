@@ -24,7 +24,7 @@ Supported commands:
 * `RrbsSummaryMetrics`
 * `ValidateSamFile`
 
-### InsertSizeMetrics
+#### InsertSizeMetrics
 By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
 This is to prevent the MultiQC report from being very large with big datasets.
 If you would like to customise this value to get a better resolution you can set the following
