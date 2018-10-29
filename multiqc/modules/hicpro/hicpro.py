@@ -304,8 +304,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Specify the order of the different possible categories
         keys = OrderedDict()
         keys['Unique_paired_alignments'] = { 'color': '#005ce6', 'name': 'Uniquely Aligned' }
-        keys['Low_qual_Pairs'] = { 'color': '#ff8533', 'name': 'Low Quality' }
-        keys['Pairs_with_singleton'] = { 'color': ' #ff9933', 'name': 'Singleton' }
+        keys['Low_qual_pairs'] = { 'color': '#b97b35', 'name': 'Low Quality' }
+        keys['Pairs_with_singleton'] = { 'color': '#ff9933', 'name': 'Singleton' }
         keys['Multiple_pairs_alignments'] = { 'color': '#e67300', 'name': 'Multi Aligned' }
         keys['Unmapped_airs'] = { 'color': '#a9a2a2', 'name': 'Failed To Align' }
     

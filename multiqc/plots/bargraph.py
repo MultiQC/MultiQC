@@ -54,6 +54,11 @@ def plot (data, cats = None, pconfig = None):
     if pconfig is None:
         pconfig = {}
 
+    # Allow user to overwrite any given config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            pconfig[k] = v
+
     # Validate config if linting
     if config.lint:
         # Get module name

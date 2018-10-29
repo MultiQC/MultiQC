@@ -296,6 +296,8 @@ def _find_file_header(f):
     for l in f['f'].splitlines():
         if l.startswith('#'):
             hlines.append(l[1:])
+    if len(hlines) == 0:
+        return None
     hconfig = None
     try:
         hconfig = yaml.load("\n".join(hlines))

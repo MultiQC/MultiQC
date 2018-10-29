@@ -73,6 +73,7 @@ setup(
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
+            'biscuit = multiqc.modules.biscuit:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
