@@ -99,6 +99,12 @@ class MultiqcModule(BaseMultiqcModule):
         '''
         headers = OrderedDict()
 
+        headers['total.reads'] = {
+            'title': 'Total reads',
+            'description': 'Total number of reads',
+            'format': '{:,.0f}',
+            'scale': 'Greys',
+        }
         headers['total.gigabases'] = {
             'title': 'Total bases (GB)',
             'description': 'Total bases',
@@ -111,12 +117,6 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Minimum read length needed to cover 50% of all reads',
             'format': '{:,.0f}',
             'scale': 'Purples',
-        }
-        headers['total.reads'] = {
-            'title': 'Total reads',
-            'description': 'Total number of reads',
-            'format': '{:,.0f}',
-            'scale': 'Blues',
         }
         headers['mean.q'] = {
             'title': 'Mean q',
@@ -147,13 +147,19 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Median read length',
             'format': '{:,.0f}',
             'scale': 'Blues',
+            'hidden': True,
         }
         for s in ['>10kb', '>50kb', '>100kb']:
+            hidden_status = False
+            if s not in ['>10kb', '>50kb']:
+                hidden_status = True
+
             headers['reads {}'.format(s)] = {
                 'title': 'Total reads {}'.format(s),
                 'description': 'Total number of reads {}'.format(s),
                 'format': '{:,.0f}',
                 'scale': 'Blues',
+                'hidden': hidden_status
             }
         for s in ['>10kb', '>50kb', '>100kb']:
             headers['gigabases {}'.format(s)] = {
