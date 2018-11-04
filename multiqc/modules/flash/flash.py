@@ -126,6 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = sample
             except Exception as err:
                 log.warning("Error parsing record in %s. %s", logf['fn'], err)
+                log.debug(traceback.format_exc())
                 continue
         return data
 
@@ -184,14 +185,16 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             for l in histf['f'].splitlines():
                 s = l.split()
-                if s[1]:
+                if len(s) == 2:
                     data[int(s[0])] = int(s[1])
-            tot = sum(data.values(), 0)
         except Exception as err:
             log.warning("Error parsing %s. %s", histf['fn'], err)
+            log.debug(traceback.format_exc())
         else:
-            if tot != 0:
+            if data:
                 nameddata[histf['s_name']] = data
+            else:
+                log.debug("%s is empty.", histf['fn'])
         finally:
             return nameddata
 
