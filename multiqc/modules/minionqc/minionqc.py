@@ -8,7 +8,7 @@ import logging
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,12 +17,14 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='MinIONQC', anchor='mymod',
+        super(MultiqcModule, self).__init__(name='MinIONQC', anchor='minionqc',
         href="https://github.com/roblanf/minion_qc",
         info=" is a QC tool for Oxford Nanopore sequencing data")
 
         # Find and load any minionqc reports
-        self.minionqc_data = dict()
+        self.minionqc_data = dict()     # main dataset. Stats from all reads
+        self.qfilt_data = dict()        # Stats from quality filtered reads
+        q_threshold_list = set()        # quality thresholds
         for f in self.find_log_files('minionqc', filehandles=True):            
             # get sample name
             s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
@@ -33,7 +35,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name)
 
             # parses minionqc summary data
-            self.minionqc_data[s_name] = self.parse_minionqc_report(s_name, f['f'])
+            parsed_dict = self.parse_minionqc_report(s_name, f['f'])
+            self.minionqc_data[s_name] = parsed_dict[0]     # stats for all reads
+            self.qfilt_data[s_name] = parsed_dict[1]        # stats for q-filtered reads
+            q_threshold_list.add(parsed_dict[2])
 
         # Filter to strip out ignored sample names
         self.minionqc_data = self.ignore_samples(self.minionqc_data)
@@ -42,14 +47,20 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.minionqc_data)))        
 
-        # columns to present in MultiQC table
+        # columns to present in MultiQC summary table
         headers = self.headers_to_use()
-        self.general_stats_addcols(self.minionqc_data, headers)
+        headers_subset = OrderedDict()
+        for k in ['total.gigabases', 'N50.length', 'median.q', 'mean.q']:
+            headers_subset[k] = headers[k]
+        
+        self.general_stats_addcols(self.minionqc_data, headers_subset)
         
         # writes parsed data into a file (by MultiQC)
         self.write_data_file(self.minionqc_data, 'multiqc_minionqc')
             
-        # plots in order
+        # tables and plots in order
+        self.table_qALL()
+        self.table_qfiltered(q_threshold_list)
         self.base_count_plot()
         self.median_q_plot()
         self.reads_n50_plot()
@@ -62,17 +73,24 @@ class MultiqcModule(BaseMultiqcModule):
         '''
         summary_dict = yaml.safe_load(f)
 
-        data_dict = {}
-        data_dict = summary_dict['All reads']
-        
-        # flatten the nested dictionary part 
-        for key_1 in ['reads', 'gigabases']:
-            for key_2 in data_dict[key_1]:
-                new_key = '{} {}'.format(key_1, key_2)
-                data_dict[new_key] = data_dict[key_1][key_2]
-            data_dict.pop(key_1)    # removes key after flattening
+        # get q value threshold used for reads
+        q_threshold = None
+        for k in summary_dict.keys():
+            if k.startswith('Q>='):
+                q_threshold = k
 
-        return data_dict
+        data_dict = {}
+        data_dict['all'] = summary_dict['All reads']        # all reads
+        data_dict['q_filt'] = summary_dict[q_threshold]     # quality filtered reads
+
+        for q_key in ['all', 'q_filt']:
+            for key_1 in ['reads', 'gigabases']:
+                for key_2 in data_dict[q_key][key_1]:
+                    new_key = '{} {}'.format(key_1, key_2)
+                    data_dict[q_key][new_key] = data_dict[q_key][key_1][key_2]
+                data_dict[q_key].pop(key_1)    # removes key after flattening
+
+        return data_dict['all'], data_dict['q_filt'], q_threshold
 
 
     def headers_to_use(self):
@@ -81,53 +99,61 @@ class MultiqcModule(BaseMultiqcModule):
         '''
         headers = OrderedDict()
 
-        headers['total.reads'] = {
-            'title': 'Total reads',
-            'description': 'Total number of reads',
-            'format': '{:,.0f}',
-        }
         headers['total.gigabases'] = {
             'title': 'Total bases (GB)',
             'description': 'Total bases',
             'format': '{:,.2f}',
+            'scale': 'Blues',
             # 'suffix': ' GB'
         }
         headers['N50.length'] = {
             'title': 'Reads N50',
             'description': 'Minimum read length needed to cover 50% of all reads',
             'format': '{:,.0f}',
+            'scale': 'Purples',
+        }
+        headers['total.reads'] = {
+            'title': 'Total reads',
+            'description': 'Total number of reads',
+            'format': '{:,.0f}',
+            'scale': 'Blues',
+        }
+        headers['mean.q'] = {
+            'title': 'Mean q',
+            'description': 'Mean quality of reads',
+            'min': 0,
+            'max': 15,
+            'format': '{:,.1f}',
+            'hidden': True,
+            'scale': 'Greens',
+        }
+        headers['median.q'] = {
+            'title': 'Median q',
+            'description': 'Median quality of reads',
+            'min': 0,
+            'max': 15,
+            'format': '{:,.1f}',
+            'scale': 'Greens',
         }
         headers['mean.length'] = {
             'title': 'Mean length',
             'description': 'Mean read length',
             'format': '{:,.0f}',
             'hidden': True,
+            'scale': 'Blues',
         }
         headers['median.length'] = {
             'title': 'Median length',
             'description': 'Median read length',
             'format': '{:,.0f}',
-        }
-        headers['mean.q'] = {
-            'title': 'Mean q',
-            'description': 'Mean quality of reads',
-            'min': 0,
-            'max': 20,
-            'format': '{:,.1f}',
-            'hidden': True,
-        }
-        headers['median.q'] = {
-            'title': 'Median q',
-            'description': 'Median quality of reads',
-            'min': 0,
-            'max': 20,
-            'format': '{:,.1f}',
+            'scale': 'Blues',
         }
         for s in ['>10kb', '>50kb', '>100kb']:
             headers['reads {}'.format(s)] = {
                 'title': 'Total reads {}'.format(s),
                 'description': 'Total number of reads {}'.format(s),
                 'format': '{:,.0f}',
+                'scale': 'Blues',
             }
         for s in ['>10kb', '>50kb', '>100kb']:
             headers['gigabases {}'.format(s)] = {
@@ -136,9 +162,55 @@ class MultiqcModule(BaseMultiqcModule):
                 'format': '{:,.3f}',
                 'suffix': ' GB',
                 'hidden': True,
+                'scale': 'Blues',
             }
 
         return headers
+
+
+    def table_qALL(self):
+        """ Table showing stats for all reads """
+
+        pconfig = { 'namespace': 'MinIONQC',
+                        'id': 'minionqc-stats-qAll-table',
+                        'table_title': 'minionqc-stats-qAll-table'}
+
+        self.add_section (
+            name = 'Stats: All reads',
+            anchor = 'minionqc-stats-qAll',
+            description = 'MinIONQC statistics for all reads',
+            plot = table.plot(self.minionqc_data, self.headers_to_use(), pconfig=pconfig)
+        )
+
+        return None
+
+
+    def table_qfiltered(self, q_threshold_list):
+        """ Table showing stats for q-filtered reads """
+
+        description = 'MinIONQC statistics for quality filtered reads. ' + \
+                        'Quailty threshold used: {}.'.format(', '.join(list(q_threshold_list)))
+        if len(q_threshold_list) > 1:
+            description += '<br><b><i>Warning</b></i>: More than one quality thresholds were present.'
+            log.warning('More than one quality thresholds were present. Thresholds: {}.'.format(', '.join(list(q_threshold_list))))
+
+        pconfig = { 'namespace': 'MinIONQC',
+                        'id': 'minionqc-stats-qFilt-table',
+                        'table_title': 'eweffcref'}
+
+        # 'rid' needs to be added to avoid linting error "HTML ID was a duplicate"
+        headers = self.headers_to_use()
+        for k in headers:
+            headers[k]['rid'] = "rid_{}".format(headers[k]['title']) 
+
+        self.add_section (
+            name = 'Stats: Quality filtered reads',
+            anchor = 'minionqc-stats-qFilt',
+            description = description,
+            plot = table.plot(self.qfilt_data, headers, pconfig=pconfig)
+        )
+
+        return None
 
 
     def reads_n50_plot (self):
