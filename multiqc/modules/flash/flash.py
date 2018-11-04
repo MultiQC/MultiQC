@@ -53,8 +53,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         except UserWarning:
             pass
-        except Exception:
-            log.error(traceback.format_exc())
+        except Exception as err:
+            log.error(err)
+            log.debug(traceback.format_exc())
 
         ## parse histograms if user option is set
         self.flash_hist = None
@@ -201,17 +202,17 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def get_colors(n):
         """get colors for freqpoly graph"""
-        if n <= 8:
-            cb_palette = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00",
-                          "#CC79A7", "#000000"]
-            return cb_palette[0:n]
-        whole = int(n/15)
-        extra = (n % 15)
-        web_palette = ["#001F3F", "#0074D9", "#7FDBFF", "#39CCCC", "#3D9970", "#2ECC40",
+        cb_palette = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00",
+                      "#CC79A7","#001F3F", "#0074D9", "#7FDBFF", "#39CCCC", "#3D9970", "#2ECC40",
                        "#01FF70", "#FFDC00", "#FF851B", "#FF4136", "#F012BE", "#B10DC9",
-                       "#85144B", "#AAAAAA", "#111111"]
-        cols = web_palette * whole
-        return cols.extend(web_palette[0:extra])
+                       "#85144B", "#AAAAAA", "#000000"]
+
+        whole = int(n/22)
+        extra = (n % 22)
+        cols = cb_palette * whole
+        if extra >= 0:
+            cols.extend(cb_palette[0:extra])
+        return cols
 
     @staticmethod
     def freqpoly_plot(data):
@@ -252,6 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         except UserWarning:
             pass
-        except Exception:
-            log.error(traceback.format_exc())
+        except Exception as err:
+            log.error(err)
+            log.debug(traceback.format_exc())
         return len(self.hist_data)
