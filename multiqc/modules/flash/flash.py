@@ -186,7 +186,9 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             for l in histf['f'].splitlines():
                 s = l.split()
-                if len(s) == 2:
+                if s:
+                    if len(s) != 2:
+                        raise RuntimeError("invalid format: " + str(len(s)) + " column(s) found in row. must be exactly 2.")
                     data[int(s[0])] = int(s[1])
         except Exception as err:
             log.warning("Error parsing %s. %s", histf['fn'], err)
