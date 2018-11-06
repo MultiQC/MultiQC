@@ -31,7 +31,7 @@ If you would like to customise this value to get a better resolution you can set
 MultiQC config values, with the new maximum number of points:
 ```yaml
 picard_config:
-    insertsize_smaooth_points: 10000
+    insertsize_smooth_points: 10000
 ```
 
 #### Coverage Levels
