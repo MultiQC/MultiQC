@@ -12,7 +12,7 @@
 
 #### Module updates:
 * **Trimmomatic**
-    * Updated Trimmomatic.md to be more helpful
+    * Updated Trimmomatic module documenation to be more helpful
 * **AdapterRemoval**
     * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
 * **Fastp**
