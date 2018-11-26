@@ -161,14 +161,14 @@ def parse_reports(self):
 
             # Allow customisation of how smooth the the plot is
             try:
-                insertsize_smaooth_points = int(config.picard_config['insertsize_smaooth_points'])
-                log.debug("Custom Picard insert size smoothing: {}".format(insertsize_smaooth_points))
+                insertsize_smooth_points = int(config.picard_config['insertsize_smooth_points'])
+                log.debug("Custom Picard insert size smoothing: {}".format(insertsize_smooth_points))
             except (AttributeError, KeyError, ValueError):
-                insertsize_smaooth_points = 500
+                insertsize_smooth_points = 500
 
             # Plot the data and add section
             pconfig = {
-                'smooth_points': insertsize_smaooth_points,
+                'smooth_points': insertsize_smooth_points,
                 'smooth_points_sumcounts': [True, False],
                 'id': 'picard_insert_size',
                 'title': 'Picard: Insert Size',

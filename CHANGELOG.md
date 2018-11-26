@@ -13,6 +13,8 @@
 #### Module updates:
 * **Picard**
     * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
+* **Trimmomatic**
+    * Updated Trimmomatic module documenation to be more helpful
 * **AdapterRemoval**
     * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
 * **Fastp**
