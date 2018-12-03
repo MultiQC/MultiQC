@@ -9,6 +9,8 @@
 [![Conda Version](https://anaconda.org/bioconda/multiqc/badges/version.svg)](https://anaconda.org/bioconda/multiqc)
 [![Docker](https://img.shields.io/docker/automated/ewels/multiqc.svg?style=flat-square)](https://hub.docker.com/r/ewels/multiqc/)
 [![Build Status](https://img.shields.io/travis/ewels/MultiQC.svg?style=flat-square)](https://travis-ci.org/ewels/MultiQC)
+[![Code Quality: Python](https://img.shields.io/lgtm/grade/python/g/ewels/MultiQC.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ewels/MultiQC/context:python)
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/ewels/MultiQC.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/ewels/MultiQC/alerts)
 
 [![Gitter](https://img.shields.io/badge/gitter-%20join%20chat%20%E2%86%92-4fb99a.svg?style=flat-square)](https://gitter.im/ewels/MultiQC)
 [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fbioinformatics%2Fbtw354-lightgrey.svg?style=flat-square)](http://dx.doi.org/10.1093/bioinformatics/btw354)
