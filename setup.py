@@ -127,6 +127,7 @@ setup(
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
+            'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',

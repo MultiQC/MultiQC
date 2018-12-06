@@ -9,6 +9,9 @@
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+* [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
+    * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 #### Module updates:
 * **Trimmomatic**
@@ -32,6 +35,7 @@
 * You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
 * Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).
 
+
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs
 * The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
@@ -54,6 +58,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * [**miRTrace**](__TBD__)
     * A quality control software for small RNA sequencing data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+
 
 #### Module updates:
 * **BCFtools**

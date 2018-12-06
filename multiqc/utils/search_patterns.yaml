@@ -487,6 +487,16 @@ snpeff:
 sortmerna:
     contents: 'Minimal SW score based on E-value'
     shared: true
+stacks/gstacks:
+    fn: 'gstacks.log.distribs'
+    contents: 'BEGIN effective_coverages_per_sample'
+stacks/populations:
+    fn: 'populations.log.distribs'
+    contents: 'BEGIN missing_samples_per_loc_prefilters'
+stacks/sumstats:
+    fn: '*.sumstats_summary.tsv'
+    contents: '# Pop ID	Private	Num_Indv	Var	StdErr	P	Var'
+    max_filesize: 1000000
 star:
     fn: '*Log.final.out'
 star/genecounts:
