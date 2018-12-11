@@ -115,10 +115,6 @@ def parse_reports(self):
         self.general_stats_addcols(self.picard_RnaSeqMetrics_data, GenStatsHeaders)
 
         # Bar plot of bases assignment
-        pconfig = {
-            'id': 'picard_rnaseq_metrics',
-            'title': 'Picard: RNA alignment regions'
-        }
         bg_cats = OrderedDict()
         bg_cats['CODING_BASES'] = { 'name': 'Coding' }
         bg_cats['UTR_BASES'] = { 'name': 'UTR' }
@@ -146,6 +142,23 @@ def parse_reports(self):
             name = 'RnaSeqMetrics Assignment',
             anchor = 'picard-rna-assignment',
             description = 'Number of bases in primary alignments that align to regions in the reference genome.' + warn_rrna,
+            plot = bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig)
+        )
+
+        # Bar plot of strand mapping
+        bg_cats = OrderedDict()
+        bg_cats['CORRECT_STRAND_READS'] = { 'name': 'Correct' }
+        bg_cats['INCORRECT_STRAND_READS'] = { 'name': 'Incorrect' }
+
+        pconfig = {
+            'id': 'picard_rnaseqmetrics_strand_plot',
+            'title': 'Picard: RnaSeqMetrics Strand Mapping',
+            'ylab': 'Number of reads'
+        }
+        self.add_section (
+            name = 'RnaSeqMetrics Strand Mapping',
+            anchor = 'picard-rna-strand',
+            description = 'Number of aligned reads that map to the correct strand.',
             plot = bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig)
         )
 
