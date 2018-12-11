@@ -30,6 +30,7 @@
 * **Picard**
     * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
     * CollectRnaSeqMetrics: Add warning about missing rRNA annotation.
+    * CollectRnaSeqMetrics: Add chart for counts/percentage of reads mapped to the correct strand.
 
 #### New MultiQC Features:
 * Documentation for Custom Content reordered to make it a little more sane
