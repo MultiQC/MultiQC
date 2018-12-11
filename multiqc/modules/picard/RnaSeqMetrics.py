@@ -126,6 +126,17 @@ def parse_reports(self):
         bg_cats['INTERGENIC_BASES'] = { 'name': 'Intergenic' }
         bg_cats['RIBOSOMAL_BASES'] = { 'name': 'Ribosomal' }
         bg_cats['PF_NOT_ALIGNED_BASES'] = { 'name': 'PF not aligned' }
+
+        # Warn user if any samples are missing 'RIBOSOMAL_BASES' data; ie picard was run without an rRNA interval file.
+        warn_rrna = ''
+        if len(list(s_name for s_name, metrics in self.picard_RnaSeqMetrics_data.items() if metrics['RIBOSOMAL_BASES'] == '')):
+            warn_rrna = '''
+            <div class="alert alert-warning">
+              <span class="glyphicon glyphicon-warning-sign"></span>
+              Picard was run without an rRNA annotation file, therefore the ribosomal assignment is not available. To correct, rerun with the <code>RIBOSOMAL_INTERVALS</code> parameter, as documented <a href="https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics" target="_blank">here</a>.
+            </div>
+            '''
+
         pconfig = {
             'id': 'picard_rnaseqmetrics_assignment_plot',
             'title': 'Picard: RnaSeqMetrics Read Assignments',
@@ -134,7 +145,7 @@ def parse_reports(self):
         self.add_section (
             name = 'RnaSeqMetrics Assignment',
             anchor = 'picard-rna-assignment',
-            description = 'Number of bases in primary alignments that align to regions in the reference genome.',
+            description = 'Number of bases in primary alignments that align to regions in the reference genome.' + warn_rrna,
             plot = bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig)
         )
 
