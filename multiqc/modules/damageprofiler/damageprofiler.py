@@ -104,7 +104,6 @@ class MultiqcModule(BaseMultiqcModule):
             # Get a dictionary out of it
             data = dict((x, y) for x, y in tuples)
             self.threepGtoAfreq_data[s_name] = data
-            pprint.pprint(self.threepGtoAfreq_data)
         else: 
             log.debug('No valid data {} in 3pGtoA report'.format(f['fn']))
             return None
