@@ -23,10 +23,10 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='damageprofiler',
+        super(MultiqcModule, self).__init__(name='DamageProfiler:',
         anchor='damageprofiler',
         href='https://github.com/Integrative-Transcriptomics/DamageProfiler',
-        info="A Java based tool to determine damage patterns on ancient DNA as a replacement for mapDamage.")
+        info="a tool to determine damage patterns on ancient DNA.")
 
         # Find and load 3pGtoAFreq Files
         self.threepGtoAfreq_data = dict() 
@@ -63,6 +63,17 @@ class MultiqcModule(BaseMultiqcModule):
         #self.write_data_file(self.5pCtoTfreq_data, 'multiqc_damageprofiler_5pCtoTfreq')
         #self.write_data_file(self.lgdist_fw_data, 'multiqc_damageprofiler_lgdist_fw')
         #self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
+
+        # Add to general stats table
+        #self.general_stats_addcols(self.threepGtoAfreq_data)
+
+        # Add plots
+        if len(self.threepGtoAfreq_data) > 0:
+            self.add_section ( 
+                name = '3\' Misincorporation Plot',
+                plot = self.threeprime_plot()
+            )
+
     
     #Parse a 3pGtoAfreq file
     def parse3pG(self, f):
@@ -87,13 +98,42 @@ class MultiqcModule(BaseMultiqcModule):
 
             if s_name in self.threepGtoAfreq_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-        
-            self.threepGtoAfreq_data[s_name] = parsed_data.get(key)
+            # Create tuples out of entries
+            pos = list(range(1,len(parsed_data.get(key))))
+            tuples = list(zip(pos,parsed_data.get(key)))
+            # Get a dictionary out of it
+            data = dict((x, y) for x, y in tuples)
+            self.threepGtoAfreq_data[s_name] = data
             pprint.pprint(self.threepGtoAfreq_data)
         else: 
             log.debug('No valid data {} in 3pGtoA report'.format(f['fn']))
             return None
+    
 
+    #Linegraph plot for 3pGtoA
+    def threeprime_plot(self):
+        """Generate a 3' GtoA linegraph plot"""
+
+        data = dict()
+        for s_name in self.threepGtoAfreq_data:
+            try:
+                data[s_name] = {int(d): float (self.threepGtoAfreq_data[s_name][d])*100 for d in self.threepGtoAfreq_data[s_name]}
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('No valid data for 3\' G to A input!')
+            return None
+
+        config = {
+            'id': 'threeprime_misinc_plot',
+            'title': 'DamageProfiler: 3\' G to A Misincorporation plot',
+            'ylab': '% G to A substituted',
+            'xlab': 'Nucleotide Position from 3\'',
+            'ymin': 0,
+            'xmin': 1
+        }
+
+        return linegraph.plot(data,config)
 
         
         
