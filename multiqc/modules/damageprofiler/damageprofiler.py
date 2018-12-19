@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import yaml
-import pprint
 
 from multiqc import config
 from multiqc.plots import  linegraph
@@ -65,8 +64,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
 
         # Basic Stats Table, use generic function to add data to general table
-        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3p G to A', 'Percentage of misincorporated G to A substitutions.')
-        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5P C to T', 'Percentage of misincorporated C to T substitutions.')
+        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3\'', 'G -> A')
+        #self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5\'', 'C -> T')
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
@@ -153,25 +152,51 @@ class MultiqcModule(BaseMultiqcModule):
 
     
     #### Tables from here on 
-    def dmgprof_misinc_stats(self, dict_to_plot, title, description):
+    def dmgprof_misinc_stats(self, dict_to_plot, readend, substitution):
         """ Take the parsed stats from the DamageProfiler and add it to the
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['damageprofiler'] = {
-            'title': title,
-            'description': description,
+        headers['1'] = {
+            'title': readend + ' ' + substitution + ' 1st base ',
+            'description': readend + ' ' + substitution + ' 1st base ',
             'min': 0,
             'max': 100,
             'suffix': '%',
-            'scale': 'RdOr',
-            'format': '{:,.0f}',
+            'scale': 'GrRd',
+            'format': '{:,.2f}',
             'modify': lambda x: x * 100.0
         }
-        self.general_stats_addcols(dict_to_plot, headers)
+        headers['2'] = {
+            'title': readend + ' ' + substitution + ' 2nd base ',
+            'description': readend + ' ' + substitution + ' 2nd base ',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'GrRd',
+            'format': '{:,.2f}',
+            'modify': lambda x: x * 100.0
+        }
+
+        # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
+        data = OrderedDict()
+
+        for key in dict_to_plot.keys():
+            tmp = dict_to_plot[key]
+            #Get the first two k,v pairs to new data dict
+            i = 2 
+            data[key] = {}
+            for entry in tmp.keys():
+                if i > 0: 
+                    data[key][entry] = tmp[entry]
+                    i -= 1
+                else:
+                    break
+        
+        self.general_stats_addcols(data,headers)
     
 
-    ##TODO add here Table info from lgdistribution 
+     
 
     #### Plotting from here on
     #Nice Linegraph plot for lgdist data
@@ -244,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'fiveprime_misinc_plot',
-            'title': 'DamageProfiler: 5P C -> T misincorporation plot',
+            'title': 'DamageProfiler: 5\' C -> T misincorporation plot',
             'ylab': '% C to T substituted',
             'xlab': 'Nucleotide position from 5\'',
             'tt_label': '{point.y:.2f} % C -> T misincorporations at nucleotide position {point.x}',
