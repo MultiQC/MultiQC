@@ -159,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'max': 100,
             'suffix': '%',
-            'scale': 'OrRd',
+            'scale': 'RdOr',
             'format': '{:,.0f}',
             'modify': lambda x: x * 100.0
         }
