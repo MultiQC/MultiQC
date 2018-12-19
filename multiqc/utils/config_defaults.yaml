@@ -342,6 +342,10 @@ module_order:
         module_tag:
             - DNA
             - ancient
+    - damageprofiler:
+        module_tag:
+            - DNA
+            - ancient
     - picard:
         module_tag:
             - DNA

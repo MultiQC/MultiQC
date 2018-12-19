@@ -150,20 +150,20 @@ class MultiqcModule(BaseMultiqcModule):
     #### Tables from here on 
     def damageprofiler_general_stats_table_3p(self):
         """ Take the parsed stats from the DamageProfiler and add it to the
-    basic stats table at the top of the report """
+        basic stats table at the top of the report """
 
-    headers = OrderedDict()
-    headers['damageprofiler'] = {
-        'title': '3\' G to A',
-        'description': 'Percentage of misincorporated G to A substitutions.',
-        'min': 0,
-        'max': 100,
-        'suffix': '%',
-        'scale': 'OrRd',
-        'format': '{:,.0f}',
-        'modify': lambda x: x * 100.0
-    }
-    self.general_stats_addcols(self.threepGtoAfreq_data, headers)
+        headers = OrderedDict()
+        headers['damageprofiler'] = {
+            'title': '3p G to A',
+            'description': 'Percentage of misincorporated G to A substitutions.',
+            'min': 0,
+            'max': 100,
+            'suffix': '%',
+            'scale': 'OrRd',
+            'format': '{:,.0f}',
+            'modify': lambda x: x * 100.0
+        }
+        self.general_stats_addcols(self.threepGtoAfreq_data, headers)
 
 
     #### Plotting from here on
@@ -185,7 +185,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'threeprime_misinc_plot',
-            'title': 'DamageProfiler: 3\' G to A Misincorporation plot',
+            'title': 'DamageProfiler: 3P G to A Misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide Position from 3\'',
             'ymin': 0,
@@ -210,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'fiveprime_misinc_plot',
-            'title': 'DamageProfiler: 5\' C to T Misincorporation plot',
+            'title': 'DamageProfiler: 5P C to T Misincorporation plot',
             'ylab': '% C to T substituted',
             'xlab': 'Nucleotide Position from 5\'',
             'ymin': 0,
