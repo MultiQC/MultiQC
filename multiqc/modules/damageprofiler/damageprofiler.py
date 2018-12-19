@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3\'', 'G -> A')
-        #self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5\'', 'C -> T')
+        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5\'', 'C -> T')
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
