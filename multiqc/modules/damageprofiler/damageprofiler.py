@@ -182,12 +182,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             log.debug('No valid data for 3\' G to A input!')
             return None
+        
+        key = threepGtoAfreq_data[s_name]
 
         config = {
             'id': 'threeprime_misinc_plot',
             'title': 'DamageProfiler: 3P G to A Misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide Position from 3\'',
+            'colors': {key,'fb1a00'},
             'ymin': 0,
             'xmin': 1
         }
@@ -213,6 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'DamageProfiler: 5P C to T Misincorporation plot',
             'ylab': '% C to T substituted',
             'xlab': 'Nucleotide Position from 5\'',
+            'colors': {key,'1f2cd8'},
             'ymin': 0,
             'xmin': 1
         }
