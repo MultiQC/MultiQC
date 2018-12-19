@@ -71,12 +71,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
             self.add_section ( 
-                name = '3\' Misincorporation Plot',
+                name = '3P Misincorporation Plot',
                 plot = self.threeprime_plot()
             )
         if len(self.fivepCtoTfreq_data) > 0:
             self.add_section (
-                name = '5\' Misincorporation Plot',
+                name = '5P Misincorporation Plot',
                 plot = self.fiveprime_plot()
             )
 
@@ -183,14 +183,16 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('No valid data for 3\' G to A input!')
             return None
         
-        key = threepGtoAfreq_data[s_name]
 
+        coldata = dict()
+        coldata[list(data.keys())[0]] = '#f42b07'
+        
         config = {
             'id': 'threeprime_misinc_plot',
             'title': 'DamageProfiler: 3P G to A Misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide Position from 3\'',
-            'colors': {key,'fb1a00'},
+            'color': coldata,
             'ymin': 0,
             'xmin': 1
         }
@@ -210,13 +212,17 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             log.debug('No valid data for 5\' C to T input!')
             return None
+        
+        coldata = dict()
+        coldata[list(data.keys())[0]] = '1f2cd8'
+
 
         config = {
             'id': 'fiveprime_misinc_plot',
             'title': 'DamageProfiler: 5P C to T Misincorporation plot',
             'ylab': '% C to T substituted',
             'xlab': 'Nucleotide Position from 5\'',
-            'colors': {key,'1f2cd8'},
+            'colors': coldata,
             'ymin': 0,
             'xmin': 1
         }
