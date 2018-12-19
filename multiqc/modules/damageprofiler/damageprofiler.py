@@ -31,17 +31,17 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load 3pGtoAFreq Files
         self.threepGtoAfreq_data = dict() 
         for f in self.find_log_files('damageprofiler/threeprime'):
-            self.parse3pG(f)
+            self.parseFreqPlot(f,self.threepGtoAfreq_data)
 
         # Find and load 5pCtoTFreq Files
         self.fivepCtoTfreq_data = dict() 
         for f in self.find_log_files('damageprofiler/fiveprime'):
-            self.parse5pC(f)
+            self.parseFreqPlot(f,self.fivepCtoTfreq_data)
 
         # Find and load lgdist forward Files
-        #self.lgdist_fw_data = dict() 
-        #for f in self.find_log_files('damageprofiler/lgdistfw'):
-        #    self.lgdistfw(f)
+        # self.lgdist_fw_data = dict() 
+        # for f in self.find_log_files('damageprofiler/lgdistfw'):
+        #     self.parselgdistfw(f)
 
         # Find and load lgdist reverse Files
         #self.lgdist_rv_data = dict() 
@@ -80,42 +80,8 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = self.fiveprime_plot()
             )
 
-
-    #Parse a 3pGtoAfreq file
-    def parse3pG(self, f):
-
-        try:
-            # Parsing as OrderedDict is slightly messier with YAML
-            # http://stackoverflow.com/a/21048064/713980
-            # Copied over from custom_content.py - thanks @ewels!
-            def dict_constructor(loader, node):
-                return OrderedDict(loader.construct_pairs(node))
-            yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-            parsed_data = yaml.load(f['f'])
-        except Exception as e:
-            log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
-            log.warning("YAML error: {}".format(e))
-            return None
-        
-        #Sample name is always the only key in the YAML
-        if parsed_data is not None:
-            key = list(parsed_data.keys())[0] 
-            s_name = self.clean_s_name(list(parsed_data.keys())[0],'')
-
-            if s_name in self.threepGtoAfreq_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            # Create tuples out of entries
-            pos = list(range(1,len(parsed_data.get(key))))
-            tuples = list(zip(pos,parsed_data.get(key)))
-            # Get a dictionary out of it
-            data = dict((x, y) for x, y in tuples)
-            self.threepGtoAfreq_data[s_name] = data
-        else: 
-            log.debug('No valid data {} in 3pGtoA report'.format(f['fn']))
-            return None
-    
-    #Parse a 5pCtoTfreq file
-    def parse5pC(self, f):
+    #Parse a generic substitution YAML file (3' and 5' supported)
+    def parseFreqPlot(self, f, dict_to_add):
 
         try:
             # Parsing as OrderedDict is slightly messier with YAML
@@ -135,16 +101,16 @@ class MultiqcModule(BaseMultiqcModule):
             key = list(parsed_data.keys())[0] 
             s_name = self.clean_s_name(list(parsed_data.keys())[0],'')
 
-            if s_name in self.fivepCtoTfreq_data:
+            if s_name in dict_to_add:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             # Create tuples out of entries
             pos = list(range(1,len(parsed_data.get(key))))
             tuples = list(zip(pos,parsed_data.get(key)))
             # Get a dictionary out of it
             data = dict((x, y) for x, y in tuples)
-            self.fivepCtoTfreq_data[s_name] = data
+            dict_to_add[s_name] = data
         else: 
-            log.debug('No valid data {} in 5pCtoT report'.format(f['fn']))
+            log.debug('No valid data {} in report'.format(f['fn']))
             return None
     
     #### Tables from here on 
