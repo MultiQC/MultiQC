@@ -45,9 +45,10 @@ MultiQC Modules:
     Bcftools: modules/bcftools.md
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
-    Disambiguate: modules/disambiguate.md
+    DamageProfiler: modules/damageprofiler.md
     DeDup: modules/dedup.md
     deepTools: modules/deeptools.md
+    Disambiguate: modules/disambiguate.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
