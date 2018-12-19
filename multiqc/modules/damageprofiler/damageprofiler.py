@@ -39,20 +39,20 @@ class MultiqcModule(BaseMultiqcModule):
             self.parseFreqPlot(f,self.fivepCtoTfreq_data)
 
         # Find and load lgdist forward Files
-        # self.lgdist_fw_data = dict() 
-        # for f in self.find_log_files('damageprofiler/lgdistfw'):
-        #     self.parselgdistfw(f)
+        self.lgdist_fw_data = dict() 
+        for f in self.find_log_files('damageprofiler/lgdistfw'):
+            self.parselgDist(f,self.lgdist_fw_data)
 
         # Find and load lgdist reverse Files
-        #self.lgdist_rv_data = dict() 
-        #for f in self.find_log_files('damageprofiler/lgdistrv'):
-        #    self.lgdistrv(f)
+        self.lgdist_rv_data = dict() 
+        for f in self.find_log_files('damageprofiler/lgdistrv'):
+            self.parselgDist(f,self.lgdist_rv_data)
 
         # Filter to strip out ignored sample names
         self.threepGtoAfreq_data         =   self.ignore_samples(self.threepGtoAfreq_data)
         self.fivepCtoTfreq_data          =   self.ignore_samples(self.fivepCtoTfreq_data)
-        #self.lgdist_fw_data   =   self.ignore_samples(self.lgdist_fw_data)
-        #self.lgdist_rv_data      =   self.ignore_samples(self.lgdist_rv_data)
+        self.lgdist_fw_data   =   self.ignore_samples(self.lgdist_fw_data)
+        self.lgdist_rv_data      =   self.ignore_samples(self.lgdist_rv_data)
 
         # Warning when no files are found
         #if max(len(self.threepGtoAfreq_data), len(self.5pCtoTfreq_data), len(self.lgdist_fw_data), len(self.lgdist_rv_data)) == 0:
@@ -61,8 +61,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed data to a file
         self.write_data_file(self.threepGtoAfreq_data, 'multiqc_damageprofiler_3pGtoAfreq')
         self.write_data_file(self.fivepCtoTfreq_data, 'multiqc_damageprofiler_5pCtoTfreq')
-        #self.write_data_file(self.lgdist_fw_data, 'multiqc_damageprofiler_lgdist_fw')
-        #self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
+        self.write_data_file(self.lgdist_fw_data, 'multiqc_damageprofiler_lgdist_fw')
+        self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
 
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3p G to A', 'Percentage of misincorporated G to A substitutions.')
@@ -79,6 +79,16 @@ class MultiqcModule(BaseMultiqcModule):
                 name = '5P Misincorporation Plot',
                 plot = self.fiveprime_plot()
             )
+        if len(self.lgdist_fw_data) > 0 and len(self.lgdist_rv_data) > 0:
+            self.add_section (
+                name = 'Forward read length distribution',
+                plot = self.lgdistplot(self.lgdist_fw_data, 'Forward')
+            )
+            self.add_section (
+                name = 'Reverse read length distribution',
+                plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
+            )
+
 
     #Parse a generic substitution YAML file (3' and 5' supported)
     def parseFreqPlot(self, f, dict_to_add):
@@ -112,6 +122,35 @@ class MultiqcModule(BaseMultiqcModule):
         else: 
             log.debug('No valid data {} in report'.format(f['fn']))
             return None
+
+    #Parse a generic lgdistribution file and parse it to data frame
+    def parselgDist(self, f, dict_to_add):
+
+        try:
+            # Parsing as OrderedDict is slightly messier with YAML
+            # http://stackoverflow.com/a/21048064/713980
+            # Copied over from custom_content.py - thanks @ewels!
+            def dict_constructor(loader, node):
+                return OrderedDict(loader.construct_pairs(node))
+            yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
+            parsed_data = yaml.load(f['f'])
+        except Exception as e:
+            log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
+            log.warning("YAML error: {}".format(e))
+            return None
+        
+        #Sample name is always the only key in each of the supplied YAML files
+        if parsed_data is not None:
+            key = list(parsed_data.keys())[0] 
+            s_name = self.clean_s_name(key,'')
+
+            if s_name in dict_to_add:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            dict_to_add[s_name] = parsed_data.get(key)
+        else: 
+            log.debug('No valid data {} in report'.format(f['fn']))
+            return None
+
     
     #### Tables from here on 
     def dmgprof_misinc_stats(self, dict_to_plot, title, description):
@@ -131,13 +170,39 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(dict_to_plot, headers)
 
+    ##TODO add here Table info from lgdistribution 
 
     #### Plotting from here on
+    #Nice Linegraph plot for lgdist data
+
+    def lgdistplot(self,dict_to_use,orientation):
+        """Generate a read length distribution plot"""
+
+        data = dict()
+        for s_name in dict_to_use:
+            try:
+                data[s_name] = {int(d): int (dict_to_use[s_name][d]) for d in dict_to_use[s_name]}
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('No valid data for forward read lgdist input!')
+            return None
+        
+        config = {
+            'id': 'lg-fw-distribution',
+            'smooth_points': 50,
+            'title': 'DamageProfiler: Read length distribution: ' + orientation,
+            'ylab': 'Number of reads',
+            'xlab': 'Readlength (bp)',
+            'ymin': 0,
+            'xmin': 0
+        }
+        return linegraph.plot(data,config)
 
 
     #Linegraph plot for 3pGtoA
     def threeprime_plot(self):
-        """Generate a 3' GtoA linegraph plot"""
+        """Generate a 3' G -> A linegraph plot"""
 
         data = dict()
         for s_name in self.threepGtoAfreq_data:
@@ -146,15 +211,14 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 pass
         if len(data) == 0:
-            log.debug('No valid data for 3\' G to A input!')
+            log.debug('No valid data for 3\' G -> A input!')
             return None
-        
-        
+
         config = {
             'id': 'threeprime_misinc_plot',
-            'title': 'DamageProfiler: 3\' G -> A Misincorporation plot',
+            'title': 'DamageProfiler: 3\' G -> A misincorporation plot',
             'ylab': '% G to A substituted',
-            'xlab': 'Nucleotide Position from 3\'',
+            'xlab': 'Nucleotide position from 3\'',
             'ymin': 0,
             'xmin': 1
         }
@@ -163,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     #Linegraph plot for 3pGtoA
     def fiveprime_plot(self):
-        """Generate a 5' CtoT linegraph plot"""
+        """Generate a 5' C -> T linegraph plot"""
 
         data = dict()
         for s_name in self.fivepCtoTfreq_data:
@@ -172,14 +236,14 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 pass
         if len(data) == 0:
-            log.debug('No valid data for 5\' C to T input!')
+            log.debug('No valid data for 5\' C -> T input!')
             return None
 
         config = {
             'id': 'fiveprime_misinc_plot',
-            'title': 'DamageProfiler: 5P C to T Misincorporation plot',
+            'title': 'DamageProfiler: 5P C -> T misincorporation plot',
             'ylab': '% C to T substituted',
-            'xlab': 'Nucleotide Position from 5\'',
+            'xlab': 'Nucleotide position from 5\'',
             'ymin': 0,
             'xmin': 1
         }
