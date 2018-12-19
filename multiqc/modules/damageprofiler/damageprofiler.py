@@ -183,16 +183,12 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('No valid data for 3\' G to A input!')
             return None
         
-
-        coldata = dict()
-        coldata[list(data.keys())[0]] = '#f42b07'
         
         config = {
             'id': 'threeprime_misinc_plot',
             'title': 'DamageProfiler: 3P G to A Misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide Position from 3\'',
-            'color': coldata,
             'ymin': 0,
             'xmin': 1
         }
@@ -212,17 +208,12 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             log.debug('No valid data for 5\' C to T input!')
             return None
-        
-        coldata = dict()
-        coldata[list(data.keys())[0]] = '1f2cd8'
-
 
         config = {
             'id': 'fiveprime_misinc_plot',
             'title': 'DamageProfiler: 5P C to T Misincorporation plot',
             'ylab': '% C to T substituted',
             'xlab': 'Nucleotide Position from 5\'',
-            'colors': coldata,
             'ymin': 0,
             'xmin': 1
         }
