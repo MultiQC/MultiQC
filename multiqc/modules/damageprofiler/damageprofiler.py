@@ -169,6 +169,7 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: x * 100.0
         }
         self.general_stats_addcols(dict_to_plot, headers)
+    
 
     ##TODO add here Table info from lgdistribution 
 
@@ -189,11 +190,12 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         config = {
-            'id': 'lg-fw-distribution',
+            'id': 'length-distribution-' + orientation,
             'smooth_points': 50,
             'title': 'DamageProfiler: Read length distribution: ' + orientation,
             'ylab': 'Number of reads',
             'xlab': 'Readlength (bp)',
+            'tt_label': '{point.y} reads of length {point.x}',
             'ymin': 0,
             'xmin': 0
         }
@@ -219,6 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'DamageProfiler: 3\' G -> A misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide position from 3\'',
+            'tt_label': '{point.y:.2f} % G -> A misincorporations at nucleotide position {point.x}',
             'ymin': 0,
             'xmin': 1
         }
@@ -244,6 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'DamageProfiler: 5P C -> T misincorporation plot',
             'ylab': '% C to T substituted',
             'xlab': 'Nucleotide position from 5\'',
+            'tt_label': '{point.y:.2f} % C -> T misincorporations at nucleotide position {point.x}',
             'ymin': 0,
             'xmin': 1
         }
