@@ -34,9 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.parse3pG(f)
 
         # Find and load 5pCtoTFreq Files
-        #self.5pCtoTfreq_data = dict() 
-        #for f in self.find_log_files('damageprofiler/fiveprime'):
-        #    self.parse5pC(f)
+        self.fivepCtoTfreq_data = dict() 
+        for f in self.find_log_files('damageprofiler/fiveprime'):
+            self.parse5pC(f)
 
         # Find and load lgdist forward Files
         #self.lgdist_fw_data = dict() 
@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.threepGtoAfreq_data         =   self.ignore_samples(self.threepGtoAfreq_data)
-        #self.5pCtoTfreq_data          =   self.ignore_samples(self.5pCtoTfreq_data)
+        self.fivepCtoTfreq_data          =   self.ignore_samples(self.fivepCtoTfreq_data)
         #self.lgdist_fw_data   =   self.ignore_samples(self.lgdist_fw_data)
         #self.lgdist_rv_data      =   self.ignore_samples(self.lgdist_rv_data)
 
@@ -59,12 +59,13 @@ class MultiqcModule(BaseMultiqcModule):
         #    raise UserWarning
 
         # Write parsed data to a file
-        #self.write_data_file(self.threepGtoAfreq_data, 'multiqc_damageprofiler_3pGtoAfreq')
-        #self.write_data_file(self.5pCtoTfreq_data, 'multiqc_damageprofiler_5pCtoTfreq')
+        self.write_data_file(self.threepGtoAfreq_data, 'multiqc_damageprofiler_3pGtoAfreq')
+        self.write_data_file(self.fivepCtoTfreq_data, 'multiqc_damageprofiler_5pCtoTfreq')
         #self.write_data_file(self.lgdist_fw_data, 'multiqc_damageprofiler_lgdist_fw')
         #self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
 
-        # Add to general stats table
+        # Basic Stats Table
+        self.damageprofiler_general_stats_table_3p()
         #self.general_stats_addcols(self.threepGtoAfreq_data)
 
         # Add plots
@@ -73,8 +74,13 @@ class MultiqcModule(BaseMultiqcModule):
                 name = '3\' Misincorporation Plot',
                 plot = self.threeprime_plot()
             )
+        if len(self.fivepCtoTfreq_data) > 0:
+            self.add_section (
+                name = '5\' Misincorporation Plot',
+                plot = self.fiveprime_plot()
+            )
 
-    
+
     #Parse a 3pGtoAfreq file
     def parse3pG(self, f):
 
@@ -108,6 +114,60 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('No valid data {} in 3pGtoA report'.format(f['fn']))
             return None
     
+    #Parse a 5pCtoTfreq file
+    def parse5pC(self, f):
+
+        try:
+            # Parsing as OrderedDict is slightly messier with YAML
+            # http://stackoverflow.com/a/21048064/713980
+            # Copied over from custom_content.py - thanks @ewels!
+            def dict_constructor(loader, node):
+                return OrderedDict(loader.construct_pairs(node))
+            yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
+            parsed_data = yaml.load(f['f'])
+        except Exception as e:
+            log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
+            log.warning("YAML error: {}".format(e))
+            return None
+        
+        #Sample name is always the only key in the YAML
+        if parsed_data is not None:
+            key = list(parsed_data.keys())[0] 
+            s_name = self.clean_s_name(list(parsed_data.keys())[0],'')
+
+            if s_name in self.fivepCtoTfreq_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            # Create tuples out of entries
+            pos = list(range(1,len(parsed_data.get(key))))
+            tuples = list(zip(pos,parsed_data.get(key)))
+            # Get a dictionary out of it
+            data = dict((x, y) for x, y in tuples)
+            self.fivepCtoTfreq_data[s_name] = data
+        else: 
+            log.debug('No valid data {} in 5pCtoT report'.format(f['fn']))
+            return None
+    
+    #### Tables from here on 
+    def damageprofiler_general_stats_table_3p(self):
+        """ Take the parsed stats from the DamageProfiler and add it to the
+    basic stats table at the top of the report """
+
+    headers = OrderedDict()
+    headers['damageprofiler'] = {
+        'title': '3\' G to A',
+        'description': 'Percentage of misincorporated G to A substitutions.',
+        'min': 0,
+        'max': 100,
+        'suffix': '%',
+        'scale': 'OrRd',
+        'format': '{:,.0f}',
+        'modify': lambda x: x * 100.0
+    }
+    self.general_stats_addcols(self.threepGtoAfreq_data, headers)
+
+
+    #### Plotting from here on
+
 
     #Linegraph plot for 3pGtoA
     def threeprime_plot(self):
@@ -128,6 +188,31 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'DamageProfiler: 3\' G to A Misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide Position from 3\'',
+            'ymin': 0,
+            'xmin': 1
+        }
+
+        return linegraph.plot(data,config)
+
+    #Linegraph plot for 3pGtoA
+    def fiveprime_plot(self):
+        """Generate a 5' CtoT linegraph plot"""
+
+        data = dict()
+        for s_name in self.fivepCtoTfreq_data:
+            try:
+                data[s_name] = {int(d): float (self.fivepCtoTfreq_data[s_name][d])*100 for d in self.fivepCtoTfreq_data[s_name]}
+            except KeyError:
+                pass
+        if len(data) == 0:
+            log.debug('No valid data for 5\' C to T input!')
+            return None
+
+        config = {
+            'id': 'fiveprime_misinc_plot',
+            'title': 'DamageProfiler: 5\' C to T Misincorporation plot',
+            'ylab': '% C to T substituted',
+            'xlab': 'Nucleotide Position from 5\'',
             'ymin': 0,
             'xmin': 1
         }
