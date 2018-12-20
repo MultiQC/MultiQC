@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import json
-import pprint
 
 from multiqc import config
 from multiqc.plots import  linegraph
@@ -112,6 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['0'] = {
+            'id': 'misinc-stats-1st-{}-{}'.format(readend, substitution),
             'title': '{} {} 1st base'.format(readend, substitution),
             'description': '{} 1st base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
@@ -119,6 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: x * 100.0
         }
         headers['1'] = {
+            'id': 'misinc-stats-2nd-{}-{}'.format(readend, substitution),
             'title': '{} {} 2nd base'.format(readend, substitution),
             'description': '{} 2nd base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
@@ -140,7 +141,6 @@ class MultiqcModule(BaseMultiqcModule):
             data = dict((x, y) for x, y in tuples)
             #Extract first two elements from list
             dict_to_add[key] = data
-            pprint.pprint(data)
         
         self.general_stats_addcols(dict_to_add,headers)
     
@@ -200,8 +200,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         
         config = {
-            'id': 'length-distribution-' + orientation,
-            'title': 'DamageProfiler: Read length distribution: ' + orientation,
+            'id': 'length-distribution-{}'.format(orientation),
+            'title': 'DamageProfiler: Read length distribution: {} '.format(orientation),
             'ylab': 'Number of reads',
             'xlab': 'Readlength (bp)',
             'xDecimals': False,
