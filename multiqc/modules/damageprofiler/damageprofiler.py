@@ -5,7 +5,7 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import yaml
+import json
 
 from multiqc import config
 from multiqc.plots import  linegraph
@@ -82,8 +82,9 @@ class MultiqcModule(BaseMultiqcModule):
         """ Parse the JSON output from DamageProfiler and save the summary statistics """
         try:
             parsed_json = json.load(f['f'])
-        except:
-            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['f']))
+        except Exception as e:
+            print(e)
+            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
             return None
         
         #Get sample name from JSON first
