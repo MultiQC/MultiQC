@@ -28,24 +28,27 @@ class MultiqcModule(BaseMultiqcModule):
         info="a tool to determine damage patterns on ancient DNA.")
 
         # Find and load 3pGtoAFreq Files
-        self.threepGtoAfreq_data = dict() 
-        for f in self.find_log_files('damageprofiler/threeprime'):
+        self.threepGtoAfreq_data = dict()
+        self.fivepCtoTfreq_data = dict()
+        self.lgdist_fw_data = dict()
+        self.lgdist_rv_data = dict() 
+        for f in self.find_log_files('damageprofiler'):
             self.parseFreqPlot(f,self.threepGtoAfreq_data)
 
         # Find and load 5pCtoTFreq Files
-        self.fivepCtoTfreq_data = dict() 
-        for f in self.find_log_files('damageprofiler/fiveprime'):
-            self.parseFreqPlot(f,self.fivepCtoTfreq_data)
+        # self.fivepCtoTfreq_data = dict() 
+        # for f in self.find_log_files('damageprofiler/fiveprime'):
+        #     self.parseFreqPlot(f,self.fivepCtoTfreq_data)
 
-        # Find and load lgdist forward Files
-        self.lgdist_fw_data = dict() 
-        for f in self.find_log_files('damageprofiler/lgdistfw'):
-            self.parselgDist(f,self.lgdist_fw_data)
+        # # Find and load lgdist forward Files
+        # self.lgdist_fw_data = dict() 
+        # for f in self.find_log_files('damageprofiler/lgdistfw'):
+        #     self.parselgDist(f,self.lgdist_fw_data)
 
-        # Find and load lgdist reverse Files
-        self.lgdist_rv_data = dict() 
-        for f in self.find_log_files('damageprofiler/lgdistrv'):
-            self.parselgDist(f,self.lgdist_rv_data)
+        # # Find and load lgdist reverse Files
+        # self.lgdist_rv_data = dict() 
+        # for f in self.find_log_files('damageprofiler/lgdistrv'):
+        #     self.parselgDist(f,self.lgdist_rv_data)
 
         # Filter to strip out ignored sample names
         self.threepGtoAfreq_data         =   self.ignore_samples(self.threepGtoAfreq_data)
@@ -61,8 +64,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
 
         # Basic Stats Table, use generic function to add data to general table
-        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3\'', 'G -> A')
-        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5\'', 'C -> T')
+        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G -> A')
+        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C -> T')
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
@@ -87,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     #Parse a generic substitution YAML file (3' and 5' supported)
-    def parseFreqPlot(self, f, dict_to_add):
+    #def parseFreqPlot(self, f, dict_to_add):
 
         try:
             # Parsing as OrderedDict is slightly messier with YAML
@@ -120,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
     #Parse a generic lgdistribution file and parse it to data frame
-    def parselgDist(self, f, dict_to_add):
+    # def parselgDist(self, f, dict_to_add):
 
         try:
             # Parsing as OrderedDict is slightly messier with YAML
