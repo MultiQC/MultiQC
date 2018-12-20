@@ -27,28 +27,16 @@ class MultiqcModule(BaseMultiqcModule):
         href='https://github.com/Integrative-Transcriptomics/DamageProfiler',
         info="a tool to determine damage patterns on ancient DNA.")
 
-        # Find and load 3pGtoAFreq Files
+        # Init empty dictionaries
+
         self.threepGtoAfreq_data = dict()
         self.fivepCtoTfreq_data = dict()
         self.lgdist_fw_data = dict()
-        self.lgdist_rv_data = dict() 
+        self.lgdist_rv_data = dict()
+
+        # Find and load JSON file
         for f in self.find_log_files('damageprofiler'):
-            self.parseFreqPlot(f,self.threepGtoAfreq_data)
-
-        # Find and load 5pCtoTFreq Files
-        # self.fivepCtoTfreq_data = dict() 
-        # for f in self.find_log_files('damageprofiler/fiveprime'):
-        #     self.parseFreqPlot(f,self.fivepCtoTfreq_data)
-
-        # # Find and load lgdist forward Files
-        # self.lgdist_fw_data = dict() 
-        # for f in self.find_log_files('damageprofiler/lgdistfw'):
-        #     self.parselgDist(f,self.lgdist_fw_data)
-
-        # # Find and load lgdist reverse Files
-        # self.lgdist_rv_data = dict() 
-        # for f in self.find_log_files('damageprofiler/lgdistrv'):
-        #     self.parselgDist(f,self.lgdist_rv_data)
+            self.parseJSON(f)
 
         # Filter to strip out ignored sample names
         self.threepGtoAfreq_data         =   self.ignore_samples(self.threepGtoAfreq_data)
@@ -89,69 +77,35 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
 
-    #Parse a generic substitution YAML file (3' and 5' supported)
-    #def parseFreqPlot(self, f, dict_to_add):
-
+    #Parse our nice little JSON file
+    def parseJSON(self, f):
+        """ Parse the JSON output from DamageProfiler and save the summary statistics """
         try:
-            # Parsing as OrderedDict is slightly messier with YAML
-            # http://stackoverflow.com/a/21048064/713980
-            # Copied over from custom_content.py - thanks @ewels!
-            def dict_constructor(loader, node):
-                return OrderedDict(loader.construct_pairs(node))
-            yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-            parsed_data = yaml.load(f['f'])
-        except Exception as e:
-            log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
-            log.warning("YAML error: {}".format(e))
+            parsed_json = json.load(f['f'])
+        except:
+            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
             return None
         
-        #Sample name is always the only key in each of the supplied YAML files
-        if parsed_data is not None:
-            key = list(parsed_data.keys())[0] 
-            s_name = self.clean_s_name(list(parsed_data.keys())[0],'')
-
-            if s_name in dict_to_add:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            # Create tuples out of entries
-            pos = list(range(1,len(parsed_data.get(key))))
-            tuples = list(zip(pos,parsed_data.get(key)))
-            # Get a dictionary out of it
-            data = dict((x, y) for x, y in tuples)
-            dict_to_add[s_name] = data
-        else: 
-            log.debug('No valid data {} in report'.format(f['fn']))
-            return None
-
-    #Parse a generic lgdistribution file and parse it to data frame
-    # def parselgDist(self, f, dict_to_add):
-
-        try:
-            # Parsing as OrderedDict is slightly messier with YAML
-            # http://stackoverflow.com/a/21048064/713980
-            # Copied over from custom_content.py - thanks @ewels!
-            def dict_constructor(loader, node):
-                return OrderedDict(loader.construct_pairs(node))
-            yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-            parsed_data = yaml.load(f['f'])
-        except Exception as e:
-            log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
-            log.warning("YAML error: {}".format(e))
-            return None
+        #Get sample name from JSON first
+        s_name = parsed_json['metadata']['sample_name']
+        print(s_name)
+        self.add_data_source(f, s_name)
         
-        #Sample name is always the only key in each of the supplied YAML files
-        if parsed_data is not None:
-            key = list(parsed_data.keys())[0] 
-            s_name = self.clean_s_name(key,'')
+        #Add 3' G to A data 
+        self.threepGtoAfreq_data[s_name] = parsed_json[s_name]['dmg_3p']
 
-            if s_name in dict_to_add:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            dict_to_add[s_name] = parsed_data.get(key)
-        else: 
-            log.debug('No valid data {} in report'.format(f['fn']))
-            return None
+        #Add 5' C to T data
+        self.fivepCtoTfreq_data[s_name] = parsed_json[s_name]['dmg_5p']
+
+        #Add lendist forward 
+        self.lgdist_fw_data[s_name] = parsed_json[s_name]['lendist_fw']
+
+        #Add lendist reverse
+        self.lgdist_rv_data[s_name] = parsed_json[s_name]['lendist_rv']
 
     
     #### Tables from here on 
+
     def dmgprof_misinc_stats(self, dict_to_plot, readend, substitution):
         """ Take the parsed stats from the DamageProfiler and add it to the
         basic stats table at the top of the report """
