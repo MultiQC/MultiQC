@@ -69,11 +69,11 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.lgdist_fw_data) > 0 and len(self.lgdist_rv_data) > 0:
             self.add_section (
                 name = 'Forward read length distribution',
-              #  plot = self.lgdistplot(self.lgdist_fw_data, 'Forward')
+                plot = self.lgdistplot(self.lgdist_fw_data, 'Forward')
             )
             self.add_section (
                 name = 'Reverse read length distribution',
-              #  plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
+                plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
             )
 
 
