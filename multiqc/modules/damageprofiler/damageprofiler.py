@@ -127,6 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
+        # Only the first two parts are informative from both 3' and 5' ends of reads (1st, 2nd base damage pattern)
         data = OrderedDict()
         dict_to_add = dict()
         
