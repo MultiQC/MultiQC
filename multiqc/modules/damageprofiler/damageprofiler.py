@@ -111,22 +111,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['1'] = {
-            'title': readend + ' ' + substitution + ' 1st base ',
-            'description': readend + ' ' + substitution + ' 1st base ',
-            'min': 0,
-            'max': 100,
+            'title': '{} {} 1st base'.format(readend, substitution),
+            'description': '{} 1st base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
-            'scale': 'GrRd',
             'format': '{:,.2f}',
             'modify': lambda x: x * 100.0
         }
         headers['2'] = {
-            'title': readend + ' ' + substitution + ' 2nd base ',
-            'description': readend + ' ' + substitution + ' 2nd base ',
-            'min': 0,
-            'max': 100,
+            'title': '{} {} 2nd base'.format(readend, substitution),
+            'description': '{} 2nd base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
-            'scale': 'GrRd',
             'format': '{:,.2f}',
             'modify': lambda x: x * 100.0
         }
