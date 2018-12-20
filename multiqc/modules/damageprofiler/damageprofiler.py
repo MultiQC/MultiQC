@@ -53,9 +53,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.lgdist_fw_data   =   self.ignore_samples(self.lgdist_fw_data)
         self.lgdist_rv_data      =   self.ignore_samples(self.lgdist_rv_data)
 
-        # Warning when no files are found
-        #if max(len(self.threepGtoAfreq_data), len(self.5pCtoTfreq_data), len(self.lgdist_fw_data), len(self.lgdist_rv_data)) == 0:
-        #    raise UserWarning
 
         # Write parsed data to a file
         self.write_data_file(self.threepGtoAfreq_data, 'multiqc_damageprofiler_3pGtoAfreq')
