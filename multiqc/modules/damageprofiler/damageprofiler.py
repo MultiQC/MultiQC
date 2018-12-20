@@ -6,6 +6,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import json
+import pprint
 
 from multiqc import config
 from multiqc.plots import  linegraph
@@ -110,14 +111,14 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['1'] = {
+        headers['0'] = {
             'title': '{} {} 1st base'.format(readend, substitution),
             'description': '{} 1st base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
             'format': '{:,.2f}',
             'modify': lambda x: x * 100.0
         }
-        headers['2'] = {
+        headers['1'] = {
             'title': '{} {} 2nd base'.format(readend, substitution),
             'description': '{} 2nd base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
@@ -133,12 +134,13 @@ class MultiqcModule(BaseMultiqcModule):
         
         for key in dict_to_plot.keys():
             tmp = dict_to_plot[key]
-            pos = list(range(1,3))
-            strlist = list(map(float,tmp[:3]))
-            tuples = list(zip(str(pos),strlist))
+            pos = list(range(2))
+            strlist = tmp[:2]
+            tuples = list(zip(pos,strlist))
             data = dict((x, y) for x, y in tuples)
             #Extract first two elements from list
             dict_to_add[key] = data
+            pprint.pprint(data)
         
         self.general_stats_addcols(dict_to_add,headers)
     
