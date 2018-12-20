@@ -6,6 +6,7 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import json
+import pprint
 
 from multiqc import config
 from multiqc.plots import  linegraph
@@ -52,8 +53,8 @@ class MultiqcModule(BaseMultiqcModule):
         #self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
 
         # Basic Stats Table, use generic function to add data to general table
-        #self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G -> A')
-        #self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C -> T')
+        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G -> A')
+        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C -> T')
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
@@ -135,13 +136,19 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
         data = OrderedDict()
+        dict_to_add = dict()
         
         for key in dict_to_plot.keys():
             tmp = dict_to_plot[key]
+            pos = list(range(1,3))
+            strlist = list(map(float,tmp[:2]))
+            tuples = list(zip(str(pos),strlist))
+            data = dict((x, y) for x, y in tuples)
             #Extract first two elements from list
-            data[key] = tmp[:2]
+            dict_to_add[key] = data
+        pprint.pprint(dict_to_add)
         
-        self.general_stats_addcols(data,headers)
+        self.general_stats_addcols(dict_to_add,headers)
     
 
      
