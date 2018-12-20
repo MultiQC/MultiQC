@@ -46,14 +46,14 @@ class MultiqcModule(BaseMultiqcModule):
 
 
         # Write parsed data to a file
-        self.write_data_file(self.threepGtoAfreq_data, 'multiqc_damageprofiler_3pGtoAfreq')
-        self.write_data_file(self.fivepCtoTfreq_data, 'multiqc_damageprofiler_5pCtoTfreq')
-        self.write_data_file(self.lgdist_fw_data, 'multiqc_damageprofiler_lgdist_fw')
-        self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
+        #self.write_data_file(self.threepGtoAfreq_data, 'multiqc_damageprofiler_3pGtoAfreq')
+        #self.write_data_file(self.fivepCtoTfreq_data, 'multiqc_damageprofiler_5pCtoTfreq')
+        #self.write_data_file(self.lgdist_fw_data, 'multiqc_damageprofiler_lgdist_fw')
+        #self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
 
         # Basic Stats Table, use generic function to add data to general table
-        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G -> A')
-        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C -> T')
+        #self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G -> A')
+        #self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C -> T')
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
@@ -69,11 +69,11 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.lgdist_fw_data) > 0 and len(self.lgdist_rv_data) > 0:
             self.add_section (
                 name = 'Forward read length distribution',
-                plot = self.lgdistplot(self.lgdist_fw_data, 'Forward')
+              #  plot = self.lgdistplot(self.lgdist_fw_data, 'Forward')
             )
             self.add_section (
                 name = 'Reverse read length distribution',
-                plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
+              #  plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
             )
 
 
@@ -89,20 +89,20 @@ class MultiqcModule(BaseMultiqcModule):
         
         #Get sample name from JSON first
         s_name = parsed_json['metadata']['sample_name']
-        print(s_name)
         self.add_data_source(f, s_name)
+
         
         #Add 3' G to A data 
-        self.threepGtoAfreq_data[s_name] = parsed_json[s_name]['dmg_3p']
+        self.threepGtoAfreq_data[s_name] = parsed_json['dmg_3p']
 
         #Add 5' C to T data
-        self.fivepCtoTfreq_data[s_name] = parsed_json[s_name]['dmg_5p']
+        self.fivepCtoTfreq_data[s_name] = parsed_json['dmg_5p']
 
         #Add lendist forward 
-        self.lgdist_fw_data[s_name] = parsed_json[s_name]['lendist_fw']
+        self.lgdist_fw_data[s_name] = parsed_json['lendist_fw']
 
         #Add lendist reverse
-        self.lgdist_rv_data[s_name] = parsed_json[s_name]['lendist_rv']
+        self.lgdist_rv_data[s_name] = parsed_json['lendist_rv']
 
     
     #### Tables from here on 
@@ -135,18 +135,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
         data = OrderedDict()
-
+        
         for key in dict_to_plot.keys():
             tmp = dict_to_plot[key]
-            #Get the first two k,v pairs to new data dict
-            i = 2 
-            data[key] = {}
-            for entry in tmp.keys():
-                if i > 0: 
-                    data[key][entry] = tmp[entry]
-                    i -= 1
-                else:
-                    break
+            #Extract first two elements from list
+            data[key] = tmp[:2]
         
         self.general_stats_addcols(data,headers)
     
@@ -187,14 +180,14 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate a 3' G -> A linegraph plot"""
 
         data = dict()
-        for s_name in self.threepGtoAfreq_data:
-            try:
-                data[s_name] = {int(d): float (self.threepGtoAfreq_data[s_name][d])*100 for d in self.threepGtoAfreq_data[s_name]}
-            except KeyError:
-                pass
-        if len(data) == 0:
-            log.debug('No valid data for 3\' G -> A input!')
-            return None
+        dict_to_add = dict()
+        # Create tuples out of entries
+        for key in self.threepGtoAfreq_data: 
+            pos = list(range(1,len(self.threepGtoAfreq_data.get(key))))
+            tuples = list(zip(pos,self.threepGtoAfreq_data.get(key)))
+            # Get a dictionary out of it
+            data = dict((x, y) for x, y in tuples)
+            dict_to_add[key] = data
 
         config = {
             'id': 'threeprime_misinc_plot',
@@ -206,21 +199,21 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 1
         }
 
-        return linegraph.plot(data,config)
+        return linegraph.plot(dict_to_add,config)
 
-    #Linegraph plot for 3pGtoA
+    #Linegraph plot for 5pCtoT
     def fiveprime_plot(self):
         """Generate a 5' C -> T linegraph plot"""
-
+        
         data = dict()
-        for s_name in self.fivepCtoTfreq_data:
-            try:
-                data[s_name] = {int(d): float (self.fivepCtoTfreq_data[s_name][d])*100 for d in self.fivepCtoTfreq_data[s_name]}
-            except KeyError:
-                pass
-        if len(data) == 0:
-            log.debug('No valid data for 5\' C -> T input!')
-            return None
+        dict_to_add = dict()
+        # Create tuples out of entries
+        for key in self.fivepCtoTfreq_data: 
+            pos = list(range(1,len(self.fivepCtoTfreq_data.get(key))))
+            tuples = list(zip(pos,self.fivepCtoTfreq_data.get(key)))
+            # Get a dictionary out of it
+            data = dict((x, y) for x, y in tuples)
+            dict_to_add[key] = data
 
         config = {
             'id': 'fiveprime_misinc_plot',
@@ -232,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 1
         }
 
-        return linegraph.plot(data,config)
+        return linegraph.plot(dict_to_add,config)
 
         
         
