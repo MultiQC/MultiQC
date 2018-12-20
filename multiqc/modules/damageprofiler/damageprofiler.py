@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import json
-import pprint
 
 from multiqc import config
 from multiqc.plots import  linegraph
@@ -34,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.fivepCtoTfreq_data = dict()
         self.lgdist_fw_data = dict()
         self.lgdist_rv_data = dict()
+        self.summary_metrics_data = dict()
 
         # Find and load JSON file
         for f in self.find_log_files('damageprofiler',filehandles=True):
@@ -45,16 +45,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.lgdist_fw_data   =   self.ignore_samples(self.lgdist_fw_data)
         self.lgdist_rv_data      =   self.ignore_samples(self.lgdist_rv_data)
 
-
-        # Write parsed data to a file
-        #self.write_data_file(self.threepGtoAfreq_data, 'multiqc_damageprofiler_3pGtoAfreq')
-        #self.write_data_file(self.fivepCtoTfreq_data, 'multiqc_damageprofiler_5pCtoTfreq')
-        #self.write_data_file(self.lgdist_fw_data, 'multiqc_damageprofiler_lgdist_fw')
-        #self.write_data_file(self.lgdist_rv_data, 'multiqc_damageprofiler_lgdist_rv')
-
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G -> A')
         self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C -> T')
+        self.addSummaryMetrics(self.summary_metrics_data)
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
@@ -105,6 +99,9 @@ class MultiqcModule(BaseMultiqcModule):
         #Add lendist reverse
         self.lgdist_rv_data[s_name] = parsed_json['lendist_rv']
 
+        #Add summary metrics
+        self.summary_metrics_data[s_name] = parsed_json['summary_stats']
+
     
     #### Tables from here on 
 
@@ -134,6 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: x * 100.0
         }
 
+
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
         data = OrderedDict()
         dict_to_add = dict()
@@ -146,10 +144,45 @@ class MultiqcModule(BaseMultiqcModule):
             data = dict((x, y) for x, y in tuples)
             #Extract first two elements from list
             dict_to_add[key] = data
-        pprint.pprint(dict_to_add)
         
         self.general_stats_addcols(dict_to_add,headers)
     
+
+
+    def addSummaryMetrics(self, dict_to_plot):
+        """ Take the parsed stats from the DamageProfiler and add it to the
+        basic stats table at the top of the report """
+
+        headers = OrderedDict()
+
+        headers['std'] = {
+            'title': 'Read length std. dev.',
+            'description': 'Read length std. dev.',
+            'suffix': 'bp',
+            'scale': 'GrRd',
+            'format': '{:,.2f}',
+        }
+
+        headers['median'] = {
+            'title': 'Median read length',
+            'description': 'Median read length',
+            'min': 0,
+            'max': 100,
+            'suffix': 'bp',
+            'scale': 'GrRd',
+            'format': '{:,.2f}',
+        }
+        headers['mean_readlength'] = {
+            'title': 'Mean read length',
+            'description': 'Mean read length',
+            'min': 0,
+            'max': 100,
+            'suffix': 'bp',
+            'scale': 'GrRd',
+            'format': '{:,.2f}',
+        }
+       
+        self.general_stats_addcols(dict_to_plot,headers)
 
      
 
@@ -171,7 +204,6 @@ class MultiqcModule(BaseMultiqcModule):
         
         config = {
             'id': 'length-distribution-' + orientation,
-            'smooth_points': 50,
             'title': 'DamageProfiler: Read length distribution: ' + orientation,
             'ylab': 'Number of reads',
             'xlab': 'Readlength (bp)',
