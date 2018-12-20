@@ -204,14 +204,8 @@ cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
     shared: true
-damageprofiler/threeprime:
-    fn: '3pGtoA_freq.yaml'
-damageprofiler/fiveprime:
-    fn: '5pCtoT_freq.yaml'
-damageprofiler/lgdistfw:
-    fn: 'lgdistribution_fw.yaml'
-damageprofiler/lgdistrv:
-    fn: 'lgdistribution_rv.yaml'
+damageprofiler:
+    fn: 'dmgprof.json'
 dedup:
     fn: 'dedup.log'
 deeptools/bamPEFragmentSize:
