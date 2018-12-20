@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         for key in dict_to_plot.keys():
             tmp = dict_to_plot[key]
             pos = list(range(1,3))
-            strlist = list(map(float,tmp[:2]))
+            strlist = list(map(float,tmp[:3]))
             tuples = list(zip(str(pos),strlist))
             data = dict((x, y) for x, y in tuples)
             #Extract first two elements from list
