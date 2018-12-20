@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.lgdist_rv_data = dict()
 
         # Find and load JSON file
-        for f in self.find_log_files('damageprofiler'):
+        for f in self.find_log_files('damageprofiler',filehandles=True):
             self.parseJSON(f)
 
         # Filter to strip out ignored sample names
@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f['f'])
         except:
-            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
+            log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['f']))
             return None
         
         #Get sample name from JSON first
