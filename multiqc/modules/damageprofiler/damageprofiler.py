@@ -40,10 +40,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.parseJSON(f)
 
         # Filter to strip out ignored sample names
-        self.threepGtoAfreq_data         =   self.ignore_samples(self.threepGtoAfreq_data)
-        self.fivepCtoTfreq_data          =   self.ignore_samples(self.fivepCtoTfreq_data)
-        self.lgdist_fw_data   =   self.ignore_samples(self.lgdist_fw_data)
-        self.lgdist_rv_data      =   self.ignore_samples(self.lgdist_rv_data)
+        self.threepGtoAfreq_data  = self.ignore_samples(self.threepGtoAfreq_data)
+        self.fivepCtoTfreq_data   = self.ignore_samples(self.fivepCtoTfreq_data)
+        self.lgdist_fw_data       = self.ignore_samples(self.lgdist_fw_data)
+        self.lgdist_rv_data       = self.ignore_samples(self.lgdist_rv_data)
+        self.summary_metrics_data = self.ignore_samples(self.summary_metrics_data)
+
+        if len(self.summary_metrics_data) == 0:
+            raise UserWarning
 
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G>A')
