@@ -22,7 +22,8 @@ class plotFingerprintMixin():
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotFingerprintOutQualityMetrics:
                     log.warning("Replacing duplicate sample {}.".format(k))
-                self.deeptools_plotFingerprintOutQualityMetrics[k] = v
+                # Values are fractions - convert to percentages for consistency with other MultiQC output
+                self.deeptools_plotFingerprintOutQualityMetrics[k] = { i:float(j)*100.0 for i,j in v.items() }
 
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotFingerprint')
@@ -38,23 +39,42 @@ class plotFingerprintMixin():
             if len(parsed_data) > 0:
                 self.add_data_source(f, section='plotFingerprint')
 
-        if len(self.deeptools_plotFingerprintOutQualityMetrics) > 0:
-            config = dict(ymin=0.0, ymax=1.0, ylab='Value', categories=True)
-            config['id'] = 'plotFingerprint_quality_metrics'
-            config['title'] = 'Fingerprint quality metrics'
-            self.add_section(name="Fingerprint quality metrics",
-                             anchor="plotFingerprint",
-                             description="Various quality metrics returned by plotFingerprint",
-                             plot=linegraph.plot(self.deeptools_plotFingerprintOutQualityMetrics, config))
-
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
-            config = dict(xmin=0.0, xmax=1.0, ymin=0.0, ymax=1.0, xlab='rank', ylab='Fraction w.r.t. bin with highest coverage')
-            config['id'] = 'deeptools_fingerprint_plot'
-            config['title'] = 'Fingerprint'
             self.add_section(name="Fingerprint",
                              anchor="deeptools_fingerprint",
                              description="Signal fingerprint according to plotFingerprint",
-                             plot=linegraph.plot(self.deeptools_plotFingerprintOutRawCounts, config))
+                             plot=linegraph.plot(
+                                self.deeptools_plotFingerprintOutRawCounts,
+                                {
+                                    'id': 'deeptools_fingerprint_plot',
+                                    'title': 'deepTools: Fingerprint plot',
+                                    'xmin': 0.0,
+                                    'xmax': 1.0,
+                                    'ymin': 0.0,
+                                    'ymax': 1.0,
+                                    'xlab': 'rank',
+                                    'ylab': 'Fraction w.r.t. bin with highest coverage'
+                                }
+                             ))
+
+        if len(self.deeptools_plotFingerprintOutQualityMetrics) > 0:
+            self.add_section(name="Fingerprint quality metrics",
+                             anchor="plotFingerprint",
+                             description="Various quality metrics returned by plotFingerprint",
+                             plot=linegraph.plot(
+                                self.deeptools_plotFingerprintOutQualityMetrics,
+                                {
+                                    'id': 'plotFingerprint_quality_metrics',
+                                    'title': 'deepTools: Fingerprint quality metrics',
+                                    'stacking': None,
+                                    'ymin': 0,
+                                    'ymax': 100,
+                                    'yLabelFormat': '{value}%',
+                                    'ylab': 'Percentage of fragments',
+                                    'categories': True,
+                                    'tt_label': '<strong>{point.x}</strong>: {point.y:.2f}%'
+                                }
+                             ))
 
         return len(self.deeptools_plotFingerprintOutQualityMetrics), len(self.deeptools_plotFingerprintOutRawCounts)
 

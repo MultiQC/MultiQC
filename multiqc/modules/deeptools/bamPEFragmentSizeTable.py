@@ -163,7 +163,7 @@ class bamPEFragmentSizeTableMixin():
                     }
                 ],
                 'id': 'deeptools_readlengthsPlot',
-                'title': 'Read/Fragment length distribution',
+                'title': 'deepTools: Read/Fragment length distribution',
                 'namespace': 'deepTools bamPEFragmentSize',
                 'ylab': "Read length (bases)",
                 'xlab': "Percentile"

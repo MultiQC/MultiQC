@@ -33,28 +33,15 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmen
         self.general_stats_data = dict()
         n = dict()
 
-        # estimateReadFiltering
-        n['estimateReadFiltering'] = self.parse_estimateReadFiltering()
-        if n['estimateReadFiltering'] > 0:
-            log.debug("Found {} deepTools estimateReadFiltering samples".format(n['estimateReadFiltering']))
+        # plotCorrelation
+        n['plotCorrelation'] = self.parse_plotCorrelation()
+        if n['plotCorrelation'] > 0:
+            log.debug("Found {} deepTools plotCorrelation samples".format(n['plotCorrelation']))
 
-        # plotCoverage
-        n['plotCoverageStdout'], n['plotCoverageOutRawCounts'] = self.parse_plotCoverage()
-        if n['plotCoverageStdout'] + n['plotCoverageOutRawCounts'] > 0:
-            extra = ''
-            if n['plotCoverageOutRawCounts'] == 0:
-                extra = ' (you may need to increase the maximum log file size to find plotCoverage --outRawCounts files)'
-            log.debug("Found {} and {} deepTools plotCoverage standard output and --outRawCounts samples, respectively{}".format(n['plotCoverageStdout'], n['plotCoverageOutRawCounts'], extra))
-
-        # bamPEFragmentSizeTable
-        n['bamPEFragmentSize'] = self.parse_bamPEFragmentSize()
-        if n['bamPEFragmentSize'] > 0:
-            log.debug("Found {} deepTools 'bamPEFragmentSize --table' samples".format(n['bamPEFragmentSize']))
-
-        # bamPEFragmentSizeDistribution
-        n['bamPEFragmentSizeDistribution'] = self.parse_bamPEFragmentSizeDistribution()
-        if n['bamPEFragmentSizeDistribution'] > 0:
-            log.debug("Found {} deepTools 'bamPEFragmentSize --outRawFragmentLengths' samples".format(n['bamPEFragmentSizeDistribution']))
+        # plotPCA
+        n['plotPCA'] = self.parse_plotPCA()
+        if n['plotPCA'] > 0:
+            log.debug("Found {} deepTools plotPCA samples".format(n['plotPCA']))
 
         # plotEnrichment
         n['plotEnrichment'] = self.parse_plotEnrichment()
@@ -69,20 +56,34 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmen
                 extra = ' (you may need to increase the maximum log file size to find plotFingerprint --outRawCounts files)'
             log.debug("Found {} and {} deepTools plotFingerprint --outQualityMetrics and --outRawCounts samples, respectively{}".format(n['plotFingerprintOutQualityMetrics'], n['plotFingerprintOutRawCounts'], extra))
 
+        # bamPEFragmentSizeDistribution
+        n['bamPEFragmentSizeDistribution'] = self.parse_bamPEFragmentSizeDistribution()
+        if n['bamPEFragmentSizeDistribution'] > 0:
+            log.debug("Found {} deepTools 'bamPEFragmentSize --outRawFragmentLengths' samples".format(n['bamPEFragmentSizeDistribution']))
+
+        # bamPEFragmentSizeTable
+        n['bamPEFragmentSize'] = self.parse_bamPEFragmentSize()
+        if n['bamPEFragmentSize'] > 0:
+            log.debug("Found {} deepTools 'bamPEFragmentSize --table' samples".format(n['bamPEFragmentSize']))
+
         # plotProfile
         n['plotProfile'] = self.parse_plotProfile()
         if n['plotProfile'] > 0:
             log.debug("Found {} deepTools plotProfile samples".format(n['plotProfile']))
 
-        # plotPCA
-        n['plotPCA'] = self.parse_plotPCA()
-        if n['plotPCA'] > 0:
-            log.debug("Found {} deepTools plotPCA samples".format(n['plotPCA']))
+        # plotCoverage
+        n['plotCoverageStdout'], n['plotCoverageOutRawCounts'] = self.parse_plotCoverage()
+        if n['plotCoverageStdout'] + n['plotCoverageOutRawCounts'] > 0:
+            extra = ''
+            if n['plotCoverageOutRawCounts'] == 0:
+                extra = ' (you may need to increase the maximum log file size to find plotCoverage --outRawCounts files)'
+            log.debug("Found {} and {} deepTools plotCoverage standard output and --outRawCounts samples, respectively{}".format(n['plotCoverageStdout'], n['plotCoverageOutRawCounts'], extra))
 
-        # plotCorrelation
-        n['plotCorrelation'] = self.parse_plotCorrelation()
-        if n['plotCorrelation'] > 0:
-            log.debug("Found {} deepTools plotCorrelation samples".format(n['plotCorrelation']))
+        # estimateReadFiltering
+        n['estimateReadFiltering'] = self.parse_estimateReadFiltering()
+        if n['estimateReadFiltering'] > 0:
+            log.debug("Found {} deepTools estimateReadFiltering samples".format(n['estimateReadFiltering']))
+
 
         tot = sum(n.values())
         if tot > 0:

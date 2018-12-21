@@ -39,7 +39,7 @@ class plotEnrichmentMixin():
                           {'name': 'Counts in features', 'ylab': 'Counts in feature'},
                           {'name': 'Percents in features', 'ylab': 'Percent of reads in feature'}],
                       'id': 'deeptools_enrichment_plot',
-                      'title': 'Signal enrichment per feature',
+                      'title': 'deepTools: Signal enrichment per feature',
                       'ylab': 'Counts in feature',
                       'categories': True,
                       'ymin': 0.0}

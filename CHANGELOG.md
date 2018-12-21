@@ -25,6 +25,7 @@
     * New fragment size distribution plots from `bamPEFragmentSize --outRawFragmentLengths` (written by [@chuan-wang](https://github.com/chuan-wang/))
     * New correlation heatmaps from the `plotCorrelation` function (written by [@chuan-wang](https://github.com/chuan-wang/))
     * New sequence distribution profiles around genes, from the `plotProfile` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * Reordered sections
 * **Fastp**
     * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
 * **FastQC**
@@ -43,6 +44,7 @@
 * Documentation for Custom Content reordered to make it a little more sane
 * You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
 * Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).
+* Improved visual spacing between grouped bar plots
 
 
 #### Bug Fixes:

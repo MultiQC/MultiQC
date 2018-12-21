@@ -30,24 +30,6 @@ class plotCorrelationMixin():
             config = {
                 'id': 'deeptools_correlation_plot',
                 'title': 'deeptools: Correlation Plot',
-                'square': True,
-                'colstops': [
-                    [0, '#313695'],
-                    [0.1, '#4575b4'],
-                    [0.2, '#74add1'],
-                    [0.3, '#abd9e9'],
-                    [0.4, '#e0f3f8'],
-                    [0.5, '#ffffbf'],
-                    [0.6, '#fee090'],
-                    [0.7, '#fdae61'],
-                    [0.8, '#f46d43'],
-                    [0.9, '#d73027'],
-                    [1, '#a50026'],
-                ],
-                'decimalPlaces': 2,
-                'borderWidth': 0,
-                'datalabels': True,
-                'datalabel_colour': '<auto>',
             }
             data = []
             for s_name in samples:
