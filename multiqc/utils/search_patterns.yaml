@@ -206,11 +206,17 @@ cutadapt:
     shared: true
 dedup:
     fn: 'dedup.log'
-deeptools/bamPEFragmentSize:
+deeptools/bamPEFragmentSizeTable:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
+    num_lines: 1
+deeptools/bamPEFragmentSizeDistribution:
+    contents: '#bamPEFragmentSize'
     num_lines: 1
 deeptools/estimateReadFiltering:
     contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'
+    num_lines: 1
+deeptools/plotCorrelationData:
+    contents: '#plotCorrelation --outFileCorMatrix'
     num_lines: 1
 deeptools/plotCoverageStdout:
     contents: 'sample	mean	std	min	25%	50%	75%	max'
@@ -226,6 +232,12 @@ deeptools/plotFingerprintOutRawCounts:
     num_lines: 1
 deeptools/plotFingerprintOutQualityMetrics:
     contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
+    num_lines: 1
+deeptools/plotPCAData:
+    contents: '#plotPCA --outFileNameData'
+    num_lines: 1
+deeptools/plotProfile:
+    contents: 'bin labels'
     num_lines: 1
 fastp:
     fn: '*fastp.json'
@@ -340,7 +352,7 @@ peddy/sex_check:
     fn: '*.sex_check.csv'
 peddy/background_pca:
     fn: '*.background_pca.json'
-phantompeakqualtools:
+phantompeakqualtools/out:
     fn: '*.spp.out'
 picard/alignment_metrics:
     contents: 'AlignmentSummaryMetrics'

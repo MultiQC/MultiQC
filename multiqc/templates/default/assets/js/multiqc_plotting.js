@@ -449,6 +449,8 @@ function plot_stacked_bar_graph(target, ds){
   var config = JSON.parse(JSON.stringify(mqc_plots[target]['config']));
 
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
+  if (config['stacking'] === 'normal'){ config['groupPadding'] = '0.02'; }
+  else { config['groupPadding'] = '0.1'; }
   if (config['ytype'] === undefined){ config['ytype'] = 'linear'; }
   if (config['reversedStacks'] === undefined){ config['reversedStacks'] = false; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
@@ -579,7 +581,8 @@ function plot_stacked_bar_graph(target, ds){
     plotOptions: {
       series: {
         stacking: config['stacking'],
-        groupPadding: 0.02,
+        pointPadding: 0,
+        groupPadding: config['groupPadding'],
         borderWidth: config['borderWidth']
       },
       cursor: config['cursor'],

@@ -20,6 +20,12 @@
     * New plot showing the top twenty of undetermined barcodes by lane.
     * Informations for R1/R2 are now separated in the General Statistics table.
     * SampleID is concatenate with SampleName because in Chromium experiments several sample have the same SampleName.
+* **deepTools**
+    * New PCA plots from the `plotPCA` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New fragment size distribution plots from `bamPEFragmentSize --outRawFragmentLengths` (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New correlation heatmaps from the `plotCorrelation` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New sequence distribution profiles around genes, from the `plotProfile` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * Reordered sections
 * **Fastp**
     * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
 * **FastQC**
@@ -32,6 +38,8 @@
 * **Picard**
     * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
     * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
+* **phantompeakqualtools**
+    * Properly clean sample names
 * **Trimmomatic**
     * Updated Trimmomatic module documentation to be more helpful
 
@@ -39,6 +47,7 @@
 * Documentation for Custom Content reordered to make it a little more sane
 * You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
 * Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).
+* Improved visual spacing between grouped bar plots
 
 
 #### Bug Fixes:
