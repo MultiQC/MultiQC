@@ -50,6 +50,7 @@
     * Properly clean sample names
 * **Trimmomatic**
     * Updated Trimmomatic module documentation to be more helpful
+    * New option to use filenames instead of relying on the command line used. See [#864](https://github.com/ewels/MultiQC/issues/864).
 
 #### New MultiQC Features:
 * Documentation for Custom Content reordered to make it a little more sane
