@@ -15,13 +15,17 @@ The sample name is set by the first input filename listed in the log.  However, 
 
 ```yaml
 flash:
-	use_output_name: true
+    use_output_name: true
 ```
 
-The module can also parse the `.hist` numeric histograms output by FLASh.  Since the histogram's file format and extension are rather generic, this parsing only occurs if the `hist` user config option is set to avoid accidentally parsing a file output by another tool.  To set this option, use the following:
+The module can also parse the `.hist` numeric histograms output by FLASh.
+
+Note that the histogram's file format and extension are too generic by themselves which could result in the accidental parsing a file output by another tool. To get around this, the MultiQC module only parses files with the filename pattern `*flash*.hist`.
+
+To customise this (for example, enabling for any file ending in `*.hist`), use the following config change:
 
 ```yaml
-flash:
-	hist: true
+sp:
+    flash/hist:
+        fn: '*.hist'
 ```
-

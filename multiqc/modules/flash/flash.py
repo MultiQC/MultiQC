@@ -18,7 +18,6 @@ class MultiqcModule(BaseMultiqcModule):
     Options:
       use_output_name: true - use first output filename as sample name
         default uses first input filename in log
-      hist: true - parse flash numerical histograms - .hist files
     """
     def __init__(self):
         # Initialise the parent object
@@ -57,11 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.error(err)
             log.debug(traceback.format_exc())
 
-        ## parse histograms if user option is set
-        self.flash_hist = None
-        hist_config = getattr(config, 'flash', {}).get('hist', False)
-        if hist_config:
-            self.flash_hist = self.hist_results()
+        ## parse histograms
+        self.flash_hist = self.hist_results()
 
         # can't find any suitable logs
         if not self.flash_data and not self.flash_hist:

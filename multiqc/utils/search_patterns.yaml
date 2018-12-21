@@ -256,7 +256,7 @@ flash/log:
     contents: '[FLASH]'
     shared: true
 flash/hist:
-    fn: '*.hist'
+    fn: '*flash*.hist'
 flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
     shared: true
