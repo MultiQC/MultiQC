@@ -252,6 +252,11 @@ fastqc/theoretical_gc:
 featurecounts:
     fn: '*.summary'
     shared: true
+flash/log:
+    contents: '[FLASH]'
+    shared: true
+flash/hist:
+    fn: '*flash*.hist'
 flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
     shared: true
