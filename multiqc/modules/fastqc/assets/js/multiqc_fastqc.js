@@ -26,7 +26,7 @@ function fastqc_seq_content_heatmap() {
     var hidden_samples = 0;
     $.each(fastqc_seq_content_data, function(s_name, data){
         // rename sample names
-        var t_status = fastqc_passfails['per_base_sequence_content'][s_name];
+        var t_status = fastqc_passfails_fastqc['per_base_sequence_content'][s_name];
         $.each(window.mqc_rename_f_texts, function(idx, f_text){
             if(window.mqc_rename_regex_mode){
                 var re = new RegExp(f_text,'g');
@@ -163,30 +163,47 @@ function fastqc_seq_content_heatmap() {
 // Set up listeners etc on page load
 $(function () {
 
-    // Add the pass / warning / fails counts to each of the FastQC submodule headings
-    $.each(fastqc_passfails, function(k, vals){
-        var pid = '#fastqc_'+k;
-        var total = 0;
-        var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
-        $.each(vals, function(s_name, status){
-            total += 1;
-            v[status] += 1;
+    // Go through each section in case FastQC is there multiple times
+    $('.mqc-module-section').each(function(i){
+
+        // Skip this module if it's not FastQC
+        if(!$(this).attr('id').startsWith('mqc-module-section-fastqc')){
+            return true;
+        }
+
+        // Add the pass / warning / fails counts to each of the FastQC submodule headings
+        var parent_id = $(this).attr('id');
+        var fastqc_passfails = window['fastqc_passfails_'+parent_id.replace(/-/g, '_').replace('mqc_module_section_', '')];
+        $.each(fastqc_passfails, function(k, vals){
+            var pid = '#'+parent_id+' [id^=fastqc_'+k+']';
+            var total = 0;
+            var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
+            $.each(vals, function(s_name, status){
+                total += 1;
+                v[status] += 1;
+            });
+            var p_bar = '<div class="progress fastqc_passfail_progress"> \
+                <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed">'+v['pass']+'</div> \
+                <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings">'+v['warn']+'</div> \
+                <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
+            </div>';
+            $(pid).append(p_bar);
         });
-        var p_bar = '<div class="progress fastqc_passfail_progress"> \
-            <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed">'+v['pass']+'</div> \
-            <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings">'+v['warn']+'</div> \
-            <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
-        </div>';
-        $(pid).append(p_bar);
     });
 
     // Create popovers on click
-    $('.mqc-section-fastqc .fastqc_passfail_progress .progress-bar').mouseover(function(){
+    $('.fastqc_passfail_progress .progress-bar').mouseover(function(){
         // Does this element already have a popover?
         if ($(this).attr('data-original-title')) { return false; }
+        // Get data target
+        var parent_id = $(this).closest('.mqc-module-section').attr('id').replace(/-/g, '_').replace('mqc_module_section_', '');
+        var fastqc_passfails = window['fastqc_passfails_'+parent_id.replace(/-/g, '_').replace('mqc_module_section_', '')];
         // Create it
         var pid = $(this).closest('h3').attr('id');
         var k = pid.substr(7);
+        // Remove suffix when there are multiple fastqc sections
+        var n = k.indexOf('-');
+        k = k.substring(0, n != -1 ? n : k.length);
         var vals = fastqc_passfails[k];
         var passes = $(this).hasClass('progress-bar-success') ? true : false;
         var warns = $(this).hasClass('progress-bar-warning') ? true : false;
@@ -207,7 +224,7 @@ $(function () {
             html: true,
             trigger: 'hover click focus',
             placement: 'bottom auto',
-            template: '<div class="popover popover-'+pclass+'" role="tooltip"> \
+            template: '<div class="popover popover-fastqc-status popover-'+pclass+'" role="tooltip"> \
                 <div class="arrow"></div>\
                 <h3 class="popover-title"></h3>\
                 <div class="fastqc-popover-intro">\

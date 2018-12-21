@@ -4,7 +4,7 @@
 .fastqc_passfail_progress .progress-bar {
   cursor: pointer;
 }
-.mqc-section-fastqc .popover .popover-content {
+.popover-fastqc-status .popover-content {
   font-size: 11px;
   max-height: 300px;
   white-space: nowrap;

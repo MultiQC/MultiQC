@@ -100,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
                     statuses[section][s_name] = status
                 except KeyError:
                     statuses[section] = {s_name: status}
-        self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(statuses))
+        self.intro += '<script type="text/javascript">fastqc_passfails_{} = {};</script>'.format(self.anchor.replace('-','_'), json.dumps(statuses))
 
         # Now add each section in order
         self.read_count_plot()
