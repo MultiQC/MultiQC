@@ -23,10 +23,15 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmentSizeDistributionMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotProfileMixin, plotPCAMixin, plotCorrelationMixin):
     def __init__(self):
+        
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='deepTools', anchor='deepTools', target='deepTools',
-                                            href="http://deeptools.readthedocs.io",
-                                            info=" is a suite of tools to process and analyze deep sequencing data.")
+        super(MultiqcModule, self).__init__(
+            name='deepTools',
+            anchor='deepTools',
+            target='deepTools',
+            href="http://deeptools.readthedocs.io",
+            info=" is a suite of tools to process and analyze deep sequencing data."
+        )
 
         # Set up class objects to hold parsed data
         self.general_stats_headers = OrderedDict()
