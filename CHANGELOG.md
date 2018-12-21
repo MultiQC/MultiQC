@@ -6,6 +6,9 @@
 * [**BISCUIT**](https://github.com/zwdzwd/biscuit)
     * BISuilfite-seq CUI Toolkit
     * Module written by [@zwdzwd](https://github.com/zwdzwd/)
+* [**FLASh**](https://ccb.jhu.edu/software/FLASH/)
+    * FLASH (Fast Length Adjustment of SHort reads)
+    * Module written by [@pooranis](https://github.com/pooranis/)
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)

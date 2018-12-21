@@ -45,13 +45,13 @@ Currently, supported tools include:
 |[FastQC][fastqc]                 |[Long Ranger][longranger]|[Samblaster][samblaster]   |[phantompeakqualtools][phantompeakqualtools]|
 |[FastQ Screen][fastq-screen]     |[Salmon][salmon]         |[Samtools][samtools]       |[Preseq][preseq]            |
 |[Fastp][fastp]                   |[Slamdunk][slamdunk]     |[SnpEff][snpeff]           |[QoRTs][qorts]              |
-|[Flexbar][flexbar]               |[STAR][star]             |[Subread featureCounts][featurecounts]|[Qualimap][qualimap]|
-|[Jellyfish][jellyfish]           |[Tophat][tophat]         |[Stacks][stacks]           |[QUAST][quast]              |
-|[KAT][kat]                       |                         |[THetA2][theta2]           |[RNA-SeQC][rna_seqc]        |
-|[Skewer][skewer]                 |                         |                           |[RSeQC][rseqc]              |
-|[SortMeRNA][sortmerna]           |                         |                           |[Sargasso][sargasso]        |
-|[Trimmomatic][trimmomatic]       |                         |                           |[Supernova][supernova]      |
-|                                 |                         |                           |[VCFTools][vcftools]        |
+|[FLASh][flash]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Qualimap][qualimap]|
+|[Flexbar][flexbar]               |[Tophat][tophat]         |[Stacks][stacks]           |[QUAST][quast]              |
+|[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[RNA-SeQC][rna_seqc]        |
+|[KAT][kat]                       |                         |                           |[RSeQC][rseqc]              |
+|[Skewer][skewer]                 |                         |                           |[Sargasso][sargasso]        |
+|[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova]      |
+|[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools]        |
 |                                 |                         |                           |[VerifyBAMID][verifybamid]  |
 
 
@@ -208,6 +208,7 @@ MultiQC is released under the GPL v3 or later licence.
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [fastp]:          http://multiqc.info/docs/#fastp
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
+[flash]:          http://multiqc.info/docs/#flash
 [flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
