@@ -244,7 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
         for key in self.threepGtoAfreq_data:
             pos = list(range(1,len(self.threepGtoAfreq_data.get(key))))
             #Multiply values by 100 to get %
-            tmp = [i * 100 for i in self.threepGtoAfreq_data.get(key)]
+            tmp = [i * 100.0 for i in self.threepGtoAfreq_data.get(key)]
             tuples = list(zip(pos,tmp))
             # Get a dictionary out of it
             data = dict((x, y) for x, y in tuples)
@@ -271,7 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Create tuples out of entries
         for key in self.fivepCtoTfreq_data:
             pos = list(range(1,len(self.fivepCtoTfreq_data.get(key))))
-            tmp = [i * 100 for i in self.fivepCtoTfreq_data.get(key)]
+            tmp = [i * 100.0 for i in self.fivepCtoTfreq_data.get(key)]
             tuples = list(zip(pos,tmp))
             # Get a dictionary out of it
             data = dict((x, y) for x, y in tuples)
