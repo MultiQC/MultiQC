@@ -49,10 +49,10 @@ Currently, supported tools include:
 |[Flexbar][flexbar]               |[Tophat][tophat]         |[Stacks][stacks]           |[QUAST][quast]              |
 |[Jellyfish][jellyfish]           |                         |[THetA2][theta2]           |[RNA-SeQC][rna_seqc]        |
 |[KAT][kat]                       |                         |                           |[RSeQC][rseqc]              |
-|[Skewer][skewer]                 |                         |                           |[Sargasso][sargasso]        |
-|[SortMeRNA][sortmerna]           |                         |                           |[Supernova][supernova]      |
-|[Trimmomatic][trimmomatic]       |                         |                           |[VCFTools][vcftools]        |
-|                                 |                         |                           |[VerifyBAMID][verifybamid]  |
+|[MinIONQC][minionqc]             |                         |                           |[Sargasso][sargasso]        |
+|[Skewer][skewer]                 |                         |                           |[Supernova][supernova]      |
+|[SortMeRNA][sortmerna]           |                         |                           |[VCFTools][vcftools]        |
+|[Trimmomatic][trimmomatic]       |                         |                           |[VerifyBAMID][verifybamid]  |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -226,6 +226,7 @@ MultiQC is released under the GPL v3 or later licence.
 [longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2
 [methylqa]:       http://multiqc.info/docs/#methylqa
+[minionqc]:       http://multiqc.info/docs/#minionqc
 [mirtrace]:       http://multiqc.info/docs/#mirtrace
 [peddy]:          http://multiqc.info/docs/#peddy
 [phantompeakqualtools]: http://multiqc.info/docs/#phantompeakqualtools
