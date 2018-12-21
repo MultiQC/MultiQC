@@ -110,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['0'] = {
+        headers['{}1'.format(readend)] = {
             'id': 'misinc-stats-1st-{}-{}'.format(readend, substitution),
             'title': '{} {} 1st base'.format(readend, substitution),
             'description': '{} 1st base substitution frequency for {}'.format(readend, substitution),
@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.2f}',
             'modify': lambda x: x * 100.0
         }
-        headers['1'] = {
+        headers['{}2'.format(readend)] = {
             'id': 'misinc-stats-2nd-{}-{}'.format(readend, substitution),
             'title': '{} {} 2nd base'.format(readend, substitution),
             'description': '{} 2nd base substitution frequency for {}'.format(readend, substitution),
@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
         
         for key in dict_to_plot.keys():
             tmp = dict_to_plot[key]
-            pos = list(range(2))
+            pos = [readend + '1', readend + '2']
             strlist = tmp[:2]
             tuples = list(zip(pos,strlist))
             data = dict((x, y) for x, y in tuples)
