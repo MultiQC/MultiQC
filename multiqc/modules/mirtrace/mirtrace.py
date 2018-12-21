@@ -23,11 +23,12 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='miRTrace',
-        anchor='mirtrace',
-        href='__TBD__',
-        info="is a quality control software for small RNA sequencing data. "\
-        "It is developed by the team of Marc Friedländer (KTH, Sweden).")
+        super(MultiqcModule, self).__init__(
+            name = 'miRTrace',
+            anchor = 'mirtrace',
+            href = 'https://github.com/friedlanderlab/mirtrace',
+            info = "is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden)."
+        )
 
         # Find and load miRTrace summary statistics table
         self.summary_data = dict()
