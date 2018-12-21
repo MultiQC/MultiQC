@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 data[s_name] = sample
             except Exception as err:
-                log.warning("Error parsing record in %s. %s", logf['fn'], err)
+                log.warning("Error parsing record in {}. {}".format(logf['fn'], err))
                 log.debug(traceback.format_exc())
                 continue
         return data
@@ -171,7 +171,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
         splotconfig = {'id': 'flash_combo_stats_plot',
                        'title': 'FLASh: Read combination statistics',
-                       'ylab': 'Samples'}
+                       'ylab': 'Number of read pairs',
+                       'hide_zero_cats': False }
         return bargraph.plot(data, cats, splotconfig)
 
     @staticmethod
