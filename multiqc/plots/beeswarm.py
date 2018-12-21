@@ -5,7 +5,7 @@
 import logging
 import random
 
-from multiqc.utils import report
+from multiqc.utils import config, report
 from multiqc.plots import table_object
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,11 @@ def plot (data, headers=None, pconfig=None):
         headers = []
     if pconfig is None:
         pconfig = {}
+
+    # Allow user to overwrite any given config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            pconfig[k] = v
 
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
@@ -93,5 +98,3 @@ def make_plot(dt):
     }
 
     return html
-
-

@@ -6,7 +6,7 @@ from __future__ import print_function
 import logging
 import random
 
-from multiqc.utils import report
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,11 @@ def plot (data, xcats, ycats=None, pconfig=None):
 
     if pconfig is None:
         pconfig = {}
+
+    # Allow user to overwrite any given config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            pconfig[k] = v
 
     if ycats is None:
         ycats = xcats
@@ -77,4 +82,3 @@ def highcharts_heatmap (data, xcats, ycats, pconfig=None):
     }
 
     return html
-

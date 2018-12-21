@@ -246,6 +246,53 @@ report_section_order:
         after: 'diffsection'
 ```
 
+## Customising plots
+Almost every plot in all MultiQC reports are created using standard plotting functions
+and a plot config. You can override any plot config variable you like for any plot to
+customise how these are generated.
+
+To do this, first find the plot that you would like to customise and copy it's unique ID.
+You can find this by clicking export - the name next to the checkbox is the ID.
+
+Next, you need to find the plot config key(s) that you would like to change.
+You can find these by reading the MultiQC documentation below.
+
+For example, to set a new limit for the Picard InsertSizeMetrics x-axis, you can use the following:
+
+```yaml
+custom_plot_config:
+    picard_insert_size:
+        xmax: 300
+```
+
+You can customise multiple variables for multiple plots:
+
+```yaml
+custom_plot_config:
+    # Show the percentages tab by default for the FastQC sequence counts plot
+    fastqc_sequence_counts_plot:
+        cpswitch_c_active: False
+
+    # Only show up to 20bp on the x axis for cutadapt, change the title
+    cutadapt_plot:
+        xmax: 20
+        title: "How many base pairs have been removed from the data"
+
+    # Add a coloured band in the background to show what is a good result
+    # Yes I know this doesn't make sense for this plot, it's just an example ;)
+    bismark_mbias:
+        yPlotBands:
+            - from: 0
+              to: 40
+              color: '#e6c3c3'
+            - from: 40
+              to: 80
+              color: '#e6dcc3'
+            - from: 80
+              to: 100
+              color: '#c3e6c3'
+```
+
 ## Customising tables
 
 ### Hiding columns
@@ -285,6 +332,10 @@ table_columns_placement:
 
 In this case, since the default placement weighting is `1000`, the `reads_mapped` will end up as the
 leftmost column and the other two will and up as the final columns on the right of the table.
+
+The columns are organised by either _namespace_ or table ID, then column ID.
+In the above example, `Samtools` is the namespace in the General Statistics table -
+the text that is at the start of the tooltip. For custom tables, the ID may be easier to use.
 
 ### Conditional formatting
 It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting. Rules can be applied to every table column, or to specific columns only, using that column's unique ID.

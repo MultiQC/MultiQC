@@ -76,6 +76,7 @@ thousandsSep_format: null
 remove_sections: []
 section_comments: {}
 lint: False
+custom_plot_config: {}
 
 ignore_symlinks: false
 fn_ignore_dirs:
@@ -180,6 +181,7 @@ fn_clean_exts:
     - '.qhist'
     - '.rpkm'
     - '.selfSM'
+    - '.extendedFrags'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -205,6 +207,7 @@ fn_clean_trim:
     - '.h5'
     - '_matrix'
     - '.stats'
+    - '.hist'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -371,6 +374,9 @@ module_order:
         module_tag:
             - DNA
             - WGS
+    - stacks:
+        module_tag:
+            - DNA
 
     # Alignment tool stats
     - bbmap:
@@ -494,3 +500,7 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - flash:
+        module_tag:
+            - DNA
+            - RNA

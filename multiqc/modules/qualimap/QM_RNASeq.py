@@ -24,7 +24,7 @@ def parse_reports(self):
         'reads_aligned_genes': r"aligned to genes\s*=\s*([\d,]+)",
         'ambiguous_alignments': r"ambiguous alignments\s*=\s*([\d,]+)",
         'not_aligned': r"not aligned\s*=\s*([\d,]+)",
-        '5_3_bias': r"5'-3' bias\s*=\s*(\d+\.\d+)",
+        '5_3_bias': r"5'-3' bias\s*=\s*([\d,\.]+)$",
         'reads_aligned_exonic': r"exonic\s*=\s*([\d,]+)",
         'reads_aligned_intronic': r"intronic\s*=\s*([\d,]+)",
         'reads_aligned_intergenic': r"intergenic\s*=\s*([\d,]+)",

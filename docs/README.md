@@ -18,6 +18,7 @@ MultiQC Modules:
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
     Fastp: modules/fastp.md
+    FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
@@ -76,6 +77,7 @@ MultiQC Modules:
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md
+    Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md

@@ -6,30 +6,60 @@
 * [**BISCUIT**](https://github.com/zwdzwd/biscuit)
     * BISuilfite-seq CUI Toolkit
     * Module written by [@zwdzwd](https://github.com/zwdzwd/)
-* [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
-    * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
-    * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+* [**FLASh**](https://ccb.jhu.edu/software/FLASH/)
+    * FLASH (Fast Length Adjustment of SHort reads)
+    * Module written by [@pooranis](https://github.com/pooranis/)
 * [**MinIONQC**](https://github.com/roblanf/minion_qc)
     * QC of reads from ONT long-read sequencing
     * Module written by [@ManavalanG](https://github.com/ManavalanG)
+* [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
+    * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
+    * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+* [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
+    * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 #### Module updates:
 * **AdapterRemoval**
     * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
-* **FastQ Screen**
-    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
+* **Bcl2fastq**
+    * New plot showing the top twenty of undetermined barcodes by lane.
+    * Informations for R1/R2 are now separated in the General Statistics table.
+    * SampleID is concatenate with SampleName because in Chromium experiments several sample have the same SampleName.
+* **deepTools**
+    * New PCA plots from the `plotPCA` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New fragment size distribution plots from `bamPEFragmentSize --outRawFragmentLengths` (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New correlation heatmaps from the `plotCorrelation` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New sequence distribution profiles around genes, from the `plotProfile` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * Reordered sections
+* **Fastp**
+    * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
+* **FastQ Screen**
+    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **InterOp**
     * Fixed bug where read counts and base pair yields were not displaying in tables correctly.
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
+* **Picard**
+    * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
+    * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
+* **phantompeakqualtools**
+    * Properly clean sample names
+* **Trimmomatic**
+    * Updated Trimmomatic module documentation to be more helpful
 
 #### New MultiQC Features:
 * Documentation for Custom Content reordered to make it a little more sane
+* You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
+* Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).
+* Improved visual spacing between grouped bar plots
+
 
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs
 * The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
+* [Sample name directory prefixes](https://multiqc.info/docs/#sample-names-prefixed-with-directories) are now added _after_ cleanup.
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
@@ -48,6 +78,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * [**miRTrace**](__TBD__)
     * A quality control software for small RNA sequencing data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+
 
 #### Module updates:
 * **BCFtools**

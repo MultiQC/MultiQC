@@ -206,11 +206,17 @@ cutadapt:
     shared: true
 dedup:
     fn: 'dedup.log'
-deeptools/bamPEFragmentSize:
+deeptools/bamPEFragmentSizeTable:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
+    num_lines: 1
+deeptools/bamPEFragmentSizeDistribution:
+    contents: '#bamPEFragmentSize'
     num_lines: 1
 deeptools/estimateReadFiltering:
     contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'
+    num_lines: 1
+deeptools/plotCorrelationData:
+    contents: '#plotCorrelation --outFileCorMatrix'
     num_lines: 1
 deeptools/plotCoverageStdout:
     contents: 'sample	mean	std	min	25%	50%	75%	max'
@@ -227,6 +233,12 @@ deeptools/plotFingerprintOutRawCounts:
 deeptools/plotFingerprintOutQualityMetrics:
     contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
     num_lines: 1
+deeptools/plotPCAData:
+    contents: '#plotPCA --outFileNameData'
+    num_lines: 1
+deeptools/plotProfile:
+    contents: 'bin labels'
+    num_lines: 1
 fastp:
     fn: '*fastp.json'
 fastq_screen:
@@ -240,6 +252,11 @@ fastqc/theoretical_gc:
 featurecounts:
     fn: '*.summary'
     shared: true
+flash/log:
+    contents: '[FLASH]'
+    shared: true
+flash/hist:
+    fn: '*flash*.hist'
 flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
     shared: true
@@ -343,7 +360,7 @@ peddy/sex_check:
     fn: '*.sex_check.csv'
 peddy/background_pca:
     fn: '*.background_pca.json'
-phantompeakqualtools:
+phantompeakqualtools/out:
     fn: '*.spp.out'
 picard/alignment_metrics:
     contents: 'AlignmentSummaryMetrics'
@@ -377,6 +394,10 @@ picard/rrbs_metrics:
     shared: true
 picard/sam_file_validation:
     fn: '*[Vv]alidate[Ss]am[Ff]ile*'
+picard/variant_calling_metrics:
+    fn: '*.variant_calling_detail_metrics'
+    contents: 'CollectVariantCallingMetrics'
+    shared: true
 picard/wgs_metrics:
     contents: 'CollectWgsMetrics'
     shared: true
@@ -490,6 +511,16 @@ snpeff:
 sortmerna:
     contents: 'Minimal SW score based on E-value'
     shared: true
+stacks/gstacks:
+    fn: 'gstacks.log.distribs'
+    contents: 'BEGIN effective_coverages_per_sample'
+stacks/populations:
+    fn: 'populations.log.distribs'
+    contents: 'BEGIN missing_samples_per_loc_prefilters'
+stacks/sumstats:
+    fn: '*.sumstats_summary.tsv'
+    contents: '# Pop ID	Private	Num_Indv	Var	StdErr	P	Var'
+    max_filesize: 1000000
 star:
     fn: '*Log.final.out'
 star/genecounts:
