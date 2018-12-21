@@ -19,9 +19,12 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='Trimmomatic', anchor='trimmomatic',
-        href='http://www.usadellab.org/cms/?page=trimmomatic',
-        info="is a flexible read trimming tool for Illumina NGS data.")
+        super(MultiqcModule, self).__init__(
+            name='Trimmomatic',
+            anchor='trimmomatic',
+            href='http://www.usadellab.org/cms/?page=trimmomatic',
+            info="is a flexible read trimming tool for Illumina NGS data."
+        )
 
         # Parse logs
         self.trimmomatic = dict()
@@ -54,9 +57,11 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_trimmomatic(self, f):
         s_name = None
+        if getattr(config, 'trimmomatic', {}).get('s_name_filenames', False):
+            s_name = f['s_name']
         for l in f['f']:
             # Get the sample name
-            if 'Trimmomatic' in l and 'Started with arguments:' in l:
+            if s_name is None and 'Trimmomatic' in l and 'Started with arguments:' in l:
                 # Match everything up until the first .fastq or .fq
                 match = re.search('Trimmomatic[SP]E: Started with arguments:.+?(?=\.fastq|\.fq)', l)
                 if match:
