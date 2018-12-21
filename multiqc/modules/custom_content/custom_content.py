@@ -99,6 +99,7 @@ def custom_module_classes():
                     image_format = 'png' if f_extension == '.png' else 'jpg'
                     img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(image_format, image_string)
                     parsed_data = {
+                        'id': f['s_name'],
                         'plot_type': 'image',
                         'section_name': f['s_name'].replace('_', ' ').replace('-', ' ').replace('.', ' '),
                         'description': 'Embedded image <code>{}</code>'.format(f['fn']),
