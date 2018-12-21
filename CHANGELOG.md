@@ -31,6 +31,7 @@
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
 * **Picard**
     * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
+    * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
 * **Trimmomatic**
     * Updated Trimmomatic module documentation to be more helpful
 
