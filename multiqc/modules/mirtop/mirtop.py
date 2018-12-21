@@ -10,6 +10,8 @@ from multiqc import config
 from multiqc.plots import bargraph, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
 
+import json
+
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -27,8 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any mirtop reports
         self.mirtop_data = dict()
         self.mirtop_keys = list()
-        for f in self.find_log_files('mirtop'):
-            self.parse_mirtop_report(f)
+        for c_file in self.find_log_files('mirtop'):
+            content = json.loads(c_file['f'])
+            self.parse_mirtop_report(content)
         # Filter to strip out ignored sample names
         self.mirtop_data = self.ignore_samples(self.mirtop_data)
 
@@ -53,27 +56,17 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    def parse_mirtop_report (self, f):
+    def parse_mirtop_report (self, content):
         """ Parse the mirtop log file. """
         
         file_names = list()
         parsed_data = dict()
-        for l in f['f'].splitlines():
-            s = l.split(",")
-            if len(s) < 2 or s[1]=="category":
-                continue
-            else:
-                if len(s) > 0:
-                    parsed_data[s[1]] = float(s[3])
-                    s_name = self.clean_s_name(s[2], f['root'])
-
-        #Calculate additional summary stats (percentage isomirs, total reads) 
-        parsed_data['read_count'] = parsed_data['isomiR_sum'] + parsed_data['ref_miRNA_sum']
-        parsed_data['isomiR_perc'] = (parsed_data['isomiR_sum'] / parsed_data['read_count'])*100
-        # Add to the main dictionary
-        if len(parsed_data) > 1:
-            self.add_data_source(f, s_name)
-            self.mirtop_data[s_name] = parsed_data
+        for sample_name in content['metrics'].keys():
+            log.info("Importing sample " + sample_name)
+            parsed_data = content['metrics'][sample_name]
+            parsed_data['read_count'] = parsed_data['isomiR_sum'] + parsed_data['ref_miRNA_sum']
+            parsed_data['isomiR_perc'] = (parsed_data['isomiR_sum'] / parsed_data['read_count'])*100
+            self.mirtop_data[sample_name] = parsed_data
 
     def mirtop_stats_table(self):
         """ Take the parsed stats from the mirtop report and add them to the
