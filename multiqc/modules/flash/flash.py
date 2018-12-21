@@ -84,8 +84,8 @@ class MultiqcModule(BaseMultiqcModule):
         match = re.search(field, slog)
         if match:
             if fl:
-                return float(match[1])
-            return int(match[1])
+                return float(match.group(1))
+            return int(match.group(1))
         return 0
 
     def clean_pe_name(self, nlog, root):
@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = re.search(r'Input files\:\n\[FLASH\]\s+(.+?)\n', nlog)
         if not name:
             return None
-        name = name[1]
+        name = name.group(1)
         name = self.clean_s_name(name, root)
         return name
 
