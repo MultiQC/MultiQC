@@ -248,7 +248,7 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 pass
         self.add_section (
-            name = 'MinIONQC: Read length output',
+            name = 'Read length output',
             anchor = 'minionqc-read-length-output',
             description = 'Number of reads / bp sequenced at given read length thresholds.',
             plot = linegraph.plot(pdata, pconfig=pconfig)
