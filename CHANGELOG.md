@@ -1,5 +1,23 @@
 # MultiQC Version History
 
+## MultiQC v1.8dev
+
+#### New Modules:
+_..no updates yet.._
+
+#### Module updates:
+_..no updates yet.._
+
+#### New MultiQC Features:
+_..no updates yet.._
+
+#### Bug Fixes:
+_..no updates yet.._
+
+
+
+
+
 ## [MultiQC v1.7](https://github.com/ewels/MultiQC/releases/tag/v1.7) - 2018-12-21
 
 #### New Modules:
@@ -69,6 +87,9 @@
 * The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
 * [Sample name directory prefixes](https://multiqc.info/docs/#sample-names-prefixed-with-directories) are now added _after_ cleanup.
 * If a module is run multiple times in one report, it's CSS and JS files will only be included once (`default` template)
+
+
+
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
@@ -151,6 +172,9 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * Fixed broken report bar plots when `-p`/`--export-plots` was specified (see issue [#801](https://github.com/ewels/MultiQC/issues/801))
 
 
+
+
+
 ## [MultiQC v1.5](https://github.com/ewels/MultiQC/releases/tag/v1.5) - 2018-03-15
 
 #### New Modules:
@@ -208,6 +232,9 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * Due to [two](https://github.com/matplotlib/matplotlib/issues/10476) [bugs](https://github.com/matplotlib/matplotlib/issues/10784) that appeared in `v2.2.0` - will remove this constraint when there's a new release that works again.
 
 
+
+
+
 ## [MultiQC v1.4](https://github.com/ewels/MultiQC/releases/tag/v1.4) - 2018-01-11
 
 A slightly earlier-than-expected release due to a new problem with dependency packages that is breaking MultiQC installations since 2018-01-11.
@@ -257,6 +284,9 @@ A slightly earlier-than-expected release due to a new problem with dependency pa
 * Fixed newly introduced bug where Custom Content MultiQC config file search patterns had been broken
 * Updated pandoc command used in `--pdf` to work with new releases of Pandoc
 * Made config `table_columns_visible` module name key matching case insensitive to make less frustrating
+
+
+
 
 
 ## [MultiQC v1.3](https://github.com/ewels/MultiQC/releases/tag/v1.3) - 2017-11-03
@@ -338,6 +368,9 @@ string beginning with the name of your module, anything you like after the first
 * Minor `default_dev` directory creation bug squashed
 * Don't prepend the directory separator (`|`) to sample names with `-d` when there are no subdirs
 * `yPlotLines` now works even if you don't set `width`
+
+
+
 
 
 ## [MultiQC v1.2](https://github.com/ewels/MultiQC/releases/tag/v1.2) - 2017-08-16
