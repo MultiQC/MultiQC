@@ -124,6 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '{} 2nd base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
             'format': '{:,.2f}',
+            'hidden': True,
             'modify': lambda x: x * 100.0
         }
 
