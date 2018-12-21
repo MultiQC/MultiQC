@@ -284,7 +284,14 @@ function plot_xy_line_graph(target, ds){
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
 
-  if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
+  if(config['tt_label'] === undefined){
+    config['tt_label'] = '{point.x}: {point.y:.2f}';
+    if(config['categories']){
+      config['tt_formatter'] = function(){
+        return '<div style="background-color:'+this.series.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">'+this.series.name+'</span><br><strong>'+this.key+':</strong> '+this.y;
+      }
+    }
+  }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else {
     config['click_func'] = eval("("+config['click_func']+")");
@@ -428,8 +435,9 @@ function plot_xy_line_graph(target, ds){
     },
     tooltip: {
       headerFormat: '',
-			pointFormat: config['pointFormat'],
-			useHTML: true
+      pointFormat: config['pointFormat'],
+      formatter: config['tt_formatter'],
+      useHTML: true
     },
     series: data
   });
