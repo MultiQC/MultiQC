@@ -14,21 +14,25 @@
     * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 #### Module updates:
-* **Trimmomatic**
-    * Updated Trimmomatic module documenation to be more helpful
 * **AdapterRemoval**
     * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
+* **Bcl2fastq**
+    * New plot showing the top twenty of undetermined barcodes by lane.
+    * Informations for R1/R2 are now separated in the General Statistics table.
+    * SampleID is concatenate with SampleName because in Chromium experiments several sample have the same SampleName.
 * **Fastp**
     * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
-* **FastQ Screen**
-    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
+* **FastQ Screen**
+    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **InterOp**
     * Fixed bug where read counts and base pair yields were not displaying in tables correctly.
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
 * **Picard**
     * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
+* **Trimmomatic**
+    * Updated Trimmomatic module documentation to be more helpful
 
 #### New MultiQC Features:
 * Documentation for Custom Content reordered to make it a little more sane
@@ -65,10 +69,6 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
 * **BBMap**
     * Support added for BBDuk kmer-based adapter/contaminant filtering summary stats ([@boulund](https://github.com/boulund)
-* **Bcl2fastq**
-    * New plot showing the top twenty of undetermined barcodes by lane.
-    * Informations for R1/R2 are splitted in General Statistics table.
-    * SampleID is concatenate with SampleName because in Chromium experiments several sample have the same SampleName.
 * **FastQC**
     * New read count plot, split into unique and duplicate reads if possible.
     * Help text added for all sections, mostly copied from the excellent FastQC help.
