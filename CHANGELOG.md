@@ -9,6 +9,9 @@
 * [**FLASh**](https://ccb.jhu.edu/software/FLASH/)
     * FLASH (Fast Length Adjustment of SHort reads)
     * Module written by [@pooranis](https://github.com/pooranis/)
+* [**MinIONQC**](https://github.com/roblanf/minion_qc)
+    * QC of reads from ONT long-read sequencing
+    * Module written by [@ManavalanG](https://github.com/ManavalanG)
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)

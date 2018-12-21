@@ -109,6 +109,7 @@ setup(
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
+            'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
