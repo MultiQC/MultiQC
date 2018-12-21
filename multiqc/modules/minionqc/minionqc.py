@@ -25,12 +25,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.minionqc_data = dict()     # main dataset. Stats from all reads
         self.qfilt_data = dict()        # Stats from quality filtered reads
         q_threshold_list = set()        # quality thresholds
-        for f in self.find_log_files('minionqc', filehandles=True):            
+        for f in self.find_log_files('minionqc', filehandles=True):
             # get sample name
             s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
             if s_name in self.minionqc_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-            
+
             # adds files used in MultiQC report
             self.add_data_source(f, s_name)
 
@@ -45,19 +45,19 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.minionqc_data) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.minionqc_data)))        
+        log.info("Found {} reports".format(len(self.minionqc_data)))
 
         # columns to present in MultiQC summary table
         headers = self.headers_to_use()
         headers_subset = OrderedDict()
         for k in ['total.gigabases', 'N50.length', 'median.q', 'mean.q']:
             headers_subset[k] = headers[k]
-        
+
         self.general_stats_addcols(self.minionqc_data, headers_subset)
-        
+
         # writes parsed data into a file (by MultiQC)
         self.write_data_file(self.minionqc_data, 'multiqc_minionqc')
-            
+
         # tables and plots in order
         self.table_qALL()
         self.table_qfiltered(q_threshold_list)
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.median_q_plot()
         self.reads_n50_plot()
 
-    
+
     def parse_minionqc_report(self, s_name, f):
         '''
         Parses minionqc's 'summary.yaml' report file for results.
@@ -207,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
         # 'rid' needs to be added to avoid linting error "HTML ID was a duplicate"
         headers = self.headers_to_use()
         for k in headers:
-            headers[k]['rid'] = "rid_{}".format(headers[k]['title']) 
+            headers[k]['rid'] = "rid_{}".format(headers[k]['title'])
 
         self.add_section (
             name = 'Stats: Quality filtered reads',
@@ -267,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample in self.minionqc_data:
             data[sample] = {}
             data[sample]['Median q'] = self.minionqc_data[sample]['median.q']
-        
+
         self.add_section (
             name = 'Median q',
             anchor = 'minionqc_median_q',
@@ -299,7 +299,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample in self.minionqc_data:
             data[sample] = {}
             data[sample]['Base count (GB)'] = self.minionqc_data[sample]['total.gigabases']
-        
+
         self.add_section (
             name = 'Base count',
             anchor = 'minionqc_basecount',
