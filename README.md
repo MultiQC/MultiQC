@@ -31,10 +31,10 @@ it ideal for routine fast quality control.
 Currently, supported tools include:
 
 
-|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing | Post-alignment QC          |
-|---------------------------------|-------------------------|---------------------------|----------------------------|
-|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]              |
-|[AfterQC][afterqc]               |[BISCUIT][biscuit]       |[Bcftools][bcftools]       |[Conpair][conpair]          |
+|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing   | Post-alignment QC                    |
+|---------------------------------|-------------------------|-----------------------------|--------------------------------------|
+|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]         |[BUSCO][busco]                        |
+|[AfterQC][afterqc]               |[BISCUIT][biscuit]       |[Bcftools][bcftools]         |[Conpair][conpair]                    |
 |[Bcl2fastq][bcl2fastq]           |[Bismark][bismark]       |[GATK][gatk]                 |[DamageProfiler][damageprofiler]      |
 |[BBTools][bbmap]                 |[Bowtie][bowtie-1]       |[HOMER][homer]               |[DeDup][dedup]                        |
 |[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]     |[HTSeq][htseq]               |[deepTools][deeptools]                |

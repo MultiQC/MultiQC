@@ -6,6 +6,9 @@
 * [**BISCUIT**](https://github.com/zwdzwd/biscuit)
     * BISuilfite-seq CUI Toolkit
     * Module written by [@zwdzwd](https://github.com/zwdzwd/)
+* [**DamageProfiler**](https://github.com/Integrative-Transcriptomics/DamageProfiler)
+    * A tool to determine ancient DNA misincorporation rates.
+    * Module written by [@apeltzer](https://github.com/apeltzer/)
 * [**FLASh**](https://ccb.jhu.edu/software/FLASH/)
     * FLASH (Fast Length Adjustment of SHort reads)
     * Module written by [@pooranis](https://github.com/pooranis/)
@@ -18,9 +21,6 @@
 * [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
     * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
-* [**DamageProfiler**](https://github.com/Integrative-Transcriptomics/DamageProfiler)
-    * A tool to determine ancient DNA misincorporation rates.
-    * Module written by [@apeltzer](https://github.com/apeltzer/)
 
 #### Module updates:
 * **AdapterRemoval**
