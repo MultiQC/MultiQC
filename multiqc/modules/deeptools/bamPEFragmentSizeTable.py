@@ -79,7 +79,7 @@ class bamPEFragmentSizeTableMixin():
             }
             config = {'namespace': 'deepTools bamPEFragmentSize'}
             self.add_section(
-                name = "Read lengths",
+                name = "Read length metrics",
                 anchor = "deeptools_readlengths",
                 plot = table.plot(self.deeptools_bamPEFragmentSize, headersSE, config)
             )
@@ -144,7 +144,7 @@ class bamPEFragmentSizeTableMixin():
                     PE = True
                     break
             if PE:
-                self.add_section(name="Fragment lengths",
+                self.add_section(name="Fragment length metrics",
                                  anchor="deeptools_fragmentlengths",
                                  plot=table.plot(self.deeptools_bamPEFragmentSize, headersPE, config))
 

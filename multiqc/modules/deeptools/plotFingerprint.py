@@ -40,7 +40,7 @@ class plotFingerprintMixin():
                 self.add_data_source(f, section='plotFingerprint')
 
         if len(self.deeptools_plotFingerprintOutRawCounts) > 0:
-            self.add_section(name="Fingerprint",
+            self.add_section(name="Fingerprint plot",
                              anchor="deeptools_fingerprint",
                              description="Signal fingerprint according to plotFingerprint",
                              plot=linegraph.plot(

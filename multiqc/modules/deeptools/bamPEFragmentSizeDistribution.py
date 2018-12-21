@@ -38,7 +38,7 @@ class bamPEFragmentSizeDistributionMixin():
             }
 
             self.add_section (
-                name = 'Fragment Size Distribution',
+                name = 'Fragment size distribution',
                 anchor = 'fragment_size_distribution',
                 description="Distribution of paired-end fragment sizes",
                 plot=linegraph.plot(self.deeptools_bamPEFragmentSizeDistribution, config)

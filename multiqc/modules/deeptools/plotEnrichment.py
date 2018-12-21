@@ -43,7 +43,7 @@ class plotEnrichmentMixin():
                       'ylab': 'Counts in feature',
                       'categories': True,
                       'ymin': 0.0}
-            self.add_section(name="Signal enrichment per feature",
+            self.add_section(name="Feature enrichment",
                              description="Signal enrichment per feature according to plotEnrichment",
                              anchor="deeptools_enrichment",
                              plot=linegraph.plot([dCounts, dPercents], pconfig=config))
