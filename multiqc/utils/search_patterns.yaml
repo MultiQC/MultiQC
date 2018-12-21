@@ -386,6 +386,10 @@ picard/rrbs_metrics:
     shared: true
 picard/sam_file_validation:
     fn: '*[Vv]alidate[Ss]am[Ff]ile*'
+picard/variant_calling_metrics:
+    fn: '*.variant_calling_detail_metrics'
+    contents: 'CollectVariantCallingMetrics'
+    shared: true
 picard/wgs_metrics:
     contents: 'CollectWgsMetrics'
     shared: true
