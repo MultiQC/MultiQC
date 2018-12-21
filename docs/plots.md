@@ -374,7 +374,7 @@ single_header = {
     'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
     'colour': '<auto>',             # Colour for column grouping
     'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Output format() string
+    'format': '{:,.1f}',            # Value format string - default 1 decimal place
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
@@ -412,7 +412,7 @@ table_html = table.plot(data)
 ```
 
 A more complicated version with ordered columns, defaults and column-specific
-settings:
+settings (eg. no decimal places):
 ```python
 data = {
     'sample 1': {
@@ -432,6 +432,7 @@ headers['aligned_percent'] = {
     'description': 'Percentage of reads that aligned',
     'suffix': '%',
     'max': 100,
+    'format': '{:,.0f}' # No decimal places please
 }
 headers['aligned'] = {
     'title': '{} Aligned'.format(config.read_count_prefix),
@@ -446,6 +447,12 @@ config = {
 }
 table_html = table.plot(data, headers, config)
 ```
+
+### Table decimal places
+You can customise how many decimal places a number has by using the `format` config
+key for that column. The default format string is `'{:,.1f}'`, which specifies a
+float number with a single decimal place. To remove decimals use `'{:,.0f}'`.
+To have two decimal places, use `'{:,.2f}'`.
 
 ### Table colour scales
 

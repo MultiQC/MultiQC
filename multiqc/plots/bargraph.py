@@ -40,7 +40,7 @@ def get_template_mod():
         _template_mod = config.avail_templates[config.template].load()
     return _template_mod
 
-def plot (data, cats=None, pconfig=None):
+def plot (data, cats = None, pconfig = None):
     """ Plot a horizontal bar graph. Expects a 2D dict of sample
     data. Also can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
@@ -53,6 +53,11 @@ def plot (data, cats=None, pconfig=None):
 
     if pconfig is None:
         pconfig = {}
+
+    # Allow user to overwrite any given config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            pconfig[k] = v
 
     # Validate config if linting
     if config.lint:
@@ -385,9 +390,10 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
 
             # Plot bars
             dlabels = []
+            prev_values = None
             for idx, d in enumerate(pdata):
                 # Plot percentages
-                values = d['data']
+                values = [x for x in d['data']]
                 if len(values) < len(y_ind):
                     values.extend([0] * (len(y_ind) - len(values)))
                 if plot_pct is True:
@@ -403,7 +409,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
                     prevdata = [0] * len(plotsamples[pidx])
                 else:
                     for i, p in enumerate(prevdata):
-                        prevdata[i] += pdata[idx-1]['data'][i]
+                        prevdata[i] += prev_values[i]
                 # Default colour index
                 cidx = idx
                 while cidx >= len(default_colors):
@@ -420,6 +426,7 @@ def matplotlib_bargraph (plotdata, plotsamples, pconfig=None):
                     align = 'center',
                     linewidth = pconfig.get('borderWidth', 0)
                 )
+                prev_values = values
 
             # Tidy up axes
             axes.tick_params(labelsize=8, direction='out', left=False, right=False, top=False, bottom=False)

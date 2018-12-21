@@ -83,6 +83,72 @@ bcl2fastq:
 biobloomtools:
     contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
     num_lines: 2
+biscuit/align_mapq:
+    fn: '*_mapq_table.txt'
+    contents: 'BISCUITqc Mapping Quality Table'
+biscuit/align_strand:
+    fn: '*_strand_table.txt'
+    contents: 'BISCUITqc Strand Table'
+biscuit/align_isize:
+    fn: '*_isize_score_table.txt'
+    contents: 'BISCUITqc Insert Size, Score Table'
+biscuit/covdist_cpg:
+    fn: '*_covdist_cpg_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (All)'
+biscuit/covdist_cpg_q40:
+    fn: '*_covdist_cpg_q40_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (Q40)'
+biscuit/covdist_cpg_q40_botgc:
+    fn: '*_covdist_cpg_q40_botgc_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (low GC, Q40)'
+biscuit/covdist_cpg_q40_topgc:
+    fn: '*_covdist_cpg_q40_topgc_table.txt'
+    contents: 'BISCUITqc CpG Depth Distribution (high GC, Q40)'
+biscuit/covdist:
+    fn: '*_covdist_table.txt'
+    contents: 'BISCUITqc Depth Distribution (All)'
+biscuit/covdist_q40:
+    fn: '*_covdist_q40_table.txt'
+    contents: 'BISCUITqc Depth Distribution (Q40)'
+biscuit/covdist_q40_botgc:
+    fn: '*_covdist_q40_botgc_table.txt'
+    contents: 'BISCUITqc Depth Distribution (low GC, Q40)'
+biscuit/covdist_q40_topgc:
+    fn: '*_covdist_q40_topgc_table.txt'
+    contents: 'BISCUITqc Depth Distribution (high GC, Q40)'
+biscuit/qc_cv:
+    fn: '*_all_cv_table.txt'
+    contents: 'BISCUITqc Uniformity Table'
+biscuit/qc_cpg_cv:
+    fn: '*_cpg_cv_table.txt'
+    contents: 'BISCUITqc CpG Uniformity Table'
+biscuit/qc_cpg_dist:
+    fn: '*_cpg_dist_table.txt'
+    contents: 'BISCUITqc CpG Distribution Table'
+biscuit/dup_report:
+    fn: '*_dup_report.txt'
+    contents: 'BISCUITqc Read Duplication Table'
+biscuit/markdup_report:
+    fn: '*_markdup_report.txt'
+    contents: '[mark_dup] parsed'
+biscuit/retention_cph_readpos:
+    fn: '*_CpHRetentionByReadPos.txt'
+    contents: 'BISCUITqc CpH Retention by Read Position Table'
+biscuit/retention_cpg_readpos:
+    fn: '*_CpGRetentionByReadPos.txt'
+    contents: 'BISCUITqc CpG Retention by Read Position Table'
+biscuit/retention_dist:
+    fn: '*_CpGRetentionDist.txt'
+    contents: 'BISCUITqc Retention Distribution Table'
+biscuit/retention_dist_byread:
+    fn: '*_freqOfTotalRetentionPerRead.txt'
+    contents: 'BISCUITqc Frequency of Total Retention per Read Table'
+biscuit/retention_rate_bybase:
+    fn: '*_totalBaseConversionRate.txt'
+    contents: 'BISCUITqc Conversion Rate by Base Average Table'
+biscuit/retention_rate_byread:
+    fn: '*_totalReadConversionRate.txt'
+    contents: 'BISCUITqc Conversion Rate by Read Average Table'
 bismark/align:
     fn: '*_[SP]E_report.txt'
 bismark/dedup:
@@ -117,7 +183,7 @@ busco:
     contents: 'BUSCO version is:'
     num_lines: 1
 custom_content:
-    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
+    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg)'
 clipandmerge:
     contents: 'ClipAndMerge ('
     num_lines: 5
@@ -138,13 +204,21 @@ cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
     shared: true
+damageprofiler:
+    fn: '*dmgprof.json'
 dedup:
     fn: 'dedup.log'
-deeptools/bamPEFragmentSize:
+deeptools/bamPEFragmentSizeTable:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
+    num_lines: 1
+deeptools/bamPEFragmentSizeDistribution:
+    contents: '#bamPEFragmentSize'
     num_lines: 1
 deeptools/estimateReadFiltering:
     contents: 'Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads'
+    num_lines: 1
+deeptools/plotCorrelationData:
+    contents: '#plotCorrelation --outFileCorMatrix'
     num_lines: 1
 deeptools/plotCoverageStdout:
     contents: 'sample	mean	std	min	25%	50%	75%	max'
@@ -161,6 +235,12 @@ deeptools/plotFingerprintOutRawCounts:
 deeptools/plotFingerprintOutQualityMetrics:
     contents: 'Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point'
     num_lines: 1
+deeptools/plotPCAData:
+    contents: '#plotPCA --outFileNameData'
+    num_lines: 1
+deeptools/plotProfile:
+    contents: 'bin labels'
+    num_lines: 1
 fastp:
     fn: '*fastp.json'
 fastq_screen:
@@ -174,6 +254,11 @@ fastqc/theoretical_gc:
 featurecounts:
     fn: '*.summary'
     shared: true
+flash/log:
+    contents: '[FLASH]'
+    shared: true
+flash/hist:
+    fn: '*flash*.hist'
 flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
     shared: true
@@ -187,6 +272,9 @@ goleft_indexcov/roc:
     fn: '*-indexcov.roc'
 goleft_indexcov/ped:
     fn: '*-indexcov.ped'
+happy:
+    fn: '*.summary.csv'
+    contents: 'Type,Filter,TRUTH'
 htseq:
     contents: '__too_low_aQual'
 hicexplorer:
@@ -250,6 +338,17 @@ macs2:
 methylQA:
     fn: '*.report'
     shared: true
+minionqc:
+    fn: 'summary.yaml'
+    contents: 'total.gigabases'
+mirtrace/summary:
+    fn: 'mirtrace-results.json'
+mirtrace/length:
+    fn: 'mirtrace-stats-length.tsv'
+mirtrace/contaminationbasic:
+    fn: 'mirtrace-stats-contamination_basic.tsv'
+mirtrace/mirnacomplexity:
+    fn: 'mirtrace-stats-mirna-complexity.tsv'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
@@ -265,6 +364,8 @@ peddy/sex_check:
     fn: '*.sex_check.csv'
 peddy/background_pca:
     fn: '*.background_pca.json'
+phantompeakqualtools/out:
+    fn: '*.spp.out'
 picard/alignment_metrics:
     contents: 'AlignmentSummaryMetrics'
     shared: true
@@ -297,6 +398,10 @@ picard/rrbs_metrics:
     shared: true
 picard/sam_file_validation:
     fn: '*[Vv]alidate[Ss]am[Ff]ile*'
+picard/variant_calling_metrics:
+    fn: '*.variant_calling_detail_metrics'
+    contents: 'CollectVariantCallingMetrics'
+    shared: true
 picard/wgs_metrics:
     contents: 'CollectWgsMetrics'
     shared: true
@@ -410,6 +515,16 @@ snpeff:
 sortmerna:
     contents: 'Minimal SW score based on E-value'
     shared: true
+stacks/gstacks:
+    fn: 'gstacks.log.distribs'
+    contents: 'BEGIN effective_coverages_per_sample'
+stacks/populations:
+    fn: 'populations.log.distribs'
+    contents: 'BEGIN missing_samples_per_loc_prefilters'
+stacks/sumstats:
+    fn: '*.sumstats_summary.tsv'
+    contents: '# Pop ID	Private	Num_Indv	Var	StdErr	P	Var'
+    max_filesize: 1000000
 star:
     fn: '*Log.final.out'
 star/genecounts:

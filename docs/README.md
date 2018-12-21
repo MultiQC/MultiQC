@@ -18,15 +18,18 @@ MultiQC Modules:
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
     Fastp: modules/fastp.md
+    FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md
+    minionqc: modules/minionqc.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
+    Biscuit: modules/biscuit.md
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
@@ -44,18 +47,22 @@ MultiQC Modules:
     Bcftools: modules/bcftools.md
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
-    Disambiguate: modules/disambiguate.md
+    DamageProfiler: modules/damageprofiler.md
     DeDup: modules/dedup.md
     deepTools: modules/deeptools.md
+    Disambiguate: modules/disambiguate.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
+    Hap.py: modules/happy.md
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
     mirtop: modules/mirtop.md
+    miRTrace: modules/mirtrace.md
+    phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
@@ -72,6 +79,7 @@ MultiQC Modules:
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md
+    Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md

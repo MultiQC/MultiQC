@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC submodule to parse output from deepTools bamPEFragmentSize """
+""" MultiQC submodule to parse output from deepTools bamPEFragmentSize for summary table """
 
 import logging
 import re
@@ -12,11 +12,11 @@ from multiqc.plots import table, linegraph
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class bamPEFragmentSizeMixin():
+class bamPEFragmentSizeTableMixin():
     def parse_bamPEFragmentSize(self):
-        """Find bamPEFragmentSize output. Only the output from --table is supported."""
+        """Find bamPEFragmentSize output. Supports the --table option"""
         self.deeptools_bamPEFragmentSize = dict()
-        for f in self.find_log_files('deeptools/bamPEFragmentSize'):
+        for f in self.find_log_files('deeptools/bamPEFragmentSizeTable'):
             parsed_data = self.parseBamPEFile(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_bamPEFragmentSize:
@@ -79,7 +79,7 @@ class bamPEFragmentSizeMixin():
             }
             config = {'namespace': 'deepTools bamPEFragmentSize'}
             self.add_section(
-                name = "Read lengths",
+                name = "Read length metrics",
                 anchor = "deeptools_readlengths",
                 plot = table.plot(self.deeptools_bamPEFragmentSize, headersSE, config)
             )
@@ -144,7 +144,7 @@ class bamPEFragmentSizeMixin():
                     PE = True
                     break
             if PE:
-                self.add_section(name="Fragment lengths",
+                self.add_section(name="Fragment length metrics",
                                  anchor="deeptools_fragmentlengths",
                                  plot=table.plot(self.deeptools_bamPEFragmentSize, headersPE, config))
 
@@ -163,7 +163,7 @@ class bamPEFragmentSizeMixin():
                     }
                 ],
                 'id': 'deeptools_readlengthsPlot',
-                'title': 'Read/Fragment length distribution',
+                'title': 'deepTools: Read/Fragment length distribution',
                 'namespace': 'deepTools bamPEFragmentSize',
                 'ylab': "Read length (bases)",
                 'xlab': "Percentile"

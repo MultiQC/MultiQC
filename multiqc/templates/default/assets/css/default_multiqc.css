@@ -827,3 +827,7 @@ tbody .sorthandle {
 .beeswarm-plot:nth-child(odd) {
   background-color: #ededed;
 }
+
+.mqc-custom-content-image img {
+    max-width: 100%;
+}

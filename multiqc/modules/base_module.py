@@ -8,6 +8,7 @@ import io
 import fnmatch
 import logging
 import markdown
+import mimetypes
 import os
 import re
 import textwrap
@@ -113,16 +114,25 @@ class BaseMultiqcModule(object):
             f['s_name'] = self.clean_s_name(f['fn'], f['root'])
             if filehandles or filecontents:
                 try:
-                    with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
-                        if filehandles:
+                    # Custom content module can now handle image files
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+                    if ftype is not None and ftype.startswith('image'):
+                        with io.open (os.path.join(f['root'],f['fn']), "rb") as fh:
+                            # always return file handles
                             f['f'] = fh
                             yield f
-                        elif filecontents:
-                            f['f'] = fh.read()
-                            yield f
-                except (IOError, OSError, ValueError, UnicodeDecodeError):
+                    else:
+                        # Everything else - should be all text files
+                        with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
+                            if filehandles:
+                                f['f'] = fh
+                                yield f
+                            elif filecontents:
+                                f['f'] = fh.read()
+                                yield f
+                except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
                     if config.report_readerrors:
-                        logger.debug("Couldn't open filehandle when returning file: {}".format(f['fn']))
+                        logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f['fn'], e))
                         f['f'] = None
             else:
                 yield f
@@ -193,18 +203,7 @@ class BaseMultiqcModule(object):
         s_name_original = s_name
         if root is None:
             root = ''
-        if config.prepend_dirs:
-            sep = config.prepend_dirs_sep
-            root = root.lstrip('.{}'.format(os.sep))
-            dirs = [d.strip() for d in root.split(os.sep) if d.strip() != '']
-            if config.prepend_dirs_depth != 0:
-                d_idx = config.prepend_dirs_depth * -1
-                if config.prepend_dirs_depth > 0:
-                    dirs = dirs[d_idx:]
-                else:
-                    dirs = dirs[:d_idx]
-            if len(dirs) > 0:
-                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
+
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
@@ -230,6 +229,20 @@ class BaseMultiqcModule(object):
                     s_name = s_name[:-len(chrs)]
                 if s_name.startswith(chrs):
                     s_name = s_name[len(chrs):]
+
+        # Prepend sample name with directory
+        if config.prepend_dirs:
+            sep = config.prepend_dirs_sep
+            root = root.lstrip('.{}'.format(os.sep))
+            dirs = [d.strip() for d in root.split(os.sep) if d.strip() != '']
+            if config.prepend_dirs_depth != 0:
+                d_idx = config.prepend_dirs_depth * -1
+                if config.prepend_dirs_depth > 0:
+                    dirs = dirs[d_idx:]
+                else:
+                    dirs = dirs[:d_idx]
+            if len(dirs) > 0:
+                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
 
         # Remove trailing whitespace
         s_name = s_name.strip()

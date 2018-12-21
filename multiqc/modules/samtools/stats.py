@@ -86,6 +86,24 @@ class StatsReportMixin():
                 'suffix': '%',
                 'scale': 'RdYlGn'
             }
+            stats_headers['reads_properly_paired_percent'] = {
+                'title': '% Proper Pairs',
+                'description': '% Properly Paired Reads',
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'scale': 'RdYlGn',
+                'hidden': True if (max([x['reads_mapped_and_paired'] for x in self.samtools_stats.values()]) == 0) else False
+            }
+            stats_headers['reads_MQ0_percent'] = {
+                'title': '% MapQ 0 Reads',
+                'description': '% of Reads that are Ambiguously Placed (MapQ=0)',
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'scale': 'OrRd',
+                'hidden': True
+            }
             stats_headers['raw_total_sequences'] = {
                 'title': '{} Total seqs'.format(config.read_count_prefix),
                 'description': 'Total sequences in the bam file ({})'.format(config.read_count_desc),

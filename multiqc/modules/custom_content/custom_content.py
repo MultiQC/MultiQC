@@ -3,6 +3,7 @@
 """ Core MultiQC module to parse output from custom script output """
 
 from __future__ import print_function
+import base64
 from collections import defaultdict, OrderedDict
 import logging
 import json
@@ -93,6 +94,17 @@ def custom_module_classes():
                         log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
                         log.warning("JSON error: {}".format(e))
                         break
+                elif f_extension == '.png' or f_extension == '.jpeg' or f_extension == '.jpg':
+                    image_string = base64.b64encode(f['f'].read()).decode('utf-8')
+                    image_format = 'png' if f_extension == '.png' else 'jpg'
+                    img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(image_format, image_string)
+                    parsed_data = {
+                        'id': f['s_name'],
+                        'plot_type': 'image',
+                        'section_name': f['s_name'].replace('_', ' ').replace('-', ' ').replace('.', ' '),
+                        'description': 'Embedded image <code>{}</code>'.format(f['fn']),
+                        'data': img_html
+                    }
                 if parsed_data is not None:
                     c_id = parsed_data.get('id', k)
                     if len(parsed_data.get('data', {})) > 0:
@@ -214,6 +226,8 @@ def custom_module_classes():
             parsed_modules.append( MultiqcModule(k, mod) )
             if mod['config'].get('plot_type') == 'html':
                 log.info("{}: Found 1 sample (html)".format(k))
+            if mod['config'].get('plot_type') == 'image':
+                log.info("{}: Found 1 sample (image)".format(k))
             else:
                 log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
 
@@ -281,6 +295,10 @@ class MultiqcModule(BaseMultiqcModule):
         elif mod['config'].get('plot_type') == 'html':
             self.add_section( content = mod['data'] )
 
+        # Raw image file as html
+        elif mod['config'].get('plot_type') == 'image':
+            self.add_section( content = mod['data'] )
+
         # Not supplied
         elif mod['config'].get('plot_type') == None:
             log.warning("Plot type not found for content ID '{}'".format(c_id))
@@ -296,6 +314,8 @@ def _find_file_header(f):
     for l in f['f'].splitlines():
         if l.startswith('#'):
             hlines.append(l[1:])
+    if len(hlines) == 0:
+        return None
     hconfig = None
     try:
         hconfig = yaml.load("\n".join(hlines))
@@ -439,7 +459,8 @@ def _parse_txt(f, conf):
         # Set table col_1 header
         if conf.get('plot_type') == 'table' and d[0][0].strip() != '':
             conf['pconfig'] = conf.get('pconfig', {})
-            conf['pconfig']['col1_header'] = d[0][0].strip()
+            if not conf['pconfig'].get('col1_header'):
+                conf['pconfig']['col1_header'] = d[0][0].strip()
         # Return parsed data
         if conf.get('plot_type') == 'bargraph' or conf.get('plot_type') == 'table':
             return (data, conf)

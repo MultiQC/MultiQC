@@ -134,7 +134,10 @@ class datatable (object):
                 try:
                     headers[idx][k]['placement'] = float(config.table_columns_placement[ headers[idx][k]['namespace'] ][k])
                 except (KeyError, ValueError):
-                    pass
+                    try:
+                        headers[idx][k]['placement'] = float(config.table_columns_placement[ pconfig['id'] ][k])
+                    except (KeyError, ValueError):
+                        pass
 
                 # Work out max and min value if not given
                 setdmax = False

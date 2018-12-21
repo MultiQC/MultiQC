@@ -171,10 +171,11 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['Yield'] = {
             'rid': 'summary_Yield',
-            'title': '{} Bp Yield'.format(config.base_count_prefix),
-            'description': 'The number of bases sequenced ({})'.format(config.base_count_desc),
+            'title': '{}p Yield'.format(config.base_count_prefix),
+            'description': 'The number of bases sequenced ({} base pairs over all "usable cycles"'.format(config.base_count_desc),
             'scale': 'PuOr',
-            'shared_key': 'base_count'
+            'shared_key': 'base_count',
+            'modify': lambda x: (x*1000000000.0) * config.base_count_multiplier, # number is already in gigabases
         }
         headers['Aligned'] = {
             'rid': 'summary_Aligned',
@@ -263,11 +264,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '{} Reads'.format(config.read_count_prefix),
             'description': 'The number of clusters ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
+            'modify': lambda x: (x*1000000.0) * config.read_count_multiplier, # number is already in millions
         }
         headers['Reads PF'] = {
             'title': '{} PF Reads'.format(config.read_count_prefix),
             'description': 'The number of passing filter clusters ({})'.format(config.read_count_desc),
             'shared_key': 'read_count',
+            'modify': lambda x: (x*1000000.0) * config.read_count_multiplier, # number is already in millions
         }
         headers['Cycles Error'] = {
             'title': 'Cycles Error',
@@ -275,10 +278,11 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.,0f}',
         }
         headers['Yield'] = {
-            'title': '{} Bp Yield'.format(config.base_count_prefix),
-            'description': 'The number of bases sequenced which passed filter ({})'.format(config.base_count_desc),
+            'title': '{}p Yield'.format(config.base_count_prefix),
+            'description': 'The number of bases sequenced which passed filter ({} base pairs)'.format(config.base_count_desc),
             'scale': 'PuOr',
-            'shared_key': 'base_count'
+            'shared_key': 'base_count',
+            'modify': lambda x: (x*1000000000.0) * config.base_count_multiplier, # number is already in gigabases
         }
         headers['Aligned'] = {
             'title': 'Aligned (%)',

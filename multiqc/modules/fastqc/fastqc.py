@@ -100,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
                     statuses[section][s_name] = status
                 except KeyError:
                     statuses[section] = {s_name: status}
-        self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(statuses))
+        self.intro += '<script type="text/javascript">fastqc_passfails_{} = {};</script>'.format(self.anchor.replace('-','_'), json.dumps(statuses))
 
         # Now add each section in order
         self.read_count_plot()
@@ -720,13 +720,17 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the Sequence Duplication Levels plot """
 
         data = dict()
+        max_dupval = 0
         for s_name in self.fastqc_data:
             try:
-                d = {d['duplication_level']: d['percentage_of_total'] for d in self.fastqc_data[s_name]['sequence_duplication_levels']}
+                thisdata = {}
+                for d in self.fastqc_data[s_name]['sequence_duplication_levels']:
+                    thisdata[d['duplication_level']] = d['percentage_of_total']
+                    max_dupval = max(max_dupval, d['percentage_of_total'])
                 data[s_name] = OrderedDict()
                 for k in self.dup_keys:
                     try:
-                        data[s_name][k] = d[k]
+                        data[s_name][k] = thisdata[k]
                     except KeyError:
                         pass
             except KeyError:
@@ -734,14 +738,13 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             log.debug('sequence_length_distribution not found in FastQC reports')
             return None
-
         pconfig = {
             'id': 'fastqc_sequence_duplication_levels_plot',
             'title': 'FastQC: Sequence Duplication Levels',
             'categories': True,
             'ylab': '% of Library',
             'xlab': 'Sequence Duplication Level',
-            'ymax': 100,
+            'ymax': 100 if max_dupval <= 100.0 else None,
             'ymin': 0,
             'yMinTickInterval': 0.1,
             'colors': self.get_status_cols('sequence_duplication_levels'),

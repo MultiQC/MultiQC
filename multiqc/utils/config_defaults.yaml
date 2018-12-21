@@ -76,6 +76,7 @@ thousandsSep_format: null
 remove_sections: []
 section_comments: {}
 lint: False
+custom_plot_config: {}
 
 ignore_symlinks: false
 fn_ignore_dirs:
@@ -126,8 +127,12 @@ fn_clean_exts:
     - '.log'
     - '.stderr'
     - '.out'
+    - '.spp'
     - '.fa'
     - '.fasta'
+    - '.png'
+    - '.jpg'
+    - '.jpeg'
     - 'Log.final'
     - 'ReadsPerGene'
     - '.flagstat'
@@ -179,6 +184,7 @@ fn_clean_exts:
     - '.qhist'
     - '.rpkm'
     - '.selfSM'
+    - '.extendedFrags'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -204,6 +210,7 @@ fn_clean_trim:
     - '.h5'
     - '_matrix'
     - '.stats'
+    - '.hist'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
@@ -246,6 +253,9 @@ module_order:
         module_tag:
             - Methylation
             - DNA
+    - phantompeakqualtools:
+        module_tag:
+            - chip
     - qualimap:
         module_tag:
             - DNA
@@ -295,7 +305,13 @@ module_order:
     - verifybamid:
         module_tag:
             - DNA
-
+    - mirtrace:
+        module_tag:
+            - smRNA
+            - miRNA
+    - happy:
+        module_tag:
+            - DNA
 
     # Post-alignment processing
     - homer:
@@ -331,6 +347,10 @@ module_order:
         module_tag:
             - DNA
             - ancient
+    - damageprofiler:
+        module_tag:
+            - DNA
+            - ancient
     - picard:
         module_tag:
             - DNA
@@ -361,6 +381,9 @@ module_order:
         module_tag:
             - DNA
             - WGS
+    - stacks:
+        module_tag:
+            - DNA
 
     # Alignment tool stats
     - bbmap:
@@ -368,6 +391,10 @@ module_order:
             - DNA
             - RNA
     - bismark:
+        module_tag:
+            - DNA
+            - methylation
+    - biscuit:
         module_tag:
             - DNA
             - methylation
@@ -461,6 +488,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - minionqc:
+        module_tag:
+            - DNA
+            - RNA
     - clusterflow:
         module_tag:
             - RNA
@@ -480,3 +511,7 @@ module_order:
         module_tag:
             - miRNA
 
+    - flash:
+        module_tag:
+            - DNA
+            - RNA

@@ -284,7 +284,14 @@ function plot_xy_line_graph(target, ds){
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
 
-  if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
+  if(config['tt_label'] === undefined){
+    config['tt_label'] = '{point.x}: {point.y:.2f}';
+    if(config['categories']){
+      config['tt_formatter'] = function(){
+        return '<div style="background-color:'+this.series.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">'+this.series.name+'</span><br><strong>'+this.key+':</strong> '+this.y;
+      }
+    }
+  }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else {
     config['click_func'] = eval("("+config['click_func']+")");
@@ -428,8 +435,9 @@ function plot_xy_line_graph(target, ds){
     },
     tooltip: {
       headerFormat: '',
-			pointFormat: config['pointFormat'],
-			useHTML: true
+      pointFormat: config['pointFormat'],
+      formatter: config['tt_formatter'],
+      useHTML: true
     },
     series: data
   });
@@ -449,6 +457,8 @@ function plot_stacked_bar_graph(target, ds){
   var config = JSON.parse(JSON.stringify(mqc_plots[target]['config']));
 
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
+  if (config['stacking'] === 'normal'){ config['groupPadding'] = '0.02'; config['pointPadding'] = '0.1'; }
+  else { config['groupPadding'] = '0.1'; config['pointPadding'] = 0 }
   if (config['ytype'] === undefined){ config['ytype'] = 'linear'; }
   if (config['reversedStacks'] === undefined){ config['reversedStacks'] = false; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
@@ -579,7 +589,8 @@ function plot_stacked_bar_graph(target, ds){
     plotOptions: {
       series: {
         stacking: config['stacking'],
-        groupPadding: 0.02,
+        pointPadding: config['pointPadding'],
+        groupPadding: config['groupPadding'],
         borderWidth: config['borderWidth']
       },
       cursor: config['cursor'],

@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             'singleton': dict(),
             'collapsed': dict(),
             'collapsed_truncated': dict(),
-            'discarged': dict(),
+            'discarded': dict(),
             'all': dict(),
         }
 
@@ -171,7 +171,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data['discarded_total'] = reads_total - self.result_data['retained']
 
         self.result_data['retained_reads'] = self.result_data['retained'] - self.result_data['singleton_m1'] - self.result_data['singleton_m2']
-        self.result_data['percent_aligned'] = round((float(self.result_data['aligned']) * 100.0) / float(self.result_data['total']), 2)
+        try:
+            self.result_data['percent_aligned'] = float(self.result_data['aligned']) * 100.0 / float(self.result_data['total'])
+        except ZeroDivisionError:
+            self.result_data['percent_aligned'] = 0
 
     def set_len_dist(self, len_dist_data):
 
@@ -186,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.len_dist_plot_data['singleton'][self.s_name] = dict()
                 self.len_dist_plot_data['collapsed'][self.s_name] = dict()
                 self.len_dist_plot_data['collapsed_truncated'][self.s_name] = dict()
-                self.len_dist_plot_data['discarged'][self.s_name] = dict()
+                self.len_dist_plot_data['discarded'][self.s_name] = dict()
                 self.len_dist_plot_data['all'][self.s_name] = dict()
 
             if self.__read_type == 'single':
@@ -196,7 +199,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = None
                     self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = None
                     self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = None
-                    self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[2]
+                    self.len_dist_plot_data['discarded'][self.s_name][l_data[0]] = l_data[2]
                     self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[3]
                 else:
                     # this case should not be reached (see case at method set_ar_type())
@@ -208,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = l_data[3]
                     self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = None
                     self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = None
-                    self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[4]
+                    self.len_dist_plot_data['discarded'][self.s_name][l_data[0]] = l_data[4]
                     self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[5]
                 else:
                     self.len_dist_plot_data['mate1'][self.s_name][l_data[0]] = l_data[1]
@@ -216,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.len_dist_plot_data['singleton'][self.s_name][l_data[0]] = l_data[3]
                     self.len_dist_plot_data['collapsed'][self.s_name][l_data[0]] = l_data[4]
                     self.len_dist_plot_data['collapsed_truncated'][self.s_name][l_data[0]] = l_data[5]
-                    self.len_dist_plot_data['discarged'][self.s_name][l_data[0]] = l_data[6]
+                    self.len_dist_plot_data['discarded'][self.s_name][l_data[0]] = l_data[6]
                     self.len_dist_plot_data['all'][self.s_name][l_data[0]] = l_data[7]
 
     def adapter_removal_stats_table(self):
@@ -316,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
                     {'name': 'Collapsed', 'ylab': 'Count'},
                     {'name': 'Collapsed Truncated', 'ylab': 'Count'}
                 ])
-        lineplot_data.append(self.len_dist_plot_data['discarged'])
+        lineplot_data.append(self.len_dist_plot_data['discarded'])
         data_labels.append({'name': 'Discarded', 'ylab': 'Count'})
 
         pconfig['data_labels'] = data_labels

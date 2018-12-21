@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = '1.6dev'
+version = '1.7dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -38,7 +38,7 @@ install_requires = [
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        'matplotlib>=2.1.1',
+        'matplotlib>=2.1.1,<3.0.0',
         'markdown',
         'numpy',
         'pyyaml',
@@ -73,6 +73,7 @@ setup(
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
+            'biscuit = multiqc.modules.biscuit:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
@@ -81,6 +82,7 @@ setup(
             'conpair = multiqc.modules.conpair:MultiqcModule',
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'damageprofiler = multiqc.modules.damageprofiler:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
             'dedup = multiqc.modules.dedup:MultiqcModule',
             'deeptools = multiqc.modules.deeptools:MultiqcModule',
@@ -88,9 +90,11 @@ setup(
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'flash = multiqc.modules.flash:MultiqcModule',
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
+            'happy = multiqc.modules.happy:MultiqcModule',
             'hicexplorer = multiqc.modules.hicexplorer:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
             'hicpro = multiqc.modules.hicpro:MultiqcModule',
@@ -106,7 +110,10 @@ setup(
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'mirtop = multiqc.modules.mirtop:MultiqcModule',
+            'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
+            'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
+            'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
@@ -124,6 +131,7 @@ setup(
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
+            'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',

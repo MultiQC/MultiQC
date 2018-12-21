@@ -216,6 +216,8 @@ class MultiqcModule(BaseMultiqcModule):
             total_reads = 0
             for v in parsed_json['duplication']['histogram']:
                 total_reads += v
+            if total_reads == 0:
+                raise KeyError
             # Calculate percentages
             for i, v in enumerate(parsed_json['duplication']['histogram']):
                 self.fastp_duplication_plotdata[s_name][i+1] = (float(v) / float(total_reads)) * 100.0
@@ -231,6 +233,8 @@ class MultiqcModule(BaseMultiqcModule):
                 total_reads += v
                 if float(v) > 0:
                     max_i = i
+            if total_reads == 0:
+                raise KeyError
             # Calculate percentages
             for i, v in enumerate(parsed_json['insert_size']['histogram']):
                 if i <= max_i:
