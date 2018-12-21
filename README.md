@@ -55,6 +55,7 @@ Currently, supported tools include:
 |                                 |                         |                           |[DamageProfiler][damageprofiler] |
 |                                 |                         |                           |[DeDup][dedup]              |
 
+
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
 
@@ -205,6 +206,7 @@ MultiQC is released under the GPL v3 or later licence.
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
 [damageprofiler]: http://multiqc.info/docs/#damageprofiler
 [dedup]:          http://multiqc.info/docs/#dedup
+[deeptools]:      http://multiqc.info/docs/#deeptools
 [disambiguate]:   http://multiqc.info/docs/#disambiguate
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
