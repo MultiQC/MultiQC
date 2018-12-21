@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## MultiQC v1.7dev
+## [MultiQC v1.7](https://github.com/ewels/MultiQC/releases/tag/v1.7) - 2018-12-21
 
 #### New Modules:
 * [**BISCUIT**](https://github.com/zwdzwd/biscuit)
