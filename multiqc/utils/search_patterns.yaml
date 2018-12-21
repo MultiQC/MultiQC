@@ -183,7 +183,7 @@ busco:
     contents: 'BUSCO version is:'
     num_lines: 1
 custom_content:
-    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
+    fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg)'
 clipandmerge:
     contents: 'ClipAndMerge ('
     num_lines: 5

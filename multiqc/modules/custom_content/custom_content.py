@@ -3,6 +3,7 @@
 """ Core MultiQC module to parse output from custom script output """
 
 from __future__ import print_function
+import base64
 from collections import defaultdict, OrderedDict
 import logging
 import json
@@ -93,6 +94,16 @@ def custom_module_classes():
                         log.warning("Error parsing JSON file '{}' (probably invalid JSON)".format(f['fn']))
                         log.warning("JSON error: {}".format(e))
                         break
+                elif f_extension == '.png' or f_extension == '.jpeg' or f_extension == '.jpg':
+                    image_string = base64.b64encode(f['f'].read()).decode('utf-8')
+                    image_format = 'png' if f_extension == '.png' else 'jpg'
+                    img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(image_format, image_string)
+                    parsed_data = {
+                        'plot_type': 'image',
+                        'section_name': f['s_name'].replace('_', ' ').replace('-', ' ').replace('.', ' '),
+                        'description': 'Embedded image <code>{}</code>'.format(f['fn']),
+                        'data': img_html
+                    }
                 if parsed_data is not None:
                     c_id = parsed_data.get('id', k)
                     if len(parsed_data.get('data', {})) > 0:
@@ -214,6 +225,8 @@ def custom_module_classes():
             parsed_modules.append( MultiqcModule(k, mod) )
             if mod['config'].get('plot_type') == 'html':
                 log.info("{}: Found 1 sample (html)".format(k))
+            if mod['config'].get('plot_type') == 'image':
+                log.info("{}: Found 1 sample (image)".format(k))
             else:
                 log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
 
@@ -279,6 +292,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raw HTML
         elif mod['config'].get('plot_type') == 'html':
+            self.add_section( content = mod['data'] )
+
+        # Raw image file as html
+        elif mod['config'].get('plot_type') == 'image':
             self.add_section( content = mod['data'] )
 
         # Not supplied

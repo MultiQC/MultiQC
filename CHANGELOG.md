@@ -57,6 +57,7 @@
     * New option to use filenames instead of relying on the command line used. See [#864](https://github.com/ewels/MultiQC/issues/864).
 
 #### New MultiQC Features:
+* Embed your custom images with a new Custom Content feature! Just add `_mqc` to the end of the filename for `.png`, `.jpg` or `.jpeg` files.
 * Documentation for Custom Content reordered to make it a little more sane
 * You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
 * Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).

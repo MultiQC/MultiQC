@@ -195,11 +195,12 @@ def search_file (pattern, f):
     contents_matched = False
 
     # Use mimetypes to exclude binary files where possible
-    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
-    if encoding is not None:
-        return False
-    if ftype is not None and ftype.startswith('image'):
-        return False
+    if not re.match(r'.+_mqc\.(png|jpg|jpeg)', f['fn']):
+        (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+        if encoding is not None:
+            return False
+        if ftype is not None and ftype.startswith('image'):
+            return False
 
     # Search pattern specific filesize limit
     if pattern.get('max_filesize') is not None and 'filesize' in f:

@@ -8,6 +8,7 @@ import io
 import fnmatch
 import logging
 import markdown
+import mimetypes
 import os
 import re
 import textwrap
@@ -113,16 +114,25 @@ class BaseMultiqcModule(object):
             f['s_name'] = self.clean_s_name(f['fn'], f['root'])
             if filehandles or filecontents:
                 try:
-                    with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
-                        if filehandles:
+                    # Custom content module can now handle image files
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+                    if ftype is not None and ftype.startswith('image'):
+                        with io.open (os.path.join(f['root'],f['fn']), "rb") as fh:
+                            # always return file handles
                             f['f'] = fh
                             yield f
-                        elif filecontents:
-                            f['f'] = fh.read()
-                            yield f
-                except (IOError, OSError, ValueError, UnicodeDecodeError):
+                    else:
+                        # Everything else - should be all text files
+                        with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
+                            if filehandles:
+                                f['f'] = fh
+                                yield f
+                            elif filecontents:
+                                f['f'] = fh.read()
+                                yield f
+                except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
                     if config.report_readerrors:
-                        logger.debug("Couldn't open filehandle when returning file: {}".format(f['fn']))
+                        logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f['fn'], e))
                         f['f'] = None
             else:
                 yield f
