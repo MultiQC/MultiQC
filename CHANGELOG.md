@@ -40,6 +40,8 @@
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
 * **Picard**
     * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
+    * CollectRnaSeqMetrics: Add warning about missing rRNA annotation.
+    * CollectRnaSeqMetrics: Add chart for counts/percentage of reads mapped to the correct strand.
     * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
 * **phantompeakqualtools**
     * Properly clean sample names
