@@ -87,7 +87,7 @@ class plotCoverageMixin():
         if len(self.deeptools_plotCoverageOutRawCounts) > 0:
             config = {
                 'id': 'deeptools_coverage_metrics_plot',
-                'title': 'Coverage distribution',
+                'title': 'deepTools: Coverage distribution',
                 'xlab': 'Coverage',
                 'ylab': 'Fraction of bases sampled'
             }
