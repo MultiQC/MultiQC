@@ -204,6 +204,8 @@ cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
     shared: true
+damageprofiler:
+    fn: '*dmgprof.json'
 dedup:
     fn: 'dedup.log'
 deeptools/bamPEFragmentSizeTable:

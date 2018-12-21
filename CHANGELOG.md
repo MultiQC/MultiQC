@@ -18,6 +18,9 @@
 * [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
     * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
+* [**DamageProfiler**](https://github.com/Integrative-Transcriptomics/DamageProfiler)
+    * A tool to determine ancient DNA misincorporation rates.
+    * Module written by [@apeltzer](https://github.com/apeltzer/)
 
 #### Module updates:
 * **AdapterRemoval**
