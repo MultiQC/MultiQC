@@ -6,6 +6,12 @@
 * [**BISCUIT**](https://github.com/zwdzwd/biscuit)
     * BISuilfite-seq CUI Toolkit
     * Module written by [@zwdzwd](https://github.com/zwdzwd/)
+* [**FLASh**](https://ccb.jhu.edu/software/FLASH/)
+    * FLASH (Fast Length Adjustment of SHort reads)
+    * Module written by [@pooranis](https://github.com/pooranis/)
+* [**MinIONQC**](https://github.com/roblanf/minion_qc)
+    * QC of reads from ONT long-read sequencing
+    * Module written by [@ManavalanG](https://github.com/ManavalanG)
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
@@ -40,6 +46,8 @@
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
 * **Picard**
     * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
+    * CollectRnaSeqMetrics: Add warning about missing rRNA annotation.
+    * CollectRnaSeqMetrics: Add chart for counts/percentage of reads mapped to the correct strand.
     * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
 * **phantompeakqualtools**
     * Properly clean sample names
@@ -72,7 +80,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * [**Long Ranger**](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
     * Works with data from the 10X Genomics Chromium. Performs sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
     * Module written by [@remiolsen](https://github.com/remiolsen/)
-* [**miRTrace**](__TBD__)
+* [**miRTrace**](https://github.com/friedlanderlab/mirtrace)
     * A quality control software for small RNA sequencing data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
 

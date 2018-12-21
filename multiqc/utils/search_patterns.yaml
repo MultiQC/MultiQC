@@ -254,6 +254,11 @@ fastqc/theoretical_gc:
 featurecounts:
     fn: '*.summary'
     shared: true
+flash/log:
+    contents: '[FLASH]'
+    shared: true
+flash/hist:
+    fn: '*flash*.hist'
 flexbar:
     contents: 'Flexbar - flexible barcode and adapter removal'
     shared: true
@@ -333,6 +338,9 @@ macs2:
 methylQA:
     fn: '*.report'
     shared: true
+minionqc:
+    fn: 'summary.yaml'
+    contents: 'total.gigabases'
 mirtrace/summary:
     fn: 'mirtrace-results.json'
 mirtrace/length:
