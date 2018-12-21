@@ -252,6 +252,7 @@ MultiQC is released under the GPL v3 or later licence.
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
+[stacks]:         http://multiqc.info/docs/#stacks
 [star]:           http://multiqc.info/docs/#star
 [supernova]:      http://multiqc.info/docs/#supernova
 [theta2]:         http://multiqc.info/docs/#theta2
