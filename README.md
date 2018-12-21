@@ -35,24 +35,24 @@ Currently, supported tools include:
 |---------------------------------|-------------------------|---------------------------|----------------------------|
 |[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]       |[BUSCO][busco]              |
 |[AfterQC][afterqc]               |[BISCUIT][biscuit]       |[Bcftools][bcftools]       |[Conpair][conpair]          |
-|[Bcl2fastq][bcl2fastq]           |[Bismark][bismark]       |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BBTools][bbmap]                 |[Bowtie][bowtie-1]       |[HOMER][homer]             |[goleft][goleft]            |
-|[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]     |[HTSeq][htseq]             |[HiCExplorer][hicexplorer]  |
-|[Cluster Flow][clusterflow]      |[HiCUP][hicup]           |[MACS2][macs2]             |[methylQA][methylqa]        |
-|[Cutadapt][cutadapt]             |[HISAT2][hisat2]         |[Picard][picard]           |[Peddy][peddy]              |
-|[leeHom][leehom]                 |[Kallisto][kallisto]     |[Prokka][prokka]           |[Preseq][preseq]            |
-|[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]   |[QoRTs][qorts]              |
-|[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]       |[Qualimap][qualimap]        |
-|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]           |[QUAST][quast]              |
-|[Fastp][fastp]                   |[STAR][star]          |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
-|[Flexbar][flexbar]               |[Tophat][tophat]         |[Stacks][stacks]           |[RSeQC][rseqc]              |
-|[Jellyfish][jellyfish]           |[HiC-Pro][hicpro]        |[RSEM][rsem]               |[Sargasso][sargasso]        |
-|[KAT][kat]                       |                         |[THetA2][theta2]           |[Supernova][supernova]      |
-|[Skewer][skewer]                 |                         |                           |[VCFTools][vcftools]        |
-|[SortMeRNA][sortmerna]           |                         |                           |[VerifyBAMID][verifybamid]  |
-|[Trimmomatic][trimmomatic]       |                         |                           |[miRTrace][mirtrace]        |
-|                                 |                         |                           |[phantompeakqualtools][phantompeakqualtools] |
-
+|[Bcl2fastq][bcl2fastq]           |[Bismark][bismark]       |[GATK][gatk]               |[deepTools][deeptools]      |
+|[BBTools][bbmap]                 |[Bowtie][bowtie-1]       |[HOMER][homer]             |[Disambiguate][disambiguate]|
+|[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]     |[HTSeq][htseq]             |[goleft][goleft]            |
+|[Cluster Flow][clusterflow]      |[HiCUP][hicup]           |[MACS2][macs2]             |[HiCExplorer][hicexplorer]  |
+|[Cutadapt][cutadapt]             |[HiC-Pro][hicpro]        |[Picard][picard]           |[methylQA][methylqa]        |
+|[leeHom][leehom]                 |[HISAT2][hisat2]         |[Prokka][prokka]           |[miRTrace][mirtrace]        |
+|[InterOp][interop]               |[Kallisto][kallisto]     |[RSEM][rsem]               |[Peddy][peddy]              |
+|[FastQC][fastqc]                 |[Long Ranger][longranger]|[Samblaster][samblaster]   |[phantompeakqualtools][phantompeakqualtools]|
+|[FastQ Screen][fastq-screen]     |[Salmon][salmon]         |[Samtools][samtools]       |[Preseq][preseq]            |
+|[Fastp][fastp]                   |[Slamdunk][slamdunk]     |[SnpEff][snpeff]           |[QoRTs][qorts]              |
+|[Flexbar][flexbar]               |[STAR][star]             |[Subread featureCounts][featurecounts]|[Qualimap][qualimap]|
+|[Jellyfish][jellyfish]           |[Tophat][tophat]         |[Stacks][stacks]           |[QUAST][quast]              |
+|[KAT][kat]                       |                         |[THetA2][theta2]           |[RNA-SeQC][rna_seqc]        |
+|[Skewer][skewer]                 |                         |                           |[RSeQC][rseqc]              |
+|[SortMeRNA][sortmerna]           |                         |                           |[Sargasso][sargasso]        |
+|[Trimmomatic][trimmomatic]       |                         |                           |[Supernova][supernova]      |
+|                                 |                         |                           |[VCFTools][vcftools]        |
+|                                 |                         |                           |[VerifyBAMID][verifybamid]  |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -202,6 +202,7 @@ MultiQC is released under the GPL v3 or later licence.
 [clusterflow]:    http://multiqc.info/docs/#cluster-flow
 [conpair]:        http://multiqc.info/docs/#conpair
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
+[deeptools]:      http://multiqc.info/docs/#deeptools
 [disambiguate]:   http://multiqc.info/docs/#disambiguate
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc

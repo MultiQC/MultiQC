@@ -2,6 +2,12 @@
 
 ## MultiQC v1.7dev
 
+#### New MultiQC Features:
+* New submodule to support PCA plot based on output from the plotPCA function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+* New submodule to support correlation heatmap based on output from the plotCorrelation function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+* New submodule to support fragment size distribution plot based on output from the `bamPEFragmentSize --outRawFragmentLengths` function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+* New submodule to support sequence distribution profile around genes based on output from the plotProfile function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
+
 #### New Modules:
 * [**BISCUIT**](https://github.com/zwdzwd/biscuit)
     * BISuilfite-seq CUI Toolkit
