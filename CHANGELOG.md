@@ -9,30 +9,37 @@
 * [**phantompeakqualtools**](https://www.encodeproject.org/software/phantompeakqualtools)
     * A tool for informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+* [**Stacks**](http://catchenlab.life.illinois.edu/stacks/)
+    * A software for analyzing restriction enzyme-based data (e.g. RAD-seq). Support for Stacks >= 2.1 only.
+    * Module written by [@remiolsen](https://github.com/remiolsen/)
 
 #### Module updates:
-* **Picard**
-    * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
-* **Trimmomatic**
-    * Updated Trimmomatic module documenation to be more helpful
 * **AdapterRemoval**
     * Handle error when zero bases are trimmed. See [#838](https://github.com/ewels/MultiQC/issues/838).
+* **Bcl2fastq**
+    * New plot showing the top twenty of undetermined barcodes by lane.
+    * Informations for R1/R2 are now separated in the General Statistics table.
+    * SampleID is concatenate with SampleName because in Chromium experiments several sample have the same SampleName.
 * **Fastp**
     * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
-* **FastQ Screen**
-    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
+* **FastQ Screen**
+    * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **InterOp**
     * Fixed bug where read counts and base pair yields were not displaying in tables correctly.
     * Number formatting for these fields can now be customised in the same way as with other modules, as described [in the docs](http://multiqc.info/docs/#number-base-multiplier)
 * **Picard**
     * InsertSizeMetrics: You can now configure to what degree the insert size plot should be smoothed.
+    * Now parses VariantCallingMetrics reports. (Similar to GATK module's VariantEval.)
+* **Trimmomatic**
+    * Updated Trimmomatic module documentation to be more helpful
 
 #### New MultiQC Features:
 * Documentation for Custom Content reordered to make it a little more sane
 * You can now add or override any config parameter for any MultiQC plot! See [the documentation](http://multiqc.info/docs/#customising-plots) for more info.
 * Allow `table_columns_placement` config to work with table IDs as well as column namespaces. See [#841](https://github.com/ewels/MultiQC/issues/841).
+
 
 #### Bug Fixes:
 * Custom content no longer clobbers `col1_header` table configs
@@ -56,6 +63,7 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
 * [**miRTrace**](__TBD__)
     * A quality control software for small RNA sequencing data.
     * Module written by [@chuan-wang](https://github.com/chuan-wang/)
+
 
 #### Module updates:
 * **BCFtools**
