@@ -46,13 +46,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.lgdist_rv_data      =   self.ignore_samples(self.lgdist_rv_data)
 
         # Basic Stats Table, use generic function to add data to general table
-        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G -> A')
-        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C -> T')
+        self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G>A')
+        self.dmgprof_misinc_stats(self.fivepCtoTfreq_data, '5 Prime', 'C>T')
         self.addSummaryMetrics(self.summary_metrics_data)
 
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
-            self.add_section ( 
+            self.add_section (
                 name = '3P Misincorporation Plot',
                 plot = self.threeprime_plot()
             )
@@ -81,19 +81,19 @@ class MultiqcModule(BaseMultiqcModule):
             print(e)
             log.warn("Could not parse DamageProfiler JSON: '{}'".format(f['fn']))
             return None
-        
+
         #Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json['metadata']['sample_name'],'')
         self.add_data_source(f, s_name)
 
-        
-        #Add 3' G to A data 
+
+        #Add 3' G to A data
         self.threepGtoAfreq_data[s_name] = parsed_json['dmg_3p']
 
         #Add 5' C to T data
         self.fivepCtoTfreq_data[s_name] = parsed_json['dmg_5p']
 
-        #Add lendist forward 
+        #Add lendist forward
         self.lgdist_fw_data[s_name] = parsed_json['lendist_fw']
 
         #Add lendist reverse
@@ -102,8 +102,8 @@ class MultiqcModule(BaseMultiqcModule):
         #Add summary metrics
         self.summary_metrics_data[s_name] = parsed_json['summary_stats']
 
-    
-    #### Tables from here on 
+
+    #### Tables from here on
 
     def dmgprof_misinc_stats(self, dict_to_plot, readend, substitution):
         """ Take the parsed stats from the DamageProfiler and add it to the
@@ -114,8 +114,9 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'misinc-stats-1st-{}-{}'.format(readend, substitution),
             'title': '{} {} 1st base'.format(readend, substitution),
             'description': '{} 1st base substitution frequency for {}'.format(readend, substitution),
+            'max': 100,
+            'min': 0,
             'suffix': '%',
-            'format': '{:,.2f}',
             'scale': 'YlGnBu',
             'modify': lambda x: x * 100.0
         }
@@ -123,8 +124,9 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'misinc-stats-2nd-{}-{}'.format(readend, substitution),
             'title': '{} {} 2nd base'.format(readend, substitution),
             'description': '{} 2nd base substitution frequency for {}'.format(readend, substitution),
+            'max': 100,
+            'min': 0,
             'suffix': '%',
-            'format': '{:,.2f}',
             'scale': 'BuGn',
             'hidden': True,
             'modify': lambda x: x * 100.0
@@ -135,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Only the first two parts are informative from both 3' and 5' ends of reads (1st, 2nd base damage pattern)
         data = OrderedDict()
         dict_to_add = dict()
-        
+
         for key in dict_to_plot.keys():
             tmp = dict_to_plot[key]
             pos = [readend + '1', readend + '2']
@@ -144,9 +146,9 @@ class MultiqcModule(BaseMultiqcModule):
             data = dict((x, y) for x, y in tuples)
             #Extract first two elements from list
             dict_to_add[key] = data
-        
+
         self.general_stats_addcols(dict_to_add,headers)
-    
+
 
 
     def addSummaryMetrics(self, dict_to_plot):
@@ -161,6 +163,8 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': 'bp',
             'scale': 'PuBu',
             'format': '{:,.2f}',
+            'shared_key': 'read_length',
+            'hidden': True
         }
 
         headers['median'] = {
@@ -169,6 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': 'bp',
             'scale': 'YlGnBu',
             'format': '{:,.2f}',
+            'shared_key': 'read_length'
         }
         headers['mean_readlength'] = {
             'title': 'Mean read length',
@@ -176,11 +181,13 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': 'bp',
             'scale': 'PuBuGn',
             'format': '{:,.2f}',
+            'shared_key': 'read_length',
+            'hidden': True
         }
-       
-        self.general_stats_addcols(dict_to_plot,headers)
 
-     
+        self.general_stats_addcols(dict_to_plot, headers)
+
+
 
     #### Plotting from here on
     #Nice Linegraph plot for lgdist data
@@ -197,7 +204,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             log.debug('No valid data for forward read lgdist input!')
             return None
-        
+
         config = {
             'id': 'length-distribution-{}'.format(orientation),
             'title': 'DamageProfiler: Read length distribution: {} '.format(orientation),
@@ -213,12 +220,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     #Linegraph plot for 3pGtoA
     def threeprime_plot(self):
-        """Generate a 3' G -> A linegraph plot"""
+        """Generate a 3' G>A linegraph plot"""
 
         data = dict()
         dict_to_add = dict()
         # Create tuples out of entries
-        for key in self.threepGtoAfreq_data: 
+        for key in self.threepGtoAfreq_data:
             pos = list(range(1,len(self.threepGtoAfreq_data.get(key))))
             tuples = list(zip(pos,self.threepGtoAfreq_data.get(key)))
             # Get a dictionary out of it
@@ -227,10 +234,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'threeprime_misinc_plot',
-            'title': 'DamageProfiler: 3P G -> A misincorporation plot',
+            'title': 'DamageProfiler: 3P G>A misincorporation plot',
             'ylab': '% G to A substituted',
             'xlab': 'Nucleotide position from 3\'',
-            'tt_label': '{point.y:.2f} % G -> A misincorporations at nucleotide position {point.x}',
+            'tt_label': '{point.y:.2f} % G>A misincorporations at nucleotide position {point.x}',
             'ymin': 0,
             'xmin': 1
         }
@@ -239,12 +246,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     #Linegraph plot for 5pCtoT
     def fiveprime_plot(self):
-        """Generate a 5' C -> T linegraph plot"""
-        
+        """Generate a 5' C>T linegraph plot"""
+
         data = dict()
         dict_to_add = dict()
         # Create tuples out of entries
-        for key in self.fivepCtoTfreq_data: 
+        for key in self.fivepCtoTfreq_data:
             pos = list(range(1,len(self.fivepCtoTfreq_data.get(key))))
             tuples = list(zip(pos,self.fivepCtoTfreq_data.get(key)))
             # Get a dictionary out of it
@@ -253,15 +260,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             'id': 'fiveprime_misinc_plot',
-            'title': 'DamageProfiler: 5\' C -> T misincorporation plot',
+            'title': 'DamageProfiler: 5\' C>T misincorporation plot',
             'ylab': '% C to T substituted',
             'xlab': 'Nucleotide position from 5\'',
-            'tt_label': '{point.y:.2f} % C -> T misincorporations at nucleotide position {point.x}',
+            'tt_label': '{point.y:.2f} % C>T misincorporations at nucleotide position {point.x}',
             'ymin': 0,
             'xmin': 1
         }
 
         return linegraph.plot(dict_to_add,config)
-
-        
-        
