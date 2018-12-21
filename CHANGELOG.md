@@ -2,12 +2,6 @@
 
 ## MultiQC v1.7dev
 
-#### New MultiQC Features:
-* New submodule to support PCA plot based on output from the plotPCA function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
-* New submodule to support correlation heatmap based on output from the plotCorrelation function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
-* New submodule to support fragment size distribution plot based on output from the `bamPEFragmentSize --outRawFragmentLengths` function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
-* New submodule to support sequence distribution profile around genes based on output from the plotProfile function for deepTools (written by [@chuan-wang](https://github.com/chuan-wang/))
-
 #### New Modules:
 * [**BISCUIT**](https://github.com/zwdzwd/biscuit)
     * BISuilfite-seq CUI Toolkit
@@ -26,6 +20,11 @@
     * New plot showing the top twenty of undetermined barcodes by lane.
     * Informations for R1/R2 are now separated in the General Statistics table.
     * SampleID is concatenate with SampleName because in Chromium experiments several sample have the same SampleName.
+* **deepTools**
+    * New PCA plots from the `plotPCA` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New fragment size distribution plots from `bamPEFragmentSize --outRawFragmentLengths` (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New correlation heatmaps from the `plotCorrelation` function (written by [@chuan-wang](https://github.com/chuan-wang/))
+    * New sequence distribution profiles around genes, from the `plotProfile` function (written by [@chuan-wang](https://github.com/chuan-wang/))
 * **Fastp**
     * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
 * **FastQC**
