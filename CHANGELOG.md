@@ -65,6 +65,10 @@ Some of these updates are thanks to the efforts of people who attended the [NASP
     * New plot showing SNP statistics versus quality of call from bcftools stats ([@MaxUlysse](https://github.com/MaxUlysse) and [@Rotholandus](https://github.com/Rotholandus))
 * **BBMap**
     * Support added for BBDuk kmer-based adapter/contaminant filtering summary stats ([@boulund](https://github.com/boulund)
+* **Bcl2fastq**
+    * New plot showing the top twenty of undetermined barcodes by lane.
+    * Informations for R1/R2 are splitted in General Statistics table.
+    * SampleID is concatenate with SampleName because in Chromium experiments several sample have the same SampleName.
 * **FastQC**
     * New read count plot, split into unique and duplicate reads if possible.
     * Help text added for all sections, mostly copied from the excellent FastQC help.
