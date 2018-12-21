@@ -39,6 +39,7 @@
     * Fixed bug in parsing of empty histogram data. See [#845](https://github.com/ewels/MultiQC/issues/845).
 * **FastQC**
     * Refactored _Per Base Sequence Content_ plots to show original underlying data, instead of calculating it from the page contents. Now shows original FastQC base-ranges and fixes 100% GC bug in final few pixels. See [#812](https://github.com/ewels/MultiQC/issues/812).
+    * When including a FastQC section multiple times in one report, the summary progress bars now behave as you would expect.
 * **FastQ Screen**
     * Don't hide genomes in the simple plot, even if they have zero unique hits. See [#829](https://github.com/ewels/MultiQC/issues/829).
 * **InterOp**
@@ -66,6 +67,7 @@
 * Custom content no longer clobbers `col1_header` table configs
 * The option `--file-list` that refers to a text file with file paths to analyse will no longer ignore directory paths
 * [Sample name directory prefixes](https://multiqc.info/docs/#sample-names-prefixed-with-directories) are now added _after_ cleanup.
+* If a module is run multiple times in one report, it's CSS and JS files will only be included once (`default` template)
 
 ## [MultiQC v1.6](https://github.com/ewels/MultiQC/releases/tag/v1.6) - 2018-08-04
 
