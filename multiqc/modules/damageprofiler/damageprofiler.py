@@ -116,6 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '{} 1st base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
             'format': '{:,.2f}',
+            'scale': 'YlGnBu',
             'modify': lambda x: x * 100.0
         }
         headers['{}2'.format(readend)] = {
@@ -124,6 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': '{} 2nd base substitution frequency for {}'.format(readend, substitution),
             'suffix': '%',
             'format': '{:,.2f}',
+            'scale': 'BuGn',
             'hidden': True,
             'modify': lambda x: x * 100.0
         }
@@ -157,26 +159,22 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Read length std. dev.',
             'description': 'Read length std. dev.',
             'suffix': 'bp',
-            'scale': 'GrRd',
+            'scale': 'PuBu',
             'format': '{:,.2f}',
         }
 
         headers['median'] = {
             'title': 'Median read length',
             'description': 'Median read length',
-            'min': 0,
-            'max': 100,
             'suffix': 'bp',
-            'scale': 'GrRd',
+            'scale': 'YlGnBu',
             'format': '{:,.2f}',
         }
         headers['mean_readlength'] = {
             'title': 'Mean read length',
             'description': 'Mean read length',
-            'min': 0,
-            'max': 100,
             'suffix': 'bp',
-            'scale': 'GrRd',
+            'scale': 'PuBuGn',
             'format': '{:,.2f}',
         }
        
