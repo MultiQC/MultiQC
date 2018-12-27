@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Create comprehensive beeswarm plots of all stats 
         self.add_section (
              name =  'Read ' + stat_string + 's',
-             anchor = 'mirtop-stats',
+             anchor = 'mirtop-stats-' + stat_string,
              description = "Detailed summary stats",
              plot = beeswarm.plot(section_data)
          )
