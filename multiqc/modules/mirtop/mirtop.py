@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from mirtop"""
 
 from __future__ import print_function
+from future.utils import viewitems
 from collections import OrderedDict
 import logging
 
@@ -45,15 +46,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create very basic summary table
         self.mirtop_stats_table()
-
-        # Create comprehensive beeswarm plots of all stats 
-        self.add_section (
-             name = 'IsoMiR Summary Statistics',
-             anchor = 'mirtop-stats',
-             description = "Detailed summary stats",
-             plot = beeswarm.plot(self.mirtop_data)
-         )
-
+        self.mirtop_beeswarm_section('mean')
+        self.mirtop_beeswarm_section('count')
+        self.mirtop_beeswarm_section('sum')
+        
 
 
     def parse_mirtop_report (self, content, f):
@@ -103,3 +99,21 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.general_stats_addcols(self.mirtop_data, headers)
+
+    def mirtop_beeswarm_section(self, stat_string):
+        """ Generate more detailed beeswarm plots, for a given stat type"""
+        
+        log.info("Plotting " + stat_string + " section." )
+        section_data = dict()
+        for sample_name, sample_data in viewitems(self.mirtop_data):
+            section_keys = [key for key in list(sample_data.keys()) if stat_string in key]
+            section_data[sample_name] = dict((k, sample_data[k]) for k in section_keys)
+            
+        # Create comprehensive beeswarm plots of all stats 
+        self.add_section (
+             name =  'Read ' + stat_string + 's',
+             anchor = 'mirtop-stats',
+             description = "Detailed summary stats",
+             plot = beeswarm.plot(section_data)
+         )
+
