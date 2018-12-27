@@ -353,8 +353,7 @@ disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
 mirtop:
-    fn: '*._mirtop_stats.log'
-    contents: 'mirtop'
+    fn: '*_mirtop_stats.log'
 peddy/summary_table:
     fn: '*.peddy.ped'
 peddy/het_check:

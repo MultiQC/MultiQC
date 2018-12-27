@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mirtop_keys = list()
         for c_file in self.find_log_files('mirtop'):
             content = json.loads(c_file['f'])
-            self.parse_mirtop_report(content)
+            self.parse_mirtop_report(content, c_file)
         # Filter to strip out ignored sample names
         self.mirtop_data = self.ignore_samples(self.mirtop_data)
 
@@ -56,13 +56,15 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    def parse_mirtop_report (self, content):
+    def parse_mirtop_report (self, content, f):
         """ Parse the mirtop log file. """
         
+        log.info("Processing file " + f['fn']  )
         file_names = list()
         parsed_data = dict()
         for sample_name in content['metrics'].keys():
-            log.info("Importing sample " + sample_name)
+            cleaned_sample_name = self.clean_s_name(sample_name, f['root'])
+            log.info("Importing sample " + sample_name + " as " + cleaned_sample_name)
             parsed_data = content['metrics'][sample_name]
             parsed_data['read_count'] = parsed_data['isomiR_sum'] + parsed_data['ref_miRNA_sum']
             parsed_data['isomiR_perc'] = (parsed_data['isomiR_sum'] / parsed_data['read_count'])*100
