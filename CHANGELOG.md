@@ -6,7 +6,8 @@
 _..no updates yet.._
 
 #### Module updates:
-_..no updates yet.._
+* **Samtools**
+    * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely 
 
 #### New MultiQC Features:
 _..no updates yet.._
