@@ -51,7 +51,7 @@ class FlagstatReportMixin():
             keys = OrderedDict()
             reads = {
                 'min': 0,
-                'modify': lambda x: float(x) / 1000000.0,
+                'modify': lambda x: float(x) * config.read_count_multiplier,
                 'suffix': 'M reads',
                 'decimalPlaces': 2,
                 'shared_key': 'read_count'
