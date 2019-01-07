@@ -52,7 +52,7 @@ class FlagstatReportMixin():
             reads = {
                 'min': 0,
                 'modify': lambda x: float(x) * config.read_count_multiplier,
-                'suffix': 'M reads',
+                 'suffix': '{} reads'.format(config.read_count_prefix),
                 'decimalPlaces': 2,
                 'shared_key': 'read_count'
             }
