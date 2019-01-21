@@ -100,7 +100,7 @@ def get_filelist(run_module_names):
             spatterns[0][key] = sps
 
     if len(ignored_patterns) > 0:
-        logger.debug("Ignored search patterns as didn't match running modules: {}".format(', '.join(ignored_patterns)))
+        logger.debug("Ignored {} search patterns as didn't match running modules.".format(len(ignored_patterns)))
 
     def add_file(fn, root):
         """
@@ -205,6 +205,7 @@ def search_file (pattern, f):
     # Search pattern specific filesize limit
     if pattern.get('max_filesize') is not None and 'filesize' in f:
         if f['filesize'] > pattern.get('max_filesize'):
+            log.debug("Ignoring because exceeded search pattern filesize limit: {}".format(f['fn']))
             return False
 
     # Search by file name (glob)

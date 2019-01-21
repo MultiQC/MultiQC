@@ -7,7 +7,9 @@ _..no updates yet.._
 
 #### Module updates:
 * **Samtools**
-    * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely 
+    * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
+* **SnpEff**
+    * Increased the default summary csv file-size limit from 1MB to 5MB.
 
 #### New MultiQC Features:
 _..no updates yet.._

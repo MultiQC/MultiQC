@@ -509,7 +509,7 @@ slamdunk/tcperutrpos:
     num_lines: 1
 snpeff:
     contents: 'SnpEff_version'
-    max_filesize: 1000000
+    max_filesize: 5000000
 sortmerna:
     contents: 'Minimal SW score based on E-value'
     shared: true
