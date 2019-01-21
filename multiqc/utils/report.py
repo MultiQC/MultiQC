@@ -205,7 +205,7 @@ def search_file (pattern, f):
     # Search pattern specific filesize limit
     if pattern.get('max_filesize') is not None and 'filesize' in f:
         if f['filesize'] > pattern.get('max_filesize'):
-            log.debug("Ignoring because exceeded search pattern filesize limit: {}".format(f['fn']))
+            logger.debug("Ignoring because exceeded search pattern filesize limit: {}".format(f['fn']))
             return False
 
     # Search by file name (glob)
