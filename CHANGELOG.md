@@ -15,7 +15,7 @@ _..no updates yet.._
 _..no updates yet.._
 
 #### Bug Fixes:
-_..no updates yet.._
+* MultiQC now ignores all `.md5` files
 
 
 

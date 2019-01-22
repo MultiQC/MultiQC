@@ -230,6 +230,7 @@ fn_ignore_files:
     - '*.txt.gz'
     - '*.pdf'
     - '*.html'
+    - '*.md5'
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
