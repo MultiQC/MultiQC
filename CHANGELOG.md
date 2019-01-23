@@ -16,6 +16,7 @@ _..no updates yet.._
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
+* Added some installation docs for windows
 
 
 

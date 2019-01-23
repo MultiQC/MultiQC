@@ -24,12 +24,12 @@ Once Anaconda is installed, you can create an environment with the
 following commands:
 
 ```
-conda create --name py2.7 python=2.7
-source activate py2.7
-# Windows: activate py2.7
+conda create --name py3.6 python=3.6
+source activate py3.6
+# Windows: activate py3.6
 ```
 
-You'll want to add the `source activate py2.7` line to your `.bashrc` file so
+You'll want to add the `source activate py3.6` line to your `.bashrc` file so
 that the environment is loaded every time you load the terminal.
 
 ## Installing with conda
@@ -98,6 +98,20 @@ python setup.py install
 ```
 
 If you downloaded the flat files, just repeat the installation procedure.
+
+## Installing on Windows
+MultiQC is has primarily been designed for us on Unix systems (Linux, Mac OSX).
+However, it _should_ work on Windows too. Indeed, automated continuous integration
+tests run using AppVeyor to check compatability at https://ci.appveyor.com/project/ewels/multiqc
+(see test config [here](https://github.com/ewels/MultiQC/blob/master/appveyor.yml)).
+
+Some users have found that running the `multiqc` command directly in Windows doesn't work
+but that using the full path to the program does work. For example:
+```
+python \path\to\python\scripts\multiqc my_data
+```
+
+Note that you may be able to avoid this by adding this directory to your `PATH`.
 
 ## Installing as an environment module
 Many people using MultiQC will be working on a HPC environment.
