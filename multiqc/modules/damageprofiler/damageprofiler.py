@@ -57,21 +57,37 @@ class MultiqcModule(BaseMultiqcModule):
         # Add plots
         if len(self.threepGtoAfreq_data) > 0:
             self.add_section (
-                name = '3P Misincorporation Plot',
+                name = '3P misincorporation plot',
+                description = '3\' misincorporation plot for G>A substitutions',
+                helptext = '''
+                This plot shows the frequency of G>A substitutions at the 3' read ends. Typically, one would observe high substitution percentages for ancient DNA, whereas modern DNA does not show these in higher extents.  
+                ''',
                 plot = self.threeprime_plot()
             )
         if len(self.fivepCtoTfreq_data) > 0:
             self.add_section (
-                name = '5P Misincorporation Plot',
+                name = '5P misincorporation plot',
+                description = '5\' misincorporation plot for C>T substitutions',
+                helptext = '''
+                This plot shows the frequency of C>T substitutions at the 5' read ends. Typically, one would observe high substitution percentages for ancient DNA, whereas modern DNA does not show these in higher extents.  
+                ''',
                 plot = self.fiveprime_plot()
             )
         if len(self.lgdist_fw_data) > 0 and len(self.lgdist_rv_data) > 0:
             self.add_section (
                 name = 'Forward read length distribution',
+                description = 'Read length distribution for forward strand (+) reads.',
+                helptext = '''
+                This plot shows the read length distribution of the forward reads in the investigated sample. Reads below lengths of 30bp are typically filtered, so the plot doesn't show these in many cases. A shifted distribution of read lengths towards smaller read lengths (e.g around 30-50bp) is also an indicator of ancient DNA.
+                ''',
                 plot = self.lgdistplot(self.lgdist_fw_data, 'Forward')
             )
             self.add_section (
                 name = 'Reverse read length distribution',
+                description = 'Read length distribution for reverse strand (-) reads.',
+                helptext = '''
+                This plot shows the read length distribution of the reverse reads in the investigated sample. Reads below lengths of 30bp are typically filtered, so the plot doesn't show these in many cases. A shifted distribution of read lengths towards smaller read lengths (e.g around 30-50bp) is also an indicator of ancient DNA.
+                ''',
                 plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
             )
 
@@ -231,7 +247,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Create tuples out of entries
         for key in self.threepGtoAfreq_data:
             pos = list(range(1,len(self.threepGtoAfreq_data.get(key))))
-            tuples = list(zip(pos,self.threepGtoAfreq_data.get(key)))
+            #Multiply values by 100 to get %
+            tmp = [i * 100.0 for i in self.threepGtoAfreq_data.get(key)]
+            tuples = list(zip(pos,tmp))
             # Get a dictionary out of it
             data = dict((x, y) for x, y in tuples)
             dict_to_add[key] = data
@@ -257,7 +275,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Create tuples out of entries
         for key in self.fivepCtoTfreq_data:
             pos = list(range(1,len(self.fivepCtoTfreq_data.get(key))))
-            tuples = list(zip(pos,self.fivepCtoTfreq_data.get(key)))
+            tmp = [i * 100.0 for i in self.fivepCtoTfreq_data.get(key)]
+            tuples = list(zip(pos,tmp))
             # Get a dictionary out of it
             data = dict((x, y) for x, y in tuples)
             dict_to_add[key] = data
