@@ -352,6 +352,10 @@ module_order:
         module_tag:
             - DNA
             - ancient
+    - biobambam2:
+        module_tag:
+            - DNA
+            - RNA
     - picard:
         module_tag:
             - DNA
