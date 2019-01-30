@@ -13,15 +13,23 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
-    """ Find Picard MarkDuplicates reports and parse their data """
+def parse_reports(self,
+    log_key='picard/markdups',
+    section_name='Mark Duplicates',
+    section_anchor='picard-markduplicates',
+    plot_title='Picard: Deduplication Stats',
+    plot_id='picard_deduplication',
+    data_filename='multiqc_picard_dups'):
+    """ Find Picard MarkDuplicates reports and parse their dataself.
+    This function is also used by the biobambam2 module, hence the parameters.
+    """
 
     # Set up vars
     self.picard_dupMetrics_data = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files('picard/markdups', filehandles=True):
-        s_name = None
+    for f in self.find_log_files(log_key, filehandles=True):
+        s_name = f['s_name']
         for l in f['f']:
             # New log starting
             if 'markduplicates' in l.lower() and 'input' in l.lower():
@@ -34,12 +42,12 @@ def parse_reports(self):
                     s_name = self.clean_s_name(s_name, f['root'])
 
             if s_name is not None:
-                if 'DuplicationMetrics' in l and '## METRICS CLASS' in l:
+                if 'UNPAIRED_READ_DUPLICATES' in l:
                     if s_name in self.picard_dupMetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='DuplicationMetrics')
                     self.picard_dupMetrics_data[s_name] = dict()
-                    keys = f['f'].readline().rstrip("\n").split("\t")
+                    keys = l.rstrip("\n").split("\t")
                     vals = f['f'].readline().rstrip("\n").split("\t")
                     for i, k in enumerate(keys):
                         try:
@@ -65,12 +73,12 @@ def parse_reports(self):
     if len(self.picard_dupMetrics_data) > 0:
 
         # Write parsed data to a file
-        self.write_data_file(self.picard_dupMetrics_data, 'multiqc_picard_dups')
+        self.write_data_file(self.picard_dupMetrics_data, data_filename)
 
         # Add to general stats table
         self.general_stats_headers['PERCENT_DUPLICATION'] = {
             'title': '% Dups',
-            'description': 'MarkDuplicates - Percent Duplication',
+            'description': '{} - Percent Duplication'.format(section_name),
             'max': 100,
             'min': 0,
             'suffix': '%',
@@ -100,16 +108,16 @@ def parse_reports(self):
 
         # Config for the plot
         pconfig = {
-            'id': 'picard_deduplication',
-            'title': 'Picard: Deduplication Stats',
+            'id': plot_id,
+            'title': plot_title,
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             'cpswitch_c_active': False
         }
 
         self.add_section (
-            name = 'Mark Duplicates',
-            anchor = 'picard-markduplicates',
+            name = section_name,
+            anchor = section_anchor,
             plot = bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
         )
 

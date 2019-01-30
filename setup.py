@@ -71,6 +71,7 @@ setup(
             'bbmap = multiqc.modules.bbmap:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
+            'biobambam2 = multiqc.modules.biobambam2:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
             'biscuit = multiqc.modules.biscuit:MultiqcModule',

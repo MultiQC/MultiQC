@@ -3,7 +3,9 @@
 ## MultiQC v1.8dev
 
 #### New Modules:
-_..no updates yet.._
+* [**biobambam2**](https://github.com/gt1/biobambam2)
+    * Added submodule for `bamsormadup` tool
+    * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
 
 #### Module updates:
 * **Samtools**

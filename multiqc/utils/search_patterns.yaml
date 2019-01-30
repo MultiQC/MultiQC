@@ -80,6 +80,9 @@ bcl2fastq:
     - fn: 'Stats.json'
       contents: 'DemuxResults'
     - num_lines: 300
+biobambam2/bamsormadup:
+    contents: '# bamsormadup'
+    num_lines: 2
 biobloomtools:
     contents: 'filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared'
     num_lines: 2

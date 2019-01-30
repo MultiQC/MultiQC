@@ -45,6 +45,7 @@ MultiQC Modules:
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
+    biobambam2: modules/biobambam2.md
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
     DamageProfiler: modules/damageprofiler.md
