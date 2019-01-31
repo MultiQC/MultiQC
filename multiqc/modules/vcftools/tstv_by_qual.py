@@ -19,6 +19,8 @@ class TsTvByQualMixin():
             for line in f['f'].readlines()[1:]: # don't add the header line (first row)
                 key = float(line.split()[0]) # taking the first column (QUAL_THRESHOLD) as key
                 val = float(line.split()[6]) # taking Ts/Tv_GT_QUAL_THRESHOLD as value
+                if (val == float('inf')) or (val == float('-inf')):
+                    val = float('nan')
                 d[key] = val
             self.vcftools_tstv_by_qual[f['s_name']] = d
 
