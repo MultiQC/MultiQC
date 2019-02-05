@@ -191,7 +191,7 @@ def custom_module_classes():
 
     # Go through each data type
     parsed_modules = list()
-    for k, mod in cust_mods.items():
+    for module_id, mod in cust_mods.items():
 
         # General Stats
         if mod['config'].get('plot_type') == 'generalstats':
@@ -208,33 +208,33 @@ def custom_module_classes():
 
             # Headers is a list of dicts
             if type(gsheaders) == list:
-                hs = OrderedDict()
-                for h in gsheaders:
-                    for k, v in h.items():
-                        hs[k] = v
-                gsheaders = hs
+                gsheaders_dict = OrderedDict()
+                for gsheader in gsheaders:
+                    for col_id, col_data in gsheader.items():
+                        gsheaders_dict[col_id] = col_data
+                gsheaders = gsheaders_dict
 
             # Add namespace and description if not specified
-            for h in gsheaders:
-                if 'namespace' not in gsheaders[h]:
-                    gsheaders[h]['namespace'] = mod['config'].get('namespace', k)
+            for m_id in gsheaders:
+                if 'namespace' not in gsheaders[m_id]:
+                    gsheaders[m_id]['namespace'] = mod['config'].get('namespace', module_id)
 
             bm.general_stats_addcols(mod['data'], gsheaders)
 
         # Initialise this new module class and append to list
         else:
-            parsed_modules.append( MultiqcModule(k, mod) )
+            parsed_modules.append( MultiqcModule(module_id, mod) )
             if mod['config'].get('plot_type') == 'html':
-                log.info("{}: Found 1 sample (html)".format(k))
+                log.info("{}: Found 1 sample (html)".format(module_id))
             if mod['config'].get('plot_type') == 'image':
-                log.info("{}: Found 1 sample (image)".format(k))
+                log.info("{}: Found 1 sample (image)".format(module_id))
             else:
-                log.info("{}: Found {} samples ({})".format(k, len(mod['data']), mod['config'].get('plot_type')))
+                log.info("{}: Found {} samples ({})".format(module_id, len(mod['data']), mod['config'].get('plot_type')))
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, 'custom_content', {}).get('order', [])
-    sorted_modules = [m for m in parsed_modules if m.anchor not in mod_order ]
-    sorted_modules.extend([m for k in mod_order for m in parsed_modules if m.anchor == k ])
+    sorted_modules = [parsed_mod for parsed_mod in parsed_modules if parsed_mod.anchor not in mod_order ]
+    sorted_modules.extend([parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules if parsed_mod.anchor == mod_id ])
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
