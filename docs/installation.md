@@ -11,9 +11,15 @@ files with all parsed data for further downstream use.
 
 # Installing MultiQC
 
+## System Python
+Before we start - a quick note that using the system-wide installation of Python
+is _not_ recommended. This often causes problems and it's a little risky to mess
+with it. If you find yourself prepending `sudo` to any MultiQC commands, take a
+step back and think about Pytohn virtual environments / conda instead (see below).
+
 ## Installing Python
 To see if you have python installed, run `python --version` on the command line.
-If you see version 2.7+, 3.4+ or 3.5+ then you can skip this step.
+MultiQC needs Python version 2.7+, 3.4+ or 3.5+.
 
 We recommend using virtual environments to manage your Python installation.
 Our favourite is Anaconda, a cross-platform tool to manage Python environments.
