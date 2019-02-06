@@ -15,7 +15,7 @@ files with all parsed data for further downstream use.
 Before we start - a quick note that using the system-wide installation of Python
 is _not_ recommended. This often causes problems and it's a little risky to mess
 with it. If you find yourself prepending `sudo` to any MultiQC commands, take a
-step back and think about Pytohn virtual environments / conda instead (see below).
+step back and think about Python virtual environments / conda instead (see below).
 
 ## Installing Python
 To see if you have python installed, run `python --version` on the command line.
