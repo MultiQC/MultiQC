@@ -22,11 +22,11 @@ To see if you have python installed, run `python --version` on the command line.
 MultiQC needs Python version 2.7+, 3.4+ or 3.5+.
 
 We recommend using virtual environments to manage your Python installation.
-Our favourite is Anaconda, a cross-platform tool to manage Python environments.
-You can installation instructions for Anaconda
-[here](http://conda.pydata.org/docs/install/quick.html).
+Our favourite is _conda_, a cross-platform tool to manage Python environments.
+You can installation instructions for Miniconda
+[here](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html).
 
-Once Anaconda is installed, you can create an environment with the
+Once conda is installed, you can create an environment with the
 following commands:
 
 ```
