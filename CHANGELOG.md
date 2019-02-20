@@ -14,6 +14,8 @@
     * Increased the default summary csv file-size limit from 1MB to 5MB.
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
+* **Hicexplorer** 
+    * Fixed bug in search patterns, and added new test data for hicexplorer=2.2
 
 #### New MultiQC Features:
 _..no updates yet.._
