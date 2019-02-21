@@ -284,7 +284,6 @@ hicexplorer:
     contents: 'Min rest. site distance'
     max_filesize: 4096
     num_lines: 5
-    fn: 'QC.*'
 hicup:
     fn: 'HiCUP_summary_report*'
 hicpro/mmapstat:

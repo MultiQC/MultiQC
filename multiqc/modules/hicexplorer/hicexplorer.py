@@ -17,11 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.mod_data = dict()
         for file in self.find_log_files('hicexplorer'):
-            s_name = file['root'] + "_" + file['s_name']
-            self.mod_data[s_name] = self.parse_logs(file['f'])
-            self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + s_name + "_" + self.mod_data[s_name]['File'][0], file['root'])
-
-            self.add_data_source(file)
+            if file['s_name'] != "QC_table":
+                s_name = file['root'] + "_" + file['s_name']
+                
+                self.mod_data[s_name] = self.parse_logs(file['f'])
+                self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + s_name + "_" + self.mod_data[s_name]['File'][0], file['root'])
+            
+                self.add_data_source(file)
 
         if len(self.mod_data) == 0:
             raise UserWarning
