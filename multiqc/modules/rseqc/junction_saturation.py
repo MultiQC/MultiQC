@@ -100,9 +100,9 @@ def plot_single():
 
         // Get the three datasets for this sample
         var data = [
-            {'name': 'All Junctions'},
             {'name': 'Known Junctions'},
-            {'name': 'Novel Junctions'}
+            {'name': 'Novel Junctions'},
+            {'name': 'All Junctions'}
         ];
         var k = 0;
         for (var i = 0; i < 3; i++) {
