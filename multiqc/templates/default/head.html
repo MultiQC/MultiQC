@@ -21,3 +21,9 @@ mqc_compressed_plotdata = '{{ report.plot_compressed_json }}';
 num_datasets_plot_limit = {{ config.num_datasets_plot_limit}};
 mqc_sample_names_rename = {{ config.sample_names_rename | tojson }};
 </script>
+
+<script type="text/javascript">
+mqc_config = {}
+{% if config.decimalPoint_format is not none %}mqc_config['decimalPoint_format'] = '{{ config.decimalPoint_format }}'; {% endif %}
+{% if config.thousandsSep_format is not none %}mqc_config['thousandsSep_format'] = '{{ config.thousandsSep_format }}'; {% endif %}
+</script>
