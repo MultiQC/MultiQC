@@ -16,6 +16,15 @@ ypos = 0;
 max_bp = 0;
 current_single_plot = undefined;
 
+fastqc_passfails = {}; // { <module>: { <section>: { <sample>: { data } } }
+
+function load_fastqc_passfails() {
+    $('.fastqc_passfails').each(function (i, elem) {
+        var key_value = JSON.parse(elem.innerHTML);
+        fastqc_passfails[key_value[0]] = key_value[1];
+    });
+}
+
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
 
@@ -26,7 +35,7 @@ function fastqc_seq_content_heatmap() {
     var hidden_samples = 0;
     $.each(fastqc_seq_content_data, function(s_name, data){
         // rename sample names
-        var t_status = fastqc_passfails_fastqc['per_base_sequence_content'][s_name];
+        var t_status = fastqc_passfails['fastqc']['per_base_sequence_content'][s_name];
         $.each(window.mqc_rename_f_texts, function(idx, f_text){
             if(window.mqc_rename_regex_mode){
                 var re = new RegExp(f_text,'g');
@@ -173,8 +182,8 @@ $(function () {
 
         // Add the pass / warning / fails counts to each of the FastQC submodule headings
         var parent_id = $(this).attr('id');
-        var fastqc_passfails = window['fastqc_passfails_'+parent_id.replace(/-/g, '_').replace('mqc_module_section_', '')];
-        $.each(fastqc_passfails, function(k, vals){
+        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
+        $.each(fastqc_passfails[module_key], function(k, vals){
             var pid = '#'+parent_id+' [id^=fastqc_'+k+']';
             var total = 0;
             var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
@@ -196,15 +205,15 @@ $(function () {
         // Does this element already have a popover?
         if ($(this).attr('data-original-title')) { return false; }
         // Get data target
-        var parent_id = $(this).closest('.mqc-module-section').attr('id').replace(/-/g, '_').replace('mqc_module_section_', '');
-        var fastqc_passfails = window['fastqc_passfails_'+parent_id.replace(/-/g, '_').replace('mqc_module_section_', '')];
+        var parent_id = $(this).closest('.mqc-module-section').attr('id');
+        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
         // Create it
         var pid = $(this).closest('h3').attr('id');
         var k = pid.substr(7);
         // Remove suffix when there are multiple fastqc sections
         var n = k.indexOf('-');
         k = k.substring(0, n != -1 ? n : k.length);
-        var vals = fastqc_passfails[k];
+        var vals = fastqc_passfails[module_key][k];
         var passes = $(this).hasClass('progress-bar-success') ? true : false;
         var warns = $(this).hasClass('progress-bar-warning') ? true : false;
         var fails = $(this).hasClass('progress-bar-danger') ? true : false;
