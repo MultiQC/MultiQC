@@ -16,14 +16,26 @@ page contents, it's machine-readable tags for browsers and search engines.
 <title>{{ config.title + ': ' if config.title != None }}MultiQC Report</title>
 
 <!-- JSON plot data -->
-<script type="text/javascript">
-mqc_compressed_plotdata = '{{ report.plot_compressed_json }}';
-num_datasets_plot_limit = {{ config.num_datasets_plot_limit}};
-mqc_sample_names_rename = {{ config.sample_names_rename | tojson }};
-</script>
+<script type="text/plain" id="mqc_compressed_plotdata">{{ report.plot_compressed_json }}</script>
 
+<script type="application/json" id="mqc_config">{{
+{
+    "num_datasets_plot_limit": config.num_datasets_plot_limit,
+    "sample_names_rename": config.sample_names_rename,
+    "decimalPoint_format": config.decimalPoint_format,
+    "thousandsSep_format": config.thousandsSep_format,
+} | tojson
+}}</script>
+
+<!-- Instead of saving data directly into variables in a normal <script>, data is separated into
+     above non-executed script blocks. This way, potential Content Security Policy restrictions
+     only apply to static script blocks, which can be added as sha256 exceptions.
+
+     As a precaution the script is wrapped in raw block to remind developers that data should
+     not be injected directly into it. -->
+{% raw %}
 <script type="text/javascript">
-mqc_config = {}
-{% if config.decimalPoint_format is not none %}mqc_config['decimalPoint_format'] = '{{ config.decimalPoint_format }}'; {% endif %}
-{% if config.thousandsSep_format is not none %}mqc_config['thousandsSep_format'] = '{{ config.thousandsSep_format }}'; {% endif %}
+mqc_compressed_plotdata = document.getElementById('mqc_compressed_plotdata').innerHTML;
+mqc_config = JSON.parse(document.getElementById('mqc_config').innerHTML);
 </script>
+{% endraw %}
