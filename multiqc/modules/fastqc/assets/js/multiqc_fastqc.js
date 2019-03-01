@@ -182,19 +182,15 @@ $(function () {
     load_fastqc_seq_content();
     fastqc_seq_content_heatmap();
 
-    // Go through each section in case FastQC is there multiple times
-    $('.mqc-module-section').each(function(i){
 
-        // Skip this module if it's not FastQC
-        if(!$(this).attr('id').startsWith('mqc-module-section-fastqc')){
-            return true;
-        }
+    // Go through each FastQC module in case there are multiple
+    $('.mqc-module-section[id^="mqc-module-section-fastqc"]').each(function(){
+        var module_element = this;
+        var parent_id = $(module_element).attr('id');
+        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
 
         // Add the pass / warning / fails counts to each of the FastQC submodule headings
-        var parent_id = $(this).attr('id');
-        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
         $.each(fastqc_passfails[module_key], function(k, vals){
-            var pid = '#'+parent_id+' [id^=fastqc_'+k+']';
             var total = 0;
             var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
             $.each(vals, function(s_name, status){
@@ -206,7 +202,7 @@ $(function () {
                 <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings">'+v['warn']+'</div> \
                 <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
             </div>';
-            $(pid).first().append(p_bar);
+            $(module_element).find('[id^=fastqc_'+k+']').first().append(p_bar);
         });
     });
 
