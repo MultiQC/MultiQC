@@ -459,10 +459,8 @@ class MultiqcModule(BaseMultiqcModule):
             </div>
             <div class="clearfix"></div>
         </div>
-        <script type="text/javascript">
-            fastqc_seq_content_data = {d};
-            $(function () {{ fastqc_seq_content_heatmap(); }});
-        </script>'''.format(d=json.dumps(data))
+        <script type="application/json" class="fastqc_seq_content">{d}</script>
+        '''.format(d=json.dumps([self.anchor.replace('-', '_'), data]))
 
         self.add_section (
             name = 'Per Base Sequence Content',
