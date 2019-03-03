@@ -163,3 +163,49 @@ process multiqc {
     """
 }
 ```
+
+## Snakemake 
+
+MultiQC can easily be integrated into your snakeamke pipelines as a snakemake "rule." The following example runs fastqc, followed by multiQC in a small, reproducible example Snakefile.
+
+```
+# An example of runniung MultiQC in a snakemake workflow.
+
+SAMPS = ["a.chr21", "b.chr21"]
+
+rule all:
+    input:
+        "data/multiqc/multiqc_report.html",
+
+rule fastqc:
+    input:
+        expand(["ngs-test-data/reads/{sample}.1.fq", "ngs-test-data/reads/{sample}.2.fq"], sample=SAMPS)
+    output:
+        expand(["data/fastqc/{sample}.1_fastqc.html","data/fastqc/{sample}.2_fastqc.html"], sample=SAMPS)
+    conda:
+        "envs/qc.yml"
+    params:
+        threads = "4"
+    shell:
+        "fastqc -o data/fastqc -t {params.threads} {input}"
+
+rule multiqc:
+    input:
+       rules.fastqc.output
+    output:
+        "data/multiqc/multiqc_report.html"
+    conda:
+        "envs/qc.yml"
+    shell:
+        "multiqc data -o data/multiqc"
+```
+
+To run this example locally, make sure you have the latest version of snakemake then in a working directory run:
+
+```
+git clone --recursive https://github.com/jakevc/snakemake_multiqc.git
+cd snakemake_multiqc
+snakemake --use-conda
+```
+
+First, snakemake will create the conda environment specified by `envs/qc.yml` where fastqc and multiqc are downloaded, then run the commands in that environment. When running multiqc, we only need to specify one output file in the snakemake rule `multiqc/multiqc.html`. The shell command `multiqc data -o data/multiqc` will run `multiqc` on all files in the `data` directory, and put the final report in `data/multiqc/`. 
