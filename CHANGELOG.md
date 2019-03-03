@@ -14,15 +14,16 @@
     * Increased the default summary csv file-size limit from 1MB to 5MB.
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
-* **Hicexplorer** 
+* **Hicexplorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 
 #### New MultiQC Features:
-_..no updates yet.._
+* Added some installation docs for windows
+* Added some docs about using MultiQC in bioinformatics pipelines
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
-* Added some installation docs for windows
+* Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
 
 
 

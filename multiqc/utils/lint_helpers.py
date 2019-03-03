@@ -30,7 +30,7 @@ def check_mods_docs_readme():
             logger.warn("Can't check docs readme in lint test as file doesn't exist: {}".format(readme_fn))
             return None
     with open(readme_fn) as f:
-        fm = next(yaml.load_all(f))
+        fm = next(yaml.load_all(f, Loader=yaml.SafeLoader))
 
     for section in fm['MultiQC Modules']:
         for name, fn in fm['MultiQC Modules'][section].items():

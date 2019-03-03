@@ -41,7 +41,7 @@ install_requires = [
         'matplotlib>=2.1.1,<3.0.0',
         'markdown',
         'numpy',
-        'pyyaml',
+        'pyyaml>=4',
         'requests',
         'simplejson',
         'spectra>=0.0.10'

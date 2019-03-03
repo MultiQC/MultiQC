@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
             def dict_constructor(loader, node):
                 return OrderedDict(loader.construct_pairs(node))
             yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-            summary_dict = yaml.load(f)
+            summary_dict = yaml.safe_load(f)
         except Exception as e:
             log.error("Error parsing MinIONQC input file: {}".format(f))
             return
