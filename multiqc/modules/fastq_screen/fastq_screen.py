@@ -162,12 +162,14 @@ class MultiqcModule(BaseMultiqcModule):
                 data.append(td)
 
         html = '''<div id="fq_screen_plot" class="hc-plot"></div>
-        <script type="text/javascript">
-            fq_screen_data = {};
-            fq_screen_categories = {};
-        </script>'''.format(json.dumps(data), json.dumps(categories))
+        <script type="application/json" id="fq_screen_data">{}</script>
+        <script type="application/json" id="fq_screen_categories">{}</script>
+        '''.format(json.dumps(data), json.dumps(categories))
 
         html += '''<script type="text/javascript">
+            fq_screen_data = JSON.parse(document.getElementById('fq_screen_data').innerHTML);
+            fq_screen_categories = JSON.parse(document.getElementById('fq_screen_categories').innerHTML);
+
             $(function () {
                 $("#fq_screen_plot").highcharts({
                     chart: { type: "column", backgroundColor: null },
