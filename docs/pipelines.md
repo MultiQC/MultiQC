@@ -163,3 +163,52 @@ process multiqc {
     """
 }
 ```
+
+## Snakemake
+
+Following is an example mini-pipeline for [Snakemake](https://github.com/snakemake-workflows)* which runs FastQC and MultiQC. Each step is executed via a rule that requires a specified input and output file(s).
+
+* Reference: Koster, J. and Rahmann, S. (2012). Snakemake–a scalable bioinformatics workflow engine. Bioinformatics, 28(19), 2520–2522.
+
+```
+# Snakefile
+# Save the file simply as 'Snakefile'
+
+import glob
+import os
+
+# Specified rule order according to which pipeline runs
+ruleorder: fastqc > multiqc
+
+# Don't forget the forward slash "/" character
+main_dir = "/directory/path/"
+fastq_dir = main_dir + "fastq/"
+fastqc_dir = main_dir + "fastqc/"
+
+# Input fastq files
+fastq_files = glob.glob(main_dir + "fastq/??-*fastq.gz")
+
+samples = [os.path.basename(f).rstrip(".fastq.gz") for f in fastq_files]
+
+# os.path.isdir will return true if path is an existing directory
+# os.mkdir is a directory creation function
+for d in [main_dir, fastq_dir, fastqc_dir]:
+    if not os.path.isdir(d):
+        os.mkdir(d)
+
+# Mention the output file of last rule as the first rule
+rule all:
+    input: main_dir + "multiqc_report.html"
+
+# additional paths for input and output files can be added using comma e.g. "output: path/to/output1, "path/to/output2"
+rule fastqc:
+    input: fastq_dir + "{sample}.fastq.gz"
+    output: fastqc_dir + "{sample}_fastqc.html"
+    shell: "fastqc --outdir {fastqc_dir} {input}"
+
+rule multiqc:
+    input: expand(fastqc_dir + "{sample}_fastqc.html", sample = samples)
+    output: main_dir + "multiqc_report.html"
+    log: main_dir + "multiqc.log"
+    shell: "multiqc {main_dir}"
+```
