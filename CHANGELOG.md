@@ -16,12 +16,12 @@
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 
 #### New MultiQC Features:
-_..no updates yet.._
+* Added some installation docs for windows
+* Added some docs about using MultiQC in bioinformatics pipelines
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
-* Added some installation docs for windows
-
+* Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
 
 
 

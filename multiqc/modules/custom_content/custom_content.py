@@ -81,7 +81,7 @@ def custom_module_classes():
                         def dict_constructor(loader, node):
                             return OrderedDict(loader.construct_pairs(node))
                         yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-                        parsed_data = yaml.load(f['f'])
+                        parsed_data = yaml.load(f['f'], Loader=SafeLoader)
                     except Exception as e:
                         log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
                         log.warning("YAML error: {}".format(e))
@@ -318,7 +318,7 @@ def _find_file_header(f):
         return None
     hconfig = None
     try:
-        hconfig = yaml.load("\n".join(hlines))
+        hconfig = yaml.load("\n".join(hlines), Loader=SafeLoader)
         assert(isinstance(hconfig, dict))
     except yaml.YAMLError as e:
         log.warn("Could not parse comment file header for MultiQC custom content: {}".format(f['fn']))
