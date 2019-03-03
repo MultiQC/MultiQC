@@ -7,10 +7,10 @@ tips about integration with different workflow tools.
 I'll use FastQC as an example input in all of these examples as it's a common
 use case. However, the concepts should apply for any of the tools that MultiQC supports.
 
-Remember that you can use [Custom Content](https://multiqc.info/docs/#custom-content)
-feature to easily collect pipeline-specific metadata (software version numbers,
-pipeline run-time data, links to documentation) in to a format that can be inserted
-in to your report.
+> Remember that you can use [Custom Content](https://multiqc.info/docs/#custom-content)
+> feature to easily collect pipeline-specific metadata (software version numbers,
+> pipeline run-time data, links to documentation) in to a format that can be inserted
+> in to your report.
 
 If you know exactly which modules will be used by MultiQC, you can use the
 `-m`/`--modules` flag to specify just these. This will speed up MultiQC a little.
@@ -25,6 +25,9 @@ See the [nf-core](https://nf-co.re/) pipelines for lots of examples of full next
 pipelines that use MultiQC.
 
 ```groovy
+#!/usr/bin/env nextflow
+
+params.reads = "data/*{1,2}.fastq.gz"
 Channel.fromFilePairs( params.reads ).into { read_files_fastqc }
 
 process fastqc {
@@ -63,6 +66,35 @@ Note that `.collect()` is needed to make MultiQC run once for all upstream outpu
 The `.ifEmpty([])` add on isn't really needed here, but is helpful in larger pipelines where
 some processes may be optional. Without this, if any channels are not processed then MultiQC
 won't run.
+
+### Clashing input filenames
+
+If a nextflow process tries to stage more than one input file with an identical filename,
+it will throw an error.  Putting inputs into their own subfolder (`file ('fastqc/*')`) in
+the above examples is not really needed, but reduces the chance of input filename clashes.
+
+If you're using a tool that gives the same filename to each file that MultiQC uses, you'll
+need to tell nextflow to rename the inputs to prevent clashes.
+
+For example, [StringTie](https://ccb.jhu.edu/software/stringtie/) prints statistics to
+STDOUT that MultiQC uses to generate reports. We can easily collect this in nextflow by
+using the `.command.log` file that nextflow saves as an output file from the process
+(`file ".command.log" into stringtie_log`). However, now every sample has the same filename
+for MultiQC.
+
+We get around this by using [dynamic input file names](https://www.nextflow.io/docs/latest/process.html#dynamic-input-file-names)
+with nextflow:
+
+```groovy
+file ('stringtie/stringtie_log*') from stringtie_log.collect().ifEmpty([])
+```
+
+This `file` pattern renames each stringtie log file to `stringtie_log1`,
+`stringtie_log2` and so on, ensuring that we avoid any filename clashes.
+
+Note that MultiQC finds output from some tools based on their filename, so use with caution
+(you may need to define some custom [module search patterns](https://multiqc.info/docs/#module-search-patterns)).
+
 
 ### Custom run name
 
