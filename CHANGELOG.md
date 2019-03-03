@@ -8,14 +8,16 @@
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
 
 #### Module updates:
+* **HiC Explorer**
+    * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+* **RSeQC**
+    * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
 * **Samtools**
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
     * Increased the default summary csv file-size limit from 1MB to 5MB.
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
-* **Hicexplorer**
-    * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 
 #### New MultiQC Features:
 * Added some installation docs for windows
