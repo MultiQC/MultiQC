@@ -123,7 +123,7 @@ Note that you may be able to avoid this by adding this directory to your `PATH`.
 ## Using the Docker container
 
 A Docker container is provided on Docker Hub called ewels/MultiQC.
-It's based on `czentye/matplotlib-minimal` to give the smallest size I could manage (200MB).
+It's based on `czentye/matplotlib-minimal` to give the smallest size I could manage (~80MB).
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory:
 

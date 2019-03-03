@@ -23,7 +23,7 @@
 * Added some installation docs for windows
 * Added some docs about using MultiQC in bioinformatics pipelines
 * Rewrote Docker image
-    * New base image `czentye/matplotlib-minimal` reduces size from 526MB to 200MB
+    * New base image `czentye/matplotlib-minimal` reduces image size from ~200MB to ~80MB
     * Proper installation method ensures latest version of the code
     * New entrypoint allows easier command-line usage
 
