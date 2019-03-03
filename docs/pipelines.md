@@ -128,7 +128,7 @@ process multiqc {
 ```
 
 Note that we use `params.name` as a placeholder, this gives the benefit that both `-name`
-and the common type `--name` work for this case.
+and the common typo `--name` work for this case.
 
 There isn't an easy way to know if a custom value for `-name` has been given to nextflow,
 but all default names are two lowercase words with a single underscore so if the name
