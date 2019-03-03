@@ -1,19 +1,22 @@
-FROM python:2.7-slim
+# Teeny-tiny matplotlib image based on alpine
+FROM czentye/matplotlib-minimal:3.0.3
 
-LABEL \
-  author="Phil Ewels" \
-  description="MultiQC" \
-  maintainer="phil.ewels@scilifelab.se"
+LABEL author="Phil Ewels" \
+      description="MultiQC" \
+      maintainer="phil.ewels@scilifelab.se"
 
-# Install libraries
-RUN \
-  apt-get update && apt-get install -y --no-install-recommends \
-  g++ \
-  git \
-  wget \
-  && wget --quiet -O /opt/get-pip.py https://bootstrap.pypa.io/get-pip.py \
-  && python /opt/get-pip.py \
-  && rm -rf /var/lib/apt/lists/* /opt/get-pip.py
+
+# Add the MultiQC source files to the container
+ADD . /usr/src/multiqc
+WORKDIR /usr/src/multiqc
+
+# Remove matplotlib requirement needed for py2 support
+# TODO: We can get rid of this when MultiQC is py3 only
+RUN sed -i 's/matplotlib>=2.1.1,<3.0.0/matplotlib>=2.1.1/g' setup.py
 
 # Install MultiQC
-RUN pip install git+git://github.com/ewels/MultiQC.git
+RUN python setup.py install
+
+# Set up entrypoint and cmd for easy docker usage
+ENTRYPOINT [ "multiqc" ]
+CMD [ "." ]

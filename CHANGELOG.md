@@ -20,6 +20,10 @@
 #### New MultiQC Features:
 * Added some installation docs for windows
 * Added some docs about using MultiQC in bioinformatics pipelines
+* Rewrote Docker image
+    * New base image `czentye/matplotlib-minimal` reduces size from 526MB to 200MB
+    * Proper installation method ensures latest version of the code
+    * New entrypoint allows easier command-line usage
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
