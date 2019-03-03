@@ -161,37 +161,41 @@ class MultiqcModule(BaseMultiqcModule):
                     td['linkedTo'] = ':previous'
                 data.append(td)
 
-        html = '<div id="fq_screen_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            fq_screen_data = {};\n\
-            fq_screen_categories = {};\n\
-            $(function () {{ \n\
-                $("#fq_screen_plot").highcharts({{ \n\
-                    chart: {{ type: "column", backgroundColor: null }}, \n\
-                    title: {{ text: "FastQ Screen Results" }}, \n\
-                    xAxis: {{ categories: fq_screen_categories }}, \n\
-                    yAxis: {{ \n\
-                        max: 100, \n\
-                        min: 0, \n\
-                        title: {{ text: "Percentage Aligned" }} \n\
-                    }}, \n\
-                    tooltip: {{ \n\
-                        formatter: function () {{ \n\
-                            return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" + \n\
-                                this.series.name + ": " + this.y + "%<br/>" + \n\
-                                "Total Alignment: " + this.point.stackTotal + "%"; \n\
-                        }}, \n\
-                    }}, \n\
-                    plotOptions: {{ \n\
-                        column: {{ \n\
-                            pointPadding: 0, \n\
-                            groupPadding: 0.02, \n\
-                            stacking: "normal" }} \n\
-                    }}, \n\
-                    series: fq_screen_data \n\
-                }}); \n\
-            }}); \n\
-        </script>'.format(json.dumps(data), json.dumps(categories))
+        html = '''<div id="fq_screen_plot" class="hc-plot"></div>
+        <script type="text/javascript">
+            fq_screen_data = {};
+            fq_screen_categories = {};
+        </script>'''.format(json.dumps(data), json.dumps(categories))
+
+        html += '''<script type="text/javascript">
+            $(function () {
+                $("#fq_screen_plot").highcharts({
+                    chart: { type: "column", backgroundColor: null },
+                    title: { text: "FastQ Screen Results" },
+                    xAxis: { categories: fq_screen_categories },
+                    yAxis: {
+                        max: 100,
+                        min: 0,
+                        title: { text: "Percentage Aligned" }
+                    },
+                    tooltip: {
+                        formatter: function () {
+                            return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
+                                this.series.name + ": " + this.y + "%<br/>" +
+                                "Total Alignment: " + this.point.stackTotal + "%";
+                        },
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0,
+                            groupPadding: 0.02,
+                            stacking: "normal"
+                        }
+                    },
+                    series: fq_screen_data
+                });
+            });
+        </script>'''
 
         return html
 
