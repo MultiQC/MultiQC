@@ -18,12 +18,12 @@
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 
 #### New MultiQC Features:
-* Added some installation docs for windows
-* Added some docs about using MultiQC in bioinformatics pipelines
+_..no updates yet.._
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
-* Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
+* Added some installation docs for windows
+
 
 
 
