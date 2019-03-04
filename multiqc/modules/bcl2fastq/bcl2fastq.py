@@ -11,7 +11,6 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 log = logging.getLogger(__name__)
 
-
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
