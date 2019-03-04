@@ -401,11 +401,11 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         if 'yPlotBands' in pconfig:
             xlim = axes.get_xlim()
             for pb in pconfig['yPlotBands']:
-                axes.barh(pb['from'], xlim[1], height = pb['to']-pb['from'], left=xlim[0], color=pb['color'], linewidth=0, zorder=0)
+                axes.barh(pb['from'], xlim[1], height = pb['to']-pb['from'], left=xlim[0], color=pb['color'], linewidth=0, zorder=0, align='edge')
         if 'xPlotBands' in pconfig:
             ylim = axes.get_ylim()
             for pb in pconfig['xPlotBands']:
-                axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0)
+                axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0, align='edge')
 
         # Tight layout - makes sure that legend fits in and stuff
         if len(pdata) <= 15:
