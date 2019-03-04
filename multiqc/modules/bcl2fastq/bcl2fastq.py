@@ -189,7 +189,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "perfectIndex": 0,
                     "filename": os.path.join(myfile['root'], myfile["fn"]),
                     "yieldQ30": 0,
-                    "qscore_sum": 0}
+                    "qscore_sum": 0
+                }
                 # simplify the population of dictionnaries
                 lsample = run_data[lane]["samples"][sample]
                 for r in range(1,5):
