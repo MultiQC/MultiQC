@@ -189,14 +189,16 @@ class MultiqcModule(BaseMultiqcModule):
                     "perfectIndex": 0,
                     "filename": os.path.join(myfile['root'], myfile["fn"]),
                     "yieldQ30": 0,
-                    "qscore_sum": 0
+                    "qscore_sum": 0,
+                    "R1_yield": 0,
+                    "R2_yield": 0,
+                    "R1_Q30": 0,
+                    "R2_Q30": 0,
+                    "R1_trimmed_bases": 0,
+                    "R2_trimmed_bases": 0
                 }
                 # simplify the population of dictionnaries
                 lsample = run_data[lane]["samples"][sample]
-                for r in range(1,5):
-                        lsample["R{}_yield".format(r)] = 0
-                        lsample["R{}_Q30".format(r)] = 0
-                        lsample["R{}_trimmed_bases".format(r)] = 0
                 rlane["total"] += demuxResult["NumberReads"]
                 rlane["total_yield"] += demuxResult["Yield"]
                 lsample["total"] += demuxResult["NumberReads"]
@@ -213,11 +215,6 @@ class MultiqcModule(BaseMultiqcModule):
                     lsample["R{}_yield".format(r)] += readMetric["Yield"]
                     lsample["R{}_Q30".format(r)] += readMetric["YieldQ30"]
                     lsample["R{}_trimmed_bases".format(r)] += readMetric["TrimmedBases"]
-                for r in range(1,5):
-                    if not lsample["R{}_yield".format(r)] and not lsample["R{}_Q30".format(r)] and not lsample["R{}_trimmed_bases".format(r)]:
-                        lsample.pop("R{}_yield".format(r))
-                        lsample.pop("R{}_Q30".format(r))
-                        lsample.pop("R{}_trimmed_bases".format(r))
             undeterminedYieldQ30 = 0
             undeterminedQscoreSum = 0
             undeterminedTrimmedBases = 0
