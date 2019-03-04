@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.effects_impact_plot()
         )
         self.add_section (
-            name = 'Variant Effects by Class',
+            name = 'Variant by Effects',
             description = (
                 "The stacked bar plot shows the effect of variants at protein "
                 "level and the number of variants for each effect type."
@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.effects_plot()
         )
         self.add_section (
-            name = 'Variant by Effects',
+            name = 'Variant Effects by Class',
             description = (
                 "The stacked bar plot shows the effect of variants and"
                 "the number of variants for each effect type."
