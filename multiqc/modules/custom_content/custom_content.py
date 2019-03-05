@@ -18,6 +18,19 @@ from multiqc.plots import table, bargraph, linegraph, scatter, heatmap, beeswarm
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+# Load YAML as an ordered dict
+# From https://stackoverflow.com/a/21912744
+def yaml_ordered_load(stream):
+    class OrderedLoader(yaml.SafeLoader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return OrderedDict(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return yaml.load(stream, OrderedLoader)
+
 def custom_module_classes():
     """
     MultiQC Custom Content class. This module does a lot of different
@@ -76,12 +89,7 @@ def custom_module_classes():
                 parsed_data = None
                 if f_extension == '.yaml' or f_extension == '.yml':
                     try:
-                        # Parsing as OrderedDict is slightly messier with YAML
-                        # http://stackoverflow.com/a/21048064/713980
-                        def dict_constructor(loader, node):
-                            return OrderedDict(loader.construct_pairs(node))
-                        yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-                        parsed_data = yaml.safe_load(f['f'])
+                        parsed_data = yaml_ordered_load(f['f'])
                     except Exception as e:
                         log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
                         log.warning("YAML error: {}".format(e))
