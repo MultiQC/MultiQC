@@ -173,7 +173,7 @@ configfile: "config.yaml"
 
 rule all:
     input:
-        "multiqc.html"
+        "multiqc_report.html"
 
 rule fastqc:
     input:
@@ -188,7 +188,7 @@ rule multiqc:
     input:
         expand("fastqc/{sample}.html", sample=config["samples"])
     output:
-        "multiqc.html"
+        "multiqc_report.html"
     wrapper:
         "0.31.1/bio/multiqc"
 ```
@@ -198,6 +198,6 @@ Running above workflow with
 ```
 snakemake --use-conda
 ```
-first installs all the required tools into isolated conda environments, and then executes all necessary steps to create the target that is given in the top rule. In other words, it will execute fastqc two times (creating `fastqc/1.html` and `fastqc/2.html`) and multiqc once, creating `multiqc.html`. 
+first installs all the required tools into isolated conda environments, and then executes all necessary steps to create the target that is given in the top rule. In other words, it will execute fastqc two times (creating `fastqc/1.html` and `fastqc/2.html`) and multiqc once, creating `multiqc_report.html`. 
 Of course, using conda is optional, but it greatly increases reproducibility.
 Naturally, Snakemake is not limited to wrappers (although its [wrapper repository](https://snakemake-wrappers.readthedocs.io) provides many in the field of bioinformatics), but also supports direct execution of [shell commands](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#rules) and integration of [custom scripts](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#external-scripts) (e.g., for plotting).
