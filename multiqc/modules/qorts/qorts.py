@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
             s = l.split("\t")
             if s_names is None:
                 s_names = [ self.clean_s_name(s_name, f['root']) for s_name in s[1:] ]
-                if len(s_names) <= 2 and s_names[0] == 'COUNT':
+                if len(s_names) <= 2 and s_names[0].endswith('COUNT'):
                     if f['fn'] == 'QC.summary.txt':
                         s_names = [ self.clean_s_name( os.path.basename(os.path.normpath(f['root'])), f['root']) ]
                     else:
