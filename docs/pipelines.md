@@ -163,3 +163,47 @@ process multiqc {
     """
 }
 ```
+
+## Snakemake
+
+The best-practice for using MultiQC in [Snakemake](https://snakemake.readthedocs.io/)  pipelines is to use a predefined [Snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/multiqc.html). For example, see the following mini-pipeline:
+
+```yaml
+configfile: "config.yaml"
+
+rule all:
+    input:
+        "multiqc_report.html"
+
+rule fastqc:
+    input:
+        "data/{sample}.fastq.gz"
+    output:
+        html="fastqc/{sample}.html",
+        zip="fastqc/{sample}.zip"
+    wrapper:
+        "0.31.1/bio/fastqc"
+
+rule multiqc:
+    input:
+        expand("fastqc/{sample}.html", sample=config["samples"])
+    output:
+        "multiqc_report.html"
+    wrapper:
+        "0.31.1/bio/multiqc"
+```
+
+Snakemake wrappers not only deliver predefined and unit tested code for generating the requested output with the respective tool, but also define the required software stack in terms of conda packages.
+
+You can run the above workflow as follows:
+
+```bash
+snakemake --use-conda
+```
+
+This first installs all the required tools into isolated conda environments, and then executes all necessary steps to create the target that is given in the top rule. In other words, it will execute FastQC twice (creating `fastqc/1.html` and `fastqc/2.html`) and MultiQC once, creating `multiqc_report.html`.
+
+Of course, using conda is optional, but it greatly increases reproducibility.
+Snakemake is not limited to wrappers (although its [wrapper repository](https://snakemake-wrappers.readthedocs.io) provides many in the field of bioinformatics), but also supports direct execution of [shell commands](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#rules) and integration of [custom scripts](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#external-scripts) (e.g., for plotting).
+
+If you prefer to use MultiQC without a snakemake wrapper, you can see a minimal example on GitHub: [jakevc/snakemake_multiqc](https://github.com/jakevc/snakemake_multiqc). This has an example script and some test data for you to play with.

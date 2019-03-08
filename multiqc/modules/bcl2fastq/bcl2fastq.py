@@ -11,7 +11,6 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 log = logging.getLogger(__name__)
 
-
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
@@ -197,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "R1_trimmed_bases": 0,
                     "R2_trimmed_bases": 0
                 }
-                # simplify the population of dictionnaries
+                # simplify the population of dictionaries
                 lsample = run_data[lane]["samples"][sample]
                 rlane["total"] += demuxResult["NumberReads"]
                 rlane["total_yield"] += demuxResult["Yield"]
@@ -215,6 +214,12 @@ class MultiqcModule(BaseMultiqcModule):
                     lsample["R{}_yield".format(r)] += readMetric["Yield"]
                     lsample["R{}_Q30".format(r)] += readMetric["YieldQ30"]
                     lsample["R{}_trimmed_bases".format(r)] += readMetric["TrimmedBases"]
+                # Remove unpopulated read keys
+                for r in range(1,5):
+                    if not lsample["R{}_yield".format(r)] and not lsample["R{}_Q30".format(r)] and not lsample["R{}_trimmed_bases".format(r)]:
+                        lsample.pop("R{}_yield".format(r))
+                        lsample.pop("R{}_Q30".format(r))
+                        lsample.pop("R{}_trimmed_bases".format(r))
             undeterminedYieldQ30 = 0
             undeterminedQscoreSum = 0
             undeterminedTrimmedBases = 0
@@ -285,16 +290,14 @@ class MultiqcModule(BaseMultiqcModule):
                         self.bcl2fastq_bysample[sample_id] = {
                             "total": 0,
                             "total_yield": 0,
-                            "R1_yield": 0,
-                            "R2_yield": 0,
                             "perfectIndex": 0,
                             "yieldQ30": 0,
-                            "R1_Q30": 0,
-                            "R2_Q30": 0,
-                            "R1_trimmed_bases": 0,
-                            "R2_trimmed_bases": 0,
                             "qscore_sum": 0
                         }
+                        for r in range(1,5):
+                                self.bcl2fastq_bysample[sample_id]["R{}_yield".format(r)] = 0
+                                self.bcl2fastq_bysample[sample_id]["R{}_Q30".format(r)] = 0
+                                self.bcl2fastq_bysample[sample_id]["R{}_trimmed_bases".format(r)] = 0
                     s = self.bcl2fastq_bysample[sample_id]
                     s["total"] += sample["total"]
                     s["total_yield"] += sample["total_yield"]
@@ -302,15 +305,13 @@ class MultiqcModule(BaseMultiqcModule):
                     s["yieldQ30"] += sample["yieldQ30"]
                     s["qscore_sum"] += sample["qscore_sum"]
                     # Undetermined samples did not have R1 and R2 information
-                    try:
-                        s["R1_yield"] += sample["R1_yield"]
-                        s["R2_yield"] += sample["R2_yield"]
-                        s["R1_Q30"] += sample["R1_Q30"]
-                        s["R2_Q30"] += sample["R2_Q30"]
-                        s["R1_trimmed_bases"] += sample["R1_trimmed_bases"]
-                        s["R2_trimmed_bases"] += sample["R2_trimmed_bases"]
-                    except KeyError:
-                        pass
+                    for r in range(1,5):
+                        try:
+                            s["R{}_yield".format(r)] += sample["R{}_yield".format(r)]
+                            s["R{}_Q30".format(r)] += sample["R{}_Q30".format(r)]
+                            s["R{}_trimmed_bases".format(r)] += sample["R{}_trimmed_bases".format(r)]
+                        except KeyError:
+                            pass
                     try:
                         s["percent_Q30"] = (float(s["yieldQ30"]) / float(s["total_yield"])) * 100.0
                     except ZeroDivisionError:
@@ -327,6 +328,16 @@ class MultiqcModule(BaseMultiqcModule):
                         if sample_id not in self.source_files:
                             self.source_files[sample_id] = []
                         self.source_files[sample_id].append(sample["filename"])
+                # Remove unpopulated read keys
+                for sample_id, sample in lane["samples"].items():
+                    for r in range(1,5):
+                        try:
+                            if not self.bcl2fastq_bysample[sample_id]["R{}_yield".format(r)] and not self.bcl2fastq_bysample[sample_id]["R{}_Q30".format(r)] and not self.bcl2fastq_bysample[sample_id]["R{}_trimmed_bases".format(r)]:
+                                self.bcl2fastq_bysample[sample_id].pop("R{}_yield".format(r))
+                                self.bcl2fastq_bysample[sample_id].pop("R{}_Q30".format(r))
+                                self.bcl2fastq_bysample[sample_id].pop("R{}_trimmed_bases".format(r))
+                        except KeyError:
+                            pass
 
     def get_unknown_barcodes(self, lane_unknown_barcode):
         """ Python 2.* dictionaries are not sorted.
@@ -347,15 +358,15 @@ class MultiqcModule(BaseMultiqcModule):
     def add_general_stats(self):
         data = dict()
         for sample_id, sample in self.bcl2fastq_bysample.items():
-            # Zero division is possible
-            try:
-                percent_R1_Q30 = '{0:.1f}'.format(float(100.0 * sample["R1_Q30"] / sample["R1_yield"]))
-            except ZeroDivisionError:
-                percent_R1_Q30 = '0.0'
-            try:
-                percent_R2_Q30 = '{0:.1f}'.format(float(100.0 * sample["R2_Q30"] / sample["R2_yield"]))
-            except ZeroDivisionError:
-                percent_R2_Q30 = '0.0'
+            percent_R_Q30 = dict()
+            for r in range(1,5):
+                # Zero division is possible
+                try:
+                    percent_R_Q30[r] = '{0:.1f}'.format(float(100.0 * sample["R{}_Q30".format(r)] / sample["R{}_yield".format(r)]))
+                except ZeroDivisionError:
+                    percent_R_Q30[r] = '0.0'
+                except KeyError:
+                    pass
             try:
                 perfect_percent = '{0:.1f}'.format(float(100.0 * sample["perfectIndex"] / sample["total"]))
             except ZeroDivisionError:
@@ -363,13 +374,15 @@ class MultiqcModule(BaseMultiqcModule):
 
             data[sample_id] = {
                 "yieldQ30": sample["yieldQ30"],
-                "percent_R1_Q30": percent_R1_Q30,
-                "percent_R2_Q30": percent_R2_Q30,
                 "total": sample["total"],
                 "perfectPercent": perfect_percent,
-                "R1_trimmed_bases": sample["R1_trimmed_bases"],
-                "R2_trimmed_bases": sample["R2_trimmed_bases"]
             }
+            for r in range(1,5):
+                try:
+                    data[sample_id]["percent_R{}_Q30".format(r)] = percent_R_Q30[r]
+                    data[sample_id]["R{}_trimmed_bases".format(r)] = sample["R{}_trimmed_bases".format(r)]
+                except KeyError:
+                    pass
 
         headers = OrderedDict()
         headers['total'] = {
@@ -384,22 +397,16 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'Greens',
             'shared_key': 'base_count'
         }
-        headers['percent_R1_Q30'] = {
-            'title': '% R1 Yield &ge; Q30',
-            'description': 'Percent of bases in R1 with a Phred score of 30 or higher',
-            'scale': 'RdYlGn',
-            'max': 100,
-            'min': 0,
-            'suffix': '%'
-        }
-        headers['percent_R2_Q30'] = {
-            'title': '% R2 Yield &ge; Q30',
-            'description': 'Percent of bases in R2 with a Phred score of 30 or higher',
-            'scale': 'RdYlGn',
-            'max': 100,
-            'min': 0,
-            'suffix': '%'
-        }
+        # If no data for a column, header will be automatically ignored
+        for r in range(1,5):
+            headers['percent_R{}_Q30'.format(r)] = {
+                'title': '% R{} Yield &ge; Q30'.format(r),
+                'description': 'Percent of bases in R{} with a Phred score of 30 or higher'.format(r),
+                'scale': 'RdYlGn',
+                'max': 100,
+                'min': 0,
+                'suffix': '%'
+            }
         headers['perfectPercent'] = {
             'title': '% Perfect Index',
             'description': 'Percent of reads with perfect index (0 mismatches)',
@@ -408,20 +415,25 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'suffix': '%'
         }
-        headers['R1_trimmed_bases'] = {
-            'title': '{} R1 trimmed'.format(config.base_count_prefix),
-            'description': 'Number of bases trimmed ({})'.format(config.base_count_desc),
-            'scale': 'RdYlBu',
-            'modify': lambda x: x * 0.000001,
-            'hidden': True if all([data[s]["R1_trimmed_bases"] == 0 for s in data]) else False
-        }
-        headers['R2_trimmed_bases'] = {
-            'title': '{} R2 trimmed'.format(config.base_count_prefix),
-            'description': 'Number of bases trimmed ({})'.format(config.base_count_desc),
-            'scale': 'RdYlBu',
-            'modify': lambda x: x * 0.000001,
-            'hidden': True if all([data[s]["R2_trimmed_bases"] == 0 for s in data]) else False
-        }
+        # If no data for a column, header will be automatically ignored
+        for r in range(1,5):
+            hideCol = True
+            for s in data:
+                try:
+                    if data[s]["R{}_trimmed_bases".format(r)] > 0:
+                        hideCol = False
+                except KeyError:
+                    pass
+            try:
+                headers['R{}_trimmed_bases'.format(r)] = {
+                    'title': '{} R{} trimmed'.format(config.base_count_prefix, r),
+                    'description': 'Number of bases trimmed ({})'.format(config.base_count_desc),
+                    'scale': 'RdYlBu',
+                    'modify': lambda x: x * 0.000001,
+                    'hidden': hideCol
+                }
+            except KeyError:
+                pass
         self.general_stats_addcols(data, headers)
 
     def lane_stats_table(self):
