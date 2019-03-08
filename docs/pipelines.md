@@ -168,7 +168,7 @@ process multiqc {
 
 MultiQC can be easily integrated into Snakemake pipelines by using a predefined [Snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/multiqc.html):
 
-```
+```python
 configfile: "config.yaml"
 
 rule all:
