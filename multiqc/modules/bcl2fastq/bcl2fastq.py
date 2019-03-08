@@ -188,16 +188,14 @@ class MultiqcModule(BaseMultiqcModule):
                     "perfectIndex": 0,
                     "filename": os.path.join(myfile['root'], myfile["fn"]),
                     "yieldQ30": 0,
-                    "qscore_sum": 0,
-                    "R1_yield": 0,
-                    "R2_yield": 0,
-                    "R1_Q30": 0,
-                    "R2_Q30": 0,
-                    "R1_trimmed_bases": 0,
-                    "R2_trimmed_bases": 0
+                    "qscore_sum": 0
                 }
                 # simplify the population of dictionaries
                 lsample = run_data[lane]["samples"][sample]
+                for r in range(1,5):
+                        lsample["R{}_yield".format(r)] = 0
+                        lsample["R{}_Q30".format(r)] = 0
+                        lsample["R{}_trimmed_bases".format(r)] = 0
                 rlane["total"] += demuxResult["NumberReads"]
                 rlane["total_yield"] += demuxResult["Yield"]
                 lsample["total"] += demuxResult["NumberReads"]
