@@ -18,6 +18,8 @@
     * Increased the default summary csv file-size limit from 1MB to 5MB.
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
+* **bcl2fastq**
+    * Added handling of demultiplexing of more than 2 reads
 
 #### New MultiQC Features:
 * Added some installation docs for windows
