@@ -8,8 +8,12 @@
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
 
 #### Module updates:
+* **bcl2fastq**
+    * Added handling of demultiplexing of more than 2 reads
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+* **QoRTs**
+    * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
 * **RSeQC**
     * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
 * **Samtools**
