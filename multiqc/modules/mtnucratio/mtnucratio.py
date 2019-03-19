@@ -78,6 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'scale': 'OrRd',
             'format': '{:,.2f}',
+            'hidden': true
         }
         headers['nuc_cov_avg'] = {
             'title': 'Average nuclear genome coverage',
@@ -86,6 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'scale': 'OrRd',
             'format': '{:,.2f}',
+            'hidden': true
         }
         headers['mt_nuc_ratio'] = {
             'title': 'MTNUC Ratio',
@@ -93,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 1,
             'max': 100,
             'scale': 'OrRd',
-            'format': '{:,.2f}',
+            'format': '{:,.2f}'
         }
         headers['nucreads'] = {
             'title': 'Reads on nuclear genome',
@@ -102,6 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'scale': 'OrRd',
             'format': '{:,.0f}',
+            'hidden': true
         }
         headers['mtreads'] = {
             'title': 'Reads on mitochondrial genome',
@@ -110,6 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 100,
             'scale': 'OrRd',
             'format': '{:,.2f}',
+            'hidden': true
         }
 
         self.general_stats_addcols(self.mtnuc_data, headers)
