@@ -22,35 +22,30 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='DeDup', anchor='dedup',
-        href="http://www.github.com/apeltzer/DeDup",
-        info="is a tool for duplicate removal for merged/collapsed reads in ancient DNA analysis.")
+        super(MultiqcModule, self).__init__(name='mtnucratio', anchor='mtnucratio',
+        href="http://www.github.com/apeltzer/MTNucRatioCalculator",
+        info="is a tool to compute mt/nuc ratios for NGS datasets.")
 
-        # Find and load any DeDup reports
-        self.dedup_data = dict()
+        # Find and load any MTNUCRATIO reports
+        self.mtnuc_data = dict()
 
         for f in self.find_log_files('dedup',filehandles=True):
             self.parseJSON(f)
 
         # Filter to strip out ignored sample names
-        self.dedup_data = self.ignore_samples(self.dedup_data)
+        self.mtnuc_data = self.ignore_samples(self.mtnuc_data)
 
-        if len(self.dedup_data) == 0:
+        if len(self.mtnuc_data) == 0:
             raise UserWarning
 
-        log.info("Found {} reports".format(len(self.dedup_data)))
+        log.info("Found {} reports".format(len(self.mtnuc_data)))
 
         # Write parsed report data to a file
-        self.write_data_file(self.dedup_data, 'multiqc_dedup')
+        self.write_data_file(self.mtnuc_data, 'multiqc_mtnucratio')
 
         # Basic Stats Table
-        self.dedup_general_stats_table()
+        self.mtnucratio_general_stats_table()
 
-        # Alignment Rate Plot
-        self.add_section(
-            description = 'This plot shows read categories that were either not removed (unique reads) or removed (duplicates).',
-            plot = self.dedup_alignment_plot()
-        )
 
     #Parse our nice little JSON file
     def parseJSON(self, f):
@@ -69,10 +64,10 @@ class MultiqcModule(BaseMultiqcModule):
         metrics_dict = parsed_json['metrics']
 
         #Add all in the main data_table
-        self.dedup_data[s_name] = metrics_dict
+        self.mtnuc_data[s_name] = metrics_dict
 
 
-    def dedup_general_stats_table(self):
+    def mtnucratio_general_stats_table(self):
         """ Take the parsed stats from the mtnucratio report and add it to the
         basic stats table at the top of the report """
 
@@ -118,6 +113,6 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.2f}',
         }
 
-        self.general_stats_addcols(self.dedup_data, headers)
+        self.general_stats_addcols(self.mtnuc_data, headers)
 
     
