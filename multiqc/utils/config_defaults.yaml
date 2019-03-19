@@ -356,6 +356,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - mtnucratio:
+        module_tag:
+            - DNA
+            - ancient
     - picard:
         module_tag:
             - DNA
