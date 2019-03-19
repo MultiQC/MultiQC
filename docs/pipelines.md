@@ -17,10 +17,7 @@ If you know exactly which modules will be used by MultiQC, you can use the
 This will probably only make a noticeable impact if your pipeline has thousands
 of input files for MultiQC.
 
-## Table of Contents
-- [Nextflow](#nextflow)
-- [Snakemake](#snakemake)
-
+In the following, we show examples for [Nextflow](#nextflow) and [Snakemake](#snakemake) integration.
 
 ## Nextflow
 
