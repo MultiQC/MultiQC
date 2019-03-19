@@ -17,6 +17,11 @@ If you know exactly which modules will be used by MultiQC, you can use the
 This will probably only make a noticeable impact if your pipeline has thousands
 of input files for MultiQC.
 
+## Table of Contents
+- [Nextflow](#nextflow)
+- [Snakemake](#snakemake)
+
+
 ## Nextflow
 
 An example mini-pipeline for [nextflow](https://www.nextflow.io/) which runs FastQC
