@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor='mosdepth-coverage-dist',
                 description='Distribution of the number of locations in the reference genome with a given depth of coverage',
                 plot=linegraph.plot(data, {
-                    'id': "mosdepth_coverage_dist",
+                    'id': "mosdepth-coverage-dist",
                     'xlab': 'Coverage (X)',
                     'ylab': '% bases in ' + scope + ' covered by least X reads',
                     'ymax': 100,
@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor='mosdepth-coverage-per-contig',
                 description='Average coverage per contig or chromosome',
                 plot=linegraph.plot(avgdata, {
-                    'id': "mosdepth_coverage_dist",
+                    'id': "mosdepth-coverage-per-contig",
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True
