@@ -10,6 +10,8 @@
 #### Module updates:
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
+* **DeDup**
+    * Added handling clusterfactor and JSON logfiles
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **QoRTs**
@@ -22,6 +24,7 @@
     * Increased the default summary csv file-size limit from 1MB to 5MB.
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
+
 
 #### New MultiQC Features:
 * Added some installation docs for windows
