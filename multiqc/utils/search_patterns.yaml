@@ -356,6 +356,8 @@ mosdepth/global_dist:
     fn: '*.mosdepth.global.dist.txt'
 mosdepth/region_dist:
     fn: '*.mosdepth.region.dist.txt'
+mosdepth/thresholds:
+    fn: '*.mosdepth.thresholds.bed.gz'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
