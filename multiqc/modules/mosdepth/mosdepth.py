@@ -101,10 +101,10 @@ class MultiqcModule(BaseMultiqcModule):
         if data:
             self.add_section(
                 name='Coverage distribution (' + scope + ')',
-                anchor='mosdepth-coverage-dist',
+                anchor='mosdepth-coverage-dist-' + scope,
                 description='Distribution of the number of locations in the reference genome with a given depth of coverage',
                 plot=linegraph.plot(data, {
-                    'id': "mosdepth-coverage-dist",
+                    'id': 'mosdepth-coverage-dist-id-' + scope,
                     'xlab': 'Coverage (X)',
                     'ylab': '% bases in ' + scope + ' covered by least X reads',
                     'ymax': 100,
@@ -114,10 +114,10 @@ class MultiqcModule(BaseMultiqcModule):
             )
             self.add_section(
                 name='Average coverage per contig (' + scope + ')',
-                anchor='mosdepth-coverage-per-contig',
+                anchor='mosdepth-coverage-per-contig-id-' + scope,
                 description='Average coverage per contig or chromosome',
                 plot=linegraph.plot(avgdata, {
-                    'id': "mosdepth-coverage-per-contig",
+                    'id': 'mosdepth-coverage-per-contig-' + scope,
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True
