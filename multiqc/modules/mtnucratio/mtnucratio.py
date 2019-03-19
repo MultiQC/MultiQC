@@ -10,7 +10,6 @@ import re
 import json
 
 from multiqc import config
-from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -29,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any MTNUCRATIO reports
         self.mtnuc_data = dict()
 
-        for f in self.find_log_files('dedup',filehandles=True):
+        for f in self.find_log_files('mtnucratio',filehandles=True):
             self.parseJSON(f)
 
         # Filter to strip out ignored sample names

@@ -353,7 +353,7 @@ mirtrace/contaminationbasic:
 mirtrace/mirnacomplexity:
     fn: 'mirtrace-stats-mirna-complexity.tsv'
 mtnucratio:
-    fn: '*.mtnucratiomtnuc.json'
+    fn: '*mtnucratiomtnuc.json'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
