@@ -65,36 +65,19 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = self.clean_s_name(parsed_json['metadata']['sample_name'],'')
         self.add_data_source(f, s_name)
 
-        #Add total reads
-        self.total_reads[s_name] = parsed_json['total_reads']
-
-        #Add merged removed
-        self.merged_removed[s_name] = parsed_json['merged_removed']
-
-        #Add forward removed
-        self.forward_removed[s_name] = parsed_json['forward_removed']
-
-        #Add total removed
-        self.total_removed[s_name] = parsed_json['total_removed']
-
-        #Add reverse removed
-        self.reverse_removed[s_name] = parsed_json['reverse_removed']       
-
-        #Add dup_rate 
-        self.dup_rate[s_name] = parsed_json['dup_rate']   
-
-        #Add ClusterFactor 
-        self.clusterfactor[s_name] = parsed_json['clusterfactor'] 
-
         #Compute not removed from given values
-        self.not_removed[s_name] = parsed_json['total_reads'] - parsed_json['reverse_removed'] - parsed_json['forward_removed'] - parsed_json['merged_removed']
+        parsed_json['not_removed'] = parsed_json['total_reads'] - parsed_json['reverse_removed'] - parsed_json['forward_removed'] - parsed_json['merged_removed']
+
+        #Add all in the main data_table
+        self.dedup_data[s_name] = parsed_json
+
 
     def dedup_general_stats_table(self):
         """ Take the parsed stats from the DeDup report and add it to the
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['duplication_rate'] = {
+        headers['dup_rate'] = {
             'title': 'Duplication Rate',
             'description': 'Percentage of reads categorised as a technical duplicate',
             'min': 0,
@@ -103,6 +86,14 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd',
             'format': '{:,.0f}',
             'modify': lambda x: x * 100.0
+        }
+        headers['clusterfactor'] = {
+            'title': 'ClusterFactor',
+            'description': 'CF~1 means high library complexity. Large CF means not worth sequencing deeper.',
+            'min': 1,
+            'max': 100,
+            'scale': 'OrRd',
+            'format': '{:,.2f}',
         }
         self.general_stats_addcols(self.dedup_data, headers)
 
