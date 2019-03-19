@@ -63,6 +63,7 @@ MultiQC Modules:
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
     miRTrace: modules/mirtrace.md
+    MTNucRatio: modules/mtnucratio.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
