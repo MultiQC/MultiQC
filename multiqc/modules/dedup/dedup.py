@@ -7,6 +7,7 @@ from collections import OrderedDict
 import logging
 import os
 import re
+import json
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -28,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any DeDup reports
         self.dedup_data = dict()
 
-        for f in self.find_log_files('dedup'):
+        for f in self.find_log_files('dedup',filehandles=True):
             self.parseJSON(f)
 
         # Filter to strip out ignored sample names
@@ -65,11 +66,16 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = self.clean_s_name(parsed_json['metadata']['sample_name'],'')
         self.add_data_source(f, s_name)
 
+        metrics_dict = parsed_json['metrics']
+
+        for k in metrics_dict:
+            metrics_dict[k] = float(metrics_dict[k])
+
         #Compute not removed from given values
-        parsed_json['not_removed'] = parsed_json['total_reads'] - parsed_json['reverse_removed'] - parsed_json['forward_removed'] - parsed_json['merged_removed']
+        metrics_dict['not_removed'] = metrics_dict['total_reads'] - metrics_dict['reverse_removed'] - metrics_dict['forward_removed'] - metrics_dict['merged_removed']
 
         #Add all in the main data_table
-        self.dedup_data[s_name] = parsed_json
+        self.dedup_data[s_name] = metrics_dict
 
 
     def dedup_general_stats_table(self):
