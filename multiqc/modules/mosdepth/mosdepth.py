@@ -1,13 +1,9 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from QualiMap """
+""" MultiQC module to parse output from mosdepth """
 
 from __future__ import print_function
 from collections import defaultdict, OrderedDict
 import logging
-import os
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -17,7 +13,8 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     Mosdepth can generate multiple outputs with a common prefix and different endings.
-    The module can use first 2, generating 2 plots for each.
+    The module can use first 2, using "region" if exists, otherwise "global".
+    Generating 2 plots: coverage distribution and per-contig average coverage.
 
     {prefix}.mosdepth.global.dist.txt
     a distribution of proportion of bases covered at or above a given threshhold for each chromosome and genome-wide
@@ -73,51 +70,55 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/brentp/mosdepth",
             info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing")
 
-        self.average_coverage_chart('global')
-        self.average_coverage_chart('region')
+        self.average_coverage_chart()
 
-    def average_coverage_chart(self, scope='global'):
+    def average_coverage_chart(self):
         xmax = 0
         data = defaultdict(OrderedDict)
         avgdata = defaultdict(OrderedDict)
-        for f in self.find_log_files('mosdepth/' + scope + '_dist'):
-            s_name = self.clean_s_name(f['fn'], root=None)
-            for line in f['f'].split("\n"):
-                if "\t" not in line:
-                    continue
-                contig, cutoff_reads, bases_fraction = line.split("\t")
-                if not contig == "total":
-                    avg = avgdata[s_name].get(contig, 0) + float(bases_fraction)
-                    avgdata[s_name][contig] = avg
-                y = 100.0 * float(bases_fraction)
-                x = int(cutoff_reads)
-                data[s_name][x] = y
-                if y > 1.0:
-                    xmax = max(xmax, x)
 
-            if s_name in data:
-                self.add_data_source(f)
+        for scope in ('region', 'global'):
+            for f in self.find_log_files('mosdepth/' + scope + '_dist'):
+                s_name = self.clean_s_name(f['fn'], root=None).replace('.mosdepth.' + scope + '.dist', '')
+                if s_name in data:  # both region and global might exist, prioritizing region
+                    continue
+
+                for line in f['f'].split("\n"):
+                    if "\t" not in line:
+                        continue
+                    contig, cutoff_reads, bases_fraction = line.split("\t")
+                    if not contig == "total":
+                        avg = avgdata[s_name].get(contig, 0) + float(bases_fraction)
+                        avgdata[s_name][contig] = avg
+                    y = 100.0 * float(bases_fraction)
+                    x = int(cutoff_reads)
+                    data[s_name][x] = y
+                    if y > 1.0:
+                        xmax = max(xmax, x)
+
+                if s_name in data:
+                    self.add_data_source(f)
 
         if data:
             self.add_section(
-                name='Coverage distribution (' + scope + ')',
-                anchor='mosdepth-coverage-dist-' + scope,
+                name='Coverage distribution',
+                anchor='mosdepth-coverage-dist',
                 description='Distribution of the number of locations in the reference genome with a given depth of coverage',
                 plot=linegraph.plot(data, {
-                    'id': 'mosdepth-coverage-dist-id-' + scope,
+                    'id': 'mosdepth-coverage-dist-id',
                     'xlab': 'Coverage (X)',
-                    'ylab': '% bases in ' + scope + ' covered by least X reads',
+                    'ylab': '% bases in genome/regions covered by least X reads',
                     'ymax': 100,
                     'xmax': xmax,
                     'tt_label': '<b>{point.x}X</b>: {point.y}',
                 })
             )
             self.add_section(
-                name='Average coverage per contig (' + scope + ')',
-                anchor='mosdepth-coverage-per-contig-id-' + scope,
+                name='Average coverage per contig',
+                anchor='mosdepth-coverage-per-contig-id',
                 description='Average coverage per contig or chromosome',
                 plot=linegraph.plot(avgdata, {
-                    'id': 'mosdepth-coverage-per-contig-' + scope,
+                    'id': 'mosdepth-coverage-per-contig',
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True

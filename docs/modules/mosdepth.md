@@ -28,7 +28,7 @@ The MultiQC module plots coverage distributions from 2 kinds of outputs:
 - `{prefix}.mosdepth.region.dist.txt`
 - `{prefix}.mosdepth.global.dist.txt`
 
-Plotting 2 plots for each:
+Using "region" if exists, otherwise "global". Plotting 2 figures:
 
 - Distribution of the number of locations in the genome with a given depth of coverage.
 - Average coverage per contig/chromosome.
