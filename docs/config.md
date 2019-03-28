@@ -200,7 +200,8 @@ sp:
 ```
 
 Search patterns can specify a filename match (`fn`) or a file contents
-match (`contents`).
+match (`contents`), as well as a number of additional search keys.
+See [below](#step-1-find-log-files) for the full reference.
 
 ## Ignoring Files
 MultiQC begins by indexing all of the files that you specified and building a list
@@ -300,4 +301,3 @@ Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap
 ```bash
 multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
-
