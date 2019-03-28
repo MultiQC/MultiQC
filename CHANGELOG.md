@@ -34,6 +34,7 @@
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
 * Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
+* Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 
 
 
