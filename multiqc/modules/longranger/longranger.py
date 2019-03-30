@@ -28,6 +28,17 @@ class MultiqcModule(BaseMultiqcModule):
         "barcode processing, alignment, quality control, variant calling, phasing, "
         "and structural variant calling.")
 
+        def try_float_lambda(x, func, base):
+            try:
+                if func == '*':
+                    return float(x) * base
+                elif func == '/':
+                    return float(x) / base
+                else:
+                    return x
+            except:
+                return x
+
         self.headers = OrderedDict()
         self.headers['large_sv_calls'] = {
                 'title': 'Large SVs',
@@ -45,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.headers['genes_phased_lt_100kb'] = {
                 'title': 'genes phased < 100kb',
                 'description': 'Percentage of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'suffix': '%',
                 'scale': 'YlOrRd',
                 'hidden': True
@@ -54,14 +65,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'Longest phased',
                 'description': 'Size of the longest phase block, in base pairs',
                 'scale': 'YlOrRd',
-                'modify': lambda x: float(x) / 1000000.0,
+                'modify': lambda x: try_float_lambda(x, '/', 1000000.0),
                 'suffix': 'Mbp',
                 'hidden': True
         }
         self.headers['n50_phase_block'] = {
                 'title': 'N50 phased',
                 'description': 'N50 length of the called phase blocks, in base pairs.',
-                'modify': lambda x: float(x) / 1000000.0,
+                'modify': lambda x: try_float_lambda(x, '/', 1000000.0),
                 'suffix': 'Mbp',
                 'scale': 'YlOrRd',
                 'hidden': True
@@ -69,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.headers['snps_phased'] = {
                 'title': 'SNPs phased',
                 'description': 'Percentage of called SNPs that were phased.',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'suffix': '%',
                 'scale': 'PuRd',
                 'hidden': True
@@ -92,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.headers['zero_coverage'] = {
                 'title': 'Zero cov',
                 'description': 'Percentage of non-N bases in the genome with zero coverage.',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'suffix': '%',
                 'max': 100.0,
                 'min': 0.0,
@@ -109,13 +120,13 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Percentage of reads marked as PCR duplicates. To be marked as PCR duplicates, reads must have the same mapping extents on the genome and the same 10x barcode.',
                 'suffix': '%',
                 'min': 15.0,
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'scale': 'RdGy-rev',
                 'hidden': True
         }
         self.headers['mapped_reads'] = {
                 'title': 'Mapped',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'suffix': '%',
                 'description': 'Percentage of input reads that were mapped to the reference genome.',
                 'scale': 'PuBu',
@@ -123,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.headers['number_reads'] = {
                 'title': 'M Reads',
-                'modify': lambda x: float(x) / 1000000.0,
+                'modify': lambda x: try_float_lambda(x, '/', 1000000.0),
                 'description': 'Total number of reads supplied to Long Ranger. (millions)',
                 'scale': 'PuBu',
                 'hidden': True
@@ -131,14 +142,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.headers['molecule_length_mean'] = {
                 'title': 'Mol size',
                 'description': 'The length-weighted mean input DNA length in base pairs.',
-                'modify': lambda x: float(x) / 1000.0,
+                'modify': lambda x: try_float_lambda(x, '/', 1000.0),
                 'suffix': 'Kbp',
                 'scale': 'YlGn'
         }
         self.headers['molecule_length_stddev'] = {
                 'title': 'Mol stddev',
                 'description': 'The length-weighted standard deviation of the input DNA length distribution in base pairs.',
-                'modify': lambda x: float(x) / 1000.0,
+                'modify': lambda x: try_float_lambda(x, '/', 1000.0),
                 'suffix': 'Kbp',
                 'scale': 'YlGn',
                 'hidden': True
@@ -154,21 +165,21 @@ class MultiqcModule(BaseMultiqcModule):
                 'description': 'Percentage of bases in R1 with base quality >= 30.',
                 'hidden': True,
                 'suffix': '%',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'scale': 'Purples'
         }
         self.headers['r2_q30_bases_fract'] = {
                 'title': '% R2 >= Q30',
                 'description': 'Percentage of bases in R2 with base quality >= 30.',
                 'suffix': '%',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'scale': 'Purples',
                 'hidden': True
         }
         self.headers['bc_on_whitelist'] = {
                 'title': 'Valid BCs',
                 'description': 'The Percentage of reads that carried a valid 10x barcode sequence.',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'suffix': '%',
                 'scale': 'BuPu',
                 'hidden': True,
@@ -177,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'BC Q30',
                 'description': 'Percentage of bases in the barcode with base quality >= 30.',
                 'suffix': '%',
-                'modify': lambda x: float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'scale': 'Purples',
                 'hidden': True
         }
@@ -190,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.headers['mean_dna_per_gem'] = {
                 'title': 'DNA per gem',
                 'description': 'The average number of base pairs of genomic DNA loaded into each GEM. This metric is based on the observed extents of read-pairs on each molecule.',
-                'modify': lambda x: float(x) / 1000000.0,
+                'modify': lambda x: try_float_lambda(x, '/', 1000000.0),
                 'suffix': 'Mbp',
                 'scale': 'OrRd',
                 'hidden': True
@@ -198,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.headers['gems_detected'] = {
                 'title': 'M Gems',
                 'description': 'The number of Chromium GEMs that were collected and which generated a non-trivial number of read-pairs. (millions)',
-                'modify': lambda x: float(x) / 1000000.0,
+                'modify': lambda x: try_float_lambda(x, '/', 1000000.0),
                 'scale': 'OrRd',
         }
         self.headers['corrected_loaded_mass_ng'] = {
@@ -284,8 +295,14 @@ class MultiqcModule(BaseMultiqcModule):
         snps_phased_pct = {}
         genes_phased_pct = {}
         for s_name in self.longranger_data:
-            snps_phased_pct[s_name] = { 'snps_phased_pct': float(self.longranger_data[s_name]['snps_phased']) * 100.0 }
-            genes_phased_pct[s_name] = { 'genes_phased_pct': float(self.longranger_data[s_name]['genes_phased_lt_100kb']) * 100.0 }
+            try:
+                snps_phased_pct[s_name] = { 'snps_phased_pct': float(self.longranger_data[s_name]['snps_phased']) * 100.0 }
+            except:
+                snps_phased_pct[s_name] = { 'snps_phased_pct': '' }
+            try:
+                genes_phased_pct[s_name] = { 'genes_phased_pct': float(self.longranger_data[s_name]['genes_phased_lt_100kb']) * 100.0 }
+            except:
+                genes_phased_pct[s_name] = { 'genes_phased_pct': '' }
         phase_plot_cats = [ OrderedDict(), OrderedDict(), OrderedDict() ]
         phase_plot_cats[0]['longest_phase_block'] = { 'name': 'Longest Phase Block' }
         phase_plot_cats[0]['n50_phase_block'] = { 'name': 'N50 of Phase Blocks' }
