@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'On target',
                 'description': 'Percentage of aligned bases mapped with the target regions in targeted mode. Only bases inside the intervals of target BED file are counted.',
                 'suffix': '%',
-                'modify': lambda x: 0 if x=="" else float(x) * 100.0,
+                'modify': lambda x: try_float_lambda(x, '*', 100.0),
                 'scale': 'Greens'
         }
         self.headers['zero_coverage'] = {
@@ -292,53 +292,62 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         ### Bar plot of phasing stats
+        phase_pdata = {}
         snps_phased_pct = {}
         genes_phased_pct = {}
         for s_name in self.longranger_data:
             try:
+                phase_pdata[s_name] = {
+                    'longest_phase_block': float(self.longranger_data[s_name]['longest_phase_block']),
+                    'n50_phase_block': float(self.longranger_data[s_name]['n50_phase_block'])
+                }
+            except:
+                pass
+            try:
                 snps_phased_pct[s_name] = { 'snps_phased_pct': float(self.longranger_data[s_name]['snps_phased']) * 100.0 }
             except:
-                snps_phased_pct[s_name] = { 'snps_phased_pct': '' }
+                pass
             try:
                 genes_phased_pct[s_name] = { 'genes_phased_pct': float(self.longranger_data[s_name]['genes_phased_lt_100kb']) * 100.0 }
             except:
-                genes_phased_pct[s_name] = { 'genes_phased_pct': '' }
+                pass
         phase_plot_cats = [ OrderedDict(), OrderedDict(), OrderedDict() ]
         phase_plot_cats[0]['longest_phase_block'] = { 'name': 'Longest Phase Block' }
         phase_plot_cats[0]['n50_phase_block'] = { 'name': 'N50 of Phase Blocks' }
         phase_plot_cats[1]['snps_phased_pct'] = { 'name': '% SNPs Phased' }
         phase_plot_cats[2]['genes_phased_pct'] = { 'name': '% Genes < 100kbp in a single phase block' }
-        self.add_section (
-            name = 'Phasing',
-            anchor = 'longranger-phasing',
-            description = 'Phasing performance from Long Ranger. Genes are only considered if &le; 100kbp in length and with at least one heterozygous SNP.',
-            helptext = '''
-                    * Longest phased
-                        * Size of the longest phase block, in base pairs
-                    * N50 phased
-                        * N50 length of the called phase blocks, in base pairs.
-                    * % SNPs phased
-                        * Percentage of called SNPs that were phased.
-                    * % Genes Phased
-                        * Percentage of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.
-                    ''',
-            plot = bargraph.plot(
-                [self.longranger_data, snps_phased_pct, genes_phased_pct],
-                phase_plot_cats,
-                {
-                    'id': 'longranger-phasing-plot',
-                    'title': 'Long Ranger: Phasing Statistics',
-                    'data_labels': [
-                        {'name': 'N50 Phased', 'ylab': 'N50 of called phase blocks (bp)'},
-                        {'name': '% SNPs Phased', 'ylab': '% SNPs Phased', 'ymax':100},
-                        {'name': '% Genes Phased', 'ylab': '% Genes Phased', 'ymax':100}
-                    ],
-                    'cpswitch': False,
-                    'stacking': None,
-                    'ylab': 'N50 of called phase blocks (bp)'
-                }
+        if len(phase_pdata) > 0:
+            self.add_section (
+                name = 'Phasing',
+                anchor = 'longranger-phasing',
+                description = 'Phasing performance from Long Ranger. Genes are only considered if &le; 100kbp in length and with at least one heterozygous SNP.',
+                helptext = '''
+                        * Longest phased
+                            * Size of the longest phase block, in base pairs
+                        * N50 phased
+                            * N50 length of the called phase blocks, in base pairs.
+                        * % SNPs phased
+                            * Percentage of called SNPs that were phased.
+                        * % Genes Phased
+                            * Percentage of genes shorter than 100kb with >1 heterozygous SNP that are phased into a single phase block.
+                        ''',
+                plot = bargraph.plot(
+                    [phase_pdata, snps_phased_pct, genes_phased_pct],
+                    phase_plot_cats,
+                    {
+                        'id': 'longranger-phasing-plot',
+                        'title': 'Long Ranger: Phasing Statistics',
+                        'data_labels': [
+                            {'name': 'N50 Phased', 'ylab': 'N50 of called phase blocks (bp)'},
+                            {'name': '% SNPs Phased', 'ylab': '% SNPs Phased', 'ymax':100},
+                            {'name': '% Genes Phased', 'ylab': '% Genes Phased', 'ymax':100}
+                        ],
+                        'cpswitch': False,
+                        'stacking': None,
+                        'ylab': 'N50 of called phase blocks (bp)'
+                    }
+                )
             )
-        )
 
         ### Bar plot of mapping statistics
         mapping_counts_data = {}
@@ -395,9 +404,10 @@ class MultiqcModule(BaseMultiqcModule):
         lines = content.splitlines()
         data = list(zip(lines[0].strip().split(','), lines[1].strip().split(',')))
         for i,j in data:
-            try:
-                out_dict[i] = float(j)
-            except ValueError:
-                out_dict[i] = j
+            if j != '':
+                try:
+                    out_dict[i] = float(j)
+                except ValueError:
+                    out_dict[i] = j
 
         return out_dict
