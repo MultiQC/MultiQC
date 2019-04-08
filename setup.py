@@ -44,7 +44,8 @@ install_requires = [
         'pyyaml>=4',
         'requests',
         'simplejson',
-        'spectra>=0.0.10'
+        'spectra>=0.0.10',
+        'networkx<2.3'  # for py2
     ]
 
 setup(
