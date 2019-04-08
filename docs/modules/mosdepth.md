@@ -3,13 +3,6 @@ Name: mosdepth
 URL: https://github.com/brentp/mosdepth
 Description: >
     Mosdepth performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.
-    It can output:
-    - per-base depth
-    - mean per-window depth given a window size--as would be used for CNV calling
-    - mean per-region given a BED file of regions
-    - a distribution of proportion of bases covered at or above a given threshhold for each chromosome and genome-wide.
-    - quantized output that merges adjacent bases as long as they fall in the same coverage bins e.g. (10-20)
-    - threshold output to indicate how many bases in each region are covered at the given thresholds.
 ---
 
 [Mosdepth](https://github.com/brentp/mosdepth/) performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.
