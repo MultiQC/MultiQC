@@ -16,12 +16,6 @@ it collects the configuration settings from the following places in this order
 7. Command line config (`--cl_config`)
 8. Specific command line options (_e.g._ `--force`)
 
-You can find an example configuration file with the MultiQC source code, called
-[`multiqc_config.example.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
-If you installed MultiQC with `pip` or `conda` you won't have this file locally,
-but you can find it on GitHub:
-[github.com/ewels/MultiQC](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
-
 ## Sample name cleaning
 MultiQC typically generates sample names by taking the input or log file name,
 and 'cleaning' it. To do this, it uses the `fn_clean_exts` settings and looks
@@ -200,7 +194,8 @@ sp:
 ```
 
 Search patterns can specify a filename match (`fn`) or a file contents
-match (`contents`).
+match (`contents`), as well as a number of additional search keys.
+See [below](#step-1-find-log-files) for the full reference.
 
 ## Ignoring Files
 MultiQC begins by indexing all of the files that you specified and building a list
@@ -300,4 +295,3 @@ Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap
 ```bash
 multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
-

@@ -12,8 +12,12 @@
 #### Module updates:
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
+* **fastp**
+    * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+* **LongRanger**
+    * Added support for the LongRanger Align pipeline.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
 * **RSeQC**
@@ -36,6 +40,7 @@
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
 * Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
+* Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 
 
 

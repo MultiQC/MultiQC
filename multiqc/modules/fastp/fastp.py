@@ -286,12 +286,13 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn-rev'
         }
         headers['after_filtering_q30_rate'] = {
-            'title': '{} Q30 reads'.format(config.read_count_prefix),
-            'description': 'Reads > Q30 after filtering ({})'.format(config.read_count_desc),
+            'title': '% > Q30',
+            'description': 'Percentage of reads > Q30 after filtering',
             'min': 0,
-            'modify': lambda x: x * config.read_count_multiplier,
+            'max': 100,
+            'modify': lambda x: x * 100.0,
             'scale': 'GnBu',
-            'shared_key': 'read_count',
+            'suffix': '%',
             'hidden': True
         }
         headers['after_filtering_q30_bases'] = {
