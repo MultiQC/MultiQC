@@ -38,14 +38,14 @@ install_requires = [
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        'matplotlib>=2.1.1,<3.0.0',
+        'matplotlib>=2.1.1' + (',<3.0.0' if sys.version_info[0] == 2 else ''),  # pin for py2
         'markdown',
         'numpy',
         'pyyaml>=4',
         'requests',
         'simplejson',
         'spectra>=0.0.10',
-        'networkx<2.3'  # for py2
+        'networkx' + ('<2.3' if sys.version_info[0] == 2 else ''),  # pin for py2
     ]
 
 setup(
