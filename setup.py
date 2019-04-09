@@ -45,7 +45,7 @@ install_requires = [
         'requests',
         'simplejson',
         'spectra>=0.0.10',
-        'networkx' + ('<2.3' if sys.version_info[0] == 2 else ''),  # pin for py2
+        'networkx' + ('<2.3' if sys.version_info[0] == 2 or sys.version_info[1] < 5 else ''),  # pin for py<3.5
     ]
 
 setup(
