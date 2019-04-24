@@ -22,6 +22,8 @@ def plot_qhist(samples, file_type, **plot_args):
         if cutoff < 0:
             xmax = item[0]
             break
+    else:
+        xmax = max(all_x)
 
     # The columns_to_plot dictionary should be replaced with an OrderedDict,
     # not to rely on the ordered-by-default implementation details on Python 3.6
