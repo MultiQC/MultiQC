@@ -87,14 +87,15 @@ class MultiqcModule(BaseMultiqcModule):
                     if "\t" not in line:
                         continue
                     contig, cutoff_reads, bases_fraction = line.split("\t")
-                    if not contig == "total":
+                    if contig == "total":
+                        y = 100.0 * float(bases_fraction)
+                        x = int(cutoff_reads)
+                        data[s_name][x] = y
+                        if y > 1.0:
+                            xmax = max(xmax, x)
+                    else:  # for per-contig plot
                         avg = avgdata[s_name].get(contig, 0) + float(bases_fraction)
                         avgdata[s_name][contig] = avg
-                    y = 100.0 * float(bases_fraction)
-                    x = int(cutoff_reads)
-                    data[s_name][x] = y
-                    if y > 1.0:
-                        xmax = max(xmax, x)
 
                 if s_name in data:
                     self.add_data_source(f, s_name=s_name)
@@ -121,6 +122,6 @@ class MultiqcModule(BaseMultiqcModule):
                     'id': 'mosdepth-coverage-per-contig',
                     'xlab': 'region',
                     'ylab': 'average coverage',
-                    'categories': True
+                    'categories': True,
                 })
             )
