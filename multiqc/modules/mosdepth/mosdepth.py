@@ -57,9 +57,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     {prefix}.thresholds.bed.gz (if --thresholds is specified) - how many bases in each region are covered at the given thresholds
 
-    #chrom  start   end     region  1X      10X     20X     30X
-    1       2488047 2488227 TNFRSF14        0       0       0       0
-    1       2489098 2489338 TNFRSF14        0       0       0       0
+    #chrom  start   end     region     1X      10X     20X     30X
+    1       2488047 2488227 TNFRSF14   0       0       0       0
+    1       2489098 2489338 TNFRSF14   0       0       0       0
 
     """
 
@@ -74,54 +74,81 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_cov_dist(self):
         xmax = 0
-        data = defaultdict(OrderedDict)
-        avgdata = defaultdict(OrderedDict)
+        dist_data = defaultdict(OrderedDict)  # cumulative distribution
+        cov_data = defaultdict(OrderedDict)  # absoulte (non-cumulative) coverage
+        perchrom_avg_data = defaultdict(OrderedDict)  # per chromosome average coverage
 
         for scope in ('region', 'global'):
             for f in self.find_log_files('mosdepth/' + scope + '_dist'):
                 s_name = self.clean_s_name(f['fn'], root=None).replace('.mosdepth.' + scope + '.dist', '')
-                if s_name in data:  # both region and global might exist, prioritizing region
+                if s_name in dist_data:  # both region and global might exist, prioritizing region
                     continue
 
                 for line in f['f'].split("\n"):
                     if "\t" not in line:
                         continue
                     contig, cutoff_reads, bases_fraction = line.split("\t")
-                    if contig == "total":
-                        y = 100.0 * float(bases_fraction)
+                    if contig == "total":  # for global coverage distribution
+                        cumcov = 100.0 * float(bases_fraction)
                         x = int(cutoff_reads)
-                        data[s_name][x] = y
-                        if y > 1.0:
+                        dist_data[s_name][x] = cumcov
+                        # converting cumulative coverage into absoulte coverage:
+                        """
+                        *example*              x:  cumcov:  abscov:
+                        3x                     3x  0      =               0   
+                        2x     -               2x  0.10   = 0.10 - 0    = 0.10  
+                        1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70 
+                        genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
+                        """
+                        if x + 1 not in dist_data[s_name]:
+                            cov_data[s_name][x] = cumcov
+                        else:
+                            cov_data[s_name][x] = cumcov - dist_data[s_name][x + 1]
+                        if cumcov > 1.0:
                             xmax = max(xmax, x)
                     else:  # for per-contig plot
-                        avg = avgdata[s_name].get(contig, 0) + float(bases_fraction)
-                        avgdata[s_name][contig] = avg
+                        avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
+                        perchrom_avg_data[s_name][contig] = avg
 
-                if s_name in data:
+                if s_name in dist_data:
                     self.add_data_source(f, s_name=s_name)
 
-        if data:
+        if dist_data:
             self.add_section(
                 name='Coverage distribution',
                 anchor='mosdepth-coverage-dist',
                 description='Distribution of the number of locations in the reference genome with a given depth of coverage',
-                plot=linegraph.plot(data, {
+                plot=linegraph.plot(dist_data, {
                     'id': 'mosdepth-coverage-dist-id',
                     'xlab': 'Coverage (X)',
                     'ylab': '% bases in genome/regions covered by least X reads',
                     'ymax': 100,
                     'xmax': xmax,
-                    'tt_label': '<b>{point.x}X</b>: {point.y}',
+                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+                })
+            )
+            self.add_section(
+                name='Coverage plot',
+                anchor='mosdepth-coverage-cov',
+                description='Number of locations in the reference genome with a given depth of coverage',
+                plot=linegraph.plot(cov_data, {
+                    'id': 'mosdepth-coverage-plot-id',
+                    'xlab': 'Coverage (X)',
+                    'ylab': '% bases in genome/regions covered at X reads',
+                    'ymax': 100,
+                    'xmax': xmax,
+                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
                 })
             )
             self.add_section(
                 name='Average coverage per contig',
                 anchor='mosdepth-coverage-per-contig-id',
                 description='Average coverage per contig or chromosome',
-                plot=linegraph.plot(avgdata, {
+                plot=linegraph.plot(perchrom_avg_data, {
                     'id': 'mosdepth-coverage-per-contig',
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True,
+                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
                 })
             )
