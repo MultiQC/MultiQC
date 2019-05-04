@@ -91,8 +91,11 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         for line_number, line in enumerate(f, start=1):
             line = line.strip().split('\t')
-            if line[0][0] == '#':
-                # It's a header row
+            try:
+                header_row = line[0][0] == '#'
+            except IndexError:
+                continue  # The table is probably empty
+            if header_row:
                 line[0] = line[0][1:] # remove leading '#'
 
                 if line[0] != cols[0]:
@@ -131,6 +134,10 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     line = list(map(int, line))
                 data[line[0]] = line[1:]
+
+        if not data:
+            log.warning("File %s appears to contain no data for plotting, ignoring...", fn)
+            return False
 
         if s_name in self.mod_data[file_type]:
             log.debug("Duplicate sample name found! Overwriting: %s", s_name)
