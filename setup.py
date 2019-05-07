@@ -33,12 +33,18 @@ print("""-----------------------------------
 
 """.format(version))
 
+matplotlib_version = '>=2.1.1'
+if sys.version_info[0] == 2:
+    matplotlib_version += ',<3.0.0'
+elif sys.version_info[0:2] == (3, 5):
+    matplotlib_version += ',<3.1.0'
+
 install_requires = [
         'click',
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        'matplotlib>=2.1.1' + (',<3.0.0' if sys.version_info[0] == 2 else ''),  # pin for py2
+        'matplotlib' + matplotlib_version,
         'markdown',
         'numpy',
         'pyyaml>=4',
