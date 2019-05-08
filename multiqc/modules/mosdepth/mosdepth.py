@@ -89,6 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'ymax': 100,
                     'xmax': xmax,
                     'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+                    'smooth_points': 500,
                 })
             )
         if cov_data:
@@ -104,6 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'ymax': 100,
                     'xmax': xmax,
                     'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+                    'smooth_points': 500,
                 })
             )
         if perchrom_avg_data:
@@ -117,6 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'ylab': 'average coverage',
                     'categories': True,
                     'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+                    'smooth_points': 500,
                 })
             )
         if dist_data:
@@ -186,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'min': 0,
                 'suffix': '%',
                 'scale': 'RdYlGn',
-                'hidden': t in hidden_threshs
+                'hidden': t in hidden_threshs,
             }
         self.general_stats_addcols(data, headers)
 
