@@ -36,7 +36,7 @@ print("""-----------------------------------
 matplotlib_version = '>=2.1.1'
 if sys.version_info[0] == 2:
     matplotlib_version += ',<3.0.0'
-elif sys.version_info[0:2] == (3, 5):
+else:
     matplotlib_version += ',<3.1.0'
 
 install_requires = [
