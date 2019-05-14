@@ -516,3 +516,8 @@ module_order:
         module_tag:
             - DNA
             - RNA
+
+    - seqyclean:
+        module_tag:
+            - DNA
+            - RNA

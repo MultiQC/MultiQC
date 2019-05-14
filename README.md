@@ -56,7 +56,7 @@ Currently, supported tools include:
 |[Trimmomatic][trimmomatic]       |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
-
+[Seqyclean][seqyclean]
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -185,6 +185,7 @@ Code contributions from:
 [@winni2k](https://github.com/winni2k),
 [@wkretzsch](https://github.com/wkretzsch),
 [@nservant](https://github.com/nservant),
+[@elizabethcook21] (https://github.com/elizabethcook21),
 
 and many others. Thanks for your support!
 
