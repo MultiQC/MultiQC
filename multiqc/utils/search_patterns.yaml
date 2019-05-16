@@ -489,6 +489,8 @@ samtools/rmdup:
     shared: true
 sargasso:
     fn: 'overall_filtering_summary.txt'
+seqyclean:
+    fn: '*_SummaryStatistics*'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
     shared: true

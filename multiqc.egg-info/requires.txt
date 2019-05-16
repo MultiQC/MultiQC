@@ -1,0 +1,11 @@
+click
+future>0.14.0
+lzstring
+jinja2>=2.9
+matplotlib<3.0.0,>=2.1.1
+markdown
+numpy
+pyyaml>=4
+requests
+simplejson
+spectra>=0.0.10

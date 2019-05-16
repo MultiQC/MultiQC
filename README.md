@@ -47,7 +47,7 @@ Currently, supported tools include:
 |[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[Peddy][peddy]                        |
 |[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
 |[FLASh][flash]                   |[Tophat][tophat]         |[Stacks][stacks]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[QoRTs][qorts]                        |
+|[Flexbar][flexbar]               |[Seqyclean][seqyclean]   |[THetA2][theta2]             |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
@@ -56,7 +56,7 @@ Currently, supported tools include:
 |[Trimmomatic][trimmomatic]       |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
-[Seqyclean][seqyclean]
+
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -251,6 +251,7 @@ MultiQC is released under the GPL v3 or later licence.
 [samblaster]:     http://multiqc.info/docs/#samblaster
 [samtools]:       http://multiqc.info/docs/#samtools
 [sargasso]:       http://multiqc.info/docs/#sargasso
+[seqyclean]:      http://multiqc.info/docs/#seqyclean
 [skewer]:         http://multiqc.info/docs/#skewer
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff

@@ -1,6 +1,3 @@
-
-
-
 ---
 Name: SeqyClean
 URL: http://www.amazing-bfx-tool.com FIX THIS
@@ -9,4 +6,4 @@ Description: >
     It will output the number of reads that fail and pass with the quality scores
 ---
 
-utah Public Health Laboratory
+Utah Public Health Laboratory
