@@ -113,6 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.seq_dup_levels_plot()
         self.overrepresented_sequences()
         self.adapter_content_plot()
+        self.per_tile_quality_plot()
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
         """ Takes contents from a fastq_data.txt file and parses out required
@@ -931,6 +932,50 @@ class MultiqcModule(BaseMultiqcModule):
             Once a sequence has been seen in a read it is counted as being present
             right through to the end of the read so the percentages you see will only
             increase as the read length goes on._
+            ''',
+            plot = plot_html
+        )
+
+    def per_tile_quality_plot(self):
+        """ Create the HTML for the FastQC per tile sequence quality plot """
+
+        data = dict()
+        for s_name in self.fastqc_data:
+            try:
+                data[s_name] = self.fastqc_data[s_name]['statuses']['per_tile_sequence_quality']
+            except KeyError:
+                log.debug("Couldn't find data for {}, invalid Key".format(s_name))
+                pass
+        if len(data) == 0:
+            log.debug('per_tile_sequence_quality not found in FastQC reports')
+            return None
+
+        plot_html = '<div class="alert alert-info"> Plots not available.</div>'
+
+        self.add_section(
+            name = 'Per tile sequence quality',
+            anchor = 'fastqc_per_tile_sequence_quality',
+            description = 'Deviation from the average quality for each tile',
+            helptext = '''
+            FastQC reports show the deviation from the average quality for each tile. Currently 
+            a MultiQC report does not show this for all samples.
+            
+            From the [FastQC Help](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/12%20Per%20Tile%20Sequence%20Quality.html):
+            
+            _This graph will only appear in your analysis results if you're using an Illumina library 
+            which retains its original sequence identifiers. Encoded in these is the flowcell tile 
+            from which each read came. The graph allows you to look at the quality scores from each 
+            tile across all of your bases to see if there was a loss in quality associated with 
+            only one part of the flowcell._
+            
+            _The plot shows the deviation from the average quality for each tile. The colours are on 
+            a cold to hot scale, with cold colours being positions where the quality was at or above 
+            the average for that base in the run, and hotter colours indicate that a tile had worse 
+            qualities than other tiles for that base. A good plot should be blue all over._
+            
+            _Reasons for seeing warnings or errors on this plot could be transient problems such 
+            as bubbles going through the flowcell, or they could be more permanent problems 
+            such as smudges on the flowcell or debris inside the flowcell lane._
             ''',
             plot = plot_html
         )
