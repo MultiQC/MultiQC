@@ -18,6 +18,8 @@
     * Added support for the LongRanger Align pipeline.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
+* **RNA-SeQC**
+    * Updated broken URL link
 * **RSeQC**
     * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
 * **Samtools**
