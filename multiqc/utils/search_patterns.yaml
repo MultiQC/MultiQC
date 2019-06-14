@@ -12,7 +12,7 @@ afterqc:
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true
-    num_lines: 2
+    num_lines: 10
 bbmap/stats:
     contents: '#Name	Reads	ReadsPct'
     num_lines: 4
