@@ -490,7 +490,7 @@ samtools/rmdup:
 sargasso:
     fn: 'overall_filtering_summary.txt'
 seqyclean:
-    fn: '*_SummaryStatistics*'
+    fn: '*_SummaryStatistics.tsv'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
     shared: true
