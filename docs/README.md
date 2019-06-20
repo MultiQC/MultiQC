@@ -26,7 +26,8 @@ MultiQC Modules:
     KAT: modules/kat.md
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
-    Skewer: modules/skewer.md
+    Seqyclean: modules/seqyclean.md   
+	Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
@@ -76,8 +77,7 @@ MultiQC Modules:
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
-    Sargasso: modules/sargasso.md
-    Seqyclean: modules/seqyclean.md    
+    Sargasso: modules/sargasso.md 
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md
