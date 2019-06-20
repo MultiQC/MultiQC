@@ -47,14 +47,14 @@ Currently, supported tools include:
 |[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[Peddy][peddy]                        |
 |[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
 |[FLASh][flash]                   |[Tophat][tophat]         |[Stacks][stacks]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |[Seqyclean][seqyclean]   |[THetA2][theta2]             |[QoRTs][qorts]                        |
+|[Flexbar][flexbar]               |   |[THetA2][theta2]             |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
 |[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
 |[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
 |[Trimmomatic][trimmomatic]       |                         |                             |[Supernova][supernova]                |
-|                                 |                         |                             |[VCFTools][vcftools]                  |
+|[Seqyclean][seqyclean]                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
 
 
