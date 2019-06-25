@@ -16,6 +16,8 @@
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **LongRanger**
     * Added support for the LongRanger Align pipeline.
+* **Picard**
+    * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
 * **RNA-SeQC**
