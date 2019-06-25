@@ -97,8 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
 		)
 		self.add_section (
 			name = 'Seqyclean Results Breakdown',
-			anchor = 'seqyclean-first',
+			anchor = 'seqyclean-second',
 			description = 'This shows the breakdown results of the seqyclean process',
-			helptext = "If you're not sure _how_ to interpret the data, we can help!",
 			plot = bargraph.plot(data_breakdown)
 		)
