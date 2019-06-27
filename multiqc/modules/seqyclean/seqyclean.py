@@ -22,8 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
 
 		# Parse logs
 		self.seqyclean = dict()
-		data_total = {}
-		data_breakdown = {}
+		self.data_total = {}
+		self.data_breakdown = {}
 		for f in self.find_log_files('seqyclean'):
 			RowTwo = f['f'].split("\n")[1] #split the file into two rows
 			#These variables will be used in the total data table 
@@ -43,15 +43,15 @@ class MultiqcModule(BaseMultiqcModule):
 			PE2DiscByContam = RowTwo.split("\t")[55]
 			PE2DiscByLength = RowTwo.split("\t")[56]
 
-		#add the variables above into a dictionary for the total values table
-			data_total.update({
+			#add the variables above into a dictionary for the total values table
+			self.data_total.update({
 				f['s_name']: {
 					'PairsKept': PairsKept,
 					'PairsDiscarded': PairsDiscarded
 				}
 			})
 			#add the above variables into a dictionary for a breakdown table
-			data_breakdown.update({
+			self.data_breakdown.update({
 				f['s_name']: {
 					'PE1ReadsAn':PE1ReadsAn,
 					'PE1TruSeqAdap_found':PE1TruSeqAdap_found,
@@ -69,35 +69,55 @@ class MultiqcModule(BaseMultiqcModule):
 			})
 		
 		# Write the results to a file
-		self.write_data_file(data_total, 'seqyclean_results')
-		self.write_data_file(data_breakdown, 'seqyclean_results')
+		self.write_data_file(self.data_total, 'seqyclean_results')
+		self.write_data_file(self.data_breakdown, 'seqyclean_results')
 		#headers for the "general information" at the top of the Multiqc Analysis
-		headers = OrderedDict()
-		headers['PairsKept'] = {
-			'title': 'PairsKept',
-			'description': 'Num of pairs kept from seqyclean analysis',
-			'scale': 'YlGn',
-			'format': '{} bp'
-		}
-		headers['PairsDiscarded'] = {
-			'title': 'PairsDiscarded',
-			'description': 'Num of pairs discarded from seqyclean analysis',
-			'scale': 'OrRd',
-			'format': '{} bp'
-		}
-		self.general_stats_addcols(data_total, headers)
-		
+		self.seqyclean_general_stats_table()
 		#These functions create the sections in the report summary
+		firstkeys = ['PairsKept', 'PairsDiscarded']
+		secondkeys =['PE1ReadsAn','PE1TruSeqAdap_found','PE1ReadswVector_found','PE1ReadswContam_found','PE1DiscByContam','PE1DiscByLength','PE2ReadsAn','PE2TruSeqAdap_found','PE2ReadswVector_found','PE2ReadswContam_found','PE2DiscByContam','PE2DiscByLength']
+		pconfig = {
+            'id': 'seqyclean_assignment_plot',
+            'title': 'Seqyclean: Reads',
+            'ylab': 'Num of Reads',
+        }
+		config = {
+            'id': 'seqyclean_assignment_plot_2',
+            'title': 'Seqyclean: Breakdown Reads',
+            'ylab': 'Num of Reads',
+        }
 		self.add_section (
 			name = 'Total Seqyclean Results',
 			anchor = 'seqyclean-first',
 			description = 'This shows the results of the seqyclean process',
 			helptext = "If you're not sure _how_ to interpret the data, we can help!",
-			plot = bargraph.plot(data_total)
+			plot = bargraph.plot(self.data_total, firstkeys, pconfig)
 		)
 		self.add_section (
 			name = 'Seqyclean Results Breakdown',
 			anchor = 'seqyclean-second',
 			description = 'This shows the breakdown results of the seqyclean process',
-			plot = bargraph.plot(data_breakdown)
+			plot = bargraph.plot(self.data_breakdown, secondkeys, config)
 		)
+				
+	def seqyclean_general_stats_table(self):
+		""" Take the parsed stats from the sargasso report and add them to the
+		basic stats table at the top of the report """
+		headers = OrderedDict()
+		headers['PairsKept'] = {
+			'title': 'PairsKept: Seqyclean pairs that were preserved',
+			'description': 'Num of pairs kept from seqyclean analysis',
+			'scale': 'YlGn',
+			'format': '{} bp',
+			'ylab': '# Reads',
+			'id': 'pairs_kept'
+		}
+		headers['PairsDiscarded'] = {
+			'title': 'PairsDiscarded: Pairs that were discarded',
+			'description': 'Num of pairs discarded from seqyclean analysis',
+			'scale': 'OrRd',
+			'format': '{} bp',
+			'ylab': '# Reads',
+			'id': 'pairs_discarded'
+		}
+		self.general_stats_addcols(self.data_total, headers)
