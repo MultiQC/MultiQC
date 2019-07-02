@@ -171,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
         return dist_data, cov_data, xmax, perchrom_avg_data
 
     def genstats_cov_thresholds(self, dist_data, threshs, hidden_threshs):
-        data = defaultdict(lambda: dict())
+        data = defaultdict(OrderedDict)
         for s_name, d in dist_data.items():
             dist_subset = {t: data for t, data in d.items() if t in threshs}
             for t in threshs:
@@ -194,7 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(data, headers)
 
     def genstats_mediancov(self, dist_data):
-        data = defaultdict(lambda: dict())
+        data = defaultdict(OrderedDict)
         for s_name, d in dist_data.items():
             median_cov = None
             for this_cov, cum_pct in d.items():
