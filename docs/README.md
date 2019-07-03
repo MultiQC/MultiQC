@@ -62,6 +62,7 @@ MultiQC Modules:
     HTSeq: modules/htseq.md
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
+    mosdepth: modules/mosdepth.md
     miRTrace: modules/mirtrace.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md

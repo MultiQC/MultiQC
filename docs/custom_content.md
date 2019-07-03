@@ -1,10 +1,3 @@
-
-> **WARNING** - This feature is new and is very much in a beta status.
-> It is expected to be further developed in future releases, which may break backwards
-> compatibility. There are also probably quite a few bugs. Use at your own risk!
-> Please report bugs or missing functionality as a
-> [new GitHub issue](https://github.com/ewels/MultiQC/issues/new).
-
 # Introduction
 Bioinformatics projects often include non-standardised analyses, with results from custom
 scripts or in-house packages. It can be frustrating to have a MultiQC report describing

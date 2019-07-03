@@ -6,16 +6,28 @@
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
+* [**mosdepth**](https://github.com/brentp/mosdepth)
+    * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 
 #### Module updates:
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
 * **DeDup**
     * Added handling clusterfactor and JSON logfiles
+* **fastp**
+    * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+* **LongRanger**
+    * Added support for the LongRanger Align pipeline.
+* **miRTrace**
+    * Fixed bug where a sample in some plots was missed. ([#932](https://github.com/ewels/MultiQC/issues/932))
+* **Picard**
+    * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
+* **RNA-SeQC**
+    * Updated broken URL link
 * **RSeQC**
     * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
 * **Samtools**
@@ -37,6 +49,7 @@
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
 * Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
+* Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 
 
 
