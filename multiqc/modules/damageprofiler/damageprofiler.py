@@ -49,13 +49,8 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.summary_metrics_data) == 0:
             raise UserWarning
         
-        # Add all of the data into a single dict
-        self.damage_data = dict()
-        self.damage_data['3PGtoA'] = self.threepGtoAfreq_data
-        self.damage_data['5PCtoT'] = self.fivepCtoTfreq_data
-        self.damage_data['dist_fw'] = self.lgdist_fw_data
-        self.damage_data['dist_rv'] = self.lgdist_rv_data
-        self.damage_data['summary'] = self.summary_metrics_data
+        # Write parsed report data to a file
+        self.write_data_file(self.summary_metrics_data, 'multiqc_damageprofiler_metrics')
 
         # Basic Stats Table, use generic function to add data to general table
         self.dmgprof_misinc_stats(self.threepGtoAfreq_data, '3 Prime', 'G>A')
@@ -99,9 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = self.lgdistplot(self.lgdist_rv_data, 'Reverse')
             )
         
-        # Write parsed report data to a file
-        
-        self.write_data_file(self.damage_data, 'multiqc_damageprofiler')
+
 
 
     #Parse our nice little JSON file
