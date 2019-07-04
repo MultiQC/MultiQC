@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f['f'])
             #Check for Keys existing
-            if(!'metrics' in parsed_json && 'metadata' in parsed_json)
+            if('metrics' not in parsed_json && 'metadata' not in parsed_json)
                 log.warn("No DeDup JSON: '{}'".format(f['fn']))
                 return None
         except JSONDecodeError as e:
