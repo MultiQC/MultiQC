@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Parse the JSON output from DeDup and save the summary statistics """
         try:
             parsed_json = json.load(f['f'])
-        except Exception as e:
+        except JSONDecodeError as e:
             log.warn("Could not parse DeDup JSON: '{}'".format(f['fn']))
             print(e)
             return None
