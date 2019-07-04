@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='RNA-SeQC', anchor='rna_seqc',
-        href='http://archive.broadinstitute.org/cancer/cga/rna_seqc',
+        href='https://software.broadinstitute.org/cancer/cga/rna-seqc',
         info="is a java program which computes a series of quality control metrics for RNA-seq data.")
 
         # Parse metrics information.

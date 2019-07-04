@@ -2,7 +2,7 @@
 
 """ MultiQC functions to plot a linegraph """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from collections import OrderedDict
 import base64
 import io
@@ -456,34 +456,38 @@ def matplotlib_linegraph (plotdata, pconfig=None):
 
 def smooth_line_data(data, numpoints, sumcounts=True):
     """
-    Function to take an x-y dataset and use binning to
-    smooth to a maximum number of datapoints.
-    """
-    smoothed = {}
-    for s_name, d in data.items():
+    Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
+    Each datapoint in a smoothed dataset corresponds to the first point in a bin.
 
+    Examples to show the idea:
+
+    d=[0 1 2 3 4 5 6 7 8 9], numpoints=6
+    we want to keep the first and the last element, thus excluding the last element from the binning:
+    binsize = len([0 1 2 3 4 5 6 7 8]))/(numpoints-1) = 9/5 = 1.8
+    taking points in indices rounded from multiples of 1.8: [0, 1.8, 3.6, 5.4, 7.2, 9],
+    ...which evaluates to first_element_in_bin_indices=[0, 2, 4, 5, 7, 9]
+    picking up the elements: [0 _ 2 _ 4 5 _ 7 _ 9]
+
+    d=[0 1 2 3 4 5 6 7 8 9], numpoints=9
+    binsize = 9/8 = 1.125
+    indices: [0.0, 1.125, 2.25, 3.375, 4.5, 5.625, 6.75, 7.875, 9] -> [0, 1, 2, 3, 5, 6, 7, 8, 9]
+    picking up the elements: [0 1 2 3 _ 5 6 7 8 9]
+
+    d=[0 1 2 3 4 5 6 7 8 9], numpoints=3
+    binsize = len(d)/numpoints = 9/2 = 4.5
+    incides: [0.0, 4.5, 9] -> [0, 5, 9]
+    picking up the elements: [0 _ _ _ _ 5 _ _ _ 9]
+    """
+    smoothed_data = dict()
+    for s_name, d in data.items():
         # Check that we need to smooth this data
-        if len(d) <= numpoints:
-            smoothed[s_name] = d
+        if len(d) <= numpoints or len(d) == 0:
+            smoothed_data[s_name] = d
             continue
 
-        smoothed[s_name] = OrderedDict();
-        p = 0
-        binsize = len(d) / numpoints
-        if binsize < 1:
-            binsize = 1
-        binvals = []
-        for x in sorted(d):
-            y = d[x]
-            if p < binsize:
-                binvals.append(y)
-                p += 1
-            else:
-                if sumcounts is True:
-                    v = sum(binvals)
-                else:
-                    v = sum(binvals) / binsize
-                smoothed[s_name][x] = v
-                p = 0
-                binvals = []
-    return smoothed
+        binsize = (len(d) - 1) / (numpoints - 1)
+        first_element_indices = [round(binsize * i) for i in range(numpoints)]
+        smoothed_d = OrderedDict(xy for i, xy in enumerate(d.items()) if i in first_element_indices)
+        smoothed_data[s_name] = smoothed_d
+
+    return smoothed_data

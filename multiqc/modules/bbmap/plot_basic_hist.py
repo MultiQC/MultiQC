@@ -22,6 +22,8 @@ def plot_basic_hist(samples, file_type, **plot_args):
         if cutoff < 0:
             xmax = item[0]
             break
+    else:
+        xmax = max(all_x)
 
     data = {
         sample: {
