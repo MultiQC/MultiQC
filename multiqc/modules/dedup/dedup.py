@@ -57,6 +57,10 @@ class MultiqcModule(BaseMultiqcModule):
         """ Parse the JSON output from DeDup and save the summary statistics """
         try:
             parsed_json = json.load(f['f'])
+            #Check for Keys existing
+            if(!'metrics' in parsed_json && 'metadata' in parsed_json)
+                log.warn("No DeDup JSON: '{}'".format(f['fn']))
+                return None
         except JSONDecodeError as e:
             log.warn("Could not parse DeDup JSON: '{}'".format(f['fn']))
             print(e)
@@ -71,8 +75,13 @@ class MultiqcModule(BaseMultiqcModule):
         for k in metrics_dict:
             metrics_dict[k] = float(metrics_dict[k])
 
-        #Compute not removed from given values
-        metrics_dict['not_removed'] = metrics_dict['total_reads'] - metrics_dict['reverse_removed'] - metrics_dict['forward_removed'] - metrics_dict['merged_removed']
+        # Compute not removed from given values
+        metrics_dict['not_removed'] = (
+        self.dedup_data[s_name]['total_reads']
+        - self.dedup_data[s_name]['reverse_removed']
+        - self.dedup_data[s_name]['forward_removed']
+        - self.dedup_data[s_name]['merged_removed']
+        )
 
         #Add all in the main data_table
         self.dedup_data[s_name] = metrics_dict
