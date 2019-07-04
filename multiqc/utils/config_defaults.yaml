@@ -497,6 +497,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - mosdepth:
+        module_tag:
+            - DNA
+            - RNA
     - clusterflow:
         module_tag:
             - RNA
