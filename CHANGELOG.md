@@ -14,6 +14,8 @@
     * Added handling of demultiplexing of more than 2 reads
 * **DeDup**
     * Added handling clusterfactor and JSON logfiles
+* **damageprofiler**
+    * Added writing metrics to data output file.
 * **fastp**
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **HiC Explorer**
