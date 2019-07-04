@@ -58,8 +58,8 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f['f'])
         except Exception as e:
-            print(e)
             log.warn("Could not parse DeDup JSON: '{}'".format(f['fn']))
+            print(e)
             return None
 
         #Get sample name from JSON first
