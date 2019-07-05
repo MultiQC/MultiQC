@@ -76,6 +76,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         dist_data, cov_data, xmax, perchrom_avg_data = self.parse_cov_dist()
 
+        # No samples found
+        num_samples = max(
+            len(dist_data),
+            len(cov_data),
+            len(perchrom_avg_data)
+        )
+        if num_samples == 0:
+            raise UserWarning
+        log.info("Found {} reports".format(num_samples))
+
         if dist_data:
             self.add_section(
                 name='Coverage distribution',
@@ -150,9 +160,9 @@ class MultiqcModule(BaseMultiqcModule):
                         # converting cumulative coverage into absoulte coverage:
                         """
                         *example*              x:  cumcov:  abscov:
-                        3x                     3x  0      =               0   
-                        2x     -               2x  0.10   = 0.10 - 0    = 0.10  
-                        1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70 
+                        3x                     3x  0      =               0
+                        2x     -               2x  0.10   = 0.10 - 0    = 0.10
+                        1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70
                         genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
                         """
                         if x + 1 not in dist_data[s_name]:
