@@ -133,7 +133,7 @@ def get_filelist(run_module_names):
         for patterns in spatterns:
             for key, sps in patterns.items():
                 for sp in sps:
-                    if search_file (sp, f):
+                    if search_file (sp, f, key):
                         # Check that we shouldn't exclude this file
                         if not exclude_file(sp, f):
                             # Looks good! Remember this file
@@ -186,7 +186,7 @@ def get_filelist(run_module_names):
         for sf in sfiles:
             add_file(sf[0], sf[1])
 
-def search_file (pattern, f):
+def search_file (pattern, f, module_key):
     """
     Function to searach a single file for a single search pattern.
     """
@@ -205,7 +205,7 @@ def search_file (pattern, f):
     # Search pattern specific filesize limit
     if pattern.get('max_filesize') is not None and 'filesize' in f:
         if f['filesize'] > pattern.get('max_filesize'):
-            logger.debug("Ignoring because exceeded search pattern filesize limit: {}".format(f['fn']))
+            logger.debug("File ignored by {} because it exceeded search pattern filesize limit: {}".format(module_key, f['fn']))
             return False
 
     # Search by file name (glob)

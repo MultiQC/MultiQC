@@ -33,18 +33,25 @@ print("""-----------------------------------
 
 """.format(version))
 
+matplotlib_version = '>=2.1.1'
+if sys.version_info[0] == 2:
+    matplotlib_version += ',<3.0.0'
+else:
+    matplotlib_version += ',<3.1.0'
+
 install_requires = [
         'click',
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        'matplotlib>=2.1.1,<3.0.0',
+        'matplotlib' + matplotlib_version,
         'markdown',
         'numpy',
         'pyyaml>=4',
         'requests',
         'simplejson',
-        'spectra>=0.0.10'
+        'spectra>=0.0.10',
+        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
     ]
 
 setup(
@@ -112,6 +119,7 @@ setup(
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
+            'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
             'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
