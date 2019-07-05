@@ -46,26 +46,26 @@ class MultiqcModule(BaseMultiqcModule):
         self.mtnucratio_general_stats_table()
 
 
-    #Parse our nice little JSON file
+    # Parse our nice little JSON file
     def parseJSON(self, f):
         """ Parse the JSON output from mtnucratio and save the summary statistics """
         try:
             parsed_json = json.load(f['f'])
             if 'metrics' not in parsed_json and 'metadata' not in parsed_json:
                 log.warn("No MTNUCRATIO JSON: '{}'".format(f['fn']))
-                return None 
+                return None
         except JSONDecodeError as e:
             log.warn("Could not parse mtnucratio JSON: '{}'".format(f['fn']))
-            print(e)
+            log.debug(e)
             return None
 
-        #Get sample name from JSON first
+        # Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json['metadata']['sample_name'],'')
         self.add_data_source(f, s_name)
 
         metrics_dict = parsed_json['metrics']
 
-        #Add all in the main data_table
+        # Add all in the main data_table
         self.mtnuc_data[s_name] = metrics_dict
 
 
@@ -75,50 +75,42 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['mt_cov_avg'] = {
-            'title': 'Average mitochondrial genome coverage',
+            'title': 'MT genome coverage',
             'description': 'Average coverage (X) on mitochondrial genome.',
             'min': 0,
-            'max': 100,
             'scale': 'OrRd',
-            'format': '{:,.2f}',
-            'hidden': true
+            'suffix': ' X',
+            'hidden': True
         }
         headers['nuc_cov_avg'] = {
-            'title': 'Average nuclear genome coverage',
+            'title': 'Genome coverage',
             'description': 'Average coverage (X) on nuclear genome.',
-            'min': 1,
-            'max': 100,
-            'scale': 'OrRd',
-            'format': '{:,.2f}',
-            'hidden': true
+            'min': 0,
+            'scale': 'GnBu',
+            'suffix': ' X',
+            'hidden': True
         }
         headers['mt_nuc_ratio'] = {
-            'title': 'MTNUC Ratio',
+            'title': '% MTNUC',
             'description': 'Mitochondrial to nuclear reads ratio (MTNUC)',
-            'min': 1,
+            'min': 0,
             'max': 100,
-            'scale': 'OrRd',
-            'format': '{:,.2f}'
+            'suffix': '%',
+            'scale': 'RdYlGrn-rev',
         }
         headers['nucreads'] = {
-            'title': 'Reads on nuclear genome',
-            'description': 'Reads on the nuclear genome.',
-            'min': 1,
-            'max': 100,
-            'scale': 'OrRd',
-            'format': '{:,.0f}',
-            'hidden': true
+            'title': '{} Genome reads'.format(config.read_count_prefix),
+            'description': 'Reads on the nuclear genome ({})'.format(config.read_count_desc),
+            'modify': lambda x: x * config.read_count_multiplier,
+            'scale': 'BuPu',
+            'hidden': True
         }
         headers['mtreads'] = {
-            'title': 'Reads on mitochondrial genome',
-            'description': 'Reads on the mitochondrial genome.',
-            'min': 1,
-            'max': 100,
+            'title': '{} MT genome reads'.format(config.read_count_prefix),
+            'description': 'Reads on the mitochondrial genome ({})'.format(config.read_count_desc),
+            'modify': lambda x: x * config.read_count_multiplier,
             'scale': 'OrRd',
-            'format': '{:,.2f}',
-            'hidden': true
+            'hidden': True
         }
 
         self.general_stats_addcols(self.mtnuc_data, headers)
-
-    

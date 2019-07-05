@@ -353,7 +353,7 @@ mirtrace/contaminationbasic:
 mirtrace/mirnacomplexity:
     fn: 'mirtrace-stats-mirna-complexity.tsv'
 mtnucratio:
-    fn: '*mtnucratiomtnuc.json'
+    fn: '*mtnuc.json'
 mosdepth/global_dist:
     fn: '*.mosdepth.global.dist.txt'
 mosdepth/region_dist:
