@@ -102,6 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '{} Genome reads'.format(config.read_count_prefix),
             'description': 'Reads on the nuclear genome ({})'.format(config.read_count_desc),
             'modify': lambda x: x * config.read_count_multiplier,
+            'shared_key': 'read_count',
             'scale': 'BuPu',
             'hidden': True
         }
@@ -109,6 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '{} MT genome reads'.format(config.read_count_prefix),
             'description': 'Reads on the mitochondrial genome ({})'.format(config.read_count_desc),
             'modify': lambda x: x * config.read_count_multiplier,
+            'shared_key': 'read_count',
             'scale': 'OrRd',
             'hidden': True
         }
