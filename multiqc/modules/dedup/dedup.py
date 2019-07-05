@@ -77,10 +77,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Compute not removed from given values
         metrics_dict['not_removed'] = (
-        self.dedup_data[s_name]['total_reads']
-        - self.dedup_data[s_name]['reverse_removed']
-        - self.dedup_data[s_name]['forward_removed']
-        - self.dedup_data[s_name]['merged_removed']
+        metrics_dict['total_reads']
+        - metrics_dict['reverse_removed']
+        - metrics_dict['forward_removed']
+        - metrics_dict['merged_removed']
         )
 
         #Add all in the main data_table
