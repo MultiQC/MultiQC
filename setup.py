@@ -120,6 +120,7 @@ setup(
             'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
+            'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
