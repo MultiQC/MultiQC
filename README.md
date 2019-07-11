@@ -44,18 +44,19 @@ Currently, supported tools include:
 |[leeHom][leehom]                 |[Kallisto][kallisto]     |[RSEM][rsem]                 |[HiCExplorer][hicexplorer]            |
 |[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]     |[methylQA][methylqa]                  |
 |[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[miRTrace][mirtrace]                  |
-|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[Peddy][peddy]                        |
-|[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
-|[FLASh][flash]                   |[Tophat][tophat]         |[Stacks][stacks]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |   |[THetA2][theta2]             |[QoRTs][qorts]                        |
-|[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
-|[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
-|[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
-|[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
-|[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
-|[Trimmomatic][trimmomatic]       |                         |                             |[Supernova][supernova]                |
-|[Seqyclean][seqyclean]                                 |                         |                             |[VCFTools][vcftools]                  |
-|                                 |                         |                             |[VerifyBAMID][verifybamid]            |
+|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]			 |
+|[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]		 |
+|[FLASh][flash]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
+|[Flexbar][flexbar]               |			    |[THetA2][theta2]             |[Preseq][preseq]			 |
+|[Jellyfish][jellyfish]           |                         |                             |[QoRTs][qorts]			 |
+|[KAT][kat]                       |                         |                             |[Qualimap][qualimap]			 |
+|[MinIONQC][minionqc]             |                         |                             |[QUAST][quast]			 |
+|[Skewer][skewer]                 |                         |                             |[RNA-SeQC][rna_seqc]			 |
+|[SortMeRNA][sortmerna]           |                         |                             |[RSeQC][rseqc]			 |
+|[Seqyclean][seqyclean]		  |                         |                             |[Sargasso][sargasso]			 | 
+|                                 |                         |                             |[Supernova][supernova]		 | 
+|                                 |                         |                             |[VCFTools][vcftools]			 |
+|				  |			    |				  |[VerifyBAMID][verifybamid]            |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.

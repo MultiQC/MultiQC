@@ -6,8 +6,12 @@
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
-* **Seqyclean**
+* [**Seqyclean**]
 	* Adds analysis for seqyclean files
+* [**mtnucratio**](https://github.com/apeltzer/MTNucRatioCalculator)
+    * Added little helper tool to compute mt to nuclear ratios for NGS data.
+* [**mosdepth**](https://github.com/brentp/mosdepth)
+    * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 
 #### Module updates:
 * **bcl2fastq**
