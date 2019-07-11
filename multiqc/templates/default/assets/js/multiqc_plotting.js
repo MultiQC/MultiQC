@@ -65,7 +65,7 @@ $(function () {
   $('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').each(function(){
     var target = $(this).attr('id');
     // Only one point per dataset, so multiply limit by arbitrary number.
-    var max_num = num_datasets_plot_limit * 50;
+    var max_num = mqc_config['num_datasets_plot_limit'] * 50;
     // Deferring each plot call prevents browser from locking up
     setTimeout(function(){
         plot_graph(target, undefined, max_num);

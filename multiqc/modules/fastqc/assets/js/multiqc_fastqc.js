@@ -16,6 +16,23 @@ ypos = 0;
 max_bp = 0;
 current_single_plot = undefined;
 
+fastqc_passfails = {}; // { <module>: { <section>: { <sample>: { data } } }
+fastqc_seq_content = {}; // { <module>: { <sample>: data } }
+
+function load_fastqc_passfails() {
+    $('.fastqc_passfails').each(function (i, elem) {
+        var key_value = JSON.parse(elem.innerHTML);
+        fastqc_passfails[key_value[0]] = key_value[1];
+    });
+}
+
+function load_fastqc_seq_content() {
+    $('.fastqc_seq_content').each(function (i, elem) {
+        var key_value = JSON.parse(elem.innerHTML);
+        fastqc_seq_content[key_value[0]] = key_value[1];
+    });
+}
+
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
 
@@ -24,9 +41,9 @@ function fastqc_seq_content_heatmap() {
     sample_statuses = [];
     var p_data = {};
     var hidden_samples = 0;
-    $.each(fastqc_seq_content_data, function(s_name, data){
+    $.each(fastqc_seq_content['fastqc'], function(s_name, data){
         // rename sample names
-        var t_status = fastqc_passfails_fastqc['per_base_sequence_content'][s_name];
+        var t_status = fastqc_passfails['fastqc']['per_base_sequence_content'][s_name];
         $.each(window.mqc_rename_f_texts, function(idx, f_text){
             if(window.mqc_rename_regex_mode){
                 var re = new RegExp(f_text,'g');
@@ -162,20 +179,18 @@ function fastqc_seq_content_heatmap() {
 
 // Set up listeners etc on page load
 $(function () {
+    load_fastqc_seq_content();
+    fastqc_seq_content_heatmap();
 
-    // Go through each section in case FastQC is there multiple times
-    $('.mqc-module-section').each(function(i){
 
-        // Skip this module if it's not FastQC
-        if(!$(this).attr('id').startsWith('mqc-module-section-fastqc')){
-            return true;
-        }
+    // Go through each FastQC module in case there are multiple
+    $('.mqc-module-section[id^="mqc-module-section-fastqc"]').each(function(){
+        var module_element = this;
+        var parent_id = $(module_element).attr('id');
+        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
 
         // Add the pass / warning / fails counts to each of the FastQC submodule headings
-        var parent_id = $(this).attr('id');
-        var fastqc_passfails = window['fastqc_passfails_'+parent_id.replace(/-/g, '_').replace('mqc_module_section_', '')];
-        $.each(fastqc_passfails, function(k, vals){
-            var pid = '#'+parent_id+' [id^=fastqc_'+k+']';
+        $.each(fastqc_passfails[module_key], function(k, vals){
             var total = 0;
             var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
             $.each(vals, function(s_name, status){
@@ -187,7 +202,7 @@ $(function () {
                 <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings">'+v['warn']+'</div> \
                 <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
             </div>';
-            $(pid).first().append(p_bar);
+            $(module_element).find('[id^=fastqc_'+k+']').first().append(p_bar);
         });
     });
 
@@ -196,15 +211,15 @@ $(function () {
         // Does this element already have a popover?
         if ($(this).attr('data-original-title')) { return false; }
         // Get data target
-        var parent_id = $(this).closest('.mqc-module-section').attr('id').replace(/-/g, '_').replace('mqc_module_section_', '');
-        var fastqc_passfails = window['fastqc_passfails_'+parent_id.replace(/-/g, '_').replace('mqc_module_section_', '')];
+        var parent_id = $(this).closest('.mqc-module-section').attr('id');
+        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
         // Create it
         var pid = $(this).closest('h3').attr('id');
         var k = pid.substr(7);
         // Remove suffix when there are multiple fastqc sections
         var n = k.indexOf('-');
         k = k.substring(0, n != -1 ? n : k.length);
-        var vals = fastqc_passfails[k];
+        var vals = fastqc_passfails[module_key][k];
         var passes = $(this).hasClass('progress-bar-success') ? true : false;
         var warns = $(this).hasClass('progress-bar-warning') ? true : false;
         var fails = $(this).hasClass('progress-bar-danger') ? true : false;
@@ -306,7 +321,7 @@ $(function () {
     });
     $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_data', function(e, cfg){
         if(cfg['ft'] == 'json'){
-            json_str = JSON.stringify(fastqc_seq_content_data, null, 2);
+            json_str = JSON.stringify(fastqc_seq_content['fastqc'], null, 2);
             var blob = new Blob([json_str], {type: "text/plain;charset=utf-8"});
             saveAs(blob, cfg['fname']);
         } else {
@@ -337,11 +352,11 @@ $(function () {
 
         // Update the key with the raw data for this position
         var hover_bp = Math.max(1, Math.floor((x/c_width)*max_bp));
-        var thispoint = fastqc_seq_content_data[s_name][hover_bp];
+        var thispoint = fastqc_seq_content['fastqc'][s_name][hover_bp];
         if(!thispoint){
             var nearestkey = 0;
             var guessdata = null;
-            $.each(fastqc_seq_content_data[s_name], function(bp, v){
+            $.each(fastqc_seq_content['fastqc'][s_name], function(bp, v){
                 bp = parseInt(bp);
                 if(bp < hover_bp && bp > nearestkey){
                     nearestkey = bp;
@@ -397,14 +412,14 @@ $(function () {
         current_single_plot = s_name;
         // Prep the new plot data
         var plot_data = [[],[],[],[]];
-        var bases = Object.keys(fastqc_seq_content_data[s_name]).sort(function (a, b) {  return a - b;  });
+        var bases = Object.keys(fastqc_seq_content['fastqc'][s_name]).sort(function (a, b) {  return a - b;  });
         for (i=0; i<bases.length; i++){
-          var base = fastqc_seq_content_data[s_name][bases[i]]['base'].toString().split('-');
+          var base = fastqc_seq_content['fastqc'][s_name][bases[i]]['base'].toString().split('-');
           base = parseFloat(base[0]);
-          plot_data[0].push([base, fastqc_seq_content_data[s_name][bases[i]]['t']]);
-          plot_data[1].push([base, fastqc_seq_content_data[s_name][bases[i]]['c']]);
-          plot_data[2].push([base, fastqc_seq_content_data[s_name][bases[i]]['a']]);
-          plot_data[3].push([base, fastqc_seq_content_data[s_name][bases[i]]['g']]);
+          plot_data[0].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['t']]);
+          plot_data[1].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['c']]);
+          plot_data[2].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['a']]);
+          plot_data[3].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['g']]);
         }
         // Update the chart
         var hc = $('#fastqc_sequence_content_single').highcharts();
@@ -435,7 +450,7 @@ $(function () {
 
 function plot_single_seqcontent(s_name){
   current_single_plot = s_name;
-  var data = fastqc_seq_content_data[s_name];
+  var data = fastqc_seq_content['fastqc'][s_name];
   var plot_data = [
     {'name': '% T', 'data':[]},
     {'name': '% C', 'data':[]},

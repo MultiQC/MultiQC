@@ -46,6 +46,8 @@
     * New base image `czentye/matplotlib-minimal` reduces image size from ~200MB to ~80MB
     * Proper installation method ensures latest version of the code
     * New entrypoint allows easier command-line usage
+* Support opening MultiQC on websites with CSP `script-src 'self'` with some sha256 exceptions
+    * Plot data is no longer intertwined with javascript code so hashes stay the same
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
