@@ -12,7 +12,7 @@ afterqc:
 bamtools/stats:
     contents: 'Stats for BAM file(s):'
     shared: true
-    num_lines: 2
+    num_lines: 10
 bbmap/stats:
     contents: '#Name	Reads	ReadsPct'
     num_lines: 4
@@ -352,6 +352,12 @@ mirtrace/contaminationbasic:
     fn: 'mirtrace-stats-contamination_basic.tsv'
 mirtrace/mirnacomplexity:
     fn: 'mirtrace-stats-mirna-complexity.tsv'
+mtnucratio:
+    fn: '*mtnuc.json'
+mosdepth/global_dist:
+    fn: '*.mosdepth.global.dist.txt'
+mosdepth/region_dist:
+    fn: '*.mosdepth.region.dist.txt'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
