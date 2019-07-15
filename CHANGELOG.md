@@ -20,6 +20,8 @@
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **FastQC**
     * When including a FastQC section multiple times in one report, the Per Base Sequence Content heatmaps now behave as you would expect.
+* **FastQ Screen**
+    * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **LongRanger**
