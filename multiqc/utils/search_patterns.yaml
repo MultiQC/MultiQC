@@ -352,6 +352,12 @@ mirtrace/contaminationbasic:
     fn: 'mirtrace-stats-contamination_basic.tsv'
 mirtrace/mirnacomplexity:
     fn: 'mirtrace-stats-mirna-complexity.tsv'
+mtnucratio:
+    fn: '*mtnuc.json'
+mosdepth/global_dist:
+    fn: '*.mosdepth.global.dist.txt'
+mosdepth/region_dist:
+    fn: '*.mosdepth.region.dist.txt'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2

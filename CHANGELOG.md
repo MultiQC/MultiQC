@@ -6,16 +6,24 @@
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
+* [**mtnucratio**](https://github.com/apeltzer/MTNucRatioCalculator)
+    * Added little helper tool to compute mt to nuclear ratios for NGS data.
+* [**mosdepth**](https://github.com/brentp/mosdepth)
+    * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 
 #### Module updates:
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
+* **damageprofiler**
+    * Added writing metrics to data output file.
 * **fastp**
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **LongRanger**
     * Added support for the LongRanger Align pipeline.
+* **miRTrace**
+    * Fixed bug where a sample in some plots was missed. ([#932](https://github.com/ewels/MultiQC/issues/932))
 * **Picard**
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
@@ -38,11 +46,14 @@
     * New base image `czentye/matplotlib-minimal` reduces image size from ~200MB to ~80MB
     * Proper installation method ensures latest version of the code
     * New entrypoint allows easier command-line usage
+* Support opening MultiQC on websites with CSP `script-src 'self'` with some sha256 exceptions
+    * Plot data is no longer intertwined with javascript code so hashes stay the same
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
 * Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
 * Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
+* Fixed matplotlib background colour issue (@epakarin - [#886](https://github.com/ewels/MultiQC/issues))
 
 
 

@@ -54,8 +54,3 @@ it prints the contents of these files into the report.
 {%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.keys() %}
 <script type="text/javascript" src="{{ js_href }}"></script>
 {%- endfor %}{% endif %}{% endfor %}
-<script type="text/javascript">
-mqc_config = {}
-{% if config.decimalPoint_format is not none %}mqc_config['decimalPoint_format'] = '{{ config.decimalPoint_format }}'; {% endif %}
-{% if config.thousandsSep_format is not none %}mqc_config['thousandsSep_format'] = '{{ config.thousandsSep_format }}'; {% endif %}
-</script>
