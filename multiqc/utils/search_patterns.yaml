@@ -203,6 +203,12 @@ conpair/concordance:
 conpair/contamination:
     contents: 'Tumor sample contamination level: '
     num_lines: 3
+crispresso2/allele_frequency_table:
+    fn: 'Alleles_frequency_table.zip'
+crispresso2/mapping_statistics:
+    fn: 'CRISPResso_mapping_statistics.txt'
+crispresso2/editing_frequencies:
+    fn: 'CRISPResso_quantification_of_editing_frequency.txt'
 cutadapt:
     contents: 'This is cutadapt'
     # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)

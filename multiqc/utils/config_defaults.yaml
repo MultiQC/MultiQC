@@ -247,6 +247,10 @@ module_order:
             - WGS
             - cancer
             - DNA
+    - crispresso2:
+        module_tag:
+            - DNA
+            - RNA
     - peddy:
         module_tag:
             - DNA

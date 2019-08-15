@@ -6,6 +6,8 @@
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
+* [**crispresso2**](http://crispresso2.pinellolab.org/)
+    * Analysis of genome editing outcomes from deep sequencing data
 * [**mtnucratio**](https://github.com/apeltzer/MTNucRatioCalculator)
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)

@@ -88,6 +88,7 @@ setup(
             'clipandmerge = multiqc.modules.clipandmerge:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
+            'crispresso2 = multiqc.modules.crispresso2:MultiqcModule',
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
             'damageprofiler = multiqc.modules.damageprofiler:MultiqcModule',
