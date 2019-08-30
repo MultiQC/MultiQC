@@ -54,10 +54,9 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_hist_report(self, f):
         sample_name = self.get_s_name(f)
         family_size = []
-        with open(f['fn'],"r") as histo_file:
-            for line in histo_file:
-                if not line.startswith("family_size"):
-                    family_size.append(tuple(line.split("\t")))
+        for line in f['f'].splitlines():
+            if not line.startswith("family_size"):
+                family_size.append(tuple(line.split("\t")))
 
         self.umi_data[sample_name] = { int(s):int(d[1]) for s, d in enumerate(family_size,1)}
 
