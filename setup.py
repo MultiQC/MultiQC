@@ -98,6 +98,7 @@ setup(
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'fgbio = multiqc.modules.fgbio:MultiqcModule',
             'flash = multiqc.modules.flash:MultiqcModule',
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',

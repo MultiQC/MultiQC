@@ -257,6 +257,8 @@ fastqc/theoretical_gc:
 featurecounts:
     fn: '*.summary'
     shared: true
+fgbio/groupreadsbyumi:
+    fn: '*.histo.tsv'
 flash/log:
     contents: '[FLASH]'
     shared: true
