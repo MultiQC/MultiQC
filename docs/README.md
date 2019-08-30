@@ -54,6 +54,7 @@ MultiQC Modules:
     deepTools: modules/deeptools.md
     Disambiguate: modules/disambiguate.md
     featureCounts: modules/featureCounts.md
+    fgbio: modules/fgbio.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
     Hap.py: modules/happy.md
