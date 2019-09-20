@@ -49,17 +49,45 @@ def parse_reports(self,
                     self.picard_dupMetrics_data[s_name] = dict()
                     keys = l.rstrip("\n").split("\t")
                     vals = f['f'].readline().rstrip("\n").split("\t")
-                    for i, k in enumerate(keys):
-                        try:
-                            self.picard_dupMetrics_data[s_name][k] = float(vals[i])
-                        except ValueError:
-                            self.picard_dupMetrics_data[s_name][k] = vals[i]
+                    # If multiple libraries are present they need to be merged and PERCENT_DUPLICATION needs to be recomputed. 
+                    recomputePerDup = False 
+
+                    # Loop over libraries
+                    while len(vals) == 10:
+                        for i, k in enumerate(keys):
+                            if k in self.picard_dupMetrics_data[s_name]:
+                                # More than one library present
+                                recomputePerDup = True
+                                try:
+                                    self.picard_dupMetrics_data[s_name][k] += float(vals[i])
+                                except ValueError:
+                                    self.picard_dupMetrics_data[s_name][k] += "_" + vals[i]
+                            else:
+                                try:
+                                    self.picard_dupMetrics_data[s_name][k] = float(vals[i])
+                                except ValueError:
+                                    self.picard_dupMetrics_data[s_name][k] = vals[i]
+                        vals = f['f'].readline().rstrip("\n").split("\t")
                     # Check that this sample had some reads
                     if self.picard_dupMetrics_data[s_name].get('READ_PAIRS_EXAMINED', 0) == 0 and \
                        self.picard_dupMetrics_data[s_name].get('UNPAIRED_READS_EXAMINED', 0) == 0:
                         self.picard_dupMetrics_data.pop(s_name, None)
                         log.warn("Skipping MarkDuplicates sample '{}' as log contained no reads".format(s_name))
+                    else:
+                        # Recompute PERCENT_DUPLICATION
+                        if recomputePerDup:
+                            try:
+                                # Note: Optical duplicates are contained in duplicates and therefore do not
+                                # enter the calculation here. See also the computation of READ_PAIR_NOT_OPTICAL_DUPLICATES.
+                                self.picard_dupMetrics_data[s_name]['PERCENT_DUPLICATION'] = \
+                                        (self.picard_dupMetrics_data[s_name].get('UNPAIRED_READ_DUPLICATES') + \
+                                        self.picard_dupMetrics_data[s_name].get('READ_PAIR_DUPLICATES') * 2) / \
+                                        (self.picard_dupMetrics_data[s_name].get('UNPAIRED_READS_EXAMINED') + \
+                                        self.picard_dupMetrics_data[s_name].get('READ_PAIRS_EXAMINED') * 2)
+                            except ValueError:
+                                continue
                     s_name = None
+
 
         for s_name in list(self.picard_dupMetrics_data.keys()):
             if len(self.picard_dupMetrics_data[s_name]) == 0:
