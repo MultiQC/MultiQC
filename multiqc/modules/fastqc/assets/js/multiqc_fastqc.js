@@ -28,7 +28,9 @@ $(function () {
 
     // Go through each FastQC module in case there are multiple
     // #mqc-module-section-fastqc, #mqc-module-section-fastqc-1, ...
-    $('.mqc-module-section[id^="mqc-module-section-fastqc"]').each(function(){
+    // or #mqc-module-section-configured-anchor, #mqc-module-section-configured-anchor-1, ...
+    var fastqc_modules = $('.fastqc_passfails').closest('.mqc-module-section');
+    fastqc_modules.each(function(){
         var module_element = $(this);
         var module_key = module_element.attr('id').replace(/-/g, '_').replace('mqc_module_section_', '');
         fastqc_module(module_element, module_key);
