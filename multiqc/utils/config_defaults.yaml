@@ -79,6 +79,7 @@ lint: False
 custom_plot_config: {}
 
 ignore_symlinks: false
+ignore_images: true
 fn_ignore_dirs:
     - 'multiqc_data'
     - 'icarus_viewers'       # quast
