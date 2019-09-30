@@ -13,6 +13,7 @@ from .plot_ihist import plot_ihist
 from .plot_indelhist import plot_indelhist
 from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
+from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
 
 class slice2OrderedDict(object):
@@ -30,6 +31,7 @@ section_order = [
     'indelhist',
     'mhist',
     'qahist',
+    'qchist',
     'qhist',
     'aqhist',
     'ehist',
@@ -317,6 +319,27 @@ file_types = {
         ],
         'plot_func': plot_qahist,
         'plot_params': {}
+    },
+    'qchist': {
+        'title': 'Count of bases with each quality value',
+        'descr': 'Histogram of base qualities (`qchist`). '
+                 'Plot shows the fraction of bases at each quality score.',
+        'help_text': '',
+        'cols': odict[
+                'Quality':int,
+                'count1':int,
+                'fraction1':float
+                ],
+        'plot_func': plot_qchist,
+        'plot_params': {
+            'xPlotBands':
+                [
+                    {'from': 28, 'to': 100, 'color': '#c3e6c3'},
+                    {'from': 20, 'to': 28, 'color': '#e6dcc3'},
+                    {'from': 0, 'to': 20, 'color': '#e6c3c3'},
+                ],
+            'yLog': True,
+        }
     },
     'qhist': {
         'title': 'Sequence Quality Histograms',
