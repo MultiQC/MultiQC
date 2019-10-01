@@ -4,7 +4,6 @@ import logging
 import re
 from itertools import chain
 from collections import OrderedDict
-import pandas as pd
 from multiqc import config
 from multiqc.plots import linegraph, bargraph, scatter, table, heatmap, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -72,8 +71,6 @@ class MultiqcModule(BaseMultiqcModule):
                     plot = self.make_basic_table(file_type)
                 )
 
-######### bbmap qchist section
-        # Find and load any input files for this module
         self.qchist_data = dict()
         headers = OrderedDict()
 
@@ -111,7 +108,6 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-############
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
         log.debug("Parsing %s/%s", root, fn)
         if not file_type in file_types:

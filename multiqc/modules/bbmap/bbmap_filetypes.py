@@ -323,7 +323,7 @@ file_types = {
     'qchist': {
         'title': 'Count of bases with each quality value',
         'descr': 'Histogram of base qualities (`qchist`). '
-                 'Plot shows the fraction of bases at each quality score.',
+                 'Plot shows the number of bases at each quality score.',
         'help_text': '',
         'cols': odict[
                 'Quality':int,
@@ -335,10 +335,12 @@ file_types = {
             'xPlotBands':
                 [
                     {'from': 30, 'to': 100, 'color': '#c3e6c3'},
-                    {'from': 20, 'to': 29, 'color': '#e6dcc3'},
+                    {'from': 20, 'to': 30, 'color': '#e6dcc3'},
                     {'from': 0, 'to': 20, 'color': '#e6c3c3'},
                 ],
             'yLog': True,
+            'xlab': 'Phred Score',
+            'ylab': 'Counts'
         }
     },
     'qhist': {
