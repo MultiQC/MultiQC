@@ -25,45 +25,22 @@ def plot_qchist(samples, file_type, **plot_args):
     else:
         xmax = max(all_x)
 
-
-    columns_to_plot = {
-        'Counts': {
-            0: 'Read1',
-            2: 'Read2'
-        },
-        'Proportions': {
-            1: 'Read1',
-            3: 'Read2'
+    data = {
+        sample: {
+            x: samples[sample]['data'][x][0] if x in samples[sample]['data'] else 0
+            for x in all_x
         }
+        for sample in samples
     }
-
-    plot_data = []
-    for column_type in columns_to_plot:
-        plot_data.append(
-            {
-                sample+'.'+column_name: {
-                    x: samples[sample]['data'][x][column] if x in samples[sample]['data'] else 0
-                    for x in all_x
-                }
-                for sample in samples
-                for column, column_name in columns_to_plot[column_type].items()
-            }
-        )
 
     plot_params = {
             'id': 'bbmap-' + file_type + '_plot',
             'title': 'BBTools: ' + plot_args['plot_title'],
-            'xmax': xmax,
-            'xlab': 'Quality score',
-            'data_labels': [
-                {'name': 'Count data', 'ylab': 'Read count'},
-                {'name': 'Proportion data', 'ylab': 'Proportion of reads'},
-            ]
-
+            'xmax': xmax
     }
     plot_params.update(plot_args['plot_params'])
     plot = linegraph.plot(
-        plot_data,
+        data,
         plot_params
     )
 

@@ -4,7 +4,7 @@ import logging
 import re
 from itertools import chain
 from collections import OrderedDict
-
+import pandas as pd
 from multiqc import config
 from multiqc.plots import linegraph, bargraph, scatter, table, heatmap, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -72,7 +72,46 @@ class MultiqcModule(BaseMultiqcModule):
                     plot = self.make_basic_table(file_type)
                 )
 
+######### bbmap qchist section
+        # Find and load any input files for this module
+        self.qchist_data = dict()
+        headers = OrderedDict()
 
+        for f in self.find_log_files('bbmap/qchist'):
+            self.qchist_data[f['s_name']] = dict()
+            my_total=[]
+            for l in f['f'].splitlines()[1:]:
+                splitted=l.split("\t", 3)
+                key=splitted[0]
+                if int(key) >= 30:
+                    value = float(splitted[2])
+                    my_total.append(value)
+                self.qchist_data[f['s_name']][key] = sum(my_total)*100
+            headers[key] = {
+                        'title': '% Q30 bases',
+                        'description': 'BBMap qchist - Percentage of bases with QUAL>=30',
+                        'suffix': ' %',
+                        'scale': 'RdYlGn-rev',
+                        'format': '{:,.2f}'
+            }
+        self.general_stats_addcols(self.qchist_data, headers)
+
+        # Filter out samples matching ignored sample names
+        self.qchist_data = self.ignore_samples(self.qchist_data)
+
+        # Nothing found - raise a UserWarning to tell MultiQC
+        if len(self.qchist_data) == 0:
+            log.debug("Could not find any reports in {}".format(config.analysis_dir))
+            raise UserWarning
+
+        log.info("Found {} reports".format(len(self.qchist_data)))
+
+        # Write parsed report data to a file
+        self.write_data_file(self.qchist_data, 'multiqc_bbmap-qchist')
+
+
+
+############
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
         log.debug("Parsing %s/%s", root, fn)
         if not file_type in file_types:

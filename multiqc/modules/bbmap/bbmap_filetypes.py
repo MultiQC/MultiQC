@@ -334,8 +334,8 @@ file_types = {
         'plot_params': {
             'xPlotBands':
                 [
-                    {'from': 28, 'to': 100, 'color': '#c3e6c3'},
-                    {'from': 20, 'to': 28, 'color': '#e6dcc3'},
+                    {'from': 30, 'to': 100, 'color': '#c3e6c3'},
+                    {'from': 20, 'to': 29, 'color': '#e6dcc3'},
                     {'from': 0, 'to': 20, 'color': '#e6c3c3'},
                 ],
             'yLog': True,
