@@ -12,6 +12,8 @@
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 
 #### Module updates:
+* **BBMap**
+    * Added handling 'qchist' output
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
 * **damageprofiler**
