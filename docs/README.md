@@ -44,6 +44,7 @@ MultiQC Modules:
     STAR: modules/star.md
     TopHat: modules/tophat.md
   Post-alignment:
+    ABRicate: modules/abricate.md
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
     biobambam2: modules/biobambam2.md

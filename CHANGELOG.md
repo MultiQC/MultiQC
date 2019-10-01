@@ -3,6 +3,8 @@
 ## MultiQC v1.8dev
 
 #### New Modules:
+* [**abricate**](https://github.com/tseemann/abricate)
+    * Mass screening of contigs for antimicrobial resistance or virulence genes.
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming

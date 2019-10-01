@@ -286,6 +286,10 @@ module_order:
     - busco:
         module_tag:
             - Denovo
+    - abricate:
+        module_tag:
+            - DNA
+            - AMR
     - goleft_indexcov:
         module_tag:
             - DNA

@@ -48,7 +48,7 @@ Currently, supported tools include:
 |[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
 |[FLASh][flash]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
 |[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Jellyfish][jellyfish]           |                         |                             |[QoRTs][qorts]                        |
+|[Jellyfish][jellyfish]           |                         |[ABRicate][abricate]         |[QoRTs][qorts]                        |
 |[KAT][kat]                       |                         |                             |[Qualimap][qualimap]                  |
 |[MinIONQC][minionqc]             |                         |                             |[QUAST][quast]                        |
 |[Skewer][skewer]                 |                         |                             |[RNA-SeQC][rna_seqc]                  |
@@ -167,6 +167,7 @@ Code contributions from:
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@HLWiencko](https://github.com/HLWiencko),
 [@iimog](https://github.com/iimog),
+[@ikkik](https://github.com/ikkik),
 [@joachimwolff](https://github.com/joachimwolff),
 [@jrderuiter](https://github.com/jrderuiter),
 [@lpantano](https://github.com/lpantano),
@@ -191,6 +192,7 @@ and many others. Thanks for your support!
 
 MultiQC is released under the GPL v3 or later licence.
 
+[abricate]:       http://multiqc.info/docs/#abricate
 [adapterremoval]: http://multiqc.info/docs/#adapter-removal
 [afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
