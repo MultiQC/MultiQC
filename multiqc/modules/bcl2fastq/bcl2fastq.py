@@ -166,14 +166,13 @@ class MultiqcModule(BaseMultiqcModule):
             rlane = run_data[lane]
 
             # Add undetermined barcodes
-            try:
-                unknown_barcode = content['UnknownBarcodes'][l - 1]['Barcodes']
-            except IndexError:
-                unknown_barcode = next(
-                    (item['Barcodes'] for item in content['UnknownBarcodes'] if item['Lane'] == 8),
-                    None
-                )
-            run_data[lane]['unknown_barcodes'] = unknown_barcode
+            for lane_data in content.get("UnknownBarcodes", list()):
+                if lane_data["Lane"] == l:
+                    unknown_barcode = lane_data["Barcodes"]
+                    break
+            else:
+                unknown_barcode = dict()
+            run_data[lane]["unknown_barcodes"] = unknown_barcode
 
             for demuxResult in conversionResult.get("DemuxResults", []):
                 if demuxResult["SampleName"] == demuxResult["SampleName"]:
