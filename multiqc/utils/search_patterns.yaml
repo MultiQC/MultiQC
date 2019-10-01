@@ -62,6 +62,7 @@ bbmap/qahist:
     contents: '#Deviation'
     num_lines: 1
 bbmap/qchist:
+    fn: '*.qchist'
     contents: '#Quality	count1	fraction1'
     num_lines: 1
 bbmap/qhist:
