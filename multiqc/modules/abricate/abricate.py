@@ -3,272 +3,125 @@
 """ MultiQC module to parse output from ABRicate """
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import heatmap
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
+
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='ABRicate', anchor='abricate',
         href="https://github.com/tseemann/abricate",
         info="Mass screening of contigs for antimicrobial resistance or virulence genes.")
 
-# from __future__ import print_function
-# from collections import OrderedDict
-# import logging
-#
-# from multiqc import config
-# from multiqc.modules.base_module import BaseMultiqcModule
-# from multiqc.plots import bargraph, linegraph, heatmap
-#
-# # Initialise the logger
-# log = logging.getLogger(__name__)
-#
-# class MultiqcModule(BaseMultiqcModule):
-#
-#     def __init__(self):
-#
-#         # Initialise the parent object
-#         super(MultiqcModule, self).__init__(name='RNA-SeQC', anchor='rna_seqc',
-#         href='https://software.broadinstitute.org/cancer/cga/rna-seqc',
-#         info="is a java program which computes a series of quality control metrics for RNA-seq data.")
-#
-#         # Parse metrics information.
-#         self.rna_seqc_metrics = dict()
-#         for f in self.find_log_files('rna_seqc/metrics'):
-#             self.parse_metrics(f)
-#
-#         # Parse normalised coverage information.
-#         self.rna_seqc_norm_high_cov = dict()
-#         self.rna_seqc_norm_medium_cov = dict()
-#         self.rna_seqc_norm_low_cov = dict()
-#         for f in self.find_log_files('rna_seqc/coverage'):
-#             self.parse_coverage(f)
-#
-#         # Parse correlation matrices
-#         self.rna_seqc_pearson = None
-#         self.rna_seqc_spearman = None
-#         for f in self.find_log_files('rna_seqc/correlation'):
-#             self.parse_correlation(f)
-#
-#         # Filters to strip out ignored sample names
-#         self.rna_seqc_metrics = self.ignore_samples(self.rna_seqc_metrics)
-#         self.rna_seqc_norm_high_cov = self.ignore_samples(self.rna_seqc_norm_high_cov)
-#         self.rna_seqc_norm_medium_cov = self.ignore_samples(self.rna_seqc_norm_medium_cov)
-#         self.rna_seqc_norm_low_cov = self.ignore_samples(self.rna_seqc_norm_low_cov)
-#         # TODO: self.rna_seqc_pearson and self.rna_seqc_spearman are trickier to filter
-#
-#         num_found = max( len(self.rna_seqc_metrics), len(self.rna_seqc_norm_high_cov),
-#                          len(self.rna_seqc_norm_medium_cov), len(self.rna_seqc_norm_low_cov) )
-#         if self.rna_seqc_pearson is not None:
-#             num_found += 1
-#         if self.rna_seqc_spearman is not None:
-#             num_found += 1
-#         if num_found == 0:
-#             raise UserWarning
-#
-#         log.info("Found {} samples".format(num_found))
-#         self.write_data_file(self.rna_seqc_metrics, 'multiqc_rna_seqc')
-#
-#         self.rnaseqc_general_stats()
-#         self.transcript_associated_plot()
-#         self.plot_correlation_heatmap()
-#         self.strand_barplot()
-#         self.coverage_lineplot()
-#
-#     def parse_metrics(self, f):
-#         """
-#         Parse the metrics.tsv file from RNA-SeQC
-#         """
-#         headers = None
-#         for l in f['f'].splitlines():
-#             s = l.strip().split("\t")
-#             if headers is None:
-#                 headers = s
-#             else:
-#                 s_name = s[ headers.index('Sample') ]
-#                 data = dict()
-#                 for idx, h in enumerate(headers):
-#                     try:
-#                         data[h] = float(s[idx])
-#                     except ValueError:
-#                         data[h] = s[idx]
-#                 self.rna_seqc_metrics[s_name] = data
-#
-#     def rnaseqc_general_stats (self):
-#         """
-#         Add alignment rate to the general stats table
-#         """
-#         headers = OrderedDict()
-#         headers['Expression Profiling Efficiency'] = {
-#             'title': '% Expression Efficiency',
-#             'description': 'Expression Profiling Efficiency: Ratio of exon reads to total reads',
-#             'max': 100,
-#             'min': 0,
-#             'suffix': '%',
-#             'scale': 'YlGn',
-#             'modify': lambda x: float(x) * 100.0
-#         }
-#         headers['Genes Detected'] = {
-#             'title': '# Genes',
-#             'description': 'Number of genes detected with at least 5 reads.',
-#             'min': 0,
-#             'scale': 'Bu',
-#             'format': '{:,.0f}'
-#         }
-#         headers['rRNA rate'] = {
-#             'title': '% rRNA Alignment',
-#             'description': ' rRNA reads (non-duplicate and duplicate reads) per total reads',
-#             'max': 100,
-#             'min': 0,
-#             'suffix': '%',
-#             'scale': 'Reds',
-#             'modify': lambda x: float(x) * 100.0
-#         }
-#
-#         self.general_stats_addcols(self.rna_seqc_metrics, headers)
-#
-#     def transcript_associated_plot (self):
-#         """ Plot a bargraph showing the Transcript-associated reads  """
-#
-#         # Plot bar graph of groups
-#         keys = OrderedDict()
-#         keys['Exonic Rate'] = { 'name': 'Exonic', 'color': '#2f7ed8' }
-#         keys['Intronic Rate'] = { 'name': 'Intronic', 'color': '#8bbc21' }
-#         keys['Intergenic Rate'] = { 'name': 'Intergenic', 'color': '#0d233a'}
-#
-#         # Config for the plot
-#         pconfig = {
-#             'id': 'rna_seqc_position_plot',
-#             'title': 'RNA-SeQC: Transcript-associated reads',
-#             'ylab': 'Ratio of Reads',
-#             'cpswitch': False,
-#             'ymax': 1,
-#             'ymin': 0,
-#             'tt_decimals': 3,
-#             'cpswitch_c_active': False
-#         }
-#         self.add_section (
-#             name = 'Transcript-associated reads',
-#             anchor = 'Transcript_associated',
-#             helptext = 'All of the above rates are per mapped read. Exonic Rate is the fraction mapping within exons. '
-#                        'Intronic Rate is the fraction mapping within introns. '
-#                        'Intergenic Rate is the fraction mapping in the genomic space between genes. ',
-#             plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
-#         )
-#
-#
-#
-#     def strand_barplot(self):
-#         """ Plot a bargraph showing the strandedness of alignments """
-#         # Plot bar graph of groups
-#         keys = [ 'End 1 Sense', 'End 1 Antisense', 'End 2 Sense', 'End 2 Antisense' ]
-#         # Config for the plot
-#         pconfig = {
-#             'id': 'rna_seqc_strandedness_plot',
-#             'title': 'RNA-SeQC: Strand Specificity',
-#             'ylab': '% Reads',
-#             'cpswitch_counts_label': '# Reads',
-#             'cpswitch_percent_label': '% Reads',
-#             'ymin': 0,
-#             'cpswitch_c_active': False
-#         }
-#         self.add_section (
-#             name = 'Strand Specificity',
-#             anchor = 'rna_seqc_strand_specificity',
-#             helptext = 'End 1/2 Sense are the number of End 1 or 2 reads that were sequenced in the sense direction. '
-#                        'Similarly, End 1/2 Antisense are the number of End 1 or 2 reads that were sequenced in the '
-#                        'antisense direction',
-#             plot = bargraph.plot(self.rna_seqc_metrics, keys, pconfig)
-#         )
-#
-#
-#     def parse_coverage (self, f):
-#         """ Parse the RNA-SeQC Normalised Coverage Files """
-#         data = dict()
-#         s_names = None
-#         j = 1
-#         for l in f['f'].splitlines():
-#             s = l.strip().split("\t")
-#             if s_names is None:
-#                 s_names = s
-#                 for s_name in s_names:
-#                     data[s_name] = dict()
-#             else:
-#                 for i, v in enumerate(s):
-#                     data[s_names[i]][j] = float(v)
-#                 j += 1
-#         if f['fn'] == 'meanCoverageNorm_high.txt':
-#             self.rna_seqc_norm_high_cov.update(data)
-#         elif f['fn'] == 'meanCoverageNorm_medium.txt':
-#             self.rna_seqc_norm_medium_cov.update(data)
-#         elif f['fn'] == 'meanCoverageNorm_low.txt':
-#             self.rna_seqc_norm_low_cov.update(data)
-#
-#     def coverage_lineplot (self):
-#         """ Make HTML for coverage line plots """
-#         # Add line graph to section
-#         data = list()
-#         data_labels = list()
-#         if len(self.rna_seqc_norm_high_cov) > 0:
-#             data.append(self.rna_seqc_norm_high_cov)
-#             data_labels.append({'name': 'High Expressed'})
-#         if len(self.rna_seqc_norm_medium_cov) > 0:
-#             data.append(self.rna_seqc_norm_medium_cov)
-#             data_labels.append({'name': 'Medium Expressed'})
-#         if len(self.rna_seqc_norm_low_cov) > 0:
-#             data.append(self.rna_seqc_norm_low_cov)
-#             data_labels.append({'name': 'Low Expressed'})
-#         pconfig = {
-#             'id': 'rna_seqc_mean_coverage_plot',
-#             'title': 'RNA-SeQC: Gene Body Coverage',
-#             'ylab': '% Coverage',
-#             'xlab': "Gene Body Percentile (5' -> 3')",
-#             'xmin': 0,
-#             'xmax': 100,
-#             'tt_label': "<strong>{point.x}% from 5'</strong>: {point.y:.2f}",
-#             'data_labels': data_labels
-#         }
-#         if len(data) > 0:
-#             self.add_section (
-#                 name = 'Gene Body Coverage',
-#                 anchor = 'rseqc-rna_seqc_mean_coverage',
-#                 helptext = 'The metrics are calculated across the transcripts with tiered expression levels.',
-#                 plot = linegraph.plot(data, pconfig)
-#             )
-#
-#     def parse_correlation(self, f):
-#         """ Parse RNA-SeQC correlation matrices """
-#         s_names = None
-#         data = list()
-#         for l in f['f'].splitlines():
-#             s = l.strip().split("\t")
-#             if s_names is None:
-#                 s_names = [ x for x in s if x != '' ]
-#             else:
-#                 data.append(s[1:])
-#         if f['fn'] == 'corrMatrixPearson.txt':
-#             self.rna_seqc_pearson = (s_names, data)
-#         elif f['fn'] == 'corrMatrixSpearman.txt':
-#             self.rna_seqc_spearman = (s_names, data)
-#
-#
-#     def plot_correlation_heatmap(self):
-#         """ Return HTML for correlation heatmap """
-#         data = None
-#         corr_type = None
-#         correlation_type = getattr(config, 'rna_seqc' ,{}).get('default_correlation', 'spearman')
-#         if self.rna_seqc_spearman is not None and correlation_type != 'pearson':
-#             data = self.rna_seqc_spearman
-#             corr_type = 'Spearman'
-#         elif self.rna_seqc_pearson is not None:
-#             data = self.rna_seqc_pearson
-#             corr_type = 'Pearson'
-#         if data is not None:
-#             pconfig = {
-#                 'id': 'rna_seqc_correlation_heatmap',
-#                 'title': 'RNA-SeQC: {} Sample Correlation'.format(corr_type)
-#             }
-#             self.add_section (
-#                 name = '{} Correlation'.format(corr_type),
-#                 anchor = 'rseqc-rna_seqc_correlation',
-#                 plot = heatmap.plot(data[1], data[0], data[0], pconfig)
-#             )
+        # Find all files for mymod
+        for myfile in self.find_log_files('abricate'):
+            print( "1" )
+            print( myfile['f'] )       # File contents
+            print( "2" )
+            print( myfile['s_name'] )  # Sample name (from cleaned filename)
+            print( "3" )
+            print( myfile['fn'] )      # Filename
+            print( "4" )
+            print( myfile['root'] )    # Directory file was in
+            print( "5" )
+
+    def plot_gene_presence_heatmap(self):
+        """ Return HTML for correlation heatmap """
+        if data is not None:
+            pconfig = {
+                'id': 'gene presence and absence',
+                'title': '{} def title'
+            }
+            self.add_section (
+                name = '{} add section title',
+                anchor = 'abricate',
+                plot = heatmap.plot(data[1], data[0], data[0], pconfig)
+            )
+
+    def gene_presence_heatmap (self):
+        """ Create the HTML for the abricate summary heatmap """
+
+        # Prep the data
+        data = OrderedDict()
+        for s_name in sorted(self.fastqc_data.keys()):
+            try:
+                data[s_name] = {self.avg_bp_from_range(d['base']): d for d in self.fastqc_data[s_name]['per_base_sequence_content']}
+            except KeyError:
+                pass
+            # Old versions of FastQC give counts instead of percentages
+            for b in data[s_name]:
+                tot = sum([data[s_name][b][base] for base in ['a','c','t','g']])
+                if tot == 100.0:
+                    break
+                else:
+                    for base in ['a','c','t','g']:
+                        data[s_name][b][base] = (float(data[s_name][b][base])/float(tot)) * 100.0
+        if len(data) == 0:
+            log.debug('sequence_content not found in FastQC reports')
+            return None
+
+        html = '''<div id="fastqc_per_base_sequence_content_plot_div">
+            <div class="alert alert-info">
+               <span class="glyphicon glyphicon-hand-up"></span>
+               Click a sample row to see a line plot for that dataset.
+            </div>
+            <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
+            <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
+            <div class="fastqc_seq_heatmap_key">
+                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
+                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>
+                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
+            </div>
+            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
+                <div id="fastqc_per_base_sequence_content_plot" class="hc-plot has-custom-export">
+                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <script type="application/json" class="fastqc_seq_content">{d}</script>
+        '''.format(d=json.dumps([self.anchor.replace('-', '_'), data]))
+
+        self.add_section (
+            name = 'Per Base Sequence Content',
+            anchor = 'fastqc_per_base_sequence_content',
+            description = 'The proportion of each base position for which each of the four normal DNA bases has been called.',
+            helptext = '''
+            To enable multiple samples to be shown in a single plot, the base composition data
+            is shown as a heatmap. The colours represent the balance between the four bases:
+            an even distribution should give an even muddy brown colour. Hover over the plot
+            to see the percentage of the four bases under the cursor.
+
+            **To see the data as a line plot, as in the original FastQC graph, click on a sample track.**
+
+            From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html):
+
+            _Per Base Sequence Content plots out the proportion of each base position in a
+            file for which each of the four normal DNA bases has been called._
+
+            _In a random library you would expect that there would be little to no difference
+            between the different bases of a sequence run, so the lines in this plot should
+            run parallel with each other. The relative amount of each base should reflect
+            the overall amount of these bases in your genome, but in any case they should
+            not be hugely imbalanced from each other._
+
+            _It's worth noting that some types of library will always produce biased sequence
+            composition, normally at the start of the read. Libraries produced by priming
+            using random hexamers (including nearly all RNA-Seq libraries) and those which
+            were fragmented using transposases inherit an intrinsic bias in the positions
+            at which reads start. This bias does not concern an absolute sequence, but instead
+            provides enrichement of a number of different K-mers at the 5' end of the reads.
+            Whilst this is a true technical bias, it isn't something which can be corrected
+            by trimming and in most cases doesn't seem to adversely affect the downstream
+            analysis._
+            ''',
+            content = html
+        )
+
+log.info('Hello World!')
