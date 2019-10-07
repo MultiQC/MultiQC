@@ -48,7 +48,7 @@ Currently, supported tools include:
 |[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
 |[FLASh][flash]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
 |[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Jellyfish][jellyfish]           |                         |                             |[QoRTs][qorts]                        |
+|[Jellyfish][jellyfish]           |                         |[Mash][mash]                             |[QoRTs][qorts]                        |
 |[KAT][kat]                       |                         |                             |[Qualimap][qualimap]                  |
 |[MinIONQC][minionqc]             |                         |                             |[QUAST][quast]                        |
 |[Skewer][skewer]                 |                         |                             |[RNA-SeQC][rna_seqc]                  |
@@ -167,6 +167,7 @@ Code contributions from:
 [@guillermo-carrasco](https://github.com/guillermo-carrasco),
 [@HLWiencko](https://github.com/HLWiencko),
 [@iimog](https://github.com/iimog),
+[@ikkik](https://github.com/ikkik),
 [@joachimwolff](https://github.com/joachimwolff),
 [@jrderuiter](https://github.com/jrderuiter),
 [@lpantano](https://github.com/lpantano),
@@ -233,6 +234,7 @@ MultiQC is released under the GPL v3 or later licence.
 [leehom]:         http://multiqc.info/docs/#leehom
 [longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2
+[mash]:           http://multiqc.info/docs/#mash
 [methylqa]:       http://multiqc.info/docs/#methylqa
 [minionqc]:       http://multiqc.info/docs/#minionqc
 [mirtrace]:       http://multiqc.info/docs/#mirtrace

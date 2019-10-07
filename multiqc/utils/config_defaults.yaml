@@ -365,6 +365,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - mash:
+        module_tag:
+            - DNA
+            - Metagenomics
     - prokka:
         module_tag:
             - prokarytotic

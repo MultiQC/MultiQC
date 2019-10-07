@@ -61,6 +61,7 @@ MultiQC Modules:
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
     MACS2: modules/macs2.md
+    Mash: modules/mash.md
     Methyl QA: modules/methylQA.md
     mosdepth: modules/mosdepth.md
     miRTrace: modules/mirtrace.md

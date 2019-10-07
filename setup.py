@@ -72,6 +72,7 @@ setup(
     install_requires = install_requires,
     entry_points = {
         'multiqc.modules.v1': [
+            'abricate = multiqc.modules.abricate:MultiqcModule',
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
@@ -116,6 +117,7 @@ setup(
             'leehom = multiqc.modules.leehom:MultiqcModule',
             'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
+            'mash = multiqc.modules.mash:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
