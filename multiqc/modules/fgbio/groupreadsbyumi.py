@@ -67,7 +67,8 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Familizy size count',
             'ylab': '# UMI',
             'xlab': 'Reads supporting UMI',
-            "xmax": 15
+            "xmax": 15,
+            'xDecimals': False
         }
 
         return linegraph.plot(self.umi_data, config)
