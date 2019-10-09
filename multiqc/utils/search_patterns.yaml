@@ -62,8 +62,7 @@ bbmap/qahist:
     contents: '#Deviation'
     num_lines: 1
 bbmap/qchist:
-    fn: '*.qchist'
-    contents: '#Quality	count1	fraction1'
+    contents_re: '#Quality	count1	fraction1\n'
     num_lines: 1
 bbmap/qhist:
     contents: '#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured'
