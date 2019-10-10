@@ -10,6 +10,8 @@
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
+* [**somalier**](https://github.com/brentp/somalier)
+    * relatedness checking and QC for BAM/CRAM/VCF for cancer,DNA,BS-Seq,exome, etc.
 
 #### Module updates:
 * **bcl2fastq**

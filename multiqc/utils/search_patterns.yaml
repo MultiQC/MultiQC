@@ -371,6 +371,10 @@ peddy/sex_check:
     fn: '*.sex_check.csv'
 peddy/background_pca:
     fn: '*.background_pca.json'
+somalier/samples:
+    fn: '*.samples.tsv'
+somalier/pairs:
+    fn: '*.pairs.tsv'
 phantompeakqualtools/out:
     fn: '*.spp.out'
 picard/alignment_metrics:

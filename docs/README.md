@@ -81,6 +81,7 @@ MultiQC Modules:
     Sargasso: modules/sargasso.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    Somalier: modules/somalier.md
     Supernova: modules/supernova.md
     Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
