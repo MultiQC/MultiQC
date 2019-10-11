@@ -12,8 +12,8 @@ Mash reduces sequences to sketches, which are then used to estimate a pairwise m
 
 Although Mash can used to determine the distance of virtually any two sequences,
 this module is for `P-value = 0` results when compared to the prepared [RefSeq sketch](refseq.genomes.k21.s1000.msh)
-with a final file ending in `*mashdist.txt`.
+with a final file ending in `sample*mashdist.txt`.
 
 ```
-mash dist refseq.genomes.k21.s1000.msh reads.fastq.msh > mashdist.tab
+mash dist refseq.genomes.k21.s1000.msh reads.fastq.msh > sample_mashdist.txt
 ```

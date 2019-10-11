@@ -338,6 +338,8 @@ longranger/invocation:
     max_filesize: 2048
 macs2:
     fn: '*_peaks.xls'
+mash:
+    fn: '*mashdist.txt'
 methylQA:
     fn: '*.report'
     shared: true
