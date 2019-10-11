@@ -12,7 +12,7 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
-    """ mash module """
+    """ mash dist module """ # mash screen would be similar
 
     def __init__(self):
         # Initialise the parent object
@@ -28,11 +28,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.mashorganisms_data = self.ignore_samples(self.mashorganisms_data)
+        log.info("Found {} logs".format(len(self.mashorganisms_data)))
+        self.write_data_file(self.mashorganisms_data, 'multiqc_mash')
 
         # Plot the data
         self.add_section( plot = self.mash_plot() )
-
-
 
     def parse_mash(self, myfile):
         parsed_data = dict()
@@ -63,5 +63,4 @@ class MultiqcModule(BaseMultiqcModule):
             'xlab': "Organism",
             'ylab': "Sample"
         }
-
         return bargraph.plot(self.mashorganisms_data, self.mashorganisms_keys, config)
