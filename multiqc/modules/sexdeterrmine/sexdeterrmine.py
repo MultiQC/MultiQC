@@ -7,6 +7,7 @@ from collections import OrderedDict
 import logging
 import os
 import re
+import json
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -42,16 +43,16 @@ class MultiqcModule(BaseMultiqcModule):
             self.parseJSON(f)
         
         #Filter to strip out ignored sample names
-        self.sexdet_nraut = self.ignore_samples(self.sexdet_nraut)
-        self.sexdet_nrX = self.ignore_samples(self.sexdet_nrX)
-        self.sexdet_nrY = self.ignore_samples(self.sexdet_nrY)
-        self.sexdet_rateErrX = self.ignore_samples(self.sexdet_rateErrX)
-        self.sexdet_rateErrY = self.ignore_samples(self.sexdet_rateErrY)
-        self.sexdet_rateX = self.ignore_samples(self.sexdet_rateX)
-        self.sexdet_rateY = self.ignore_samples(self.sexdet_rateY)
-        self.sexdet_snpsauto = self.ignore_samples(self.sexdet_snpsauto)
-        self.sexdet_Xsnps = self.ignore_samples(self.sexdet_Xsnps)
-        self.sexdet_Ysnps = self.ignore_samples(self.sexdet_Ysnps)
+        #self.sexdet_nraut = self.ignore_samples(self.sexdet_nraut)
+        #self.sexdet_nrX = self.ignore_samples(self.sexdet_nrX)
+        #self.sexdet_nrY = self.ignore_samples(self.sexdet_nrY)
+        #self.sexdet_rateErrX = self.ignore_samples(self.sexdet_rateErrX)
+        #self.sexdet_rateErrY = self.ignore_samples(self.sexdet_rateErrY)
+        #self.sexdet_rateX = self.ignore_samples(self.sexdet_rateX)
+        #self.sexdet_rateY = self.ignore_samples(self.sexdet_rateY)
+        #self.sexdet_snpsauto = self.ignore_samples(self.sexdet_snpsauto)
+        #self.sexdet_Xsnps = self.ignore_samples(self.sexdet_Xsnps)
+        #self.sexdet_Ysnps = self.ignore_samples(self.sexdet_Ysnps)
 
         self.write_data_file(self.sexdet_nraut, 'multiqc_sexdeter_nraut_metrics')
 
@@ -67,40 +68,23 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         #Get sample name from JSON first
-        for k in parsed_json:
+        for k in parsed_json.items():
             if k == 'metadata':
                continue 
-            try: 
-               s_name = self.clean_s_name(k)
-               self.add_data_source(f, s_name)
-               self.sexdet_nraut[s_name] = parsed_json[k]['NR Aut']
-               self.sexdet_nrX = parsed_json[k]['NrX']
-               self.sexdet_nrY = parsed_json[k]['NrY']
-               self.sexdet_rateErrX = float(parsed_json[k]['RateErrX'])
-               self.sexdet_rateErrY = float(parsed_json[k]['RateErrY'])
-               self.sexdet_rateX = float(parsed_json[k]['RateX'])
-               self.sexdet_rateY = float(parsed_json[k]['RateY'])
-               self.sexdet_snpsauto = parsed_json[k]['Snps Autosomal']
-               self.sexdet_Xsnps = parsed_json[k]['XSnps']
-               self.sexdet_Ysnps = parsed_json[k]['YSnps']
-            except (ValueError, TypeError):
+            else:
+                try:  
+                    s_name = self.clean_s_name(k)
+                    print(s_name)
+                    self.add_data_source(f, s_name)
+                    self.sexdet_nraut[s_name] = parsed_json[k]['NR Aut']
+                    self.sexdet_nrX = parsed_json[k]['NrX']
+                    self.sexdet_nrY = parsed_json[k]['NrY']
+                    self.sexdet_rateErrX = float(parsed_json[k]['RateErrX'])
+                    self.sexdet_rateErrY = float(parsed_json[k]['RateErrY'])
+                    self.sexdet_rateX = float(parsed_json[k]['RateX'])
+                    self.sexdet_rateY = float(parsed_json[k]['RateY'])
+                    self.sexdet_snpsauto = parsed_json[k]['Snps Autosomal']
+                    self.sexdet_Xsnps = parsed_json[k]['XSnps']
+                    self.sexdet_Ysnps = parsed_json[k]['YSnps']
+                except (ValueError, TypeError):
                     pass
-
-
-        
-
-        #Add 3' G to A data
-        self.threepGtoAfreq_data[s_name] = parsed_json['dmg_3p']
-
-        #Add 5' C to T data
-        self.fivepCtoTfreq_data[s_name] = parsed_json['dmg_5p']
-
-        #Add lendist forward
-        self.lgdist_fw_data[s_name] = parsed_json['lendist_fw']
-
-        #Add lendist reverse
-        self.lgdist_rv_data[s_name] = parsed_json['lendist_rv']
-
-        #Add summary metrics
-        self.summary_metrics_data[s_name] = parsed_json['summary_stats']
-
