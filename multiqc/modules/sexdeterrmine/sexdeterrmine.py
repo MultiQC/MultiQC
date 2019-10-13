@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import json
+import pprint
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -62,29 +63,31 @@ class MultiqcModule(BaseMultiqcModule):
         """ Parse the JSON output from SexDeterrmine and save the summary statistics """
         try:
             parsed_json = json.load(f['f'])
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(parsed_json)
         except Exception as e:
             print(e)
             log.warn("Could not parse SexDeterrmine JSON: '{}'".format(f['fn']))
             return None
 
+        pp.pprint(parsed_json['/Users/alexanderpeltzer/Downloads/BOO002.sorted.bam'])
         #Get sample name from JSON first
-        for k in parsed_json.items():
-            if k == 'metadata':
-               continue 
-            else:
+        for k in parsed_json:
+            if (k != 'Metadata'):
                 try:  
-                    s_name = self.clean_s_name(k)
-                    print(s_name)
+                    s_name = self.clean_s_name(k,'')
                     self.add_data_source(f, s_name)
                     self.sexdet_nraut[s_name] = parsed_json[k]['NR Aut']
-                    self.sexdet_nrX = parsed_json[k]['NrX']
-                    self.sexdet_nrY = parsed_json[k]['NrY']
-                    self.sexdet_rateErrX = float(parsed_json[k]['RateErrX'])
-                    self.sexdet_rateErrY = float(parsed_json[k]['RateErrY'])
-                    self.sexdet_rateX = float(parsed_json[k]['RateX'])
-                    self.sexdet_rateY = float(parsed_json[k]['RateY'])
-                    self.sexdet_snpsauto = parsed_json[k]['Snps Autosomal']
-                    self.sexdet_Xsnps = parsed_json[k]['XSnps']
-                    self.sexdet_Ysnps = parsed_json[k]['YSnps']
-                except (ValueError, TypeError):
-                    pass
+                    self.sexdet_nrX[s_name] = parsed_json[k]['NrX']
+                    self.sexdet_nrY[s_name] = parsed_json[k]['NrY']
+                    self.sexdet_rateErrX[s_name] = float(parsed_json[k]['RateErrX'])
+                    self.sexdet_rateErrY[s_name] = float(parsed_json[k]['RateErrY'])
+                    self.sexdet_rateX[s_name] = float(parsed_json[k]['RateX'])
+                    self.sexdet_rateY[s_name] = float(parsed_json[k]['RateY'])
+                    self.sexdet_snpsauto[s_name] = parsed_json[k]['Snps Autosomal']
+                    self.sexdet_Xsnps[s_name] = parsed_json[k]['XSnps']
+                    self.sexdet_Ysnps[s_name] = parsed_json[k]['YSnps']
+                except ValueError as error:
+                    print("Something isn't right with this error:", error)
+            else:
+                continue
