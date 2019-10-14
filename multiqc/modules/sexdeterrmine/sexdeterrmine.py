@@ -43,6 +43,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('sexdeterrmine',filehandles=True):
             self.parseJSON(f)
         
+        pp = pprint.PrettyPrinter(indent=4)
+        print(self.sexdet_nraut)
+        print(self.sexdet_nrX)
+        
         #Filter to strip out ignored sample names
         #self.sexdet_nraut = self.ignore_samples(self.sexdet_nraut)
         #self.sexdet_nrX = self.ignore_samples(self.sexdet_nrX)
@@ -55,22 +59,19 @@ class MultiqcModule(BaseMultiqcModule):
         #self.sexdet_Xsnps = self.ignore_samples(self.sexdet_Xsnps)
         #self.sexdet_Ysnps = self.ignore_samples(self.sexdet_Ysnps)
 
-        self.write_data_file(self.sexdet_nraut, 'multiqc_sexdeter_nraut_metrics')
+        #self.write_data_file(self.sexdet_nraut, 'multiqc_sexdeter_nraut_metrics')
 
 
         #Parse our nice little JSON file
     def parseJSON(self, f):
+
         """ Parse the JSON output from SexDeterrmine and save the summary statistics """
         try:
             parsed_json = json.load(f['f'])
-            pp = pprint.PrettyPrinter(indent=4)
-            pp.pprint(parsed_json)
         except Exception as e:
             print(e)
             log.warn("Could not parse SexDeterrmine JSON: '{}'".format(f['fn']))
             return None
-
-        pp.pprint(parsed_json['/Users/alexanderpeltzer/Downloads/BOO002.sorted.bam'])
         #Get sample name from JSON first
         for k in parsed_json:
             if (k != 'Metadata'):
@@ -91,3 +92,39 @@ class MultiqcModule(BaseMultiqcModule):
                     print("Something isn't right with this error:", error)
             else:
                 continue
+
+    def addSummaryMetrics(self, dict_to_plot):
+        """ Take the parsed stats from SexDetErrmine and add it to the main plot """
+
+        headers = OrderedDict()
+
+        nraut nrX nrY rateErrX rateErrY rateX rateY snpsauto XSnps YSnps
+        headers['nraut'] = {
+            'title': '# Autosomal SNPs',
+            'description': 'Read length std. dev.',
+            'suffix': 'bp',
+            'scale': 'PuBu',
+            'format': '{:,.2f}',
+            'shared_key': 'read_length',
+            'hidden': True
+        }
+
+        headers['median'] = {
+            'title': 'Median read length',
+            'description': 'Median read length',
+            'suffix': 'bp',
+            'scale': 'YlGnBu',
+            'format': '{:,.2f}',
+            'shared_key': 'read_length'
+        }
+        headers['mean_readlength'] = {
+            'title': 'Mean read length',
+            'description': 'Mean read length',
+            'suffix': 'bp',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'shared_key': 'read_length',
+            'hidden': True
+        }
+
+        self.general_stats_addcols(dict_to_plot, headers)
