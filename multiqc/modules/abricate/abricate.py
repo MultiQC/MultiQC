@@ -9,7 +9,6 @@ import re
 
 log = logging.getLogger(__name__)
 
-
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
@@ -25,25 +24,33 @@ class MultiqcModule(BaseMultiqcModule):
         for myfile in self.find_log_files('abricate'):
             # files are named db.abricate_summary.txt
             db = re.sub('.abricate_summary.txt','',myfile['fn'])
+            db = re.sub('abricate_summary.txt','',db)
             if not db :
-                db = summary
+                db = myfile['s_name']
             self.getdata(myfile, db)
             self.add_section( plot = self.abricate_heatmap_plot(db) )
 
         log.info("Found {} logs".format(len(self.abricate_data)))
-#        self.write_data_file(self.abricate_data, 'multiqc_abricate')
 
     def getdata(self, myfile, db):
         self.abricate_ycats[db] = []
         self.abricate_data[db] = []
         for line in myfile['f'].splitlines():
+            line = line.replace('\t.', '\t0.00')
             if not line.split("\t")[0] == "#FILE":
                 # gets the sample name
                 self.abricate_ycats[db].append(line.split("\t")[0])
                 # gets the numbers
-                self.abricate_data[db].append(line.split("\t")[2:])
-                # get the max number of multiple hits
-                <code>
+                # sometimes organisms are found to carry multiple copies, so those elements need to be converted to a single number
+                if ';' in line:
+                    double_carrier_line = line.split("\t")[2:]
+                    for status in double_carrier_line:
+                        if ';' in status:
+                            # get the max number of multiple hits
+                            double_carrier_line[double_carrier_line.index(status)]=max(status.split(';'), key=float)
+                    self.abricate_data[db].append(double_carrier_line)
+                else:
+                    self.abricate_data[db].append(line.split("\t")[2:])
             else:
                 # gets the gene names
                 self.abricate_xcats[db] = line.split("\t")[2:]
@@ -55,6 +62,6 @@ class MultiqcModule(BaseMultiqcModule):
             'xlab': "Gene",
             'ylab': "Sample",
             'square': False,
-#            'colstops': [ [0, '#FFFFFF'], [0.6, '#ffffe5'], [0.7, '#d9f0a3'], [0.95, '#004529'], [1, '#000000'], ]
+            'colstops': [ [0, '#FFFFFF'], [0.6, '#ffffe5'], [0.7, '#d9f0a3'], [0.95, '#004529'], [1, '#000000'], ]
         }
         return heatmap.plot(self.abricate_data[db], self.abricate_xcats[db], self.abricate_ycats[db], config)
