@@ -1,4 +1,8 @@
 script-src 'self'
+    # v1.8dev with support for multiple fastq modules
+    'sha256-gMm+i7J9RFrqkxWwywqwdylMa1h6M7wuN8lUGjU1yXY=' # multiqc_fastqc.js
+    'sha256-pMsBH3T9O1Z2ybOWP9nXEnBjBiYNE7W0JnFTJc2udmw=' # fastq screen inline script
+
     # v1.8dev
     'sha256-Q8T2P8EmA90icfsFreWNkgqXzeAUtRDu2cLsJfgN1aY=' # load mqc_compressed_plotdata and mqc_config
     'sha256-+F66a8s8ponoNnBnP06kgZ4LvQ6IBedFeTJHpTbA0O0=' # load_fastqc_passfails();
