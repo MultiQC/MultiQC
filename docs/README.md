@@ -116,7 +116,7 @@ The documentation has the following pages:
    - [Customising Reports](customisation.md)
    - [Common Problems](troubleshooting.md)
 - [MultiQC Modules](modules/)
-   - [Custom Content](custom_content.md)
+- [Custom Content](custom_content.md)
    - Coding with MultiQC
    - [Writing new templates](templates.md)
    - [Writing new modules](modules.md)
