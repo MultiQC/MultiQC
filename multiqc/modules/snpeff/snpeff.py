@@ -81,10 +81,23 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.effects_impact_plot()
         )
         self.add_section (
-            name = 'Variant Effects by Class',
+            name = 'Variant by Effects',
             description = (
                 "The stacked bar plot shows the effect of variants at protein "
                 "level and the number of variants for each effect type."
+            ),
+            helptext = (
+                "This plot shows the effect of variants with respect to"
+                "the mRNA."
+            ),
+            anchor = 'snpeff-effects',
+            plot = self.effects_plot()
+        )
+        self.add_section (
+            name = 'Variant Effects by Class',
+            description = (
+                "The stacked bar plot shows the effect of variants and"
+                "the number of variants for each effect type."
             ),
             helptext = (
                 "This plot shows the effect of variants on the translation of "
@@ -228,6 +241,26 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
+    def effects_plot(self):
+        """ Generate the SnpEff Counts by Effects plot """
+
+        # Sort the keys based on the total counts
+        keys = self.snpeff_section_totals['# Count by effects']
+        sorted_keys = sorted(keys, reverse=True, key=keys.get)
+
+        # Make nicer label names
+        pkeys = OrderedDict()
+        for k in sorted_keys:
+            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
+
+        # Config for the plot
+        pconfig = {
+            'id': 'snpeff_effects',
+            'title': 'SnpEff: Counts by Effects',
+            'ylab': '# Reads',
+            'logswitch': False
+        }
+        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
     def effects_impact_plot(self):
         """ Generate the SnpEff Counts by Effects Impact plot """
