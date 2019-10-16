@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 """ MultiQC module to parse output from DeDup """
 
@@ -52,12 +52,12 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.dedup_alignment_plot()
         )
 
-    #Parse our nice little JSON file
+    # Parse our nice little JSON file
     def parseJSON(self, f):
         """ Parse the JSON output from DeDup and save the summary statistics """
         try:
             parsed_json = json.load(f['f'])
-            #Check for Keys existing
+            # Check for Keys existing
             if 'metrics' not in parsed_json or 'metadata' not in parsed_json:
                 log.debug("DeDup JSON missing essential keys - skipping sample: '{}'".format(f['fn']))
                 return None
@@ -66,8 +66,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(e)
             return None
 
-        #Get sample name from JSON first
-        s_name = self.clean_s_name(parsed_json['metadata']['sample_name'],'')
+        # Get sample name from JSON first
+        s_name = self.clean_s_name(parsed_json['metadata']['sample_name'], f['root'])
         self.add_data_source(f, s_name)
 
         metrics_dict = parsed_json['metrics']
@@ -77,13 +77,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Compute not removed from given values
         metrics_dict['not_removed'] = (
-        metrics_dict['total_reads']
-        - metrics_dict['reverse_removed']
-        - metrics_dict['forward_removed']
-        - metrics_dict['merged_removed']
+            metrics_dict['total_reads']
+                - metrics_dict['reverse_removed']
+                - metrics_dict['forward_removed']
+                - metrics_dict['merged_removed']
         )
 
-        #Add all in the main data_table
+        # Add all in the main data_table
         self.dedup_data[s_name] = metrics_dict
 
 
