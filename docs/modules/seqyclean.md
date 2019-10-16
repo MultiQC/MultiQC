@@ -8,5 +8,3 @@ Description: >
  
     The module parses the `*SummaryStatistics.tsv` files that results from a SeqyClean cleaning.
 ---
-
-Utah Public Health Laboratory
