@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         for k in parsed_json:
             if (k != 'Metadata'):
                 try:  
-                    s_name = self.clean_s_name(k,'')
+                    s_name = self.clean_s_name(k,f['root'])
                     self.add_data_source(f, s_name)
                     self.sexdet_nraut[s_name] = parsed_json[k]['NR Aut']
                     self.sexdet_nrX[s_name] = parsed_json[k]['NrX']
@@ -97,34 +97,75 @@ class MultiqcModule(BaseMultiqcModule):
         """ Take the parsed stats from SexDetErrmine and add it to the main plot """
 
         headers = OrderedDict()
-
-        nraut nrX nrY rateErrX rateErrY rateX rateY snpsauto XSnps YSnps
         headers['nraut'] = {
-            'title': '# Autosomal SNPs',
-            'description': 'Read length std. dev.',
-            'suffix': 'bp',
+            'title': '# Autosomal Pos',
+            'description': 'The number of reads covering positions on the autosome.',
             'scale': 'PuBu',
             'format': '{:,.2f}',
-            'shared_key': 'read_length',
             'hidden': True
         }
-
-        headers['median'] = {
-            'title': 'Median read length',
-            'description': 'Median read length',
-            'suffix': 'bp',
+        headers['nrX'] = {
+            'title': '# X Pos',
+            'description': 'The number of reads covering positions on Chromosome X.',
             'scale': 'YlGnBu',
             'format': '{:,.2f}',
-            'shared_key': 'read_length'
-        }
-        headers['mean_readlength'] = {
-            'title': 'Mean read length',
-            'description': 'Mean read length',
-            'suffix': 'bp',
-            'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'shared_key': 'read_length',
             'hidden': True
         }
+        headers['nrY'] = {
+            'title': '# Y Pos',
+            'description': 'The number of reads covering positions on Chromosome Y.',
+            'scale': 'YlGnBu',
+            'format': '{:,.2f}',
+            'hidden': True
+        }
+        headers['rateErrX'] = {
+            'title': 'rateErrX',
+            'description': 'Rate of Error for Chr X',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'hidden': True
+        }
+        headers['rateErrY'] = {
+            'title': 'rateErrY',
+            'description': 'Rate of Error for Chr Y',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'hidden': True
+        }
+        headers['rateX'] = {
+            'title': 'rateX',
+            'description': 'Number of positions on Chromosome X vs Autosomal positions.',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'hidden': True
+        }
+        headers['rateY'] = {
+            'title': 'rateY',
+            'description': 'Number of positions on Chromosome Y vs Autosomal positions.',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'hidden': True
+        }
+        headers['snpsauto'] = {
+            'title': 'Pos on Auto',
+            'description': 'Total number of autosomal positions. When supplied with a BED file, this includes only positions specified there.',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'hidden': True
+        } 
+        headers['XSnps'] = {
+            'title': 'Pos on X',
+            'description': 'Total number of positions on Chromosome X. When supplied with a BED file, this includes only positions specified there.',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'hidden': True
+        } 
+        headers['YSnps'] = {
+            'title': 'Pos on Y',
+            'description': 'Total number of positions on Chromosome Y. When supplied with a BED file, this includes only positions specified there.',
+            'scale': 'PuBuGn',
+            'format': '{:,.2f}',
+            'hidden': True
+        } 
 
         self.general_stats_addcols(dict_to_plot, headers)
