@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
 	def __init__(self):
 		# Initialise the parent object
 		super(MultiqcModule, self).__init__(name='Seqyclean', anchor='seqyclean',
-		href="http://www.awesome_bioinfo.com/my_module",
+		href="https://github.com/ibest/seqyclean",
 		info="These graphs analyze the seqyclean files created during the pipeline. There are two associated graphs. The first one shows the total number of pairs kept and discarded. The second breaks down the reasons why certain pairs were discarded.")
 
 		# Parse logs
