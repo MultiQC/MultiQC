@@ -75,27 +75,26 @@ class MultiqcModule(BaseMultiqcModule):
 		self.seqyclean_general_stats_table()
 		#These functions create the sections in the report summary
 		firstkeys = ['PairsKept', 'PairsDiscarded']
-		secondkeys =['PE1ReadsAn','PE1TruSeqAdap_found','PE1ReadswVector_found','PE1ReadswContam_found','PE1DiscByContam','PE1DiscByLength','PE2ReadsAn','PE2TruSeqAdap_found','PE2ReadswVector_found','PE2ReadswContam_found','PE2DiscByContam','PE2DiscByLength']
-		pconfig = {
-            'id': 'seqyclean_assignment_plot',
-            'title': 'Seqyclean: Reads',
-            'ylab': 'Num of Reads',
-        }
+		secondkeys =['PE1ReadsAn',
+			     'PE1TruSeqAdap_found',
+			     'PE1ReadswVector_found',
+			     'PE1ReadswContam_found',
+			     'PE1DiscByContam',
+			     'PE1DiscByLength',
+			     'PE2ReadsAn',
+			     'PE2TruSeqAdap_found',
+			     'PE2ReadswVector_found',
+			     'PE2ReadswContam_found',
+			     'PE2DiscByContam',
+			     'PE2DiscByLength']
 		config = {
-            'id': 'seqyclean_assignment_plot_2',
-            'title': 'Seqyclean: Breakdown Reads',
+            'id': 'seqyclean',
+            'title': 'Seqyclean',
             'ylab': 'Num of Reads',
         }
-		self.add_section (
-			name = 'Total Seqyclean Results',
-			anchor = 'seqyclean-first',
-			description = 'This shows the results of the seqyclean process',
-			helptext = "If you're not sure _how_ to interpret the data, we can help!",
-			plot = bargraph.plot(self.data_total, firstkeys, pconfig)
-		)
 		self.add_section (
 			name = 'Seqyclean Results Breakdown',
-			anchor = 'seqyclean-second',
+			anchor = 'seqyclean',
 			description = 'This shows the breakdown results of the seqyclean process',
 			plot = bargraph.plot(self.data_breakdown, secondkeys, config)
 		)
@@ -105,19 +104,19 @@ class MultiqcModule(BaseMultiqcModule):
 		basic stats table at the top of the report """
 		headers = OrderedDict()
 		headers['PairsKept'] = {
-			'title': 'PairsKept: Seqyclean pairs that were preserved',
-			'description': 'Num of pairs kept from seqyclean analysis',
+			'title': '{} Pairs Kept'.format(config.read_count_prefix),
+			'description': 'Number of pairs ({})'.format(config.read_count_desc),
 			'scale': 'YlGn',
 			'format': '{} bp',
-			'ylab': '# Reads',
-			'id': 'pairs_kept'
+			'id': 'pairs_kept',
+			'modify': lambda x: x * config.read_count_multiplier,
 		}
 		headers['PairsDiscarded'] = {
-			'title': 'PairsDiscarded: Pairs that were discarded',
-			'description': 'Num of pairs discarded from seqyclean analysis',
+			'title': '{} Pairs Discarded'.format(config.read_count_prefix),
+			'description': 'Number of pairs ({})'.format(config.read_count_desc),
 			'scale': 'OrRd',
 			'format': '{} bp',
-			'ylab': '# Reads',
 			'id': 'pairs_discarded'
+			'modify': lambda x: x * config.read_count_multiplier,
 		}
 		self.general_stats_addcols(self.data_total, headers)
