@@ -7,7 +7,7 @@
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
 * [**Seqyclean**](https://github.com/ibest/seqyclean)
-	  * Adds analysis for seqyclean files
+    * Adds analysis for seqyclean files
 * [**mtnucratio**](https://github.com/apeltzer/MTNucRatioCalculator)
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)
