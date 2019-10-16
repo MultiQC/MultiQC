@@ -13,9 +13,6 @@ install:
   - git clone https://github.com/ewels/MultiQC_TestData.git test_data
   - cd test_data
   - mkdir empty_dir
-  # Install node for browser test
-  - nvm install 10
-  - (cd ../test && npm install)
 # commands to run tests
 script:
   - python -m unittest discover
@@ -27,6 +24,3 @@ script:
   - multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
   - multiqc -f empty_dir
   - multiqc -f data/modules/gatk/BaseRecalibrator/recal_data.table
-  # Run browser test
-  - (cd ../test && multiqc ../test_data/data/)
-  - (cd ../test && npm run test)
