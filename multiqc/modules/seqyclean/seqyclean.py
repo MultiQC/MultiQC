@@ -17,106 +17,71 @@ class MultiqcModule(BaseMultiqcModule):
 		# Initialise the parent object
 		super(MultiqcModule, self).__init__(name='SeqyClean', anchor='seqyclean',
 		href="https://github.com/ibest/seqyclean",
-		info=""" is a pre-processing tool for NGS data able to do filtering of adapters,
-		     vector / contaminants, quality trimming, poly A/T trimming and trimming of overlapping paired reads.""")
+		info="SeqyClean is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.")
 
 		# Parse logs
-		self.seqyclean = dict()
-		self.data_total = {}
-		self.data_breakdown = {}
+		self.seqyclean_data = dict()
 		for f in self.find_log_files('seqyclean'):
-			RowTwo = f['f'].split("\n")[1] #split the file into two rows
-			#These variables will be used in the total data table 
-			PairsKept = RowTwo.split("\t")[57] # get the number of pairs kept (from the second row)
-			PairsDiscarded = RowTwo.split("\t")[61] #get num of pairs discarded
-			#These are for the breakdown
-			PE1ReadsAn = RowTwo.split("\t")[21]
-			PE1TruSeqAdap_found = RowTwo.split("\t")[23]
-			PE1ReadswVector_found = RowTwo.split("\t")[25]
-			PE1ReadswContam_found = RowTwo.split("\t")[27]
-			PE1DiscByContam = RowTwo.split("\t")[37]
-			PE1DiscByLength = RowTwo.split("\t")[38]
-			PE2ReadsAn = RowTwo.split("\t")[39]
-			PE2TruSeqAdap_found = RowTwo.split("\t")[41]
-			PE2ReadswVector_found = RowTwo.split("\t")[43]
-			PE2ReadswContam_found = RowTwo.split("\t")[45]
-			PE2DiscByContam = RowTwo.split("\t")[55]
-			PE2DiscByLength = RowTwo.split("\t")[56]
+			rows = f['f'].splitlines()
+			headers = rows[0].split("\t")
+			cols = rows[1].split("\t")
+			f['s_name'] = re.sub('_SummaryStatistics','',f['s_name'])
 
-			#add the variables above into a dictionary for the total values table
-			self.data_total.update({
-				f['s_name']: {
-					'PairsKept': PairsKept,
-					'PairsDiscarded': PairsDiscarded
-				}
-			})
-			#add the above variables into a dictionary for a breakdown table
-			self.data_breakdown.update({
-				f['s_name']: {
-					'PE1ReadsAn':PE1ReadsAn,
-					'PE1TruSeqAdap_found':PE1TruSeqAdap_found,
-					'PE1ReadswVector_found':PE1ReadswVector_found,
-					'PE1ReadswContam_found':PE1ReadswContam_found,
-					'PE1DiscByContam':PE1DiscByContam,
-					'PE1DiscByLength':PE1DiscByLength,
-					'PE2ReadsAn':PE2ReadsAn,
-					'PE2TruSeqAdap_found':PE2TruSeqAdap_found,
-					'PE2ReadswVector_found':PE2ReadswVector_found,
-					'PE2ReadswContam_found':PE2ReadswContam_found,
-					'PE2DiscByContam':PE2DiscByContam,
-					'PE2DiscByLength':PE2DiscByLength
-				}
-			})
-		
+			self.seqyclean_data[f['s_name']] = dict()
+			for header, cols in zip(headers, cols):
+				self.seqyclean_data[f['s_name']].update({ header : cols })
+
+		if len(self.seqyclean_data) == 0:
+			raise UserWarning
+
+		self.seqyclean_data = self.ignore_samples(self.seqyclean_data)
+
+		log.info("Found {} logs".format(len(self.seqyclean_data)))
+
+		# Adding the bar plot
+		self.add_section( plot = self.seqyclean_bargraph() )
+
 		# Write the results to a file
-		self.write_data_file(self.data_total, 'seqyclean_results')
-		self.write_data_file(self.data_breakdown, 'seqyclean_results')
-		#headers for the "general information" at the top of the Multiqc Analysis
+		self.write_data_file(self.seqyclean_data, 'seqyclean')
+
+		# Adding to the general statistics table
 		self.seqyclean_general_stats_table()
-		#These functions create the sections in the report summary
-		firstkeys = ['PairsKept', 'PairsDiscarded']
-		secondkeys =['PE1ReadsAn',
-			     'PE1TruSeqAdap_found',
-			     'PE1ReadswVector_found',
-			     'PE1ReadswContam_found',
-			     'PE1DiscByContam',
-			     'PE1DiscByLength',
-			     'PE2ReadsAn',
-			     'PE2TruSeqAdap_found',
-			     'PE2ReadswVector_found',
-			     'PE2ReadswContam_found',
-			     'PE2DiscByContam',
-			     'PE2DiscByLength']
+
+	def seqyclean_bargraph(self):
 		config = {
-            'id': 'seqyclean',
-            'title': 'Seqyclean',
-            'ylab': 'Num of Reads',
-        }
-		self.add_section (
-			name = 'Seqyclean Results Breakdown',
-			anchor = 'seqyclean',
-			description = 'This shows the breakdown results of the seqyclean process',
-			plot = bargraph.plot(self.data_breakdown, secondkeys, config)
-		)
-				
+			'id': 'seqyclean',
+            'title': 'SeqyClean: Reads Analysis',
+            'ylab': 'Number of Reads'
+			}
+		keys =['PE1ReadsAn',
+			'PE1TruSeqAdap_found',
+			'PE1ReadswVector_found',
+			'PE1ReadswContam_found',
+			'PE1DiscByContam',
+			'PE1DiscByLength',
+			'PE2ReadsAn',
+			'PE2TruSeqAdap_found',
+			'PE2ReadswVector_found',
+			'PE2ReadswContam_found',
+			'PE2DiscByContam',
+			'PE2DiscByLength']
+
+		return bargraph.plot(self.seqyclean_data, keys, config)
+
 	def seqyclean_general_stats_table(self):
-		""" Take the parsed stats from the SeqyClean report and add them to the
-		basic stats table at the top of the report """
 		headers = OrderedDict()
 		headers['PairsKept'] = {
-			'title': '{} Pairs Kept'.format(config.read_count_prefix),
-			'description': 'Number of pairs ({})'.format(config.read_count_desc),
+			'title': 'Pairs Kept',
+			'description': 'The number of read pairs remaining after SeqyClean',
 			'scale': 'YlGn',
-			'format': '{} bp',
 			'id': 'pairs_kept',
-			'modify': lambda x: x * config.read_count_multiplier,
+			'format' : '{:,.0f}',
 		}
 		headers['PairsDiscarded'] = {
-			'title': '{} Pairs Discarded'.format(config.read_count_prefix),
-			'description': 'Number of pairs ({})'.format(config.read_count_desc),
+			'title': 'Pairs Discarded',
+			'description': 'The number of read pairs discarded after SeqyClean',
 			'scale': 'OrRd',
-			'format': '{} bp',
+			'format' : '{:,.0f}',
 			'id': 'pairs_discarded'
-			'modify': lambda x: x * config.read_count_multiplier,
 		}
-		self.general_stats_addcols(self.data_total, headers)
+		self.general_stats_addcols(self.seqyclean_data, headers)
