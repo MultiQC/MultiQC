@@ -11,7 +11,6 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
-import traceback
 
 class MultiqcModule(BaseMultiqcModule):
 	def __init__(self):
