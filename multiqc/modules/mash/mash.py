@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
         for myfile in self.find_log_files('mash'):
             self.mashorganisms_data.update({myfile['s_name'] : self.parse_mash(myfile)})
 
+        if len(self.mashorganisms_data) == 0:
+            raise UserWarning
         # Filter to strip out ignored sample names
         self.mashorganisms_data = self.ignore_samples(self.mashorganisms_data)
         log.info("Found {} logs".format(len(self.mashorganisms_data)))
