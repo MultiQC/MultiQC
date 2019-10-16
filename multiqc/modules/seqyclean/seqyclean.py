@@ -17,7 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
 		# Initialise the parent object
 		super(MultiqcModule, self).__init__(name='SeqyClean', anchor='seqyclean',
 		href="https://github.com/ibest/seqyclean",
-		info="These graphs analyze the seqyclean files created during the pipeline. There are two associated graphs. The first one shows the total number of pairs kept and discarded. The second breaks down the reasons why certain pairs were discarded.")
+		info=""" is a pre-processing tool for NGS data able to do filtering of adapters,
+		     vector / contaminants, quality trimming, poly A/T trimming and trimming of overlapping paired reads.""")
 
 		# Parse logs
 		self.seqyclean = dict()
