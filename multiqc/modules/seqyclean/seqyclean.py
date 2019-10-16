@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
 	def __init__(self):
 		# Initialise the parent object
-		super(MultiqcModule, self).__init__(name='Seqyclean', anchor='seqyclean',
+		super(MultiqcModule, self).__init__(name='SeqyClean', anchor='seqyclean',
 		href="https://github.com/ibest/seqyclean",
 		info="These graphs analyze the seqyclean files created during the pipeline. There are two associated graphs. The first one shows the total number of pairs kept and discarded. The second breaks down the reasons why certain pairs were discarded.")
 
