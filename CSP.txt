@@ -1,3 +1,6 @@
+# If you are hosting MultiQC reports >= v1.8 on a web application with CSP
+# (Content Security Policy), you will need the following scripts whitelisted:
+
 script-src 'self'
     # v1.8dev with support for multiple fastq modules
     'sha256-gMm+i7J9RFrqkxWwywqwdylMa1h6M7wuN8lUGjU1yXY=' # multiqc_fastqc.js
