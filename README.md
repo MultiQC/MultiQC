@@ -186,7 +186,7 @@ Code contributions from:
 [@winni2k](https://github.com/winni2k),
 [@wkretzsch](https://github.com/wkretzsch),
 [@nservant](https://github.com/nservant),
-[@elizabethcook21] (https://github.com/elizabethcook21),
+[@elizabethcook21](https://github.com/elizabethcook21),
 
 and many others. Thanks for your support!
 
