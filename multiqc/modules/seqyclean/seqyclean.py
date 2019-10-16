@@ -101,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
 		)
 				
 	def seqyclean_general_stats_table(self):
-		""" Take the parsed stats from the sargasso report and add them to the
+		""" Take the parsed stats from the SeqyClean report and add them to the
 		basic stats table at the top of the report """
 		headers = OrderedDict()
 		headers['PairsKept'] = {
