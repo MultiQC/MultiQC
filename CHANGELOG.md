@@ -14,6 +14,8 @@
 #### Module updates:
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
+* **DeDup**
+    * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
     * Added writing metrics to data output file.
 * **fastp**
@@ -44,6 +46,7 @@
     * Added handling of demultiplexing of more than 2 reads
 * **snpEff**
     * Added plot of effects
+
 
 #### New MultiQC Features:
 * Added some installation docs for windows

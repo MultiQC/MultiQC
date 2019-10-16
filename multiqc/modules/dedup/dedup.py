@@ -7,6 +7,7 @@ from collections import OrderedDict
 import logging
 import os
 import re
+import json
 
 from multiqc import config
 from multiqc.plots import bargraph
@@ -27,8 +28,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any DeDup reports
         self.dedup_data = dict()
-        for f in self.find_log_files('dedup'):
-            self.parse_dedup_log(f)
+
+        for f in self.find_log_files('dedup',filehandles=True):
+            self.parseJSON(f)
 
         # Filter to strip out ignored sample names
         self.dedup_data = self.ignore_samples(self.dedup_data)
@@ -50,42 +52,47 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.dedup_alignment_plot()
         )
 
-
-    def parse_dedup_log(self, f):
-        regexes = {
-            'input_file': r"Input file:\s+(\S+)",
-            'total_reads': r"Total reads:\s+(\d+)",
-            'reverse_removed': r"Reverse removed:\s+(\d+)",
-            'forward_removed': r"Forward removed:\s+(\d+)",
-            'merged_removed': r"Merged removed:\s+(\d+)",
-            'total_removed': r"Total removed:\s+(\d+)",
-            'duplication_rate': r"Duplication Rate:\s+([\d\.]+)",
-        }
-        parsed_data = dict()
-        for k, r in regexes.items():
-            r_search = re.search(r, f['f'], re.MULTILINE)
-            if r_search:
-                try:
-                    parsed_data[k] = float(r_search.group(1))
-                except ValueError:
-                    parsed_data[k] = r_search.group(1)
+    #Parse our nice little JSON file
+    def parseJSON(self, f):
+        """ Parse the JSON output from DeDup and save the summary statistics """
         try:
-            parsed_data['not_removed'] = parsed_data['total_reads'] - parsed_data['reverse_removed'] - parsed_data['forward_removed'] - parsed_data['merged_removed']
-        except KeyError:
-            log.debug('Could not calculate "not_removed"')
+            parsed_json = json.load(f['f'])
+            #Check for Keys existing
+            if 'metrics' not in parsed_json or 'metadata' not in parsed_json:
+                log.debug("DeDup JSON missing essential keys - skipping sample: '{}'".format(f['fn']))
+                return None
+        except JSONDecodeError as e:
+            log.debug("Could not parse DeDup JSON: '{}'".format(f['fn']))
+            log.debug(e)
+            return None
 
-        if len(parsed_data) > 0:
-            s_name = self.clean_s_name(os.path.basename(f['root']), f['root'])
-            if 'input_file' in parsed_data:
-                s_name = self.clean_s_name(parsed_data['input_file'], f['root'])
-            self.dedup_data[s_name] = parsed_data
+        #Get sample name from JSON first
+        s_name = self.clean_s_name(parsed_json['metadata']['sample_name'],'')
+        self.add_data_source(f, s_name)
+
+        metrics_dict = parsed_json['metrics']
+
+        for k in metrics_dict:
+            metrics_dict[k] = float(metrics_dict[k])
+
+        # Compute not removed from given values
+        metrics_dict['not_removed'] = (
+        metrics_dict['total_reads']
+        - metrics_dict['reverse_removed']
+        - metrics_dict['forward_removed']
+        - metrics_dict['merged_removed']
+        )
+
+        #Add all in the main data_table
+        self.dedup_data[s_name] = metrics_dict
+
 
     def dedup_general_stats_table(self):
         """ Take the parsed stats from the DeDup report and add it to the
         basic stats table at the top of the report """
 
         headers = OrderedDict()
-        headers['duplication_rate'] = {
+        headers['dup_rate'] = {
             'title': 'Duplication Rate',
             'description': 'Percentage of reads categorised as a technical duplicate',
             'min': 0,
@@ -94,6 +101,14 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd',
             'format': '{:,.0f}',
             'modify': lambda x: x * 100.0
+        }
+        headers['clusterfactor'] = {
+            'title': 'ClusterFactor',
+            'description': 'CF~1 means high library complexity. Large CF means not worth sequencing deeper.',
+            'min': 1,
+            'max': 100,
+            'scale': 'OrRd',
+            'format': '{:,.2f}',
         }
         self.general_stats_addcols(self.dedup_data, headers)
 

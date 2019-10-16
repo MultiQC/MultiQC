@@ -210,7 +210,7 @@ cutadapt:
 damageprofiler:
     fn: '*dmgprof.json'
 dedup:
-    fn: 'dedup.log'
+    fn: '*dedup.json'
 deeptools/bamPEFragmentSizeTable:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
     num_lines: 1
