@@ -41,7 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         for line in myfile['f'].splitlines():
             split_line = line.split("\t")
             if split_line[3] == '0' :
-                # split_line[0] contains the full sequence name in a horrendous format, now to get Genus and species. It's not perfect, but it works 99.99% of the time
+                # split_line[0] contains the full sequence name in a horrendous format, now to get Genus and species.
+                #It's not perfect, but it works 99.99% of the time
                 split_split_line = split_line[0].split("-")[7]
                 if split_split_line.startswith('_'):
                     split_split_line = split_split_line[1:]
