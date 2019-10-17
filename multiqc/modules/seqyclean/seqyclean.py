@@ -15,9 +15,10 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
 	def __init__(self):
 		# Initialise the parent object
-		super(MultiqcModule, self).__init__(name='SeqyClean', anchor='seqyclean',
-		href="https://github.com/ibest/seqyclean",
-		info="SeqyClean is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.")
+		super(MultiqcModule, self).__init__(name='SeqyClean',
+		anchor='seqyclean',
+		href='https://github.com/ibest/seqyclean',
+		info='SeqyClean is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.')
 
 		# Parse logs
 		self.seqyclean_data = dict()
@@ -39,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
 		log.info("Found {} logs".format(len(self.seqyclean_data)))
 
 		# Adding the bar plot
-		self.add_section( plot = self.seqyclean_bargraph() )
+		self.add_section(plot = self.seqyclean_bargraph())
 
 		# Write the results to a file
 		self.write_data_file(self.seqyclean_data, 'seqyclean')
@@ -49,9 +50,9 @@ class MultiqcModule(BaseMultiqcModule):
 
 	def seqyclean_bargraph(self):
 		config = {
-			'id': 'seqyclean',
-            'title': 'SeqyClean: Reads Analysis',
-            'ylab': 'Number of Reads'
+			'id': 'seqyclean-1',
+			'title': 'SeqyClean: Reads Analysis',
+			'ylab': 'Number of Reads'
 			}
 		keys =['PE1ReadsAn',
 			'PE1TruSeqAdap_found',
