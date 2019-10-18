@@ -21,6 +21,7 @@ class GroupReadsByUmiMixin():
         umi_data = dict()
 
         for f in self.find_log_files('fgbio/groupreadsbyumi'):
+            self.add_data_source(f)
             sample_name = f['s_name']
             family_size = []
             for line in f['f'].splitlines():
@@ -32,6 +33,7 @@ class GroupReadsByUmiMixin():
         if not umi_data:
             raise UserWarning("No fgbio GroupReadsByUmi logs found")
 
+        umi_data = self.ignore_samples(umi_data)
         log.info("Processed {} report(s)".format(len(self.umi_data)))
 
         return umi_data
