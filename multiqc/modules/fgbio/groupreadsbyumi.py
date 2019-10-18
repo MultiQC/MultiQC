@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+
+""" MultiQC module to parse output from fgbio GroupReadsByUmi
+"""
+
+from __future__ import print_function
+from collections import OrderedDict
+
+import logging
+
+from multiqc.plots import linegraph
+
+# Initialise the logger
+log = logging.getLogger(__name__)
+
+class GroupReadsByUmiMixin():
+
+    def parse_groupreadsbyumi(self):
+
+        # Parse data
+        self.parse_groupreadsbyumi_log()
+
+        # Make a plot if we have anything
+        if len(self.fgbio_umi_data) > 0:
+            self.parse_groupreadsbyumi_plot()
+
+        # Return the number of samples parsed
+        return len(self.fgbio_umi_data)
+
+    def parse_groupreadsbyumi_log(self):
+        umi_data = dict()
+
+        for f in self.find_log_files('fgbio/groupreadsbyumi'):
+            # add file to data sources
+            self.add_data_source(f)
+            family_size = []
+            for line in f['f'].splitlines():
+                if not line.startswith("family_size"):
+                    family_size.append(tuple(line.split("\t")))
+
+            umi_data[f['s_name']] = { int(s):int(d[1]) for s, d in enumerate(family_size,1)}
+
+        # Filter samples
+        self.fgbio_umi_data = self.ignore_samples(umi_data)
+
+    def parse_groupreadsbyumi_plot(self):
+        config = {
+            'id': 'fgbio-groupreadsbyumi-plot',
+            'title': 'fgbio: Family size count',
+            'ylab': '# UMIs',
+            'xlab': 'Reads supporting UMI',
+            'xmax': 15,
+            'xDecimals': False
+        }
+
+        self.add_section(
+            name = 'GroupReadsByUmi statistics',
+            anchor = 'fgbio-groupreadsbyumi',
+            description = '''During GroupReadsByUmi processing family size count data is generated,
+                             showing number of UMIs represented by a certain number of reads.''',
+            helptext = '''
+            This tool groups reads together that appear to have come from the same original molecule.
+            Reads are grouped by template, and then templates are sorted by the 5’ mapping positions
+            of the reads from the template, used from earliest mapping position to latest.
+            Reads that have the same end positions are then sub-grouped by UMI sequence.
+
+            The histogram shows tag family size counts.
+            ''',
+            plot = linegraph.plot(self.fgbio_umi_data, config)
+        )
