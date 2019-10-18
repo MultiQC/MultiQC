@@ -46,14 +46,14 @@ Currently, supported tools include:
 |[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[miRTrace][mirtrace]                  |
 |[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]                  |
 |[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
-|[FLASh][flash]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
-|[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Jellyfish][jellyfish]           |                         |                             |[QoRTs][qorts]                        |
-|[KAT][kat]                       |                         |                             |[Qualimap][qualimap]                  |
-|[MinIONQC][minionqc]             |                         |                             |[QUAST][quast]                        |
-|[Skewer][skewer]                 |                         |                             |[RNA-SeQC][rna_seqc]                  |
-|[SortMeRNA][sortmerna]           |                         |                             |[RSeQC][rseqc]                        |
-|                                 |                         |                             |[Sargasso][sargasso]                  |
+|[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
+|[FLASh][flash]                   |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
+|[Flexbar][flexbar]               |                         |                             |[QoRTs][qorts]                        |
+|[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
+|[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
+|[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
+|[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
+|[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
 |                                 |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
@@ -181,6 +181,7 @@ Code contributions from:
 [@robinandeer](https://github.com/robinandeer),
 [@Rotholandus](https://github.com/Rotholandus),
 [@sachalau](https://github.com/sachalau/),
+[@smeds](https://github.com/smeds/),
 [@t-neumann](https://github.com/t-neumann),
 [@vladsaveliev](https://github.com/vladsaveliev),
 [@winni2k](https://github.com/winni2k),
@@ -216,6 +217,7 @@ MultiQC is released under the GPL v3 or later licence.
 [fastqc]:         http://multiqc.info/docs/#fastqc
 [fastp]:          http://multiqc.info/docs/#fastp
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
+[fgbio]:          http://multiqc.info/docs/#fgbio
 [flash]:          http://multiqc.info/docs/#flash
 [flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
