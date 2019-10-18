@@ -115,11 +115,17 @@ class MultiqcModule(BaseMultiqcModule):
         cats['NrX'] = { 'name': 'Reads on X' }
         cats['NrY'] = { 'name': 'Reads on Y' }
 
+        config = {
+            'id': 'sexdeterrmine-readcounts-plot',
+            'title': 'SexDetErrmine: Read Counts',
+            'ylab': '# Reads'
+        }
+
         self.add_section(
             name = 'Read Counts',
             anchor = 'sexdeterrmine-readcounts',
             description = 'The number of reads covering positions on the autosomes, X and Y chromosomes.',
-            plot = bargraph.plot(self.sexdet_data, cats)
+            plot = bargraph.plot(self.sexdet_data, cats, config)
         )
 
     def snp_count_barplot(self):
@@ -130,9 +136,15 @@ class MultiqcModule(BaseMultiqcModule):
         cats['XSnps'] = { 'name': 'SNPs on X' }
         cats['YSnps'] = { 'name': 'SNPs on Y' }
 
+        config = {
+            'id': 'sexdeterrmine-snps-plot',
+            'title': 'SexDetErrmine: SNP Counts',
+            'ylab': '# Reads'
+        }
+
         self.add_section(
             name = 'SNP Counts',
             anchor = 'sexdeterrmine-snps',
             description = 'Total number of SNP positions. When supplied with a BED file, this includes only positions specified there.',
-            plot = bargraph.plot(self.sexdet_data, cats)
+            plot = bargraph.plot(self.sexdet_data, cats, config)
         )
