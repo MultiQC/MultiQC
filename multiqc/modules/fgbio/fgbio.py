@@ -1,6 +1,8 @@
 """ MultiQC module to parse output from fgbio """
+import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 
 from .groupreadsbyumi import GroupReadsByUmiMixin
 

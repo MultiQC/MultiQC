@@ -8,10 +8,6 @@ from collections import OrderedDict
 
 import logging
 
-from multiqc import config
-from multiqc.plots import linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
-
 # Initialise the logger
 log = logging.getLogger(__name__)
 
@@ -21,6 +17,7 @@ class GroupReadsByUmiMixin():
         umi_data = dict()
 
         for f in self.find_log_files('fgbio/groupreadsbyumi'):
+            # add file to data sources
             self.add_data_source(f)
             sample_name = f['s_name']
             family_size = []
@@ -33,7 +30,9 @@ class GroupReadsByUmiMixin():
         if not umi_data:
             raise UserWarning("No fgbio GroupReadsByUmi logs found")
 
+        #Filter samples
         umi_data = self.ignore_samples(umi_data)
-        log.info("Processed {} report(s)".format(len(self.umi_data)))
+
+        log.info("Processed {} report(s)".format(len(umi_data)))
 
         return umi_data
