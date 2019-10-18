@@ -37,7 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.umi_data = dict()
 
-        # Find and parse unzipped FastQC reports
         for f in self.find_log_files('fgbio/groupreadsbyumi'):
             self.parse_hist_report(f)
 
