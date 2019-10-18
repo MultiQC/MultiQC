@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             rlane = run_data[lane]
 
             # Add undetermined barcodes
-			unknown_barcode = dict()
+            unknown_barcode = dict()
             for lane_data in content.get("UnknownBarcodes", list()):
                 if lane_data["Lane"] == l:
                     unknown_barcode = lane_data["Barcodes"]
