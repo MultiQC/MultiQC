@@ -1,0 +1,34 @@
+# If you are hosting MultiQC reports >= v1.8 on a web application with CSP
+# (Content Security Policy), you will need the following scripts whitelisted:
+
+script-src 'self'
+    # v1.8dev with support for multiple fastq modules
+    'sha256-gMm+i7J9RFrqkxWwywqwdylMa1h6M7wuN8lUGjU1yXY=' # multiqc_fastqc.js
+    'sha256-pMsBH3T9O1Z2ybOWP9nXEnBjBiYNE7W0JnFTJc2udmw=' # fastq screen inline script
+
+    # v1.8dev
+    'sha256-Q8T2P8EmA90icfsFreWNkgqXzeAUtRDu2cLsJfgN1aY=' # load mqc_compressed_plotdata and mqc_config
+    'sha256-+F66a8s8ponoNnBnP06kgZ4LvQ6IBedFeTJHpTbA0O0=' # load_fastqc_passfails();
+    'sha256-6Iyez8LRQbIQe12+IHNW66k9OJvzlLF1yPb2gK11T5o=' # fastq screen inline script
+
+    'sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=' # jquery-3.1.1.min.js
+    'sha256-iWO8z1sbOFlW9jqHm6PDldXb2wCcqo3gBNPZxg/TBBs=' # jquery-ui.min.js
+    'sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=' # bootstrap.min.js
+    'sha256-QwUrND/LJhYUBcYRAAxtMNWjZhZI+Yr8N7fpvHSFd4E=' # highcharts.js
+    'sha256-X5AUZ+9MCHrVWj/x7N3Rkc/02lN9YB7fEx9RODM7A+k=' # highcharts.heatmap.js
+    'sha256-+9tTm/2PzXj/LVTpB+PDvRvk7tG4QGM5YZIKs4DE45o=' # highcharts.exporting.js
+    'sha256-Vndz/rd9+SJEYoVVpV/BqYrULpr5CA+pwbE6rbynp/0=' # highcharts.offline-exporting.js
+    'sha256-qRzmKGpTQ9kQfjgKtYTcIxkIAwipJOcF3c6psri9FAc=' # highcharts.export-csv.js
+    'sha256-AhtCowp6HzQCEXZP0Bdbk1Jg9PEYtx8/jZkfHJgXY2c=' # jquery.tablesorter.min.js
+    'sha256-mYqjlBuTYmeoEFTjuPCrwns2stAp2HOJyXR5X2xjP70=' # clipboard.min.js
+    'sha256-FPJJt8nA+xL4RU6/gsriA8p8xAeLGatoyTjldvQKGdE=' # FileSaver.min.js
+    'sha256-nRoO8HoupfqozUr7YKBRgHXmdx40Hl/04OSBzv7e7L8=' # lz-string.min.js
+    'sha256-v69SxdPeknzXy0hkSHL/SrchLvO8QDQS4N7V50xE0Ks=' # jquery.toast.min.js
+    'sha256-7gUXukWB8g8TYIxnHrzoQrukADhWL1n8vcdPVzDvf9o=' # multiqc.js
+    'sha256-bXJ/DLuHU3+9ybEepMTgDM965n8Cp2jD7JEJZtsWxGc=' # multiqc_tables.js
+    'sha256-+pOrbPU8yLRc3gIYFSyzUfvh3zDWjv4P+WgZr3tm8yg=' # multiqc_plotting.js
+    'sha256-8kPZc83fQr/qzo5ISaYAcLl4M5meLuuTzHFVRGb4GhU=' # multiqc_mpl.js
+    'sha256-1pWjCVoi5AoQvT52zb72qGCpIpfJzlc9trKcbcarXUY=' # multiqc_toolbox.js
+    'sha256-gB0osLOAZOyj1tcLhUs/xzf98qK3dfViuIJdX0lI8xA=' # multiqc_fastqc.js
+    'unsafe-eval'
+;

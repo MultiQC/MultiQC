@@ -20,8 +20,9 @@ import re
 import zipfile
 
 from multiqc import config
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import linegraph, bargraph, heatmap
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -115,6 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.seq_dup_levels_plot()
         self.overrepresented_sequences()
         self.adapter_content_plot()
+        self.status_heatmap()
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
         """ Takes contents from a fastq_data.txt file and parses out required
@@ -453,14 +455,18 @@ class MultiqcModule(BaseMultiqcModule):
                 <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
             </div>
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="fastqc_per_base_sequence_content_plot" class="hc-plot has-custom-export">
+                <div id="{id}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
                 </div>
             </div>
             <div class="clearfix"></div>
         </div>
         <script type="application/json" class="fastqc_seq_content">{d}</script>
-        '''.format(d=json.dumps([self.anchor.replace('-', '_'), data]))
+        '''.format(
+            # Generate unique plot ID, needed in mqc_export_selectplots
+            id=report.save_htmlid('fastqc_per_base_sequence_content_plot'),
+            d=json.dumps([self.anchor.replace('-', '_'), data]),
+        )
 
         self.add_section (
             name = 'Per Base Sequence Content',
@@ -933,6 +939,63 @@ class MultiqcModule(BaseMultiqcModule):
             increase as the read length goes on._
             ''',
             plot = plot_html
+        )
+
+    def status_heatmap(self):
+        """ Heatmap showing all statuses for every sample """
+        status_numbers = {
+            'pass': 1,
+            'warn': 0.5,
+            'fail': 0.25
+        }
+        data = []
+        s_names = []
+        status_cats = OrderedDict()
+        for s_name in sorted(self.fastqc_data.keys()):
+            s_names.append(s_name)
+            for status_cat, status in self.fastqc_data[s_name]['statuses'].items():
+                if status_cat not in status_cats:
+                    status_cats[status_cat] = status_cat.replace('_', ' ').title().replace('Gc', 'GC')
+        for s_name in s_names:
+            row = []
+            for status_cat in status_cats:
+                try:
+                    row.append(status_numbers[self.fastqc_data[s_name]['statuses'][status_cat]])
+                except KeyError:
+                    row.append(0)
+            data.append(row)
+
+        pconfig = {
+            'fastqc-status-heatmap'
+            'title': 'FastQC: Statuses',
+            'xTitle': 'Category',
+            'yTitle': 'Sample',
+            'min': 0,
+            'max': 1,
+            'square': False,
+            'colstops': [
+                [0, '#ffffff'],
+                [0.25, '#d9534f'],
+                [0.5, '#fee391'],
+                [1, '#5cb85c'],
+            ],
+            'decimalPlaces': 1,
+            'legend': False,
+            'datalabels': False
+        }
+
+        self.add_section (
+            name = 'Statuses',
+            anchor = 'fastqc-statuses',
+            description = 'FastQC section statuses for each sample.',
+            helptext = '''
+            FastQC assigns a status for each section of the report.
+            Here, we summarise all of these into a single heatmap for a quick overview.
+
+            Note that not all FastQC sections have plots in MultiQC reports, but all statuses
+            are shown in this heatmap.
+            ''',
+            plot = heatmap.plot(data, list(status_cats.values()), s_names, pconfig)
         )
 
 
