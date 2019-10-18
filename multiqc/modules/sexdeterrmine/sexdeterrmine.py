@@ -5,12 +5,8 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import os
-import re
 import json
-import pprint
 
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -25,134 +21,118 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='SexDetErrmine', anchor='sexdeterrmine',
         href="https://github.com/TCLamnidis/Sex.DetERRmine",
-        info="A python script to calculate the relative coverage of X and Y chromosomes, and their associated error bars, from the depth of coverage at specified SNPs. ")
+        info="""A python script to calculate the relative coverage of X and Y chromosomes,
+            and their associated error bars, from the depth of coverage at specified SNPs. """)
 
         # Find and load any DeDup reports
         self.sexdet_data = dict()
-        
 
         # Find and load JSON file
-        for f in self.find_log_files('sexdeterrmine',filehandles=True):
-            self.parseJSON(f)
-        
-        # Empty dictionary for sending to table
-        dict_to_plot = OrderedDict()
+        for f in self.find_log_files('sexdeterrmine', filehandles=True):
+            self.parse_data(f)
 
-        pp = pprint.PrettyPrinter(indent=4) 
-        pp.pprint(self.sexdet_data)
-        for k in self.sexdet_data:
-            if (k != 'Metadata'):
-                try:  
-                    s_name = self.clean_s_name(k,f['root'])
-                    self.add_data_source(f, s_name)
-                    dict_to_plot[s_name]['NR Aut'] = self.sexdet_data[k]['NR Aut']
-                    dict_to_plot[s_name]['NrX'] = self.sexdet_data[k]['NrX']
-                    dict_to_plot[s_name]['NrY'] = self.sexdet_data[k]['NrY']
-                    dict_to_plot[s_name]['RateErrX'] = self.sexdet_data[k]['RateErrX']
-                    dict_to_plot[s_name]['RateErrY'] = self.sexdet_data[k]['RateErrY']
-                    dict_to_plot[s_name]['RateX'] = self.sexdet_data[k]['RateX']
-                    dict_to_plot[s_name]['RateY'] = self.sexdet_data[k]['RateY']
-                    dict_to_plot[s_name]['Snps Autosomal'] = self.sexdet_data[k]['Snps Autosomal']
-                    dict_to_plot[s_name]['XSnps'] = self.sexdet_data[k]['XSnps']
-                    dict_to_plot[s_name]['YSnps'] = self.sexdet_data[k]['YSnps']
-                    self.addSummaryMetrics(dict_to_plot)
-                    dict_to_plot = OrderedDict()
-                except ValueError as error:
-                    print("Something isn't right with this error:", error)
-            else:
-                continue
+        # Filter samples
+        self.sexdet_data = self.ignore_samples(self.sexdet_data)
 
-       
-        
-        
+        # Return if no samples found
+        if len(self.sexdet_data) == 0:
+            raise UserWarning
+
+        # Save data output file
         self.write_data_file(self.sexdet_data, 'multiqc_sexdeter_metrics')
 
+        # Add to General Statistics
+        self.addSummaryMetrics()
 
-        #Parse our nice little JSON file
-    def parseJSON(self, f):
+        # Plots
+        self.read_count_barplot()
+        self.snp_count_barplot()
 
-        """ Parse the JSON output from SexDeterrmine and save the summary statistics """
+    def parse_data(self, f):
         try:
-            parsed_json = json.load(f['f'])
-            self.sexdet_data = parsed_json
+            data = json.load(f['f'])
         except Exception as e:
-            print(e)
+            log.debug(e)
             log.warn("Could not parse SexDeterrmine JSON: '{}'".format(f['fn']))
-            return None
+            return
 
-    def addSummaryMetrics(self, dict_to_plot):
+        # Parse JSON data to a dict
+        for s_name in data:
+            if (s_name == 'Metadata'):
+                continue
+
+            s_clean = self.clean_s_name(s_name, f['root'])
+            if s_clean in self.sexdet_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+
+            self.add_data_source(f, s_clean)
+            self.sexdet_data[s_clean] = dict()
+
+            for k, v in data[s_name].items():
+                try:
+                    self.sexdet_data[s_clean][k] = float(v)
+                except ValueError:
+                    self.sexdet_data[s_clean][k] = v
+
+    def addSummaryMetrics(self):
         """ Take the parsed stats from SexDetErrmine and add it to the main plot """
 
         headers = OrderedDict()
-        headers['nraut'] = {
-            'title': '# Autosomal Pos',
-            'description': 'The number of reads covering positions on the autosome.',
-            'scale': 'PuBu',
-            'format': '{:,.2f}',
-            'hidden': True
-        }
-        headers['nrX'] = {
-            'title': '# X Pos',
-            'description': 'The number of reads covering positions on Chromosome X.',
-            'scale': 'YlGnBu',
-            'format': '{:,.2f}',
-            'hidden': True
-        }
-        headers['nrY'] = {
-            'title': '# Y Pos',
-            'description': 'The number of reads covering positions on Chromosome Y.',
-            'scale': 'YlGnBu',
-            'format': '{:,.2f}',
-            'hidden': True
-        }
-        headers['rateErrX'] = {
-            'title': 'rateErrX',
+        headers['RateErrX'] = {
+            'title': 'Err Rate X',
             'description': 'Rate of Error for Chr X',
-            'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'hidden': True
+            'scale': 'OrRd',
+            'hidden': True,
+            'shared_key': 'snp_err_rate'
         }
-        headers['rateErrY'] = {
-            'title': 'rateErrY',
+        headers['RateErrY'] = {
+            'title': 'Err Rate Y',
             'description': 'Rate of Error for Chr Y',
-            'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'hidden': True
+            'scale': 'OrRd',
+            'hidden': True,
+            'shared_key': 'snp_err_rate'
         }
-        headers['rateX'] = {
-            'title': 'rateX',
+        headers['RateX'] = {
+            'title': 'Rate X',
             'description': 'Number of positions on Chromosome X vs Autosomal positions.',
             'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'hidden': True
+            'shared_key': 'snp_count'
         }
-        headers['rateY'] = {
-            'title': 'rateY',
+        headers['RateY'] = {
+            'title': 'Rate Y',
             'description': 'Number of positions on Chromosome Y vs Autosomal positions.',
-            'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'hidden': True
+            'scale': 'BuPu',
+            'shared_key': 'snp_count'
         }
-        headers['snpsauto'] = {
-            'title': 'Pos on Auto',
-            'description': 'Total number of autosomal positions. When supplied with a BED file, this includes only positions specified there.',
-            'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'hidden': True
-        } 
-        headers['XSnps'] = {
-            'title': 'Pos on X',
-            'description': 'Total number of positions on Chromosome X. When supplied with a BED file, this includes only positions specified there.',
-            'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'hidden': True
-        } 
-        headers['YSnps'] = {
-            'title': 'Pos on Y',
-            'description': 'Total number of positions on Chromosome Y. When supplied with a BED file, this includes only positions specified there.',
-            'scale': 'PuBuGn',
-            'format': '{:,.2f}',
-            'hidden': True
-        } 
 
-        self.general_stats_addcols(dict_to_plot, headers)
+        self.general_stats_addcols(self.sexdet_data, headers)
+
+    def read_count_barplot(self):
+        """ Make a bar plot showing read counts on Autosomal, X and Y chr
+        """
+        cats = OrderedDict()
+        cats['NR Aut'] = { 'name': 'Autosomal Reads' }
+        cats['NrX'] = { 'name': 'Reads on X' }
+        cats['NrY'] = { 'name': 'Reads on Y' }
+
+        self.add_section(
+            name = 'Read Counts',
+            anchor = 'sexdeterrmine-readcounts',
+            description = 'The number of reads covering positions on the autosomes, X and Y chromosomes.',
+            plot = bargraph.plot(self.sexdet_data, cats)
+        )
+
+    def snp_count_barplot(self):
+        """ Make a bar plot showing read counts on Autosomal, X and Y chr
+        """
+        cats = OrderedDict()
+        cats['Snps Autosomal'] = { 'name': 'Autosomal SNPs' }
+        cats['XSnps'] = { 'name': 'SNPs on X' }
+        cats['YSnps'] = { 'name': 'SNPs on Y' }
+
+        self.add_section(
+            name = 'SNP Counts',
+            anchor = 'sexdeterrmine-snps',
+            description = 'Total number of SNP positions. When supplied with a BED file, this includes only positions specified there.',
+            plot = bargraph.plot(self.sexdet_data, cats)
+        )
