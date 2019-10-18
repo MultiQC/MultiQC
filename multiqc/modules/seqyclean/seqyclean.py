@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
 		super(MultiqcModule, self).__init__(name='SeqyClean',
 		anchor='seqyclean',
 		href='https://github.com/ibest/seqyclean',
-		info='SeqyClean is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.')
+		info='is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.')
 
 		# Parse logs
 		self.seqyclean_data = dict()
