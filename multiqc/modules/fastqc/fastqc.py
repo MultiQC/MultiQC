@@ -20,7 +20,7 @@ import re
 import zipfile
 
 from multiqc import config
-from multiqc.plots import linegraph, bargraph, heatmap, table
+from multiqc.plots import linegraph, bargraph, heatmap
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.utils import report
 
@@ -117,7 +117,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.overrepresented_sequences()
         self.adapter_content_plot()
         self.status_heatmap()
-        self.status_table()
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
         """ Takes contents from a fastq_data.txt file and parses out required
@@ -997,62 +996,6 @@ class MultiqcModule(BaseMultiqcModule):
             are shown in this heatmap.
             ''',
             plot = heatmap.plot(data, list(status_cats.values()), s_names, pconfig)
-        )
-
-
-    def status_table(self):
-        """ Table showing all statuses for every sample """
-
-        tdata = { s_name: {k: v.title() for k, v in d['statuses'].items()} for s_name, d in self.fastqc_data.items() }
-
-        table_config = {
-            'namespace': 'FastQC',
-            'id': 'fastqc-status-table',
-            'table_title': 'FastQC: Statuses',
-            'no_beeswarm': True,
-            'scale': False
-        }
-
-        headers = OrderedDict()
-        abbrs = {
-            'Quality': 'Qual',
-            'Sequence': 'Seq',
-            'Statistics': 'Stats',
-            'Distribution': '',
-            'Content': '',
-            'Scores': '',
-            'Per': '',
-            'Levels': '',
-            'Duplication': 'Dup',
-            'Overrepresented': 'Overrepr'
-        }
-        for s_name in self.fastqc_data:
-            for k in self.fastqc_data[s_name]['statuses']:
-                if k not in headers:
-                    nice_name = k.replace('_', ' ').title().replace('Gc', 'GC')
-                    short_name = nice_name
-                    for abbr, abbr_repl in abbrs.items():
-                        short_name = short_name.replace(abbr, abbr_repl)
-                    headers[k] = {
-                        'title': short_name,
-                        'description': nice_name,
-                    }
-
-
-
-
-        self.add_section (
-            name = 'Statuses',
-            anchor = 'fastqc-statuses-table',
-            description = 'FastQC section statuses for each sample.',
-            helptext = '''
-            FastQC assigns a status for each section of the report.
-            Here, we summarise all of these into a single heatmap for a quick overview.
-
-            Note that not all FastQC sections have plots in MultiQC reports, but all statuses
-            are shown in this heatmap.
-            ''',
-            plot = table.plot(tdata, headers, table_config)
         )
 
 
