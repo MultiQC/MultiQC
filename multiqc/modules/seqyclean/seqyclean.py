@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
 		super(MultiqcModule, self).__init__(name='SeqyClean',
 		anchor='seqyclean',
 		href='https://github.com/ibest/seqyclean',
-		info='is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.')
+		info='SeqyClean is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.')
 
 		# Parse logs
 		self.seqyclean_data = dict()
@@ -26,7 +26,6 @@ class MultiqcModule(BaseMultiqcModule):
 			rows = f['f'].splitlines()
 			headers = rows[0].split("\t")
 			cols = rows[1].split("\t")
-			f['s_name'] = re.sub('_SummaryStatistics','',f['s_name'])
 
 			self.seqyclean_data[f['s_name']] = dict()
 			for header, cols in zip(headers, cols):
@@ -72,15 +71,19 @@ class MultiqcModule(BaseMultiqcModule):
 	def seqyclean_general_stats_table(self):
 		headers = OrderedDict()
 		headers['PairsKept'] = {
-			'title': 'Pairs Kept',
-			'description': 'The number of read pairs remaining after SeqyClean',
+			'title': '{} Pairs Kept'.format(config.read_count_prefix),
+			'description': 'The number of read pairs remaining ({})'.format(config.read_count_desc),
+			'modify': lambda x: x * config.read_count_multiplier,
+			'shared_key': 'read_count',
 			'scale': 'YlGn',
 			'id': 'pairs_kept',
 			'format' : '{:,.0f}',
 		}
 		headers['PairsDiscarded'] = {
 			'title': 'Pairs Discarded',
-			'description': 'The number of read pairs discarded after SeqyClean',
+			'description': 'The number of read pairs discarded ({})'.format(config.read_count_desc),
+			'modify': lambda x: x * config.read_count_multiplier,
+			'shared_key': 'read_count',
 			'scale': 'OrRd',
 			'format' : '{:,.0f}',
 			'id': 'pairs_discarded'
