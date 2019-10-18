@@ -71,19 +71,22 @@ class MultiqcModule(BaseMultiqcModule):
 	def seqyclean_general_stats_table(self):
 		headers = OrderedDict()
 		headers['PairsKept'] = {
-			'title': '{} Pairs Kept'.format(config.read_count_prefix),
-			'description': 'The number of read pairs remaining ({})'.format(config.read_count_desc),
-			'modify': lambda x: x * config.read_count_multiplier,
-			'shared_key': 'read_count',
+			'title': 'Pairs Kept',
+			'description': 'The number of read pairs remaining',
+#			'title': '{} Pairs Kept'.format(config.read_count_prefix),
+#			'description': 'The number of read pairs remaining ({})'.format(config.read_count_desc),
+#			'modify': lambda x: x * config.read_count_multiplier,
+#			'shared_key': 'read_count',
 			'scale': 'YlGn',
 			'id': 'pairs_kept',
 			'format' : '{:,.0f}',
 		}
 		headers['PairsDiscarded'] = {
 			'title': 'Pairs Discarded',
-			'description': 'The number of read pairs discarded ({})'.format(config.read_count_desc),
-			'modify': lambda x: x * config.read_count_multiplier,
-			'shared_key': 'read_count',
+			'description': 'The number of read pairs discarded',
+#			'description': 'The number of read pairs discarded ({})'.format(config.read_count_desc),
+#			'modify': lambda x: x * config.read_count_multiplier,
+#			'shared_key': 'read_count',
 			'scale': 'OrRd',
 			'format' : '{:,.0f}',
 			'id': 'pairs_discarded'
