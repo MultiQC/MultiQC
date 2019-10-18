@@ -382,6 +382,9 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - sexdeterrmine:
+        module_tag:
+            - DNA
     - bamtools:
         module_tag:
             - DNA

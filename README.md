@@ -54,6 +54,7 @@ Currently, supported tools include:
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
 |[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
 |[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
+|                                 |                         |                             |[SexDetErrmine][sexdeterrmine]        |
 |                                 |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
@@ -254,6 +255,7 @@ MultiQC is released under the GPL v3 or later licence.
 [samblaster]:     http://multiqc.info/docs/#samblaster
 [samtools]:       http://multiqc.info/docs/#samtools
 [sargasso]:       http://multiqc.info/docs/#sargasso
+[sexdeterrmine]:  http://multiqc.info/docs/#sexdeterrmine
 [skewer]:         http://multiqc.info/docs/#skewer
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
