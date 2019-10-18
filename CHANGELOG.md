@@ -14,6 +14,8 @@
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**ABRicate**](https://github.com/tseemann/abricate)
+    * Mass screening of contigs for antimicrobial resistance or virulence genes.
 
 #### Module updates:
 * **bcl2fastq**
