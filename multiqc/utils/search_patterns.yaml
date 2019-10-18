@@ -257,6 +257,9 @@ fastqc/theoretical_gc:
 featurecounts:
     fn: '*.summary'
     shared: true
+fgbio/groupreadsbyumi:
+    contents: 'fraction_gt_or_eq_family_size'
+    num_lines: 1
 flash/log:
     contents: '[FLASH]'
     shared: true

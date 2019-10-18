@@ -345,6 +345,11 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - fgbio:
+        module_tag:
+            - DNA
+            - RNA
+            - umi
     - dedup:
         module_tag:
             - DNA
