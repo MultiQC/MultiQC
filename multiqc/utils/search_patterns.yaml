@@ -210,7 +210,7 @@ cutadapt:
 damageprofiler:
     fn: '*dmgprof.json'
 dedup:
-    fn: 'dedup.log'
+    fn: '*dedup.json'
 deeptools/bamPEFragmentSizeTable:
     contents: '	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu.'
     num_lines: 1
@@ -257,6 +257,9 @@ fastqc/theoretical_gc:
 featurecounts:
     fn: '*.summary'
     shared: true
+fgbio/groupreadsbyumi:
+    contents: 'fraction_gt_or_eq_family_size'
+    num_lines: 1
 flash/log:
     contents: '[FLASH]'
     shared: true
@@ -497,6 +500,9 @@ sargasso:
     fn: 'overall_filtering_summary.txt'
 seqyclean:
     fn: '*_SummaryStatistics.tsv'
+    num_lines: 2
+sexdeterrmine:
+    fn: 'sexdeterrmine.json'
 skewer:
     contents: 'maximum error ratio allowed (-r):'
     shared: true
