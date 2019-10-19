@@ -79,6 +79,7 @@ lint: False
 custom_plot_config: {}
 
 ignore_symlinks: false
+ignore_images: true
 fn_ignore_dirs:
     - 'multiqc_data'
     - 'icarus_viewers'       # quast
@@ -345,6 +346,11 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - fgbio:
+        module_tag:
+            - DNA
+            - RNA
+            - umi
     - dedup:
         module_tag:
             - DNA
@@ -377,6 +383,9 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - sexdeterrmine:
+        module_tag:
+            - DNA
     - bamtools:
         module_tag:
             - DNA

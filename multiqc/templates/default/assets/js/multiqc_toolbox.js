@@ -25,9 +25,9 @@ $(function () {
     if(j == 0){
       apply_mqc_renamesamples();
     } else {
-      for(i=0; i<mqc_sample_names_rename.length; i++){
-        var ft = mqc_sample_names_rename[i][0];
-        var tt = mqc_sample_names_rename[i][j];
+      for(i=0; i<mqc_config['sample_names_rename'].length; i++){
+        var ft = mqc_config['sample_names_rename'][i][0];
+        var tt = mqc_config['sample_names_rename'][i][j];
         $('#mqc_renamesamples_filters').append('<li class="mqc_sname_switches_li"> \
           <input class="f_text from_text" value="'+ft+'" /><small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="'+tt+'" /> \
           <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
@@ -57,7 +57,7 @@ $(function () {
   $(document).on('mqc_config_loaded', function(e){
     $('.hc-plot').each(function(){
       var target = $(this).attr('id');
-      plot_graph(target, undefined, num_datasets_plot_limit);
+      plot_graph(target, undefined, mqc_config['num_datasets_plot_limit']);
     });
   });
 

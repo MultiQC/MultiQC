@@ -3,6 +3,8 @@
 ## MultiQC v1.8dev
 
 #### New Modules:
+* [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
+    * Process family size count hist data from GroupReadsByUmi
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
@@ -12,16 +14,28 @@
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
+* [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
+    * Relative coverage and error rate of X and Y chromosomes
 
 #### Module updates:
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
+    * Allow bcl2fastq to parse undetermined barcode information in situations when lane indexes do not start at 1
+* **DeDup**
+    * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
     * Added writing metrics to data output file.
 * **fastp**
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
+* **FastQC**
+    * When including a FastQC section multiple times in one report, the Per Base Sequence Content heatmaps now behave as you would expect.
+    * Added heatmap showing FastQC status for every section report across all samples
+* **FastQ Screen**
+    * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+* **HTSeq**
+    * Fixed bug where module would crash if a sample had zero reads ([#1006](https://github.com/ewels/MultiQC/issues/1006))
 * **LongRanger**
     * Added support for the LongRanger Align pipeline.
 * **miRTrace**
@@ -34,12 +48,16 @@
     * Updated broken URL link
 * **RSeQC**
     * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
+    * When including a RSeQC section multiple times in one report, clicking Junction Saturation plot now behaves as you would expect.
 * **Samtools**
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
     * Increased the default summary csv file-size limit from 1MB to 5MB.
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
+* **snpEff**
+    * Added plot of effects
+
 
 #### New MultiQC Features:
 * Added some installation docs for windows
@@ -48,6 +66,8 @@
     * New base image `czentye/matplotlib-minimal` reduces image size from ~200MB to ~80MB
     * Proper installation method ensures latest version of the code
     * New entrypoint allows easier command-line usage
+* Support opening MultiQC on websites with CSP `script-src 'self'` with some sha256 exceptions
+    * Plot data is no longer intertwined with javascript code so hashes stay the same
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files

@@ -67,7 +67,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(parsed_data) > 0:
             parsed_data['assigned'] = assigned_counts
             parsed_data['total_count'] = sum([v for v in parsed_data.values()])
-            parsed_data['percent_assigned'] = (float(parsed_data['assigned']) / float(parsed_data['total_count'])) * 100.0
+            try:
+                parsed_data['percent_assigned'] = (float(parsed_data['assigned']) / float(parsed_data['total_count'])) * 100.0
+            except ZeroDivisionError:
+                parsed_data['percent_assigned'] = 0
             return parsed_data
         return None
 

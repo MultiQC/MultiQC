@@ -54,7 +54,7 @@ Currently, supported tools include:
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
 |[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
 |[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
-|[SeqyClean][seqyclean]                                 |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
+|[SeqyClean][seqyclean]           |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
 |                                 |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |

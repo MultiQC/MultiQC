@@ -500,7 +500,6 @@ sargasso:
     fn: 'overall_filtering_summary.txt'
 seqyclean:
     fn: '*_SummaryStatistics.tsv'
-    num_lines: 2
 sexdeterrmine:
     fn: 'sexdeterrmine.json'
 skewer:
