@@ -22,13 +22,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.abricate_ycats = dict()
         # Find all files for mymod
         for myfile in self.find_log_files('abricate'):
-            # files are named db.abricate_summary.txt
-            db = re.sub('.abricate_summary.txt','',myfile['fn'])
-            db = re.sub('abricate_summary.txt','',db)
-            if not db :
-                db = myfile['s_name']
+            db = myfile['s_name']
+            db = db.replace('.', '_') # just in case the user puts a period in the name, HTML hates that
             self.getdata(myfile, db)
-            self.add_section( plot = self.abricate_heatmap_plot(db) )
+            self.add_section(
+                name = db,
+                anchor = 'abricate-' + db,
+                description = 'This heatmap shows the score for each sample with the genes supplied from ' + db,
+                plot = self.abricate_heatmap_plot(db) )
 
         log.info("Found {} logs".format(len(self.abricate_data)))
 
@@ -59,8 +60,6 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             'id' : "abricate_" + db,
             'title': "ABRicate: " + db,
-            'xlab': "Gene",
-            'ylab': "Sample",
             'square': False,
             'colstops': [ [0, '#FFFFFF'], [0.6, '#ffffe5'], [0.7, '#d9f0a3'], [0.95, '#004529'], [1, '#000000'], ]
         }
