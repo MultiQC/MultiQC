@@ -9,4 +9,9 @@ ABRicate uses a blast search against a prepared database to locate genes in fast
 
 This modules parses the tab-delimited summary output of abricate into a heatmap showing the presence and absence of genes identified.
 
-Example usage: `abricate --summary 1.tab 2.tab > abricate_summary.txt`
+Example usage:
+
+`abricate --summary 1.tab 2.tab > abricate_summary.txt`
+
+`abricate --summary ncbi_db/*tab > ncbi.abricate_summary.txt`
+
