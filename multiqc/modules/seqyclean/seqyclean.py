@@ -38,8 +38,24 @@ class MultiqcModule(BaseMultiqcModule):
 
 		log.info("Found {} logs".format(len(self.seqyclean_data)))
 
-		# Adding the bar plot
-		self.add_section(plot = self.seqyclean_bargraph())
+		# Adding the bar plots
+		self.add_section(
+			name = 'Summary',
+			anchor = 'seqyclean-summary',
+			description = 'This plot shows the number of reads that were kept and discarded',
+			plot = self.seqyclean_summary())
+
+		self.add_section(
+			name = 'Annotations',
+			anchor = 'seqyclean-annotation',
+			description = 'This plot shows how reads were annotated',
+			plot = self.seqyclean_analysis())
+
+		self.add_section(
+			name = 'Discarded',
+			anchor = 'seqyclean-discarded',
+			description = 'This plot shows the breakdown for discarded reads',
+			plot = self.seqyclean_discarded())
 
 		# Write the results to a file
 		self.write_data_file(self.seqyclean_data, 'seqyclean')
@@ -47,48 +63,77 @@ class MultiqcModule(BaseMultiqcModule):
 		# Adding to the general statistics table
 		self.seqyclean_general_stats_table()
 
-	def seqyclean_bargraph(self):
+	def seqyclean_summary(self):
 		config = {
 			'id': 'seqyclean-1',
-			'title': 'SeqyClean: Reads Analysis',
+			'title': 'SeqyClean: Summary',
 			'ylab': 'Number of Reads'
 			}
-		keys =['PE1ReadsAn',
-			'PE1TruSeqAdap_found',
-			'PE1ReadswVector_found',
-			'PE1ReadswContam_found',
-			'PE1DiscByContam',
-			'PE1DiscByLength',
-			'PE2ReadsAn',
-			'PE2TruSeqAdap_found',
-			'PE2ReadswVector_found',
-			'PE2ReadswContam_found',
-			'PE2DiscByContam',
-			'PE2DiscByLength']
+		keys =['PairsKept', # for paired end
+			'PairsDiscarded',
+			'PE1DiscardedTotal',
+			'PE2DiscardedTotal',
+			'SEReadsKept', # single end
+			'SEDiscardedTotal',
+			'ReadsKept', # 454
+			'DiscardedTotal']
+		return bargraph.plot(self.seqyclean_data, keys, config)
 
+	def seqyclean_analysis(self):
+		config = {
+			'id': 'seqyclean-2',
+			'title': 'SeqyClean: Read Annotations',
+			'ylab': 'Number of Reads'
+			}
+		keys =['PE1TruSeqAdap_found', # for paired end
+			'PE1ReadsWVector_found',
+			'PE1ReadsWContam_found',
+			'PE2TruSeqAdap_found',
+			'PE2ReadsWVector_found',
+			'PE2ReadsWContam_found',
+			'SETruSeqAdap_found', # for single end
+			'SEReadsWVector_found',
+			'SEReadsWContam_found',
+			'left_mid_tags_found', # 454 data
+			'right_mid_tags_found',
+			'ReadsWithVector_found',
+			'ReadsWithContam_found']
+		return bargraph.plot(self.seqyclean_data, keys, config)
+
+	def seqyclean_discarded(self):
+		config = {
+			'id': 'seqyclean-3',
+			'title': 'SeqyClean: Discarded Reads',
+			'ylab': 'Number of Reads'
+			}
+		keys =['SEDiscByContam', # single end
+			'SEDiscByLength',
+			'PE1DiscByContam', # paired end
+			'PE1DiscByLength',
+			'PE2DiscByContam',
+			'PE2DiscByLength',
+			'DiscByContam', # 454 data
+			'DiscByLength']
 		return bargraph.plot(self.seqyclean_data, keys, config)
 
 	def seqyclean_general_stats_table(self):
 		headers = OrderedDict()
-		headers['PairsKept'] = {
-			'title': 'Pairs Kept',
-			'description': 'The number of read pairs remaining',
-#			'title': '{} Pairs Kept'.format(config.read_count_prefix),
-#			'description': 'The number of read pairs remaining ({})'.format(config.read_count_desc),
-#			'modify': lambda x: x * config.read_count_multiplier,
-#			'shared_key': 'read_count',
+		# Paired and single end
+		headers['Perc_Kept'] = {
+			'title': 'Percentage Kept',
+			'description': 'The percentage of reads remaining after cleaning',
 			'scale': 'YlGn',
-			'id': 'pairs_kept',
-			'format' : '{:,.0f}',
+			'suffix': '%',
+			'max': 100,
+			'min': 0
 		}
-		headers['PairsDiscarded'] = {
-			'title': 'Pairs Discarded',
-			'description': 'The number of read pairs discarded',
-#			'description': 'The number of read pairs discarded ({})'.format(config.read_count_desc),
-#			'modify': lambda x: x * config.read_count_multiplier,
-#			'shared_key': 'read_count',
-			'scale': 'OrRd',
-			'format' : '{:,.0f}',
-			'id': 'pairs_discarded'
+		# 454
+		headers['PercentageKept'] = {
+			'title': 'Percentage Kept',
+			'description': 'The percentage of reads remaining after cleaning',
+			'scale': 'YlGn',
+			'suffix': '%',
+			'max': 100,
+			'min': 0
 		}
 		self.general_stats_addcols(self.seqyclean_data, headers)
