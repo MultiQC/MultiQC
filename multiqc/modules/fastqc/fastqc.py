@@ -966,7 +966,7 @@ class MultiqcModule(BaseMultiqcModule):
             data.append(row)
 
         pconfig = {
-            'fastqc-status-heatmap'
+            'fastqc-status-check-heatmap'
             'title': 'FastQC: Statuses',
             'xTitle': 'Category',
             'yTitle': 'Sample',
@@ -985,14 +985,29 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section (
-            name = 'Statuses',
-            anchor = 'fastqc-statuses',
-            description = 'FastQC section statuses for each sample.',
+            name = 'Status Checks',
+            anchor = 'fastqc-status-checks',
+            description = '''
+            Status for each FastQC section showing whether results seem entirely normal (green),
+            slightly abnormal (orange) or very unusual (red).
+            ''',
             helptext = '''
             FastQC assigns a status for each section of the report.
-            Here, we summarise all of these into a single heatmap for a quick overview.
+            These give a quick evaluation of whether the results of the analysis seem
+            entirely normal (green), slightly abnormal (orange) or very unusual (red).
 
-            Note that not all FastQC sections have plots in MultiQC reports, but all statuses
+            It is important to stress that although the analysis results appear to give a pass/fail result,
+            these evaluations must be taken in the context of what you expect from your library.
+            A 'normal' sample as far as FastQC is concerned is random and diverse.
+            Some experiments may be expected to produce libraries which are biased in particular ways.
+            You should treat the summary evaluations therefore as pointers to where you should concentrate
+            your attention and understand why your library may not look random and diverse.
+
+            Specific guidance on how to interpret the output of each module can be found in the relevant
+            report section, or in the [FastQC help](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/).
+
+            In this heatmap, we summarise all of these into a single heatmap for a quick overview.
+            Note that not all FastQC sections have plots in MultiQC reports, but all status checks
             are shown in this heatmap.
             ''',
             plot = heatmap.plot(data, list(status_cats.values()), s_names, pconfig)
