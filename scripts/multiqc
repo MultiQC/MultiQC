@@ -346,7 +346,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     if dirs:
         logger.info("Prepending directory to sample names")
     for d in config.analysis_dir:
-        logger.info("Searching '{}'".format(d))
+        logger.info("Searching   : {}".format(os.path.abspath(d)))
 
     # Prep module configs
     config.top_modules = [ m if type(m) is dict else {m:{}} for m in config.top_modules ]
