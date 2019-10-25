@@ -84,9 +84,9 @@ For maximum compatibility with other tools, you can also use comma-separated or 
 Include commented header lines with plot configuration in YAML format:
 
 ```bash
-# title: 'Output from my script'
+# id: "Output from my script'
+# section_name: 'Custom data file'
 # description: 'This output is described in the file header. Any MultiQC installation will understand it without prior configuration.'
-# section: 'Custom Data File'
 # format: 'tsv'
 # plot_type: 'bargraph'
 # pconfig:
