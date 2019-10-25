@@ -281,6 +281,10 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
         config.load_sample_names(sample_names)
     if module_tag is not None:
         config.module_tag = module_tag
+    if len(module) > 0:
+        config.run_modules = module
+    if len(exclude) > 0:
+        config.exclude_modules = exclude
     config.kwargs = kwargs # Plugin command line options
 
     plugin_hooks.mqc_trigger('execution_start')
@@ -375,18 +379,18 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     run_modules.extend( [ {m:{}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules ] )
     run_modules.extend( [ m for m in config.module_order if list(m.keys())[0] in config.avail_modules.keys() and list(m.keys())[0] not in [list(rm.keys())[0] for rm in run_modules] ] )
 
-    if module:
-        run_modules = [ m for m in run_modules if list(m.keys())[0] in module ]
-        logger.info('Only using modules {}'.format(', '.join(module)))
+    if len(getattr(config, 'run_modules', {})) > 0:
+        run_modules = [ m for m in run_modules if list(m.keys())[0] in config.run_modules ]
+        logger.info('Only using modules {}'.format(', '.join(config.run_modules)))
     elif modules_from_tags:
         run_modules = [ m for m in run_modules if list(m.keys())[0] in modules_from_tags ]
         logger.info("Only using modules with '{}' tag".format(', '.join(module_tag)))
-    if exclude:
-        logger.info("Excluding modules '{}'".format("', '".join(exclude)))
-        if 'general_stats' in exclude:
+    if len(getattr(config, 'exclude_modules', {})) > 0:
+        logger.info("Excluding modules '{}'".format("', '".join(config.exclude_modules)))
+        if 'general_stats' in config.exclude_modules:
             config.skip_generalstats = True
-            exclude = tuple(x for x in exclude if x != 'general_stats')
-        run_modules = [m for m in run_modules if list(m.keys())[0] not in exclude]
+            config.exclude_modules = tuple(x for x in config.exclude_modules if x != 'general_stats')
+        run_modules = [m for m in run_modules if list(m.keys())[0] not in config.exclude_modules]
     if len(run_modules) == 0:
         logger.critical('No analysis modules specified!')
         sys.exit(1)

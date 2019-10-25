@@ -114,7 +114,22 @@ the `#section_id` at the end of the browser URL.
 
 ## Removing modules or sections
 If you don't want an entire module to be used in a MultiQC report, use the `-e`/`--exclude`
-command line flags to skip running that tool.
+command line flags to skip running that tool. You can also use the config option `exclude_modules`:
+
+```yaml
+exclude_modules:
+    - fastqc
+    - cutadapt
+```
+
+If you want to run _only_ specific modules, you can do that with `-m`/`--module` or the
+config option `run_modules`:
+
+```yaml
+run_modules:
+    - fastqc
+    - cutadapt
+```
 
 If you would like to remove just one section of a module report, you can do so with the
 `remove_sections` config option as follows:
