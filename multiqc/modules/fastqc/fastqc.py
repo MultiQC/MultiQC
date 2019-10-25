@@ -986,7 +986,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section (
             name = 'Status Checks',
-            anchor = 'fastqc-status-checks',
+            anchor = 'fastqc_status_checks',
             description = '''
             Status for each FastQC section showing whether results seem entirely normal (green),
             slightly abnormal (orange) or very unusual (red).

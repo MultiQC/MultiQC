@@ -498,7 +498,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
 
-    # Sort the report sections if we have a config
+    # Sort the report module output if we have a config
     if len(getattr(config, 'report_section_order', {})) > 0:
         section_id_order = {}
         idx = 10
@@ -507,6 +507,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
             idx += 10
         for anchor, ss in config.report_section_order.items():
             if anchor not in section_id_order.keys():
+                logger.debug("Reordering sections: anchor '{}' not found.".format(anchor))
                 continue
             if ss.get('order') is not None:
                 section_id_order[anchor] = ss['order']
@@ -516,6 +517,33 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
                 section_id_order[anchor] = section_id_order[ss['before']] - 1
         sorted_ids = sorted(section_id_order, key=section_id_order.get)
         report.modules_output = [ mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i ]
+
+    # Sort the report sections if we have a config
+    # Basically the same as above, but sections within a module
+    if len(getattr(config, 'report_section_order', {})) > 0:
+        # Go through each module
+        for midx, mod in enumerate(report.modules_output):
+            # Go through each section to be reordered
+            for anchor, ss in config.report_section_order.items():
+                # Get a list of the section anchors
+                section_id_order = {}
+                idx = 10
+                for s in mod.sections:
+                    section_id_order[s['anchor']] = idx
+                    idx += 10
+                # Section to be moved is not in this module
+                if anchor not in section_id_order.keys():
+                    logger.debug("Reordering sections: anchor '{}' not found for module '{}'.".format(anchor, mod.name))
+                    continue
+                if ss.get('order') is not None:
+                    section_id_order[anchor] = ss['order']
+                if ss.get('after') in section_id_order.keys():
+                    section_id_order[anchor] = section_id_order[ss['after']] + 1
+                if ss.get('before') in section_id_order.keys():
+                    section_id_order[anchor] = section_id_order[ss['before']] - 1
+            # Sort the module sections
+            sorted_ids = sorted(section_id_order, key=section_id_order.get)
+            report.modules_output[midx].sections = [ s for i in sorted_ids for s in mod.sections if s['anchor'] == i ]
 
     plugin_hooks.mqc_trigger('after_modules')
 

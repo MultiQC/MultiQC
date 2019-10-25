@@ -218,17 +218,20 @@ the first iteration.
 > Let me know if this is a problem..
 
 
-## Order of sections
-Sometimes it's desirable to customise the order of specific sections in a report, independent of
-module execution. For example, the `custom_content` module can generate multiple sections from
-different input files.
+### Order of module and module subsection output
+The `module_order` config changes the order in which each MultiQC module is executed.
+However, sometimes it's desirable to customise the order of specific sections in a report,
+independent of the order of module execution. For example, the `custom_content` module can
+generate multiple sections from different input files.
+Also, `module_order` does not allow you to change the sequence of sections within a MultiQC module.
 
-To do this, follow a link in a report navigation to skip to the section you want to move (must
-be a major section header, not a subheading). Find the ID of that section by looking at the URL.
+To change the order of MultiQC outputs, follow a link in a report navigation to skip to the section
+you want to move (either a major section header or a subheading). Find the ID of that section by looking at the URL.
 For example, clicking on _FastQC_ changes the URL to `multiqc_report.html#fastqc` -  the ID is
-the text after (not including) the `#` symbol.
+the text after (not including) the `#` symbol: `fastqc`.
+The FastQC _Status Checks_ subsection is `multiqc_report.html#fastqc_status_checks` and has the id `fastqc_status_checks`.
 
-Next, specify the `report_section_order` option in your MultiQC config file. Section in
+Next, specify the `report_section_order` option in your MultiQC config file. Modules and sections in
 the report are given a number ranging from 10 (section at bottom of report), incrementing by +10
 for each section. You can change this number (eg. a very low number to always get at the bottom
 of the report or very high to always be at the top), or you can move a section to before or after
@@ -238,13 +241,16 @@ For example, add the following to your MultiQC config file:
 
 ```yaml
 report_section_order:
-    section1:
+    module_output_1:
         order: -1000
-    section2:
+    section_output:
         before: 'othersection'
-    section3:
+    module_output_2:
         after: 'diffsection'
 ```
+
+Note that module sub-sections can only be move _within_ their module. So you can't have the
+FastQC _Adapter Content_ section shown under the GATK module header.
 
 ## Customising plots
 Almost every plot in all MultiQC reports are created using standard plotting functions
