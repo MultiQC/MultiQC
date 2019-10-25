@@ -66,6 +66,7 @@
     * New entrypoint allows easier command-line usage
 * Support opening MultiQC on websites with CSP `script-src 'self'` with some sha256 exceptions
     * Plot data is no longer intertwined with javascript code so hashes stay the same
+* Made `config.report_section_order` work for module sub-sections as well as just modules.
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
