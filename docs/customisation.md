@@ -237,20 +237,26 @@ for each section. You can change this number (eg. a very low number to always ge
 of the report or very high to always be at the top), or you can move a section to before or after
 another existing section (has no effect if the other named ID is not in the report).
 
-For example, add the following to your MultiQC config file:
+> Note that module sub-sections can only be move _within_ their module. So you can't have the
+> FastQC _Adapter Content_ section shown under the GATK module header.
+
+You can also use this config option to completely remove module sub-sections.
+To do this, just set the subsection ID to `remove` (NB: no `:` or `-`).
+This only works for module subsections. To remove an entire module, use the `-e`/`--exclude` flag.
+
+For example, you could add the following to your MultiQC config file:
 
 ```yaml
 report_section_order:
     module_output_1:
         order: -1000
-    section_output:
-        before: 'othersection'
     module_output_2:
         after: 'diffsection'
+    mod_section_1:
+        before: 'othersection'
+    mod_section_2:
+        remove
 ```
-
-Note that module sub-sections can only be move _within_ their module. So you can't have the
-FastQC _Adapter Content_ section shown under the GATK module header.
 
 ## Customising plots
 Almost every plot in all MultiQC reports are created using standard plotting functions

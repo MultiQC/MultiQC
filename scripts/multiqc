@@ -535,12 +535,17 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
                 if anchor not in section_id_order.keys():
                     logger.debug("Reordering sections: anchor '{}' not found for module '{}'.".format(anchor, mod.name))
                     continue
+                if ss == 'remove':
+                    section_id_order[anchor] = False
+                    continue
                 if ss.get('order') is not None:
                     section_id_order[anchor] = ss['order']
                 if ss.get('after') in section_id_order.keys():
                     section_id_order[anchor] = section_id_order[ss['after']] + 1
                 if ss.get('before') in section_id_order.keys():
                     section_id_order[anchor] = section_id_order[ss['before']] - 1
+            # Remove module sections
+            section_id_order = { s:o for s,o in section_id_order.items() if o is not False }
             # Sort the module sections
             sorted_ids = sorted(section_id_order, key=section_id_order.get)
             report.modules_output[midx].sections = [ s for i in sorted_ids for s in mod.sections if s['anchor'] == i ]
