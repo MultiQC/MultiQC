@@ -41,17 +41,18 @@ else:
 
 install_requires = [
         'click',
+        'coloredlogs',
         'future>0.14.0',
-        'lzstring',
         'jinja2>=2.9',
-        'matplotlib' + matplotlib_version,
+        'lzstring',
         'markdown',
+        'matplotlib' + matplotlib_version,
+        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
         'numpy',
         'pyyaml>=4',
         'requests',
         'simplejson',
         'spectra>=0.0.10',
-        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
     ]
 
 setup(

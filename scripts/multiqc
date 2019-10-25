@@ -182,11 +182,15 @@ logger = config.logger
                     is_flag = True,
                     help = "Only show log warnings"
 )
+@click.option('--no-ansi',
+                    is_flag = True,
+                    help = "Disable coloured log output"
+)
 @click.version_option(__version__)
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
-export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, **kwargs):
+export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, no_ansi, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -205,7 +209,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     loglevel = log.LEVELS.get(min(verbose,1), "INFO")
     if quiet:
         loglevel = 'WARNING'
-    log.init_log(logger, loglevel=loglevel)
+    log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
     # Load config files
     plugin_hooks.mqc_trigger('before_config')
