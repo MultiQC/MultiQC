@@ -68,6 +68,7 @@
     * Plot data is no longer intertwined with javascript code so hashes stay the same
 * Made `config.report_section_order` work for module sub-sections as well as just modules.
 * New config options `exclude_modules` and `run_modules` to complement `-e` and `-m` cli flags.
+* Command line output is now coloured by default :rainbow: (use `--no-ansi` to turn this off)
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
