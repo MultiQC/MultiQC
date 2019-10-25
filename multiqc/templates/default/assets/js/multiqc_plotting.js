@@ -1430,14 +1430,6 @@ function plot_heatmap(target, ds){
     },
     plotOptions: {
       series: {
-        point: {
-          events: {
-            mouseOver: function() {
-              // Stop highcharts making squares blue on hover
-              this.pointAttr.hover.fill = this.color;
-            }
-          }
-        },
         states: {
           hover: {
             borderWidth: 2,

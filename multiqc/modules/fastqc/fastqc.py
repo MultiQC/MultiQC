@@ -966,9 +966,9 @@ class MultiqcModule(BaseMultiqcModule):
             data.append(row)
 
         pconfig = {
-            'fastqc-status-check-heatmap'
-            'title': 'FastQC: Statuses',
-            'xTitle': 'Category',
+            'id': 'fastqc-status-check-heatmap',
+            'title': 'FastQC: Status Checks',
+            'xTitle': 'Section Name',
             'yTitle': 'Sample',
             'min': 0,
             'max': 1,
