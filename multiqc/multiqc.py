@@ -24,7 +24,6 @@ import sys
 import tempfile
 import traceback
 
-from multiqc import __version__
 from multiqc.plots import table
 from multiqc.utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
@@ -181,9 +180,9 @@ logger = config.logger
                     is_flag = True,
                     help = "Disable coloured log output"
 )
-@click.version_option(__version__, prog_name='multiqc')
+@click.version_option(config.version, prog_name='multiqc')
 
-def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
+def run(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
 export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, no_ansi, **kwargs):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -288,7 +287,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
 
     plugin_hooks.mqc_trigger('execution_start')
 
-    logger.info("This is MultiQC v{}".format(__version__))
+    logger.info("This is MultiQC v{}".format(config.version))
     logger.debug("Command     : {}".format(' '.join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     if make_pdf:

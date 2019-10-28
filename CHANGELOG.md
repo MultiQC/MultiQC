@@ -69,6 +69,10 @@
 * Made `config.report_section_order` work for module sub-sections as well as just modules.
 * New config options `exclude_modules` and `run_modules` to complement `-e` and `-m` cli flags.
 * Command line output is now coloured by default :rainbow: (use `--no-ansi` to turn this off)
+* Better launch comparability due to code refactoring by [@KerstenBreuer](https://github.com/KerstenBreuer) and [@ewels](https://github.com/ewels)
+    * Windows support for base `multiqc` command
+    * Support for running as a python module: `python -m multiqc .`
+    * Support for running within a script: `import multiqc` and `multiqc.run('/path/to/files')`
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files

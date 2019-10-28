@@ -6,8 +6,7 @@
 from __future__ import print_function
 import click
 import pkg_resources
-from multiqc import __version__
-from multiqc import multiqc
+import multiqc
 
 
 def modify_usage_error(main_command):
@@ -24,7 +23,7 @@ def modify_usage_error(main_command):
         if self.ctx is not None:
             color = self.ctx.color
             click.utils.echo(self.ctx.get_usage() + '\n', file=file, color=color)
-        click.utils.echo('Error: %s\n\nThis is MultiQC v{}\n\nFor more help, run \'multiqc --help\' or visit http://multiqc.info\n'.format(__version__) % self.format_message(), file=file, color=color)
+        click.utils.echo('Error: %s\n\nThis is MultiQC v{}\n\nFor more help, run \'multiqc --help\' or visit http://multiqc.info\n'.format(multiqc.__version__) % self.format_message(), file=file, color=color)
     click.exceptions.UsageError.show = show
 
 
@@ -36,4 +35,4 @@ if __name__ == "__main__" or __name__ == 'multiqc.__main__':
     # Modify the default click error handling
     modify_usage_error(multiqc)
     # Call the main function
-    multiqc.multiqc(prog_name='multiqc')
+    multiqc.run(prog_name='multiqc')
