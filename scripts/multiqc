@@ -531,14 +531,14 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     if len(getattr(config, 'report_section_order', {})) > 0:
         # Go through each module
         for midx, mod in enumerate(report.modules_output):
+            section_id_order = {}
+            # Get a list of the section anchors
+            idx = 10
+            for s in mod.sections:
+                section_id_order[s['anchor']] = idx
+                idx += 10
             # Go through each section to be reordered
             for anchor, ss in config.report_section_order.items():
-                # Get a list of the section anchors
-                section_id_order = {}
-                idx = 10
-                for s in mod.sections:
-                    section_id_order[s['anchor']] = idx
-                    idx += 10
                 # Section to be moved is not in this module
                 if anchor not in section_id_order.keys():
                     logger.debug("Reordering sections: anchor '{}' not found for module '{}'.".format(anchor, mod.name))
