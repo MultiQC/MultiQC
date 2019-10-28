@@ -42,18 +42,18 @@ def init_log(logger, loglevel=0, no_ansi=False):
     # Set up the console logging stream
     console = logging.StreamHandler()
     console.setLevel(getattr(logging, loglevel))
-    level_styes = coloredlogs.DEFAULT_LEVEL_STYLES
-    level_styes['debug'] = {'faint': True}
+    level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
+    level_styles['debug'] = {'faint': True}
     if loglevel == 'DEBUG':
         if no_ansi or not sys.stderr.isatty():
             console.setFormatter(logging.Formatter(debug_template))
         else:
-            console.setFormatter(coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styes))
+            console.setFormatter(coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles))
     else:
         if no_ansi or not sys.stderr.isatty():
             console.setFormatter(logging.Formatter(info_template))
         else:
-            console.setFormatter(coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styes))
+            console.setFormatter(coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles))
     logger.addHandler(console)
 
     # Now set up the file logging stream if we have a data directory
