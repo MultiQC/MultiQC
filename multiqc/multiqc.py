@@ -8,6 +8,7 @@ I know the namespace is horrible. I ended up here by trying to get
 the logging to use nice names.
 Primarily called by multiqc.__main__.py
 """
+from __future__ import print_function
 
 import base64
 import click
