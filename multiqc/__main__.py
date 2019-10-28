@@ -186,7 +186,7 @@ logger = config.logger
                     is_flag = True,
                     help = "Disable coloured log output"
 )
-@click.version_option(__version__)
+@click.version_option(__version__, prog_name='multiqc')
 
 def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
@@ -796,7 +796,7 @@ def modify_usage_error(main_command):
     click.exceptions.UsageError.show = show
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" or __name__ == 'multiqc.__main__':
     # Add any extra plugin command line options
     for entry_point in pkg_resources.iter_entry_points('multiqc.cli_options.v1'):
         opt_func = entry_point.load()
