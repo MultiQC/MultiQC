@@ -3,10 +3,9 @@
 """
 multiqc.multiqc
 ~~~~~~~~~~~~~~~~~~~~~
-The main function to run MultiQC.
-I know the namespace is horrible. I ended up here by trying to get
-the logging to use nice names.
+The main function to run MultiQC. Sorry about the messy namespace.
 Primarily called by multiqc.__main__.py
+Imported by __init__.py so available as multiqc.run()
 """
 from __future__ import print_function
 
@@ -25,8 +24,8 @@ import sys
 import tempfile
 import traceback
 
-from multiqc.plots import table
-from multiqc.utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
+from plots import table
+from utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
 
 @click.command(

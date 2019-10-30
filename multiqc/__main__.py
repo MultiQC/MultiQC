@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" MultiQC: A modular tool to aggregate results from bioinformatics analyses across many samples into a single report
+""" __main__.py
+~~~~~~~~~~~~~~~~~~~~
+Called when multiqc namespace is used, primarily by the cli:
+
+$ multiqc .
+$ python -m multiqc .
 """
 
 from __future__ import print_function
