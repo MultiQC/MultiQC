@@ -17,7 +17,7 @@ import multiqc
 
 # Default logger will be replaced by caller
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('multiqc')
 
 # Get the MultiQC version
 version = pkg_resources.get_distribution("multiqc").version
