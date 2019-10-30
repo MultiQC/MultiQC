@@ -24,8 +24,8 @@ import sys
 import tempfile
 import traceback
 
-from plots import table
-from utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
+from .plots import table
+from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
 
 @click.command(
