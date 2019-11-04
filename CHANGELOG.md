@@ -69,6 +69,7 @@
 * Made `config.report_section_order` work for module sub-sections as well as just modules.
 * New config options `exclude_modules` and `run_modules` to complement `-e` and `-m` cli flags.
 * Command line output is now coloured by default :rainbow: (use `--no-ansi` to turn this off)
+* Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/936))
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
