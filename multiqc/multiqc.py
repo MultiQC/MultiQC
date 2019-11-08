@@ -24,6 +24,16 @@ import sys
 import tempfile
 import traceback
 
+try:
+    # Python 3 imports
+    from urllib.request import urlopen
+except ImportError:
+    # Python 2 imports
+    from urllib2 import urlopen
+    # Use UTF-8 encoding by default
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+
 from .plots import table
 from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
@@ -295,6 +305,13 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     logger.info("Template    : {}".format(config.template))
     if lint:
         logger.info('--lint specified. Being strict with validation.')
+
+    # Throw a warning if we are running on Python 2
+    if sys.version_info[0] < 3:
+        logger.warn("You are running MultiQC with Python {}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+        logger.warn("Please upgrade! MultiQC will soon drop support for Python < v3.5")
+    else:
+        logger.debug("Running Python {}".format(sys.version.replace("\n", ' ')))
 
     # Add files if --file-list option is given
     if file_list:
