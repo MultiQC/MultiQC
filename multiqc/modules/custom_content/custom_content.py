@@ -35,6 +35,7 @@ def custom_module_classes():
     """
     MultiQC Custom Content class. This module does a lot of different
     things depending on the input and is as flexible as possible.
+
     NB: THIS IS TOTALLY DIFFERENT TO ALL OTHER MODULES
     """
 
@@ -92,7 +93,7 @@ def custom_module_classes():
                         parsed_data = yaml_ordered_load(f['f'])
                     except Exception as e:
                         log.warning("Error parsing YAML file '{}' (probably invalid YAML)".format(f['fn']))
-                        log.warning("YAML error: {}".format(e))
+                        log.debug("YAML error: {}".format(e), exc_info=True)
                         break
                 elif f_extension == '.json':
                     try:
