@@ -3,10 +3,8 @@
 """ MultiQC submodule to parse output from deepTools bamPEFragmentSize for summary table """
 
 import logging
-import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import table, linegraph
 
 # Initialise the logger

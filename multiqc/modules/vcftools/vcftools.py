@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 import logging
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from .relatedness2 import Relatedness2Mixin
 from .tstv_by_count import TsTvByCountMixin

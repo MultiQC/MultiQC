@@ -146,7 +146,7 @@ def get_filelist(run_module_names):
                             break
 
     # Go through the analysis directories and get file list
-    multiqc_installation_dir_files = os.listdir( os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) )
+    multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'appveyor.yml', 'setup.py', '.gitignore', '.travis.yml']
     for path in config.analysis_dir:
         if os.path.islink(path) and config.ignore_symlinks:
             continue
@@ -181,7 +181,7 @@ def get_filelist(run_module_names):
                     continue
 
                 # Sanity check - make sure that we're not just running in the installation directory
-                if len(filenames) > 0 and all([fn in multiqc_installation_dir_files for fn in filenames]):
+                if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
                     logger.error("Error: MultiQC is running in source code directory! {}".format(root))
                     logger.warn("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
                     dirnames[:] = []

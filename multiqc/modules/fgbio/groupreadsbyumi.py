@@ -4,7 +4,6 @@
 """
 
 from __future__ import print_function
-from collections import OrderedDict
 
 import logging
 
@@ -60,7 +59,7 @@ class GroupReadsByUmiMixin():
                              showing number of UMIs represented by a certain number of reads.''',
             helptext = '''
             This tool groups reads together that appear to have come from the same original molecule.
-            Reads are grouped by template, and then templates are sorted by the 5’ mapping positions
+            Reads are grouped by template, and then templates are sorted by the 5' mapping positions
             of the reads from the template, used from earliest mapping position to latest.
             Reads that have the same end positions are then sub-grouped by UMI sequence.
 

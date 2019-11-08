@@ -3,7 +3,6 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # deepTools modules

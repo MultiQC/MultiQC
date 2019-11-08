@@ -3,10 +3,8 @@
 """ MultiQC submodule to parse output from deepTools estimateReadFiltering """
 
 import logging
-import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import table
 
 # Initialise the logger

@@ -4,7 +4,7 @@
 
 import logging
 from collections import OrderedDict
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

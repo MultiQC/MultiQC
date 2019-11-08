@@ -6,7 +6,7 @@ import logging
 import math
 import os
 import re
-from multiqc.plots import bargraph, linegraph, scatter, table
+from multiqc.plots import bargraph, linegraph
 from collections import OrderedDict
 
 # Initialise the logger

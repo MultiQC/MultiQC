@@ -114,20 +114,34 @@ python setup.py install
 
 If you downloaded the flat files, just repeat the installation procedure.
 
+## Using a specific python interpreter
+If you prefer, you can also run MultiQC with a specific python interpreter.
+The command line usage and flags are then exactly the same as if you ran just `multiqc`.
+
+For example:
+
+```bash
+python -m multiqc .
+python3 -m multiqc .
+~/my_env/bin/python -m multiqc .
+```
+
+## Using with a Python script
+You can import and run MultiQC from within a Python script, using
+the `multiqc.run()` function as follows:
+
+```python
+import multiqc
+multiqc.run("/path/to/dir")
+```
+
 ## Installing on Windows
 MultiQC is has primarily been designed for us on Unix systems (Linux, Mac OSX).
 However, it _should_ work on Windows too. Indeed, automated continuous integration
 tests run using AppVeyor to check compatability at https://ci.appveyor.com/project/ewels/multiqc
 (see test config [here](https://github.com/ewels/MultiQC/blob/master/appveyor.yml)).
 
-Some users have found that running the `multiqc` command directly in Windows doesn't work
-but that using the full path to the program does work. For example:
-
-```
-python \path\to\python\scripts\multiqc my_data
-```
-
-Note that you may be able to avoid this by adding this directory to your `PATH`.
+Note that support for the base `multiqc` command was improved in version 1.8.
 
 
 ## Using the Docker container

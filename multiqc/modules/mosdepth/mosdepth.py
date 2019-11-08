@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import math
 from collections import defaultdict, OrderedDict
 import logging
 

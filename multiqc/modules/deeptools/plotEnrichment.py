@@ -3,10 +3,8 @@
 """ MultiQC submodule to parse output from deepTools plotEnrichment """
 
 import logging
-import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger

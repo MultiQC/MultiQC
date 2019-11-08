@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import logging
-import re
-from itertools import chain
 from collections import OrderedDict
 
-from multiqc import config
-from multiqc.plots import linegraph, bargraph, scatter, table, heatmap, beeswarm
+from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
 
-from .bbmap_filetypes import section_order, file_types, statsfile_machine_keys
+from .bbmap_filetypes import file_types, section_order
 
 """ MultiQC module to parse output from BBMap """
 
