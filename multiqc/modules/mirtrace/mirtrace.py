@@ -8,10 +8,6 @@ from collections import OrderedDict
 import logging
 
 import json
-import csv
-import random
-import string
-from multiqc import config
 from multiqc.plots import bargraph, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 

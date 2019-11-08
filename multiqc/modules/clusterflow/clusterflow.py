@@ -10,7 +10,6 @@ import re
 import os
 import time
 
-from multiqc import config
 from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
 

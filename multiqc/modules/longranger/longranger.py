@@ -7,9 +7,7 @@ from collections import OrderedDict
 import logging
 import re
 import os
-import csv
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph
 

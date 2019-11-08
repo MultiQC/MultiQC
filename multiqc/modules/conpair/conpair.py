@@ -6,7 +6,6 @@ from __future__ import print_function
 import logging
 import re
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger

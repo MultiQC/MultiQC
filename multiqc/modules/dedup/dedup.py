@@ -5,11 +5,8 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import os
-import re
 import json
 
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 

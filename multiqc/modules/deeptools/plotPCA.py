@@ -3,11 +3,7 @@
 """ MultiQC submodule to parse output from deepTools plotPCA """
 
 import logging
-import re
-from collections import OrderedDict
-import numpy as np
 
-from multiqc import config
 from multiqc.plots import scatter
 
 # Initialise the logger
