@@ -375,6 +375,10 @@ def run(
         config.exclude_modules = exclude
     config.kwargs = kwargs # Plugin command line options
 
+    # Clean up analysis_dir if a string (interactive environment only)
+    if isinstance(config.analysis_dir, str):
+        config.analysis_dir = [ config.analysis_dir ]
+
     plugin_hooks.mqc_trigger('execution_start')
 
     logger.info("This is MultiQC v{}".format(config.version))
