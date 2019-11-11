@@ -77,29 +77,72 @@ class MultiqcModule(BaseMultiqcModule):
         """ Take the parsed stats from SexDetErrmine and add it to the main plot """
 
         headers = OrderedDict()
-        headers['RateErrX'] = {
-            'title': 'Err Rate X',
-            'description': 'Rate of Error for Chr X',
+        headers['SNP Calls (all)'] = {
+            'title': 'All SNP calls',
+            'description': 'The complete set of SNP calls',
             'scale': 'OrRd',
             'hidden': True,
-            'shared_key': 'snp_err_rate'
+            'shared_key': 'snp_call'
         }
-        headers['RateErrY'] = {
-            'title': 'Err Rate Y',
-            'description': 'Rate of Error for Chr Y',
+        headers['SNP Calls (het)'] = {
+            'title': 'Heterozygous SNP Calls',
+            'description': 'The set of heterozygous SNP calls',
             'scale': 'OrRd',
             'hidden': True,
-            'shared_key': 'snp_err_rate'
+            'shared_key': 'snp_call'
         }
-        headers['RateX'] = {
-            'title': 'Rate X',
-            'description': 'Number of positions on Chromosome X vs Autosomal positions.',
+        headers['coverage(fold)'] = {
+            'title': 'Fold Coverage',
+            'description': 'The fold coverage on average over all positions.',
+            'scale': 'OrRd',
+            'hidden': True,
+            'shared_key': 'coverage'
+        }
+        headers['coverage(percent)'] = {
+            'title': 'Percent Covered',
+            'description': 'Percentage of genome covered by selected coverage threshold.',
             'scale': 'PuBuGn',
-            'shared_key': 'snp_count'
+            'shared_key': 'coverage'
         }
-        headers['RateY'] = {
-            'title': 'Rate Y',
-            'description': 'Number of positions on Chromosome Y vs Autosomal positions.',
+        headers['refCall'] = {
+            'title': 'Number of reference calls',
+            'description': 'Number of calls where there is a reference allele.',
+            'scale': 'BuPu',
+            'shared_key': 'calls'
+        }
+        headers['allPos'] = {
+            'title': 'XXXX',
+            'description': 'YYYY',
+            'scale': 'BuPu',
+            'shared_key': 'calls'
+        }
+        headers['noCall'] = {
+            'title': 'XXXX',
+            'description': 'YYYY',
+            'scale': 'BuPu',
+            'shared_key': 'calls'
+        }
+        headers['discardedRefCall'] = {
+            'title': 'XXXX',
+            'description': 'YYYY',
+            'scale': 'BuPu',
+            'shared_key': 'snp_ccallsount'
+        }
+        headers['discardedVarCall'] = {
+            'title': 'XXXX',
+            'description': 'YYYYY',
+            'scale': 'BuPu',
+            'shared_key': 'calls'
+        }
+        headers['filteredVarCall'] = {
+            'title': 'XXXXX',
+            'description': 'YYYYY',
+            'scale': 'BuPu',
+            'shared_key': 'calls'
+        }
+        headers['unhandledGenotype'] = {
+            'title': 'An unhandled genotype',
+            'description': 'A genotype that can\'t be used by MultiVCFAnalyzer.',
             'scale': 'BuPu',
             'shared_key': 'snp_count'
         }
@@ -107,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.mvcf_data, headers)
 
     def read_count_barplot(self):
-        """ Make a bar plot showing read counts on Autosomal, X and Y chr
+        """ Make a bar plot showing numbers for individual call classes.
         """
         cats = OrderedDict()
         cats['NR Aut'] = { 'name': 'Autosomal Reads' }
