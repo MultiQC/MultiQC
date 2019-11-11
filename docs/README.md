@@ -26,6 +26,7 @@ MultiQC Modules:
     KAT: modules/kat.md
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
+    SeqyClean: modules/seqyclean.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
@@ -116,9 +117,9 @@ The documentation has the following pages:
    - [Configuration](config.md)
    - [Customising Reports](customisation.md)
    - [Common Problems](troubleshooting.md)
- - [MultiQC Modules](modules/)
- - [Custom Content](custom_content.md)
- - Coding with MultiQC
+- [MultiQC Modules](modules/)
+- [Custom Content](custom_content.md)
+   - Coding with MultiQC
    - [Writing new templates](templates.md)
    - [Writing new modules](modules.md)
    - [Plugins](plugins.md)
