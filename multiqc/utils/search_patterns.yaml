@@ -361,6 +361,8 @@ mosdepth/global_dist:
     fn: '*.mosdepth.global.dist.txt'
 mosdepth/region_dist:
     fn: '*.mosdepth.region.dist.txt'
+multivcfanalyzer:
+    fn: 'MultiVCFAnalyzer.json'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2

@@ -514,6 +514,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - multivcfanalyzer:
+        module_tag:
+            - DNA
+            - ancient
     - clusterflow:
         module_tag:
             - RNA
