@@ -5,8 +5,7 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
-from multiqc.plots import linegraph, bargraph, table
+from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -15,10 +14,12 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='SeqyClean',
-        anchor='seqyclean',
-        href='https://github.com/ibest/seqyclean',
-        info='is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.')
+        super(MultiqcModule, self).__init__(
+            name='SeqyClean',
+            anchor='seqyclean',
+            href='https://github.com/ibest/seqyclean',
+            info='is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.'
+        )
 
         # Parse logs
         self.seqyclean_data = dict()
@@ -28,8 +29,13 @@ class MultiqcModule(BaseMultiqcModule):
             cols = rows[1].split("\t")
 
             self.seqyclean_data[f['s_name']] = dict()
-            for header, cols in zip(headers, cols):
-                self.seqyclean_data[f['s_name']].update({ header : cols })
+            for header, col in zip(headers, cols):
+                # Attempt to convert into a float if we can
+                try:
+                    col = float(col)
+                except (ValueError, TypeError):
+                    pass
+                self.seqyclean_data[f['s_name']].update({ header : col })
 
         if len(self.seqyclean_data) == 0:
             raise UserWarning
@@ -42,33 +48,33 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Summary',
             anchor = 'seqyclean-summary',
-            description = 'This plot shows the number of reads that were kept and discarded',
+            description = 'This plot shows the number of reads that were kept and discarded.',
             plot = self.seqyclean_summary()
         )
 
         self.add_section(
             name = 'Annotations',
             anchor = 'seqyclean-annotation',
-            description = 'This plot shows how reads were annotated',
+            description = 'This plot shows how reads were annotated.',
             plot = self.seqyclean_analysis()
         )
 
         self.add_section(
             name = 'Discarded',
             anchor = 'seqyclean-discarded',
-            description = 'This plot shows the breakdown for discarded reads',
+            description = 'This plot shows the breakdown of reasons for why reads were discarded.',
             plot = self.seqyclean_discarded()
         )
 
         # Write the results to a file
-        self.write_data_file(self.seqyclean_data, 'seqyclean')
+        self.write_data_file(self.seqyclean_data, 'multiqc_seqyclean')
 
         # Adding to the general statistics table
         self.seqyclean_general_stats_table()
 
     def seqyclean_summary(self):
         config = {
-            'id': 'seqyclean-1',
+            'id': 'seqyclean-summary-plot',
             'title': 'SeqyClean: Summary',
             'ylab': 'Number of Reads'
         }
@@ -82,11 +88,11 @@ class MultiqcModule(BaseMultiqcModule):
             'ReadsKept', # 454
             'DiscardedTotal'
         ]
-        return bargraph.plot(self.seqyclean_data, keys, config)
+        return bargraph.plot(self.seqyclean_data, self._clean_keys(keys), config)
 
     def seqyclean_analysis(self):
         config = {
-            'id': 'seqyclean-2',
+            'id': 'seqyclean-read-annotation-plot',
             'title': 'SeqyClean: Read Annotations',
             'ylab': 'Number of Reads'
         }
@@ -105,11 +111,11 @@ class MultiqcModule(BaseMultiqcModule):
             'ReadsWithVector_found',
             'ReadsWithContam_found'
         ]
-        return bargraph.plot(self.seqyclean_data, keys, config)
+        return bargraph.plot(self.seqyclean_data, self._clean_keys(keys), config)
 
     def seqyclean_discarded(self):
         config = {
-            'id': 'seqyclean-3',
+            'id': 'seqyclean-discarded-reads-plot',
             'title': 'SeqyClean: Discarded Reads',
             'ylab': 'Number of Reads'
         }
@@ -123,13 +129,13 @@ class MultiqcModule(BaseMultiqcModule):
             'DiscByContam', # 454 data
             'DiscByLength'
         ]
-        return bargraph.plot(self.seqyclean_data, keys, config)
+        return bargraph.plot(self.seqyclean_data, self._clean_keys(keys), config)
 
     def seqyclean_general_stats_table(self):
         headers = OrderedDict()
         # Paired and single end
         headers['Perc_Kept'] = {
-            'title': 'Percentage Kept',
+            'title': '% Kept',
             'description': 'The percentage of reads remaining after cleaning',
             'scale': 'YlGn',
             'suffix': '%',
@@ -138,7 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         # 454
         headers['PercentageKept'] = {
-            'title': 'Percentage Kept',
+            'title': '% Kept',
             'description': 'The percentage of reads remaining after cleaning',
             'scale': 'YlGn',
             'suffix': '%',
@@ -146,3 +152,18 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0
         }
         self.general_stats_addcols(self.seqyclean_data, headers)
+
+    def _clean_keys(self, keys):
+        """ Given a list of keys, make them easier to read for plot labels
+        """
+        cats = OrderedDict()
+        for k in keys:
+            nice_name = re.sub("([a-z])([A-Z])","\g<1> \g<2>", k) # CamelCase > Camel Case
+            nice_name = re.sub("([PS]E\d?)","\g<1> ", nice_name) # PE1Label > PE1 Label
+            nice_name = re.sub("W([A-Z])","W \g<1>", nice_name) # WContam > W Contam
+            nice_name = nice_name.replace('_', ' ') # tags_found > tags found
+            nice_name = nice_name.title() # Title Case
+            nice_name = nice_name.replace('Pe', 'PE').replace('Se', 'SE')
+            nice_name = nice_name.replace('Tru SEq', 'TruSeq')
+            cats[k] = { 'name': nice_name }
+        return cats
