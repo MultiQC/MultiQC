@@ -40,4 +40,4 @@ if __name__ == "__main__" or __name__ == 'multiqc.__main__':
     # Modify the default click error handling
     modify_usage_error(multiqc)
     # Call the main function
-    multiqc.run(prog_name='multiqc')
+    multiqc.multiqc.run_cli(prog_name='multiqc')
