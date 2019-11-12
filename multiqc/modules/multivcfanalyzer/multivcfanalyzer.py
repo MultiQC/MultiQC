@@ -74,75 +74,75 @@ class MultiqcModule(BaseMultiqcModule):
                     self.mvcf_data[s_clean][k] = v
 
     def addSummaryMetrics(self):
-        """ Take the parsed stats from SexDetErrmine and add it to the main plot """
+        """ Take the parsed stats from MultiVCFAnalyzer and add it to the main plot """
 
         headers = OrderedDict()
         headers['SNP Calls (all)'] = {
             'title': 'All SNP calls',
-            'description': 'The complete set of SNP calls',
+            'description': 'Total number of non-reference calls made',
             'scale': 'OrRd',
             'hidden': True,
             'shared_key': 'snp_call'
         }
         headers['SNP Calls (het)'] = {
             'title': 'Heterozygous SNP Calls',
-            'description': 'The set of heterozygous SNP calls',
+            'description': 'Total number of non-reference calls not passing homozygosity thresholds',
             'scale': 'OrRd',
             'hidden': True,
             'shared_key': 'snp_call'
         }
         headers['coverage(fold)'] = {
             'title': 'Fold Coverage',
-            'description': 'The fold coverage on average over all positions.',
+            'description': 'Average number of reads covering final calls',
             'scale': 'OrRd',
             'hidden': True,
             'shared_key': 'coverage'
         }
         headers['coverage(percent)'] = {
             'title': 'Percent Covered',
-            'description': 'Percentage of genome covered by selected coverage threshold.',
+            'description': 'Percent coverage of all positions with final calls',
             'scale': 'PuBuGn',
             'shared_key': 'coverage'
         }
         headers['refCall'] = {
-            'title': 'Number of reference calls',
-            'description': 'Number of calls where there is a reference allele.',
+            'title': 'Number of Reference Calls',
+            'description': 'Number of reference calls made',
             'scale': 'BuPu',
             'shared_key': 'calls'
         }
         headers['allPos'] = {
-            'title': 'XXXX',
-            'description': 'YYYY',
+            'title': 'Bases in SNP Alignment',
+            'description': 'Length of FASTA file in base pairs (bp)',
             'scale': 'BuPu',
             'shared_key': 'calls'
         }
         headers['noCall'] = {
-            'title': 'XXXX',
-            'description': 'YYYY',
+            'title': 'Positions with No Call',
+            'description': 'Number of positions with no call made as reported by GATK',
             'scale': 'BuPu',
             'shared_key': 'calls'
         }
         headers['discardedRefCall'] = {
-            'title': 'XXXX',
-            'description': 'YYYY',
+            'title': 'Discarded Reference Call',
+            'description': 'Number of reference positions not reaching genotyping quality threshold',
             'scale': 'BuPu',
-            'shared_key': 'snp_ccallsount'
+            'shared_key': 'calls'
         }
         headers['discardedVarCall'] = {
-            'title': 'XXXX',
-            'description': 'YYYYY',
+            'title': 'Discarded SNP Call',
+            'description': 'Number of non-reference positions not reaching genotyping quality threshold',
             'scale': 'BuPu',
             'shared_key': 'calls'
         }
         headers['filteredVarCall'] = {
-            'title': 'XXXXX',
-            'description': 'YYYYY',
+            'title': 'Filtered SNP Call',
+            'description': 'Number of positions ignored defined in user-supplied filter list',
             'scale': 'BuPu',
             'shared_key': 'calls'
         }
         headers['unhandledGenotype'] = {
-            'title': 'An unhandled genotype',
-            'description': 'A genotype that can\'t be used by MultiVCFAnalyzer.',
+            'title': 'Unhandled Genotypes',
+            'description': 'Number of positions discarded due to presence of more than one alternate allele',
             'scale': 'BuPu',
             'shared_key': 'snp_count'
         }
