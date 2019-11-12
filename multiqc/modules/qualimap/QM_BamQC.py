@@ -141,14 +141,16 @@ def parse_coverage(self, f):
     # Find median and mean without importing anything to do it for us
     num_counts = sum(d.values())
     cum_counts = 0
+    total_cov = 0
     median_coverage = None
     mean_coverage = None
     for thiscov, thiscount in d.items():
         cum_counts += thiscount
+        total_cov += thiscov*thiscount
         if cum_counts >= num_counts/2:
             median_coverage = thiscov
             break
-    mean_coverage = cum_counts / num_counts
+    mean_coverage = total_cov / num_counts
     self.general_stats_data[s_name]['mean_coverage' = mean_coverage
     self.general_stats_data[s_name]['median_coverage'] = median_coverage
 
