@@ -40,6 +40,9 @@
     * Added support for the LongRanger Align pipeline.
 * **miRTrace**
     * Fixed bug where a sample in some plots was missed. ([#932](https://github.com/ewels/MultiQC/issues/932))
+* **Peddy**
+    * Fixed bug where sample name cleaning could lead to error. ([#1024](https://github.com/ewels/MultiQC/issues/1024))
+    * All plots (including _Het Check_ and _Sex Check_) now hidden if no data
 * **Picard**
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
