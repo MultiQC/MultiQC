@@ -45,6 +45,7 @@
     * All plots (including _Het Check_ and _Sex Check_) now hidden if no data
 * **Picard**
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
+    * Modified MarkDuplicates.py so that it will combine all sequencing libraries.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
 * **RNA-SeQC**
