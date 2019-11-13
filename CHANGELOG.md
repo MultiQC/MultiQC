@@ -75,7 +75,8 @@
     * Windows support for base `multiqc` command
     * Support for running as a python module: `python -m multiqc .`
     * Support for running within a script: `import multiqc` and `multiqc.run('/path/to/files')`
-* Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/936))
+* Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/1044))
+* Config `table_columns_visible` can now be given a module namespace and it will hide all columns from that module ([#541](https://github.com/ewels/MultiQC/issues/541))
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files

@@ -353,7 +353,15 @@ table_columns_visible:
         percent_duplicates: False
 ```
 
-Note that you can set these to `True` to show columns that would otherwise be hidden
+You can also specify a value for an entire module / table namespace.
+This will then show or hide all columns for that module. For example:
+
+```yaml
+table_columns_visible:
+    FastQC: False
+```
+
+Note that you can set these values to `True` to show columns that would otherwise be hidden
 by default.
 
 ### Column order
