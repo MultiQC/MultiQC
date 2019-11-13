@@ -111,7 +111,7 @@ $(function () {
     $('.mqc_configModal_table').on('sortstop', function(e, ui){
       change_mqc_table_col_order( $(this) );
     });
-    $('.mqc_configModal_table').bind('sortEnd',function() { 
+    $('.mqc_configModal_table').bind('sortEnd',function() {
       change_mqc_table_col_order( $(this) );
     });
 
@@ -158,7 +158,7 @@ $(function () {
     // Rename samples
     $(document).on('mqc_renamesamples', function(e, f_texts, t_texts, regex_mode){
       $(".mqc_table tbody th").each(function(){
-        var s_name = $(this).data('original-sn');
+        var s_name = String($(this).data('original-sn'));
         $.each(f_texts, function(idx, f_text){
           if(regex_mode){
             var re = new RegExp(f_text,"g");
