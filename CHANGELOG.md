@@ -59,6 +59,8 @@
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
     * Increased the default summary csv file-size limit from 1MB to 5MB.
+* **Stacks**
+    * Fixed bug where multi-population sum stats are parsed correctly ([#906](https://github.com/ewels/MultiQC/issues/906))
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 * **snpEff**
