@@ -21,6 +21,8 @@
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
     * Allow bcl2fastq to parse undetermined barcode information in situations when lane indexes do not start at 1
+* **BBMap**
+    * Support for scafstats output marked as not yet implemented in docs
 * **DeDup**
     * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
