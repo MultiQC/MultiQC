@@ -48,7 +48,7 @@ def parse_reports(self):
             if r_search:
                 d['{}_total_bases'.format(k)] = int(r_search.group(1))
                 d['{}_tag_count'.format(k)] = int(r_search.group(2))
-                d['{}_tags_kb'.format(k)] = float(r_search.group(2))
+                d['{}_tags_kb'.format(k)] = float(r_search.group(3))
 
         d['other_intergenic_tag_count'] = d['total_tags']-d['total_assigned_tags']
 
