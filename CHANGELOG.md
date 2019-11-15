@@ -12,6 +12,7 @@
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
 

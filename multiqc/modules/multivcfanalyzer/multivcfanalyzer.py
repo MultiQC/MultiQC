@@ -37,15 +37,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.mvcf_data) == 0:
             raise UserWarning
 
+        # Add in extra columns to data file
+        self.compute_perc_hets()
+
         # Save data output file
         self.write_data_file(self.mvcf_data, 'multiqc_multivcfanalyzer_metrics')
 
         # Add to General Statistics
         self.addSummaryMetrics()
 
-        # Plots
-        self.read_count_barplot()
-        self.snp_count_barplot()
 
     def parse_data(self, f):
         try:
@@ -59,19 +59,27 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in data:
             if (s_name == 'metadata'):
                 continue
+            
+            if (s_name == 'metrics'):
+                for sample in data['metrics'].items():
+                    s_clean = sample[0]
+                    if s_clean in self.mvcf_data:
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 
-            s_clean = self.clean_s_name(s_name, f['root'])
-            if s_clean in self.mvcf_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+                    self.add_data_source(f, s_clean)
+                    self.mvcf_data[s_clean] = dict()
 
-            self.add_data_source(f, s_clean)
-            self.mvcf_data[s_clean] = dict()
+                    for k, v in sample[1].items():
+                        try:
+                            self.mvcf_data[s_clean][k] = float(v)
+                        except ValueError:
+                            self.mvcf_data[s_clean][k] = v
 
-            for k, v in data[s_name].items():
-                try:
-                    self.mvcf_data[s_clean][k] = float(v)
-                except ValueError:
-                    self.mvcf_data[s_clean][k] = v
+    #Compute % heterozygous snp alleles and add to data
+    def compute_perc_hets(self):
+        """Take the parsed stats from MultiVCFAnalyzer and add one column per sample """
+        for sample in self.mvcf_data:
+            self.mvcf_data[sample]['Heterozygous SNP alleles (percent)'] = (self.mvcf_data[sample]['SNP Calls (het)'] / self.mvcf_data[sample]['SNP Calls (all)'])*100
 
     def addSummaryMetrics(self):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the main plot """
@@ -81,7 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'All SNP calls',
             'description': 'Total number of non-reference calls made',
             'scale': 'OrRd',
-            'hidden': True,
             'shared_key': 'snp_call'
         }
         headers['SNP Calls (het)'] = {
@@ -91,102 +98,77 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True,
             'shared_key': 'snp_call'
         }
-        headers['coverage(fold)'] = {
-            'title': 'Fold Coverage',
-            'description': 'Average number of reads covering final calls',
+        headers['Heterozygous SNP alleles (percent)'] = {
+            'title': 'Heterozygous SNP alleles (percent)',
+            'description': 'Percentage of heterozygous SNP alleles',
             'scale': 'OrRd',
-            'hidden': True,
-            'shared_key': 'coverage'
-        }
-        headers['coverage(percent)'] = {
-            'title': 'Percent Covered',
-            'description': 'Percent coverage of all positions with final calls',
-            'scale': 'PuBuGn',
-            'shared_key': 'coverage'
-        }
-        headers['refCall'] = {
-            'title': 'Number of Reference Calls',
-            'description': 'Number of reference calls made',
-            'scale': 'BuPu',
-            'shared_key': 'calls'
+            'shared_key': 'snp_call'
         }
         headers['allPos'] = {
             'title': 'Bases in SNP Alignment',
             'description': 'Length of FASTA file in base pairs (bp)',
             'scale': 'BuPu',
-            'shared_key': 'calls'
-        }
-        headers['noCall'] = {
-            'title': 'Positions with No Call',
-            'description': 'Number of positions with no call made as reported by GATK',
-            'scale': 'BuPu',
-            'shared_key': 'calls'
-        }
-        headers['discardedRefCall'] = {
-            'title': 'Discarded Reference Call',
-            'description': 'Number of reference positions not reaching genotyping quality threshold',
-            'scale': 'BuPu',
+            'hidden': True,
             'shared_key': 'calls'
         }
         headers['discardedVarCall'] = {
             'title': 'Discarded SNP Call',
             'description': 'Number of non-reference positions not reaching genotyping quality threshold',
             'scale': 'BuPu',
+            'hidden': True,
             'shared_key': 'calls'
         }
         headers['filteredVarCall'] = {
             'title': 'Filtered SNP Call',
             'description': 'Number of positions ignored defined in user-supplied filter list',
             'scale': 'BuPu',
+            'hidden': True,
             'shared_key': 'calls'
+        }
+        headers['refCall'] = {
+            'title': 'Number of Reference Calls',
+            'description': 'Number of reference calls made',
+            'scale': 'BuPu',
+            'hidden': True,
+            'shared_key': 'calls'
+        }
+        headers['discardedRefCall'] = {
+            'title': 'Discarded Reference Call',
+            'description': 'Number of reference positions not reaching genotyping quality threshold',
+            'scale': 'BuPu',
+            'hidden': True,
+            'shared_key': 'calls'
+        }
+        headers['noCall'] = {
+            'title': 'Positions with No Call',
+            'description': 'Number of positions with no call made as reported by GATK',
+            'scale': 'BuPu',
+            'hidden': True,
+            'shared_key': 'calls'
+        }
+        headers['coverage (fold)'] = {
+            'title': 'Fold Coverage',
+            'description': 'Average number of reads covering final calls',
+            'scale': 'OrRd',
+            'shared_key': 'coverage'
+        }
+        headers['coverage (percent)'] = {
+            'title': 'Percent Covered',
+            'description': 'Percent coverage of all positions with final calls',
+            'scale': 'PuBuGn',
+            'hidden': True,
+            'shared_key': 'coverage'
         }
         headers['unhandledGenotype'] = {
             'title': 'Unhandled Genotypes',
             'description': 'Number of positions discarded due to presence of more than one alternate allele',
             'scale': 'BuPu',
+            'hidden': True,
             'shared_key': 'snp_count'
         }
 
         self.general_stats_addcols(self.mvcf_data, headers)
 
-    def read_count_barplot(self):
-        """ Make a bar plot showing numbers for individual call classes.
-        """
-        cats = OrderedDict()
-        cats['NR Aut'] = { 'name': 'Autosomal Reads' }
-        cats['NrX'] = { 'name': 'Reads on X' }
-        cats['NrY'] = { 'name': 'Reads on Y' }
-
-        config = {
-            'id': 'sexdeterrmine-readcounts-plot',
-            'title': 'SexDetErrmine: Read Counts',
-            'ylab': '# Reads'
-        }
-
-        self.add_section(
-            name = 'Read Counts',
-            anchor = 'sexdeterrmine-readcounts',
-            description = 'The number of reads covering positions on the autosomes, X and Y chromosomes.',
-            plot = bargraph.plot(self.mvcf_data, cats, config)
-        )
-
-    def snp_count_barplot(self):
-        """ Make a bar plot showing read counts on Autosomal, X and Y chr
-        """
-        cats = OrderedDict()
-        cats['Snps Autosomal'] = { 'name': 'Autosomal SNPs' }
-        cats['XSnps'] = { 'name': 'SNPs on X' }
-        cats['YSnps'] = { 'name': 'SNPs on Y' }
-
-        config = {
-            'id': 'sexdeterrmine-snps-plot',
-            'title': 'SexDetErrmine: SNP Counts',
-            'ylab': '# Reads'
-        }
-
-        self.add_section(
-            name = 'SNP Counts',
-            anchor = 'sexdeterrmine-snps',
-            description = 'Total number of SNP positions. When supplied with a BED file, this includes only positions specified there.',
-            plot = bargraph.plot(self.mvcf_data, cats, config)
-        )
+    def scatter_plot(self):
+        """ Adds a scatter plot of available data """
+        
