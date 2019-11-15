@@ -168,7 +168,3 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.general_stats_addcols(self.mvcf_data, headers)
-
-    def scatter_plot(self):
-        """ Adds a scatter plot of available data """
-        
