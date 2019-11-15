@@ -61,9 +61,9 @@ def parse_reports(self):
             'xmax': 100,
             'tt_label': "<strong>{point.x}% of reads</strong>: {point.y:.2f}",
             'data_labels': [
+                {'name': 'All Junctions'},
                 {'name': 'Known Junctions'},
-                {'name': 'Novel Junctions'},
-                {'name': 'All Junctions'}
+                {'name': 'Novel Junctions'}
             ],
             'cursor': 'pointer',
             'click_func': plot_single()
@@ -81,9 +81,9 @@ def parse_reports(self):
                   Click a line to see the data side by side (as in the original RSeQC plot).
                 </div><p>''',
             plot = linegraph.plot([
+                    self.junction_saturation_all,
                     self.junction_saturation_known,
-                    self.junction_saturation_novel,
-                    self.junction_saturation_all
+                    self.junction_saturation_novel
                 ], pconfig)
         )
 
@@ -106,9 +106,9 @@ def plot_single():
 
         // Get the three datasets for this sample
         var data = [
+            {'name': 'All Junctions'},
             {'name': 'Known Junctions'},
-            {'name': 'Novel Junctions'},
-            {'name': 'All Junctions'}
+            {'name': 'Novel Junctions'}
         ];
         var k = 0;
         for (var i = 0; i < 3; i++) {

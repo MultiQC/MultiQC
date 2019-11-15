@@ -27,6 +27,10 @@
     * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
     * Added writing metrics to data output file.
+* **DeepTools**
+    * Fixed Python3 bug with int() conversion ([#1057](https://github.com/ewels/MultiQC/issues/1057))
+    * Handle varied TES boundary labels in plotProfile ([#1011](https://github.com/ewels/MultiQC/issues/1011))
+    * Fixed bug that prevented running on only plotProfile files when no other deepTools files found.
 * **fastp**
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **FastQC**
@@ -34,6 +38,9 @@
     * Added heatmap showing FastQC status checks for every section report across all samples
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+* **GATK**
+    * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
+    * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **HTSeq**
@@ -52,7 +59,7 @@
 * **RNA-SeQC**
     * Updated broken URL link
 * **RSeQC**
-    * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
+    * Fixed bug where Junction Saturation plot when clicking a single sample was mislabelling the lines.
     * When including a RSeQC section multiple times in one report, clicking Junction Saturation plot now behaves as you would expect.
     * Fixed bug where exported data in `multiqc_rseqc_read_distribution.txt` files had incorrect values for `_kb` fields ([#1017](https://github.com/ewels/MultiQC/issues/1017))
 * **Samtools**
@@ -61,6 +68,8 @@
     * Increased the default summary csv file-size limit from 1MB to 5MB.
 * **Stacks**
     * Fixed bug where multi-population sum stats are parsed correctly ([#906](https://github.com/ewels/MultiQC/issues/906))
+* **TopHat**
+    * Fixed bug where TopHat would try to run with files from Bowtie2 or HiSAT2 and crash
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 * **snpEff**

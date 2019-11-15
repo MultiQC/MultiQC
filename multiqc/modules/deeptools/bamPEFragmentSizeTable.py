@@ -228,7 +228,7 @@ class bamPEFragmentSizeTableMixin():
                             continue
                         try:
                             # Most values are ac
-                            d[s_name][h] = int(cols[idx])
+                            d[s_name][h] = self._int(cols[idx])
                         except ValueError:
                             d[s_name][h] = float(cols[idx])
 
