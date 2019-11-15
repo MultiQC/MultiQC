@@ -66,6 +66,8 @@
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
     * Increased the default summary csv file-size limit from 1MB to 5MB.
+* **TopHat**
+    * Fixed bug where TopHat would try to run with files from Bowtie2 or HiSAT2 and crash
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 * **snpEff**
