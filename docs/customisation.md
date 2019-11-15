@@ -114,7 +114,22 @@ the `#section_id` at the end of the browser URL.
 
 ## Removing modules or sections
 If you don't want an entire module to be used in a MultiQC report, use the `-e`/`--exclude`
-command line flags to skip running that tool.
+command line flags to skip running that tool. You can also use the config option `exclude_modules`:
+
+```yaml
+exclude_modules:
+    - fastqc
+    - cutadapt
+```
+
+If you want to run _only_ specific modules, you can do that with `-m`/`--module` or the
+config option `run_modules`:
+
+```yaml
+run_modules:
+    - fastqc
+    - cutadapt
+```
 
 If you would like to remove just one section of a module report, you can do so with the
 `remove_sections` config option as follows:
@@ -218,32 +233,44 @@ the first iteration.
 > Let me know if this is a problem..
 
 
-## Order of sections
-Sometimes it's desirable to customise the order of specific sections in a report, independent of
-module execution. For example, the `custom_content` module can generate multiple sections from
-different input files.
+### Order of module and module subsection output
+The `module_order` config changes the order in which each MultiQC module is executed.
+However, sometimes it's desirable to customise the order of specific sections in a report,
+independent of the order of module execution. For example, the `custom_content` module can
+generate multiple sections from different input files.
+Also, `module_order` does not allow you to change the sequence of sections within a MultiQC module.
 
-To do this, follow a link in a report navigation to skip to the section you want to move (must
-be a major section header, not a subheading). Find the ID of that section by looking at the URL.
+To change the order of MultiQC outputs, follow a link in a report navigation to skip to the section
+you want to move (either a major section header or a subheading). Find the ID of that section by looking at the URL.
 For example, clicking on _FastQC_ changes the URL to `multiqc_report.html#fastqc` -  the ID is
-the text after (not including) the `#` symbol.
+the text after (not including) the `#` symbol: `fastqc`.
+The FastQC _Status Checks_ subsection is `multiqc_report.html#fastqc_status_checks` and has the id `fastqc_status_checks`.
 
-Next, specify the `report_section_order` option in your MultiQC config file. Section in
+Next, specify the `report_section_order` option in your MultiQC config file. Modules and sections in
 the report are given a number ranging from 10 (section at bottom of report), incrementing by +10
 for each section. You can change this number (eg. a very low number to always get at the bottom
 of the report or very high to always be at the top), or you can move a section to before or after
 another existing section (has no effect if the other named ID is not in the report).
 
-For example, add the following to your MultiQC config file:
+> Note that module sub-sections can only be move _within_ their module. So you can't have the
+> FastQC _Adapter Content_ section shown under the GATK module header.
+
+You can also use this config option to completely remove module sub-sections.
+To do this, just set the subsection ID to `remove` (NB: no `:` or `-`).
+This only works for module subsections. To remove an entire module, use the `-e`/`--exclude` flag.
+
+For example, you could add the following to your MultiQC config file:
 
 ```yaml
 report_section_order:
-    section1:
+    module_output_1:
         order: -1000
-    section2:
-        before: 'othersection'
-    section3:
+    module_output_2:
         after: 'diffsection'
+    mod_section_1:
+        before: 'othersection'
+    mod_section_2:
+        remove
 ```
 
 ## Customising plots
@@ -293,6 +320,19 @@ custom_plot_config:
               color: '#c3e6c3'
 ```
 
+As of version 1.8, this also works for customising the config of bargraph categories:
+
+```yaml
+custom_plot_config:
+  bowtie1_alignment:
+    reads_aligned:
+      color: '#d84e2f'
+    multimapped:
+      color: '#f2e63f'
+    not_aligned:
+      color: '#8bbc21'
+```
+
 ## Customising tables
 
 ### Hiding columns
@@ -313,7 +353,15 @@ table_columns_visible:
         percent_duplicates: False
 ```
 
-Note that you can set these to `True` to show columns that would otherwise be hidden
+You can also specify a value for an entire module / table namespace.
+This will then show or hide all columns for that module. For example:
+
+```yaml
+table_columns_visible:
+    FastQC: False
+```
+
+Note that you can set these values to `True` to show columns that would otherwise be hidden
 by default.
 
 ### Column order

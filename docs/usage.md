@@ -2,7 +2,8 @@
 Once installed, just go to your analysis directory and run `multiqc`, followed
 by a list of directories to search. At it's simplest, this can just be `.`
 (the current working directory):
-```
+
+```bash
 multiqc .
 ```
 
@@ -17,7 +18,8 @@ For a description of all command line parameters, run `multiqc --help`.
 ## Choosing where to scan
 You can supply MultiQC with as many directories or files as you like. Above,
 we supply `.` - just the current directory, but all of these would work too:
-```
+
+```bash
 multiqc data/
 multiqc data/ ../proj_one/analysis/ /tmp/results
 multiqc data/*_fastqc.zip
@@ -27,7 +29,8 @@ multiqc data/sample_1*
 You can also ignore files using the `-x`/`--ignore` flag (can be specified multiple
 times). This takes a string which it matches using glob expansion to filenames,
 directory names and entire paths:
-```
+
+```bash
 multiqc . --ignore *_R2*
 multiqc . --ignore run_two/
 multiqc . --ignore */run_three/*/fastqc/*_R2.zip
@@ -36,7 +39,8 @@ multiqc . --ignore */run_three/*/fastqc/*_R2.zip
 Some modules get sample names from the contents of the file and not the filename
 (for example, `stdout` logs can contain multiple samples). In this case, you can
 skip samples by name instead:
-```
+
+```bash
 multiqc . --ignore-samples sample_3*
 ```
 These strings are matched using glob logic (`*` and `?` are wildcards).
@@ -46,7 +50,8 @@ to type them on the command line for every run.
 
 Finally, you can supply a file containing a list of file paths, one per row.
 MultiQC only search the listed files.
-```
+
+```bash
 multiqc --file-list my_file_list.txt
 ```
 
@@ -78,6 +83,7 @@ integer to use that many directories at the end of the path. A negative integer 
 directories from the start of the path.
 
 For example:
+
 ```
 $ multiqc -d .
 # analysis_1 | results | type | sample_1 | file.log
@@ -118,6 +124,7 @@ Once the report is generated MultiQC attempts to call [Pandoc](http://pandoc.org
 a command line tool able to convert documents between different file formats.
 **You must have Pandoc already installed for this to work**. If you don't have
 Pandoc installed, you will get an error message that looks like this:
+
 ```
 Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/
 ```

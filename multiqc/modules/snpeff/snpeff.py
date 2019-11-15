@@ -6,7 +6,6 @@ from __future__ import print_function
 
 from collections import OrderedDict
 import logging
-from multiqc import config
 from multiqc.plots import bargraph, linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -51,12 +50,16 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Variants by Genomic Region',
             description = (
-                "The stacked bar plot shows locations of detected variants in"
-                " the genome and the number of variants for each location."
+                """
+                The stacked bar plot shows locations of detected variants in
+                the genome and the number of variants for each location.
+                """
             ),
             helptext = (
-                "The upstream and downstream interval size to detect these "
-                "genomic regions is 5000bp by default."
+                """
+                The upstream and downstream interval size to detect these
+                genomic regions is 5000bp by default.
+                """
             ),
             anchor = 'snpeff-genomic-regions',
             plot = self.count_genomic_region_plot()
@@ -64,36 +67,58 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Variant Effects by Impact',
             description = (
-                "The stacked bar plot shows the putative impact of detected "
-                "variants and the number of variants for each impact."
+                """
+                The stacked bar plot shows the putative impact of detected
+                variants and the number of variants for each impact.
+                """
             ),
             helptext = (
-                "There are four levels of impacts predicted by SnpEff:"
-                "<ul>"
-                "<li><b>High</b>: High impact (like stop codon)</li>"
-                "<li><b>Moderate</b>: Middle impact (like same type of amino "
-                "acid substitution)</li>"
-                "<li><b>Low</b>: Low impact (ie silence mutation)</li>"
-                "<li><b>Modifier</b>: No impact</li>"
-                "</ul>"
+                """
+                There are four levels of impacts predicted by SnpEff:
+
+                * **High**: High impact (like stop codon)
+                * **Moderate**: Middle impact (like same type of amino acid substitution)
+                * **Low**: Low impact (ie silence mutation)
+                * **Modifier**: No impact
+                """
             ),
             anchor = 'snpeff-effects-impact',
             plot = self.effects_impact_plot()
         )
         self.add_section (
-            name = 'Variant Effects by Class',
+            name = 'Variants by Effect Types',
             description = (
-                "The stacked bar plot shows the effect of variants at protein "
-                "level and the number of variants for each effect type."
+                """
+                The stacked bar plot shows the effect of variants at protein
+                level and the number of variants for each effect type.
+                """
             ),
             helptext = (
-                "This plot shows the effect of variants on the translation of "
-                "the mRNA as protein. There are three possible cases:"
-                "<ul>"
-                "<li><b>Silent</b>: The amino acid does not change.</li>"
-                "<li><b>Missense</b>: The amino acid is different.</li>"
-                "<li><b>Nonsense</b>: The variant generates a stop codon.</li>"
-                "</ul>"
+                """
+                This plot shows the effect of variants with respect to
+                the mRNA.
+                """
+            ),
+            anchor = 'snpeff-effects',
+            plot = self.effects_plot()
+        )
+        self.add_section (
+            name = 'Variants by Functional Class',
+            description = (
+                """
+                The stacked bar plot shows the effect of variants and
+                the number of variants for each effect type.
+                """
+            ),
+            helptext = (
+                """
+                This plot shows the effect of variants on the translation of
+                the mRNA as protein. There are three possible cases:
+
+                * **Silent**: The amino acid does not change.
+                * **Missense**: The amino acid is different.
+                * **Nonsense**: The variant generates a stop codon.
+                """
             ),
             anchor = 'snpeff-functional-class',
             plot = self.effects_function_plot()
@@ -102,12 +127,16 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section (
                 name = 'Variant Qualities',
                 description = (
-                    "The line plot shows the quantity as function of the "
-                    "variant quality score."
+                    """
+                    The line plot shows the quantity as function of the
+                    variant quality score.
+                    """
                 ),
                 helptext = (
-                    "The quality score corresponds to the QUAL column of the "
-                    "VCF file. This score is set by the variant caller."
+                    """
+                    The quality score corresponds to the QUAL column of the
+                    VCF file. This score is set by the variant caller.
+                    """
                 ),
                 anchor = 'snpeff-qualities',
                 plot = self.qualities_plot()
@@ -123,10 +152,10 @@ class MultiqcModule(BaseMultiqcModule):
                 'Number_of_known_variants', 'Number_of_effects',
                 'Genome_total_length', 'Change_rate'
             ],
-            '# Effects by impact': [ 'HIGH', 'LOW', 'MODERATE', 'MODIFIER' ],
-            '# Effects by functional class': [ 'MISSENSE', 'NONSENSE', 'SILENT', 'Missense_Silent_ratio' ],
+            '# Effects by impact': ['HIGH', 'LOW', 'MODERATE', 'MODIFIER'],
+            '# Effects by functional class': ['MISSENSE', 'NONSENSE', 'SILENT', 'Missense_Silent_ratio'],
             '# Hom/Het table': ['Het', 'Hom', 'Missing'],
-            '# Ts/Tv summary': [ 'Transitions', 'Transversions', 'Ts_Tv_ratio' ],
+            '# Ts/Tv summary': ['Transitions', 'Transversions', 'Ts_Tv_ratio'],
             '# Count by effects': 'all',
             '# Count by genomic region': 'all'
         }
@@ -228,6 +257,26 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
+    def effects_plot(self):
+        """ Generate the SnpEff Counts by Effects plot """
+
+        # Sort the keys based on the total counts
+        keys = self.snpeff_section_totals['# Count by effects']
+        sorted_keys = sorted(keys, reverse=True, key=keys.get)
+
+        # Make nicer label names
+        pkeys = OrderedDict()
+        for k in sorted_keys:
+            pkeys[k] = {'name': k.replace('_', ' ').title().replace('Utr', 'UTR') }
+
+        # Config for the plot
+        pconfig = {
+            'id': 'snpeff_effects',
+            'title': 'SnpEff: Counts by Effect Types',
+            'ylab': '# Reads',
+            'logswitch': False
+        }
+        return bargraph.plot(self.snpeff_data, pkeys, pconfig)
 
     def effects_impact_plot(self):
         """ Generate the SnpEff Counts by Effects Impact plot """

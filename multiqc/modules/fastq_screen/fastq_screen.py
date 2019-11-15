@@ -11,6 +11,7 @@ import re
 from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -161,40 +162,51 @@ class MultiqcModule(BaseMultiqcModule):
                     td['linkedTo'] = ':previous'
                 data.append(td)
 
-        html = '''<div id="fq_screen_plot" class="hc-plot"></div>
-        <script type="application/json" id="fq_screen_data">{}</script>
-        <script type="application/json" id="fq_screen_categories">{}</script>
-        '''.format(json.dumps(data), json.dumps(categories))
+        plot_id = report.save_htmlid('fq_screen_plot')
+        html = '''<div id={plot_id} class="fq_screen_plot hc-plot"></div>
+        <script type="application/json" class="fq_screen_dict">{dict}</script>
+        '''.format(
+            plot_id=json.dumps(plot_id),
+            dict=json.dumps({ 'plot_id': plot_id, 'data': data, 'categories': categories }),
+        )
 
         html += '''<script type="text/javascript">
-            fq_screen_data = JSON.parse(document.getElementById('fq_screen_data').innerHTML);
-            fq_screen_categories = JSON.parse(document.getElementById('fq_screen_categories').innerHTML);
+            fq_screen_dict = { }; // { <plot_id>: data, categories }
+            $('.fq_screen_dict').each(function (i, elem) {
+                var dict = JSON.parse(elem.innerHTML);
+                fq_screen_dict[dict.plot_id] = dict;
+            });
 
             $(function () {
-                $("#fq_screen_plot").highcharts({
-                    chart: { type: "column", backgroundColor: null },
-                    title: { text: "FastQ Screen Results" },
-                    xAxis: { categories: fq_screen_categories },
-                    yAxis: {
-                        max: 100,
-                        min: 0,
-                        title: { text: "Percentage Aligned" }
-                    },
-                    tooltip: {
-                        formatter: function () {
-                            return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
-                                this.series.name + ": " + this.y + "%<br/>" +
-                                "Total Alignment: " + this.point.stackTotal + "%";
+                // In case of repeated modules: #fq_screen_plot, #fq_screen_plot-1, ..
+                $(".fq_screen_plot").each(function () {
+                    var plot_id = $(this).attr('id');
+
+                    $(this).highcharts({
+                        chart: { type: "column", backgroundColor: null },
+                        title: { text: "FastQ Screen Results" },
+                        xAxis: { categories: fq_screen_dict[plot_id].categories },
+                        yAxis: {
+                            max: 100,
+                            min: 0,
+                            title: { text: "Percentage Aligned" }
                         },
-                    },
-                    plotOptions: {
-                        column: {
-                            pointPadding: 0,
-                            groupPadding: 0.02,
-                            stacking: "normal"
-                        }
-                    },
-                    series: fq_screen_data
+                        tooltip: {
+                            formatter: function () {
+                                return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
+                                    this.series.name + ": " + this.y + "%<br/>" +
+                                    "Total Alignment: " + this.point.stackTotal + "%";
+                            },
+                        },
+                        plotOptions: {
+                            column: {
+                                pointPadding: 0,
+                                groupPadding: 0.02,
+                                stacking: "normal"
+                            }
+                        },
+                        series: fq_screen_dict[plot_id].data
+                    });
                 });
             });
         </script>'''

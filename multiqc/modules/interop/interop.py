@@ -1,7 +1,5 @@
 from multiqc.modules.base_module import BaseMultiqcModule
 import logging
-import os
-import csv
 from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import table

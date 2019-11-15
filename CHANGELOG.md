@@ -3,23 +3,46 @@
 ## MultiQC v1.8dev
 
 #### New Modules:
+* [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
+    * Process family size count hist data from GroupReadsByUmi
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
+* [**SeqyClean**](https://github.com/ibest/seqyclean)
+    * Adds analysis for seqyclean files
 * [**mtnucratio**](https://github.com/apeltzer/MTNucRatioCalculator)
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
+* [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
+    * Relative coverage and error rate of X and Y chromosomes
 
 #### Module updates:
 * **BBMap**
     * Added handling 'qchist' output
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
+    * Allow bcl2fastq to parse undetermined barcode information in situations when lane indexes do not start at 1
+* **BBMap**
+    * Support for scafstats output marked as not yet implemented in docs
+* **DeDup**
+    * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
     * Added writing metrics to data output file.
+* **DeepTools**
+    * Fixed Python3 bug with int() conversion ([#1057](https://github.com/ewels/MultiQC/issues/1057))
+    * Handle varied TES boundary labels in plotProfile ([#1011](https://github.com/ewels/MultiQC/issues/1011))
+    * Fixed bug that prevented running on only plotProfile files when no other deepTools files found.
 * **fastp**
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
+* **FastQC**
+    * When including a FastQC section multiple times in one report, the Per Base Sequence Content heatmaps now behave as you would expect.
+    * Added heatmap showing FastQC status checks for every section report across all samples
+* **FastQ Screen**
+    * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+* **GATK**
+    * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
+    * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **HTSeq**
@@ -28,6 +51,9 @@
     * Added support for the LongRanger Align pipeline.
 * **miRTrace**
     * Fixed bug where a sample in some plots was missed. ([#932](https://github.com/ewels/MultiQC/issues/932))
+* **Peddy**
+    * Fixed bug where sample name cleaning could lead to error. ([#1024](https://github.com/ewels/MultiQC/issues/1024))
+    * All plots (including _Het Check_ and _Sex Check_) now hidden if no data
 * **Picard**
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
@@ -35,13 +61,20 @@
 * **RNA-SeQC**
     * Updated broken URL link
 * **RSeQC**
-    * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
+    * Fixed bug where Junction Saturation plot when clicking a single sample was mislabelling the lines.
+    * When including a RSeQC section multiple times in one report, clicking Junction Saturation plot now behaves as you would expect.
+    * Fixed bug where exported data in `multiqc_rseqc_read_distribution.txt` files had incorrect values for `_kb` fields ([#1017](https://github.com/ewels/MultiQC/issues/1017))
 * **Samtools**
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
     * Increased the default summary csv file-size limit from 1MB to 5MB.
+* **TopHat**
+    * Fixed bug where TopHat would try to run with files from Bowtie2 or HiSAT2 and crash
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
+* **snpEff**
+    * Added plot of effects
+
 
 #### New MultiQC Features:
 * Added some installation docs for windows
@@ -52,12 +85,22 @@
     * New entrypoint allows easier command-line usage
 * Support opening MultiQC on websites with CSP `script-src 'self'` with some sha256 exceptions
     * Plot data is no longer intertwined with javascript code so hashes stay the same
+* Made `config.report_section_order` work for module sub-sections as well as just modules.
+* New config options `exclude_modules` and `run_modules` to complement `-e` and `-m` cli flags.
+* Command line output is now coloured by default :rainbow: (use `--no-ansi` to turn this off)
+* Better launch comparability due to code refactoring by [@KerstenBreuer](https://github.com/KerstenBreuer) and [@ewels](https://github.com/ewels)
+    * Windows support for base `multiqc` command
+    * Support for running as a python module: `python -m multiqc .`
+    * Support for running within a script: `import multiqc` and `multiqc.run('/path/to/files')`
+* Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/1044))
+* Config `table_columns_visible` can now be given a module namespace and it will hide all columns from that module ([#541](https://github.com/ewels/MultiQC/issues/541))
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
 * Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
 * Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 * Fixed matplotlib background colour issue (@epakarin - [#886](https://github.com/ewels/MultiQC/issues))
+* Table rows that are empty due to hidden columns are now properly hidden on page load ([#835](https://github.com/ewels/MultiQC/issues/835))
 
 
 

@@ -150,8 +150,9 @@ def plot (data, pconfig=None):
         if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
             try:
                 return matplotlib_linegraph(plotdata, pconfig)
-            except:
+            except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
+                logger.debug(e, exc_info=True)
                 return highcharts_linegraph(plotdata, pconfig)
         else:
             # Use MatPlotLib to generate static plots if requested

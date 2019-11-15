@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import json
 
-from multiqc import config
 from multiqc.plots import scatter
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -43,6 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.peddy_data[s_name].update(parsed_data[s_name])
                     except KeyError:
                         self.peddy_data[s_name] = parsed_data[s_name]
+
         # parse peddy CSV files
         for pattern in ['het_check', 'ped_check', 'sex_check']:
             sp_key = 'peddy/{}'.format(pattern)
@@ -53,11 +53,11 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data = self.parse_peddy_csv(f, pattern)
                 if parsed_data is not None:
                     for s_name in parsed_data:
-                        s_name = self.clean_s_name(s_name, f['root'])
                         try:
                             self.peddy_data[s_name].update(parsed_data[s_name])
                         except KeyError:
                             self.peddy_data[s_name] = parsed_data[s_name]
+
         # parse background PCA JSON file, this is identitical for all peddy runs,
         # so just parse the first one we find
         for f in self.find_log_files("peddy/background_pca"):
@@ -134,6 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                         return None
             else:
                 s_name = '-'.join([s[idx] for idx in s_name_idx])
+                s_name = self.clean_s_name(s_name, f['root'])
                 parsed_data[s_name] = dict()
                 for i, v in enumerate(s):
                     if i not in s_name_idx:
@@ -215,9 +216,12 @@ class MultiqcModule(BaseMultiqcModule):
             if 'PC1_het_check' in d and 'PC2_het_check' in d:
                 data[s_name] = {
                     'x': d['PC1_het_check'],
-                    'y': d['PC2_het_check'],
-                    'color': ancestry_colors.get(d['ancestry-prediction'], default_color)
+                    'y': d['PC2_het_check']
                 }
+                try:
+                    data[s_name]['color'] = ancestry_colors.get(d['ancestry-prediction'], default_color)
+                except KeyError:
+                    pass
 
         pconfig = {
             'id': 'peddy_pca_plot',
@@ -291,17 +295,18 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'proportion het calls',
         }
 
-        self.add_section (
-            name = 'Het Check',
-            description = "Proportion of sites that were heterozygous against median depth.",
-            helptext = """
-            A high proportion of heterozygous sites suggests contamination, a low proportion suggests consanguinity.
-            
-            See [the main peddy documentation](https://peddy.readthedocs.io/en/latest/output.html#het-check) for more details about the `het_check` command.
-            """,
-            anchor = 'peddy-hetcheck-plot',
-            plot = scatter.plot(data, pconfig)
-        )
+        if len(data) > 0:
+            self.add_section (
+                name = 'Het Check',
+                description = "Proportion of sites that were heterozygous against median depth.",
+                helptext = """
+                A high proportion of heterozygous sites suggests contamination, a low proportion suggests consanguinity.
+
+                See [the main peddy documentation](https://peddy.readthedocs.io/en/latest/output.html#het-check) for more details about the `het_check` command.
+                """,
+                anchor = 'peddy-hetcheck-plot',
+                plot = scatter.plot(data, pconfig)
+            )
 
     def peddy_sex_check_plot(self):
         data = {}
@@ -322,14 +327,15 @@ class MultiqcModule(BaseMultiqcModule):
             'categories': ["Female", "Male", "Unknown"]
         }
 
-        self.add_section(
-            name = 'Sex Check',
-            description = "Predicted sex against heterozygosity ratio",
-            helptext = """
-            Higher values of Sex Het Ratio suggests the sample is female, low values suggest male.
+        if len(data) > 0:
+            self.add_section(
+                name = 'Sex Check',
+                description = "Predicted sex against heterozygosity ratio",
+                helptext = """
+                Higher values of Sex Het Ratio suggests the sample is female, low values suggest male.
 
-            See [the main peddy documentation](http://peddy.readthedocs.io/en/latest/#sex-check) for more details about the `het_check` command.
-            """,
-            anchor='peddy-sexcheck-plot',
-            plot=scatter.plot(data, pconfig)
-        )
+                See [the main peddy documentation](http://peddy.readthedocs.io/en/latest/#sex-check) for more details about the `het_check` command.
+                """,
+                anchor='peddy-sexcheck-plot',
+                plot=scatter.plot(data, pconfig)
+            )

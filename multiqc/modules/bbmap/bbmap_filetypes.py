@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from itertools import chain
 
 from multiqc.utils import config
 

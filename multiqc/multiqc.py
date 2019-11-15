@@ -1,8 +1,12 @@
 #!/usr/bin/env python
-
-""" MultiQC: A modular tool to aggregate results from bioinformatics analyses across many samples into a single report
+# -*- coding: utf-8 -*-
 """
-
+multiqc.multiqc
+~~~~~~~~~~~~~~~~~~~~~
+The main function to run MultiQC. Sorry about the messy namespace.
+Primarily called by multiqc.__main__.py
+Imported by __init__.py so available as multiqc.run()
+"""
 from __future__ import print_function
 
 import base64
@@ -13,7 +17,6 @@ import errno
 import io
 import jinja2
 import os
-import pkg_resources
 import re
 import shutil
 import subprocess
@@ -22,16 +25,17 @@ import tempfile
 import traceback
 
 try:
-    from urllib.request import urlopen #py3
+    # Python 3 imports
+    from urllib.request import urlopen
 except ImportError:
-    from urllib2 import urlopen #py2
+    # Python 2 imports
+    from urllib2 import urlopen
     # Use UTF-8 encoding by default
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-from multiqc import __version__
-from multiqc.plots import table
-from multiqc.utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
+from .plots import table
+from .utils import report, plugin_hooks, megaqc, util_functions, lint_helpers, config, log
 logger = config.logger
 
 @click.command(
@@ -182,11 +186,98 @@ logger = config.logger
                     is_flag = True,
                     help = "Only show log warnings"
 )
-@click.version_option(__version__)
+@click.option('--no-ansi',
+                    is_flag = True,
+                    help = "Disable coloured log output"
+)
+@click.version_option(config.version, prog_name='multiqc')
 
-def multiqc(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
+def run_cli(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
-export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, **kwargs):
+export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, no_ansi, **kwargs):
+    """
+    Main MultiQC run command for use with the click command line, complete with all click function decorators.
+    To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
+    parsed variables on to a vanilla python function.
+    """
+    # Use keyword arguments in case things get rearranged in the future
+    sys_exit_code = run(
+        analysis_dir=analysis_dir,
+        dirs=dirs,
+        dirs_depth=dirs_depth,
+        no_clean_sname=no_clean_sname,
+        title=title,
+        report_comment=report_comment,
+        template=template,
+        module_tag=module_tag,
+        module=module,
+        exclude=exclude,
+        outdir=outdir,
+        ignore=ignore,
+        ignore_samples=ignore_samples,
+        sample_names=sample_names,
+        file_list=file_list,
+        filename=filename,
+        make_data_dir=make_data_dir,
+        no_data_dir=no_data_dir,
+        data_format=data_format,
+        zip_data_dir=zip_data_dir,
+        force=force,
+        ignore_symlinks=ignore_symlinks,
+        export_plots=export_plots,
+        plots_flat=plots_flat,
+        plots_interactive=plots_interactive,
+        lint=lint,
+        make_pdf=make_pdf,
+        no_megaqc_upload=no_megaqc_upload,
+        config_file=config_file,
+        cl_config=cl_config,
+        verbose=verbose,
+        quiet=quiet,
+        no_ansi=no_ansi,
+        kwargs=kwargs
+    )
+
+    # End execution using the exit code returned from MultiQC
+    sys.exit(sys_exit_code)
+
+# Main function that runs MultQC. Available to use within an interactive Python environment
+def run(
+        analysis_dir,
+        dirs = False,
+        dirs_depth = None,
+        no_clean_sname = False,
+        title = None,
+        report_comment = None,
+        template = None,
+        module_tag = (),
+        module = (),
+        exclude = (),
+        outdir = None,
+        ignore = (),
+        ignore_samples = (),
+        sample_names = None,
+        file_list = False,
+        filename = None,
+        make_data_dir = False,
+        no_data_dir = False,
+        data_format = None,
+        zip_data_dir = False,
+        force = True,
+        ignore_symlinks = False,
+        export_plots = False,
+        plots_flat = False,
+        plots_interactive = False,
+        lint = False,
+        make_pdf = False,
+        no_megaqc_upload = False,
+        config_file = (),
+        cl_config = (),
+        verbose = 0,
+        quiet = False,
+        no_ansi = False,
+        kwargs = {}
+    ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -205,7 +296,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     loglevel = log.LEVELS.get(min(verbose,1), "INFO")
     if quiet:
         loglevel = 'WARNING'
-    log.init_log(logger, loglevel=loglevel)
+    log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
     # Load config files
     plugin_hooks.mqc_trigger('before_config')
@@ -281,11 +372,19 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
         config.load_sample_names(sample_names)
     if module_tag is not None:
         config.module_tag = module_tag
+    if len(module) > 0:
+        config.run_modules = module
+    if len(exclude) > 0:
+        config.exclude_modules = exclude
     config.kwargs = kwargs # Plugin command line options
+
+    # Clean up analysis_dir if a string (interactive environment only)
+    if isinstance(config.analysis_dir, str):
+        config.analysis_dir = [ config.analysis_dir ]
 
     plugin_hooks.mqc_trigger('execution_start')
 
-    logger.info("This is MultiQC v{}".format(__version__))
+    logger.info("This is MultiQC v{}".format(config.version))
     logger.debug("Command     : {}".format(' '.join(sys.argv)))
     logger.debug("Working dir : {}".format(os.getcwd()))
     if make_pdf:
@@ -293,6 +392,13 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     logger.info("Template    : {}".format(config.template))
     if lint:
         logger.info('--lint specified. Being strict with validation.')
+
+    # Throw a warning if we are running on Python 2
+    if sys.version_info[0] < 3:
+        logger.warn("You are running MultiQC with Python {}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+        logger.warn("Please upgrade! MultiQC will soon drop support for Python < v3.5")
+    else:
+        logger.debug("Running Python {}".format(sys.version.replace("\n", ' ')))
 
     # Add files if --file-list option is given
     if file_list:
@@ -338,7 +444,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     if dirs:
         logger.info("Prepending directory to sample names")
     for d in config.analysis_dir:
-        logger.info("Searching '{}'".format(d))
+        logger.info("Searching   : {}".format(os.path.abspath(d)))
 
     # Prep module configs
     config.top_modules = [ m if type(m) is dict else {m:{}} for m in config.top_modules ]
@@ -375,18 +481,18 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     run_modules.extend( [ {m:{}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules ] )
     run_modules.extend( [ m for m in config.module_order if list(m.keys())[0] in config.avail_modules.keys() and list(m.keys())[0] not in [list(rm.keys())[0] for rm in run_modules] ] )
 
-    if module:
-        run_modules = [ m for m in run_modules if list(m.keys())[0] in module ]
-        logger.info('Only using modules {}'.format(', '.join(module)))
+    if len(getattr(config, 'run_modules', {})) > 0:
+        run_modules = [ m for m in run_modules if list(m.keys())[0] in config.run_modules ]
+        logger.info('Only using modules {}'.format(', '.join(config.run_modules)))
     elif modules_from_tags:
         run_modules = [ m for m in run_modules if list(m.keys())[0] in modules_from_tags ]
         logger.info("Only using modules with '{}' tag".format(', '.join(module_tag)))
-    if exclude:
-        logger.info("Excluding modules '{}'".format("', '".join(exclude)))
-        if 'general_stats' in exclude:
+    if len(getattr(config, 'exclude_modules', {})) > 0:
+        logger.info("Excluding modules '{}'".format("', '".join(config.exclude_modules)))
+        if 'general_stats' in config.exclude_modules:
             config.skip_generalstats = True
-            exclude = tuple(x for x in exclude if x != 'general_stats')
-        run_modules = [m for m in run_modules if list(m.keys())[0] not in exclude]
+            config.exclude_modules = tuple(x for x in config.exclude_modules if x != 'general_stats')
+        run_modules = [m for m in run_modules if list(m.keys())[0] not in config.exclude_modules]
     if len(run_modules) == 0:
         logger.critical('No analysis modules specified!')
         sys.exit(1)
@@ -498,7 +604,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
         # Exit with an error code if a module broke
         sys.exit(sys_exit_code)
 
-    # Sort the report sections if we have a config
+    # Sort the report module output if we have a config
     if len(getattr(config, 'report_section_order', {})) > 0:
         section_id_order = {}
         idx = 10
@@ -507,6 +613,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
             idx += 10
         for anchor, ss in config.report_section_order.items():
             if anchor not in section_id_order.keys():
+                logger.debug("Reordering sections: anchor '{}' not found.".format(anchor))
                 continue
             if ss.get('order') is not None:
                 section_id_order[anchor] = ss['order']
@@ -516,6 +623,38 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
                 section_id_order[anchor] = section_id_order[ss['before']] - 1
         sorted_ids = sorted(section_id_order, key=section_id_order.get)
         report.modules_output = [ mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i ]
+
+    # Sort the report sections if we have a config
+    # Basically the same as above, but sections within a module
+    if len(getattr(config, 'report_section_order', {})) > 0:
+        # Go through each module
+        for midx, mod in enumerate(report.modules_output):
+            section_id_order = {}
+            # Get a list of the section anchors
+            idx = 10
+            for s in mod.sections:
+                section_id_order[s['anchor']] = idx
+                idx += 10
+            # Go through each section to be reordered
+            for anchor, ss in config.report_section_order.items():
+                # Section to be moved is not in this module
+                if anchor not in section_id_order.keys():
+                    logger.debug("Reordering sections: anchor '{}' not found for module '{}'.".format(anchor, mod.name))
+                    continue
+                if ss == 'remove':
+                    section_id_order[anchor] = False
+                    continue
+                if ss.get('order') is not None:
+                    section_id_order[anchor] = ss['order']
+                if ss.get('after') in section_id_order.keys():
+                    section_id_order[anchor] = section_id_order[ss['after']] + 1
+                if ss.get('before') in section_id_order.keys():
+                    section_id_order[anchor] = section_id_order[ss['before']] - 1
+            # Remove module sections
+            section_id_order = { s:o for s,o in section_id_order.items() if o is not False }
+            # Sort the module sections
+            sorted_ids = sorted(section_id_order, key=section_id_order.get)
+            report.modules_output[midx].sections = [ s for i in sorted_ids for s in mod.sections if s['anchor'] == i ]
 
     plugin_hooks.mqc_trigger('after_modules')
 
@@ -733,34 +872,5 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     # Move the log file into the data directory
     log.move_tmp_log(logger)
 
-    # Exit with an error code if a module broke
-    sys.exit(sys_exit_code)
-
-
-def modify_usage_error(main_command):
-    ''' Function to modify the default click error handling.
-    Used here to tell the user about how to find additional help.
-    With thanks to this Stack Overflow answer: http://stackoverflow.com/a/43922088/713980
-    :param main_command: top-level group or command object constructed by click wrapper
-    :return: None
-    '''
-    def show(self, file=None):
-        if file is None:
-            file = click._compat.get_text_stderr()
-        color = None
-        if self.ctx is not None:
-            color = self.ctx.color
-            click.utils.echo(self.ctx.get_usage() + '\n', file=file, color=color)
-        click.utils.echo('Error: %s\n\nThis is MultiQC v{}\n\nFor more help, run \'multiqc --help\' or visit http://multiqc.info\n'.format(__version__) % self.format_message(), file=file, color=color)
-    click.exceptions.UsageError.show = show
-
-
-if __name__ == "__main__":
-    # Add any extra plugin command line options
-    for entry_point in pkg_resources.iter_entry_points('multiqc.cli_options.v1'):
-        opt_func = entry_point.load()
-        multiqc = opt_func(multiqc)
-    # Modify the default click error handling
-    modify_usage_error(multiqc)
-    # Call the main function
-    multiqc()
+    # Return the appropriate error code (eg. 1 if a module broke, 0 on success)
+    return sys_exit_code

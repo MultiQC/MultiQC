@@ -5,7 +5,6 @@
 from __future__ import print_function
 
 import logging
-from multiqc import config
 from multiqc.plots import linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 

@@ -3,10 +3,8 @@
 """ MultiQC submodule to parse output from deepTools estimateReadFiltering """
 
 import logging
-import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import table
 
 # Initialise the logger
@@ -148,9 +146,9 @@ class estimateReadFilteringMixin():
             d[s_name] = dict()
 
             try:
-                d[s_name]["total"] = int(cols[1])
-                d[s_name]["mapped"] = int(cols[2])
-                d[s_name]["blacklisted"] = int(cols[3])
+                d[s_name]["total"] = self._int(cols[1])
+                d[s_name]["mapped"] = self._int(cols[2])
+                d[s_name]["blacklisted"] = self._int(cols[3])
                 d[s_name]["filtered"] = float(cols[4])
                 d[s_name]["mapq"] = float(cols[5])
                 d[s_name]["required flags"] = float(cols[6])

@@ -7,7 +7,6 @@ import os
 from collections import OrderedDict
 import logging
 import re
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 

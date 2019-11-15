@@ -41,17 +41,18 @@ else:
 
 install_requires = [
         'click',
+        'coloredlogs',
         'future>0.14.0',
-        'lzstring',
         'jinja2>=2.9',
-        'matplotlib' + matplotlib_version,
+        'lzstring',
         'markdown',
+        'matplotlib' + matplotlib_version,
+        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
         'numpy',
         'pyyaml>=4',
         'requests',
         'simplejson',
         'spectra>=0.0.10',
-        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
     ]
 
 setup(
@@ -68,9 +69,11 @@ setup(
     packages = find_packages(),
     include_package_data = True,
     zip_safe = False,
-    scripts = ['scripts/multiqc'],
     install_requires = install_requires,
     entry_points = {
+        "console_scripts": [
+            "multiqc=multiqc.__main__:multiqc",
+        ],
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'afterqc = multiqc.modules.afterqc:MultiqcModule',
@@ -98,6 +101,7 @@ setup(
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'fgbio = multiqc.modules.fgbio:MultiqcModule',
             'flash = multiqc.modules.flash:MultiqcModule',
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
@@ -136,6 +140,8 @@ setup(
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
             'sargasso = multiqc.modules.sargasso:MultiqcModule',
+            'seqyclean = multiqc.modules.seqyclean:MultiqcModule',
+            'sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',

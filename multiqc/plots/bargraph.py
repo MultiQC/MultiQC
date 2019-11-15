@@ -120,6 +120,13 @@ def plot (data, cats = None, pconfig = None):
                 if 'name' not in cat[c]:
                     cats[idx][c]['name'] = c
 
+    # Allow user to overwrite a given category config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            if k in cats[idx].keys():
+                for kk, vv in v.items():
+                    cats[idx][k][kk] = vv
+
     # Parse the data into a chart friendly format
     plotsamples = list()
     plotdata = list()
@@ -172,8 +179,9 @@ def plot (data, cats = None, pconfig = None):
         if config.plots_force_flat or (not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries):
             try:
                 return matplotlib_bargraph(plotdata, plotsamples, pconfig)
-            except:
+            except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
+                logger.debug(e, exc_info=True)
                 return highcharts_bargraph(plotdata, plotsamples, pconfig)
         else:
             # Use MatPlotLib to generate static plots if requested

@@ -3,11 +3,9 @@
 """ MultiQC submodule to parse output from deepTools plotFingerprint """
 
 import logging
-import re
 from collections import OrderedDict
 import numpy as np
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -131,7 +129,7 @@ class plotFingerprintMixin():
                 continue
 
             for idx, c in enumerate(cols):
-                d[samples[idx]].append(int(c))
+                d[samples[idx]].append(self._int(c))
 
         # Switch to numpy, get the normalized cumsum
         x = np.linspace(0, len(d[samples[0]]) - 1, endpoint=True, num=100, dtype=int)  # The indices into the vectors that we'll actually return for plotting

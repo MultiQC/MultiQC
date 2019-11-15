@@ -24,26 +24,27 @@ MultiQC needs Python version 2.7+, 3.4+ or 3.5+.
 We recommend using virtual environments to manage your Python installation.
 Our favourite is _conda_, a cross-platform tool to manage Python environments.
 You can installation instructions for Miniconda
-[here](https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html).
+[here](https://docs.conda.io/en/latest/miniconda.html).
 
-Once conda is installed, you can create an environment with the
-following commands:
+Once conda is installed, you can create a Python environment with the following commands:
 
-```
-conda create --name py3.6 python=3.6
-source activate py3.6
-# Windows: activate py3.6
+```bash
+conda create --name py3.7 python=3.7
+conda activate py3.6
 ```
 
-You'll want to add the `source activate py3.6` line to your `.bashrc` file so
+You'll want to add the `conda activate py3.7` line to your `.bashrc` file so
 that the environment is loaded every time you load the terminal.
 
 ## Installing with conda
 If you're using `conda` as described above, you can install MultiQC from the `bioconda`
 channel as follows:
+
+```bash
+conda install -c bioconda -c conda-forge multiqc
 ```
-conda install -c bioconda multiqc
-```
+
+Please see the [Bioconda documentation](https://bioconda.github.io/user/install.html) for more details.
 
 ## Installation with pip
 This is the easiest way to install MultiQC. `pip` is the package manager for
@@ -52,32 +53,37 @@ otherwise you can find installation instructions [here](http://pip.readthedocs.o
 
 You can now install MultiQC from
 [PyPI](https://pypi.python.org/pypi/multiqc) as follows:
-```
+
+```bash
 pip install multiqc
 ```
 
 If you would like the development version, the command is:
-```
+
+```bash
 pip install git+https://github.com/ewels/MultiQC.git
 ```
 
 Note that if you have problems with read-only directories, you can install to
 your home directory with the `--user` parameter (though it's probably better
 to use virtual environments, as described above).
-```
+
+```bash
 pip install --user multiqc
 ```
 
 ## Manual installation
 If you'd rather not use either of these tools, you can clone the code and install the code yourself:
-```
+
+```bash
 git clone https://github.com/ewels/MultiQC.git
 cd MultiQC
 python setup.py install
 ```
 
 `git` not installed? No problem - just download the flat files:
-```
+
+```bash
 curl -LOk https://github.com/ewels/MultiQC/archive/master.zip
 unzip master.zip
 cd MultiQC-master
@@ -87,17 +93,20 @@ python setup.py install
 ## Updating MultiQC
 You can update MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc)
 at any time by running the following command:
-```
+
+```bash
 pip --update multiqc
 ```
 
 To update the development version, use:
-```
+
+```bash
 pip install --force git+https://github.com/ewels/MultiQC.git
 ```
 
 If you cloned the `git` repo, just pull the latest changes and install:
-```
+
+```bash
 cd MultiQC
 git pull
 python setup.py install
@@ -105,19 +114,34 @@ python setup.py install
 
 If you downloaded the flat files, just repeat the installation procedure.
 
+## Using a specific python interpreter
+If you prefer, you can also run MultiQC with a specific python interpreter.
+The command line usage and flags are then exactly the same as if you ran just `multiqc`.
+
+For example:
+
+```bash
+python -m multiqc .
+python3 -m multiqc .
+~/my_env/bin/python -m multiqc .
+```
+
+## Using with a Python script
+You can import and run MultiQC from within a Python script, using
+the `multiqc.run()` function as follows:
+
+```python
+import multiqc
+multiqc.run("/path/to/dir")
+```
+
 ## Installing on Windows
 MultiQC is has primarily been designed for us on Unix systems (Linux, Mac OSX).
 However, it _should_ work on Windows too. Indeed, automated continuous integration
 tests run using AppVeyor to check compatability at https://ci.appveyor.com/project/ewels/multiqc
 (see test config [here](https://github.com/ewels/MultiQC/blob/master/appveyor.yml)).
 
-Some users have found that running the `multiqc` command directly in Windows doesn't work
-but that using the full path to the program does work. For example:
-```
-python \path\to\python\scripts\multiqc my_data
-```
-
-Note that you may be able to avoid this by adding this directory to your `PATH`.
+Note that support for the base `multiqc` command was improved in version 1.8.
 
 
 ## Using the Docker container
@@ -154,6 +178,30 @@ The easiest and fast manner to use MutliQC is to use the [usegalaxy.org](https:/
 You can install MultiQC on your own Galaxy instance through your Galaxy admin space, searching on the [main Toolshed](https://toolshed.g2.bx.psu.edu/) for the [MultiQC repository](https://toolshed.g2.bx.psu.edu/view/iuc/multiqc/3bad335ccea9) available under the *visualization*, *statistics* and *Fastq Manipulation* sections.
 
 
+## Installing from FreeBSD
+
+If you're using FreeBSD you can install MultiQC via the FreeBSD ports system:
+
+```bash
+pkg install py36-multiqc
+```
+
+_(or `py27-multiqc`, `py37-multiqc`, or any other currently mainstream python version)._
+
+This will install a prebuilt binary using only highly-portable
+optimizations, much like `apt`, `yum`, etc.
+
+FreeBSD ports can also be built and installed from source:
+
+```bash
+cd /usr/ports/biology/py-multiqc
+make install
+```
+
+To report issues with a FreeBSD port, please submit a PR on the
+[FreeBSD bug reports page](https://www.freebsd.org/support/bugreports.html).
+For more information, visit [https://www.freebsd.org/ports/](https://www.freebsd.org/ports/index.html)
+
 ## Installing as an environment module
 Many people using MultiQC will be working on a HPC environment.
 Every server / cluster is different, and you're probably best off asking
@@ -167,7 +215,8 @@ and the script must be available on the `$PATH`.
 
 A typical installation procedure with an environment module Python install
 might look like this: _(Note that `$PYTHONPATH` must be defined before `pip` installation.)_
-```
+
+```bash
 VERSION=0.7
 INST=/path/to/software/multiqc/$VERSION
 module load python/2.7.6

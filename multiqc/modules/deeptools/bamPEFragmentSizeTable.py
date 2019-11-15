@@ -3,10 +3,8 @@
 """ MultiQC submodule to parse output from deepTools bamPEFragmentSize for summary table """
 
 import logging
-import re
 from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import table, linegraph
 
 # Initialise the logger
@@ -230,7 +228,7 @@ class bamPEFragmentSizeTableMixin():
                             continue
                         try:
                             # Most values are ac
-                            d[s_name][h] = int(cols[idx])
+                            d[s_name][h] = self._int(cols[idx])
                         except ValueError:
                             d[s_name][h] = float(cols[idx])
 

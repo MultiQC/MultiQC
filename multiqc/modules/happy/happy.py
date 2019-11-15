@@ -4,13 +4,11 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-import json
 import csv
 import logging
-import re
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table
+from multiqc.plots import table
 
 log = logging.getLogger(__name__)
 VAR_TYPES = ("INDEL", "SNP")

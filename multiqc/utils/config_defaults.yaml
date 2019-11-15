@@ -187,6 +187,7 @@ fn_clean_exts:
     - '.rpkm'
     - '.selfSM'
     - '.extendedFrags'
+    - '_SummaryStatistics'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -346,6 +347,11 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - fgbio:
+        module_tag:
+            - DNA
+            - RNA
+            - umi
     - dedup:
         module_tag:
             - DNA
@@ -378,6 +384,9 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - sexdeterrmine:
+        module_tag:
+            - DNA
     - bamtools:
         module_tag:
             - DNA
@@ -523,6 +532,11 @@ module_order:
             - DNA
             - methylation
     - flash:
+        module_tag:
+            - DNA
+            - RNA
+
+    - seqyclean:
         module_tag:
             - DNA
             - RNA

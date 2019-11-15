@@ -61,9 +61,9 @@ def parse_reports(self):
             'xmax': 100,
             'tt_label': "<strong>{point.x}% of reads</strong>: {point.y:.2f}",
             'data_labels': [
+                {'name': 'All Junctions'},
                 {'name': 'Known Junctions'},
-                {'name': 'Novel Junctions'},
-                {'name': 'All Junctions'}
+                {'name': 'Novel Junctions'}
             ],
             'cursor': 'pointer',
             'click_func': plot_single()
@@ -81,9 +81,9 @@ def parse_reports(self):
                   Click a line to see the data side by side (as in the original RSeQC plot).
                 </div><p>''',
             plot = linegraph.plot([
+                    self.junction_saturation_all,
                     self.junction_saturation_known,
-                    self.junction_saturation_novel,
-                    self.junction_saturation_all
+                    self.junction_saturation_novel
                 ], pconfig)
         )
 
@@ -93,20 +93,26 @@ def parse_reports(self):
 
 def plot_single():
     """ Return JS code required for plotting a single sample
-    RSeQC plot. Attempt to make it look as much like the original as possible. """
+    RSeQC plot. Attempt to make it look as much like the original as possible.
+    Note: this code is injected by `eval(str)`, not <script type="text/javascript"> """
 
     return """
     function(e){
+        // In case of repeated modules: #rseqc_junction_saturation_plot, #rseqc_junction_saturation_plot-1, ..
+        var rseqc_junction_saturation_plot = $(e.currentTarget).closest('.hc-plot');
+        var rseqc_junction_saturation_plot_id = rseqc_junction_saturation_plot.attr('id');
+        var junction_sat_single_hint = rseqc_junction_saturation_plot.closest('.mqc-section').find('#junction_sat_single_hint');
+
 
         // Get the three datasets for this sample
         var data = [
+            {'name': 'All Junctions'},
             {'name': 'Known Junctions'},
-            {'name': 'Novel Junctions'},
-            {'name': 'All Junctions'}
+            {'name': 'Novel Junctions'}
         ];
         var k = 0;
         for (var i = 0; i < 3; i++) {
-            var ds = mqc_plots['rseqc_junction_saturation_plot']['datasets'][i];
+            var ds = mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i];
             for (k = 0; k < ds.length; k++){
                 if(ds[k]['name'] == this.series.name){
                     data[i]['data'] = JSON.parse(JSON.stringify(ds[k]['data']));
@@ -116,7 +122,7 @@ def plot_single():
         }
 
         // Create single plot div, and hide overview
-        var newplot = '<div id="rseqc_junction_saturation_single"> \
+        var newplot = $('<div id="rseqc_junction_saturation_single"> \
             <div id="rseqc_junction_saturation_single_controls"> \
               <button class="btn btn-primary btn-sm" id="rseqc-junction_sat_single_return"> \
                 Return to overview \
@@ -131,47 +137,47 @@ def plot_single():
                 <small>loading..</small> \
               </div> \
             </div> \
-          </div>';
-        var pwrapper = $('#rseqc_junction_saturation_plot').parent().parent();
-        $(newplot).insertAfter(pwrapper).hide().slideDown();
+          </div>');
+        var pwrapper = rseqc_junction_saturation_plot.parent().parent();
+        newplot.insertAfter(pwrapper).hide().slideDown();
         pwrapper.slideUp();
-        $('#rseqc-junction_sat_single_hint').slideUp();
+        junction_sat_single_hint.slideUp();
 
         // Listener to return to overview
-        $('#rseqc-junction_sat_single_return').click(function(e){
+        newplot.find('#rseqc-junction_sat_single_return').click(function(e){
           e.preventDefault();
-          $('#rseqc_junction_saturation_single').slideUp(function(){
+          newplot.slideUp(function(){
             $(this).remove();
           });
           pwrapper.slideDown();
-          $('#rseqc-junction_sat_single_hint').slideDown();
+          junction_sat_single_hint.slideDown();
         });
 
         // Listeners for previous / next plot
-        $('.rseqc-junction_sat_single_prevnext').click(function(e){
+        newplot.find('.rseqc-junction_sat_single_prevnext').click(function(e){
           e.preventDefault();
           if($(this).data('action') == 'prev'){
             k--;
             if(k < 0){
-              k = mqc_plots['rseqc_junction_saturation_plot']['datasets'][0].length - 1;
+              k = mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][0].length - 1;
             }
           } else {
             k++;
-            if(k >= mqc_plots['rseqc_junction_saturation_plot']['datasets'][0].length){
+            if(k >= mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][0].length){
               k = 0;
             }
           }
-          hc = $('#rseqc_junction_saturation_single .hc-plot').highcharts();
+          var hc = newplot.find('.hc-plot').highcharts();
           for (var i = 0; i < 3; i++) {
-              hc.series[i].setData(mqc_plots['rseqc_junction_saturation_plot']['datasets'][i][k]['data'], false);
+              hc.series[i].setData(mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i][k]['data'], false);
           }
-          var ptitle = 'RSeQC Junction Saturation: '+mqc_plots['rseqc_junction_saturation_plot']['datasets'][0][k]['name'];
+          var ptitle = 'RSeQC Junction Saturation: '+mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][0][k]['name'];
           hc.setTitle({text: ptitle});
           hc.redraw({ duration: 200 });
         });
 
         // Plot the single data
-        $('#rseqc_junction_saturation_single .hc-plot').highcharts({
+        newplot.find('.hc-plot').highcharts({
           chart: {
             type: 'line',
             zoomType: 'x'

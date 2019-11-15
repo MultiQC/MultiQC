@@ -3,7 +3,6 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # deepTools modules
@@ -23,7 +22,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmentSizeDistributionMixin, estimateReadFilteringMixin, plotCoverageMixin, plotEnrichmentMixin, plotFingerprintMixin, plotProfileMixin, plotPCAMixin, plotCorrelationMixin):
     def __init__(self):
-        
+
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name='deepTools',
@@ -95,3 +94,9 @@ class MultiqcModule(BaseMultiqcModule, bamPEFragmentSizeTableMixin, bamPEFragmen
             log.info('Found {} total deepTools samples'.format(tot))
         else:
             raise UserWarning
+
+    def _int(self, val):
+        """ Avoids Python3 error:
+        ValueError: invalid literal for self._int() with base 10: '1.0'
+        """
+        return int(round(float(val)))

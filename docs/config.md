@@ -280,6 +280,14 @@ of samples. Hovering on a dot will highlight the same sample in other rows.
 By default, MultiQC starts using beeswarm plots when a table has 500 rows or more. This
 can be changed by setting the `max_table_rows` config option.
 
+## Coloured log output
+As of MultiQC version 1.8, log output is coloured using the [coloredlogs](https://pypi.org/project/coloredlogs/)
+Python package. The code attempts to detect if the logs on the terminal are being redirected to a file
+or piped to another tool and will disable colours if so. If the colours annoy you or you're ending
+up with weird characters in your MultiQC output, you can disable this feature with the command line
+flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the logger is initilised
+before configs are loaded.
+
 ## Command-line config
 Sometimes it's useful to specify a single small config option just once, where creating
 a config file for the occasion may be overkill. In these cases you can use the

@@ -3,11 +3,7 @@
 """ MultiQC submodule to parse output from deepTools plotPCA """
 
 import logging
-import re
-from collections import OrderedDict
-import numpy as np
 
-from multiqc import config
 from multiqc.plots import scatter
 
 # Initialise the logger
@@ -70,6 +66,6 @@ class plotPCAMixin():
                 idx = 0
                 compo = cols[0]
                 for c in cols[1:(len(cols)-1)]:
-                    d[samples[idx]][int(compo)] = float(c)
+                    d[samples[idx]][self._int(compo)] = float(c)
                     idx += 1
         return d

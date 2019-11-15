@@ -16,6 +16,7 @@ they run the program. However, it also helpfully generates a file
 called `fastqc_data.txt` which is relatively easy to parse.
 
 A typical run will produce the following files:
+
 ```
 mysample_fastqc.html
 mysample_fastqc/
@@ -26,6 +27,7 @@ mysample_fastqc/
   fastqc_report.html
   summary.txt
 ```
+
 Sometimes the directory is zipped, with just `mysample_fastqc.zip`.
 
 The FastQC MultiQC module looks for files called `fastqc_data.txt`
@@ -52,21 +54,30 @@ sp:
 > `Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.
 
 ### Theoretical GC Content
+
 It is possible to plot a dashed line showing the theoretical GC content for a
 reference genome. MultiQC comes with genome and transcriptome guides for Human
 and Mouse. You can use these in your reports by adding the following MultiQC
 config keys (see [Configuring MultiQC](http://multiqc.info/docs/#configuring-multiqc)):
+
 ```yaml
 fastqc_config:
     fastqc_theoretical_gc: 'hg38_genome'
 ```
-Only one theoretical distribution can be plotted. The following guides are available:
-`hg38_genome`, `hg38_txome`, `mm10_genome`, `mm10_txome` (txome = transcriptome).
+
+Only one theoretical distribution can be plotted.
+The following guides are available: _(txome = transcriptome)_
+
+* `hg38_genome`
+* `hg38_txome`
+* `mm10_genome`
+* `mm10_txome`
 
 Alternatively, a custom theoretical guide can be used in reports. To do this,
 create a file with `fastqc_theoretical_gc` in the filename and place it with your
 analysis files. It should be tab delimited with the following format (column 1 = %GC,
 column 2 = % of genome):
+
 ```bash
 # FastQC theoretical GC content curve: YOUR REFERENCE NAME
 0	0.005311768
@@ -94,8 +105,22 @@ sp:
 If you want to always use a specific custom file for MultiQC reports without having to
 add it to the analysis directory, add the full file path to the same MultiQC config
 variable described above:
+
 ```yaml
 fastqc_config:
     fastqc_theoretical_gc: '/path/to/your/custom_fastqc_theoretical_gc.txt'
 ```
 
+### Changing the order of sections
+
+Remember that it is possible to customise the order in which the different module sections appear
+in the report if you wish.
+See [the docs](https://multiqc.info/docs/#order-of-module-and-module-subsection-output) for more information.
+
+For example, to show the _Status Checks_ section at the top, use the following config:
+
+```yaml
+report_section_order:
+    fastqc_status_checks:
+        order: -1000
+```

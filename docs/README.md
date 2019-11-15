@@ -26,6 +26,7 @@ MultiQC Modules:
     KAT: modules/kat.md
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
+    SeqyClean: modules/seqyclean.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
@@ -54,6 +55,7 @@ MultiQC Modules:
     deepTools: modules/deeptools.md
     Disambiguate: modules/disambiguate.md
     featureCounts: modules/featureCounts.md
+    fgbio: modules/fgbio.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
     Hap.py: modules/happy.md
@@ -79,6 +81,7 @@ MultiQC Modules:
     Samblaster: modules/samblaster.md
     Samtools: modules/samtools.md
     Sargasso: modules/sargasso.md
+    SexDetErrmine: modules/sexdeterrmine.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md
