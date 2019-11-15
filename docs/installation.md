@@ -178,6 +178,30 @@ The easiest and fast manner to use MutliQC is to use the [usegalaxy.org](https:/
 You can install MultiQC on your own Galaxy instance through your Galaxy admin space, searching on the [main Toolshed](https://toolshed.g2.bx.psu.edu/) for the [MultiQC repository](https://toolshed.g2.bx.psu.edu/view/iuc/multiqc/3bad335ccea9) available under the *visualization*, *statistics* and *Fastq Manipulation* sections.
 
 
+## Installing from FreeBSD
+
+If you're using FreeBSD you can install MultiQC via the FreeBSD ports system:
+
+```bash
+pkg install py36-multiqc
+```
+
+_(or `py27-multiqc`, `py37-multiqc`, or any other currently mainstream python version)._
+
+This will install a prebuilt binary using only highly-portable
+optimizations, much like `apt`, `yum`, etc.
+
+FreeBSD ports can also be built and installed from source:
+
+```bash
+cd /usr/ports/biology/py-multiqc
+make install
+```
+
+To report issues with a FreeBSD port, please submit a PR on the
+[FreeBSD bug reports page](https://www.freebsd.org/support/bugreports.html).
+For more information, visit [https://www.freebsd.org/ports/](https://www.freebsd.org/ports/index.html)
+
 ## Installing as an environment module
 Many people using MultiQC will be working on a HPC environment.
 Every server / cluster is different, and you're probably best off asking
