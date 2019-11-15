@@ -500,6 +500,8 @@ samtools/rmdup:
     shared: true
 sargasso:
     fn: 'overall_filtering_summary.txt'
+seqyclean:
+    fn: '*_SummaryStatistics.tsv'
 sexdeterrmine:
     fn: 'sexdeterrmine.json'
 skewer:

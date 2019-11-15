@@ -8,6 +8,8 @@
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
+* [**SeqyClean**](https://github.com/ibest/seqyclean)
+    * Adds analysis for seqyclean files
 * [**mtnucratio**](https://github.com/apeltzer/MTNucRatioCalculator)
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)
@@ -20,6 +22,8 @@
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
     * Allow bcl2fastq to parse undetermined barcode information in situations when lane indexes do not start at 1
+* **BBMap**
+    * Support for scafstats output marked as not yet implemented in docs
 * **DeDup**
     * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
@@ -39,6 +43,9 @@
     * Added support for the LongRanger Align pipeline.
 * **miRTrace**
     * Fixed bug where a sample in some plots was missed. ([#932](https://github.com/ewels/MultiQC/issues/932))
+* **Peddy**
+    * Fixed bug where sample name cleaning could lead to error. ([#1024](https://github.com/ewels/MultiQC/issues/1024))
+    * All plots (including _Het Check_ and _Sex Check_) now hidden if no data
 * **Picard**
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
@@ -48,6 +55,7 @@
 * **RSeQC**
     * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
     * When including a RSeQC section multiple times in one report, clicking Junction Saturation plot now behaves as you would expect.
+    * Fixed bug where exported data in `multiqc_rseqc_read_distribution.txt` files had incorrect values for `_kb` fields ([#1017](https://github.com/ewels/MultiQC/issues/1017))
 * **Samtools**
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
@@ -74,13 +82,15 @@
     * Windows support for base `multiqc` command
     * Support for running as a python module: `python -m multiqc .`
     * Support for running within a script: `import multiqc` and `multiqc.run('/path/to/files')`
-* Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/936))
+* Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/1044))
+* Config `table_columns_visible` can now be given a module namespace and it will hide all columns from that module ([#541](https://github.com/ewels/MultiQC/issues/541))
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
 * Use `SafeLoader` for PyYaml load calls, avoiding recent warning messages.
 * Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 * Fixed matplotlib background colour issue (@epakarin - [#886](https://github.com/ewels/MultiQC/issues))
+* Table rows that are empty due to hidden columns are now properly hidden on page load ([#835](https://github.com/ewels/MultiQC/issues/835))
 
 
 

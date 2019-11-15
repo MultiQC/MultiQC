@@ -141,6 +141,7 @@ setup(
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
             'sargasso = multiqc.modules.sargasso:MultiqcModule',
+            'seqyclean = multiqc.modules.seqyclean:MultiqcModule',
             'sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',

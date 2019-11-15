@@ -192,9 +192,92 @@ logger = config.logger
 )
 @click.version_option(config.version, prog_name='multiqc')
 
-def run(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
+def run_cli(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
 ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
 export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, no_ansi, **kwargs):
+    """
+    Main MultiQC run command for use with the click command line, complete with all click function decorators.
+    To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
+    parsed variables on to a vanilla python function.
+    """
+    # Use keyword arguments in case things get rearranged in the future
+    sys_exit_code = run(
+        analysis_dir=analysis_dir,
+        dirs=dirs,
+        dirs_depth=dirs_depth,
+        no_clean_sname=no_clean_sname,
+        title=title,
+        report_comment=report_comment,
+        template=template,
+        module_tag=module_tag,
+        module=module,
+        exclude=exclude,
+        outdir=outdir,
+        ignore=ignore,
+        ignore_samples=ignore_samples,
+        sample_names=sample_names,
+        file_list=file_list,
+        filename=filename,
+        make_data_dir=make_data_dir,
+        no_data_dir=no_data_dir,
+        data_format=data_format,
+        zip_data_dir=zip_data_dir,
+        force=force,
+        ignore_symlinks=ignore_symlinks,
+        export_plots=export_plots,
+        plots_flat=plots_flat,
+        plots_interactive=plots_interactive,
+        lint=lint,
+        make_pdf=make_pdf,
+        no_megaqc_upload=no_megaqc_upload,
+        config_file=config_file,
+        cl_config=cl_config,
+        verbose=verbose,
+        quiet=quiet,
+        no_ansi=no_ansi,
+        kwargs=kwargs
+    )
+
+    # End execution using the exit code returned from MultiQC
+    sys.exit(sys_exit_code)
+
+# Main function that runs MultQC. Available to use within an interactive Python environment
+def run(
+        analysis_dir,
+        dirs = False,
+        dirs_depth = None,
+        no_clean_sname = False,
+        title = None,
+        report_comment = None,
+        template = None,
+        module_tag = (),
+        module = (),
+        exclude = (),
+        outdir = None,
+        ignore = (),
+        ignore_samples = (),
+        sample_names = None,
+        file_list = False,
+        filename = None,
+        make_data_dir = False,
+        no_data_dir = False,
+        data_format = None,
+        zip_data_dir = False,
+        force = True,
+        ignore_symlinks = False,
+        export_plots = False,
+        plots_flat = False,
+        plots_interactive = False,
+        lint = False,
+        make_pdf = False,
+        no_megaqc_upload = False,
+        config_file = (),
+        cl_config = (),
+        verbose = 0,
+        quiet = False,
+        no_ansi = False,
+        kwargs = {}
+    ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
         It searches a given directory for analysis logs and compiles a HTML report.
@@ -294,6 +377,10 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     if len(exclude) > 0:
         config.exclude_modules = exclude
     config.kwargs = kwargs # Plugin command line options
+
+    # Clean up analysis_dir if a string (interactive environment only)
+    if isinstance(config.analysis_dir, str):
+        config.analysis_dir = [ config.analysis_dir ]
 
     plugin_hooks.mqc_trigger('execution_start')
 
@@ -785,5 +872,5 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
     # Move the log file into the data directory
     log.move_tmp_log(logger)
 
-    # Exit with an error code if a module broke
-    sys.exit(sys_exit_code)
+    # Return the appropriate error code (eg. 1 if a module broke, 0 on success)
+    return sys_exit_code

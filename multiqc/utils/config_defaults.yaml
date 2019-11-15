@@ -186,6 +186,7 @@ fn_clean_exts:
     - '.rpkm'
     - '.selfSM'
     - '.extendedFrags'
+    - '_SummaryStatistics'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -534,6 +535,11 @@ module_order:
             - DNA
             - methylation
     - flash:
+        module_tag:
+            - DNA
+            - RNA
+
+    - seqyclean:
         module_tag:
             - DNA
             - RNA

@@ -11,7 +11,7 @@ $ python -m multiqc .
 from __future__ import print_function
 import click
 import pkg_resources
-import multiqc
+from . import multiqc
 
 
 def modify_usage_error(main_command):
@@ -40,4 +40,4 @@ if __name__ == "__main__" or __name__ == 'multiqc.__main__':
     # Modify the default click error handling
     modify_usage_error(multiqc)
     # Call the main function
-    multiqc.run(prog_name='multiqc')
+    multiqc.run_cli(prog_name='multiqc')

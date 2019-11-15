@@ -60,6 +60,7 @@ def make_table (dt):
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = OrderedDict()
+    t_rows_empty = OrderedDict()
     dt.raw_vals = defaultdict(lambda: dict())
     empty_cells = dict()
     hidden_cols = 1
@@ -221,6 +222,11 @@ def make_table (dt):
                         t_rows[s_name] = dict()
                     t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
 
+                # Is this cell hidden or empty?
+                if s_name not in t_rows_empty:
+                    t_rows_empty[s_name] = dict()
+                t_rows_empty[s_name][rid] = header.get('hidden', False) or str(val).strip() == ''
+
         # Remove header if we don't have any filled cells for it
         if sum([len(rows) for rows in t_rows.values()]) == 0:
             t_headers.pop(rid, None)
@@ -266,9 +272,11 @@ def make_table (dt):
             """.format(tid=table_id)
 
         # "Showing x of y columns" text
+        row_visibilities = [ all(t_rows_empty[s_name].values()) for s_name in t_rows_empty ]
+        visible_rows = [ x for x in row_visibilities if not x ]
         html += """
-        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nrows}</sup>/<sub>{nrows}</sub> rows and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns.</small>
-        """.format(tid=table_id, nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
+        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nvisrows}</sup>/<sub>{nrows}</sub> rows and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns.</small>
+        """.format(tid=table_id, nvisrows=len(visible_rows), nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
 
     # Build the table itself
     collapse_class = 'mqc-table-collapse' if len(t_rows) > 10 and config.collapse_tables else ''
@@ -288,7 +296,9 @@ def make_table (dt):
     if dt.pconfig.get('sortRows') is not False:
         t_row_keys = sorted(t_row_keys)
     for s_name in t_row_keys:
-        html += '<tr>'
+        # Hide the row if all cells are empty or hidden
+        row_hidden = ' style="display:none"' if all(t_rows_empty[s_name].values()) else  ''
+        html += '<tr{}>'.format(row_hidden)
         # Sample name row header
         html += '<th class="rowheader" data-original-sn="{sn}">{sn}</th>'.format(sn=s_name)
         for k in t_headers:
