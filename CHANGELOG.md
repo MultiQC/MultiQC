@@ -27,6 +27,10 @@
     * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
     * Added writing metrics to data output file.
+* **DeepTools**
+    * Fixed Python3 bug with int() conversion ([#1057](https://github.com/ewels/MultiQC/issues/1057))
+    * Handle varied TES boundary labels in plotProfile ([#1011](https://github.com/ewels/MultiQC/issues/1011))
+    * Fixed bug that prevented running on only plotProfile files when no other deepTools files found.
 * **fastp**
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **FastQC**
