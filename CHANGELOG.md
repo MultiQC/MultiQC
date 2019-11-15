@@ -34,6 +34,9 @@
     * Added heatmap showing FastQC status checks for every section report across all samples
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+* **GATK**
+    * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
+    * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **HTSeq**

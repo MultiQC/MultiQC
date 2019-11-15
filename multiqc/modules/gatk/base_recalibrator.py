@@ -65,66 +65,73 @@ class BaseRecalibratorMixin():
 
         sample_data = []
         data_labels = []
+
+        # Loop through the different data types
         for rt_type_name, rt_type in recal_table_type._asdict().items():
             sample_tables = self.gatk_base_recalibrator[rt_type]['quality_quantization_map']
             if len(sample_tables) == 0:
                 continue
 
-            sample_data.append({
-                sample: {int(x): int(y) for x, y in zip(table['QualityScore'], table['Count'])}
-                for sample, table in sample_tables.items()
+            count_data = {}
+            pct_data = {}
+            for sample, table in sample_tables.items():
+                count_data[sample] = {}
+                pct_data[sample] = {}
+
+                # Get the total count for this sample
+                sample_y_sum = sum( int(y) for y in table['Count'] )
+
+                # Collect the data for the plots
+                for x, y in zip(table['QualityScore'], table['Count']):
+                    # Quality score counts
+                    count_data[sample][int(x)] = int(y)
+                    # Quality score percentages
+                    try:
+                        pct_data[sample][int(x)] = float(y) / sample_y_sum
+                    except ZeroDivisionError:
+                        pct_data[sample][int(x)] = 0
+
+            # Append the datasets for this data type
+            sample_data.append(count_data)
+            sample_data.append(pct_data)
+
+            # Build data label configs for this data type
+            data_labels.append({
+                'name': "{} Count".format(rt_type_name.capitalize().replace('_', '-')),
+                'ylab': 'Count'
             })
-
-            sample_y_sums = {
-                sample: sum(int(y) for y in table['Count'])
-                for sample, table
-                in sample_tables.items()
-            }
-
-            sample_data.append({
-                sample: {
-                    int(x): float(y) / sample_y_sums[sample]
-                    for x, y in zip(table['QualityScore'], table['Count'])
-                }
-                for sample, table in sample_tables.items()
+            data_labels.append({
+                'name': "{} Percent".format(rt_type_name.capitalize().replace('_', '-')),
+                'ylab': 'Percent'
             })
-
-            flat_proportions = [float(y) / sample_y_sums[sample]
-                                for sample, table in sample_tables.items()
-                                for y in table['Count']]
-            prop_ymax = max(flat_proportions)
-            data_labels.append({'name': "{} Count".format(rt_type_name.capitalize().replace('_', '-')),
-                                'ylab': 'Count'})
-            data_labels.append({'ymax': prop_ymax,
-                                'name': "{} Percent".format(rt_type_name.capitalize().replace('_', '-')),
-                                'ylab': 'Percent'})
 
         plot = linegraph.plot(
             sample_data,
-            pconfig={
+            pconfig = {
                 'title': "Observed Quality Score Counts",
-                'id': 'gatk-base-recalibrator-quality-score-vs-number-of-observations',
+                'id': 'gatk-base-recalibrator-quality-scores-plot',
                 'xlab': 'Observed Quality Score',
                 'ylab': 'Count',
                 'xDecimals': False,
-                'data_labels': data_labels,
+                'data_labels': data_labels
             })
 
         # Reported vs empirical quality scores
         self.add_section(
-            name='Observed Quality Scores',
-            description=(
+            name = 'Observed Quality Scores',
+            anchor = 'gatk-base-recalibrator-quality-scores',
+            description = (
                 'This plot shows the distribution of base quality scores in each sample before and '
                 'after base quality score recalibration (BQSR). Applying BQSR should broaden the '
                 'distribution of base quality scores.'
             ),
-            helptext=(
+            helptext = (
                 'For more information see '
                 '[the Broad\'s description of BQSR]'
                 '(https://gatkforums.broadinstitute.org/gatk/discussion/44/base-quality-score-recalibration-bqsr)'
                 '.'
             ),
-            plot=plot,
+            plot = plot,
         )
 
 
