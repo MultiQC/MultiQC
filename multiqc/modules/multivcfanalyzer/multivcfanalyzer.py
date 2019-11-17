@@ -7,7 +7,9 @@ from collections import OrderedDict
 import logging
 import json
 
+from multiqc.plots import table
 from multiqc.plots import bargraph
+from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -21,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='MultiVCFAnalyzer', anchor='multivcfanalyzer',
         href="https://github.com/alexherbig/MultiVCFAnalyzer",
-        info="""MultiVCFAnalyzer reads multiple VCF files as produced by the GATK UnifiedGenotyper and after filtering provides the combined genotype calls in a number of formats that are suitable for follow-up analyses such as phylogenetic reconstruction, SNP effect analyses, population genetic analyses etc.""")
+        info="""combines multiple VCF files in a coherent way, can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""")
 
         # Find and load any MultiVCFAnalyzer reports
         self.mvcf_data = dict()
@@ -46,6 +48,20 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to General Statistics
         self.addSummaryMetrics()
 
+        # Add MultiVCFAnalyzer Table Section
+        self.add_section (
+        name = 'MultiVCFAnalyzer analysis results',
+        anchor = 'mvcf_table',
+        helptext = "This is the output from MultiVCFAnalyzer. Please refer to the manual here - https://github.com/alexherbig/MultiVCFAnalyzer for more information on how to interpret data.",
+        plot = self.addTable())
+        
+        # Add MultiVCFAnalyzer Barplot Section
+        self.add_section (
+        name = 'Call statistics barplot',
+        anchor = 'mvcf-barplot',
+        plot = self.addBarplot()
+        )
+
 
     def parse_data(self, f):
         try:
@@ -57,23 +73,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse JSON data to a dict
         for s_name, metrics in data.get('metrics', {}).items():
-            if (s_name == 'metadata'):
-                continue
-            
-            if (s_name == 'metrics'):
-                for sample in data['metrics'].items():
-                    s_clean = sample[0]
-                    if s_clean in self.mvcf_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+            s_clean = self.clean_s_name(s_name, f['root'])
+            if s_clean in self.mvcf_data:
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
 
-                    self.add_data_source(f, s_clean)
-                    self.mvcf_data[s_clean] = dict()
-
-                    for k, v in sample[1].items():
-                        try:
-                            self.mvcf_data[s_clean][k] = float(v)
-                        except ValueError:
-                            self.mvcf_data[s_clean][k] = v
+            self.add_data_source(f, s_clean)
+            self.mvcf_data[s_clean] = dict()           
+            for snp_prop, value in metrics.items():
+                self.mvcf_data[s_clean][snp_prop] = value
 
     #Compute % heterozygous snp alleles and add to data
     def compute_perc_hets(self):
@@ -101,17 +108,22 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True,
             'shared_key': 'snp_call'
         }
-        headers['% Hets'] = {
-            'title': 'Heterozygous SNP alleles (percent)',
+        headers['Heterozygous SNP alleles (percent)'] = {
+            'title': '% Hets',
             'description': 'Percentage of heterozygous SNP alleles',
             'scale': 'OrRd',
             'shared_key': 'snp_call'
         }
+        self.general_stats_addcols(self.mvcf_data, headers)
+
+    def addTable(self):
+        """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
+        headers = OrderedDict()
+
         headers['allPos'] = {
             'title': 'Bases in SNP Alignment',
             'description': 'Length of FASTA file in base pairs (bp)',
             'scale': 'BuPu',
-            'hidden': True,
             'shared_key': 'calls'
         }
         headers['discardedVarCall'] = {
@@ -146,7 +158,6 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Positions with No Call',
             'description': 'Number of positions with no call made as reported by GATK',
             'scale': 'BuPu',
-            'hidden': True,
             'shared_key': 'calls'
         }
         headers['coverage (fold)'] = {
@@ -159,7 +170,6 @@ class MultiqcModule(BaseMultiqcModule):
             'title': '% SNPs Covered',
             'description': 'Percent coverage of all positions with final calls',
             'scale': 'PuBuGn',
-            'hidden': True,
             'shared_key': 'coverage'
         }
         headers['unhandledGenotype'] = {
@@ -170,4 +180,60 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'snp_count'
         }
 
-        self.general_stats_addcols(self.mvcf_data, headers)
+        #Separate table config
+        table_config = {
+        'namespace': 'MultiVCFAnalyzer',                         # Name for grouping. Prepends desc and is in Config Columns modal
+        'id': 'mvcf-table',                 # ID used for the table
+        'table_title': 'MultiVCFAnalyzer Results',             # Title of the table. Used in the column config modal
+        }
+        tab = table.plot(self.mvcf_data, headers, table_config)
+        return tab
+
+
+    def addBarplot(self):
+        """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
+        cats = OrderedDict()
+        cats['SNP Calls (all)'] = {
+            'name': 'SNP Calls (all)',
+            'description': 'Total number of non-reference calls made',
+            'color': '#8bbc21'
+        }
+        cats['discardedVarCall'] = {
+            'name': 'Discarded SNP Call',
+            'description': 'Number of non-reference positions not reaching genotyping quality threshold',
+            'color': '#f7a35c'
+        }
+        cats['filteredVarCall'] = {
+            'name': 'Filtered SNP Call',
+            'description': 'Number of positions ignored defined in user-supplied filter list',
+            'scale': 'BuPu'
+        }
+        cats['refCall'] = {
+            'name': 'Number of Reference Calls',
+            'description': 'Number of reference calls made',
+            'scale': 'BuPu'
+        }
+        cats['discardedRefCall'] = {
+            'name': 'Discarded Reference Call',
+            'description': 'Number of reference positions not reaching genotyping quality threshold',
+            'scale': 'BuPu'
+        }
+        cats['noCall'] = {
+            'name': 'Positions with No Call',
+            'description': 'Number of positions with no call made as reported by GATK',
+            'scale': 'BuPu'
+        }
+
+        config = {
+        # Building the plot
+        'id': 'mvcf_barplot',                # HTML ID used for plot
+        'hide_zero_cats': True,                 # Hide categories where data for all samples is 0
+        # Customising the plot
+        'title': 'MultiVCFAnalyzer: Call Categories',                          # Plot title - should be in format "Module Name: Plot Title"
+        'ylab': 'Total # Positions',                           # X axis label
+        'xlab': None,
+        'stacking': 'normal',                   # Set to None to have category bars side by side
+        'use_legend': True,                     # Show / hide the legend
+        }
+        return bargraph.plot(self.mvcf_data, cats, config)
+        

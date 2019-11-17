@@ -15,6 +15,7 @@
 * [**mosdepth**](https://github.com/brentp/mosdepth)
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+    * combining multiple VCF files into one coherent report and format for downstream analysis.
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
 
