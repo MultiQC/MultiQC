@@ -151,7 +151,7 @@ def parse_coverage(self, f):
             median_coverage = thiscov
             break
     mean_coverage = total_cov / num_counts
-    self.general_stats_data[s_name]['mean_coverage' = mean_coverage
+    self.general_stats_data[s_name]['mean_coverage'] = mean_coverage
     self.general_stats_data[s_name]['median_coverage'] = median_coverage
 
     # Save results
