@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.compute_perc_hets()
 
         # Save data output file
-        self.write_data_file(self.mvcf_data, 'multiqc_multivcfanalyzer_metrics')
+        self.write_data_file(self.mvcf_data, 'multiqc_multivcfanalyzer')
 
         # Add to General Statistics
         self.addSummaryMetrics()
@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Parse JSON data to a dict
-        for s_name in data:
+        for s_name, metrics in data.get('metrics', {}).items():
             if (s_name == 'metadata'):
                 continue
             
@@ -79,26 +79,29 @@ class MultiqcModule(BaseMultiqcModule):
     def compute_perc_hets(self):
         """Take the parsed stats from MultiVCFAnalyzer and add one column per sample """
         for sample in self.mvcf_data:
-            self.mvcf_data[sample]['Heterozygous SNP alleles (percent)'] = (self.mvcf_data[sample]['SNP Calls (het)'] / self.mvcf_data[sample]['SNP Calls (all)'])*100
+            try:
+                self.mvcf_data[sample]['Heterozygous SNP alleles (percent)'] = (self.mvcf_data[sample]['SNP Calls (het)'] / self.mvcf_data[sample]['SNP Calls (all)'])*100
+            except ZeroDivisionError:
+                self.mvcf_data[sample]['Heterozygous SNP alleles (percent)'] = 'NA'
 
     def addSummaryMetrics(self):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the main plot """
 
         headers = OrderedDict()
         headers['SNP Calls (all)'] = {
-            'title': 'All SNP calls',
+            'title': 'SNPs',
             'description': 'Total number of non-reference calls made',
             'scale': 'OrRd',
             'shared_key': 'snp_call'
         }
         headers['SNP Calls (het)'] = {
-            'title': 'Heterozygous SNP Calls',
+            'title': 'Het SNPs',
             'description': 'Total number of non-reference calls not passing homozygosity thresholds',
             'scale': 'OrRd',
             'hidden': True,
             'shared_key': 'snp_call'
         }
-        headers['Heterozygous SNP alleles (percent)'] = {
+        headers['% Hets'] = {
             'title': 'Heterozygous SNP alleles (percent)',
             'description': 'Percentage of heterozygous SNP alleles',
             'scale': 'OrRd',
@@ -147,13 +150,13 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'calls'
         }
         headers['coverage (fold)'] = {
-            'title': 'Fold Coverage',
+            'title': 'SNP Coverage',
             'description': 'Average number of reads covering final calls',
             'scale': 'OrRd',
             'shared_key': 'coverage'
         }
         headers['coverage (percent)'] = {
-            'title': 'Percent Covered',
+            'title': '% SNPs Covered',
             'description': 'Percent coverage of all positions with final calls',
             'scale': 'PuBuGn',
             'hidden': True,
