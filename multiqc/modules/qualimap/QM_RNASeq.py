@@ -102,6 +102,9 @@ def parse_reports(self):
     self.qualimap_rnaseq_genome_results = self.ignore_samples(self.qualimap_rnaseq_genome_results)
     self.qualimap_rnaseq_cov_hist = self.ignore_samples(self.qualimap_rnaseq_cov_hist)
 
+    # Write data to file 
+    self.write_data_file(self.qualimap_rnaseq_genome_results, 'multiqc_rnaseq_genome_results')
+    self.write_data_file(self.qualimap_rnaseq_cov_hist, 'multiqc_rnaseq_cov_hist')
     #### Plots
 
     # Genomic Origin Bar Graph
