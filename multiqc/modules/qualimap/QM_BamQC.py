@@ -22,14 +22,14 @@ def parse_reports(self):
     for f in self.find_log_files('qualimap/bamqc/genome_results'):
         parse_genome_results(self, f)
     self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
-    self.write_data_file(self.qualimap_bamqc_genome_results, 'multiqc_bamqc_genome_results')
+    self.write_data_file(self.qualimap_bamqc_genome_results, 'multiqc_qualimap_bamqc_genome_results')
 
     # Coverage - coverage_histogram.txt
     self.qualimap_bamqc_coverage_hist = dict()
     for f in self.find_log_files('qualimap/bamqc/coverage', filehandles=True):
         parse_coverage(self, f)
     self.qualimap_bamqc_coverage_hist = self.ignore_samples(self.qualimap_bamqc_coverage_hist)
-    self.write_data_file(self.qualimap_bamqc_coverage_hist, 'multiqc_bamqc_coverage_hist')
+    self.write_data_file(self.qualimap_bamqc_coverage_hist, 'multiqc_qualimap_bamqc_coverage_hist')
 
 
     # Insert size - insert_size_histogram.txt
@@ -37,7 +37,7 @@ def parse_reports(self):
     for f in self.find_log_files('qualimap/bamqc/insert_size', filehandles=True):
         parse_insert_size(self, f)
     self.qualimap_bamqc_insert_size_hist = self.ignore_samples(self.qualimap_bamqc_insert_size_hist)
-    self.write_data_file(self.qualimap_bamqc_insert_size_hist, 'multiqc_bamqc_insert_size_hist')
+    self.write_data_file(self.qualimap_bamqc_insert_size_hist, 'multiqc_qualimap_bamqc_insert_size_hist')
 
 
     # GC distribution - mapped_reads_gc-content_distribution.txt
@@ -46,7 +46,7 @@ def parse_reports(self):
     for f in self.find_log_files('qualimap/bamqc/gc_dist', filehandles=True):
         parse_gc_dist(self, f)
     self.qualimap_bamqc_gc_by_species = self.ignore_samples(self.qualimap_bamqc_gc_by_species)
-    self.write_data_file(self.qualimap_bamqc_gc_by_species, 'multiqc_bamqc_gc_by_species')
+    self.write_data_file(self.qualimap_bamqc_gc_by_species, 'multiqc_qualimap_bamqc_gc_by_species')
 
     num_parsed = max(
         len(self.qualimap_bamqc_genome_results),
