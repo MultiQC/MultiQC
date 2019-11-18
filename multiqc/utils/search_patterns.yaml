@@ -446,7 +446,7 @@ quast:
     fn: 'report.tsv'
     shared: true
 rna_seqc/metrics:
-    fn: 'metrics.tsv'
+    fn: '*metrics.tsv'
     shared: true
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'

@@ -16,6 +16,8 @@
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**RNASeQC2**](https://github.com/broadinstitute/rnaseqc)
+    * New module to handle the parsing of more recent RNAseQC metric files. 
 
 #### Module updates:
 * **bcl2fastq**
