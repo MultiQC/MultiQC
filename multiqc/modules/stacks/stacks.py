@@ -250,8 +250,6 @@ class MultiqcModule(BaseMultiqcModule):
         for l in var_lines:
             if l.startswith("# Pop ID	Private	Num_Indv"):
                 headers = l.split("\t")
-            elif l.startswith("# All positions (variant and fixed)"):
-                break
             elif headers is not None:
                 cdict = OrderedDict()
                 content = l.split("\t")
