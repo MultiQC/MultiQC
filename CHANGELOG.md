@@ -106,6 +106,10 @@
 * Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 * Fixed matplotlib background colour issue (@epakarin - [#886](https://github.com/ewels/MultiQC/issues))
 * Table rows that are empty due to hidden columns are now properly hidden on page load ([#835](https://github.com/ewels/MultiQC/issues/835))
+* Sample name cleaning: All sample names are now truncated to their basename, without a path.
+  * This includes for `regex` and `replace` (before was only the default `truncate`).
+  * Only affects modules that take sample names from file contents, such as cutadapt.
+  * See [#897](https://github.com/ewels/MultiQC/issues/897) for discussion.
 
 
 
