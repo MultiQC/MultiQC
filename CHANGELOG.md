@@ -56,6 +56,9 @@
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
+* **Qualimap**
+    * Added in mean coverage computation for general statistics report
+    * Creates now tables of collected data in `multiqc_data`
 * **RNA-SeQC**
     * Updated broken URL link
 * **RSeQC**
