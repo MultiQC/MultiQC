@@ -154,7 +154,7 @@ def parse_coverage(self, f):
         self.general_stats_data[s_name]['mean_coverage'] = total_cov / num_counts
     except ZeroDivisionError:
         self.general_stats_data[s_name]['mean_coverage'] = 0
-    
+
     self.general_stats_data[s_name]['median_coverage'] = median_coverage
 
     # Save results
@@ -529,14 +529,14 @@ def general_stats_headers (self):
             'hidden': c in hidecovs
         }
     self.general_stats_headers['median_coverage'] = {
-        'title': 'Median coverage',
+        'title': 'Median cov',
         'description': 'Median coverage',
         'min': 0,
         'suffix': 'X',
         'scale': 'BuPu'
     }
     self.general_stats_headers['mean_coverage'] = {
-        'title': 'Mean coverage',
+        'title': 'Mean cov',
         'description': 'Mean coverage',
         'min': 0,
         'suffix': 'X',
