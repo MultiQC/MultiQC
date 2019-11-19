@@ -50,6 +50,15 @@ function fastqc_module(module_element, module_key) {
     var max_bp = 0;
     var current_single_plot = undefined;
 
+    // Make a lookup hash of sample names, in case we rename stuff later
+    module_element
+    orig_s_names = {}
+    for (var s_name in fastqc_seq_content[module_key]) {
+        if (Object.prototype.hasOwnProperty.call(fastqc_seq_content[module_key], s_name)) {
+            orig_s_names[s_name] = s_name
+        }
+    }
+
     // Function to plot heatmap
     function fastqc_seq_content_heatmap() {
         // Get sample names, rename and skip hidden samples
@@ -59,6 +68,7 @@ function fastqc_module(module_element, module_key) {
         var hidden_samples = 0;
         $.each(fastqc_seq_content[module_key], function(s_name, data){
             // rename sample names
+            var orig_s_name = s_name;
             var t_status = fastqc_passfails[module_key]['per_base_sequence_content'][s_name];
             $.each(window.mqc_rename_f_texts, function(idx, f_text){
                 if(window.mqc_rename_regex_mode){
@@ -68,6 +78,7 @@ function fastqc_module(module_element, module_key) {
                     s_name = s_name.replace(f_text, window.mqc_rename_t_texts[idx]);
                 }
             });
+            orig_s_names[s_name] = orig_s_name;
             sample_statuses[s_name] = t_status;
             p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
 
@@ -256,7 +267,7 @@ function fastqc_module(module_element, module_key) {
         }).popover('show');
     });
 
-    // Listener for Status higlight click
+    // Listener for Status highlight click
     module_element.find('.fastqc_passfail_progress').on('click', '.fastqc-status-highlight', function(e){
         e.preventDefault();
         // Get sample names and highlight colour
@@ -347,6 +358,7 @@ function fastqc_module(module_element, module_key) {
         // Get label from y position
         var idx = Math.floor(y/s_height);
         var s_name = sample_names[idx];
+        var orig_s_name = orig_s_names[ sample_names[idx] ];
         if(s_name === undefined){ return false; }
 
         // Show the pass/warn/fail status heading for this sample
@@ -359,11 +371,11 @@ function fastqc_module(module_element, module_key) {
 
         // Update the key with the raw data for this position
         var hover_bp = Math.max(1, Math.floor((x/c_width)*max_bp));
-        var thispoint = fastqc_seq_content[module_key][s_name][hover_bp];
+        var thispoint = fastqc_seq_content[module_key][orig_s_name][hover_bp];
         if(!thispoint){
             var nearestkey = 0;
             var guessdata = null;
-            $.each(fastqc_seq_content[module_key][s_name], function(bp, v){
+            $.each(fastqc_seq_content[module_key][orig_s_name], function(bp, v){
                 bp = parseInt(bp);
                 if(bp < hover_bp && bp > nearestkey){
                     nearestkey = bp;
@@ -403,7 +415,8 @@ function fastqc_module(module_element, module_key) {
         var y = e.pageY - pos.y;
         var idx = Math.floor(y/s_height);
         var s_name = sample_names[idx];
-        if(s_name !== undefined){
+        var orig_s_name = orig_s_names[ sample_names[idx] ];
+        if(orig_s_name !== undefined){
             plot_single_seqcontent(s_name);
         }
     });
@@ -416,17 +429,18 @@ function fastqc_module(module_element, module_key) {
         if(idx < 0){ idx = sample_names.length - 1; }
         if(idx >= sample_names.length){ idx = 0; }
         var s_name = sample_names[idx];
+        var orig_s_name = orig_s_names[ sample_names[idx] ];
         current_single_plot = s_name;
         // Prep the new plot data
         var plot_data = [[],[],[],[]];
-        var bases = Object.keys(fastqc_seq_content[module_key][s_name]).sort(function (a, b) {  return a - b;  });
+        var bases = Object.keys(fastqc_seq_content[module_key][orig_s_name]).sort(function (a, b) {  return a - b;  });
         for (i=0; i<bases.length; i++){
-            var base = fastqc_seq_content[module_key][s_name][bases[i]]['base'].toString().split('-');
+            var base = fastqc_seq_content[module_key][orig_s_name][bases[i]]['base'].toString().split('-');
             base = parseFloat(base[0]);
-            plot_data[0].push([base, fastqc_seq_content[module_key][s_name][bases[i]]['t']]);
-            plot_data[1].push([base, fastqc_seq_content[module_key][s_name][bases[i]]['c']]);
-            plot_data[2].push([base, fastqc_seq_content[module_key][s_name][bases[i]]['a']]);
-            plot_data[3].push([base, fastqc_seq_content[module_key][s_name][bases[i]]['g']]);
+            plot_data[0].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]['t']]);
+            plot_data[1].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]['c']]);
+            plot_data[2].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]['a']]);
+            plot_data[3].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]['g']]);
         }
         // Update the chart
         var hc = module_element.find('#fastqc_sequence_content_single').highcharts();
@@ -456,7 +470,8 @@ function fastqc_module(module_element, module_key) {
 
     function plot_single_seqcontent(s_name){
         current_single_plot = s_name;
-        var data = fastqc_seq_content[module_key][s_name];
+        var orig_s_name = orig_s_names[ s_name ];
+        var data = fastqc_seq_content[module_key][orig_s_name];
         var plot_data = [
             {'name': '% T', 'data':[]},
             {'name': '% C', 'data':[]},
