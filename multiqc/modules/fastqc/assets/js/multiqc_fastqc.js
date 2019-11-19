@@ -272,7 +272,7 @@ function fastqc_module(module_element, module_key) {
         e.preventDefault();
         // Get sample names and highlight colour
         var samples = $(this).parent().parent().find('.popover-content').html().split('<br>');
-        var f_col = mqc_colours[mqc_colours_idx];
+        var f_col = $('#mqc_colour_filter_color').val();
         // Add sample names to the toolbox
         for (i = 0; i < samples.length; i++) {
             var f_text = samples[i];

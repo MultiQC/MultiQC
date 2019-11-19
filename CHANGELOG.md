@@ -37,6 +37,7 @@
     * When including a FastQC section multiple times in one report, the Per Base Sequence Content heatmaps now behave as you would expect.
     * Added heatmap showing FastQC status checks for every section report across all samples
     * Made sequence content individual plots work after samples have been renamed ([#777](https://github.com/ewels/MultiQC/issues/777))
+    * Highlighting samples from status - respect chosen highlight colour in the toolbox ([#742](https://github.com/ewels/MultiQC/issues/742))
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
 * **GATK**
