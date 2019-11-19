@@ -124,7 +124,8 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Bases in SNP Alignment',
             'description': 'Length of FASTA file in base pairs (bp)',
             'scale': 'BuPu',
-            'shared_key': 'calls'
+            'shared_key': 'calls',
+            'format': '{:,.0f}'
         }
         headers['discardedVarCall'] = {
             'title': 'Discarded SNP Call',
@@ -164,13 +165,15 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'SNP Coverage',
             'description': 'Average number of reads covering final calls',
             'scale': 'OrRd',
-            'shared_key': 'coverage'
+            'shared_key': 'coverage',
+            'suffix': 'X'
         }
         headers['coverage (percent)'] = {
             'title': '% SNPs Covered',
             'description': 'Percent coverage of all positions with final calls',
             'scale': 'PuBuGn',
-            'shared_key': 'coverage'
+            'shared_key': 'coverage',
+            'suffix': '%'
         }
         headers['unhandledGenotype'] = {
             'title': 'Unhandled Genotypes',
