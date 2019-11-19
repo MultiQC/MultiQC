@@ -50,15 +50,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add MultiVCFAnalyzer Table Section
         self.add_section (
-        name = 'MultiVCFAnalyzer analysis results',
+        name = 'Summary metrics',
         anchor = 'mvcf_table',
-        helptext = "This is the output from MultiVCFAnalyzer. Please refer to the manual here - https://github.com/alexherbig/MultiVCFAnalyzer for more information on how to interpret data.",
         plot = self.addTable())
         
         # Add MultiVCFAnalyzer Barplot Section
         self.add_section (
         name = 'Call statistics barplot',
         anchor = 'mvcf-barplot',
+        helptext = """
+        MultiVCFAnalyzer has a filtering step during the merge, where SNPs of low quality are discarded.
+        This plot shows the number of SNPs that fell in to the different MultiVCFAnalyzer categories:
+
+        * _SNP Calls (all):_ Total number of non-reference calls made
+        * _Filtered SNP call:_ Number of non-reference positions not reaching genotyping quality threshold
+        * _Number of Reference Calls:_ Number of reference calls made
+        * _Discarded Reference Calls:_ Number of reference positions not reaching genotyping quality threshold
+        * _Discarded SNP Call:_ Number of non-reference positions not reaching enough coverage.
+        * _No Call:_ Number of positions with no call made as reported by GATK
+        """,
         plot = self.addBarplot()
         )
 
@@ -193,38 +203,30 @@ class MultiqcModule(BaseMultiqcModule):
         return tab
 
 
+    
     def addBarplot(self):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
         cats = OrderedDict()
+
         cats['SNP Calls (all)'] = {
             'name': 'SNP Calls (all)',
-            'description': 'Total number of non-reference calls made',
             'color': '#8bbc21'
         }
         cats['discardedVarCall'] = {
             'name': 'Discarded SNP Call',
-            'description': 'Number of non-reference positions not reaching genotyping quality threshold',
             'color': '#f7a35c'
         }
         cats['filteredVarCall'] = {
             'name': 'Filtered SNP Call',
-            'description': 'Number of positions ignored defined in user-supplied filter list',
-            'scale': 'BuPu'
         }
         cats['refCall'] = {
             'name': 'Number of Reference Calls',
-            'description': 'Number of reference calls made',
-            'scale': 'BuPu'
         }
         cats['discardedRefCall'] = {
             'name': 'Discarded Reference Call',
-            'description': 'Number of reference positions not reaching genotyping quality threshold',
-            'scale': 'BuPu'
         }
         cats['noCall'] = {
             'name': 'Positions with No Call',
-            'description': 'Number of positions with no call made as reported by GATK',
-            'scale': 'BuPu'
         }
 
         config = {
