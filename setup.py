@@ -33,10 +33,13 @@ print("""-----------------------------------
 
 """.format(version))
 
+# Set version requirements according to what version of Python we're running
+networkx_version = ''
 matplotlib_version = '>=2.1.1'
-if sys.version_info[0] == 2:
-    # Python 2 support is dropped in matplotlib version 3
+if sys.version_info[0:2] < (3, 5):
+    # MatPlotLib v3 dropped Python 2 support. Version 3.1 onwards only supports Python 3.5+
     matplotlib_version += ',<3.0.0'
+    networkx_version = '<2.3'
 else:
     # Unlike pip, setuptools install_requires will install pre-releases!
     # Matplotlib often ships these and they very often break
@@ -52,7 +55,7 @@ install_requires = [
         'lzstring',
         'markdown',
         'matplotlib' + matplotlib_version,
-        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
+        'networkx' + networkx_version,
         'numpy',
         'pyyaml>=4',
         'requests',
