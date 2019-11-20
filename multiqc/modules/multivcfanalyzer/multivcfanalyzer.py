@@ -62,10 +62,10 @@ class MultiqcModule(BaseMultiqcModule):
         MultiVCFAnalyzer has a filtering step during the merge, where SNPs of low quality are discarded.
         This plot shows the number of SNPs that fell in to the different MultiVCFAnalyzer categories:
 
-        * _SNP Calls (all):_ Total number of non-reference calls made
-        * _Filtered SNP call:_ Number of non-reference positions not reaching genotyping quality threshold
+        * _SNP Calls (all):_ Total number of non-reference homzygous and heterozygous calls made
+        * _Filtered SNP call:_ Number of non-reference positions excluded by user-supplied list.
         * _Number of Reference Calls:_ Number of reference calls made
-        * _Discarded Reference Calls:_ Number of reference positions not reaching genotyping quality threshold
+        * _Discarded Reference Calls:_ Number of reference positions not reaching genotyping or coverage thresholds
         * _Discarded SNP Call:_ Number of non-reference positions not reaching enough coverage.
         * _No Call:_ Number of positions with no call made as reported by GATK
         """,
@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['discardedVarCall'] = {
             'title': 'Discarded SNP Call',
-            'description': 'Number of non-reference positions not reaching genotyping quality threshold',
+            'description': 'Number of non-reference positions not reaching genotyping or coverage thresholds',
             'scale': 'BuPu',
             'hidden': True,
             'shared_key': 'calls'
@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'calls'
         }
         headers['refCall'] = {
-            'title': 'Number of Reference Calls',
+            'title': 'Reference Calls',
             'description': 'Number of reference calls made',
             'scale': 'BuPu',
             'hidden': True,
@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers['discardedRefCall'] = {
             'title': 'Discarded Reference Call',
-            'description': 'Number of reference positions not reaching genotyping quality threshold',
+            'description': 'Number of reference positions not reaching genotyping or coverage thresholds',
             'scale': 'BuPu',
             'hidden': True,
             'shared_key': 'calls'
@@ -209,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats = OrderedDict()
 
         cats['SNP Calls (all)'] = {
-            'name': 'SNP Calls (all)',
+            'name': 'SNP Calls',
             'color': '#8bbc21'
         }
         cats['discardedVarCall'] = {
@@ -220,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
             'name': 'Filtered SNP Call',
         }
         cats['refCall'] = {
-            'name': 'Number of Reference Calls',
+            'name': 'Reference Calls',
         }
         cats['discardedRefCall'] = {
             'name': 'Discarded Reference Call',
