@@ -37,8 +37,8 @@ if __name__ == "__main__" or __name__ == 'multiqc.__main__':
     # Add any extra plugin command line options
     for entry_point in pkg_resources.iter_entry_points('multiqc.cli_options.v1'):
         opt_func = entry_point.load()
-        multiqc = opt_func(multiqc)
+        multiqc.run_cli = opt_func(multiqc.run_cli)
     # Modify the default click error handling
-    modify_usage_error(multiqc)
+    modify_usage_error(multiqc.run_cli)
     # Call the main function
     multiqc.run_cli(prog_name='multiqc')
