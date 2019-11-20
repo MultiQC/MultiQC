@@ -33,10 +33,16 @@ print("""-----------------------------------
 
 """.format(version))
 
+matplotlib_version = '>=2.1.1'
 if sys.version_info[0] == 2:
-    matplotlib_version = '>=2.1.1,<3.0.0'
+    # Python 2 support is dropped in matplotlib version 3
+    matplotlib_version += ',<3.0.0'
 else:
-    matplotlib_version = '>=3.1.2'
+    # Unlike pip, setuptools install_requires will install pre-releases!
+    # Matplotlib often ships these and they very often break
+    # Pinning a maximum version prevents this, but can make dependency management more difficult, sorry!
+    # See: https://github.com/pypa/setuptools/issues/855
+    matplotlib_version += ',<3.1.2'
 
 install_requires = [
         'click',
