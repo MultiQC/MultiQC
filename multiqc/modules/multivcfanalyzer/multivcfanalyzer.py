@@ -68,6 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
         * _Discarded Reference Calls:_ Number of reference positions not reaching genotyping quality threshold
         * _Discarded SNP Call:_ Number of non-reference positions not reaching enough coverage.
         * _No Call:_ Number of positions with no call made as reported by GATK
+        * _Unhandled Genotypes:_ Number of positions where more than two possible alleles occured and were discarded
         """,
         plot = self.addBarplot()
         )
