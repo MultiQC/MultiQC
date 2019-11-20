@@ -36,7 +36,7 @@ print("""-----------------------------------
 # Set version requirements according to what version of Python we're running
 networkx_version = ''
 matplotlib_version = '>=2.1.1'
-if sys.version_info[0:2] < (3, 5):
+if sys.version_info[0:2] < (3, 6):
     # MatPlotLib v3 dropped Python 2 support. Version 3.1 onwards only supports Python 3.5+
     matplotlib_version += ',<3.0.0'
     networkx_version = '<2.3'
