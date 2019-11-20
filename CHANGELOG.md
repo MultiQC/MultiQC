@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## MultiQC v1.8dev
+## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
