@@ -20,7 +20,7 @@ _..nothing yet.._
 * [**mosdepth**](https://github.com/brentp/mosdepth)
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
-    * SNP filtering and SNP alignment generation of GATK UnifiedGenotyper VCF files.
+  * combining multiple VCF files into one coherent report and format for downstream analysis.
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
 
