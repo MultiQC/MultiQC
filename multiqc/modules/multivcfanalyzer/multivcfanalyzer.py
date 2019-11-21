@@ -114,10 +114,18 @@ class MultiqcModule(BaseMultiqcModule):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the main plot """
 
         headers = OrderedDict()
+
+        headers['SNP Calls (all)'] = {
+            'title': 'SNPs',
+            'description': 'Total number of non-reference calls',
+            'scale': 'RdGn',
+            'shared_key': 'snp_call'
+        }
         headers['SNP Calls (hom)'] = {
             'title': 'Hom SNPs',
             'description': 'Total number of non-reference calls passing homozygosity thresholds',
             'scale': 'RdYlGn',
+            'hidden': True,
             'shared_key': 'snp_call'
         }
         headers['SNP Calls (het)'] = {
@@ -138,11 +146,24 @@ class MultiqcModule(BaseMultiqcModule):
     def addTable(self):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
         headers = OrderedDict()
-
+        
+        headers['allPos'] = {
+            'title': 'Bases in Final Alignment',
+            'description': 'Length of FASTA file in base pairs (bp)',
+            'scale': 'BrBG',
+            'shared_key': 'calls',
+            'format': '{:,.0f}'
+        }
         headers['SNP Calls (all)'] = {
             'title': 'SNPs',
             'description': 'Total number of non-reference calls made',
             'scale': 'OrRd',
+            'shared_key': 'snp_call'
+        }
+        headers['Heterozygous SNP alleles (percent)'] = {
+            'title': '% Hets',
+            'description': 'Percentage of heterozygous SNP alleles',
+            'scale': 'PuBu',
             'shared_key': 'snp_call'
         }
         headers['SNP Calls (hom)'] = {
@@ -155,12 +176,6 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Het SNPs',
             'description': 'Total number of non-reference calls not passing homozygosity thresholds',
             'scale': 'RdYlGn',
-            'shared_key': 'snp_call'
-        }
-        headers['Heterozygous SNP alleles (percent)'] = {
-            'title': '% Hets',
-            'description': 'Percentage of heterozygous SNP alleles',
-            'scale': 'PuBu',
             'shared_key': 'snp_call'
         }
         headers['discardedVarCall'] = {
@@ -187,12 +202,6 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'YlGnBu',
             'shared_key': 'calls'
         }
-        headers['noCall'] = {
-            'title': 'Positions with No Call',
-            'description': 'Number of positions with no call made as reported by GATK',
-            'scale': 'GnBu',
-            'shared_key': 'calls'
-        }
         headers['coverage (fold)'] = {
             'title': 'Average Call Coverage',
             'description': 'Average number of reads covering final calls',
@@ -213,12 +222,11 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'BuPu',
             'shared_key': 'snp_count'
         }
-        headers['allPos'] = {
-            'title': 'Bases in Final Alignment',
-            'description': 'Length of FASTA file in base pairs (bp)',
-            'scale': 'BrBG',
-            'shared_key': 'calls',
-            'format': '{:,.0f}'
+        headers['noCall'] = {
+            'title': 'Positions with No Call',
+            'description': 'Number of positions with no call made as reported by GATK',
+            'scale': 'GnBu',
+            'shared_key': 'calls'
         }
 
         #Separate table config
@@ -250,6 +258,10 @@ class MultiqcModule(BaseMultiqcModule):
             'name': 'SNP Calls (het)',
             'color': '#5ab4ac'
         }
+        cats['refCall'] = {
+            'name': 'Reference Calls',
+            'color': '#9ebcda'
+        }
         cats['discardedVarCall'] = {
             'name': 'Discarded SNP Call',
             'color': '#f7a35c'
@@ -257,13 +269,13 @@ class MultiqcModule(BaseMultiqcModule):
         cats['filteredVarCall'] = {
             'name': 'Filtered SNP Call',
         }
-        cats['refCall'] = {
-            'name': 'Reference Calls',
-            'color': '#9ebcda'
-        }
         cats['discardedRefCall'] = {
             'name': 'Discarded Reference Call',
             'color': '#e34a33'
+        }
+        cats['unhandledGenotype'] = {
+            'name': 'Positions with an unknown Genotype Call',
+            'color': '#252525'
         }
         cats['noCall'] = {
             'name': 'Positions with No Call',

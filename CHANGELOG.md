@@ -2,7 +2,9 @@
 
 ## MultiQC v1.9dev
 
-_..nothing yet.._
+#### New Modules:
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+  * combining multiple VCF files into one coherent report and format for downstream analysis.
 
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
@@ -19,8 +21,6 @@ _..nothing yet.._
     * Added little helper tool to compute mt to nuclear ratios for NGS data.
 * [**mosdepth**](https://github.com/brentp/mosdepth)
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
-* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
-  * combining multiple VCF files into one coherent report and format for downstream analysis.
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
 
