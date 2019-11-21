@@ -3,7 +3,7 @@
 
 script-src 'self'
     # v1.8dev with support for multiple fastq modules
-    'sha256-gMm+i7J9RFrqkxWwywqwdylMa1h6M7wuN8lUGjU1yXY=' # multiqc_fastqc.js
+    'sha256-QikgYLXjlBzwXG+ymKSgvpKRMD9n0vZIOHtNOwYJjPo=' # multiqc_fastqc.js
     'sha256-pMsBH3T9O1Z2ybOWP9nXEnBjBiYNE7W0JnFTJc2udmw=' # fastq screen inline script
     'sha256-kvXmFPx65wSwMACCymANGTV/YPyA4cby1tDgjq1/138=' # multiqc_plotting.js
     'sha256-pSkR6mTLjv5YR+gLPA69aBzr+/34tLq+OtZ/ajFK+oE=' # multiqc_tables.js

@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = '1.8dev'
+version = '1.9dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -33,11 +33,19 @@ print("""-----------------------------------
 
 """.format(version))
 
+# Set version requirements according to what version of Python we're running
+networkx_version = ''
 matplotlib_version = '>=2.1.1'
-if sys.version_info[0] == 2:
+if sys.version_info[0:2] < (3, 6):
+    # MatPlotLib v3 dropped Python 2 support. Version 3.1 onwards only supports Python 3.5+
     matplotlib_version += ',<3.0.0'
+    networkx_version = '<2.3'
 else:
-    matplotlib_version += ',<3.1.0'
+    # Unlike pip, setuptools install_requires will install pre-releases!
+    # Matplotlib often ships these and they very often break
+    # Pinning a maximum version prevents this, but can make dependency management more difficult, sorry!
+    # See: https://github.com/pypa/setuptools/issues/855
+    matplotlib_version += ',<3.1.2'
 
 install_requires = [
         'click',
@@ -47,7 +55,7 @@ install_requires = [
         'lzstring',
         'markdown',
         'matplotlib' + matplotlib_version,
-        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
+        'networkx' + networkx_version,
         'numpy',
         'pyyaml>=4',
         'requests',

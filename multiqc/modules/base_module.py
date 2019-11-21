@@ -204,13 +204,17 @@ class BaseMultiqcModule(object):
         if root is None:
             root = ''
 
+        # if s_name comes from file contents, it may have a file path
+        # For consistency with other modules, we keep just the basename
+        s_name = os.path.basename(s_name)
+
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
                 if type(ext) is str:
                     ext = {'type': 'truncate', 'pattern': ext}
                 if ext['type'] == 'truncate':
-                    s_name = os.path.basename(s_name.split(ext['pattern'], 1)[0])
+                    s_name = s_name.split(ext['pattern'], 1)[0]
                 elif ext['type'] in ('remove', 'replace'):
                     if ext['type'] == 'replace':
                         logger.warning("use 'config.fn_clean_sample_names.remove' instead "

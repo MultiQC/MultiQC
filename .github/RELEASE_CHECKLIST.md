@@ -9,6 +9,7 @@ This checklist is for my own reference, as I forget the steps every time.
     ```bash
     python setup.py install
     ```
+    * This removes the commit hash from the version number when MultiQC runs
 6. Run using test data
     * Check for any command line or javascript errors
     * Check version numbers are printed correctly

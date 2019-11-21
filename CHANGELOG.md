@@ -1,6 +1,11 @@
 # MultiQC Version History
 
-## MultiQC v1.8dev
+## MultiQC v1.9dev
+
+_..nothing yet.._
+
+
+## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
@@ -29,13 +34,22 @@
     * Added handling clusterfactor and JSON logfiles
 * **damageprofiler**
     * Added writing metrics to data output file.
+* **DeepTools**
+    * Fixed Python3 bug with int() conversion ([#1057](https://github.com/ewels/MultiQC/issues/1057))
+    * Handle varied TES boundary labels in plotProfile ([#1011](https://github.com/ewels/MultiQC/issues/1011))
+    * Fixed bug that prevented running on only plotProfile files when no other deepTools files found.
 * **fastp**
     * Fix faulty column handling for the _after filtering_ Q30 rate ([#936](https://github.com/ewels/MultiQC/issues/936))
 * **FastQC**
     * When including a FastQC section multiple times in one report, the Per Base Sequence Content heatmaps now behave as you would expect.
     * Added heatmap showing FastQC status checks for every section report across all samples
+    * Made sequence content individual plots work after samples have been renamed ([#777](https://github.com/ewels/MultiQC/issues/777))
+    * Highlighting samples from status - respect chosen highlight colour in the toolbox ([#742](https://github.com/ewels/MultiQC/issues/742))
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+* **GATK**
+    * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
+    * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
 * **HTSeq**
@@ -51,16 +65,23 @@
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
+* **Qualimap**
+    * Added in mean coverage computation for general statistics report
+    * Creates now tables of collected data in `multiqc_data`
 * **RNA-SeQC**
     * Updated broken URL link
 * **RSeQC**
-    * Fixed bug where Junction Saturation plot for a single sample was mislabelling the lines.
+    * Fixed bug where Junction Saturation plot when clicking a single sample was mislabelling the lines.
     * When including a RSeQC section multiple times in one report, clicking Junction Saturation plot now behaves as you would expect.
     * Fixed bug where exported data in `multiqc_rseqc_read_distribution.txt` files had incorrect values for `_kb` fields ([#1017](https://github.com/ewels/MultiQC/issues/1017))
 * **Samtools**
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
     * Increased the default summary csv file-size limit from 1MB to 5MB.
+* **Stacks**
+    * Fixed bug where multi-population sum stats are parsed correctly ([#906](https://github.com/ewels/MultiQC/issues/906))
+* **TopHat**
+    * Fixed bug where TopHat would try to run with files from Bowtie2 or HiSAT2 and crash
 * **VCFTools**
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 * **snpEff**
@@ -92,6 +113,10 @@
 * Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 * Fixed matplotlib background colour issue (@epakarin - [#886](https://github.com/ewels/MultiQC/issues))
 * Table rows that are empty due to hidden columns are now properly hidden on page load ([#835](https://github.com/ewels/MultiQC/issues/835))
+* Sample name cleaning: All sample names are now truncated to their basename, without a path.
+  * This includes for `regex` and `replace` (before was only the default `truncate`).
+  * Only affects modules that take sample names from file contents, such as cutadapt.
+  * See [#897](https://github.com/ewels/MultiQC/issues/897) for discussion.
 
 
 
