@@ -132,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
 
         headers['allPos'] = {
-            'title': 'Bases in SNP Alignment',
+            'title': 'Bases in Final Alignment',
             'description': 'Length of FASTA file in base pairs (bp)',
             'scale': 'BuPu',
             'shared_key': 'calls',
@@ -173,14 +173,14 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'calls'
         }
         headers['coverage (fold)'] = {
-            'title': 'SNP Coverage',
+            'title': 'Average Call Coverage',
             'description': 'Average number of reads covering final calls',
             'scale': 'OrRd',
             'shared_key': 'coverage',
             'suffix': 'X'
         }
         headers['coverage (percent)'] = {
-            'title': '% SNPs Covered',
+            'title': '% Reference with Calls',
             'description': 'Percent coverage of all positions with final calls',
             'scale': 'PuBuGn',
             'shared_key': 'coverage',
