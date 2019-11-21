@@ -131,6 +131,24 @@ class MultiqcModule(BaseMultiqcModule):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
         headers = OrderedDict()
 
+        headers['SNP Calls (all)'] = {
+            'title': 'SNPs',
+            'description': 'Total number of non-reference calls made',
+            'scale': 'OrRd',
+            'shared_key': 'snp_call'
+        }
+        headers['SNP Calls (het)'] = {
+            'title': 'Het SNPs',
+            'description': 'Total number of non-reference calls not passing homozygosity thresholds',
+            'scale': 'OrRd',
+            'shared_key': 'snp_call'
+        }
+        headers['Heterozygous SNP alleles (percent)'] = {
+            'title': '% Hets',
+            'description': 'Percentage of heterozygous SNP alleles',
+            'scale': 'OrRd',
+            'shared_key': 'snp_call'
+        }
         headers['allPos'] = {
             'title': 'Bases in Final Alignment',
             'description': 'Length of FASTA file in base pairs (bp)',
@@ -142,28 +160,24 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Discarded SNP Call',
             'description': 'Number of non-reference positions not reaching genotyping or coverage thresholds',
             'scale': 'BuPu',
-            'hidden': True,
             'shared_key': 'calls'
         }
         headers['filteredVarCall'] = {
             'title': 'Filtered SNP Call',
             'description': 'Number of positions ignored defined in user-supplied filter list',
             'scale': 'BuPu',
-            'hidden': True,
             'shared_key': 'calls'
         }
         headers['refCall'] = {
             'title': 'Reference Calls',
             'description': 'Number of reference calls made',
             'scale': 'BuPu',
-            'hidden': True,
             'shared_key': 'calls'
         }
         headers['discardedRefCall'] = {
             'title': 'Discarded Reference Call',
             'description': 'Number of reference positions not reaching genotyping or coverage thresholds',
             'scale': 'BuPu',
-            'hidden': True,
             'shared_key': 'calls'
         }
         headers['noCall'] = {
@@ -190,7 +204,6 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Unhandled Genotypes',
             'description': 'Number of positions discarded due to presence of more than one alternate allele',
             'scale': 'BuPu',
-            'hidden': True,
             'shared_key': 'snp_count'
         }
 
