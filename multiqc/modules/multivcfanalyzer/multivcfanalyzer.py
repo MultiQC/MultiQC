@@ -42,6 +42,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Add in extra columns to data file
         self.compute_perc_hets()
 
+        #Add in extra stuff like Snp(hom) to data
+        self.computeSnpHom()
+
         # Save data output file
         self.write_data_file(self.mvcf_data, 'multiqc_multivcfanalyzer')
 
@@ -102,20 +105,25 @@ class MultiqcModule(BaseMultiqcModule):
             except ZeroDivisionError:
                 self.mvcf_data[sample]['Heterozygous SNP alleles (percent)'] = 'NA'
 
+    def computeSnpHom(self):
+        """ Computes snp(hom) for data present by MultiVCFAnalyzer"""
+        for sample in self.mvcf_data:
+            self.mvcf_data[sample]['SNP Calls (hom)'] = (self.mvcf_data[sample]['SNP Calls (all)'])- self.mvcf_data[sample]['SNP Calls (het)']
+
     def addSummaryMetrics(self):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the main plot """
 
         headers = OrderedDict()
-        headers['SNP Calls (all)'] = {
-            'title': 'SNPs',
-            'description': 'Total number of non-reference calls made',
-            'scale': 'OrRd',
+        headers['SNP Calls (hom)'] = {
+            'title': 'Hom SNPs',
+            'description': 'Total number of non-reference calls passing homozygosity thresholds',
+            'scale': 'RdYlGn',
             'shared_key': 'snp_call'
         }
         headers['SNP Calls (het)'] = {
             'title': 'Het SNPs',
             'description': 'Total number of non-reference calls not passing homozygosity thresholds',
-            'scale': 'OrRd',
+            'scale': 'YlGn',
             'hidden': True,
             'shared_key': 'snp_call'
         }
@@ -137,53 +145,52 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd',
             'shared_key': 'snp_call'
         }
+        headers['SNP Calls (hom)'] = {
+            'title': 'Hom SNPs',
+            'description': 'Total number of non-reference calls passing homozygosity thresholds',
+            'scale': 'RdYlGn',
+            'shared_key': 'snp_call'
+        }
         headers['SNP Calls (het)'] = {
             'title': 'Het SNPs',
             'description': 'Total number of non-reference calls not passing homozygosity thresholds',
-            'scale': 'OrRd',
+            'scale': 'RdYlGn',
             'shared_key': 'snp_call'
         }
         headers['Heterozygous SNP alleles (percent)'] = {
             'title': '% Hets',
             'description': 'Percentage of heterozygous SNP alleles',
-            'scale': 'OrRd',
+            'scale': 'PuBu',
             'shared_key': 'snp_call'
-        }
-        headers['allPos'] = {
-            'title': 'Bases in Final Alignment',
-            'description': 'Length of FASTA file in base pairs (bp)',
-            'scale': 'BuPu',
-            'shared_key': 'calls',
-            'format': '{:,.0f}'
         }
         headers['discardedVarCall'] = {
             'title': 'Discarded SNP Call',
             'description': 'Number of non-reference positions not reaching genotyping or coverage thresholds',
-            'scale': 'BuPu',
+            'scale': 'PuCr',
             'shared_key': 'calls'
         }
         headers['filteredVarCall'] = {
             'title': 'Filtered SNP Call',
             'description': 'Number of positions ignored defined in user-supplied filter list',
-            'scale': 'BuPu',
+            'scale': 'RdGy',
             'shared_key': 'calls'
         }
         headers['refCall'] = {
             'title': 'Reference Calls',
             'description': 'Number of reference calls made',
-            'scale': 'BuPu',
+            'scale': 'Spectral',
             'shared_key': 'calls'
         }
         headers['discardedRefCall'] = {
             'title': 'Discarded Reference Call',
             'description': 'Number of reference positions not reaching genotyping or coverage thresholds',
-            'scale': 'BuPu',
+            'scale': 'YlGnBu',
             'shared_key': 'calls'
         }
         headers['noCall'] = {
             'title': 'Positions with No Call',
             'description': 'Number of positions with no call made as reported by GATK',
-            'scale': 'BuPu',
+            'scale': 'GnBu',
             'shared_key': 'calls'
         }
         headers['coverage (fold)'] = {
@@ -206,6 +213,13 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'BuPu',
             'shared_key': 'snp_count'
         }
+        headers['allPos'] = {
+            'title': 'Bases in Final Alignment',
+            'description': 'Length of FASTA file in base pairs (bp)',
+            'scale': 'BrBG',
+            'shared_key': 'calls',
+            'format': '{:,.0f}'
+        }
 
         #Separate table config
         table_config = {
@@ -222,9 +236,19 @@ class MultiqcModule(BaseMultiqcModule):
         """ Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
         cats = OrderedDict()
 
-        cats['SNP Calls (all)'] = {
-            'name': 'SNP Calls',
-            'color': '#8bbc21'
+        
+    # SNP Calls (all): Green CHECK
+    # Number of Reference Calls: Blue CHECK
+    # Discarded SNP Call: Orange CHECK
+    # Discarded Reference Call: Red [if avaliable] CHECK
+    # Positions with No Call: Black CHECK
+        cats['SNP Calls (hom)'] = {
+            'name': 'SNP Calls (hom)',
+            'color': '#01665e'
+        }
+        cats['SNP Calls (het)'] = {
+            'name': 'SNP Calls (het)',
+            'color': '#5ab4ac'
         }
         cats['discardedVarCall'] = {
             'name': 'Discarded SNP Call',
@@ -235,12 +259,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
         cats['refCall'] = {
             'name': 'Reference Calls',
+            'color': '#9ebcda'
         }
         cats['discardedRefCall'] = {
             'name': 'Discarded Reference Call',
+            'color': '#e34a33'
         }
         cats['noCall'] = {
             'name': 'Positions with No Call',
+            'color': '#252525'
         }
 
         config = {
@@ -255,4 +282,7 @@ class MultiqcModule(BaseMultiqcModule):
         'use_legend': True,                     # Show / hide the legend
         }
         return bargraph.plot(self.mvcf_data, cats, config)
-        
+    
+
+
+            
