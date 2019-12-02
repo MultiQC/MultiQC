@@ -1,4 +1,4 @@
-name: "Run MultiQC - Windows"
+name: "MultiQC - Windows"
 on: [push, pull_request]
 
 jobs:
@@ -24,24 +24,19 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    # Update pip and install beautifulsoup4 for CSP checking
-    - name: Install dependencies for CI tests
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade beautifulsoup4
-
     # Install MultiQC
     - name: Install MultiQC
       run: python setup.py install
 
-    # Fetch the MultiQC test data (Windows, where reserved filenames and characters are a problem)
+    # Fetch the MultiQC test data
+    # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
     - name: Download test data
       run: |
         curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip
         7z x test_data.zip -y -o"test_data"
         dir test_data\MultiQC_TestData-master
 
-    # Run all of the tests!
+    # Run all of the tests! Remember the BACKslash path separator!
     - name: Special case input data
       run: multiqc test_data\MultiQC_TestData-master\data --ignore test_data\MultiQC_TestData-master\data\modules\
 

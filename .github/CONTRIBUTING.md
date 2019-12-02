@@ -37,7 +37,7 @@ Once you've submitted a new pull request, here's what you can expect from me:
 
 * I usually don't look at your code at all until the automated tests pass
    * The tests use example data in the [MultiQC_TestData](https://github.com/ewels/MultiQC_TestData) repository, so you'll need some files there before the PR will go any further.
-   * You can set up [Travis](https://travis-ci.org) to run the same tests on your fork really easily - just enable the repo.
+   * The tests use [GitHub actions](https://github.com/features/actions) so should also run automatically on your fork.
 * First pass - I go through and give feedback just by reading the code
 * Second pass - I download and run your code, usually more feedback
 * Merge! Once we're both happy, I merge into the main codebase.

@@ -137,11 +137,12 @@ multiqc.run("/path/to/dir")
 
 ## Installing on Windows
 MultiQC is has primarily been designed for us on Unix systems (Linux, Mac OSX).
-However, it _should_ work on Windows too. Indeed, automated continuous integration
-tests run using AppVeyor to check compatability at https://ci.appveyor.com/project/ewels/multiqc
-(see test config [here](https://github.com/ewels/MultiQC/blob/master/appveyor.yml)).
+However, it _should_ work on Windows too. Indeed, automated
+|continuous integration tests](https://github.com/ewels/MultiQC/actions)
+run using GitHub Actions to check compatibility (see test config
+[here](https://github.com/ewels/MultiQC/blob/master/.github/workflows/multiqc_windows.yml)).
 
-Note that support for the base `multiqc` command was improved in version 1.8.
+Note that support for using the base `multiqc` command was improved in MultiQC version 1.8.
 
 
 ## Using the Docker container

@@ -2,7 +2,12 @@
 
 ## MultiQC v1.9dev
 
-_..nothing yet.._
+#### New MultiQC Features
+
+* Now using [GitHub Actions](https://github.com/features/actions) for all CI testing
+    * Dropped Travis and AppVeyor, everything is now just on GitHub
+    * Still testing on both Linux and Windows, with multiple versions of Python
+    * CI tests should now run automatically for anyone who forks the MultiQC repository
 
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20

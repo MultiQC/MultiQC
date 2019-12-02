@@ -146,7 +146,7 @@ def get_filelist(run_module_names):
                             break
 
     # Go through the analysis directories and get file list
-    multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'appveyor.yml', 'setup.py', '.gitignore', '.travis.yml']
+    multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'setup.py', '.gitignore']
     for path in config.analysis_dir:
         if os.path.islink(path) and config.ignore_symlinks:
             continue
