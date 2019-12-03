@@ -23,16 +23,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.rna_seqc_metrics = dict()
         self.rna_seqc2_metrics = dict()
         for file in self.find_log_files('rna_seqc/metrics'):
-            print("-----------------------------------------------------------------------------")
-            print(file['fn'])
             self.parse_metrics_rnaseqc(file)
 
-
-        print(self.rna_seqc2_metrics)
-        print(self.rna_seqc_metrics)
         # detect if using version 2 data
         if len(self.rna_seqc2_metrics) != 0:
-            print('in seqc2')
             # Filters to strip out ignored sample names
             self.rna_seqc2_metrics = self.ignore_samples(self.rna_seqc2_metrics)
 
@@ -49,10 +43,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.strand_barplot_v2()
             self.bam_statplot()
 
-        print("in between")
         if len(self.rna_seqc_metrics) != 0:
             # Parse normalised coverage information.
-            print('in seqc1')
             self.rna_seqc_norm_high_cov = dict()
             self.rna_seqc_norm_medium_cov = dict()
             self.rna_seqc_norm_low_cov = dict()
@@ -103,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'transcript_plot_v2',
-            'title': 'RNA-SeQCv2: Transcript-associated reads',
+            'title': 'Transcript-associated reads',
             'ylab': 'Ratio of Reads',
             'cpswitch': False,
             'ymax': 1,
@@ -131,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
             'decimalPlaces': 2,
             'modify': lambda x: float(x) / 1000000.0,
         }
-        keys['Total Reads'] = dict(defaults, **{'title': 'Total # Reads'})
+        keys['Total # Reads'] = dict(defaults, **{'title': 'Total # Reads'})
         keys['Alternative Alignments'] = dict(defaults, **{'title': 'Alternative Alignments'})
         keys['Chimeric Reads'] = dict(defaults, **{'title': 'Chimeric Reads'})
         keys['Duplicate Reads'] = dict(defaults, **{'title': 'Duplicate Reads'})
@@ -167,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'strand_spec_barplot',
-            'title': 'RNA-SeQC: Strand Specificity',
+            'title': 'Strand Specificity',
             'ylab': '% Reads',
             'cpswitch_counts_label': '# Reads',
             'cpswitch_percent_label': '% Reads',
@@ -189,8 +181,8 @@ class MultiqcModule(BaseMultiqcModule):
         """
         headers = OrderedDict()
         headers['Expression Profiling Efficiency'] = {
-            'namespace': 'rna_seqc2',
-            'title': '% Expression Efficiency v2',
+            'namespace': 'RNA-SeQCv2',
+            'title': '% Expression Efficiency',
             'description': 'Expression Profiling Efficiency: Ratio of exon reads to total reads',
             'max': 100,
             'min': 0,
@@ -199,16 +191,16 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: float(x) * 100.0
         }
         headers['Genes Detected'] = {
-            'namespace': 'rna_seqc2',
-            'title': '# Genes v2',
+            'namespace': 'RNA-SeQCv2',
+            'title': '# Genes',
             'description': 'Number of genes detected with at least 5 reads.',
             'min': 0,
             'scale': 'Bu',
             'format': '{:,.0f}'
         }
         headers['rRNA Rate'] = {
-            'namespace': 'rna_seqc2',
-            'title': '% rRNA Alignment v2',
+            'namespace': 'RNA-SeQCv2',
+            'title': '% rRNA Alignment',
             'description': ' rRNA reads (non-duplicate and duplicate reads) per total reads',
             'max': 100,
             'min': 0,
@@ -232,10 +224,8 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             attempt = s[2]
             version = 1
-            print('v1')
         except IndexError:
             version = 2
-            print('v2')
 
         if version == 1:
             headers = None
@@ -268,10 +258,13 @@ class MultiqcModule(BaseMultiqcModule):
                     data[headers[i]] = s_name
                 else:
                     s = l.split('\t')
+                    if s[1] == "Total Reads":
+                        s[1] = "Total # Reads"
                     data[headers[i]] = s[1]
                 i += 1
 
             self.rna_seqc2_metrics[s_name] = data
+
 
 
     def rnaseqc_general_stats(self):
@@ -280,8 +273,8 @@ class MultiqcModule(BaseMultiqcModule):
         """
         headers = OrderedDict()
         headers['Expression Profiling Efficiency'] = {
-            'namespace': 'rna_seqcv1',
-            'title': '% Expression Efficiency v1',
+            'namespace': 'RNA-SeQCv1',
+            'title': '% Expression Efficiency',
             'description': 'Expression Profiling Efficiency: Ratio of exon reads to total reads',
             'max': 100,
             'min': 0,
@@ -290,16 +283,16 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: float(x) * 100.0
         }
         headers['Genes Detected'] = {
-            'namespace': 'rna_seqcv1',
-            'title': '# Genes v1',
+            'namespace': 'RNA-SeQCv1',
+            'title': '# Genes',
             'description': 'Number of genes detected with at least 5 reads.',
             'min': 0,
             'scale': 'Bu',
             'format': '{:,.0f}'
         }
         headers['rRNA rate'] = {
-            'title': '% rRNA Alignment v1',
-            'namespace': 'rna_seqcv1',
+            'namespace': 'RNA-SeQCv1',
+            'title': '% rRNA Alignment',
             'description': ' rRNA reads (non-duplicate and duplicate reads) per total reads',
             'max': 100,
             'min': 0,
@@ -322,7 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'transcript_plot_v1',
-            'title': 'RNA-SeQCv2: Transcript-associated reads',
+            'title': 'Transcript-associated reads',
             'ylab': 'Ratio of Reads',
             'cpswitch': False,
             'ymax': 1,
@@ -348,7 +341,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'strand_spec_v1',
-            'title': 'RNA-SeQC: Strand Specificity',
+            'title': 'Strand Specificity',
             'ylab': '% Reads',
             'cpswitch_counts_label': '# Reads',
             'cpswitch_percent_label': '% Reads',
@@ -449,7 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data is not None:
             pconfig = {
                 'id': 'plot_correlation_rnaseqc',
-                'title': 'RNA-SeQC: {} Sample Correlation'.format(corr_type)
+                'title': '{} Sample Correlation'.format(corr_type)
             }
             self.add_section (
                 name = '{} Correlation'.format(corr_type),
