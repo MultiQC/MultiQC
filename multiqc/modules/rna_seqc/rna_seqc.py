@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'transcript_plot_v2',
-            'title': 'Transcript-associated reads',
+            'title': 'RNA-SeQC: Transcript-associated reads',
             'ylab': 'Ratio of Reads',
             'cpswitch': False,
             'ymax': 1,
@@ -159,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'strand_spec_barplot',
-            'title': 'Strand Specificity',
+            'title': 'RNA-SeQC: Strand Specificity',
             'ylab': '% Reads',
             'cpswitch_counts_label': '# Reads',
             'cpswitch_percent_label': '% Reads',
@@ -315,7 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'transcript_plot_v1',
-            'title': 'Transcript-associated reads',
+            'title': 'RNA-SeQC: Transcript-associated reads',
             'ylab': 'Ratio of Reads',
             'cpswitch': False,
             'ymax': 1,
@@ -341,7 +341,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         pconfig = {
             'id': 'strand_spec_v1',
-            'title': 'Strand Specificity',
+            'title': 'RNA-SeQC: Strand Specificity',
             'ylab': '% Reads',
             'cpswitch_counts_label': '# Reads',
             'cpswitch_percent_label': '% Reads',
@@ -442,7 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data is not None:
             pconfig = {
                 'id': 'plot_correlation_rnaseqc',
-                'title': '{} Sample Correlation'.format(corr_type)
+                'title': 'RNA-SeQC: {} Sample Correlation'.format(corr_type)
             }
             self.add_section (
                 name = '{} Correlation'.format(corr_type),
