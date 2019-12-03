@@ -246,6 +246,8 @@ class MultiqcModule(BaseMultiqcModule):
             # handle header creation (get first column from the file).
             for l in f['f'].splitlines():
                 s = l.split('\t')
+                if s[0] == "Total Reads":
+                    s[0] = "Total # Reads"
                 headers.append(s[0])
 
             # sample name
@@ -258,8 +260,6 @@ class MultiqcModule(BaseMultiqcModule):
                     data[headers[i]] = s_name
                 else:
                     s = l.split('\t')
-                    if s[1] == "Total Reads":
-                        s[1] = "Total # Reads"
                     data[headers[i]] = s[1]
                 i += 1
 
