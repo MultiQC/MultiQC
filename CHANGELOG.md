@@ -9,9 +9,10 @@
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
     
-#### Bug Fixes
- 
-* Fixes misleading value suffix in general stats table for MTNucRatioCalculator
+#### Module updates:
+
+* **MTNucRatioCalculator**
+    * Fixed misleading value suffix in general stats table
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
