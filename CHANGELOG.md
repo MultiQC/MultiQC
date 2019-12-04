@@ -11,7 +11,7 @@
     
 #### Bug Fixes
  
-* Fixes misleading value suffix for MTNucRatioCalculator
+* Fixes misleading value suffix in general stats table for MTNucRatioCalculator
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
