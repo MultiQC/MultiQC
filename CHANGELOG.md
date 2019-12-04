@@ -8,7 +8,10 @@
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
-
+    
+#### Bug Fixes
+ 
+* Fixes misleading value suffix for MTNucRatioCalculator
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
