@@ -89,11 +89,10 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True
         }
         headers['mt_nuc_ratio'] = {
-            'title': '% MTNUC',
+            'title': 'MT to Nuclear Ratio',
             'description': 'Mitochondrial to nuclear reads ratio (MTNUC)',
             'min': 0,
             'max': 100,
-            'suffix': '%',
             'scale': 'RdYlGrn-rev',
         }
         headers['nucreads'] = {
