@@ -32,33 +32,33 @@ it ideal for routine fast quality control.
 Currently, supported tools include:
 
 
-|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing   | Post-alignment QC                    |
-|---------------------------------|-------------------------|-----------------------------|--------------------------------------|
-|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]         |[biobambam2][biobambam2]              |
-|[AfterQC][afterqc]               |[BISCUIT][biscuit]       |[Bcftools][bcftools]         |[BUSCO][busco]                        |
-|[Bcl2fastq][bcl2fastq]           |[Bismark][bismark]       |[GATK][gatk]                 |[Conpair][conpair]                    |
-|[BBTools][bbmap]                 |[Bowtie][bowtie-1]       |[HOMER][homer]               |[DamageProfiler][damageprofiler]      |
-|[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]     |[HTSeq][htseq]               |[DeDup][dedup]                        |
-|[ClipAndMerge][clipandmerge]     |[HiCUP][hicup]           |[MACS2][macs2]               |[deepTools][deeptools]                |
-|[Cluster Flow][clusterflow]      |[HiC-Pro][hicpro]        |[Picard][picard]             |[Disambiguate][disambiguate]          |
-|[Cutadapt][cutadapt]             |[HISAT2][hisat2]         |[Prokka][prokka]             |[goleft][goleft]                      |
-|[leeHom][leehom]                 |[Kallisto][kallisto]     |[RSEM][rsem]                 |[HiCExplorer][hicexplorer]            |
-|[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]     |[methylQA][methylqa]                  |
-|[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[miRTrace][mirtrace]                  |
-|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]                  |
-|[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
-|[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
-|[FLASh][flash]                   |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |                             |[QoRTs][qorts]                        |
-|[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
-|[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
-|[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
-|[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
-|[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
-|[SeqyClean][seqyclean]           |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
-|                                 |                         |                             |[Supernova][supernova]                |
-|                                 |                         |                             |[VCFTools][vcftools]                  |
-|                                 |                         |                             |[VerifyBAMID][verifybamid]            |
+| Read QC & pre-processing          | Aligners / quantifiers    | Post-alignment processing              | Post-alignment QC                            |
+|-----------------------------------|---------------------------|----------------------------------------|----------------------------------------------|
+| [Adapter Removal][adapterremoval] | [BBMap][bbmap]            | [Bamtools][bamtools]                   | [biobambam2][biobambam2]                     |
+| [AfterQC][afterqc]                | [BISCUIT][biscuit]        | [Bcftools][bcftools]                   | [BUSCO][busco]                               |
+| [Bcl2fastq][bcl2fastq]            | [Bismark][bismark]        | [GATK][gatk]                           | [Conpair][conpair]                           |
+| [BBTools][bbmap]                  | [Bowtie][bowtie-1]        | [HOMER][homer]                         | [DamageProfiler][damageprofiler]             |
+| [BioBloom Tools][biobloomtools]   | [Bowtie 2][bowtie-2]      | [HTSeq][htseq]                         | [DeDup][dedup]                               |
+| [ClipAndMerge][clipandmerge]      | [HiCUP][hicup]            | [MACS2][macs2]                         | [deepTools][deeptools]                       |
+| [Cluster Flow][clusterflow]       | [HiC-Pro][hicpro]         | [Picard][picard]                       | [Disambiguate][disambiguate]                 |
+| [Cutadapt][cutadapt]              | [HISAT2][hisat2]          | [Prokka][prokka]                       | [goleft][goleft]                             |
+| [leeHom][leehom]                  | [Kallisto][kallisto]      | [RSEM][rsem]                           | [HiCExplorer][hicexplorer]                   |
+| [InterOp][interop]                | [Long Ranger][longranger] | [Samblaster][samblaster]               | [methylQA][methylqa]                         |
+| [FastQC][fastqc]                  | [Salmon][salmon]          | [Samtools][samtools]                   | [miRTrace][mirtrace]                         |
+| [FastQ Screen][fastq-screen]      | [Slamdunk][slamdunk]      | [SnpEff][snpeff]                       | [mosdepth][mosdepth]                         |
+| [Fastp][fastp]                    | [STAR][star]              | [Subread featureCounts][featurecounts] | [Peddy][peddy]                               |
+| [fgbio][fgbio]                    | [Tophat][tophat]          | [Stacks][stacks]                       | [phantompeakqualtools][phantompeakqualtools] |
+| [FLASh][flash]                    |                           | [THetA2][theta2]                       | [Preseq][preseq]                             |
+| [Flexbar][flexbar]                |                           |                                        | [QoRTs][qorts]                               |
+| [Jellyfish][jellyfish]            |                           |                                        | [Qualimap][qualimap]                         |
+| [KAT][kat]                        |                           |                                        | [QUAST][quast]                               |
+| [MinIONQC][minionqc]              |                           |                                        | [RNA-SeQC][rna_seqc]                         |
+| [pycoQC][pycoqc]                  |                           |                                        | [RSeQC][rseqc]                               |
+| [Skewer][skewer]                  |                           |                                        | [Sargasso][sargasso]                         |
+| [SortMeRNA][sortmerna]            |                           |                                        | [Sex.DetERRmine][sexdeterrmine]              |
+| [SeqyClean][seqyclean]            |                           |                                        | [Supernova][supernova]                       |
+|                                   |                           |                                        | [VCFTools][vcftools]                         |
+|                                   |                           |                                        | [VerifyBAMID][verifybamid]                   |
 
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
@@ -190,6 +190,7 @@ Code contributions from:
 [@winni2k](https://github.com/winni2k),
 [@wkretzsch](https://github.com/wkretzsch),
 [@nservant](https://github.com/nservant),
+[@ssjunnebo](https://github.com/ssjunnebo),
 
 and many others. Thanks for your support!
 
