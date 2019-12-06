@@ -426,7 +426,7 @@ prokka:
     contents: 'contigs:'
     num_lines: 2
 pycoqc:
-    contents: 'pycoqc'
+    contents: '"pycoqc":'
     num_lines: 2
 qorts:
     contents: 'BENCHMARK_MinutesOnSamIteration'
