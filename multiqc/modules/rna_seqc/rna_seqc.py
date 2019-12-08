@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
             'decimalPlaces': 2,
             'modify': lambda x: float(x) / 1000000.0,
         }
-        keys['Total # Reads'] = dict(defaults, **{'title': 'Total # Reads'})
+        keys['Total Read Number'] = dict(defaults, **{'title': 'Total Read Number'})
         keys['Alternative Alignments'] = dict(defaults, **{'title': 'Alternative Alignments'})
         keys['Chimeric Reads'] = dict(defaults, **{'title': 'Chimeric Reads'})
         keys['Duplicate Reads'] = dict(defaults, **{'title': 'Duplicate Reads'})
@@ -247,7 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
             for l in f['f'].splitlines():
                 s = l.split('\t')
                 if s[0] == "Total Reads":
-                    s[0] = "Total # Reads"
+                    s[0] = "Total Read Number"
                 headers.append(s[0])
 
             # sample name
