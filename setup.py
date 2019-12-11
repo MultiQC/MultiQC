@@ -124,6 +124,7 @@ setup(
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
             'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
+            'indexhopping = multiqc.modules.indexhopping:MultiqcModule',
             'interop = multiqc.modules.interop:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
