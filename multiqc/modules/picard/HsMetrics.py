@@ -204,12 +204,6 @@ def _clean_table(data):
     data_table = defaultdict(dict)
     for s in data:
         for h in data[s]:
-            if h.startswith("PCT"):
-                continue
-            if h.startswith("HS"):
-                continue
-            if h == "GENOME_SIZE":
-                continue
             data_table[s][h] = data[s][h]
     return data_table
 
