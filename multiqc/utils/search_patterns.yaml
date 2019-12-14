@@ -244,6 +244,40 @@ deeptools/plotPCAData:
 deeptools/plotProfile:
     contents: 'bin labels'
     num_lines: 1
+
+dragen/fragment_length_hist:
+    fn: "*.fragment_length_hist.csv"
+dragen/insert_stats:
+    fn: "*.insert-stats.tab"
+dragen/mapping_metrics:
+    fn: "*.mapping_metrics.csv"
+dragen/ploidy_estimation_metrics:
+    fn: "*.ploidy_estimation_metrics.csv"
+dragen/time_metrics:
+    fn: "*.time_metrics.csv"
+dragen/vc_metrics:
+    fn: "*.vc_metrics.csv"
+dragen/wgs_contig_mean_cov_normal:
+    fn: "*.wgs_contig_mean_cov_normal.csv"
+dragen/wgs_contig_mean_cov_tumor:
+    fn: "*.wgs_contig_mean_cov_tumor.csv"
+dragen/wgs_coverage_metrics_normal:
+    fn: "*.wgs_coverage_metrics_normal.csv"
+dragen/wgs_coverage_metrics_tumor:
+    fn: "*.wgs_coverage_metrics_tumor.csv"
+dragen/wgs_fine_hist_normal:
+    fn: "*.wgs_fine_hist_normal.csv"
+dragen/wgs_fine_hist_tumor:
+    fn: "*.wgs_fine_hist_tumor.csv"
+dragen/wgs_hist_normal:
+    fn: "*.wgs_hist_normal.csv"
+dragen/wgs_hist_tumor:
+    fn: "*.wgs_hist_tumor.csv"
+dragen/wgs_overall_mean_cov_normal:
+    fn: "*.wgs_overall_mean_cov_normal.csv"
+dragen/wgs_overall_mean_cov_tumor:
+    fn: "*.wgs_overall_mean_cov_tumor.csv"
+
 fastp:
     fn: '*fastp.json'
 fastq_screen:

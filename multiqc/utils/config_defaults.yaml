@@ -25,9 +25,9 @@ pandoc_template: null
 read_count_multiplier: 0.000001
 read_count_prefix: 'M'
 read_count_desc: 'millions'
-base_count_multiplier: 0.000001
-base_count_prefix: 'Mb'
-base_count_desc: 'millions'
+base_count_multiplier: 0.000000001
+base_count_prefix: 'Gb'
+base_count_desc: 'billions'
 output_fn_name: 'multiqc_report.html'
 data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
