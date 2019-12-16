@@ -1,39 +1,17 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from collections import OrderedDict, defaultdict
-import logging
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, beeswarm
 
 # Initialise the logger
-from multiqc.plots import bargraph, beeswarm
+import logging
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule):
-    """ Dragen has a number of different pipelines and outputs.
-    This MultiQC module supports some but not all. The code for
-    each script is split into its own file and adds a section to
-    the module output if logs are found. """
-
-    def __init__(self):
-        super(MultiqcModule, self).__init__(
-            name='Dragen', anchor='Dragen', target='Dragen',
-            href='https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html',
-            info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
-                  " using field-programmable gate array technology (FPGA)."))
-
-        # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
-        self.general_stats_data = dict()
-
-        self.add_mapping_metrics()
-
-        # # Exit if we didn't find anything
-        # if len(self.general_stats_data) == 0:
-        #     raise UserWarning
-
-    def add_mapping_metrics(self):
+class DragenMappingMetics(BaseMultiqcModule):
+    def parse_mapping_metrics(self):
         all_data_by_sample = dict()
         general_info_by_sample_by_id = defaultdict(dict)
 
@@ -69,8 +47,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(all_data_by_sample, headers, 'Mapping metrics')
         # Make bargraph plots of mapped, dupped and paired reads
-        self.map_dup_read_chart(all_data_by_sample)
-        self.map_pair_read_chart(all_data_by_sample)
+        self.__map_dup_read_chart(all_data_by_sample)
+        self.__map_pair_read_chart(all_data_by_sample)
 
         self.add_section(
             name='Mapping metrics',
@@ -79,8 +57,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot=beeswarm.plot(all_data_by_sample, beeswarm_keys, {'id': 'dragen-mapping-metrics-dp'})
         )
 
-    def map_dup_read_chart(self, data_by_sample):
-        chart_data = {}
+    def __map_dup_read_chart(self, data_by_sample):
+        chart_data = dict()
         for sample_id, data in data_by_sample.items():
             if data['Number of unique & mapped reads (excl. duplicate marked reads)']\
                     + data['Number of duplicate marked reads']\
@@ -89,11 +67,11 @@ class MultiqcModule(BaseMultiqcModule):
                             "skipping mapping/duplicates percentages plot for: {}".format(sample_id))
             else:
                 chart_data[sample_id] = data
-        self.add_section (
-            name = 'Mapped and duplicates percentages',
-            anchor = 'dragen-mapping-dup-percentage',
-            description = "Mapping and duplicate reads from Dragen: uniqly mapped vs. duplicate vs. unmapped reads.",
-            plot = bargraph.plot(chart_data, {
+        self.add_section(
+            name='Mapped and duplicates percentages',
+            anchor='dragen-mapping-dup-percentage',
+            description='Mapping and duplicate reads from Dragen: uniqly mapped vs. duplicate vs. unmapped reads.',
+            plot=bargraph.plot(chart_data, {
                 'Number of unique & mapped reads (excl. duplicate marked reads)': {'color': '#437bb1', 'name': 'Mapped'},
                 'Number of duplicate marked reads':                               {'color': '#f5a742', 'name': 'Duplicated'},
                 'Unmapped reads':                                                 {'color': '#b1084c', 'name': 'Unmapped'},
@@ -105,8 +83,8 @@ class MultiqcModule(BaseMultiqcModule):
             })
         )
 
-    def map_pair_read_chart(self, data_by_sample):
-        chart_data = {}
+    def __map_pair_read_chart(self, data_by_sample):
+        chart_data = dict()
         for sample_id, data in data_by_sample.items():
             if data['Not properly paired reads (discordant)'] + data['Properly paired reads']\
                     + data['Singleton reads (itself mapped; mate unmapped)']\
@@ -115,11 +93,11 @@ class MultiqcModule(BaseMultiqcModule):
                             "skipping mapping/paired percentages plot for: {}".format(sample_id))
             else:
                 chart_data[sample_id] = data
-        self.add_section (
-            name = 'Mapped and paired percentages',
-            anchor = 'dragen-mapping-paired-percentage',
-            description = "Mapping and pairing read metrics from Dragen: properly paired vs. discordant vs. unpaired vs. unmapped reads.",
-            plot = bargraph.plot(chart_data, {
+        self.add_section(
+            name='Mapped and paired percentages',
+            anchor='dragen-mapping-paired-percentage',
+            description="Mapping and pairing read metrics from Dragen: properly paired vs. discordant vs. unpaired vs. unmapped reads.",
+            plot=bargraph.plot(chart_data, {
                 'Properly paired reads':                             {'color': '#00cc00', 'name': 'Paired, properly'},
                 'Not properly paired reads (discordant)':            {'color': '#ff9900', 'name': 'Paired, discordant'},
                 'Singleton reads (itself mapped; mate unmapped)':    {'color': '#ff33cc', 'name': 'Singleton'},
@@ -335,7 +313,7 @@ mapping_metrics = [
     ('Q30 bases'                                              , 'Q30'                        , '%',  'bases', True,  'Number of bases with quality above 30, {}'),
     ('Q30 bases R1'                                           , 'Q30 R1'                     , None, 'bases', False, 'Number of bases with quality above 30 on R1 reads, {}'),
     ('Q30 bases R2'                                           , 'Q30 R2'                     , None, 'bases', False, 'Number of bases with quality above 30 on R2 reads, {}'),
-    ('Q30 bases (excl. dups & clipped bases)'                 , 'Q30 excl dup & clipped'     , '%',  'bases', True,  'Number of bases with quality above 30, excluding duplicated reads & clipped bases, {}'),
+    ('Q30 bases (excl. dups & clipped bases)'                 , 'Q30 excl dup & clipped'     , None, 'bases', True,  'Number of bases with quality above 30, excluding duplicated reads & clipped bases, {}'),
     # General metrics. Showing only when general metrics are different for different samples, otherwise showing in the header
     ('Bases in reference genome'                              , 'Bases in ref. genome'       , '#',  'bases', False, 'Bases in reference genome'              ),
     ('Bases in target bed [% of genome]'                      , 'Bases in target bed'        , '#',  '%'    , False, 'Bases in target bed [% of genome]'      ),
