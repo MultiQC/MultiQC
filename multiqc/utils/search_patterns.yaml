@@ -247,8 +247,6 @@ deeptools/plotProfile:
 
 dragen/fragment_length_hist:
     fn: "*.fragment_length_hist.csv"
-dragen/insert_stats:
-    fn: "*.insert-stats.tab"
 dragen/mapping_metrics:
     fn: "*.mapping_metrics.csv"
 dragen/ploidy_estimation_metrics:
