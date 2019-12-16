@@ -12,18 +12,6 @@ log = logging.getLogger(__name__)
 
 class DragenTimeMetrics(BaseMultiqcModule):
     def parse_time_metrics(self):
-        """
-        RUN TIME,,Time loading reference,00:00:00.000,0.00
-        RUN TIME,,Time aligning reads,01:31:29.713,5489.71
-        RUN TIME,,Time sorting and marking duplicates,01:58:18.388,7098.39
-        RUN TIME,,Time DRAGStr calibration,00:00:48.280,48.28
-        RUN TIME,,Time saving map/align output,01:59:24.920,7164.92
-        RUN TIME,,Time partial reconfiguration,00:00:03.606,3.61
-        RUN TIME,,Time variant calling,01:59:21.690,7161.69
-        RUN TIME,,Time partitioning,01:31:27.108,5487.11
-        RUN TIME,,Total runtime,03:32:28.426,12748.43
-        """
-
         # TODO: figure why steps don't sum up into total runtime
 
         all_general_data = defaultdict(dict)
@@ -74,6 +62,19 @@ class DragenTimeMetrics(BaseMultiqcModule):
 
 
 def parse_time_metrics_file(f):
+    """
+    T_SRR7890936_50pc.time_metrics.csv
+
+    RUN TIME,,Time loading reference,00:00:00.000,0.00
+    RUN TIME,,Time aligning reads,01:31:29.713,5489.71
+    RUN TIME,,Time sorting and marking duplicates,01:58:18.388,7098.39
+    RUN TIME,,Time DRAGStr calibration,00:00:48.280,48.28
+    RUN TIME,,Time saving map/align output,01:59:24.920,7164.92
+    RUN TIME,,Time partial reconfiguration,00:00:03.606,3.61
+    RUN TIME,,Time variant calling,01:59:21.690,7161.69
+    RUN TIME,,Time partitioning,01:31:27.108,5487.11
+    RUN TIME,,Total runtime,03:32:28.426,12748.43
+    """
     sample = f['fn'].split('.time_metrics.csv')[0]
 
     data_by_sample = defaultdict(dict)

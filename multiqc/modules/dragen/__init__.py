@@ -13,7 +13,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-
 class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics, DragenTimeMetrics, DragenVCMetrics, DragenCoverage):
     """ Dragen has a number of different pipelines and outputs.
     This MultiQC module supports some but not all. The code for

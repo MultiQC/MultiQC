@@ -12,15 +12,6 @@ log = logging.getLogger(__name__)
 
 class DragenPloidyEstimationMetrics(BaseMultiqcModule):
     def parse_ploidy_estimation_metrics(self):
-        """
-        PLOIDY ESTIMATION,,Autosomal median coverage,55.63
-        PLOIDY ESTIMATION,,X median coverage,27.44
-        PLOIDY ESTIMATION,,Y median coverage,0.00
-        PLOIDY ESTIMATION,,X median / Autosomal median,0.49
-        PLOIDY ESTIMATION,,Y median / Autosomal median,0.00
-        PLOIDY ESTIMATION,,Ploidy estimation,X0
-        """
-
         all_data_by_sample = dict()
 
         for f in self.find_log_files('dragen/ploidy_estimation_metrics'):
@@ -50,6 +41,17 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
 
 
 def parse_ploidy_estimation_metrics_file(f):
+    """
+    T_SRR7890936_50pc.ploidy_estimation_metrics.csv
+
+    PLOIDY ESTIMATION,,Autosomal median coverage,55.63
+    PLOIDY ESTIMATION,,X median coverage,27.44
+    PLOIDY ESTIMATION,,Y median coverage,0.00
+    PLOIDY ESTIMATION,,X median / Autosomal median,0.49
+    PLOIDY ESTIMATION,,Y median / Autosomal median,0.00
+    PLOIDY ESTIMATION,,Ploidy estimation,X0
+    """
+
     sample = f['fn'].split('.ploidy_estimation_metrics.csv')[0]
 
     data_by_sample = defaultdict(dict)
