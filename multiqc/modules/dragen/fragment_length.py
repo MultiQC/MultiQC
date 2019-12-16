@@ -12,28 +12,6 @@ log = logging.getLogger(__name__)
 
 class DragenFragmentLength(BaseMultiqcModule):
     def parse_fragment_length_hist(self):
-        """
-        #Sample: N_SRR7890889
-        FragmentLength,Count
-        36,1
-        37,0
-        38,0
-        39,0
-        40,0
-        41,1
-        ...
-        39203,0
-        39204,0
-        39205,1
-        #Sample: T_SRR7890936_50pc
-        FragmentLength,Count
-        53,2
-        54,0
-        ...
-        39316,0
-        39317,1
-        """
-
         all_data_by_sample = dict()
 
         for f in self.find_log_files('dragen/fragment_length_hist'):
@@ -70,6 +48,30 @@ class DragenFragmentLength(BaseMultiqcModule):
 
 
 def parse_fragment_length_hist_file(f):
+    """
+    T_SRR7890936_50pc.fragment_length_hist.csv
+
+    #Sample: N_SRR7890889
+    FragmentLength,Count
+    36,1
+    37,0
+    38,0
+    39,0
+    40,0
+    41,1
+    ...
+    39203,0
+    39204,0
+    39205,1
+    #Sample: T_SRR7890936_50pc
+    FragmentLength,Count
+    53,2
+    54,0
+    ...
+    39316,0
+    39317,1
+    """
+
     data_by_sample = defaultdict(dict)
 
     sample = None
