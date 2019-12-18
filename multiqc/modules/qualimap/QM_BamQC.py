@@ -139,8 +139,8 @@ def parse_coverage(self, f):
         log.debug("Couldn't parse contents of coverage histogram file {}".format(f['fn']))
         return None
 
-    # Find median and mean without importing anything to do it for us
-    num_counts = sum(d.values())
+    # Find median without importing anything to do it for us
+    num_counts = sum(d.values()) #This might be a baddie...
     cum_counts = 0
     total_cov = 0
     median_coverage = None
@@ -150,12 +150,19 @@ def parse_coverage(self, f):
         if cum_counts >= num_counts/2:
             median_coverage = thiscov
             break
+    self.general_stats_data[s_name]['median_coverage'] = median_coverage
+
+    #Find mean without importing anything to do it for us 
+    cum_counts = 0
+    total_cov = 0
+    for thiscov, thiscount in d.items():
+        cum_counts += thiscount
+        total_cov += thiscov*thiscount
     try:
-        self.general_stats_data[s_name]['mean_coverage'] = total_cov / num_counts
+        self.general_stats_data[s_name]['mean_coverage'] = total_cov / cum_counts
     except ZeroDivisionError:
         self.general_stats_data[s_name]['mean_coverage'] = 0
 
-    self.general_stats_data[s_name]['median_coverage'] = median_coverage
 
     # Save results
     if s_name in self.qualimap_bamqc_coverage_hist:

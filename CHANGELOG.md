@@ -13,6 +13,8 @@
 
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
+* **QualiMap**
+    * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
