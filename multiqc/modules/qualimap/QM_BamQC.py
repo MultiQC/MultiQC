@@ -86,6 +86,7 @@ def parse_genome_results(self, f):
         'median_insert_size': r"median insert size = ([\d,\.]+)",
         'mean_mapping_quality': r"mean mapping quality = ([\d,\.]+)",
         'general_error_rate': r"general error rate = ([\d,\.]+)",
+        'mean_coverage': r"mean coverageData = ([\d,]+)"
     }
     d = dict()
     for k, r in regexes.items():
@@ -110,6 +111,7 @@ def parse_genome_results(self, f):
         d['percentage_aligned'] = (d['mapped_reads'] / d['total_reads'])*100
         self.general_stats_data[s_name]['percentage_aligned'] = d['percentage_aligned']
         self.general_stats_data[s_name]['general_error_rate'] = d['general_error_rate']*100
+        self.general_stats_data[s_name]['mean_coverage'] = d['mean_coverage']
     except KeyError:
         pass
 
@@ -151,19 +153,6 @@ def parse_coverage(self, f):
             median_coverage = thiscov
             break
     self.general_stats_data[s_name]['median_coverage'] = median_coverage
-
-    #Find mean without importing anything to do it for us 
-    cum_counts = 0
-    total_cov = 0
-    for thiscov, thiscount in d.items():
-        cum_counts += thiscount
-        total_cov += thiscov*thiscount
-    try:
-        self.general_stats_data[s_name]['mean_coverage'] = total_cov / cum_counts
-    except ZeroDivisionError:
-        self.general_stats_data[s_name]['mean_coverage'] = 0
-
-
     # Save results
     if s_name in self.qualimap_bamqc_coverage_hist:
         log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
