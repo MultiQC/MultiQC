@@ -142,7 +142,7 @@ def parse_coverage(self, f):
         return None
 
     # Find median without importing anything to do it for us
-    num_counts = sum(d.values()) #This might be a baddie...
+    num_counts = sum(d.values())
     cum_counts = 0
     total_cov = 0
     median_coverage = None
