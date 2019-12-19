@@ -267,36 +267,40 @@ base_format += '&nbsp;' + config.base_count_prefix
 mapping_metrics = [
     # id_in_data                                               # title (display name)        # show  # unit  # beeswarm  # description
     # Read stats:
-    ('Total reads in RG'                                      , 'Reads'                      , '#',  'reads', True,  'Total number of reads, {}'),
-    ('Reads with mate sequenced'                              , 'Reads with mate seq\'d'     , None, 'reads', True,  'Number of reads with mate sequenced, {}'),
-    ('Reads without mate sequenced'                           , 'Reads w/o mate seq\'d'      , None, 'reads', False, 'Number of reads without mate sequenced, {}'),
-    ('QC-failed reads'                                        , 'QC-fail'                    , None, 'reads', True,  'Number of QC-failed reads, {}'),
+    ('Total reads in RG'                                      , 'Reads'                      , '#',  'reads', True,  'Total number of reads in this read group (sample), {}'),
+    ('Reads with mate sequenced'                              , 'Reads with mate'            , None, 'reads', True,  'Number of reads with a mate sequenced, {}'),
+    ('Reads without mate sequenced'                           , 'Reads w/o mate'             , None, 'reads', False, 'Number of reads without a mate sequenced, {}'),
+    ('QC-failed reads'                                        , 'QC-fail'                    , None, 'reads', True,  'Number of reads not passing platform/vendor quality checks (SAM flag 0x200), {}'),
     ('Mapped reads'                                           , 'Map'                        , '%',  'reads', True,  'Number of mapped reads, {}'),
-    ('Mapped reads R1'                                        , 'Map R1'                     , None, 'reads', False, 'Mapped reads R1, {}'),
-    ('Mapped reads R2'                                        , 'Map R2'                     , None, 'reads', False, 'Mapped reads R2, {}'),
-    ('Reads with MAPQ [40:inf)'                               , 'MQ>=40'                     , None, 'reads', True,  'Reads with MAPQ [40:inf), {}'),
-    ('Number of duplicate marked reads'                       , 'Dup'                        , '%',  'reads', False, 'Number of duplicate marked reads, {}'),
-    ('Number of duplicate marked and mate reads removed'      , 'Dup with mates removed'     , None, 'reads', False, 'Number of duplicate marked and mate reads removed, {}'),
-    ('Number of unique reads (excl. duplicate marked reads)'  , 'Uniq'                       , None, 'reads', True,  'Number of unique reads (excl. duplicate marked reads), {}'),
-    ('Number of unique & mapped reads (excl. duplicate marked reads)', 'Uniq map'            , None, 'reads', True,  'Number of unique & mapped reads (excl. duplicate marked reads), {}'),
+    ('Mapped reads R1'                                        , 'Map R1'                     , None, 'reads', False, 'Number of mapped reads R1, {}'),
+    ('Mapped reads R2'                                        , 'Map R2'                     , None, 'reads', False, 'Number of mapped reads R2, {}'),
+    ('Reads with MAPQ [40:inf)'                               , 'MQ>=40'                     , None, 'reads', True,  'Number of reads with MAPQ [40:inf), {}'),
+    ('Number of duplicate marked reads'                       , 'Dup'                        , '%',  'reads', False, 'Number of duplicate marked reads as a result of the --enable-duplicatemarking option being used, {}'),
+    ('Number of duplicate marked and mate reads removed'      , 'Dup with mates removed'     , None, 'reads', False, 'Number of reads marked as duplicates, along with any mate reads, that are removed '
+                                                                                                                        'when the --remove-duplicates option is used, {}'),
+    ('Number of unique reads (excl. duplicate marked reads)'  , 'Uniq'                       , None, 'reads', True,  'Number of unique reads (all reads minus duplicate marked reads), {}'),
+    ('Number of unique & mapped reads (excl. duplicate marked reads)', 'Uniq map'            , None, 'reads', True,  'Number of unique & mapped reads (mapped reads minus duplicate marked reads), {}'),
     ('Unmapped reads'                                         , 'Unmap'                      , None, 'reads', False, 'Number of unmapped reads, {}'),
-    ('Paired reads (itself & mate mapped)'                    , 'Mapped & mate mapped'       , None, 'reads', True,  'Number of reads mapped in pairs (itself & mate mapped), {}'),
-    ('Properly paired reads'                                  , 'Prop pair'                  , '%',  'reads', True,  'Number of properly paired reads (insert size close to the mean value), {}'),
-    ('Not properly paired reads (discordant)'                 , 'Discord'                    , None, 'reads', True,  'Number of not properly paired reads (discordant), {}'),
-    ('Singleton reads (itself mapped; mate unmapped)'         , 'Singleton'                  , None, 'reads', True,  'Number of singleton reads (itself mapped; mate unmapped), {}'),
-    ('Paired reads mapped to different chromosomes'           , 'Mate map to diff chrom'     , None, 'reads', True,  'Number of paired reads mapped to different chromosomes, {}'),
-    ('Paired reads mapped to different chromosomes (MAPQ>=10)', 'Mate diff chrom, MQ>=10'    , None, 'reads', True,  'Number of paired reads mapped to different chromosomes (MAPQ>=10), {}'),
-    ('Reads with indel R1'                                    , 'Reads with indel R1'        , None, 'reads', False, 'Reads with indel R1, {}'),
-    ('Reads with indel R2'                                    , 'Reads with indel R2'        , None, 'reads', False, 'Reads with indel R2, {}'),
+    ('Paired reads (itself & mate mapped)'                    , 'Self & mate mapped'         , None, 'reads', True,  'Number of reads mapped in pairs (itself & mate mapped), {}'),
+    ('Properly paired reads'                                  , 'Prop pair'                  , '%',  'reads', True,  'Number of properly paired reads, {} (both reads in pair are mapped and '
+                                                                                                                        'fall within an acceptable range from each other based on the estimated insert length distribution)'),
+    ('Not properly paired reads (discordant)'                 , 'Discord'                    , None, 'reads', True,  'Number of discordant reads: paired reads minus properly paired reads , {}'),
+    ('Singleton reads (itself mapped; mate unmapped)'         , 'Singleton'                  , None, 'reads', True,  'Number of singleton reads: itself mapped; mate unmapped, {}'),
+    ('Paired reads mapped to different chromosomes'           , 'Mate map to diff chrom'     , None, 'reads', True,  'Number of paired reads with a mate mapped to a different chromosome, {}'),
+    ('Paired reads mapped to different chromosomes (MAPQ>=10)', 'Mate diff chrom, MQ>=10'    , None, 'reads', True,  'Number of paired reads, mapped with MAPQ>=10 and with a mate mapped to a different chromosome, {}'),
+    ('Reads with indel R1'                                    , 'Reads with indel R1'        , None, 'reads', False, 'Number of R1 reads containing at least 1 indel, {}'),
+    ('Reads with indel R2'                                    , 'Reads with indel R2'        , None, 'reads', False, 'Number of R2 reads containing at least 1 indel, {}'),
     # Alignments stats:
-    ('Total alignments'                                       , 'Alignments'                 , None, 'reads', True,  'Total number of alignments, {}'),
+    ('Total alignments'                                       , 'Alignments'                 , None, 'reads', True,  'Total number of alignments with MQ > 0, {}'),
     ('Secondary alignments'                                   , 'Second\'ry'                 , '%',  'reads', True,  'Number of secondary alignments, {}. Secondary alignment occurs when '
-                                                                                                                      'a given read could align reasonably well to more than one place. '
-                                                                                                                      'One of the possible reported alignments is termed "primary" and '
-                                                                                                                      'the others will be marked as "secondary".'),
-    ('Supplementary (chimeric) alignments'                    , 'Suppl\'ry'                  , None, 'reads', True,  'Number of supplementary (chimeric) alignments, {}'),
+                                                                                                                        'a given read could align reasonably well to more than one place. '
+                                                                                                                        'One of the possible reported alignments is termed "primary" and '
+                                                                                                                        'the others will be marked as "secondary".'),
+    ('Supplementary (chimeric) alignments'                    , 'Suppl\'ry'                  , None, 'reads', True,  'Number of supplementary (chimeric) alignments, {}. A chimeric read is split '
+                                                                                                                        'over multiple loci (possibly due to structural variants). One alignment is '
+                                                                                                                        'referred to as the representative alignment, the other are supplementary'),
     # Read length stats:
-    ('Estimated read length'                                  , 'Read len'                   , '#',  'len',   False, 'Estiamted read length'),
+    ('Estimated read length'                                  , 'Read len'                   , '#',  'len',   False, 'Estimated read length. Total number of input bases divided by the number of reads'),
     ('Insert length: mean'                                    , 'Avg IS'                     , None, 'len',   False, 'Insert length: mean'),
     ('Insert length: median'                                  , 'Med IS'                     , '#',  'len',   False, 'Insert length: median'),
     ('Insert length: standard deviation'                      , 'IS std'                     , None, 'len',   False, 'Insert length: standard deviation'),
@@ -310,14 +314,22 @@ mapping_metrics = [
     ('Mapped bases R2'                                        , 'Mapped bases R2'            , None, 'bases', False, 'Number of mapped bases on R2 reads, {}'),
     ('Soft-clipped bases R1'                                  , 'Soft-clip bases R1'         , None, 'bases', False, 'Number of soft-clipped bases on R1 reads, {}'),
     ('Soft-clipped bases R2'                                  , 'Soft-clip bases R2'         , None, 'bases', False, 'Number of soft-clipped bases on R2 reads, {}'),
-    ('Mismatched bases R1'                                    , 'MM bases R1'                , None, 'bases', False, 'Number of mismatched bases on R1 reads, {}'),
-    ('Mismatched bases R2'                                    , 'MM bases R2'                , None, 'bases', False, 'Number of mismatched bases on R2 reads, {}'),
-    ('Mismatched bases R1 (excl. indels)'                     , 'MM bases R1 excl indels'    , None, 'bases', False, 'Number of mismatched bases, excluding indels, on R1 reads, {}'),
-    ('Mismatched bases R2 (excl. indels)'                     , 'MM bases R2 excl indels'    , None, 'bases', False, 'Number of mismatched bases, excluding indels, on R2 reads, {}'),
-    ('Q30 bases'                                              , 'Q30'                        , '%',  'bases', True,  'Number of bases with quality above 30, {}'),
-    ('Q30 bases R1'                                           , 'Q30 R1'                     , None, 'bases', False, 'Number of bases with quality above 30 on R1 reads, {}'),
-    ('Q30 bases R2'                                           , 'Q30 R2'                     , None, 'bases', False, 'Number of bases with quality above 30 on R2 reads, {}'),
-    ('Q30 bases (excl. dups & clipped bases)'                 , 'Q30 excl dup & clipped'     , None, 'bases', True,  'Number of bases with quality above 30, excluding duplicated reads & clipped bases, {}'),
+    ('Mismatched bases R1'                                    , 'MM bases R1'                , None, 'bases', False, 'Number of mismatched bases on R1, {}, which is the sum of SNP count and indel lengths. '
+                                                                                                                        'It does not count anything within soft clipping, or RNA introns. '
+                                                                                                                        'It also does not count a mismatch if either the reference base or read base is N'),
+    ('Mismatched bases R2'                                    , 'MM bases R2'                , None, 'bases', False, 'Number of mismatched bases on R2, {}, which is the sum of SNP count and indel lengths. '
+                                                                                                                        'It does not count anything within soft clipping, or RNA introns. '
+                                                                                                                        'It also does not count a mismatch if either the reference base or read base is N'),
+    ('Mismatched bases R1 (excl. indels)'                     , 'MM bases R1 excl indels'    , None, 'bases', False, 'Number of mismatched bases on R1, {}. The indels lengts are ignored. '
+                                                                                                                        'It does not count anything within soft clipping, or RNA introns. '
+                                                                                                                        'It also does not count a mismatch if either the reference base or read base is N'),
+    ('Mismatched bases R2 (excl. indels)'                     , 'MM bases R2 excl indels'    , None, 'bases', False, 'Number of mismatched bases on R2, {}. The indels lengts are ignored. '
+                                                                                                                        'It does not count anything within soft clipping, or RNA introns. '
+                                                                                                                        'It also does not count a mismatch if either the reference base or read base is N'),
+    ('Q30 bases'                                              , 'Q30'                        , '%',  'bases', True,  'Number of bases with BQ >= 30, {}'),
+    ('Q30 bases R1'                                           , 'Q30 R1'                     , None, 'bases', False, 'Number of bases on R1 reads with BQ >= 30, {}'),
+    ('Q30 bases R2'                                           , 'Q30 R2'                     , None, 'bases', False, 'Number of bases on R2 reads with BQ >= 30, {}'),
+    ('Q30 bases (excl. dups & clipped bases)'                 , 'Q30 excl dup & clipped'     , None, 'bases', True,  'Number of non-clipped bases with BQ >= 30 on non-duplicate reads, {}'),
     # General metrics. Showing only when general metrics are different for different samples, otherwise showing in the header
     ('Bases in reference genome'                              , 'Bases in ref. genome'       , '#',  'bases', False, 'Bases in reference genome'              ),
     ('Bases in target bed [% of genome]'                      , 'Bases in target bed'        , '#',  '%'    , False, 'Bases in target bed [% of genome]'      ),
