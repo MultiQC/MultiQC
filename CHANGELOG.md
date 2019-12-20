@@ -13,6 +13,8 @@
 
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
+* **Samtools**
+    * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076))
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
