@@ -51,9 +51,10 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.__map_pair_read_chart(all_data_by_sample)
 
         self.add_section(
-            name='Mapping metrics',
+            name='Mapping metrics beeswarm',
             anchor='dragen-mapping-metrics',
-            description="This module parses the output from <code>Dragen mapping metrics</code>. All numbers in millions.",
+            description="A beeswarm plot showing Dragen mapping metrics. All read counts in " + str(config.read_count_desc) +
+                        ", all bases counts in " + str(config.read_count_desc),
             plot=beeswarm.plot(all_data_by_sample, beeswarm_keys, {'id': 'dragen-mapping-metrics-dp'})
         )
 
