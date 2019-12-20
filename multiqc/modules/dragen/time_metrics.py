@@ -40,21 +40,23 @@ class DragenTimeMetrics(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['Total runtime'] = {
-            'title': 'Runtime',
-            'description': 'Total runtime',
+            'title': 'Run time',
+            'description': 'Run time metrics',
             'suffix': ' h'
         }
         self.general_stats_addcols(all_general_data, headers, 'Time metrics')
 
         self.add_section(
-            name='Time metrics',
+            name='Run time metrics',
             anchor='dragen-time-metrics',
-            description='Time metrics',
+            description='Breakdown of the run duration of each process. '
+                        'Each section on the barplot corresponds to an execution stage, with X axis values showing '
+                        'time (in hours) in finished after the start of the pipeline.',
             plot=bargraph.plot(all_bargraph_data, {
                 step: {'name': step} for step in all_bargraph_steps
             }, {
                 'id': 'dragen_time_metrics',
-                'title': 'Dragen time metrics',
+                'title': 'Run time metrics',
                 'ylab': 'hours',
                 'cpswitch_counts_label': 'Hours'
             })
