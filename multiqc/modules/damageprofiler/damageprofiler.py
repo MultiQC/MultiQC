@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='DamageProfiler:',
+        super(MultiqcModule, self).__init__(name='DamageProfiler',
         anchor='damageprofiler',
         href='https://github.com/Integrative-Transcriptomics/DamageProfiler',
         info="a tool to determine damage patterns on ancient DNA.")
