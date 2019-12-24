@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
+import re
 from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
@@ -12,33 +14,29 @@ log = logging.getLogger(__name__)
 
 class DragenVCMetrics(BaseMultiqcModule):
     def parse_vc_metrics(self):
-        all_data_by_sample = dict()
+        data_by_sample = dict()
 
         for f in self.find_log_files('dragen/vc_metrics'):
-            data_by_sample = parse_vc_metrics_file(f)
-            if data_by_sample:
-                for sn, data in data_by_sample.items():
-                    if sn in all_data_by_sample:
-                        log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
-                    self.add_data_source(f, section='stats')
-
-                    all_data_by_sample[sn] = data
+            data = parse_vc_metrics_file(f)
+            if f['s_name'] in data_by_sample:
+                log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
+            self.add_data_source(f, section='stats')
+            data_by_sample[f['s_name']] = data
 
         # Filter to strip out ignored sample names:
-        all_data_by_sample = self.ignore_samples(all_data_by_sample)
-
-        if not all_data_by_sample:
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if not data_by_sample:
             return
-        log.info('Found variant calling metrics for {} samples'.format(len(all_data_by_sample)))
+        log.info('Found variant calling metrics for {} Dragen output prefixes'.format(len(data_by_sample)))
 
         all_metric_names = set()
-        for sn, sdata in all_data_by_sample.items():
+        for sn, sdata in data_by_sample.items():
             for m in sdata.keys():
                 all_metric_names.add(m)
 
         gen_stats_headers, vc_table_headers = make_headers(all_metric_names)
 
-        self.general_stats_addcols(all_data_by_sample, gen_stats_headers, 'Variant calling')
+        self.general_stats_addcols(data_by_sample, gen_stats_headers, 'Variant calling')
 
         self.add_section(
             name='Variant calling',
@@ -48,7 +46,7 @@ class DragenVCMetrics(BaseMultiqcModule):
                         'VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs, '
                         'except for the "Filtered" metrics which represent how many variants were filtered out'
                         'from pre-filter VCF to generate the post-filter VCF.',
-            plot=table.plot(all_data_by_sample, vc_table_headers)
+            plot=table.plot(data_by_sample, vc_table_headers)
         )
 
 
@@ -104,7 +102,7 @@ vc_metrics = [
 
 def make_headers(metric_names):
     # Init general stats table
-    gen_stats_headers = OrderedDict()
+    genstats_headers = OrderedDict()
 
     # Init the VC table
     vc_table_headers = OrderedDict()
@@ -115,8 +113,11 @@ def make_headers(metric_names):
             description=descr,
             min=0,
         )
-        gen_stats_headers[id_in_data] = dict(col, hidden=in_gen_stats != '#')
-        vc_table_headers[id_in_data] = dict(col, hidden=in_vc_table != '#')
+        cnt_fmt = None
+        if any(descr.startswith(pref) for pref in ('Total number of ', 'The number of ', 'Number of ')):
+            cnt_fmt = '{:,.0f}'
+        genstats_headers[id_in_data] = dict(col, format=cnt_fmt, hidden=in_gen_stats != '#')
+        vc_table_headers[id_in_data] = dict(col, format=cnt_fmt, hidden=in_vc_table != '#')
 
         if id_in_data + ' pct' in metric_names:
             # if % value is available, showing it instead of the number value; the number value will be hidden
@@ -126,10 +127,10 @@ def make_headers(metric_names):
                 max=100,
                 suffix='%',
             )
-            gen_stats_headers[id_in_data + ' pct'] = dict(pct_col, hidden=in_gen_stats != '%')
+            genstats_headers[id_in_data + ' pct'] = dict(pct_col, hidden=in_gen_stats != '%')
             vc_table_headers[id_in_data + ' pct'] = dict(pct_col, hidden=in_vc_table != '%')
 
-    return gen_stats_headers, vc_table_headers
+    return genstats_headers, vc_table_headers
 
 
 def parse_vc_metrics_file(f):
@@ -182,10 +183,11 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Callability,NA
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
-    sample = f['fn'].split('.vc_metrics.csv')[0]
 
-    prefilter_data_by_sample = defaultdict(dict)
-    postfilter_data_by_sample = defaultdict(dict)
+    f['s_name'] = re.search(r'(.*).vc_metrics.csv', f['fn']).group(1)
+
+    prefilter_data = dict()
+    postfilter_data = dict()
 
     for line in f['f'].splitlines():
         fields = line.split(',')
@@ -211,42 +213,40 @@ def parse_vc_metrics_file(f):
                 pass
 
         if analysis == 'VARIANT CALLER SUMMARY':
-            prefilter_data_by_sample[sample][metric] = value
+            prefilter_data[metric] = value
 
         if analysis == 'VARIANT CALLER PREFILTER':
-            prefilter_data_by_sample[sample][metric] = value
+            prefilter_data[metric] = value
 
         if analysis == 'VARIANT CALLER POSTFILTER':
-            postfilter_data_by_sample[sample][metric] = value
+            postfilter_data[metric] = value
             if percentage is not None:
-                postfilter_data_by_sample[sample][metric + ' pct'] = percentage
+                postfilter_data[metric + ' pct'] = percentage
 
     # adding few more metrics: total insertions, deletions and indels numbers
-    for d in [prefilter_data_by_sample, postfilter_data_by_sample]:
-        for sname, data in d.items():
-            data['Insertions'] = data['Insertions (Hom)'] + data['Insertions (Het)']
-            data['Deletions']  = data['Deletions (Hom)']  + data['Deletions (Het)']
-            data['Indels']     = data['Insertions']       + data['Deletions']
-            if data['Total'] != 0:
-                data['Insertions pct'] = data['Insertions'] / data['Total']
-                data['Deletions pct']  = data['Deletions']  / data['Total']
-                data['Indels pct']     = data['Indels']     / data['Total']
+    for data in [prefilter_data, postfilter_data]:
+        data['Insertions'] = data['Insertions (Hom)'] + data['Insertions (Het)']
+        data['Deletions']  = data['Deletions (Hom)']  + data['Deletions (Het)']
+        data['Indels']     = data['Insertions']       + data['Deletions']
+        if data['Total'] != 0:
+            data['Insertions pct'] = data['Insertions'] / data['Total']
+            data['Deletions pct']  = data['Deletions']  / data['Total']
+            data['Indels pct']     = data['Indels']     / data['Total']
 
-    data_by_sample = postfilter_data_by_sample
+    data = postfilter_data
     # we are not really interested in all the details of pre-filtered variants, however
     # it would be nice to report how much we filtered out
-    for sname, data in data_by_sample.items():
-        data['Filtered vars']     = prefilter_data_by_sample[sname]['Total']  - data['Total']
-        data['Filtered SNPs']     = prefilter_data_by_sample[sname]['SNPs']   - data['SNPs']
-        data['Filtered indels']   = prefilter_data_by_sample[sname]['Indels'] - data['Indels']
-        if prefilter_data_by_sample['Total'] != 0:
-            data['Filtered vars pct']   = data['Filtered vars']     / prefilter_data_by_sample[sname]['Total']
-        if prefilter_data_by_sample['SNPs'] != 0:
-            data['Filtered SNPs pct']   = data['Filtered SNPs']     / prefilter_data_by_sample[sname]['SNPs']
-        if prefilter_data_by_sample['Indels'] != 0:
-            data['Filtered indels pct'] = data['Filtered indels']   / prefilter_data_by_sample[sname]['Indels']
+    data['Filtered vars']     = prefilter_data['Total']  - data['Total']
+    data['Filtered SNPs']     = prefilter_data['SNPs']   - data['SNPs']
+    data['Filtered indels']   = prefilter_data['Indels'] - data['Indels']
+    if prefilter_data['Total'] != 0:
+        data['Filtered vars pct']   = data['Filtered vars']   / prefilter_data['Total']
+    if prefilter_data['SNPs'] != 0:
+        data['Filtered SNPs pct']   = data['Filtered SNPs']   / prefilter_data['SNPs']
+    if prefilter_data['Indels'] != 0:
+        data['Filtered indels pct'] = data['Filtered indels'] / prefilter_data['Indels']
 
-    return data_by_sample
+    return data
 
 
 

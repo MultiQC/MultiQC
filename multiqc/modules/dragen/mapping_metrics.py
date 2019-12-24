@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
+import itertools
+import re
 from collections import OrderedDict, defaultdict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -12,50 +15,72 @@ log = logging.getLogger(__name__)
 
 class DragenMappingMetics(BaseMultiqcModule):
     def parse_mapping_metrics(self):
-        all_data_by_sample = dict()
-        general_info_by_sample_by_id = defaultdict(dict)
+        data_by_rg_by_sample = defaultdict(dict)
+        data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files('dragen/mapping_metrics'):
-            data_by_sample, general_info = parse_mapping_metrics_file(f)
+            data_by_readgroup, data_by_phenotype = parse_mapping_metrics_file(f)
 
-            if data_by_sample:
-                for sn, data in data_by_sample.items():
-                    if sn in all_data_by_sample:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
-                    self.add_data_source(f, section='stats')
+            if f['s_name'] in data_by_rg_by_sample:
+                log.debug('Duplicate Dragen output prefix found! Overwriting: {}'.format(f['s_name']))
+                self.add_data_source(f, section='stats')
+            data_by_phenotype_by_sample[f['s_name']] = data_by_phenotype
 
-                    all_data_by_sample[sn] = data
+            for rg, data in data_by_readgroup.items():
+                if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
+                    log.debug('Duplicate read group name {} found for output prefix {}! Overwriting'.format(rg, f['s_name']))
+            data_by_rg_by_sample[f['s_name']] = data_by_readgroup
 
-                    for k, v in general_info.items():
-                        general_info_by_sample_by_id[k][sn] = v
-
-        # Filter to strip out ignored sample names:
-        all_data_by_sample = self.ignore_samples(all_data_by_sample)
-
-        if not all_data_by_sample:
+        # filter to strip out ignored sample names:
+        data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
+        data_by_phenotype_by_sample = self.ignore_samples(data_by_phenotype_by_sample)
+        if not data_by_rg_by_sample and not data_by_phenotype_by_sample:
             return
-        log.info("Found mapping metrics for {} samples".format(len(all_data_by_sample)))
+        log.info("Found mapping metrics for {} Dragen output prefixes".format(len(data_by_rg_by_sample)))
 
+        # flattening phenotype-sample data by adding a prefix " normal" to the normal samples
+        data_by_sample = dict()
+        for sn in data_by_phenotype_by_sample:
+            for phenotype in data_by_phenotype_by_sample[sn]:
+                new_sn = sn
+                if phenotype == 'normal':
+                    new_sn = sn + ' normal'
+                data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
+
+        # general metrics that differrent between different samples are to be moved into per-sample stats,
+        # those that are common for all samples will stay to be reported in the report header section
+        maybe_add_general_metrics(data_by_sample)
+
+        # merging all read group data
+        data_by_rg = dict()
+        for sname in data_by_rg_by_sample:
+            for rg, d in data_by_rg_by_sample[sname].items():
+                if rg in data_by_rg:
+                    rg = rg + ' (' + sname + ')'
+                data_by_rg[rg] = d
+
+        # getting all available metric names to determine table headers
         all_metric_names = set()
-        for sn, sdata in all_data_by_sample.items():
-            for m in sdata.keys():
-                all_metric_names.add(m)
+        for sn, data_by_rg in data_by_rg_by_sample.items():
+            for rg, data in data_by_rg.items():
+                for m in data.keys():
+                    all_metric_names.add(m)
 
+        # and making headers
         headers, beeswarm_keys = make_mapping_stats_headers(all_metric_names)
 
-        all_data_by_sample = maybe_add_general_metrics(general_info_by_sample_by_id, all_data_by_sample)
-
-        self.general_stats_addcols(all_data_by_sample, headers, 'Mapping metrics')
+        self.general_stats_addcols(data_by_sample, headers, 'Mapping metrics')
         # Make bargraph plots of mapped, dupped and paired reads
-        self.__map_dup_read_chart(all_data_by_sample)
-        self.__map_pair_read_chart(all_data_by_sample)
+        self.__map_dup_read_chart(data_by_rg)
+        self.__map_pair_read_chart(data_by_rg)
 
         self.add_section(
-            name='Mapping metrics beeswarm',
+            name='Mapping metrics per RG',
             anchor='dragen-mapping-metrics',
-            description="A beeswarm plot showing Dragen mapping metrics. All read counts in " + str(config.read_count_desc) +
-                        ", all bases counts in " + str(config.read_count_desc),
-            plot=beeswarm.plot(all_data_by_sample, beeswarm_keys, {'id': 'dragen-mapping-metrics-dp'})
+            description="A dot plot showing DRAGEN mapping metrics for each input read group. "
+                        "All read counts in " + str(config.read_count_desc) + ", " +
+                        "all bases counts in " + str(config.read_count_desc),
+            plot=beeswarm.plot(data_by_rg, beeswarm_keys, {'id': 'dragen-mapping-metrics-dp'})
         )
 
     def __map_dup_read_chart(self, data_by_sample):
@@ -69,16 +94,17 @@ class DragenMappingMetics(BaseMultiqcModule):
             else:
                 chart_data[sample_id] = data
         self.add_section(
-            name='Mapped and duplicates percentages',
+            name='Mapped and duplicated per RG',
             anchor='dragen-mapping-dup-percentage',
-            description='Mapping and duplicate reads from Dragen: uniqly mapped vs. duplicate vs. unmapped reads.',
+            description='Mapping and duplicate reads per read group: '
+                        'uniquely mapped vs. duplicate vs. unmapped reads.',
             plot=bargraph.plot(chart_data, {
                 'Number of unique & mapped reads (excl. duplicate marked reads)': {'color': '#437bb1', 'name': 'Mapped'},
                 'Number of duplicate marked reads':                               {'color': '#f5a742', 'name': 'Duplicated'},
                 'Unmapped reads':                                                 {'color': '#b1084c', 'name': 'Unmapped'},
             }, {
                 'id': 'mapping_dup_percentage_plot',
-                'title': 'Dragen mapping metrics: duplicate reads',
+                'title': 'Mapping metrics per read group: duplicate reads',
                 'ylab': '# Reads',
                 'cpswitch_counts_label': 'Number of reads'
             })
@@ -95,139 +121,220 @@ class DragenMappingMetics(BaseMultiqcModule):
             else:
                 chart_data[sample_id] = data
         self.add_section(
-            name='Mapped and paired percentages',
+            name='Mapped and paired per RG',
             anchor='dragen-mapping-paired-percentage',
-            description="Mapping and pairing read metrics from Dragen: properly paired vs. discordant vs. unpaired vs. unmapped reads.",
+            description="Mapping and pairing read metrics per read group: "
+                        "properly paired vs. discordant vs. unpaired vs. unmapped reads.",
             plot=bargraph.plot(chart_data, {
-                'Properly paired reads':                             {'color': '#00cc00', 'name': 'Paired, properly'},
-                'Not properly paired reads (discordant)':            {'color': '#ff9900', 'name': 'Paired, discordant'},
-                'Singleton reads (itself mapped; mate unmapped)':    {'color': '#ff33cc', 'name': 'Singleton'},
-                'Unmapped reads':                                    {'color': '#b1084c', 'name': 'Unmapped'},
+                'Properly paired reads':                          {'color': '#00cc00', 'name': 'Paired, properly'},
+                'Not properly paired reads (discordant)':         {'color': '#ff9900', 'name': 'Paired, discordant'},
+                'Singleton reads (itself mapped; mate unmapped)': {'color': '#ff33cc', 'name': 'Singleton'},
+                'Unmapped reads':                                 {'color': '#b1084c', 'name': 'Unmapped'},
             }, {
                 'id': 'mapping_paired_percentage_plot',
-                'title': 'Dragen mapping metrics: paired reads',
+                'title': '<apping metrics per read group: paired reads',
                 'ylab': '# Reads',
                 'cpswitch_counts_label': 'Number of reads'
             })
         )
 
 
-def maybe_add_general_metrics(general_info_by_sample_by_id, all_data_by_sample):
-    if general_info_by_sample_by_id:
-        for id_in_data, title, fmt, modify in general_metrics:
-            v_by_sn = general_info_by_sample_by_id[id_in_data]
-            if len(list(set(v_by_sn.values()))) > 1:
-                # if general stats are different for different samples - adding them into the general stats table
-                for sn, v in v_by_sn.items():
-                    if v != 'NA':
-                        all_data_by_sample[sn][id_in_data] = v
-            else:
-                # else - adding them into the report header:
-                if config.report_header_info is None:
-                    config.report_header_info = list()
+def maybe_add_general_metrics(data_by_sample):
+    general_stats_by_sample_by_metric = defaultdict(dict)
 
-                v = list(set(v_by_sn.values()))[0]
-                if v != 'NA':
-                    if modify:
-                        v = modify(v)
-                    config.report_header_info.append({title: fmt.format(v)})
+    for sname, data in data_by_sample.items():
+        for metric, val in data.items():
+            if metric in [metric for (metric, title, fmt, modify) in GENERAL_METRICS]:
+                general_stats_by_sample_by_metric[metric][sname] = val
 
-    return all_data_by_sample
+    for metric, title, fmt, modify in GENERAL_METRICS:
+        vals_by_sample = general_stats_by_sample_by_metric[metric]
+        # if general stats are shared for different samples, adding into the report header section:
+        if len(list(set(vals_by_sample.values()))) == 1:
+            if config.report_header_info is None:
+                config.report_header_info = list()
+
+            v = list(set(vals_by_sample.values()))[0]
+            if v != 'NA':
+                if modify:
+                    v = modify(v)
+                config.report_header_info.append({title: fmt.format(v)})
+
+            # and removing them from general stats:
+            for sname, data in data_by_sample.items():
+                del data[metric]
 
 
 def parse_mapping_metrics_file(f):
     """
+    Mapping and aligning metrics, like the metrics computed by the Samtools Flagstat command, are available
+    on an aggregate level (over all input data), and on a per read group level. Unless explicitly stated,
+    the metrics units are in reads (ie, not in terms of pairs or alignments).
+
     T_SRR7890936_50pc.mapping_metrics.csv
 
+    # phenotype-level metrics (tumor or normal):
+    TUMOR MAPPING/ALIGNING SUMMARY,,Total input reads,2200000000,100.00
+    TUMOR MAPPING/ALIGNING SUMMARY,,Number of duplicate marked reads,433637413,19.71
+    TUMOR MAPPING/ALIGNING SUMMARY,,Number of duplicate marked and mate reads removed,NA
+    TUMOR MAPPING/ALIGNING SUMMARY,,Number of unique reads (excl. duplicate marked reads),1766362587,80.29
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with mate sequenced,2200000000,100.00
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads without mate sequenced,0,0.00
+    TUMOR MAPPING/ALIGNING SUMMARY,,QC-failed reads,0,0.00
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mapped reads,2130883930,96.86
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mapped reads R1,1066701794,96.97
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mapped reads R2,1064182136,96.74
+    TUMOR MAPPING/ALIGNING SUMMARY,,Number of unique & mapped reads (excl. duplicate marked reads),1697246517,77.15
+    TUMOR MAPPING/ALIGNING SUMMARY,,Unmapped reads,69116070,3.14
+    TUMOR MAPPING/ALIGNING SUMMARY,,Singleton reads (itself mapped; mate unmapped),3917092,0.18
+    TUMOR MAPPING/ALIGNING SUMMARY,,Paired reads (itself & mate mapped),2126966838,96.68
+    TUMOR MAPPING/ALIGNING SUMMARY,,Properly paired reads,2103060370,95.59
+    TUMOR MAPPING/ALIGNING SUMMARY,,Not properly paired reads (discordant),23906468,1.09
+    TUMOR MAPPING/ALIGNING SUMMARY,,Paired reads mapped to different chromosomes,17454370,0.82
+    TUMOR MAPPING/ALIGNING SUMMARY,,Paired reads mapped to different chromosomes (MAPQ>=10),6463547,0.30
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with MAPQ [40:inf),2002661377,91.03
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with MAPQ [30:40),7169392,0.33
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with MAPQ [20:30),16644390,0.76
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with MAPQ [10:20),20280057,0.92
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with MAPQ [ 0:10),84128714,3.82
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with MAPQ NA (Unmapped reads),69116070,3.14
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with indel R1,26849051,2.52
+    TUMOR MAPPING/ALIGNING SUMMARY,,Reads with indel R2,24810803,2.33
+    TUMOR MAPPING/ALIGNING SUMMARY,,Total bases,330000000000
+    TUMOR MAPPING/ALIGNING SUMMARY,,Total bases R1,165000000000
+    TUMOR MAPPING/ALIGNING SUMMARY,,Total bases R2,165000000000
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mapped bases R1,160005269100
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mapped bases R2,159627320400
+    TUMOR MAPPING/ALIGNING SUMMARY,,Soft-clipped bases R1,1757128997,1.10
+    TUMOR MAPPING/ALIGNING SUMMARY,,Soft-clipped bases R2,3208748350,2.01
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mismatched bases R1,585802788,0.37
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mismatched bases R2,1155805091,0.72
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mismatched bases R1 (excl. indels),501394281,0.31
+    TUMOR MAPPING/ALIGNING SUMMARY,,Mismatched bases R2 (excl. indels),1073788605,0.67
+    TUMOR MAPPING/ALIGNING SUMMARY,,Q30 bases,297564555927,90.17
+    TUMOR MAPPING/ALIGNING SUMMARY,,Q30 bases R1,155492239719,94.24
+    TUMOR MAPPING/ALIGNING SUMMARY,,Q30 bases R2,142072316208,86.10
+    TUMOR MAPPING/ALIGNING SUMMARY,,Q30 bases (excl. dups & clipped bases),246555769158
+    TUMOR MAPPING/ALIGNING SUMMARY,,Total alignments,2190085267
+    TUMOR MAPPING/ALIGNING SUMMARY,,Secondary alignments,0
+    TUMOR MAPPING/ALIGNING SUMMARY,,Supplementary (chimeric) alignments,59201337
+    TUMOR MAPPING/ALIGNING SUMMARY,,Estimated read length,150.00
+    TUMOR MAPPING/ALIGNING SUMMARY,,Average sequenced coverage over genome,102.83
+    TUMOR MAPPING/ALIGNING SUMMARY,,Insert length: mean,383.00
+    TUMOR MAPPING/ALIGNING SUMMARY,,Insert length: median,376.00
+    TUMOR MAPPING/ALIGNING SUMMARY,,Insert length: standard deviation,85.15
+    # general metrics - reporting in the header (except for DRAGEN mapping rate may be different to T and N:
+    TUMOR MAPPING/ALIGNING SUMMARY,,Bases in reference genome,3209286105
+    TUMOR MAPPING/ALIGNING SUMMARY,,Bases in target bed [% of genome],NA
+    TUMOR MAPPING/ALIGNING SUMMARY,,Provided sex chromosome ploidy,NA
+    TUMOR MAPPING/ALIGNING SUMMARY,,DRAGEN mapping rate [mil. reads/second],0.39
+    # then same for normal:
+    NORMAL MAPPING/ALIGNING SUMMARY,,Total input reads,1100000000,100.00
+    NORMAL MAPPING/ALIGNING SUMMARY,,Number of duplicate marked reads,123518125,11.23
+    ...
+    # then tumor and normal per-read-group metrics - reproting in the beeswarm plot:
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Total reads in RG,2200000000,100.00
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Number of duplicate marked reads,433637413,19.71
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Number of duplicate marked and mate reads removed,NA
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Number of unique reads (excl. duplicate marked reads),1766362587,80.29
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with mate sequenced,2200000000,100.00
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads without mate sequenced,0,0.00
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,QC-failed reads,0,0.00
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mapped reads,2130883930,96.86
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mapped reads R1,1066701794,96.97
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mapped reads R2,1064182136,96.74
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Number of unique & mapped reads (excl. duplicate marked reads),1697246517,77.15
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Unmapped reads,69116070,3.14
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Singleton reads (itself mapped; mate unmapped),3917092,0.18
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Paired reads (itself & mate mapped),2126966838,96.68
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Properly paired reads,2103060370,95.59
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Not properly paired reads (discordant),23906468,1.09
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Paired reads mapped to different chromosomes,17454370,0.82
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Paired reads mapped to different chromosomes (MAPQ>=10),6463547,0.30
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with MAPQ [40:inf),2002661377,91.03
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with MAPQ [30:40),7169392,0.33
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with MAPQ [20:30),16644390,0.76
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with MAPQ [10:20),20280057,0.92
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with MAPQ [ 0:10),84128714,3.82
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with MAPQ NA (Unmapped reads),69116070,3.14
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with indel R1,26849051,2.52
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Reads with indel R2,24810803,2.33
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Total bases,330000000000
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Total bases R1,165000000000
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Total bases R2,165000000000
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mapped bases R1,160005269100
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mapped bases R2,159627320400
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Soft-clipped bases R1,1757128997,1.10
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Soft-clipped bases R2,3208748350,2.01
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mismatched bases R1,585802788,0.37
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mismatched bases R2,1155805091,0.72
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mismatched bases R1 (excl. indels),501394281,0.31
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Mismatched bases R2 (excl. indels),1073788605,0.67
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Q30 bases,297564555927,90.17
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Q30 bases R1,155492239719,94.24
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Q30 bases R2,142072316208,86.10
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Q30 bases (excl. dups & clipped bases),246555769158
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Total alignments,2190085267
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Secondary alignments,0
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Supplementary (chimeric) alignments,59201337
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Estimated read length,150.00
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Average sequenced coverage over genome,102.83
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Insert length: mean,383.01
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Insert length: median,376.00
+    TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Insert length: standard deviation,87.58
+    # same for normal:
     NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Total reads in RG,1100000000,100.00
     NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Number of duplicate marked reads,NA
     NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Number of duplicate marked and mate reads removed,NA
     NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Number of unique reads (excl. duplicate marked reads),NA
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Reads with mate sequenced,1100000000,100.00
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Reads without mate sequenced,0,0.00
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,QC-failed reads,0,0.00
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mapped reads,1066826874,96.98
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mapped reads R1,533963768,97.08
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mapped reads R2,532863106,96.88
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Number of unique & mapped reads (excl. duplicate marked reads),1066826874,96.98
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Unmapped reads,33173126,3.02
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Singleton reads (itself mapped; mate unmapped),1585054,0.14
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Paired reads (itself & mate mapped),1065241820,96.84
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Properly paired reads,1055464776,95.95
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Not properly paired reads (discordant),9777044,0.89
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Paired reads mapped to different chromosomes,6948576,0.65
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Paired reads mapped to different chromosomes (MAPQ>=10),3629346,0.34
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Reads with indel R1,13131067,2.46
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Reads with indel R2,12308296,2.31
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Total bases,165000000000
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Total bases R1,82500000000
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Total bases R2,82500000000
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mapped bases R1,80094565200
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mapped bases R2,79929465900
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Soft-clipped bases R1,700070179,0.87
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Soft-clipped bases R2,1419400306,1.77
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mismatched bases R1,294215249,0.37
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mismatched bases R2,610527210,0.76
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mismatched bases R1 (excl. indels),252464476,0.32
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Mismatched bases R2 (excl. indels),567877112,0.71
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Q30 bases,147576651866,89.44
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Q30 bases R1,77087948549,93.44
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Q30 bases R2,70488703317,85.44
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Q30 bases (excl. dups & clipped bases),150322268169
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Total alignments,1094089541
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Secondary alignments,0
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Supplementary (chimeric) alignments,27262667
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Estimated read length,150.00
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Average sequenced coverage over genome,51.41
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Insert length: mean,383.14
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Insert length: median,377.00
-    NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Insert length: standard deviation,82.67
-    NORMAL MAPPING/ALIGNING SUMMARY,,Bases in reference genome,3209286105
-    NORMAL MAPPING/ALIGNING SUMMARY,,Bases in target bed [% of genome],NA
-    NORMAL MAPPING/ALIGNING SUMMARY,,Provided sex chromosome ploidy,NA
-    NORMAL MAPPING/ALIGNING SUMMARY,,DRAGEN mapping rate [mil. reads/second],0.53
+    ...
+
+    We are reporting summary metrics in the general stats table, and per-read-group in the beeswarm plot.
     """
 
-    data_by_sample = defaultdict(dict)
-    general_info = dict()
+    f['s_name'] = re.search(r'(.*).mapping_metrics.csv', f['fn']).group(1)
+
+    data_by_readgroup = defaultdict(dict)
+    data_by_phenotype = defaultdict(dict)
+
     for line in f['f'].splitlines():
         fields = line.split(',')
+        phenotype = fields[0].split('/')[0].split(' ')[0].lower()  # TUMOR MAPPING -> tumor
         analysis = fields[0].split('/')[1]  # ALIGNING SUMMARY, ALIGNING PER RG
+        metric = fields[2]
+        value = fields[3]
+        try:
+            value = int(value)
+        except ValueError:
+            try:
+                value = float(value)
+            except ValueError:
+                pass
+
+        percentage = None
+        if len(fields) > 4:  # percentage
+            percentage = fields[4]
+            try:
+                percentage = float(percentage)
+            except ValueError:
+                pass
+
         # sample-unspecific metrics are reported only in ALIGNING SUMMARY sections
         if analysis == 'ALIGNING SUMMARY':
-            metric = fields[2]
-            if metric in [id_in_data for (id_in_data, title, fmt, modify) in general_metrics]:
-                value = fields[3]
-                try:
-                    value = int(value)
-                except ValueError:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        pass
-                general_info[metric] = value
+            data_by_phenotype[phenotype][metric] = value
+            if percentage is not None:
+                data_by_phenotype[phenotype][metric + ' pct'] = percentage
 
         # for sample-specific metrics, using ALIGNING PER RG because it has the sample name in the 2nd col
         if analysis == 'ALIGNING PER RG':
-            sample = fields[1]
-            metric = fields[2]
-            value = fields[3]
-            try:
-                value = int(value)
-            except ValueError:
-                pass
-            data_by_sample[sample][metric] = value
-
-            if len(fields) > 4:  # percentage
-                percentage = fields[4]
-                try:
-                    percentage = float(percentage)
-                except ValueError:
-                    pass
-                data_by_sample[sample][metric + ' pct'] = percentage
+            # setting normal and tumor sample names for future use
+            readgroup = fields[1]
+            data_by_readgroup[readgroup][metric] = value
+            if percentage is not None:
+                data_by_readgroup[readgroup][metric + ' pct'] = percentage
 
     # adding some missing values that we wanna report for consistency
-    for sname, data in data_by_sample.items():
+    for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
         # fixing when deduplication wasn't performed
         if data['Number of duplicate marked reads'] == 'NA':
             data['Number of duplicate marked reads'] = 0
@@ -244,13 +351,7 @@ def parse_mapping_metrics_file(f):
             data['Mapped bases R1 pct'] = data['Mapped bases R1'] / data['Total bases'] * 100.0
             data['Mapped bases R2 pct'] = data['Mapped bases R2'] / data['Total bases'] * 100.0
 
-    # removing NA values
-    for sname, data in data_by_sample.items():
-        for k, v in data.items():
-            if v == 'NA':
-                del data[k]
-
-    return data_by_sample, general_info
+    return data_by_readgroup, data_by_phenotype
 
 
 read_format = '{:,.1f}'
@@ -265,10 +366,11 @@ elif config.base_count_multiplier == 0.000000001:
     base_format = '{:,.2f}'
 base_format += '&nbsp;' + config.base_count_prefix
 
-mapping_metrics = [
+MAPPING_METRICS = [
     # id_in_data                                               # title (display name)        # show  # unit  # beeswarm  # description
     # Read stats:
-    ('Total reads in RG'                                      , 'Reads'                      , '#',  'reads', True,  'Total number of reads in this read group (sample), {}'),
+    ('Total input reads'                                      , 'Reads'                      , '#',  'reads', False, 'Total number of input reads for this sample (or total number of reads in all input read groups combined), {}'),
+    ('Total reads in RG'                                      , 'Reads'                      , None, 'reads', True,  'Total number of reads in this RG, {}'),
     ('Reads with mate sequenced'                              , 'Reads with mate'            , None, 'reads', True,  'Number of reads with a mate sequenced, {}'),
     ('Reads without mate sequenced'                           , 'Reads w/o mate'             , None, 'reads', False, 'Number of reads without a mate sequenced, {}'),
     ('QC-failed reads'                                        , 'QC-fail'                    , None, 'reads', True,  'Number of reads not passing platform/vendor quality checks (SAM flag 0x200), {}'),
@@ -338,12 +440,12 @@ mapping_metrics = [
     ('DRAGEN mapping rate [mil. reads/second]'                , 'DRAGEN map rate'            , None,  None  , False, 'DRAGEN mapping rate [mil. reads/second]'),
 ]
 
-general_metrics = [
+GENERAL_METRICS = [
     # id_in_data                              # title                            # format                         # modify
-    ('Bases in reference genome'              , 'Bases in ref. genome'           , base_format                    , lambda v: v * config.base_count_multiplier ),
-    ('Bases in target bed [% of genome]'      , 'Bases in target bed'            , '{} % of genome'               , None                                       ),
-    ('Provided sex chromosome ploidy'         , 'Provided sex chrom ploidy'      , '{}'                           , None                                       ),
-    ('DRAGEN mapping rate [mil. reads/second]', 'DRAGEN mapping rate'            , '{:,.2f} [mil. reads/second]'  , None                                       ),
+    ('Bases in reference genome'              , 'Bases in ref. genome:'           , base_format                    , lambda v: v * config.base_count_multiplier ),
+    ('Bases in target bed [% of genome]'      , 'Bases in target bed:'            , '{} % of genome'               , None                                       ),
+    ('Provided sex chromosome ploidy'         , 'Prov. sex chrom ploidy:'         , '{}'                           , None                                       ),
+    ('DRAGEN mapping rate [mil. reads/second]', 'DRAGEN mapping rate:'            , '{:,.2f} [mil. reads/second]'  , None                                       ),
 ]
 
 def make_mapping_stats_headers(metric_names):
@@ -353,7 +455,7 @@ def make_mapping_stats_headers(metric_names):
     # Init beeswarm plot
     beeswarm_keys = OrderedDict()
 
-    for id_in_data, title, showing, unit, show_in_beeswarm, descr in mapping_metrics:
+    for id_in_data, title, showing, unit, show_in_beeswarm, descr in MAPPING_METRICS:
         col = dict(
             title=title,
             description=descr,

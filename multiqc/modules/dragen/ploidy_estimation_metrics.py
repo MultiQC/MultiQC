@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
+import re
 from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -12,24 +14,20 @@ log = logging.getLogger(__name__)
 
 class DragenPloidyEstimationMetrics(BaseMultiqcModule):
     def parse_ploidy_estimation_metrics(self):
-        all_data_by_sample = dict()
+        data_by_sample = dict()
 
         for f in self.find_log_files('dragen/ploidy_estimation_metrics'):
-            data_by_sample = parse_ploidy_estimation_metrics_file(f)
-            if data_by_sample:
-                for sn, data in data_by_sample.items():
-                    if sn in all_data_by_sample:
-                        log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
-                    self.add_data_source(f, section='stats')
-
-                    all_data_by_sample[sn] = data
+            data = parse_ploidy_estimation_metrics_file(f)
+            if f['s_name'] in data_by_sample:
+                log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
+            self.add_data_source(f, section='stats')
+            data_by_sample[f['s_name']] = data
 
         # Filter to strip out ignored sample names:
-        all_data_by_sample = self.ignore_samples(all_data_by_sample)
-
-        if not all_data_by_sample:
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if not data_by_sample:
             return
-        log.info('Found ploidy estimation metrics for {} samples'.format(len(all_data_by_sample)))
+        log.info('Found ploidy estimation metrics for {} samples'.format(len(data_by_sample)))
 
         headers = OrderedDict()
         headers['Ploidy estimation'] = {
@@ -37,7 +35,7 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
             'description': 'Ploidy estimation (XX, XY, X0, 00, etc.)',
             'scale': 'Set1',
         }
-        self.general_stats_addcols(all_data_by_sample, headers, 'Ploidy estimation')
+        self.general_stats_addcols(data_by_sample, headers, 'Ploidy estimation')
 
 
 def parse_ploidy_estimation_metrics_file(f):
@@ -52,9 +50,9 @@ def parse_ploidy_estimation_metrics_file(f):
     PLOIDY ESTIMATION,,Ploidy estimation,X0
     """
 
-    sample = f['fn'].split('.ploidy_estimation_metrics.csv')[0]
+    f['s_name'] = re.search(r'(.*).ploidy_estimation_metrics.csv', f['fn']).group(1)
 
-    data_by_sample = defaultdict(dict)
+    data = defaultdict(dict)
 
     for line in f['f'].splitlines():
         _, _, metric, stat = line.split(',')
@@ -62,8 +60,8 @@ def parse_ploidy_estimation_metrics_file(f):
             stat = float(stat)
         except ValueError:
             pass
-        data_by_sample[sample][metric] = stat
+        data[metric] = stat
 
-    return data_by_sample
+    return data
 
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
+import re
 from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, bargraph
@@ -14,29 +16,27 @@ class DragenTimeMetrics(BaseMultiqcModule):
     def parse_time_metrics(self):
         # TODO: figure why steps don't sum up into total runtime
 
-        all_general_data = defaultdict(dict)
-        all_bargraph_data = defaultdict(dict)
+        genstats_data_by_sample = defaultdict(dict)
+        bargraph_data_by_sample = defaultdict(dict)
         all_bargraph_steps = list()
 
         for f in self.find_log_files('dragen/time_metrics'):
-            bargraph_data, bargraph_steps, general_data = parse_time_metrics_file(f)
-            if bargraph_data:
-                for sn, data in bargraph_data.items():
-                    if sn in bargraph_data:
-                        log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
-                    self.add_data_source(f, section='stats')
-                    all_bargraph_data[sn] = data
+            bargraph_data, bargraph_steps, genstats_data = parse_time_metrics_file(f)
+            if f['s_name'] in bargraph_data:
+                log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
+            self.add_data_source(f, section='stats')
+            bargraph_data_by_sample[f['s_name']] = bargraph_data
+            genstats_data_by_sample[f['s_name']] = genstats_data
 
-                # TODO: if steps are differrent in different runs, make separate bargraphs
-                all_bargraph_steps = bargraph_steps
+            # TODO: if steps are differrent in different runs, make separate bargraphs
+            all_bargraph_steps = bargraph_steps
 
         # Filter to strip out ignored sample names:
-        all_bargraph_data = self.ignore_samples(all_bargraph_data)
-        all_general_data = self.ignore_samples(all_general_data)
-
-        if not all_bargraph_data:
+        bargraph_data_by_sample = self.ignore_samples(bargraph_data_by_sample)
+        genstats_data_by_sample = self.ignore_samples(genstats_data_by_sample)
+        if not bargraph_data_by_sample:
             return
-        log.info('Found time metrics for {} samples'.format(len(all_bargraph_data)))
+        log.info('Found time metrics for {} samples'.format(len(bargraph_data_by_sample)))
 
         headers = OrderedDict()
         headers['Total runtime'] = {
@@ -44,7 +44,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
             'description': 'Run time metrics',
             'suffix': ' h'
         }
-        self.general_stats_addcols(all_general_data, headers, 'Time metrics')
+        self.general_stats_addcols(genstats_data_by_sample, headers, 'Time metrics')
 
         self.add_section(
             name='Run time metrics',
@@ -52,7 +52,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
             description='Breakdown of the run duration of each process. '
                         'Each section on the barplot corresponds to an execution stage, with X axis values showing '
                         'time (in hours) in finished after the start of the pipeline.',
-            plot=bargraph.plot(all_bargraph_data, {
+            plot=bargraph.plot(bargraph_data_by_sample, {
                 step: {'name': step} for step in all_bargraph_steps
             }, {
                 'id': 'dragen_time_metrics',
@@ -77,11 +77,12 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time partitioning,01:31:27.108,5487.11
     RUN TIME,,Total runtime,03:32:28.426,12748.43
     """
-    sample = f['fn'].split('.time_metrics.csv')[0]
 
-    data_by_sample = defaultdict(dict)
+    f['s_name'] = re.search(r'(.*).time_metrics.csv', f['fn']).group(1)
+
+    data = defaultdict(dict)
     steps = []
-    general_stats = defaultdict(dict)
+    gen_stats = defaultdict(dict)
 
     for line in f['f'].splitlines():
         _, _, step, time, seconds = line.split(',')
@@ -91,11 +92,11 @@ def parse_time_metrics_file(f):
             pass
         hours = seconds / 60 / 60
         if step == 'Total runtime':
-            general_stats[sample][step] = hours
+            gen_stats[step] = hours
         else:
-            data_by_sample[sample][step] = hours
+            data[step] = hours
             steps.append(step)
 
-    return data_by_sample, steps, general_stats
+    return data, steps, gen_stats
 
 

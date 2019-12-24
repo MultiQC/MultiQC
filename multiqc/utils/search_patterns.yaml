@@ -255,26 +255,16 @@ dragen/time_metrics:
     fn: "*.time_metrics.csv"
 dragen/vc_metrics:
     fn: "*.vc_metrics.csv"
-dragen/wgs_contig_mean_cov_normal:
-    fn: "*.wgs_contig_mean_cov_normal.csv"
-dragen/wgs_contig_mean_cov_tumor:
-    fn: "*.wgs_contig_mean_cov_tumor.csv"
-dragen/wgs_coverage_metrics_normal:
-    fn: "*.wgs_coverage_metrics_normal.csv"
-dragen/wgs_coverage_metrics_tumor:
-    fn: "*.wgs_coverage_metrics_tumor.csv"
-dragen/wgs_fine_hist_normal:
-    fn: "*.wgs_fine_hist_normal.csv"
-dragen/wgs_fine_hist_tumor:
-    fn: "*.wgs_fine_hist_tumor.csv"
-dragen/wgs_hist_normal:
-    fn: "*.wgs_hist_normal.csv"
-dragen/wgs_hist_tumor:
-    fn: "*.wgs_hist_tumor.csv"
-dragen/wgs_overall_mean_cov_normal:
-    fn: "*.wgs_overall_mean_cov_normal.csv"
-dragen/wgs_overall_mean_cov_tumor:
-    fn: "*.wgs_overall_mean_cov_tumor.csv"
+dragen/wgs_contig_mean_cov:
+    fn: "*.wgs_contig_mean_cov_(tumor|normal).csv"
+dragen/wgs_coverage_metrics:
+    fn: "*.wgs_coverage_metrics_(tumor|normal).csv"
+dragen/wgs_fine_hist:
+    fn: "*.wgs_fine_hist_(tumor|normal).csv"
+dragen/wgs_hist:
+    fn: "*.wgs_hist_(tumor|normal).csv"
+dragen/wgs_overall_mean_cov:
+    fn: "*.wgs_overall_mean_cov_(tumor|normal).csv"
 
 fastp:
     fn: '*fastp.json'
