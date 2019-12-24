@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True,
-                    'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
+                    'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
                     'smooth_points': 500,
                 })
             )
