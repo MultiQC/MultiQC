@@ -26,6 +26,10 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
             info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                   " using field-programmable gate array technology (FPGA)."))
 
+        # collecting sample names based on mapping statistics file,
+        # because the coverage stats like <tumor_name>.wgs_contig_mean_cov_normal.csv don't specify the normal sample name,
+        self.sample_names_by_output_prefixes = defaultdict(dict)  # { <output-prefix>: {tumor: <tumor-name>, normal: <normal-name>} }
+
         self.parse_mapping_metrics()
         # T_SRR7890936_50pc.mapping_metrics.csv              - general stats table, barplots and beeswarm
 
