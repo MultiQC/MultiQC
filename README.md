@@ -48,8 +48,8 @@ Currently, supported tools include:
 |[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]                  |
 |[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
 |[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
-|[FLASh][flash]                   |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |                             |[QoRTs][qorts]                        |
+|[FLASh][flash]                   |[Dragen][dragen]         |[THetA2][theta2]             |[Preseq][preseq]                      |
+|[Flexbar][flexbar]               |                         |[Dragen][dragen]             |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
