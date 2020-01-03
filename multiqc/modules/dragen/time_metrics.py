@@ -4,7 +4,8 @@ from __future__ import print_function
 import re
 from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import linegraph, bargraph
+from multiqc.modules.dragen.utils import Metric
+from multiqc.plots import linegraph, bargraph, table, beeswarm
 
 # Initialise the logger
 import logging
@@ -13,56 +14,85 @@ log = logging.getLogger(__name__)
 
 
 class DragenTimeMetrics(BaseMultiqcModule):
-    def parse_time_metrics(self):
-        # TODO: figure why steps don't sum up into total runtime
+    """
+    Rendering a beeswarm. Could go with a bargraph, but the steps don't sum up to total runtime,
+    meaning they are executed partially in parallel, so bars need to be overlapping.
+    MultiQC doesn't support plots like that, so just showing a table.
+    #TODO: figure why steps don't sum up into total runtime
+    """
 
-        genstats_data_by_sample = defaultdict(dict)
-        bargraph_data_by_sample = defaultdict(dict)
-        all_bargraph_steps = list()
+    def parse_time_metrics(self):
+        data_by_sample = dict()
 
         for f in self.find_log_files('dragen/time_metrics'):
-            bargraph_data, bargraph_steps, genstats_data = parse_time_metrics_file(f)
-            if f['s_name'] in bargraph_data:
+            data = parse_time_metrics_file(f)
+            if f['s_name'] in data:
                 log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
             self.add_data_source(f, section='stats')
-            bargraph_data_by_sample[f['s_name']] = bargraph_data
-            genstats_data_by_sample[f['s_name']] = genstats_data
-
-            # TODO: if steps are differrent in different runs, make separate bargraphs
-            all_bargraph_steps = bargraph_steps
+            data_by_sample[f['s_name']] = data
 
         # Filter to strip out ignored sample names:
-        bargraph_data_by_sample = self.ignore_samples(bargraph_data_by_sample)
-        genstats_data_by_sample = self.ignore_samples(genstats_data_by_sample)
-        if not bargraph_data_by_sample:
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if not data_by_sample:
             return
-        log.info('Found time metrics for {} samples'.format(len(bargraph_data_by_sample)))
+        log.info('Found time metrics for {} samples'.format(len(data_by_sample)))
 
         headers = OrderedDict()
-        headers['Total runtime'] = {
-            'title': 'Run time',
-            'description': 'Run time metrics',
-            'suffix': ' h',
-            'scale': 'Greys',
-            'hidden': True,
-        }
-        self.general_stats_addcols(genstats_data_by_sample, headers, 'Time metrics')
+        genstats_headers = OrderedDict()
+        max_time = 0
+        for sn, data in data_by_sample.items():
+            for step, time in data.items():
+                title = step
+                if step.startswith('Time '):
+                    title = step[5].upper() + step[6:]  # Time aligning reads -> Aligning reads
+                headers[step] = {
+                    'title': title,
+                    'description': step,
+                    'suffix': ' h',
+                    'scale': 'Greys',
+                }
+                if step == 'Total run time':
+                    genstats_headers[step] = {
+                        'title': 'Run time',
+                        'description': step,
+                        'suffix': ' h',
+                        'scale': 'Greys',
+                        'hidden': True,
+                    }
+                max_time = max(time, max_time)
+
+        self.general_stats_addcols(data_by_sample, genstats_headers, 'Time metrics')
 
         self.add_section(
             name='Run time metrics',
             anchor='dragen-time-metrics',
             description='Breakdown of the run duration of each process. '
-                        'Each section on the barplot corresponds to an execution stage, with X axis values showing '
-                        'time (in hours) in finished after the start of the pipeline.',
-            plot=bargraph.plot(bargraph_data_by_sample, {
-                step: {'name': step} for step in all_bargraph_steps
-            }, {
-                'id': 'dragen_time_metrics',
-                'title': 'Run time metrics',
-                'ylab': 'hours',
-                'cpswitch_counts_label': 'Hours'
+                        'Each row corresponds to an execution stage, with X axis values showing '
+                        'time (in hours) this stage took to execute. Some steps may run in parallel, '
+                        'so the numbers don\'t nesesseraly sum up to total runtime.',
+            plot=beeswarm.plot(data_by_sample, headers, pconfig={
+                'namespace': 'Time metrics',
+                'max': max_time
             })
         )
+
+        # Alternatively can consider bargraph plots. Howevew since the steps don't nesesseraly sum up to total run time
+        # due to parallelization, bargraph without overlapping bars can be misleading.
+        # self.add_section(
+        #     name='Run time metrics',
+        #     anchor='dragen-time-metrics',
+        #     description='Breakdown of the run duration of each process. '
+        #                 'Each section on the barplot corresponds to an execution stage, with X axis values showing '
+        #                 'time (in hours) in finished after the start of the pipeline.',
+        #     plot=bargraph.plot(bargraph_data_by_sample, {
+        #         step: {'name': step} for step in all_bargraph_steps
+        #     }, {
+        #         'id': 'dragen_time_metrics',
+        #         'title': 'Run time metrics',
+        #         'ylab': 'hours',
+        #         'cpswitch_counts_label': 'Hours'
+        #     })
+        # )
 
 
 def parse_time_metrics_file(f):
@@ -83,8 +113,6 @@ def parse_time_metrics_file(f):
     f['s_name'] = re.search(r'(.*).time_metrics.csv', f['fn']).group(1)
 
     data = defaultdict(dict)
-    steps = []
-    gen_stats = defaultdict(dict)
 
     for line in f['f'].splitlines():
         _, _, step, time, seconds = line.split(',')
@@ -93,12 +121,8 @@ def parse_time_metrics_file(f):
         except ValueError:
             pass
         hours = seconds / 60 / 60
-        if step == 'Total runtime':
-            gen_stats[step] = hours
-        else:
-            data[step] = hours
-            steps.append(step)
+        data[step] = hours
 
-    return data, steps, gen_stats
+    return data
 
 
