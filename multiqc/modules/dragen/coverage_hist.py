@@ -13,8 +13,6 @@ from multiqc.plots import linegraph, bargraph, table
 import logging
 log = logging.getLogger(__name__)
 
-from .utils import make_headers, Metric
-
 
 class DragenCoverageHist(BaseMultiqcModule):
     def parse_coverage_hist(self):

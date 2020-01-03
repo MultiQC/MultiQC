@@ -86,6 +86,7 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.__map_dup_read_chart(data_by_rg)
         self.__map_pair_read_chart(data_by_rg)
 
+        # Alternatively can consider a beeswarm plot, similar to samtools flagstats:
         # self.add_section(
         #     name='Mapping metrics per RG',
         #     anchor='dragen-mapping-metrics',
@@ -144,7 +145,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 'Unmapped reads':                                 {'color': '#b1084c', 'name': 'Unmapped'},
             }, {
                 'id': 'mapping_paired_percentage_plot',
-                'title': '<apping metrics per read group: paired reads',
+                'title': 'Mapping metrics per read group: paired reads',
                 'ylab': '# Reads',
                 'cpswitch_counts_label': 'Number of reads'
             })
@@ -366,7 +367,6 @@ def parse_mapping_metrics_file(f):
     return data_by_readgroup, data_by_phenotype
 
 
-# MAPPING_METRICS = [
 MAPPING_METRICS = [
     # id_in_data                                                    # title (display name)  # in_genstats  # in_own_tabl # unit  # description
     # Read stats:
