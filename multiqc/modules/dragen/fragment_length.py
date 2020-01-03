@@ -23,12 +23,12 @@ class DragenFragmentLength(BaseMultiqcModule):
             data_by_rg = parse_fragment_length_hist_file(f)
             if f['s_name'] in data_by_rg_by_sample:
                 log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
-                self.add_data_source(f, section='stats')
+            self.add_data_source(f, section='stats')
 
             for rg, data in data_by_rg.items():
                 if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
                     log.debug('Duplicate read group name {} found for {}! Overwriting'.format(rg, f['s_name']))
-            data_by_rg_by_sample[f['s_name']] = data_by_rg
+            data_by_rg_by_sample[f['s_name']].update(data_by_rg)
 
         # Filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)

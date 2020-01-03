@@ -42,7 +42,9 @@ class DragenTimeMetrics(BaseMultiqcModule):
         headers['Total runtime'] = {
             'title': 'Run time',
             'description': 'Run time metrics',
-            'suffix': ' h'
+            'suffix': ' h',
+            'scale': 'Greys',
+            'hidden': True,
         }
         self.general_stats_addcols(genstats_data_by_sample, headers, 'Time metrics')
 
