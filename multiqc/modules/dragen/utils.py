@@ -19,7 +19,7 @@ base_format += '&nbsp;' + config.base_count_prefix
 
 class Metric:
     def __init__(self, id, title, in_genstats=None, in_own_tabl=None, unit=None,
-                 descr=None, fmt=None, modify=None, namespace=None):
+                 descr=None, fmt=None, modify=None, namespace=None, precision=None):
         self.id = id
         self.title = title
         self.unit = unit
@@ -29,6 +29,7 @@ class Metric:
         self.fmt = fmt
         self.modify = modify
         self.namespace = namespace
+        self.precision = precision
 
 
 def make_headers(parsed_metric_ids, metrics):
@@ -65,6 +66,9 @@ def make_headers(parsed_metric_ids, metrics):
                 max=100,
                 suffix='%',
             )
+            if metric.precision is not None:
+                pct_col['format'] = '{:,.' + str(metric.precision) + 'f}'
+
             if metric.in_genstats is not None:
                 show = metric.in_genstats == '%'
                 genstats_headers[metric.id + ' pct'] = dict(pct_col, hidden=not show)
@@ -93,6 +97,8 @@ def make_headers(parsed_metric_ids, metrics):
             col['format'] = '{:,.1f}'
         elif any(metric.descr.startswith(pref) for pref in ('Total number of ', 'The number of ', 'Number of ')):
             col['format'] = '{:,.0f}'
+        if metric.precision is not None:
+            col['format'] = '{:,.' + str(metric.precision) + 'f}'
 
         if metric.in_genstats is not None:
             genstats_headers[metric.id] = dict(col, hidden=metric.in_genstats != '#')
