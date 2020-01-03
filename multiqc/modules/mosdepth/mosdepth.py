@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=linegraph.plot(dist_data, {
                     'id': 'mosdepth-coverage-dist-id',
                     'xlab': 'Coverage (X)',
-                    'ylab': '% bases in genome/regions covered by least X reads',
+                    'ylab': '% bases in genome/regions covered by at least X reads',
                     'ymax': 100,
                     'xmax': xmax,
                     'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',

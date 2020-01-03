@@ -261,10 +261,6 @@ dragen/wgs_coverage_metrics:
     fn_re: '.*\.wgs_coverage_metrics_(tumor|normal)\.csv'
 dragen/wgs_fine_hist:
     fn_re: '.*\.wgs_fine_hist_(tumor|normal)\.csv'
-dragen/wgs_hist:
-    fn_re: '.*\.wgs_hist_(tumor|normal)\.csv'
-dragen/wgs_overall_mean_cov:
-    fn_re: '.*\.wgs_overall_mean_cov_(tumor|normal)\.csv'
 
 fastp:
     fn: '*fastp.json'

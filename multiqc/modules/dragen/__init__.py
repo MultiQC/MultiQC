@@ -8,13 +8,14 @@ from .time_metrics import DragenTimeMetrics
 from .vc_metrics import DragenVCMetrics
 from .coverage_per_contig import DragenCoveragePerContig
 from .coverage_metrics import DragenCoverageMetrics
+from .coverage_hist import DragenCoverageHist
 
 import logging
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics, DragenTimeMetrics, DragenVCMetrics,
-                    DragenCoveragePerContig, DragenCoverageMetrics):
+                    DragenCoveragePerContig, DragenCoverageMetrics, DragenCoverageHist):
     """ Dragen has a number of different pipelines and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
@@ -31,6 +32,10 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         # because the coverage stats like <tumor_name>.wgs_contig_mean_cov_normal.csv don't specify the normal sample name,
         self.sample_names_by_output_prefixes = defaultdict(dict)  # { <output-prefix>: {tumor: <tumor-name>, normal: <normal-name>} }
 
+        self.parse_coverage_hist()
+        # T_SRR7890936_50pc.wgs_fine_hist_normal.csv         - distribution plot
+        # T_SRR7890936_50pc.wgs_fine_hist_tumor.csv          - same
+
         self.parse_mapping_metrics()
         # T_SRR7890936_50pc.mapping_metrics.csv              - general stats table, barplots and beeswarm
 
@@ -41,13 +46,6 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         self.parse_coverage_per_contig()
         # T_SRR7890936_50pc.wgs_contig_mean_cov_normal.csv   - histogram or a plot like in mosdepth, with each chrom in X axis
         # T_SRR7890936_50pc.wgs_contig_mean_cov_tumor.csv    - same
-
-        # T_SRR7890936_50pc.wgs_fine_hist_normal.csv         - distribution plot
-        # T_SRR7890936_50pc.wgs_fine_hist_tumor.csv          - same
-        # T_SRR7890936_50pc.wgs_hist_normal.csv
-        # T_SRR7890936_50pc.wgs_hist_tumor.csv
-        # T_SRR7890936_50pc.wgs_overall_mean_cov_normal.csv  - more accurate cov value. replace the value from mapping_metrics
-        # T_SRR7890936_50pc.wgs_overall_mean_cov_tumor.csv   - same
 
         self.parse_fragment_length_hist()
         # T_SRR7890936_50pc.fragment_length_hist.csv         - histogram plot
