@@ -49,7 +49,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
                         'the length of the contig or (if a target bed is used) the total length of the target '
                         'region spanning that contig.',
             plot=linegraph.plot(perchrom_data_by_sample, pconfig={
-                'id': 'dragen-coverage-per-contig',
+                'id': 'dragen_coverage_per_contig',
                 'title': 'Average coverage per contig or chromosome',
                 'ylab': 'Average coverage',
                 'xlab': 'Region',

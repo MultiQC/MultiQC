@@ -360,6 +360,10 @@ module_order:
             - DNA
             - RNA
             - umi
+    - dragen:
+        module_tag:
+            - DNA
+            - RNA
     - dedup:
         module_tag:
             - DNA
