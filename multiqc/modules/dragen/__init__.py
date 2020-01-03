@@ -28,34 +28,30 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
             info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                   " using field-programmable gate array technology (FPGA)."))
 
-        # collecting sample names based on mapping statistics file,
-        # because the coverage stats like <tumor_name>.wgs_contig_mean_cov_normal.csv don't specify the normal sample name,
-        self.sample_names_by_output_prefixes = defaultdict(dict)  # { <output-prefix>: {tumor: <tumor-name>, normal: <normal-name>} }
-
         self.parse_coverage_hist()
-        # T_SRR7890936_50pc.wgs_fine_hist_normal.csv         - distribution plot
-        # T_SRR7890936_50pc.wgs_fine_hist_tumor.csv          - same
+        # <output prefix>.wgs_fine_hist_normal.csv         - distribution plot
+        # <output prefix>.wgs_fine_hist_tumor.csv          - same
 
         self.parse_mapping_metrics()
-        # T_SRR7890936_50pc.mapping_metrics.csv              - general stats table, barplots and beeswarm
+        # <output prefix>.mapping_metrics.csv              - general stats table, barplots and beeswarm
 
         self.parse_coverage_metrics()
-        # T_SRR7890936_50pc.wgs_coverage_metrics_normal.csv  - metrics into gen stats table, own table, plus histogram for "PCT of genome with coverage"
-        # T_SRR7890936_50pc.wgs_coverage_metrics_tumor.csv   - same
+        # <output prefix>.wgs_coverage_metrics_normal.csv  - metrics into gen stats table, own table, plus histogram for "PCT of genome with coverage"
+        # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
 
         self.parse_coverage_per_contig()
-        # T_SRR7890936_50pc.wgs_contig_mean_cov_normal.csv   - histogram or a plot like in mosdepth, with each chrom in X axis
-        # T_SRR7890936_50pc.wgs_contig_mean_cov_tumor.csv    - same
+        # <output prefix>.wgs_contig_mean_cov_normal.csv   - histogram or a plot like in mosdepth, with each chrom in X axis
+        # <output prefix>.wgs_contig_mean_cov_tumor.csv    - same
 
         self.parse_fragment_length_hist()
-        # T_SRR7890936_50pc.fragment_length_hist.csv         - histogram plot
+        # <output prefix>.fragment_length_hist.csv         - histogram plot
 
         self.parse_ploidy_estimation_metrics()
-        # T_SRR7890936_50pc.ploidy_estimation_metrics.csv    - add just PLOIDY ESTIMATION,,Ploidy estimation,X0  into gen stats
+        # <output prefix>.ploidy_estimation_metrics.csv    - add just PLOIDY ESTIMATION,,Ploidy estimation,X0  into gen stats
 
         self.parse_vc_metrics()
-        # T_SRR7890936_50pc.vc_metrics.csv                   - a table
+        # <output prefix>.vc_metrics.csv                   - a table
 
         self.parse_time_metrics()
-        # T_SRR7890936_50pc.time_metrics.csv                 - perhaps a barplot?
+        # <output prefix>.time_metrics.csv                 - perhaps a barplot?
 

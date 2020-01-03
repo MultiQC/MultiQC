@@ -30,6 +30,8 @@
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**Dragen**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
+    * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
 
 #### Module updates:
 * **bcl2fastq**
