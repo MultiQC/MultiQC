@@ -51,7 +51,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
                     'suffix': ' h',
                     'scale': 'Greys',
                 }
-                if step == 'Total run time':
+                if step == 'Total runtime':
                     genstats_headers[step] = {
                         'title': 'Run time',
                         'description': step,

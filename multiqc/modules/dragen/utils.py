@@ -19,7 +19,8 @@ base_format += '&nbsp;' + config.base_count_prefix
 
 class Metric:
     def __init__(self, id, title, in_genstats=None, in_own_tabl=None, unit=None,
-                 descr=None, fmt=None, modify=None, namespace=None, precision=None):
+                 descr=None, fmt=None, modify=None, namespace=None, precision=None,
+                 reversed=False):
         self.id = id
         self.title = title
         self.unit = unit
@@ -30,6 +31,7 @@ class Metric:
         self.modify = modify
         self.namespace = namespace
         self.precision = precision
+        self.reversed = reversed
 
 
 def make_headers(parsed_metric_ids, metrics):
@@ -50,11 +52,15 @@ def make_headers(parsed_metric_ids, metrics):
         if metric.unit == 'reads':
             col['scale'] = 'Greens'
         elif metric.unit == 'bases':
-            col['scale'] = 'Blues'
+            col['scale'] = 'Greys'
         elif metric.unit == 'bp':
-            col['scale'] = 'Reds'
+            col['scale'] = 'Purples'
         elif metric.unit == 'x' or metric.namespace == 'Coverage':
-            col['scale'] = 'Oranges'
+            col['scale'] = 'Blues'
+            if metric.unit == '%':
+                col['scale'] = 'RdBu'
+                if metric.reversed:
+                    col['scale'] += '-rev'
         elif metric.namespace == 'Variants':
             col['scale'] = 'Purples'
 
@@ -66,6 +72,15 @@ def make_headers(parsed_metric_ids, metrics):
                 max=100,
                 suffix='%',
             )
+            if metric.unit == 'reads':
+                pct_col['scale'] = 'RdYlGn'
+            elif metric.unit == 'bases':
+                pct_col['scale'] = 'RdGy'
+            elif metric.unit == 'x' or metric.namespace == 'Coverage':
+                pct_col['scale'] = 'RdBu'
+            if metric.reversed:
+                pct_col['scale'] += '-rev'
+
             if metric.precision is not None:
                 pct_col['format'] = '{:,.' + str(metric.precision) + 'f}'
 
