@@ -41,13 +41,14 @@ class DragenCoverageHist(BaseMultiqcModule):
             return
         log.info('Found Dragen coverage histogram for {} Dragen output prefixes'.format(len(data_by_sample)))
 
-        dist_data   = {sn: dist for sn, (dist, cum) in data_by_sample.items()}
-        cum_data    = {sn: cum  for sn, (dist, cum) in data_by_sample.items()}
+        dist_data  = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
+        cum_data   = {sn: cum  for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
+        depth_1pc  = max(depth_1pc for (dist, cum, depth_1pc) in data_by_sample.values())
 
         self.add_section(
             name='Coverage distribution',
             anchor='dragen-coverage-distribution',
-            description='Number of locations in the reference genome with a given depth of coverage',
+            description='Number of locations in the reference genome with a given depth of coverage.',
             helptext=coverage_histogram_helptext,
             plot=linegraph.plot(dist_data, {
                 'id': 'dragen_coverage_dist',
@@ -56,6 +57,7 @@ class DragenCoverageHist(BaseMultiqcModule):
                 'ylab': 'Number of bases in genome covered by X reads',
                 'ymin': 0,
                 'xmin': 0,
+                'xmax': depth_1pc,  # trim long flat tail
                 'tt_label': '<b>{point.x}X</b>: {point.y} loci',
             })
         )
@@ -63,7 +65,7 @@ class DragenCoverageHist(BaseMultiqcModule):
         self.add_section(
             name='Cumulative coverage hist',
             anchor='dragen-cum-coverage-histogram',
-            description='Number of locations in the reference genome with at least given depth of coverage',
+            description='Number of locations in the reference genome with at least given depth of coverage.',
             helptext=genome_fraction_helptext,
             plot=linegraph.plot(cum_data, {
                 'id': 'dragen_cumulative_coverage_hist',
@@ -73,7 +75,8 @@ class DragenCoverageHist(BaseMultiqcModule):
                 'ymin': 0,
                 'ymax': 100,
                 'xmin': 0,
-                'tt_label': '<b>{point.x}X</b>: {point.y}%',
+                'xmax': depth_1pc,  # trim long flat tail
+                'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
             })
         )
 
@@ -115,22 +118,24 @@ def parse_wgs_fine_hist(f):
     data = dict()
     cum_data = dict()
     cum_cnt = 0
+    depth_1pc = None
 
-    for key, cnt in parsed_data.items():
+    for key, cnt in reversed(list(parsed_data.items())):
         try:
             depth = int(key)
         except ValueError:
             continue
         cum_cnt += cnt
         cum_pct = cum_cnt / total_cnt * 100.0
-        if cum_pct <= 99:  # require preventing long flat tail
-            data[depth] = cnt
-            cum_data[depth] = cum_pct
+        if cum_pct < 1:  # to trim long flat tail
+            depth_1pc = depth
+        data[depth] = cnt
+        cum_data[depth] = cum_pct
 
     m = re.search(r'(.*).wgs_fine_hist_(\S*).csv', f['fn'])
     sample, phenotype = m.group(1), m.group(2)
     f['s_name'] = sample
-    return {phenotype: (data, cum_data)}
+    return {phenotype: (data, cum_data, depth_1pc)}
 
 
 

@@ -1,13 +1,11 @@
 #!/usr/bin/env python
+# coding=utf-8
 from __future__ import print_function
 
 import itertools
 import math
 import re
 from collections import OrderedDict, defaultdict
-
-from more_itertools import flatten
-
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, bargraph, table
 
@@ -18,13 +16,15 @@ log = logging.getLogger(__name__)
 from .utils import make_headers, Metric
 
 
-BASES_USED_NOTICE = 'Considering only bases usable for variant calling, i.e. excluding  ' \
-                    '1. clipped bases, ' \
-                    '2. bases in duplicate reads, ' \
-                    '3. reads with MAPQ < min MAPQ, ' \
-                    '4. bases with BQ < min BQ, ' \
-                    '5. reads with MAPQ = 0, ' \
-                    '6. overlapping mates are double-counted.'
+BASES_USED_NOTICE = """
+Considering only bases usable for variant calling, i.e. excluding:
+1. clipped bases,
+2. bases in duplicate reads,
+3. reads with MAPQ < min MAPQ (default 20),
+4. bases with BQ < min BQ (default 10) 
+5. reads with MAPQ = 0 (multimappers); 
+6. overlapping mates are double-counted.
+"""
 
 
 class DragenCoverageMetrics(BaseMultiqcModule):
@@ -58,7 +58,6 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         for sn, sdata in data_by_sample.items():
             for m in sdata.keys():
                 all_metric_names.add(m)
-
         gen_stats_headers, own_tabl_headers = make_headers(all_metric_names, COV_METRICS)
 
         self.general_stats_addcols(data_by_sample, gen_stats_headers, 'Coverage')
@@ -67,12 +66,12 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             name='Coverage metrics',
             anchor='dragen-cov-metrics',
             description='Coverage metrics over a region, where the region can be the genome, a target region, '
-                        'or a QC coverage region. ' + BASES_USED_NOTICE,
+                        'or a QC coverage region. ' + BASES_USED_NOTICE.replace('\n', '<br>'),
             plot=table.plot(data_by_sample, own_tabl_headers, pconfig={'namespace': 'Coverage'})
         )
 
 
-COV_METRICS = list(flatten([[
+COV_METRICS = list(itertools.chain.from_iterable([[
                   Metric(id, title, in_genstats=in_genstats, in_own_tabl=in_own_tabl, unit=unit, descr=descr + ' ' + BASES_USED_NOTICE, namespace='Coverage'),
                   Metric(id.replace('{}', 'genome'), title.replace('{}', 'genome'), in_genstats=in_genstats, in_own_tabl=in_own_tabl, unit=unit, descr=descr.replace('{}', 'genome') + ' ' + BASES_USED_NOTICE, namespace='Coverage'),
                   Metric(id.replace('{}', 'genome'), title.replace('{}', 'region'), in_genstats=in_genstats, in_own_tabl=in_own_tabl, unit=unit, descr=descr.replace('{}', 'region') + ' ' + BASES_USED_NOTICE, namespace='Coverage'),
@@ -91,20 +90,20 @@ COV_METRICS = list(flatten([[
     ('Average autosomal coverage over {}'                 , 'Avg aut cov'        ,'x'     , 'hid', 'hid', 'Average autosomal coverage over {}. Calculated as the number of bases that aligned to the autosomal loci in {} divided by the total number of loci in the autosomal loci in {}. If there is no autosomes in the reference genome, or the region does not intersect autosomes, this metric shows as NA.'),
     ('Median autosomal coverage over {}'                  , 'Med aut cov'        ,'x'     , 'hid', 'hid', 'Median alignment coverage over the autosomal loci in {}. If there is no autosome in the reference genome or the region does not intersect autosomes, this metric shows as NA.'),
     ('Mean/Median autosomal coverage ratio over {}'       , 'Mean/med aut cov ratio', ''  , 'hid', 'hid', 'Mean autosomal coverage in {} divided by the median autosomal coverage in {}. If there is no autosome in the reference genome or the region does not intersect autosomes, this metric shows as NA.'),
-    ('PCT of genome with coverage [100x: inf)'            , '%⩾100x'             ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 100x coverage.'),
-    ('PCT of genome with coverage [ 50x: inf)'            , '%⩾50x'              ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 50x coverage.'),
-    ('PCT of genome with coverage [ 20x: inf)'            , '%⩾20x'              ,'%'     , '#'  , '#'  , 'Percentage of sites in region with at least 20x coverage.'),
-    ('PCT of genome with coverage [ 15x: inf)'            , '%⩾15x'              ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 15x coverage.'),
-    ('PCT of genome with coverage [ 10x: inf)'            , '%⩾10x'              ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 10x coverage.'),
-    ('PCT of genome with coverage [  3x: inf)'            , '%⩾3x'               ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 3x coverage.'),
     ('PCT of genome with coverage [  1x: inf)'            , '%⩾1x'               ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 1x coverage.'),
-    ('PCT of genome with coverage [ 50x:100x)'            , '% 50x..100x'        ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 50x but less than 100x coverage.'),
-    ('PCT of genome with coverage [ 20x: 50x)'            , '% 20x..50x'         ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 20x but less than 50x coverage.'),
-    ('PCT of genome with coverage [ 15x: 20x)'            , '% 15x..20x'         ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 15x but less than 20x coverage.'),
-    ('PCT of genome with coverage [ 10x: 15x)'            , '% 10x..15x'         ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 10x but less than 15x coverage.'),
-    ('PCT of genome with coverage [  3x: 10x)'            , '% 3x..10x'          ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 3x but less than 10x coverage.'),
-    ('PCT of genome with coverage [  1x:  3x)'            , '% 1x..3x'           ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 1x but less than 3x coverage.'),
+    ('PCT of genome with coverage [  3x: inf)'            , '%⩾3x'               ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 3x coverage.'),
+    ('PCT of genome with coverage [ 10x: inf)'            , '%⩾10x'              ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 10x coverage.'),
+    ('PCT of genome with coverage [ 15x: inf)'            , '%⩾15x'              ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 15x coverage.'),
+    ('PCT of genome with coverage [ 20x: inf)'            , '%⩾20x'              ,'%'     , '#'  , '#'  , 'Percentage of sites in region with at least 20x coverage.'),
+    ('PCT of genome with coverage [ 50x: inf)'            , '%⩾50x'              ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 50x coverage.'),
+    ('PCT of genome with coverage [100x: inf)'            , '%⩾100x'             ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 100x coverage.'),
     ('PCT of genome with coverage [  0x:  1x)'            , '% 0x'               ,'%'     , 'hid', 'hid', 'Percentage of sites in region with no coverage.'),
+    ('PCT of genome with coverage [  1x:  3x)'            , '% 1x..3x'           ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 1x but less than 3x coverage.'),
+    ('PCT of genome with coverage [  3x: 10x)'            , '% 3x..10x'          ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 3x but less than 10x coverage.'),
+    ('PCT of genome with coverage [ 10x: 15x)'            , '% 10x..15x'         ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 10x but less than 15x coverage.'),
+    ('PCT of genome with coverage [ 15x: 20x)'            , '% 15x..20x'         ,'%'     , 'hid', 'hid', 'Percentage of sites in region with at least 15x but less than 20x coverage.'),
+    ('PCT of genome with coverage [ 20x: 50x)'            , '% 20x..50x'         ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 20x but less than 50x coverage.'),
+    ('PCT of genome with coverage [ 50x:100x)'            , '% 50x..100x'        ,'%'     , 'hid', '#'  , 'Percentage of sites in region with at least 50x but less than 100x coverage.'),
 ]]))
 
 
