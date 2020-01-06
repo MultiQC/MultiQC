@@ -45,7 +45,7 @@ class DragenVCMetrics(BaseMultiqcModule):
             description='Variant calling metrics. Metrics are reported for each sample in multi sample VCF '
                         'and gVCF files. Based on the run case, metrics are reported either as standard '
                         'VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs, '
-                        'except for the "Filtered" metrics which represent how many variants were filtered out'
+                        'except for the "Filtered" metrics which represent how many variants were filtered out '
                         'from pre-filter VCF to generate the post-filter VCF.',
             plot=table.plot(data_by_sample, vc_table_headers, pconfig={'namespace': 'Variant calling'})
         )
