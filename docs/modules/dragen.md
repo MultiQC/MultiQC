@@ -21,3 +21,5 @@ and alike. This MultiQC module supports some of the output but not all.
 - `<output prefix>.fragment_length_hist.csv                - a histogram plot`
 - `<output prefix>.ploidy_estimation_metrics.csv           - add just Ploidy estimation into the general stats table`
 - `<output prefix>.vc_metrics.csv                          - a dedicated table and the total number of Variants into the general stats table`
+
+Each QC output adds a section into the report if a corresponding QC file is found.

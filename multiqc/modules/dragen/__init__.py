@@ -14,12 +14,16 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics, DragenTimeMetrics, DragenVCMetrics,
-                    DragenCoveragePerContig, DragenCoverageMetrics, DragenCoverageHist):
-    """ Dragen has a number of different pipelines and outputs.
-    This MultiQC module supports some but not all. The code for
-    each script is split into its own file and adds a section to
-    the module output if logs are found. """
+class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics, DragenTimeMetrics,
+                    DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics, DragenCoverageHist):
+    """ Dragen has a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+    post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
+    For each stage, it generates QC files with metrics resembling those of samtools-stats, mosdepth, bcftools-stats
+    and alike. This MultiQC module supports some of the output but not all.
+
+    The code for each type of QC output is split into its own file, where a class mix-in is defined, that is
+    inherited by this main MultiqcModule class. Each mix-in adds a section to the module output if corresponding
+    QC files are found. """
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
