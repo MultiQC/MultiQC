@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from collections import OrderedDict, defaultdict
 
 from .mapping_metrics import DragenMappingMetics
 from .fragment_length import DragenFragmentLength

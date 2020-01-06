@@ -77,7 +77,7 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.add_section(
             name='Mapping metrics per RG',
             anchor='dragen-mapping-metrics',
-            description='Mapping metrics, similar to the metrics computed by the Samtools Flagstat command.'
+            description='Mapping metrics, similar to the metrics computed by the samtools-stats command. '
                         'Shown on per read group level. To see per-sample level metrics, refer to the general '
                         'stats table.',
             plot=table.plot(data_by_rg, own_tabl_headers, pconfig={'namespace': 'Mapping metrics'})
