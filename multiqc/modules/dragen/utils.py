@@ -23,9 +23,9 @@ class Metric:
                  reversed=False):
         self.id = id
         self.title = title
-        self.unit = unit
         self.in_genstats = in_genstats
         self.in_own_tabl = in_own_tabl
+        self.unit = unit
         self.descr = descr
         self.fmt = fmt
         self.modify = modify
