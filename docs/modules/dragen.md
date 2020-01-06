@@ -15,11 +15,12 @@ For each stage, it generates QC files with metrics resembling those of samtools-
 and alike. This MultiQC module supports some of the output but not all.
 
 - `<output prefix>.wgs_fine_hist_<tumor|normal>.csv        - coverage distribution and cumulative coverage plots`
-- `<output prefix>.mapping_metrics.csv                     - general stats table, a dedicated table, and a few barplots `
+- `<output prefix>.mapping_metrics.csv                     - general stats table, a dedicated table, and a few barplots`
 - `<output prefix>.wgs_coverage_metrics_<tumor|normal>.csv - general stats table and a dedicated table`
 - `<output prefix>.wgs_contig_mean_cov_<tumor|normal>.csv  - a histogram like in mosdepth, with each chrom as a category on X axis, plus a category for autosomal chromosomes average`
 - `<output prefix>.fragment_length_hist.csv                - a histogram plot`
 - `<output prefix>.ploidy_estimation_metrics.csv           - add just Ploidy estimation into the general stats table`
 - `<output prefix>.vc_metrics.csv                          - a dedicated table and the total number of Variants into the general stats table`
+- `<output prefix>.time_metrics.csv                        - a beeswarm plot with dots for time each stage for each sample has finished`
 
 Each QC output adds a section into the report if a corresponding QC file is found.
