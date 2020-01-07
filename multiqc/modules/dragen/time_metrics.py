@@ -78,17 +78,22 @@ class DragenTimeMetrics(BaseMultiqcModule):
 
         # Alternatively can consider bargraph plots. Howevew since the steps don't nesesseraly sum up to total run time
         # due to parallelization, bargraph without overlapping bars can be misleading.
+        # all_bargraph_steps = []
+        # for sn, d in data_by_sample.items():
+        #     for step in d:
+        #         if step not in all_bargraph_steps:
+        #             all_bargraph_steps.append(step)
         # self.add_section(
-        #     name='Run time metrics',
-        #     anchor='dragen-time-metrics',
+        #     name='Run time metrics barchart',
+        #     anchor='dragen-time-metrics-barchart',
         #     description='Breakdown of the run duration of each process. '
         #                 'Each section on the barplot corresponds to an execution stage, with X axis values showing '
         #                 'time (in hours) in finished after the start of the pipeline.',
-        #     plot=bargraph.plot(bargraph_data_by_sample, {
+        #     plot=bargraph.plot(data_by_sample, {
         #         step: {'name': step} for step in all_bargraph_steps
         #     }, {
-        #         'id': 'dragen_time_metrics',
-        #         'title': 'Run time metrics',
+        #         'id': 'dragen_time_metrics_barchart',
+        #         'title': 'Run time metrics barchart',
         #         'ylab': 'hours',
         #         'cpswitch_counts_label': 'Hours'
         #     })
