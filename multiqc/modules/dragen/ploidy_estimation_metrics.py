@@ -31,9 +31,9 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['Ploidy estimation'] = {
-            'title': 'Ploidy',
-            'description': 'Ploidy estimation (XX, XY, X0, 00, etc.)',
-            'scale': 'Set1',
+            'title': 'Sex',
+            'description': 'Sex chromosome ploidy estimation (XX, XY, X0, 00, etc.)',
+            'scale': 'Set3',
         }
         self.general_stats_addcols(data_by_sample, headers, 'Ploidy estimation')
 

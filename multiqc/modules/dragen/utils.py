@@ -18,7 +18,7 @@ base_format += '&nbsp;' + config.base_count_prefix
 class Metric:
     def __init__(self, id, title, in_genstats=None, in_own_tabl=None, unit=None,
                  descr=None, fmt=None, modify=None, namespace=None, precision=None,
-                 reversed=False):
+                 the_higher_the_worse=False):
         self.id = id
         self.title = title
         self.in_genstats = in_genstats
@@ -29,7 +29,7 @@ class Metric:
         self.modify = modify
         self.namespace = namespace
         self.precision = precision
-        self.reversed = reversed
+        self.the_higher_the_worse = the_higher_the_worse
 
 
 def make_headers(parsed_metric_ids, metrics):
@@ -57,8 +57,9 @@ def make_headers(parsed_metric_ids, metrics):
             col['scale'] = 'Blues'
             if metric.unit == '%':
                 col['scale'] = 'RdBu'
-                if metric.reversed:
-                    col['scale'] += '-rev'
+                if metric.the_higher_the_worse:
+                    col['scale'] = 'YlOrRd'
+                    # col['scale'] += '-rev'
         elif metric.namespace == 'Variants':
             col['scale'] = 'Purples'
 
@@ -76,8 +77,9 @@ def make_headers(parsed_metric_ids, metrics):
                 pct_col['scale'] = 'RdGy'
             elif metric.unit == 'x' or metric.namespace == 'Coverage':
                 pct_col['scale'] = 'RdBu'
-            if metric.reversed:
-                pct_col['scale'] += '-rev'
+            if metric.the_higher_the_worse:
+                pct_col['scale'] = 'YlOrRd'
+                # pct_col['scale'] += '-rev'
 
             if metric.precision is not None:
                 pct_col['format'] = '{:,.' + str(metric.precision) + 'f}'
