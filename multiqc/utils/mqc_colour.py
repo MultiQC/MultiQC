@@ -42,7 +42,7 @@ class mqc_colour_scale(object):
 	def get_colour(self, val, colformat='hex'):
 		""" Given a value, return a colour within the colour scale """
 		try:
-            # When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc), and a qualitive
+			# When we have non-numeric values (e.g. Male/Female, Yes/No, chromosome names, etc), and a qualitive
             # scale (Set1, Set3, etc), we don't want to attempt to parse numbers, otherwise we will end up with all
             # values assigned withthe same color. But instead we will geta has from a string to hope to assign
             # a unique color for each possible enumeration value.
