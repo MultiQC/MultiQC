@@ -98,7 +98,7 @@ VC_METRICS = [Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_
                                                                                                 '', 'positions having a PASSing genotype call. Multi-allelic variants are not counted. '
                                                                                                 '', 'Deletions are counted for all the deleted reference positions only for homozygous calls. '
                                                                                                 '', 'Only autosomes are considered (for all chromosomes, see the Callability metric).'),
-    Metric('Filtered vars'                              , 'Filtered'            , 'hid', '%'  , '', 'Number of raw variants minus the number of PASSed variants', the_higher_the_worse=True),
+    Metric('Filtered vars'                              , 'Filt var'            , '%'  , '%'  , '', 'Number of raw variants minus the number of PASSed variants', the_higher_the_worse=True),
     Metric('Filtered SNPs'                              , 'Filt SNPs'           , 'hid', 'hid', '', 'Number of raw SNPs minus the number of PASSed SNPs', the_higher_the_worse=True),
     Metric('Filtered indels'                            , 'Filt indels'         , 'hid', 'hid', '', 'Number of raw indels minus the number of PASSed indels', the_higher_the_worse=True),
 ]]
