@@ -39,19 +39,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent module Class object
         super(MultiqcModule, self).__init__(
             name = 'Indexhopping',
-            # target = "indexhopping",
             anchor = 'indexhopping',
             info = 'PF clusters showing unexpected combinations of barcodes used in SampleSheet. Number of PF clusters and percentage of all PF clusters for a given lane.'
-            #href = 'https://github.com/MultiQC/example-plugin',
-            #info = " is an example module to show how the MultQC pluginm system works."
         )
         self.f_count = 0
 
         for f in self.find_log_files('bcl2fastq'):
             self.single_run(os.path.join(f['root'],f['fn']))
-        #for f in report.searchfiles:
-            #if f[0] == 'Stats.json':
-                #self.single_run(os.path.join(f[1],f[0]))
 
 
     def get_all_tags(self, stats):
@@ -170,16 +164,12 @@ class MultiqcModule(BaseMultiqcModule):
                 t1 = ",".join(tag1)
                 t2 = ",".join(tag2)
                 file_data[ln].append([ t1 + ' + ' + t2, i, ub['Barcodes'][i] ])
-            #self.perc[lane] = float(lanes[lane]) / tags[lane]
             self.perc[lane] = dict()
             self.perc[lane]['perc'] = float(lanes[lane]) / tags[lane]['total'] * 100
-            #self.perc[lane]['hop'] = lanes[lane]
             run_id_lane = run_id + ' - ' + str(lane)
             table_data[run_id_lane] = dict()
             table_data[run_id_lane]['count'] = lanes[lane]
             table_data[run_id_lane]['perc'] = float(lanes[lane]) / tags[lane]['total'] * 100
-            #self.perc[lane]['total'] = tags[lane]['total'] 
-            #log.info (str(lane) + ': ' + str(lanes[lane]) + ' / ' + str(tags[lane]['total']))
 
         # Add section for report
         if not table_data:
@@ -202,7 +192,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(file_data, 'multiqc_indexhopping_' + str(self.f_count), data_format='json')
         cats = OrderedDict()
         cats["perc"] = { 'name': 'Percentage', 'color' : '#6CCAB0' } # green 7EDDA7
-        #cats["hop"] = { 'name': 'Indexhopping reads', 'color' : 'blue' }
         self.add_section (
             name = 'Indexhopping ' + f,
             anchor = 'indexhopping-lane',
@@ -241,16 +230,13 @@ class MultiqcModule(BaseMultiqcModule):
         for lane in tag:
             if not tag[lane]['problem']['left'] and not tag[lane]['problem']['right']:
                 continue
-            #log.info(tag[lane]['problem'])
             if tag[lane]['problem']['left']:
-                #ret += ' Lane ' + str(lane) + ' has same tags in left index: ' + ', '.join(tag[lane]['problem']['left']) + '.'
                 add += ' Lane ' + str(lane) + ' has multiple samples with same tag in i5 index: ' + ', '.join(tag[lane]['problem']['left']) + '.'
             if tag[lane]['problem']['right']:
-                #ret += ' Lane ' + str(lane) + ' has same tags in right index: ' + ', '.join(tag[lane]['problem']['right']) + '.'
                 add += ' Lane ' + str(lane) + ' has multiple samples with same tag in i7 index: ' + ', '.join(tag[lane]['problem']['right']) + '.'
-	if add:
+        if add:
             ret += "\n\nPROBLEM!" + add
-	return ret
+        return ret
 
     def lane_stats_table(self, table_data):
         headers = OrderedDict()
