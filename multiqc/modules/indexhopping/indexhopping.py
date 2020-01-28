@@ -12,14 +12,11 @@ import os.path
 import itertools
 import pprint
 
-#from multiqc import config
-#from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
 from pkg_resources import get_distribution
 from multiqc.utils import report, util_functions, config
 from multiqc.plots import bargraph, table
-#from multiqc.modules import base_module
 
 # Initialise the logger
 log = logging.getLogger('multiqc')
@@ -33,8 +30,6 @@ class MultiqcModule(BaseMultiqcModule):
         if getattr(config, 'disable_indexhopping', False) is True:
             log.debug("Skipping indexhopping as specified in config file")
             return None
-
-        #log.info("Running indexhopping parser v{}".format(__version__))
 
         # Initialise the parent module Class object
         super(MultiqcModule, self).__init__(
@@ -50,7 +45,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def get_all_tags(self, stats):
         ret = dict()
-        #log.info(stats['ConversionResults'])
         skip_re = re.compile('^N+$')
         for lane_stats in stats['ConversionResults']:
             ln = lane_stats['LaneNumber']
@@ -63,7 +57,6 @@ class MultiqcModule(BaseMultiqcModule):
             ret[ln]['problem']['right'] = []
             g = {0:'left',1:'right'}
             for demux in lane_stats['DemuxResults']:
-                #log.info(demux)
                 for c in demux['IndexMetrics']:
                     index_seq = c['IndexSequence']
                     ind_tags = []
@@ -129,7 +122,6 @@ class MultiqcModule(BaseMultiqcModule):
         tags = self.get_all_tags(run)
         table_data = dict()
         lanes = dict()
-        #log.info(tags)
         dual_index = self.dual_index_lanes(run)
         file_data = OrderedDict()
         self.perc = dict()
@@ -153,11 +145,8 @@ class MultiqcModule(BaseMultiqcModule):
                     tag2 = tags[lane]['right'][unmatch[1]]
                 if tag1 is None or tag2 is None:
                     continue
-                #if tag1 is tag2:
-                    #continue
                 if self.has_same_tag(tag1,tag2):
                     continue
-                #log.info('t1:' + tag1 + ' t2:' + tag2)
                 lanes[lane] += ub['Barcodes'][i]
                 for j in itertools.chain(tag1, tag2):
                     sample_count[j]['indexhopping'] += ub['Barcodes'][i]
