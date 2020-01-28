@@ -112,11 +112,12 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def single_run(self, f):
-        try:
-            run = json.load(file(f))
-        except ValueError:
-            log.warn('Could not parse file as json: {}'.format(f))
-            return
+        with open(f) as json_file:
+            try:
+                run = json.load(json_file)
+            except ValueError:
+                log.warn('Could not parse file as json: {}'.format(f))
+                return
         # first go through all tags and put them to a sample
         # then check through all missed combinations if match two different samples, hit!
         tags = self.get_all_tags(run)
