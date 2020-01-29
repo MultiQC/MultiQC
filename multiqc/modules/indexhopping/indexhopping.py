@@ -57,9 +57,13 @@ class MultiqcModule(BaseMultiqcModule):
             ret[ln]['problem']['right'] = []
             g = {0:'left',1:'right'}
             for demux in lane_stats['DemuxResults']:
+                # skip samples with no indexes
+                if not 'IndexMetrics' in demux:
+                    continue
                 for c in demux['IndexMetrics']:
                     index_seq = c['IndexSequence']
                     ind_tags = []
+                    # skip single indexes
                     if index_seq.find('+') is -1:
                         continue
                     ind_tags.extend(index_seq.split('+'))
@@ -71,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
                         continue
                     for i in 0,1:
                         if ind_tags[i] in ret[ln][g[i]]:
-                            #problem
+                            # problem
                             ret[ln][g[i]][ind_tags[i]].append(demux['SampleId'])
                             if ind_tags[i] not in ret[ln]['problem'][g[i]]:
                                 ret[ln]['problem'][g[i]].append(ind_tags[i])
@@ -86,10 +90,12 @@ class MultiqcModule(BaseMultiqcModule):
             lane = info['LaneNumber']
             cnt = 0
             for rinfo in info['ReadInfos']:
-                if rinfo['IsIndexedRead']:
+                # some samples have index true with 0 cycles
+                if rinfo['IsIndexedRead'] and rinfo['NumCycles'] > 0:
                     cnt += 1
             if cnt > 1:
                 ret[lane] = True
+                log.info("Dual:" + str(lane))
         return ret
 
 
@@ -118,6 +124,11 @@ class MultiqcModule(BaseMultiqcModule):
             except ValueError:
                 log.warn('Could not parse file as json: {}'.format(f))
                 return
+        #try:
+            #run = json.load(file(f))
+        #except ValueError:
+            #log.warn('Could not parse file as json: {}'.format(f))
+            #return
         # first go through all tags and put them to a sample
         # then check through all missed combinations if match two different samples, hit!
         tags = self.get_all_tags(run)
@@ -137,6 +148,9 @@ class MultiqcModule(BaseMultiqcModule):
             lanes[lane] = 0;
             ln = 'Lane ' + str(lane)
             file_data[ln] = []
+            # for some reason there can be samples on lanes with no index, so skip lanes with no index
+            if not tags[lane]['left']:
+                continue
             for i in sorted(ub['Barcodes'], key=ub['Barcodes'].get, reverse=True):
                 unmatch = i.split('+')
                 tag1 = tag2 = None
