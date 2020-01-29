@@ -18,10 +18,10 @@ class MultiqcModule(BaseMultiqcModule):
         for file in self.find_log_files('hicexplorer'):
             if file['s_name'] != "QC_table":
                 s_name = file['root'] + "_" + file['s_name']
-                
+
                 self.mod_data[s_name] = self.parse_logs(file['f'])
                 self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + s_name + "_" + self.mod_data[s_name]['File'][0], file['root'])
-            
+
                 self.add_data_source(file)
 
         if len(self.mod_data) == 0:
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         # compatibility to HiCExplorer <= 1.7 version QC files
         for data_ in self.mod_data:
             if not 'Pairs mappable, unique and high quality' in self.mod_data[data_]:
-                self.mod_data[data_]['Pairs mappable, unique and high quality'] = self.mod_data[data_]['Pairs considered']
+                self.mod_data[data_]['Pairs mappable, unique and high quality'] = self.mod_data[data_]['Sequenced reads']
                 keys = ['One mate unmapped', 'One mate not unique', 'One mate low quality']
                 for key in keys:
                     self.mod_data[data_]['Pairs mappable, unique and high quality'][0] -= self.mod_data[data_][key][0]
@@ -51,10 +51,10 @@ class MultiqcModule(BaseMultiqcModule):
         # key lists for plotting
         keys_categorization_of_reads_considered = ['Pairs mappable, unique and high quality', 'One mate unmapped',
                                                    'One mate not unique', 'One mate low quality']
-        keys_mappable_unique_and_high_quality = ['Pairs used', 'Self ligation (removed)', 'Same fragment', 'Self circle',
+        keys_mappable_unique_and_high_quality = ['Hi-C contacts', 'Self ligation (removed)', 'Same fragment', 'Self circle',
                                                  'Dangling end', 'One mate not close to rest site', 'Duplicated pairs']
-        keys_list_contact_distance = ['Short range', 'Long range', 'Inter chromosomal']
-        keys_list_read_orientation = ['Inward pairs', 'Outward pairs', 'Left pairs', 'Right pairs', 'Inter chromosomal']
+        keys_list_contact_distance = ['Intra short range', 'Intra long range', 'Inter chromosomal']
+        keys_list_read_orientation = ['Read pair type: inward pairs', 'Read pair type: outward pairs', 'Read pair type: left pairs', 'Read pair type: right pairs', 'Inter chromosomal']
 
         # prepare the detail report section
         self.add_section(
@@ -98,9 +98,9 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Contact distance', 'contact_distance'),
             description='This figure contains information about the distance and location of the valid pairs used.',
             helptext='''
-            * **Long range**
+            * **Intra long range**
                 * Pairs with a distance greater than 20 kilobases
-            * **Short range**
+            * **Intra short range**
                 * Pairs with a distance less than 20 kilobases
             * **Inter chromosomal**
                 * Interchromosomal pairs.
@@ -137,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             s = l.split("\t")
             data_ = []
-            # catch lines with descriptive content: "Of pairs used:"
+            # catch lines with descriptive content: "Of Hi-C contacts:"
             for i in s[1:]:
                 if len(i) == 0:
                     continue
@@ -151,8 +151,8 @@ class MultiqcModule(BaseMultiqcModule):
                     data_.append(i)
             if len(data_) == 0:
                 continue
-            if s[0].startswith('short range'):
-                s[0] = 'short range'
+            if s[0].startswith('Intra short range'):
+                s[0] = 'Intra short range'
             elif s[0].startswith('same fragment'):
                 s[0] = 'same fragment'
             s[0] = s[0].capitalize()
@@ -164,26 +164,26 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         for file in self.mod_data:
             max_distance_key = 'Max rest. site distance'
-            total_pairs = self.mod_data[file]['Pairs considered'][0]
+            total_pairs = self.mod_data[file]['Sequenced reads'][0]
             try:
                 self.mod_data[file][max_distance_key][0]
             except KeyError:
                 max_distance_key = 'Max library insert size'
             data_ = {
-                'Pairs considered': self.mod_data[file]['Pairs considered'][0],
-                'Pairs used': self.mod_data[file]['Pairs used'][0] / total_pairs,
+                'Sequenced reads': self.mod_data[file]['Sequenced reads'][0],
+                'Hi-C contacts': self.mod_data[file]['Hi-C contacts'][0] / total_pairs,
                 'Mapped': self.mod_data[file]['One mate unmapped'][0] / total_pairs,
                 'Min rest. site distance': self.mod_data[file]['Min rest. site distance'][0],
                 max_distance_key: self.mod_data[file][max_distance_key][0],
             }
             data[self.mod_data[file]['File'][0]] = data_
         headers = OrderedDict()
-        headers['Pairs considered'] = {
+        headers['Sequenced reads'] = {
             'title': '{} Pairs'.format(config.read_count_prefix),
             'description': 'Total number of read pairs ({})'.format(config.read_count_desc),
             'shared_key': 'read_count'
         }
-        headers['Pairs used'] = {
+        headers['Hi-C contacts'] = {
             'title': '% Used pairs',
             'max': 100,
             'min': 0,
