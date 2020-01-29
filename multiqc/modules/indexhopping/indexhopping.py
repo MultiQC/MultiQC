@@ -57,13 +57,13 @@ class MultiqcModule(BaseMultiqcModule):
             ret[ln]['problem']['right'] = []
             g = {0:'left',1:'right'}
             for demux in lane_stats['DemuxResults']:
-                # skip samples with no indexes
+                # skip samples with no indices
                 if not 'IndexMetrics' in demux:
                     continue
                 for c in demux['IndexMetrics']:
                     index_seq = c['IndexSequence']
                     ind_tags = []
-                    # skip single indexes
+                    # skip single indices
                     if index_seq.find('+') is -1:
                         continue
                     ind_tags.extend(index_seq.split('+'))
@@ -95,7 +95,6 @@ class MultiqcModule(BaseMultiqcModule):
                     cnt += 1
             if cnt > 1:
                 ret[lane] = True
-                log.info("Dual:" + str(lane))
         return ret
 
 
@@ -143,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
         sample_count = self.get_sample_cluster_count(run)
         for ub in run['UnknownBarcodes']:
             lane = ub['Lane']
-            if not lane in dual_index.keys():
+            if not lane in dual_index:
                 continue
             lanes[lane] = 0;
             ln = 'Lane ' + str(lane)
