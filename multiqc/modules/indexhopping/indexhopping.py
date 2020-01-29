@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
                         continue
                     for i in 0,1:
                         if ind_tags[i] in ret[ln][g[i]]:
-                            # problem
+                            # problem, multiple other tags
                             ret[ln][g[i]][ind_tags[i]].append(demux['SampleId'])
                             if ind_tags[i] not in ret[ln]['problem'][g[i]]:
                                 ret[ln]['problem'][g[i]].append(ind_tags[i])
@@ -185,7 +185,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # warn if there is elements in tags['problem']['left'] or tags['problem']['right']
         desc_lanestats = 'Statistics about each lane' + self.get_problems_value(tags)
-        log.info(desc_lanestats)
         self.add_section (
             name = 'Lane Statistics',
             anchor = 'indexhopping-lanestats',
@@ -234,11 +233,13 @@ class MultiqcModule(BaseMultiqcModule):
             if not tag[lane]['problem']['left'] and not tag[lane]['problem']['right']:
                 continue
             if tag[lane]['problem']['left']:
-                add += ' Lane ' + str(lane) + ' has multiple samples with same tag in i5 index: ' + ', '.join(tag[lane]['problem']['left']) + '.'
+                add += 'Lane ' + str(lane) + ' has multiple samples with same tag in i5 index: ' + ', '.join(tag[lane]['problem']['left']) + '.'
             if tag[lane]['problem']['right']:
-                add += ' Lane ' + str(lane) + ' has multiple samples with same tag in i7 index: ' + ', '.join(tag[lane]['problem']['right']) + '.'
+                if add:
+                    add += '\n</br>'
+                add += 'Lane ' + str(lane) + ' has multiple samples with same tag in i7 index: ' + ', '.join(tag[lane]['problem']['right']) + '.'
         if add:
-            ret += "\n\nPROBLEM!" + add
+            ret += "\n</br>PROBLEM!\n</br>" + add
         return ret
 
     def lane_stats_table(self, table_data):
