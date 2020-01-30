@@ -206,7 +206,9 @@ class MultiqcModule(BaseMultiqcModule):
                     'title': 'Indexhopping per lane %',
                     'tt_decimals': 5,
                     'cpswitch': False,
-                    'tt_percentages': False
+                    'tt_percentages': False,
+                    'ylab': '',
+                    'xlab': ''
                 }
             )
         )
@@ -219,7 +221,9 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     'id': 'indexhopping-sample',
                     'cpswitch_c_active': False,
-                    'title': 'Indexhopping per sample'
+                    'title': 'Indexhopping per sample',
+                    'ylab': '',
+                    'xlab': ''
                 }
             )
         )

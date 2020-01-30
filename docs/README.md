@@ -21,6 +21,7 @@ MultiQC Modules:
     Fastp: modules/fastp.md
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
+    Indexhopping: modules/indexhopping.md
     InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
