@@ -23,8 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any pairtools stats summaries
         self.pairtools_stats = dict()
-            for f in self.find_log_files('pairtools'):
-                self.parse_pairtools_stats(f)
+        for f in self.find_log_files('pairtools'):
+            self.parse_pairtools_stats(f)
 
         # Filter to strip out ignored sample names
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.pairtools_stats)))
 
 
-    def parse_hicup_logs(self, f):
+    def parse_pairtools_stats(self, f):
         """ Parse a pairtools summary stats """
-        lof.info("parsing {} ...".format(f))
+        log.info("parsing {} ...".format(f['fn']))
         pass
