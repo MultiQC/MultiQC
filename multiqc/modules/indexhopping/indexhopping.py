@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     'id': 'indexhopping-lane',
-                    'title': 'Indexhopping per lane %',
+                    'title': 'Indexhopping: lane %',
                     'tt_decimals': 5,
                     'cpswitch': False,
                     'tt_percentages': False,
@@ -221,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     'id': 'indexhopping-sample',
                     'cpswitch_c_active': False,
-                    'title': 'Indexhopping per sample',
+                    'title': 'Indexhopping: sample',
                     'ylab': '',
                     'xlab': ''
                 }
