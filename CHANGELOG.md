@@ -8,6 +8,10 @@
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
+
+#### New Modules:
+* [**pairtools**](https://github.com/mirnylab/pairtools)
+    * pairtools - a framework to process sequencing data from a Hi-C experiment
     
 #### Module updates:
 

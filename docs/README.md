@@ -60,6 +60,7 @@ MultiQC Modules:
     goleft_indexcov: modules/goleft_indexcov.md
     Hap.py: modules/happy.md
     HiCExplorer: modules/hicexplorer.md
+    pairtools: modules/pairtools.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
     MACS2: modules/macs2.md

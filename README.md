@@ -49,7 +49,7 @@ Currently, supported tools include:
 |[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
 |[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
 |[FLASh][flash]                   |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |                             |[QoRTs][qorts]                        |
+|[Flexbar][flexbar]               |                         |[pairtools][pairtools]       |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
@@ -242,7 +242,8 @@ MultiQC is released under the GPL v3 or later licence.
 [minionqc]:       http://multiqc.info/docs/#minionqc
 [mirtrace]:       http://multiqc.info/docs/#mirtrace
 [mosdepth]:       http://multiqc.info/docs/#mosdepth
-[peddy]:          http://multiqc.info/docs/#peddy
+[pairtools]:      http://multiqc.info/docs/#peddy
+[peddy]:          http://multiqc.info/docs/#pairtools
 [phantompeakqualtools]: http://multiqc.info/docs/#phantompeakqualtools
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq

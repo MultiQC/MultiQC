@@ -420,6 +420,9 @@ module_order:
     - hicexplorer:
         module_tag:
             - hi-c
+    - pairtools:
+        module_tag:
+            - hi-c
     - hicup:
         module_tag:
             - hi-c

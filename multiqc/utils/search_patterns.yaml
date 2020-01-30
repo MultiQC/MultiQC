@@ -283,6 +283,11 @@ happy:
     contents: 'Type,Filter,TRUTH'
 htseq:
     contents: '__too_low_aQual'
+pairtools:
+    - contents: 'total_single_sided_mapped'
+      num_lines: 20
+    - contents: 'pair_types'
+      num_lines: 20
 hicexplorer:
     contents: 'Min rest. site distance'
     max_filesize: 4096
