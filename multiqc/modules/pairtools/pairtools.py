@@ -40,10 +40,38 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.pairtools_general_stats()
 
+        # Report sections
+        self.add_section (
+            name = 'Read Truncation',
+            anchor = 'hicup-truncating',
+            plot = self.hicup_truncating_chart()
+        )
+
 
 
     def parse_pairtools_stats(self, f):
         """ Parse a pairtools summary stats """
+        #
+        # categories that we need to read from stats file
+        # ['chrom_freq',
+        #  'cis',
+        #  'cis_10kb+',
+        #  'cis_1kb+',
+        #  'cis_20kb+',
+        #  'cis_2kb+',
+        #  'cis_40kb+',
+        #  'cis_4kb+',
+        #  'dist_freq',
+        #  'pair_types',
+        #  'total',
+        #  'total_dups',
+        #  'total_mapped',
+        #  'total_nodups',
+        #  'total_single_sided_mapped',
+        #  'total_unmapped',
+        #  'trans']
+        #
+        #
         # s_name = f['s_name']
         # f_name = f['fn']
         # log.info("parsing {} {} ...".format(s_name,f_name))
@@ -72,3 +100,32 @@ class MultiqcModule(BaseMultiqcModule):
         # }
         # self.general_stats_addcols(self.pairtools_stats, headers, 'pairtools')
         self.general_stats_addcols(self.pairtools_stats)
+
+
+    def hicup_truncating_chart (self):
+        """ Generate the HiCUP Truncated reads plot """
+
+        # Specify the order of the different possible categories
+        keys = OrderedDict()
+        keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
+        keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
+
+        # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
+        data = {}
+        for s_name in self.hicup_data:
+            data['{} Read 1'.format(s_name)] = {}
+            data['{} Read 2'.format(s_name)] = {}
+            data['{} Read 1'.format(s_name)]['Not_Truncated_Reads'] = self.hicup_data[s_name]['Not_Truncated_Reads_1']
+            data['{} Read 2'.format(s_name)]['Not_Truncated_Reads'] = self.hicup_data[s_name]['Not_Truncated_Reads_2']
+            data['{} Read 1'.format(s_name)]['Truncated_Read'] = self.hicup_data[s_name]['Truncated_Read_1']
+            data['{} Read 2'.format(s_name)]['Truncated_Read'] = self.hicup_data[s_name]['Truncated_Read_2']
+
+        # Config for the plot
+        config = {
+            'id': 'hicup_truncated_reads_plot',
+            'title': 'HiCUP: Truncated Reads',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+
+        return bargraph.plot(data, keys, config)
