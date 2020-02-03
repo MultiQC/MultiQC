@@ -7,7 +7,10 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
+import re
 import numpy as np
+from copy import copy
+from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -74,6 +77,10 @@ def _from_file(file_handle):
         ('--', np.zeros(len(_dist_bins), dtype=np.int)),
         ('++', np.zeros(len(_dist_bins), dtype=np.int)),
         ])
+
+    # pack distance bins along with dist_freq at least for now
+    stat_from_file['dist_bins'] = _dist_bins
+
     #
     for l in file_handle:
         fields = l.strip().split(_SEP)
@@ -188,55 +195,191 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.pairtools_general_stats()
 
-        # # Report sections
-        # self.add_section (
-        #     name = 'Read Truncation',
-        #     anchor = 'hicup-truncating',
-        #     plot = self.hicup_truncating_chart()
-        # )
+        # Report sections
+        self.add_section (
+            name = 'Pair types report',
+            anchor = 'pair-types',
+            plot = self.pair_types_chart()
+        )
 
+        self.add_section (
+            name = 'Cis pairs by ranges',
+            anchor = 'cis-ranges',
+            plot = self.cis_breakdown_chart()
+        )
+
+        self.add_section (
+            name = 'Pairs by distance and directionality',
+            anchor = 'pairs dirs',
+            plot = self.pairs_with_genomic_separation()
+        )
 
 
     def parse_pairtools_stats(self, f):
         """ Parse a pairtools summary stats """
-        #
-        # categories that we need to read from stats file
-        # ['chrom_freq',
-        #  'cis',
-        #  'cis_10kb+',
-        #  'cis_1kb+',
-        #  'cis_20kb+',
-        #  'cis_2kb+',
-        #  'cis_40kb+',
-        #  'cis_4kb+',
-        #  'dist_freq',
-        #  'pair_types',
-        #  'total',
-        #  'total_dups',
-        #  'total_mapped',
-        #  'total_nodups',
-        #  'total_single_sided_mapped',
-        #  'total_unmapped',
-        #  'trans']
-        #
-        #
         # s_name = f['s_name']
         # f_name = f['fn']
         # log.info("parsing {} {} ...".format(s_name,f_name))
-        #
-        # just testing displying random fields from stats ...
         f_handle = f['f']
-        # _data = dict()
         return _from_file(f_handle)
-        # _i = 0
-        # num_fields = 8
-        # for line in f_handle:
-        #     _1,_2 = line.rstrip().split('\t')
-        #     _data[_1] = int(_2)
-        #     _i += 1
-        #     if _i >=num_fields:
-        #         break
-        # return _data
+
+
+    def pair_types_chart(self):
+        """ Generate the pair types report """
+
+        _report_field = "pair_types"
+
+        # Construct a data structure for the plot
+        _data = dict()
+        for s_name in self.pairtools_stats:
+            _data[s_name] = dict()
+            for k in self.pairtools_stats[s_name][_report_field]:
+                _data[s_name][k] = self.pairtools_stats[s_name][_report_field][k]
+
+        # # Specify the order of the different possible categories
+        # keys = OrderedDict()
+        # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
+        # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
+
+        # Config for the plot
+        config = {
+            'id': 'pair_types',
+            'title': 'pairtools: pair types report',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads'
+        }
+
+        return bargraph.plot(_data, pconfig=config)
+
+
+    def cis_breakdown_chart(self):
+        """ cis-pairs split into several ranges """
+
+        cis_dist_pattern = r"cis_(\d+)kb\+"
+
+        # Construct a data structure for the plot
+        _data = dict()
+        _tmp = dict()
+        for s_name in self.pairtools_stats:
+            sample_stats = self.pairtools_stats[s_name]
+            _tmp[s_name] = dict()
+            _data[s_name] = dict()
+            for k in sample_stats:
+                # check if a key matches "cis_dist_pattern":
+                cis_dist_match = re.fullmatch(cis_dist_pattern, k)
+                if cis_dist_match is not None:
+                    # extract distance and number of cis-pairs:
+                    dist = int(cis_dist_match.group(1))
+                    _count = int(sample_stats[k])
+                    # fill in _tmp
+                    _tmp[s_name][dist] = _count
+            # after all cis-dist ones are extracted:
+            prev_counter = copy(sample_stats['cis'])
+            prev_dist = 0
+            sorted_keys = []
+            for dist in sorted(_tmp[s_name].keys()):
+                cis_pair_counter = prev_counter - _tmp[s_name][dist]
+                dist_range_key = "cis: {}-{}kb".format(prev_dist,dist)
+                _data[s_name][dist_range_key] = cis_pair_counter
+                prev_dist = dist
+                prev_counter = _tmp[s_name][dist]
+                sorted_keys.append(dist_range_key)
+            # and the final range max-dist+ :
+            cis_pair_counter = _tmp[s_name][dist]
+            dist_range_key = "cis: {}+ kb".format(prev_dist)
+            _data[s_name][dist_range_key] = prev_counter
+            sorted_keys.append(dist_range_key)
+
+        # # Specify the order of the different possible categories
+        # keys = sorted_keys
+        # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
+        # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
+
+        # Config for the plot
+        config = {
+            'id': 'pair_cis_ranges',
+            'title': 'pairtools: cis pairs broken into ranges',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads',
+            'logswitch': True
+        }
+
+        return bargraph.plot(_data, pconfig=config)
+
+
+    # dist_freq/56234133-100000000/-+
+    def pairs_with_genomic_separation(self):
+        """ number of cis-pairs with genomic separation """
+
+        _report_field = "dist_freq"
+
+
+        # Construct a data structure for the plot
+        _data = dict()
+        for s_name in self.pairtools_stats:
+            _data[s_name] = dict()
+            # pre-calculate geom-mean of dist-bins for P(s):
+            _dist_bins = self.pairtools_stats[s_name]['dist_bins']
+            _dist_bins_geom = []
+            for i in range(len(_dist_bins)-1):
+                geom_dist = np.sqrt(np.prod(_dist_bins[i:i+2]))
+                _dist_bins_geom.append(int(geom_dist))
+            # _dist_bins_geom are calcualted
+            sample_dist_freq = self.pairtools_stats[s_name][_report_field]
+            # that's how it is for now ...
+            # stat_from_file[key][dirs][bin_idx] = int(fields[1])
+            dir_std = np.std([
+                        sample_dist_freq["++"],
+                        sample_dist_freq["+-"],
+                        sample_dist_freq["-+"],
+                        sample_dist_freq["--"]
+                                ],axis=0)
+                            # / self.pairtools_stats[s_name]["cis_1kb+"]
+            # fill in the data ...
+            for i,(k,v) in enumerate(zip(_dist_bins_geom,dir_std)):
+                _data[s_name][np.log(k+0.1)] = np.log(v)
+
+        # # Specify the order of the different possible categories
+        # keys = sorted_keys
+        # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
+        # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
+
+        # description = 'This plot shows the number of reads with certain lengths of adapter trimmed. \n\
+        # Obs/Exp shows the raw counts divided by the number expected due to sequencing errors. A defined peak \n\
+        # may be related to adapter length. See the \n\
+        # <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
+        # for more information on how these numbers are generated.'
+        # pconfig = {
+        #     'id': 'cutadapt_plot',
+        #     'title': 'Cutadapt: Lengths of Trimmed Sequences',
+        #     'ylab': 'Counts',
+        #     'xlab': 'Length Trimmed (bp)',
+        #     'xDecimals': False,
+        #     'ymin': 0,
+        #     'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
+        #     'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
+        #                     {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
+        # }
+        # plot = linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
+        # return linegraph.plot(_data, pconfig=config)
+
+        pconfig = {
+            'id': 'broom plot',
+            'title': 'Pairs by distance and by read orintation',
+            'ylab': 'Counts',
+            'xlab': 'Genomic separation (bp)',
+            'xDecimals': False,
+            'ymin': 0,
+            # 'xtype': 'logarithmic', - doesn't work
+            # 'logswitch': True, - doesn't work
+            'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
+            # 'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
+            #                 {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
+        }
+
+        # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
+
+        return linegraph.plot(_data, pconfig=pconfig)
 
 
 
@@ -307,33 +450,4 @@ class MultiqcModule(BaseMultiqcModule):
         # }
         self.general_stats_addcols(self.pairtools_stats, headers, 'pairtools')
         # self.general_stats_addcols(self.pairtools_stats)
-
-
-    # def hicup_truncating_chart (self):
-    #     """ Generate the HiCUP Truncated reads plot """
-
-    #     # Specify the order of the different possible categories
-    #     keys = OrderedDict()
-    #     keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
-    #     keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
-
-    #     # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
-    #     data = {}
-    #     for s_name in self.hicup_data:
-    #         data['{} Read 1'.format(s_name)] = {}
-    #         data['{} Read 2'.format(s_name)] = {}
-    #         data['{} Read 1'.format(s_name)]['Not_Truncated_Reads'] = self.hicup_data[s_name]['Not_Truncated_Reads_1']
-    #         data['{} Read 2'.format(s_name)]['Not_Truncated_Reads'] = self.hicup_data[s_name]['Not_Truncated_Reads_2']
-    #         data['{} Read 1'.format(s_name)]['Truncated_Read'] = self.hicup_data[s_name]['Truncated_Read_1']
-    #         data['{} Read 2'.format(s_name)]['Truncated_Read'] = self.hicup_data[s_name]['Truncated_Read_2']
-
-    #     # Config for the plot
-    #     config = {
-    #         'id': 'hicup_truncated_reads_plot',
-    #         'title': 'HiCUP: Truncated Reads',
-    #         'ylab': '# Reads',
-    #         'cpswitch_counts_label': 'Number of Reads'
-    #     }
-
-    #     return bargraph.plot(data, keys, config)
 
