@@ -9,7 +9,7 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 import re
 import numpy as np
-from copy import copy
+from copy import copy, deepcopy
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -259,6 +259,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Construct a data structure for the plot
         _data = dict()
+        _datawtrans = dict()
         _tmp = dict()
         for s_name in self.pairtools_stats:
             sample_stats = self.pairtools_stats[s_name]
@@ -290,6 +291,12 @@ class MultiqcModule(BaseMultiqcModule):
             _data[s_name][dist_range_key] = prev_counter
             sorted_keys.append(dist_range_key)
 
+            # add trans here as well ...
+            _datawtrans[s_name] = dict(_data[s_name])
+            dist_range_key = "trans"
+            _datawtrans[s_name][dist_range_key] = copy(sample_stats['trans'])
+            sorted_keys.append(dist_range_key)
+
         # # Specify the order of the different possible categories
         # keys = sorted_keys
         # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
@@ -301,25 +308,35 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'pairtools: cis pairs broken into ranges',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
-            'logswitch': True
+            # 'logswitch': True - useless for that
+            'data_labels': ['cis-only','cis-n-trans']
         }
 
-        return bargraph.plot(_data, pconfig=config)
+        return bargraph.plot([_data, _datawtrans], sorted_keys, pconfig=config)
 
 
     # dist_freq/56234133-100000000/-+
     def pairs_with_genomic_separation(self):
         """ number of cis-pairs with genomic separation """
 
+        def _contact_areas(distbins, scaffold_length=2_000_000_000):
+            distbins = distbins.astype(float)
+            scaffold_length = float(scaffold_length)
+            outer_areas = np.maximum(scaffold_length - distbins[:-1], 0) ** 2
+            inner_areas = np.maximum(scaffold_length - distbins[1:], 0) ** 2
+            return 0.5 * (outer_areas - inner_areas)
+
         _report_field = "dist_freq"
 
-
         # Construct a data structure for the plot
-        _data = dict()
+        _data_std = dict()
+        _data_mean = dict()
         for s_name in self.pairtools_stats:
-            _data[s_name] = dict()
+            _data_std[s_name] = dict()
+            _data_mean[s_name] = dict()
             # pre-calculate geom-mean of dist-bins for P(s):
             _dist_bins = self.pairtools_stats[s_name]['dist_bins']
+            _areas = _contact_areas( _dist_bins, scaffold_length=2_000_000_000_000 )
             _dist_bins_geom = []
             for i in range(len(_dist_bins)-1):
                 geom_dist = np.sqrt(np.prod(_dist_bins[i:i+2]))
@@ -333,11 +350,28 @@ class MultiqcModule(BaseMultiqcModule):
                         sample_dist_freq["+-"],
                         sample_dist_freq["-+"],
                         sample_dist_freq["--"]
-                                ],axis=0)
-                            # / self.pairtools_stats[s_name]["cis_1kb+"]
+                                ],axis=0)[1:]
+
+            dir_mean = np.mean([
+                        sample_dist_freq["++"],
+                        sample_dist_freq["+-"],
+                        sample_dist_freq["-+"],
+                        sample_dist_freq["--"]
+                                ],axis=0)[1:]
+            # / self.pairtools_stats[s_name]["cis_1kb+"]
+
+            # dir_std /= _areas#+0.01
+            dir_mean /= _areas#+0.01
+
+            # dir_std *= np.mean(_areas)
+            # dir_mean *= np.mean(_areas)
+
+            #
             # fill in the data ...
-            for i,(k,v) in enumerate(zip(_dist_bins_geom,dir_std)):
-                _data[s_name][np.log(k+0.1)] = np.log(v)
+            for i,(k,v1,v2) in enumerate(zip(_dist_bins_geom, dir_std, dir_mean)):
+                if i>3:
+                    _data_std[s_name][k] = v1
+                    _data_mean[s_name][k] = v2
 
         # # Specify the order of the different possible categories
         # keys = sorted_keys
@@ -368,18 +402,20 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Pairs by distance and by read orintation',
             'ylab': 'Counts',
             'xlab': 'Genomic separation (bp)',
-            'xDecimals': False,
-            'ymin': 0,
+            'xLog': True,
+            'yLog': True,
+            # 'xDecimals': False,
+            # 'ymin': 0,
             # 'xtype': 'logarithmic', - doesn't work
             # 'logswitch': True, - doesn't work
-            'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
+            # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
             # 'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
             #                 {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
         }
 
         # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
 
-        return linegraph.plot(_data, pconfig=pconfig)
+        return linegraph.plot([_data_std, _data_mean], pconfig=pconfig)
 
 
 
