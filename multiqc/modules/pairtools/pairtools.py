@@ -222,6 +222,12 @@ class MultiqcModule(BaseMultiqcModule):
             plot = self.pairs_by_chrom_pairs()
         )
 
+        self.add_section (
+            name = 'Inter-sample correlation',
+            anchor = 'pairs chrom/chroms corr...',
+            plot = self.samples_similarity_chrom_pairs()
+        )
+
 
     def parse_pairtools_stats(self, f):
         """ Parse a pairtools summary stats """
@@ -494,6 +500,69 @@ class MultiqcModule(BaseMultiqcModule):
                 the_data_filt[:,sorted_idx].tolist(),
                 np.array(xcats)[mask][sorted_idx].tolist(),
                 ycats)#, pconfig)
+
+
+
+
+
+    # chrom_freq/chr1/chrX ...
+    def samples_similarity_chrom_pairs(self):
+        """ number of pairs by chromosome pairs """
+
+        _report_field = "chrom_freq"
+
+        # figure infer list of chromosomes (beware of scaffolds):
+        # tuple(key_fields)
+        _chromset = set()
+        for s_name in self.pairtools_stats:
+            _chrom_freq_sample = \
+                self.pairtools_stats[s_name][_report_field]
+            # unzip list of tuples:
+            _chroms1, _chroms2 = list(
+                    zip(*_chrom_freq_sample.keys())
+                )
+            _chromset |= set(_chroms1)
+            _chromset |= set(_chroms2)
+        # done:
+        _chroms = sorted(list(_chromset))
+
+        # cis-only for now:
+        # Construct a data structure for the plot
+        _data = dict()
+        for s_name in self.pairtools_stats:
+            _data[s_name] = []
+            _chrom_freq_sample = \
+                self.pairtools_stats[s_name][_report_field]
+            # go over chroms:
+            for c1,c2 in combinations_with_replacement( _chroms, 2):
+                if (c1,c2) in _chrom_freq_sample:
+                    _num_pairs = _chrom_freq_sample[(c1,c2)]
+                elif (c2,c1) in _chrom_freq_sample:
+                    _num_pairs = _chrom_freq_sample[(c2,c1)]
+                else:
+                    _num_pairs = 0
+                # let's take ALL data in ...
+                # we'll try to normalize it afterwards ...
+                _num_pairs /= (self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans'])
+                # pass
+                _data[s_name].append(_num_pairs)
+
+        #
+
+
+        # prepare for the heatmap:
+        ycats = sorted(_data)
+        the_data = np.asarray([ _data[_] for _ in ycats ])
+        corrs = np.corrcoef(the_data)
+        #
+
+
+        return heatmap.plot(
+                corrs.tolist(),
+                ycats,
+                ycats)#, pconfig)
+
+
 
 
 
