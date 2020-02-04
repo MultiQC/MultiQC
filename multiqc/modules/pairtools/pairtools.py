@@ -7,10 +7,12 @@ from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
+
+from itertools import combinations, combinations_with_replacement
 import re
 import numpy as np
 from copy import copy, deepcopy
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, heatmap
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -212,6 +214,12 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Pairs by distance and directionality',
             anchor = 'pairs dirs',
             plot = self.pairs_with_genomic_separation()
+        )
+
+        self.add_section (
+            name = 'cis-Pairs by chromosomes',
+            anchor = 'pairs chrom/chroms ...',
+            plot = self.pairs_by_chrom_pairs()
         )
 
 
@@ -416,6 +424,76 @@ class MultiqcModule(BaseMultiqcModule):
         # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
 
         return linegraph.plot([_data_std, _data_mean], pconfig=pconfig)
+
+
+    # chrom_freq/chr1/chrX ...
+    def pairs_by_chrom_pairs(self):
+        """ number of pairs by chromosome pairs """
+
+        _report_field = "chrom_freq"
+
+        # figure infer list of chromosomes (beware of scaffolds):
+        # tuple(key_fields)
+        _chromset = set()
+        for s_name in self.pairtools_stats:
+            _chrom_freq_sample = \
+                self.pairtools_stats[s_name][_report_field]
+            # unzip list of tuples:
+            _chroms1, _chroms2 = list(
+                    zip(*_chrom_freq_sample.keys())
+                )
+            _chromset |= set(_chroms1)
+            _chromset |= set(_chroms2)
+        # done:
+        _chroms = sorted(list(_chromset))
+
+        # cis-only for now:
+        # Construct a data structure for the plot
+        _data = dict()
+        for s_name in self.pairtools_stats:
+            _data[s_name] = []
+            _chrom_freq_sample = \
+                self.pairtools_stats[s_name][_report_field]
+            # go over chroms:
+            for c1,c2 in combinations_with_replacement( _chroms, 2):
+                if (c1,c2) in _chrom_freq_sample:
+                    _num_pairs = _chrom_freq_sample[(c1,c2)]
+                elif (c2,c1) in _chrom_freq_sample:
+                    _num_pairs = _chrom_freq_sample[(c2,c1)]
+                else:
+                    _num_pairs = 0
+                # let's filter by # of pairs ...
+                if _num_pairs < 0.0007*self.pairtools_stats[s_name]['cis']:
+                    _num_pairs = 0
+                else:
+                    # we'll try to normalize it afterwards ...
+                    _num_pairs /= (self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans'])
+                    # pass
+                _data[s_name].append(_num_pairs)
+
+        # now we need to filter 0 cells ...
+        # prepare for the heatmap:
+        ycats = sorted(_data)
+        the_data = [ _data[_] for _ in ycats ]
+        # xcats = _chroms
+        xcats = [ "{}-{}".format(c1, c2) for c1, c2 in combinations_with_replacement( _chroms, 2) ]
+
+
+        # check if there are any zeros in the column (i.e. for a given chrom pair) ...
+        mask = np.all(the_data, axis=0)
+
+        # # debug
+        # log.info(mask.tolist())
+        # # log.info(np.array(xcats)[mask][sorted_idx].tolist())
+        # # debug
+
+        the_data_filt = np.array(the_data)[:,mask]
+        # mean over columns to sort ...
+        sorted_idx = the_data_filt.mean(axis=0).argsort()
+        return heatmap.plot(
+                the_data_filt[:,sorted_idx].tolist(),
+                np.array(xcats)[mask][sorted_idx].tolist(),
+                ycats)#, pconfig)
 
 
 
