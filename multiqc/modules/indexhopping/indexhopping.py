@@ -38,9 +38,58 @@ class MultiqcModule(BaseMultiqcModule):
             info = 'PF clusters showing unexpected combinations of barcodes used in SampleSheet. Number of PF clusters and percentage of all PF clusters for a given lane.'
         )
         self.f_count = 0
+        self.perc = dict()
+        self.table_data = dict()
+        self.samples = dict()
+        self.tag_problem = dict()
 
         for f in self.find_log_files('bcl2fastq'):
             self.single_run(os.path.join(f['root'],f['fn']))
+
+        desc_lanestats = 'Statistics about lanes.'
+        if self.tag_problem:
+            desc_lanestats += "\n</br>\n</br>PROBLEM!\n</br>"
+        for i in sorted (self.tag_problem):
+            desc_lanestats += self.tag_problem[i]
+        self.add_section (
+            name = 'Lane Statistics',
+            anchor = 'indexhopping-lanestats',
+            description = desc_lanestats,
+            plot = self.lane_stats_table(self.table_data)
+        )
+        cats = OrderedDict()
+        cats["perc"] = { 'name': 'Percentage', 'color' : '#6CCAB0' } # green 7EDDA7
+        self.add_section (
+            name = 'Indexhopping by lane',
+            anchor = 'indexhopping-lane',
+            #description = 'Indexhopping shows how many unmatched index pairs are in multiple samples.',
+            plot = bargraph.plot(
+                self.perc,
+                cats,
+                {
+                    'id': 'indexhopping-lane',
+                    'title': 'Indexhopping: lane %',
+                    'tt_decimals': 5,
+                    'cpswitch': False,
+                    'tt_percentages': False,
+                    'ylab': ''
+                }
+            )
+        )
+
+        self.add_section (
+            anchor = 'indexhopping-sample',
+            plot = bargraph.plot(
+                self.samples,
+                { 'clusters':{ 'name':'Total clusters' }, 'indexhopping':{ 'name':'Indexhopping' } },
+                {
+                    'id': 'indexhopping-sample',
+                    'cpswitch_c_active': False,
+                    'title': 'Indexhopping: sample',
+                    'ylab': ''
+                }
+            )
+        )
 
 
     def get_all_tags(self, stats):
@@ -107,12 +156,16 @@ class MultiqcModule(BaseMultiqcModule):
     
     def get_sample_cluster_count(self,data):
         ret = dict()
+        run_id = data['RunId']
         for counts in data['ConversionResults']:
+            run_id_lane =  run_id + '-' + str(counts['LaneNumber'])
             for dm in counts['DemuxResults']:
                 sample = dm['SampleName']
+                full_sample = sample + ' ' + run_id_lane
                 ret[sample] = dict()
                 ret[sample]['clusters'] = dm['NumberReads']
                 ret[sample]['indexhopping'] = 0
+                self.samples[full_sample] = ret[sample]
         return ret
 
 
@@ -131,11 +184,9 @@ class MultiqcModule(BaseMultiqcModule):
         # first go through all tags and put them to a sample
         # then check through all missed combinations if match two different samples, hit!
         tags = self.get_all_tags(run)
-        table_data = dict()
         lanes = dict()
         dual_index = self.dual_index_lanes(run)
         file_data = OrderedDict()
-        self.perc = dict()
         self.f_count += 1
         run_id = run['RunId']
         file_data['file'] = f
@@ -167,71 +218,23 @@ class MultiqcModule(BaseMultiqcModule):
                 t1 = ",".join(tag1)
                 t2 = ",".join(tag2)
                 file_data[ln].append([ t1 + ' + ' + t2, i, ub['Barcodes'][i] ])
-            self.perc[lane] = dict()
-            self.perc[lane]['perc'] = float(lanes[lane]) / tags[lane]['total'] * 100
             run_id_lane = run_id + ' - ' + str(lane)
-            table_data[run_id_lane] = dict()
-            table_data[run_id_lane]['count'] = lanes[lane]
-            table_data[run_id_lane]['perc'] = float(lanes[lane]) / tags[lane]['total'] * 100
+            self.perc[run_id_lane] = dict()
+            self.perc[run_id_lane]['perc'] = float(lanes[lane]) / tags[lane]['total'] * 100
+            self.table_data[run_id_lane] = dict()
+            self.table_data[run_id_lane]['count'] = lanes[lane]
+            self.table_data[run_id_lane]['perc'] = float(lanes[lane]) / tags[lane]['total'] * 100
 
-        # Add section for report
-        if not table_data:
-            self.add_section (
-                #name = 'Indexhopping',
-                anchor = 'indexhopping-skip',
-                description = 'No dual index samples found, cannot calculate indexhopping.'
-            )
-            return
-
-        # warn if there is elements in tags['problem']['left'] or tags['problem']['right']
-        desc_lanestats = 'Statistics about each lane' + self.get_problems_value(tags)
-        self.add_section (
-            name = 'Lane Statistics',
-            anchor = 'indexhopping-lanestats',
-            description = desc_lanestats,
-            plot = self.lane_stats_table(table_data)
-        )
         self.write_data_file(file_data, 'multiqc_indexhopping_' + str(self.f_count), data_format='json')
-        cats = OrderedDict()
-        cats["perc"] = { 'name': 'Percentage', 'color' : '#6CCAB0' } # green 7EDDA7
-        self.add_section (
-            name = 'Indexhopping ' + f,
-            anchor = 'indexhopping-lane',
-            #description = 'Indexhopping shows how many unmatched index pairs are in multiple samples.',
-            plot = bargraph.plot(
-                self.perc,
-                cats,
-                {
-                    'id': 'indexhopping-lane',
-                    'title': 'Indexhopping: lane %',
-                    'tt_decimals': 5,
-                    'cpswitch': False,
-                    'tt_percentages': False,
-                    'ylab': '',
-                    'xlab': ''
-                }
-            )
-        )
+        tag_issues = self.get_problems_value(tags, run_id)
+        # warn if there is elements in tags['problem']['left'] or tags['problem']['right']
+        if tag_issues:
+            self.tag_problem[run_id] = tag_issues
+        return
 
-        self.add_section (
-            anchor = 'indexhopping-sample',
-            plot = bargraph.plot(
-                sample_count,
-                { 'clusters':{ 'name':'Total clusters' }, 'indexhopping':{ 'name':'Indexhopping' } },
-                {
-                    'id': 'indexhopping-sample',
-                    'cpswitch_c_active': False,
-                    'title': 'Indexhopping: sample',
-                    'ylab': '',
-                    'xlab': ''
-                }
-            )
-        )
-
-
-    def get_problems_value(self, tag):
+    def get_problems_value(self, tag, run_id):
         # Lane x has same tags in left index on samples
-        ret = '.'
+        ret = ''
         add = ''
         for lane in tag:
             if not tag[lane]['problem']['left'] and not tag[lane]['problem']['right']:
@@ -243,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
                     add += '\n</br>'
                 add += 'Lane ' + str(lane) + ' has multiple samples with same tag in i7 index: ' + ', '.join(tag[lane]['problem']['right']) + '.'
         if add:
-            ret += "\n</br>PROBLEM!\n</br>" + add
+            ret = run_id + '\n</br>' + add
         return ret
 
     def lane_stats_table(self, table_data):
