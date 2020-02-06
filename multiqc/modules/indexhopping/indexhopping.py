@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.perc,
                 cats,
                 {
-                    'id': 'indexhopping-lane',
+                    'id': 'indexhopping-lane-plot',
                     'title': 'Indexhopping: lane %',
                     'tt_decimals': 5,
                     'cpswitch': False,
@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.samples,
                 { 'clusters':{ 'name':'Total clusters' }, 'indexhopping':{ 'name':'Indexhopping' } },
                 {
-                    'id': 'indexhopping-sample',
+                    'id': 'indexhopping-sample-plot',
                     'cpswitch_c_active': False,
                     'title': 'Indexhopping: sample',
                     'ylab': ''
@@ -176,11 +176,6 @@ class MultiqcModule(BaseMultiqcModule):
             except ValueError:
                 log.warn('Could not parse file as json: {}'.format(f))
                 return
-        #try:
-            #run = json.load(file(f))
-        #except ValueError:
-            #log.warn('Could not parse file as json: {}'.format(f))
-            #return
         # first go through all tags and put them to a sample
         # then check through all missed combinations if match two different samples, hit!
         tags = self.get_all_tags(run)
