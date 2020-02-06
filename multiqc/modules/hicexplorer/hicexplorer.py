@@ -5,7 +5,7 @@ from multiqc import config
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
-
+logging.basicConfig(level=logging.DEBUG)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -41,19 +41,20 @@ class MultiqcModule(BaseMultiqcModule):
         for data_ in self.mod_data:
             if not 'Pairs mappable, unique and high quality' in self.mod_data[data_]:
                 self.mod_data[data_]['Pairs mappable, unique and high quality'] = self.mod_data[data_]['Sequenced reads']
-                keys = ['One mate unmapped', 'One mate not unique', 'One mate low quality']
+                keys = ['One mate unmapped', 'One mate not unique', 'Low mapping quality']
                 for key in keys:
                     self.mod_data[data_]['Pairs mappable, unique and high quality'][0] -= self.mod_data[data_][key][0]
 
+        log.debug('self.mod_data {}'.format(self.mod_data))
         # prepare the basic statistics for hicexplorer
         self.hicexplorer_basic_statistics()
 
         # key lists for plotting
         keys_categorization_of_reads_considered = ['Pairs mappable, unique and high quality', 'One mate unmapped',
-                                                   'One mate not unique', 'One mate low quality']
-        keys_mappable_unique_and_high_quality = ['Hi-C contacts', 'Self ligation (removed)', 'Same fragment', 'Self circle',
+                                                   'One mate not unique', 'Low mapping quality']
+        keys_mappable_unique_and_high_quality = ['Hi-c contacts', 'Self ligation (removed)', 'Same fragment', 'Self circle',
                                                  'Dangling end', 'One mate not close to rest site', 'Duplicated pairs']
-        keys_list_contact_distance = ['Intra short range', 'Intra long range', 'Inter chromosomal']
+        keys_list_contact_distance = ['Intra short range (< 20kb)', 'Intra long range (>= 20kb)', 'Inter chromosomal']
         keys_list_read_orientation = ['Read pair type: inward pairs', 'Read pair type: outward pairs', 'Read pair type: left pairs', 'Read pair type: right pairs', 'Inter chromosomal']
 
         # prepare the detail report section
@@ -69,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
                     * Filtered out read because one mate was not mapped.
                 * **One mate not unique**
                     * Filtered out read because one mate was not unique.
-                * **One mate low quality**
+                * **Low mapping quality**
                     * Filtered out because one mate was having a low quality.
             '''
         )
@@ -151,8 +152,8 @@ class MultiqcModule(BaseMultiqcModule):
                     data_.append(i)
             if len(data_) == 0:
                 continue
-            if s[0].startswith('Intra short range'):
-                s[0] = 'Intra short range'
+            if s[0].startswith('Intra short range (< 20kb)'):
+                s[0] = 'Intra short range (< 20kb)'
             elif s[0].startswith('same fragment'):
                 s[0] = 'same fragment'
             s[0] = s[0].capitalize()
@@ -171,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
                 max_distance_key = 'Max library insert size'
             data_ = {
                 'Sequenced reads': self.mod_data[file]['Sequenced reads'][0],
-                'Hi-C contacts': self.mod_data[file]['Hi-C contacts'][0] / total_pairs,
+                'Hi-c contacts': self.mod_data[file]['Hi-c contacts'][0] / total_pairs,
                 'Mapped': self.mod_data[file]['One mate unmapped'][0] / total_pairs,
                 'Min rest. site distance': self.mod_data[file]['Min rest. site distance'][0],
                 max_distance_key: self.mod_data[file][max_distance_key][0],
@@ -183,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Total number of read pairs ({})'.format(config.read_count_desc),
             'shared_key': 'read_count'
         }
-        headers['Hi-C contacts'] = {
+        headers['Hi-c contacts'] = {
             'title': '% Used pairs',
             'max': 100,
             'min': 0,
