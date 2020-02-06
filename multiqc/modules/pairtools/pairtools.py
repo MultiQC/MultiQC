@@ -200,6 +200,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Report sections
         self.add_section (
             name = 'Pair types report',
+            description="Number of pairs clasified in each"
+                        "<a href=\"https://pairtools.readthedocs.io/en/latest/formats.html#pair-types\" > category</a>"
+                        " including unmapped, walks and duplicates",
             anchor = 'pair-types',
             plot = self.pair_types_chart()
         )
@@ -207,24 +210,42 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Cis pairs by ranges',
             anchor = 'cis-ranges',
+            description="Uniquely mapped and rescued pairs split"
+                        " into several groups by genomic distance"
+                        " for cis-pairs and trans.",
             plot = self.cis_breakdown_chart()
         )
 
         self.add_section (
             name = 'Pairs by distance and directionality',
             anchor = 'pairs dirs',
+            description="Scaling plots - frequency of interactions"
+                        " as a function of genomic distance averaged"
+                        " between ++,+-,-+ and -- pair configurations."
+                        " Standard deviation between these 4 categories"
+                        " is also reported as a function of distance.",
             plot = self.pairs_with_genomic_separation()
         )
 
         self.add_section (
             name = 'cis-Pairs by chromosomes',
             anchor = 'pairs chrom/chroms ...',
+            description="Number of pairs interacting within each chromosome"
+                        " or between two different chromosomes."
+                        " Interactions are normalized by the number of"
+                        " usable pairs in a given sample."
+                        " Interactions are reported only exceeding 1\% of usable ones.",
             plot = self.pairs_by_chrom_pairs()
         )
 
         self.add_section (
             name = 'Inter-sample correlation',
             anchor = 'pairs chrom/chroms corr...',
+            description="An attempt to characterize inter-sample similarity"
+                        " using different metrics:"
+                        " distribution of pairs per chromosome pair,"
+                        " distribution of pairs by distance (and trans) [not implemented]"
+                        " distribution of all pairs by categories.",
             plot = self.samples_similarity_chrom_pairs()
         )
 
@@ -323,10 +344,10 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
             # 'logswitch': True - useless for that
-            'data_labels': ['cis-only','cis-n-trans']
+            # 'data_labels': ['cis-only','cis-n-trans']
         }
 
-        return bargraph.plot([_data, _datawtrans], sorted_keys, pconfig=config)
+        return bargraph.plot(_datawtrans, sorted_keys, pconfig=config)
 
 
     # dist_freq/56234133-100000000/-+
@@ -365,6 +386,8 @@ class MultiqcModule(BaseMultiqcModule):
                         sample_dist_freq["-+"],
                         sample_dist_freq["--"]
                                 ],axis=0)[1:]
+            # consider using max-min instead ...
+            # amount of information sum(f*log(f) ) ?!...
 
             dir_mean = np.mean([
                         sample_dist_freq["++"],
@@ -376,10 +399,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             # dir_std /= _areas#+0.01
             dir_mean /= _areas#+0.01
-
-            # dir_std *= np.mean(_areas)
-            # dir_mean *= np.mean(_areas)
-
             #
             # fill in the data ...
             for i,(k,v1,v2) in enumerate(zip(_dist_bins_geom, dir_std, dir_mean)):
@@ -392,39 +411,18 @@ class MultiqcModule(BaseMultiqcModule):
         # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
         # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
 
-        # description = 'This plot shows the number of reads with certain lengths of adapter trimmed. \n\
-        # Obs/Exp shows the raw counts divided by the number expected due to sequencing errors. A defined peak \n\
-        # may be related to adapter length. See the \n\
-        # <a href="http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report" target="_blank">cutadapt documentation</a> \n\
-        # for more information on how these numbers are generated.'
-        # pconfig = {
-        #     'id': 'cutadapt_plot',
-        #     'title': 'Cutadapt: Lengths of Trimmed Sequences',
-        #     'ylab': 'Counts',
-        #     'xlab': 'Length Trimmed (bp)',
-        #     'xDecimals': False,
-        #     'ymin': 0,
-        #     'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-        #     'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
-        #                     {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
-        # }
-        # plot = linegraph.plot([self.cutadapt_length_counts, self.cutadapt_length_obsexp], pconfig)
-        # return linegraph.plot(_data, pconfig=config)
-
         pconfig = {
             'id': 'broom plot',
             'title': 'Pairs by distance and by read orintation',
-            'ylab': 'Counts',
+            # 'ylab': 'Counts',
             'xlab': 'Genomic separation (bp)',
             'xLog': True,
             'yLog': True,
             # 'xDecimals': False,
             # 'ymin': 0,
-            # 'xtype': 'logarithmic', - doesn't work
-            # 'logswitch': True, - doesn't work
             # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            # 'data_labels': [{'name': 'Counts', 'ylab': 'Count'},
-            #                 {'name': 'Obs/Exp', 'ylab': 'Observed / Expected'}]
+            'data_labels': [{'name': 'std', 'ylab': 'frequency of interactions'},
+                            {'name': 'mean', 'ylab': 'frequency of interactions'}]
         }
 
         # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
