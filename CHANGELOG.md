@@ -102,6 +102,10 @@ Whilst it may be possible to continue using MultiQC with Python 2 for a short ti
 pinning dependencies, MultiQC compatibility for Python 2 will now slowly drift and start
 to break. If you haven't already, **you need to switch to Python 3 now**.
 
+#### New Modules:
+* [**ngsderive**](https://github.com/claymcleod/ngsderive)
+    * Forensic analysis tool useful in backwards computing information from next-generation sequencing data.
+
 #### New MultiQC Features
 
 - Now using [GitHub Actions](https://github.com/features/actions) for all CI testing
