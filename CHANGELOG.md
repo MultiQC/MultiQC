@@ -59,6 +59,7 @@
     * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
     * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+    * Updated the format of the report to fits the changes which have been applied to the QC report of hicexplorer v3.3
 * **HTSeq**
     * Fixed bug where module would crash if a sample had zero reads ([#1006](https://github.com/ewels/MultiQC/issues/1006))
 * **LongRanger**
