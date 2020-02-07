@@ -80,9 +80,9 @@ class MultiqcModule(BaseMultiqcModule):
                 relevant_items.append(row)
 
         if len(relevant_items) < 1:
-            raise RuntimeError(f"Could not find results for {sample_name} in ngsderive strandedness report!")
+            raise RuntimeError("Could not find results for {sample_name} in ngsderive strandedness report!".format(sample_name=sample_name))
         elif len(relevant_items) > 1:
-            raise RuntimeError(f"Too many results for {sample_name} in ngsderive strandedness report!")
+            raise RuntimeError("Too many results for {sample_name} in ngsderive strandedness report!".format(sample_name=sample_name))
 
         d[sample_name] = relevant_items.pop(0)
 
