@@ -387,6 +387,15 @@ multivcfanalyzer:
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
+ngsderive/strandedness:
+    contents_re: '(.*)File(.*)TotalReads(.*)ForwardPct(.*)ReversePct(.*)Predicted'
+    num_lines: 1
+ngsderive/instrument:
+    contents_re: '(.*)File(.*)Instrument(.*)Confidence(.*)Basis'
+    num_lines: 1
+ngsderive/readlen:
+    contents_re: '(.*)File(.*)Evidence(.*)MajorityPctDetected(.*)ConsensusReadLength'
+    num_lines: 1
 peddy/summary_table:
     fn: '*.peddy.ped'
 peddy/het_check:
