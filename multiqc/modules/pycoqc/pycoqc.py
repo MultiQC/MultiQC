@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from pycoQC """
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph, table
 from collections import OrderedDict
 import yaml
 import logging
@@ -17,109 +18,169 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='pycoQC', anchor='pycoqc',
         href="https://a-slide.github.io/pycoQC/",
-        info="Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data")
+        info="computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data")
         self.pycoqc_data = {}
         for f in  self.find_log_files('pycoqc'):
-            self.pycoqc_data = self.parse_logs(f['f'])
+            if f['s_name'] in self.pycoqc_data:
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], f['s_name']))
+            self.pycoqc_data[f['s_name']] = self.parse_logs(f['f'])
 
-        if len(self.pycoqc_data) == 0:  # Maybe move this?
+        if len(self.pycoqc_data) == 0:
             raise UserWarning
 
-        self.pycoqc_info = self.pycoqc_data['pycoqc']
-
-        self.pycoqc_all_reads = self.pycoqc_data['All Reads']
-        self.all_reads_run_data = self.pycoqc_all_reads['run']
-        self.all_reads_basecall = self.pycoqc_all_reads['basecall']
-        self.all_reads_median_length = self.median(self.all_reads_basecall['len_percentiles'])
-        self.all_reads_median_qual = self.median(self.all_reads_basecall['qual_score_percentiles'])
-
-        self.pycoqc_passed = self.pycoqc_data['Pass Reads']
-        self.passed_run_data = self.pycoqc_passed['run']
-        self.passed_basecall = self.pycoqc_passed['basecall']
-        self.passed_median_length = self.median(self.passed_basecall['len_percentiles'])
-        self.passed_median_qual = self.median(self.passed_basecall['qual_score_percentiles'])
-
-        data = {
-           "All Reads" : {
-               'first_col': self.all_reads_basecall['reads_number'],
-               'second_col': self.all_reads_basecall['bases_number'],
-               'third_col': self.all_reads_median_length,
-               'fourth_col': self.all_reads_median_qual,
-               'fifth_col': self.all_reads_basecall['N50'],
-               'sixth_col': self.all_reads_run_data['run_duration'],
-               'seventh_col': self.all_reads_run_data['active_channels'],
-               'eighth_col': self.all_reads_run_data['runid_number'],
-               'ninth_col': self.all_reads_run_data['barcodes_number'],
-            },
-            "Passed Reads" : {
-                'first_col': self.passed_basecall['reads_number'],
-                'second_col': self.passed_basecall['bases_number'],
-                'third_col': self.passed_median_length,
-                'fourth_col': self.passed_median_qual,
-                'fifth_col': self.passed_basecall['N50'],
-                'sixth_col': self.passed_run_data['run_duration'],
-                'seventh_col': self.passed_run_data['active_channels'],
-                'eighth_col': self.passed_run_data['runid_number'],
-                'ninth_col': self.passed_run_data['barcodes_number'],
-            },
-
-        }
+        self.table_data, self.reads_data, self.bases_data = self.setup_data()
 
         headers = OrderedDict()
-        headers['first_col'] = {
-            'title': 'Reads',
-            'description': 'Number of reads',
-            'scale': 'False'
+        headers['all_median_read_length'] = {
+            'title': 'Median Read Length (All)',
+            'description': 'Median Read Length all',
+            'scale': 'BuPu',
+            'shared_key': 'median_read_len',
         }
-        headers['second_col'] = {
-            'title': 'Bases',
-            'description': 'Number of bases',
-            'scale': 'False'
+        headers['passed_median_read_length'] = {
+            'title': 'Median Read Length (Pass)',
+            'description': 'Median Read Length pass',
+            'scale': 'BuPu',
+            'shared_key': 'median_read_len',
         }
-        headers['third_col'] = {
-            'title': 'Median Read Length',
-            'description': 'Median Read Length',
-            'scale': 'False'
+        headers['all_reads'] = {
+            'title': 'Number of Reads (All)',
+            'description': 'Number of Reads all',
+            'scale': 'BuGn',
+            'shared_key': 'read_count',
         }
-        headers['fourth_col'] = {
-            'title': 'Median PHRED score',
-            'description': 'Median PHRED score',
-            'scale': 'False'
+        headers['passed_reads'] = {
+            'title': 'Number of Reads (Pass)',
+            'description': 'Number of Reads pass',
+            'scale': 'BuGn',
+            'shared_key': 'read_count',
         }
-        headers['fifth_col'] = {
-            'title': 'N50',
+        headers['all_bases'] = {
+            'title': 'Number of Bases (All)',
+            'description': 'Number of Bases all',
+            'scale': 'OrRd',
+            'shared_key': 'bases_count',
+        }
+        headers['passed_bases'] = {
+            'title': 'Number of Bases (Pass)',
+            'description': 'Number of Bases pass',
+            'scale': 'OrRd',
+            'shared_key': 'bases_count',
+        }
+
+        self.general_stats_addcols(self.table_data, headers)
+        self.write_data_file(self.table_data, 'multiqc_pycoqc')
+
+        pycoqc_table_headers = OrderedDict()
+        pycoqc_table_headers['all_n50'] = {
+            'namespace': 'pycoQC',
+            'title': 'N50 (All)',
             'description': 'N50',
-            'scale': 'False'
+            'scale': 'Greys',
+            'shared_key': 'n50',
         }
-        headers['sixth_col'] = {
-            'title': 'Run Duration',
-            'description': 'Run Duration in hours',
-            'scale': 'False'
+        pycoqc_table_headers['passed_n50'] = {
+            'namespace': 'pycoQC',
+            'title': 'N50 (Pass)',
+            'description': 'N50',
+            'scale': 'Greys',
+            'shared_key': 'n50',
         }
-        headers['seventh_col'] = {
-            'title': 'Active Channels',
+        pycoqc_table_headers['all_median_phred_score'] = {
+            'namespace': 'pycoQC',
+            'title': 'Median PHRED score (All)',
+            'description': 'Median PHRED score',
+            'scale': 'BuGn',
+            'shared_key': 'phred',
+        }
+        pycoqc_table_headers['passed_median_phred_score'] = {
+            'namespace': 'pycoQC',
+            'title': 'Median PHRED score (Pass)',
+            'description': 'Median PHRED score',
+            'scale': 'BuGn',
+            'shared_key': 'phred',
+        }
+        pycoqc_table_headers['all_channels'] = {
+            'namespace': 'pycoQC',
+            'title': 'Active Channels (All)',
             'description': 'Number of active channels',
-            'scale': 'False'
+            'scale': 'PuBuGn',
+            'shared_key': 'channels',
         }
-        headers['eighth_col'] = {
-            'title': 'Runids',
-            'description': 'Number of runids',
-            'scale': 'False'
-        }
-        headers['ninth_col'] = {
-            'title': 'Barcodes',
-            'description': 'Number of barcodes',
-            'scale': 'False'
+        pycoqc_table_headers['passed_channels'] = {
+            'namespace': 'pycoQC',
+            'title': 'Active Channels (Pass)',
+            'description': 'Number of active channels',
+            'scale': 'PuBuGn',
+            'shared_key': 'channels',
         }
 
-        self.general_stats_addcols(data, headers)
+        self.add_section (
+            name = 'pycoQC Statistics table',
+            anchor = 'pycoqc_stats',
+            description = 'Statistics from pycoQC',
+            plot = table.plot(self.table_data, pycoqc_table_headers)
+        )
 
+        run_duration_headers = OrderedDict()
+        run_duration_headers['all_run_duration'] = {
+            'namespace': 'pycoQC',
+            'title': 'Run duration',
+            'description': 'Run duration',
+            'scale': 'PuBuGn'
+        }
+        self.add_section(
+            name = 'Run Duration',
+            anchor = 'pycoqc_run_duration',
+            description = 'Run Duration',
+            plot = table.plot(self.table_data, run_duration_headers)
+        )
+
+        self.add_section(
+            name = 'pycoQC Reads',
+            anchor = 'pycoqc_reads',
+            description = 'Reads',
+            plot = bargraph.plot(self.reads_data)
+        )
+
+        self.add_section(
+            name = 'pycoQC Bases',
+            anchor = 'pycoqc_bases',
+            description = 'Bases',
+            plot = bargraph.plot(self.bases_data)
+        )
+
+
+    def setup_data(self):
+        data_for_table = {}
+        reads_data = {}
+        bases_data = {}
+        for sample, sample_data in self.pycoqc_data.items():
+            data_for_table[sample] = {
+                'all_median_read_length': sample_data['All Reads']['basecall']['len_percentiles'][50],
+                'all_median_phred_score': sample_data['All Reads']['basecall']['qual_score_percentiles'][50],
+                'all_n50': sample_data['All Reads']['basecall']['N50'],
+                'all_run_duration': sample_data['All Reads']['run']['run_duration'],
+                'all_channels': sample_data['All Reads']['run']['active_channels'],
+                'all_reads': sample_data['All Reads']['basecall']['reads_number'],
+                'all_bases': sample_data['All Reads']['basecall']['bases_number'],
+                'passed_median_read_length': sample_data['Pass Reads']['basecall']['len_percentiles'][50],
+                'passed_median_phred_score': sample_data['Pass Reads']['basecall']['qual_score_percentiles'][50],
+                'passed_n50': sample_data['Pass Reads']['basecall']['N50'],
+                'passed_channels': sample_data['Pass Reads']['run']['active_channels'],
+                'passed_reads': sample_data['Pass Reads']['basecall']['reads_number'],
+                'passed_bases': sample_data['Pass Reads']['basecall']['bases_number'],
+                }
+            reads_data[sample] = {
+                'passed_reads': sample_data['Pass Reads']['basecall']['reads_number'],
+                'non_passed_reads': sample_data['All Reads']['basecall']['reads_number'] - sample_data['Pass Reads']['basecall']['reads_number'],
+            }
+            bases_data[sample] = {
+                'passed_bases': sample_data['Pass Reads']['basecall']['bases_number'],
+                'non_passed_bases': sample_data['All Reads']['basecall']['bases_number'] - sample_data['Pass Reads']['basecall']['bases_number'],
+            }
+        return data_for_table, reads_data, bases_data
 
     def parse_logs(self, f):
         data = yaml.load(f, Loader=yaml.FullLoader)
         return data
-
-    def median(self, values):
-        nr = len(values)
-        sorted_values = sorted(values)
-        return (sum(sorted_values[nr//2-1:nr//2+1])/2.0, sorted_values[nr//2])[nr % 2] if nr else None
