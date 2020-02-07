@@ -59,7 +59,7 @@ install_requires = [
         'future>0.14.0',
         'jinja2>=2.9,<3.0',
         'lzstring',
-        'markdown',
+        'markdown<3.2',
         'pyyaml>=4',
         'requests',
         'simplejson',
