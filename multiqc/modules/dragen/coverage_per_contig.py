@@ -41,21 +41,36 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         log.info('Found Dragen per-contig coverage histogram for {} Dragen output prefixes'.format(
             len(perchrom_data_by_sample)))
 
+        main_contigs_by_sample = {sn: data[0] for sn, data in perchrom_data_by_sample.items()}
+        other_contigs_by_sample = {sn: data[1] for sn, data in perchrom_data_by_sample.items()}
+
         self.add_section(
             name='Coverage per contig',
             anchor='dragen-coverage-per-contig',
-            description='Average coverage per contig or chromosome. Calculated as the number of bases (excluding '
-                        'duplicate marked reads, reads with MAPQ=0, and clipped bases), divided by '
-                        'the length of the contig or (if a target bed is used) the total length of the target '
-                        'region spanning that contig.',
-            plot=linegraph.plot(perchrom_data_by_sample, pconfig={
-                'id': 'dragen_coverage_per_contig',
-                'title': 'Average coverage per contig or chromosome',
-                'ylab': 'Average coverage',
-                'xlab': 'Region',
-                'categories': True,
-                'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
-            })
+            description='Average coverage per contig or chromosome. '
+                        'Calculated as the number of bases (excluding duplicate marked reads, reads '
+                        'with MAPQ=0, and clipped bases), divided by the length of the contig or '
+                        '(if a target bed is used) the total length of the target region spanning that contig.',
+            plot=linegraph.plot(main_contigs_by_sample, pconfig={
+                 'id': 'dragen_coverage_per_contig',
+                 'title': 'Average coverage per contig' + (' (main contigs)' if other_contigs_by_sample else ''),
+                 'ylab': 'Average coverage',
+                 'xlab': 'Region',
+                 'categories': True,
+                 'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
+            }) + (
+                '<br>' +
+                'Non-main contigs: '
+                'unlocalized (*_random), unplaced (chrU_*), alts (*_alt), mitochondria (chrM), EBV, HLA. '
+                'Zoom in to see more contigs as all labels don\'t fit the screen. ' +
+                linegraph.plot(other_contigs_by_sample, pconfig={
+                    'id': 'dragen_coverage_per_non_main_contig',
+                    'title': 'Average coverage of non-main contigs',
+                    'ylab': 'Average coverage',
+                    'xlab': 'Region',
+                    'categories': True,
+                    'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
+                }) if other_contigs_by_sample else '')
         )
 
 
@@ -82,10 +97,12 @@ def parse_wgs_contig_mean_cov(f):
     chrY_KI270740v1_random,0,0
     Autosomal regions ,130912665915,47.4953
 
-    A histogram or a plot like in mosdepth, with each chrom in X axis
+    A histogram or a plot like in mosdepth, with each chrom in X axis.
+    Two versions: for main contigs (chr1..chrY), and including non-main contigs (chrUn_*, *_random, HLA-*, *_alt, chrM)
     """
 
-    perchrom_data = dict()
+    main_contig_perchrom_data = dict()
+    other_contig_perchrom_data = dict()
 
     for line in f['f'].splitlines():
         chrom, bases, depth = line.split(',')
@@ -93,10 +110,17 @@ def parse_wgs_contig_mean_cov(f):
         depth = float(depth)
         # skipping unplaced and alternative contigs, as well as the mitochondria (might attract 100 times more coverage
         # than human chromosomes):
-        if chrom.startswith('chrUn_') or chrom.endswith('_random') or chrom.endswith('_alt') \
-                or chrom == 'chrM' or chrom == 'MT':
-            continue
-        perchrom_data[chrom] = depth
+        if \
+                chrom.startswith('chrUn_') or \
+                chrom.endswith('_random') or \
+                chrom.endswith('_alt') or \
+                chrom == 'chrM' or \
+                chrom == 'MT' or \
+                chrom == 'chrEBV' or \
+                chrom.startswith('HLA-'):
+            other_contig_perchrom_data[chrom] = depth
+        else:
+            main_contig_perchrom_data[chrom] = depth
 
     def chrom_order(chrom):
         if chrom == 'Autosomal regions':
@@ -104,17 +128,20 @@ def parse_wgs_contig_mean_cov(f):
             return 0
         try:
             # autosomal chromosomes go first, thus getting a negative order
-            return int(chrom.replace('chr', '')) - len(perchrom_data)
+            return int(chrom.replace('chr', '')) - len(main_contig_perchrom_data)
         except ValueError:
             # sex and other chromosomes go in the end
             return 1
 
-    perchrom_data = OrderedDict(sorted(perchrom_data.items(), key=lambda key_val: chrom_order(key_val[0])))
+    main_contig_perchrom_data = OrderedDict(
+        sorted(main_contig_perchrom_data.items(), key=lambda key_val: chrom_order(key_val[0])))
+    other_contig_perchrom_data = OrderedDict(
+        sorted(other_contig_perchrom_data.items(), key=lambda key_val: chrom_order(key_val[0])))
 
     m = re.search(r'(.*).wgs_contig_mean_cov_(\S*).csv', f['fn'])
     sample, phenotype = m.group(1), m.group(2)
     f['s_name'] = sample
-    return {phenotype: perchrom_data}
+    return {phenotype: [main_contig_perchrom_data, other_contig_perchrom_data]}
 
 
 
