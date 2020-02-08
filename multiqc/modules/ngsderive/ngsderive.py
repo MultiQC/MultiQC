@@ -11,10 +11,16 @@ import re
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph, heatmap
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+BUFFER_SIZE = 4096
+COMMON_DELIMITERS = ["\t", ",", " ", "|"]
+EXPECTED_HEADER_COUNT_STRANDEDNESS = 5
+EXPECTED_HEADER_COUNT_INSTRUMENT = 4
+EXPECTED_HEADER_COUNT_READLEN = 4
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -39,13 +45,31 @@ class MultiqcModule(BaseMultiqcModule):
 
         # parse ngsderive summary file
         for f in self.find_log_files('ngsderive/strandedness'):
-            self.parse(self.strandedness, f.get('f'), f.get('s_name'))
+            self.parse(
+                self.strandedness, 
+                f.get('f'), 
+                f.get('s_name'), 
+                "strandedness", 
+                EXPECTED_HEADER_COUNT_STRANDEDNESS
+            )
 
         for f in self.find_log_files('ngsderive/instrument'):
-            self.parse(self.instrument, f.get('f'), f.get('s_name'))
+            self.parse(
+                self.instrument,
+                f.get('f'),
+                f.get('s_name'),
+                "instrument",
+                EXPECTED_HEADER_COUNT_INSTRUMENT
+            )
 
         for f in self.find_log_files('ngsderive/readlen'):
-            self.parse(self.readlen, f.get('f'), f.get('s_name'))
+            self.parse(
+                self.readlen,
+                f.get('f'),
+                f.get('s_name'),
+                "readlen",
+                EXPECTED_HEADER_COUNT_READLEN
+            )
 
         self.strandedness = self.ignore_samples(self.strandedness)
         self.instrument = self.ignore_samples(self.instrument)
@@ -67,22 +91,46 @@ class MultiqcModule(BaseMultiqcModule):
         if not any_results_found:
             raise UserWarning
 
+    
+    def probe_file_for_dictreader_kwargs(self, f, expected_header_count):
+        """In short, this file was created to figure out which
+           kwargs need to be passed to csv.DictReader. First,
+           it tries to extract commonly known delimiters without
+           doing an expensive scanning operation. If that
+           doesn't work, we try sniffing for a dialect."""
 
-    def parse(self, d, contents, sample_name):
-        relevant_items = []
-
-        f = io.StringIO(contents)
-        dialect = csv.Sniffer().sniff(f.read(1024))
+        header = f.readline()
         f.seek(0)
 
-        for row in csv.DictReader(io.StringIO(contents), dialect=dialect):
-            if sample_name in row.get("File"):
+        for delim in COMMON_DELIMITERS:
+            if delim in header and len(header.split(delim)) == expected_header_count:
+                return { 'delimiter': delim }
+
+        log.warn("Could not easily detect delimiter for file. Trying csv.Sniffer()")
+        dialect = csv.Sniffer().sniff(f.read(BUFFER_SIZE))
+        f.seek(0)
+        return { 'dialect': dialect }
+
+
+    def parse(self, d, contents, sample_name, subcommand, expected_header_count):
+        kwargs = self.probe_file_for_dictreader_kwargs(
+                    io.StringIO(contents),
+                    expected_header_count
+                 )
+
+        relevant_items = []
+        for row in csv.DictReader(io.StringIO(contents), **kwargs):
+            if row.get("File") and sample_name in row.get("File"):
                 relevant_items.append(row)
 
         if len(relevant_items) < 1:
-            raise RuntimeError("Could not find results for {sample_name} in ngsderive strandedness report!".format(sample_name=sample_name))
+            raise RuntimeError("Could not find results for {sample_name} in ngsderive " + \
+                               "{subcommand} report! This may be related to the file " + \
+                               "being malformed or an uncommon delimiter being detected.".format(sample_name=sample_name, subcommand=subcommand))
         elif len(relevant_items) > 1:
-            raise RuntimeError("Too many results for {sample_name} in ngsderive strandedness report!".format(sample_name=sample_name))
+            raise RuntimeError("Too many results for {sample_name} in ngsderive " + \
+                               "{subcommand} report! This may be related to the file " + \
+                               "being malformed or an uncommon delimiter being detected.".format(sample_name=sample_name, subcommand=subcommand))
 
         d[sample_name] = relevant_items.pop(0)
 
@@ -95,6 +143,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "forward": round(float(strandedness.get("ForwardPct")) * 100.0, 2),
                 "reverse": round(float(strandedness.get("ReversePct")) * 100.0, 2),
             }
+
+        bardata = OrderedDict()
+        sorted_data = sorted(data.items(), key=lambda x: x[1].get("forward"))
+        for (k, v) in sorted_data:
+            bardata[k] = v
 
         headers = OrderedDict()
         headers['predicted'] = {
@@ -139,8 +192,9 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'Predicted strandedness provided by ngsderive. ' + \
                 'For more information, please see <a href="https://github.com/claymcleod/ngsderive/#strandedness-inference">' + \
                 'the relevant documentation and limitations</a>.',
-            plot = bargraph.plot(data, headers, pconfig)
+            plot = bargraph.plot(bardata, headers, pconfig)
         )
+
 
     def add_instrument_data(self):
         data = {}
@@ -163,8 +217,61 @@ class MultiqcModule(BaseMultiqcModule):
         headers['basis'] = {
             'title': 'Instrument (Basis)',
             'description': 'Basis upon which the prediction was made (see documentation for more details).',
+            'hidden': True
         }
         self.general_stats_addcols(data, headers)
+
+        samples = []
+        samples_data = []
+        instruments = set()
+
+        # first pass through, start to formulate heatmap data
+        for s, d in data.items():
+            samples.append(s)
+            data = d.get("instrument").split("/")
+            samples_data.append(data)
+            instruments.update(data)
+
+        # move multiple instruments to the end if it exists
+        instruments = sorted(instruments)
+        if "multiple instruments" in instruments:
+            instruments.remove("multiple instruments")
+            instruments.append("multiple instruments")
+
+        # one-hot encode machine for each sample
+        heatdata = []
+        for _sample_data in samples_data:
+            heatdata.append([int(i in _sample_data) for i in instruments])
+
+        # sort the table so that it looks nice. essentially, this is
+        # done as treating the one-hot encoded vectors as a binary
+        # encoded number that is then sorted.
+        heatdata = zip(samples, heatdata)
+        def reduce(l):
+            return sum([pow(i-1, _l) for (i, _l) in enumerate(l)])
+
+        sorted_heatdata = sorted(heatdata, key=lambda x: reduce(x[1]))
+        samples, heatdata = zip(*sorted_heatdata)
+
+         # Config for the plot
+        pconfig = {
+            'id': 'ngsderive_instruments_plot',
+            'title': 'ngsderive: instruments',
+            'xTitle': 'Predicted Instrument',
+            'yTitle': 'Sample',
+            'square': False,
+            'legend': False,
+            'datalabels': False
+        }
+
+        self.add_section (
+            name = 'Instrument',
+            anchor = 'ngsderive-instrument',
+            description = 'Predicted instrument provided by ngsderive. ' + \
+                'For more information, please see <a href="https://github.com/claymcleod/ngsderive/#illumina-machine-type">' + \
+                'the relevant documentation and limitations</a>.',
+            plot = heatmap.plot(heatdata, instruments, samples, pconfig=pconfig)
+        )
 
 
     def add_readlen_data(self):
@@ -175,6 +282,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
                 "consensusreadlength": int(readlen.get("ConsensusReadLength")),
             }
+
+        max_readlen = max([d.get("consensusreadlength") for _, d in data.items()])
+        readlens_to_plot = list(range(1, max_readlen + 1))
 
         headers = OrderedDict()
         headers['consensusreadlength'] = {
@@ -195,18 +305,30 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(data, headers)
 
-        linedata = {}
+        samples = []
+        heatdata = []
+
         for sample, d in data.items():
-            linedata[sample] = {}
+            samples.append(sample)
+            _this_samples_data = {}
             for parts in d.get("evidence").split(";"):
                 (k, v) = parts.split("=")
-                linedata[sample][int(k)] = int(v)
+                _this_samples_data[int(k)] = int(v)
+
+            reads = [_this_samples_data.get(this_readlen, 0) for this_readlen in readlens_to_plot]
+            total_reads = sum(reads)
+            reads = [r / total_reads for r in reads]
+            heatdata.append(reads)
 
         # Config for the plot
         pconfig = {
             'id': 'ngsderive_readlen_plot',
             'title': 'ngsderive: readlen',
-            'ylab': 'Evidence for Respective Read Length'
+            'xTitle': '% Evidence for Read Length',
+            'yTitle': 'Sample',
+            'square': False,
+            'legend': False,
+            'datalabels': False
         }
 
         self.add_section (
@@ -215,5 +337,5 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'Predicted read length provided by ngsderive. ' + \
                 'For more information, please see <a href="https://github.com/claymcleod/ngsderive/#read-length-calculation">' + \
                 'the relevant documentation and limitations</a>.',
-            plot = linegraph.plot(linedata, pconfig=pconfig)
+            plot = heatmap.plot(heatdata, readlens_to_plot, samples, pconfig=pconfig)
         )
