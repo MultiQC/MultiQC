@@ -47,13 +47,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Number of Reads (All)',
             'description': 'Number of Reads all',
             'scale': 'BuGn',
-            'shared_key': 'read_count',
+            'shared_key': 'long_read_count',
         }
         headers['passed_reads'] = {
             'title': 'Number of Reads (Pass)',
             'description': 'Number of Reads pass',
             'scale': 'BuGn',
-            'shared_key': 'read_count',
+            'shared_key': 'long_read_count',
         }
         headers['all_bases'] = {
             'title': 'Number of Bases (All)',
