@@ -3,7 +3,7 @@
 """ MultiQC module to parse output from pycoQC """
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph, table, linegraph
 from collections import OrderedDict
 import yaml
 import logging
@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pycoqc_data) == 0:
             raise UserWarning
 
-        self.table_data, self.reads_data, self.bases_data = self.setup_data()
+        self.table_data, self.reads_data, self.bases_data, self.read_lenght_plot_data, self.quality_plot_data = self.setup_data()
 
         headers = OrderedDict()
         headers['all_median_read_length'] = {
@@ -150,11 +150,26 @@ class MultiqcModule(BaseMultiqcModule):
             plot = bargraph.plot(self.bases_data)
         )
 
+        self.add_section(
+            name = 'pycoQC read length distribution',
+            anchor = 'pycoqc_read_len',
+            description = 'pycoQC read length distribution',
+            plot = linegraph.plot(self.read_lenght_plot_data)
+        )
+
+        self.add_section(
+            name = 'pycoQC PHRED quality score distribution',
+            anchor = 'pycoqc_read_qual',
+            description = 'pycoQC PHRED quality score distribution',
+            plot = linegraph.plot(self.quality_plot_data)
+        )
 
     def setup_data(self):
         data_for_table = {}
         reads_data = {}
         bases_data = {}
+        length_plot = {}
+        qual_plot = {}
         for sample, sample_data in self.pycoqc_data.items():
             data_for_table[sample] = {
                 'all_median_read_length': sample_data['All Reads']['basecall']['len_percentiles'][50],
@@ -179,7 +194,14 @@ class MultiqcModule(BaseMultiqcModule):
                 'passed_bases': sample_data['Pass Reads']['basecall']['bases_number'],
                 'non_passed_bases': sample_data['All Reads']['basecall']['bases_number'] - sample_data['Pass Reads']['basecall']['bases_number'],
             }
-        return data_for_table, reads_data, bases_data
+            length_x_vals = sample_data['All Reads']['basecall']['len_hist']['x']
+            length_y_vals = sample_data['All Reads']['basecall']['len_hist']['y']
+            length_plot[sample] = dict(zip(length_x_vals,length_y_vals))
+
+            qual_x_vals = sample_data['All Reads']['basecall']['qual_score_hist']['x']
+            qual_y_vals = sample_data['All Reads']['basecall']['qual_score_hist']['y']
+            qual_plot[sample] = dict(zip(qual_x_vals,qual_y_vals))
+        return data_for_table, reads_data, bases_data, length_plot, qual_plot
 
     def parse_logs(self, f):
         data = yaml.load(f, Loader=yaml.FullLoader)
