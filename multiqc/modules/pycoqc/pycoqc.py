@@ -150,26 +150,40 @@ class MultiqcModule(BaseMultiqcModule):
             plot = bargraph.plot(self.bases_data)
         )
 
+        read_length_config = {
+            'data_labels': [
+                {'name': 'All', 'ylab': 'Read Density', 'xlab': 'Basecalled Length'},
+                {'name': 'Pass', 'ylab': 'Read Density', 'xlab': 'Basecalled Length'}
+            ]
+        }
         self.add_section(
             name = 'pycoQC read length distribution',
             anchor = 'pycoqc_read_len',
             description = 'pycoQC read length distribution',
-            plot = linegraph.plot(self.read_lenght_plot_data)
+            plot = linegraph.plot(self.read_lenght_plot_data, read_length_config)
         )
 
+        qual_config = {
+            'data_labels': [
+                {'name': 'All', 'ylab': 'Read Density', 'xlab': 'Read Quality Score'},
+                {'name': 'Pass', 'ylab': 'Read Density', 'xlab': 'Read Quality Score'}
+            ]
+        }
         self.add_section(
             name = 'pycoQC PHRED quality score distribution',
             anchor = 'pycoqc_read_qual',
             description = 'pycoQC PHRED quality score distribution',
-            plot = linegraph.plot(self.quality_plot_data)
+            plot = linegraph.plot(self.quality_plot_data, qual_config)
         )
 
     def setup_data(self):
         data_for_table = {}
         reads_data = {}
         bases_data = {}
-        length_plot = {}
-        qual_plot = {}
+        length_plot_all = {}
+        length_plot_pass = {}
+        qual_plot_all = {}
+        qual_plot_pass = {}
         for sample, sample_data in self.pycoqc_data.items():
             data_for_table[sample] = {
                 'all_median_read_length': sample_data['All Reads']['basecall']['len_percentiles'][50],
@@ -194,14 +208,21 @@ class MultiqcModule(BaseMultiqcModule):
                 'passed_bases': sample_data['Pass Reads']['basecall']['bases_number'],
                 'non_passed_bases': sample_data['All Reads']['basecall']['bases_number'] - sample_data['Pass Reads']['basecall']['bases_number'],
             }
-            length_x_vals = sample_data['All Reads']['basecall']['len_hist']['x']
-            length_y_vals = sample_data['All Reads']['basecall']['len_hist']['y']
-            length_plot[sample] = dict(zip(length_x_vals,length_y_vals))
+            length_x_vals_all = sample_data['All Reads']['basecall']['len_hist']['x']
+            length_y_vals_all = sample_data['All Reads']['basecall']['len_hist']['y']
+            length_plot_all[sample] = dict(zip(length_x_vals_all,length_y_vals_all))
+            length_x_vals_pass = sample_data['Pass Reads']['basecall']['len_hist']['x']
+            length_y_vals_pass = sample_data['Pass Reads']['basecall']['len_hist']['y']
+            length_plot_pass[sample] = dict(zip(length_x_vals_pass,length_y_vals_pass))
 
-            qual_x_vals = sample_data['All Reads']['basecall']['qual_score_hist']['x']
-            qual_y_vals = sample_data['All Reads']['basecall']['qual_score_hist']['y']
-            qual_plot[sample] = dict(zip(qual_x_vals,qual_y_vals))
-        return data_for_table, reads_data, bases_data, length_plot, qual_plot
+            qual_x_vals_all = sample_data['All Reads']['basecall']['qual_score_hist']['x']
+            qual_y_vals_all = sample_data['All Reads']['basecall']['qual_score_hist']['y']
+            qual_plot_all[sample] = dict(zip(qual_x_vals_all,qual_y_vals_all))
+            qual_x_vals_pass = sample_data['Pass Reads']['basecall']['qual_score_hist']['x']
+            qual_y_vals_pass = sample_data['Pass Reads']['basecall']['qual_score_hist']['y']
+            qual_plot_pass[sample] = dict(zip(qual_x_vals_pass,qual_y_vals_pass))
+
+        return data_for_table, reads_data, bases_data, [length_plot_all, length_plot_pass], [qual_plot_all, qual_plot_pass]
 
     def parse_logs(self, f):
         data = yaml.load(f, Loader=yaml.FullLoader)
