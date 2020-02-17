@@ -50,18 +50,21 @@ class MultiqcModule(BaseMultiqcModule):
             plot = table.plot(self.table_data, self.run_duration_headers)
         )
 
+        self.read_lenth_bar_config = self.setup_read_lenth_bar_config()
+        cats = ['passed_reads', 'non_passed_reads']
         self.add_section(
             name = 'pycoQC Reads',
             anchor = 'pycoqc_reads',
             description = 'Reads',
-            plot = bargraph.plot(self.reads_data)
+            plot = bargraph.plot(self.reads_data, cats, self.read_lenth_bar_config)
         )
 
+        self.read_qual_config = self.setup_qual_bar_config()
         self.add_section(
             name = 'pycoQC Bases',
             anchor = 'pycoqc_bases',
             description = 'Bases',
-            plot = bargraph.plot(self.bases_data)
+            plot = bargraph.plot(self.bases_data, cats, self.read_qual_config)
         )
 
         if self.read_lenght_plot_data[0]:
@@ -234,6 +237,22 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'PuBuGn'
         }
         return(run_duration_headers)
+
+    def setup_read_lenth_bar_config(self):
+        read_length_bar_plot_config = {
+            'id': 'pycoqc_length_plot',
+            'title': 'pycoQC: Read Length',
+            'ylab': 'Sample',
+        }
+        return read_length_bar_plot_config
+
+    def setup_qual_bar_config(self):
+        read_qual_bar_plot_config = {
+            'id': 'pycoqc_qual_plot',
+            'title': 'pycoQC: Read Quality',
+            'ylab': 'Sample',
+        }
+        return read_qual_bar_plot_config
 
     def setup_read_length_config(self):
         read_length_config = {

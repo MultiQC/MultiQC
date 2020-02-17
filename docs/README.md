@@ -26,7 +26,7 @@ MultiQC Modules:
     KAT: modules/kat.md
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
-    pycoQC: modules/nanoseq.md
+    pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
