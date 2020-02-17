@@ -248,6 +248,7 @@ MultiQC is released under the GPL v3 or later licence.
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq
 [prokka]:         http://multiqc.info/docs/#prokka
+[pycoqc]:         http://multiqc.info/docs/#pycoqc
 [qorts]:          http://multiqc.info/docs/#qorts
 [qualimap]:       http://multiqc.info/docs/#qualimap
 [quast]:          http://multiqc.info/docs/#quast
