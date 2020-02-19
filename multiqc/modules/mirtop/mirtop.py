@@ -3,8 +3,6 @@
 """ MultiQC module to parse output from mirtop"""
 
 from __future__ import print_function
-## from future.utils import viewitems
-## from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 from collections import OrderedDict
@@ -61,7 +59,6 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data['read_count'] = parsed_data['isomiR_sum'] + parsed_data['ref_miRNA_sum']
             parsed_data['isomiR_perc'] = (parsed_data['isomiR_sum'] / parsed_data['read_count']) * 100
             self.mirtop_data[sample_name] = parsed_data
-            self.add_data_source(f['fn'], sample_name)
 
     def mirtop_stats_table(self):
         """ Take the parsed stats from the mirtop report and add them to the
