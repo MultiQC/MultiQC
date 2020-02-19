@@ -3,14 +3,12 @@
 """ MultiQC module to parse output from mirtop"""
 
 from __future__ import print_function
-from future.utils import viewitems
+## from future.utils import viewitems
+## from multiqc import config
+from multiqc.plots import bargraph
+from multiqc.modules.base_module import BaseMultiqcModule
 from collections import OrderedDict
 import logging
-
-from multiqc import config
-from multiqc.plots import bargraph, beeswarm
-from multiqc.modules.base_module import BaseMultiqcModule
-
 import json
 
 # Initialise the logger
@@ -23,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='mirtop',
         anchor='mirtop', target='mirtop',
-        href='https://github.com/miRTop',
+        href='https://github.com/miRTop/mirtop/',
         info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format."
         )
         
@@ -154,22 +152,4 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext = plots_info[plot_key]["helptext"],
                 plot = bargraph.plot(plot_data, cats_section)
             )
-        
-        
-    def mirtop_beeswarm_section(self, stat_string):
-        """ Generate more detailed beeswarm plots, for a given stat type"""
-        
-        log.info("Plotting " + stat_string + " section." )
-        section_data = dict()
-        for sample_name, sample_data in viewitems(self.mirtop_data):
-            section_keys = [key for key in list(sample_data.keys()) if (stat_string in key) and ('snp' in key or 'snv' in key)]
-            section_data[sample_name] = dict((k, sample_data[k]) for k in section_keys)
-            
-        # Create comprehensive beeswarm plots of all stats 
-        self.add_section (
-             name =  'Read ' + stat_string + 's',
-             anchor = 'mirtop-stats-' + stat_string,
-             description = "Detailed summary stats",
-             plot = beeswarm.plot(section_data)
-         )
 
