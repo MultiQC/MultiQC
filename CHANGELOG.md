@@ -32,6 +32,9 @@
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**mirtop**](https://github.com/miRTop/mirtop)
+    * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
+    * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
 
 #### Module updates:
 * **bcl2fastq**

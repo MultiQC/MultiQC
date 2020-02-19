@@ -40,16 +40,16 @@ Currently, supported tools include:
 |[BBTools][bbmap]                 |[Bowtie][bowtie-1]       |[HOMER][homer]               |[DamageProfiler][damageprofiler]      |
 |[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]     |[HTSeq][htseq]               |[DeDup][dedup]                        |
 |[ClipAndMerge][clipandmerge]     |[HiCUP][hicup]           |[MACS2][macs2]               |[deepTools][deeptools]                |
-|[Cluster Flow][clusterflow]      |[HiC-Pro][hicpro]        |[Picard][picard]             |[Disambiguate][disambiguate]          |
-|[Cutadapt][cutadapt]             |[HISAT2][hisat2]         |[Prokka][prokka]             |[goleft][goleft]                      |
-|[leeHom][leehom]                 |[Kallisto][kallisto]     |[RSEM][rsem]                 |[HiCExplorer][hicexplorer]            |
-|[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]     |[methylQA][methylqa]                  |
-|[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[miRTrace][mirtrace]                  |
-|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]                  |
-|[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
-|[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
-|[FLASh][flash]                   |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |                             |[QoRTs][qorts]                        |
+|[Cluster Flow][clusterflow]      |[HiC-Pro][hicpro]        |[mirtop][mirtop]             |[Disambiguate][disambiguate]          |
+|[Cutadapt][cutadapt]             |[HISAT2][hisat2]         |[Picard][picard]             |[goleft][goleft]                      |
+|[leeHom][leehom]                 |[Kallisto][kallisto]     |[Prokka][prokka]             |[HiCExplorer][hicexplorer]            |
+|[InterOp][interop]               |[Long Ranger][longranger]|[RSEM][rsem]                 |[methylQA][methylqa]                  |
+|[FastQC][fastqc]                 |[Salmon][salmon]         |[Samblaster][samblaster]     |[miRTrace][mirtrace]                  |
+|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[Samtools][samtools]         |[mosdepth][mosdepth]                  |
+|[Fastp][fastp]                   |[STAR][star]             |[SnpEff][snpeff]             |[Peddy][peddy]                        |
+|[fgbio][fgbio]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
+|[FLASh][flash]                   |                         |[Stacks][stacks]             |[Preseq][preseq]                      |
+|[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
