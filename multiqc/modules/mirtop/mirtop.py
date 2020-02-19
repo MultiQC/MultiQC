@@ -19,8 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name='mirtop',
-        anchor='mirtop', target='mirtop',
+        super(MultiqcModule, self).__init__(name='mirtop', anchor='mirtop',
         href='https://github.com/miRTop/mirtop/',
         info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format."
         )
@@ -29,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mirtop_data = dict()
         for f in self.find_log_files('mirtop'):
             self.parse_mirtop_report(f)
-        # Filter to strip out ignored sample names
+        # Filter out ignored samples (given with --ignore-samples option)
         self.mirtop_data = self.ignore_samples(self.mirtop_data)
 
         # Raise error if dict is empty
@@ -45,8 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mirtop_stats_table()
 
         # Create detailed plots
-        self.mirtop_barplot_section(aggregate_snps=False)
-#        self.mirtop_beeswarm_section("sum")
+        self.mirtop_barplot_section(aggregate_snps=True)
         
     def parse_mirtop_report (self, f):
         """ Parse the mirtop log file. """
@@ -63,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data['read_count'] = parsed_data['isomiR_sum'] + parsed_data['ref_miRNA_sum']
             parsed_data['isomiR_perc'] = (parsed_data['isomiR_sum'] / parsed_data['read_count']) * 100
             self.mirtop_data[sample_name] = parsed_data
-            #self.add_data_source(f['fn'], sample_name)
+            self.add_data_source(f['fn'], sample_name)
 
     def mirtop_stats_table(self):
         """ Take the parsed stats from the mirtop report and add them to the
@@ -86,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Total reads',
             'description': 'Total read counts (both isomiRs and reference miRNA)',
             'shared_key': 'reads',
-            'scale': 'PuBu'
+            'scale': 'Greens'
         } 
         headers['isomiR_perc'] = {
             'title': 'IsomiR %',
@@ -94,9 +92,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min':0,
             'max':100,
             'suffix':'%',
-            'scale': 'YlOrRd'
+            'scale': 'Purples'
         }
-
         self.general_stats_addcols(self.mirtop_data, headers)
 
     def mirtop_barplot_section(self, aggregate_snps):
