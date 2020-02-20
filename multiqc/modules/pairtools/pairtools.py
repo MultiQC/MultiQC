@@ -255,8 +255,13 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Inter-sample correlation [ATTEMPT]',
             anchor = 'pairs chrom/chroms corr...',
             description="An attempt to characterize inter-sample similarity"
-                        " using different *ALL* available metrics:"
-                        " distribution of pairs per chromosome pair",
+                        " using different available metrics:"
+                        " distribution of pairs per chromosome pair"
+                        " Samples with translocations would 'cluster' away from the 'normal' ones with this metric..."
+                        " If we add chromsizes as part of stats, we could display # of cis-pairs ~ chromlen, or"
+                        " # of trans-pairs ~inter-chromosomal 'area' (these are supposed to be ~linear relationships)"
+                        " so, samples with translocations and other stuff would pop-up ....(maybe)"
+                        " Another thing to do (bassed on this) - show 'coverage' per chromosome ....",
             plot = self.samples_similarity_chrom_pairs()
         )
 
@@ -264,8 +269,10 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Inter-sample correlation [ATTEMPT#2]',
             anchor = 'pairs by separation groups...',
             description="An attempt #2 to characterize inter-sample similarity"
-                        " using different *ALL* available metrics:"
-                        " distribution of pairs by distance (and trans)",
+                        " using different available metrics:"
+                        " distribution of pairs by distance (and trans)"
+                        " Samples with translocations would 'cluster' away from the 'normal' ones with this metric..."
+                        " Overall this should show similar 'clustering' as in attempt #1 ...",
             plot = self.samples_similarity_cis_pairs()
         )
 
@@ -274,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Inter-sample correlation [ATTEMPT#3]',
             anchor = 'pairs by alignment status...',
             description="An attempt #3 to characterize inter-sample similarity"
-                        " using different *ALL* available metrics:"
+                        " using different available metrics:"
                         " distribution of pairs alignment status (UU,NN,MM,...)",
             plot = self.samples_similarity_mapped_pairs()
         )
