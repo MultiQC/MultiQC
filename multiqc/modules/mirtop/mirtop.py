@@ -75,13 +75,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'IsomiR reads',
             'description': 'Read counts summed over all isomiRs',
             'shared_key': 'reads',
-            'scale': 'YlOrRd'
+            'scale': 'PuBu'
         }
         headers['read_count'] = {
             'title': 'Total reads',
             'description': 'Total read counts (both isomiRs and reference miRNA)',
             'shared_key': 'reads',
-            'scale': 'Greens'
+            'scale': 'PuBu'
         } 
         headers['isomiR_perc'] = {
             'title': 'IsomiR %',
@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
             'min':0,
             'max':100,
             'suffix':'%',
-            'scale': 'Purples'
+            'scale': 'YlOrRd'
         }
         self.general_stats_addcols(self.mirtop_data, headers)
 
@@ -100,19 +100,21 @@ class MultiqcModule(BaseMultiqcModule):
         plots_info = OrderedDict()
         general_helptext = " The different isomiR types are: **iso_3p**, a sequence with a 3' end difference because of trimming or templated tailing; **iso_5p**, a sequence with a 5' end difference because of trimming or templated tailing; **iso_add3p**, a sequence with non templated tailing in the 3' end; **iso_add5p**, a sequence with non templated tailing in the 5' end; **iso_snv**, a sequence with a single nucleotide variant. The **ref_miRNA** label corresponds to the reference miRNA (canonical sequence)."
         plots_info["sum"] = {
-            "name" : "IsomiR types: Total counts",
-            "description" : "Total counts of reads aligned for each isomiR type, over all detected miRNAs. The total counts of reads detected as reference miRNA sequences is also shown.",
+            "name" : "Read counts for each isomiR type",
+            "description" : "Total counts of reads aligned for each isomiR type, over all detected miRNAs. The total counts of reads detected as reference miRNA sequences is also shown. Since a read can belong to 2 (or more) different isomiRs types (e.g iso_3p and iso_5p), the cumulated read counts shown in this plot for a sample can be higher than its total read count shown in the general statistics.",
             "helptext" : "For each sample, the mean counts of each type of isomiRs over all detected miRNAs is displayed in a different color." + general_helptext}
         plots_info["count"] = {
-            "name" : "IsomiR types: Number of unique sequences",
+            "name" : "Number of unique sequences for each isomiR type",
             "description" : "For each isomiR type, number of distinct sequences detected, over all miRNAs. The number of reference miRNA sequences detected is also shown.",
             "helptext" : "For each sample, the number of miRNAs with each type of isomiRs, is displayed in a different color." + general_helptext}
         plots_info["mean"] = {
-            "name" : "IsomiR types: Means",
+            "name" : "Means for each isomiR type",
             "description" : "Mean counts, for each isomiR type, over all detected miRNAs. The mean counts of reads detected as reference miRNA sequences is also shown",
             "helptext" : "For each sample, the mean counts of each type of isomiRs over all detected miRNAs is displayed in a different color." + general_helptext}
 
         cats = ["ref_miRNA", "iso_3p", "iso_5p", "iso_add3p", "iso_add5p", "iso_add", "iso_snv", "iso_snv_seed", "iso_snv_central_offset", "iso_snv_central", "iso_snv_central_supp", "iso_snp", "iso_snp_seed", "iso_snp_central_offset", "iso_snp_central", "iso_snp_central_supp"]
+
+        ylab_dict = {"sum": "Read counts (stacked)", "count": "Unique sequences (stacked)", "mean": "Means (stacked)"}
         
         # Aggregate infos for iso_snp isomiRs (for clarity). "Mean" section is recomputed
         def aggregate_snps_in_samples():
@@ -140,10 +142,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # Select keys with plot_key for each sample (except keys with "isomiRs_*" and "read_*")
                 plot_data[sample]={key:data[sample][key] for key in data[sample] if plot_key in key and "isomiR" not in key and "read" not in key}
             cats_section = {key + "_" + plot_key:{'name':key} for key in cats}
+            config = {"id": plot_key, "title": "mirtop: " + plots_info[plot_key]["name"], "ylab": ylab_dict[plot_key]}
             self.add_section (
                 name = plots_info[plot_key]["name"],
                 description = plots_info[plot_key]["description"],
                 helptext = plots_info[plot_key]["helptext"],
-                plot = bargraph.plot(plot_data, cats_section)
+                plot = bargraph.plot(plot_data, cats_section, config)
             )
 
