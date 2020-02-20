@@ -176,7 +176,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='pairtools', anchor='pairtools',
         href="https://github.com/mirnylab/pairtools",
-        info="pairtools is a command-line framework to process sequencing data from a Hi-C experiment.")
+        info="pairtools is a command-line framework for processing sequencing data"
+            " generated with Chromatin Conformation Capture based experiments:"
+            " pairtools can handle pairs of short-reads aligned to a reference genome,"
+            " extract 3C-specific information and perform common tasks, such as sorting,"
+            " filtering and deduplication.")
 
 
         # Find and load any pairtools stats summaries
@@ -199,55 +203,82 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Report sections
         self.add_section (
-            name = 'Pair types report',
-            description="Number of pairs clasified in each"
-                        "<a href=\"https://pairtools.readthedocs.io/en/latest/formats.html#pair-types\" > category</a>"
-                        " including unmapped, walks and duplicates",
+            name = 'Pairs alignment status report',
+            description="Number of pairs clasified according to their alignment status,"
+                        " including uniquely mapped (UU), unmapped (NN), duplicated (DD), and others."
+                        " For further details check"
+                        " <a href=\"https://pairtools.readthedocs.io/en/latest/formats.html#pair-types\" > pairtools</a>"
+                        " documentation.",
             anchor = 'pair-types',
             plot = self.pair_types_chart()
         )
 
         self.add_section (
-            name = 'Cis pairs by ranges',
+            name = 'Usable pairs grouped by genomic separations',
             anchor = 'cis-ranges',
-            description="Uniquely mapped and rescued pairs split"
-                        " into several groups by genomic distance"
-                        " for cis-pairs and trans.",
+            description="Distribution of usable pairs (UU, UR and RU) by their genomic"
+                        " separations for cis-pairs and trans-pairs as a separate group."
+                        " Short-range cis-pairs are typically enriched in technical artifacts.",
             plot = self.cis_breakdown_chart()
         )
 
         self.add_section (
-            name = 'Pairs by distance and directionality',
+            name = 'Frequency of interactions as a function of genomic separation',
             anchor = 'pairs dirs',
-            description="Scaling plots - frequency of interactions"
-                        " as a function of genomic distance averaged"
-                        " between ++,+-,-+ and -- pair configurations."
-                        " Standard deviation between these 4 categories"
-                        " is also reported as a function of distance.",
+            description="Frequency of interactions (usable pairs) reported"
+                        " as a function of genomic separation, known as \"scaling plots\", P(s)."
+                        " Frequency of interactions for pairs of different strand orientations"
+                        " ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into technical artifacts:"
+                        " typically manifested as unequal fractions of FF, FR, RF, RR at a given separation."
+                        " In order to avoid showing 4 lines per sample we plot std(FF,FR,RF,RR), as a measure"
+                        " of \"divergence\" between pairs of different strand orientations."
+                        " [THIS SECTION IS MY BIGGEST STRUGGLE - NOT SURE IF STANDARD DEVIATION DOES A GOOD JOB"
+                        " AT SHOWING THE DIVERGENCE OF A \"BROOM\"-PLOT, CONSIDERED MAX(FF,FR,RF,RR)-MIN(FF,FR,RF,RR)"
+                        " BEST THING WOULD BE TO SHOW 4-LINES FF,FR,RF,RR, AFTER CLICKING ON A GIVEN SAMPLE"
+                        " - WOULD REQUIRE SOME JAVASCRIPTING - PROBABLY NOT FOR THE FIRST ITERATION... ]",
             plot = self.pairs_with_genomic_separation()
         )
 
         self.add_section (
-            name = 'cis-Pairs by chromosomes',
+            name = 'Usable pairs grouped by chromosomes',
             anchor = 'pairs chrom/chroms ...',
-            description="Number of pairs interacting within each chromosome"
-                        " or between two different chromosomes."
-                        " Interactions are normalized by the number of"
-                        " usable pairs in a given sample."
-                        " Interactions are reported only exceeding 1\% of usable ones.",
+            description="Number of usable pairs interacting within each chromosome"
+                        " or for a combination of chromosomes."
+                        " Numbers of pairs are normalized by the total number of"
+                        " usable pairs per sample."
+                        " Number are reported only for chromosomes/combinations that have >1% of usable pairs."
+                        " [THERE SEEM TO BE A BUG IN MULTIQC HEATMAP - OBVIOUS WHEN USE HIGHLIGHTING,RENAMING ETC]",
             plot = self.pairs_by_chrom_pairs()
         )
 
         self.add_section (
-            name = 'Inter-sample correlation',
+            name = 'Inter-sample correlation [ATTEMPT]',
             anchor = 'pairs chrom/chroms corr...',
             description="An attempt to characterize inter-sample similarity"
-                        " using different metrics:"
-                        " distribution of pairs per chromosome pair,"
-                        " distribution of pairs by distance (and trans) [not implemented]"
-                        " distribution of all pairs by categories.",
+                        " using different *ALL* available metrics:"
+                        " distribution of pairs per chromosome pair",
             plot = self.samples_similarity_chrom_pairs()
         )
+
+        self.add_section (
+            name = 'Inter-sample correlation [ATTEMPT#2]',
+            anchor = 'pairs by separation groups...',
+            description="An attempt #2 to characterize inter-sample similarity"
+                        " using different *ALL* available metrics:"
+                        " distribution of pairs by distance (and trans)",
+            plot = self.samples_similarity_cis_pairs()
+        )
+
+
+        self.add_section (
+            name = 'Inter-sample correlation [ATTEMPT#3]',
+            anchor = 'pairs by alignment status...',
+            description="An attempt #3 to characterize inter-sample similarity"
+                        " using different *ALL* available metrics:"
+                        " distribution of pairs alignment status (UU,NN,MM,...)",
+            plot = self.samples_similarity_mapped_pairs()
+        )
+
 
 
     def parse_pairtools_stats(self, f):
@@ -283,6 +314,8 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
         }
+
+        self.pair_types_chart_data = _data
 
         return bargraph.plot(_data, pconfig=config)
 
@@ -337,6 +370,8 @@ class MultiqcModule(BaseMultiqcModule):
         # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
         # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
 
+        self.pairs_breakdown = _datawtrans
+
         # Config for the plot
         config = {
             'id': 'pair_cis_ranges',
@@ -365,9 +400,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Construct a data structure for the plot
         _data_std = dict()
+        _data_spread = dict()
         _data_mean = dict()
         for s_name in self.pairtools_stats:
             _data_std[s_name] = dict()
+            _data_spread[s_name] = dict()
             _data_mean[s_name] = dict()
             # pre-calculate geom-mean of dist-bins for P(s):
             _dist_bins = self.pairtools_stats[s_name]['dist_bins']
@@ -385,26 +422,43 @@ class MultiqcModule(BaseMultiqcModule):
                         sample_dist_freq["+-"],
                         sample_dist_freq["-+"],
                         sample_dist_freq["--"]
-                                ],axis=0)[1:]
+                                ],axis=0)[1:].astype(float)
             # consider using max-min instead ...
             # amount of information sum(f*log(f) ) ?!...
 
-            dir_mean = np.mean([
+            # data spread max(++,+-,-+,--) - min(++,+-,-+,--)
+            dir_spread = \
+                    np.max([
                         sample_dist_freq["++"],
                         sample_dist_freq["+-"],
                         sample_dist_freq["-+"],
                         sample_dist_freq["--"]
-                                ],axis=0)[1:]
+                                ],axis=0)[1:].astype(float) - \
+                    np.min([
+                        sample_dist_freq["++"],
+                        sample_dist_freq["+-"],
+                        sample_dist_freq["-+"],
+                        sample_dist_freq["--"]
+                                ],axis=0)[1:].astype(float)
+
+            dir_mean = np.sum([
+                        sample_dist_freq["++"],
+                        sample_dist_freq["+-"],
+                        sample_dist_freq["-+"],
+                        sample_dist_freq["--"]
+                                ],axis=0)[1:].astype(float)
             # / self.pairtools_stats[s_name]["cis_1kb+"]
 
             # dir_std /= _areas#+0.01
+            # dir_spread /= _areas#+0.01
             dir_mean /= _areas#+0.01
             #
             # fill in the data ...
-            for i,(k,v1,v2) in enumerate(zip(_dist_bins_geom, dir_std, dir_mean)):
+            for i,(k,v1,v2,v3) in enumerate(zip(_dist_bins_geom, dir_std, dir_spread, dir_mean)):
                 if i>3:
                     _data_std[s_name][k] = v1
-                    _data_mean[s_name][k] = v2
+                    _data_spread[s_name][k] = v2
+                    _data_mean[s_name][k] = v3
 
         # # Specify the order of the different possible categories
         # keys = sorted_keys
@@ -413,7 +467,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'broom plot',
-            'title': 'Pairs by distance and by read orintation',
+            'title': 'Pairs by distance and by read orientation',
             # 'ylab': 'Counts',
             'xlab': 'Genomic separation (bp)',
             'xLog': True,
@@ -421,13 +475,14 @@ class MultiqcModule(BaseMultiqcModule):
             # 'xDecimals': False,
             # 'ymin': 0,
             # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            'data_labels': [{'name': 'std', 'ylab': 'frequency of interactions'},
-                            {'name': 'mean', 'ylab': 'frequency of interactions'}]
+            'data_labels': [{'name': 'Spread: std', 'ylab': 'frequency of interactions'},
+                            {'name': 'Spread: max-min', 'ylab': 'frequency of interactions'},
+                            {'name': 'P(s): sum', 'ylab': 'frequency of interactions'}]
         }
 
         # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
 
-        return linegraph.plot([_data_std, _data_mean], pconfig=pconfig)
+        return linegraph.plot([_data_std, _data_spread, _data_mean], pconfig=pconfig)
 
 
     # chrom_freq/chr1/chrX ...
@@ -451,52 +506,50 @@ class MultiqcModule(BaseMultiqcModule):
         # done:
         _chroms = sorted(list(_chromset))
 
-        # cis-only for now:
         # Construct a data structure for the plot
         _data = dict()
         for s_name in self.pairtools_stats:
-            _data[s_name] = []
+            _data[s_name] = dict()
             _chrom_freq_sample = \
                 self.pairtools_stats[s_name][_report_field]
             # go over chroms:
             for c1,c2 in combinations_with_replacement( _chroms, 2):
+                # record the chromosome combination:
+                _chrom_combo = (c1,c2)
+                # _num_pairs calculations:
                 if (c1,c2) in _chrom_freq_sample:
                     _num_pairs = _chrom_freq_sample[(c1,c2)]
                 elif (c2,c1) in _chrom_freq_sample:
                     _num_pairs = _chrom_freq_sample[(c2,c1)]
+                    # _chrom_combo = (c2,c1)
                 else:
                     _num_pairs = 0
-                # let's filter by # of pairs ...
+                # let's filter by # of pairs - by doing some masking ...
                 if _num_pairs < 0.0007*self.pairtools_stats[s_name]['cis']:
                     _num_pairs = 0
                 else:
                     # we'll try to normalize it afterwards ...
                     _num_pairs /= (self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans'])
                     # pass
-                _data[s_name].append(_num_pairs)
+                _data[s_name][_chrom_combo] = _num_pairs
 
         # now we need to filter 0 cells ...
         # prepare for the heatmap:
+        xcats = sorted([ (c1, c2) for c1, c2 in combinations_with_replacement( _chroms, 2) ])
+        xcats_names = [f"{c1}-{c2}" for c1,c2 in xcats]
+        # try samples as x-category ...
         ycats = sorted(_data)
-        the_data = [ _data[_] for _ in ycats ]
-        # xcats = _chroms
-        xcats = [ "{}-{}".format(c1, c2) for c1, c2 in combinations_with_replacement( _chroms, 2) ]
+        the_data = [ [ _data[s][k] for k in xcats ] for s in ycats ]
 
 
         # check if there are any zeros in the column (i.e. for a given chrom pair) ...
         mask = np.all(the_data, axis=0)
-
-        # # debug
-        # log.info(mask.tolist())
-        # # log.info(np.array(xcats)[mask][sorted_idx].tolist())
-        # # debug
-
-        the_data_filt = np.array(the_data)[:,mask]
-        # mean over columns to sort ...
+        the_data_filt = np.asarray(the_data)[:,mask]
+        # # mean over columns to sort ...
         sorted_idx = the_data_filt.mean(axis=0).argsort()
         return heatmap.plot(
                 the_data_filt[:,sorted_idx].tolist(),
-                np.array(xcats)[mask][sorted_idx].tolist(),
+                np.array(xcats_names)[mask][sorted_idx].tolist(),
                 ycats)#, pconfig)
 
 
@@ -555,13 +608,62 @@ class MultiqcModule(BaseMultiqcModule):
         #
 
 
+        # let's try other metric here as well ...
+        the_data2 = [[self.pairs_breakdown[s][k] for k in sorted(self.pairs_breakdown[s])] for s in ycats]
+        corrs2 = np.corrcoef(the_data2)
+
+
         return heatmap.plot(
                 corrs.tolist(),
                 ycats,
                 ycats)#, pconfig)
 
 
+    def samples_similarity_cis_pairs(self):
+        """ number of pairs by chromosome pairs """
 
+        # prepare for the heatmap:
+        ycats = sorted(self.pairs_breakdown)
+
+        # let's try other metric here as well ...
+        # normalize the data - i.e. use percentage instead of the counts ...
+        the_data = [
+                        [
+                          float(self.pairs_breakdown[s][k])/sum(self.pairs_breakdown[s].values()) \
+                            for k in sorted(self.pairs_breakdown[s])
+                        ] \
+                      for s in ycats]
+
+        corrs = np.corrcoef(the_data)
+
+
+        return heatmap.plot(
+                corrs.tolist(),
+                ycats,
+                ycats)#, pconfig)
+
+
+    def samples_similarity_mapped_pairs(self):
+        """ number of pairs by chromosome pairs """
+
+        # prepare for the heatmap:
+        ycats = sorted(self.pair_types_chart_data)
+
+        # let's try other metric here as well ...
+        # normalize the data - i.e. use percentage instead of the counts ...
+        the_data = [
+                    [
+                     float(self.pair_types_chart_data[s][k])/sum(self.pair_types_chart_data[s].values()) \
+                       for k in sorted(self.pair_types_chart_data[s])
+                    ] for s in ycats
+                   ]
+        corrs = np.corrcoef(the_data)
+
+
+        return heatmap.plot(
+                corrs.tolist(),
+                ycats,
+                ycats)#, pconfig)
 
 
     def pairtools_general_stats(self):
