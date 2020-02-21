@@ -207,28 +207,29 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Report sections
         self.add_section (
-            name = 'Pairs alignment status report',
-            description="Number of pairs clasified according to their alignment status,"
-                        " including uniquely mapped (UU), unmapped (NN), duplicated (DD), and others."
-                        " For further details check"
-                        " <a href=\"https://pairtools.readthedocs.io/en/latest/formats.html#pair-types\" > pairtools</a>"
-                        " documentation.",
+            name = 'Pairs alignment status',
             anchor = 'pair-types',
+            description="Number of pairs classified according to their alignment status,"
+                        " including uniquely mapped (UU), unmapped (NN), duplicated (DD), and others.",
+            helptext = '''For further details check
+                        <a href=\"https://pairtools.readthedocs.io/en/latest/formats.html#pair-types\" > pairtools</a>
+                        documentation.''',
             plot = self.pair_types_chart()
         )
 
         self.add_section (
             name = 'Usable pairs grouped by genomic separations',
-            anchor = 'cis-ranges',
-            description="Distribution of usable pairs (UU, UR and RU) by their genomic"
-                        " separations for cis-pairs and trans-pairs as a separate group."
-                        " Short-range cis-pairs are typically enriched in technical artifacts.",
+            anchor = 'cis-ranges-trans',
+            description="Distribution of usable pairs (UU, UR and RU) by genomic"
+                        " separations for <it>cis-</it>pairs and <it>trans-</it>pairs as a separate group.",
+            helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
+            High fraction of trans interactions typically suggests increased noise levels''',
             plot = self.cis_breakdown_chart()
         )
 
         self.add_section (
             name = 'Frequency of interactions as a function of genomic separation',
-            anchor = 'pairs dirs',
+            anchor = 'scalings-plots',
             description="Frequency of interactions (usable pairs) reported"
                         " as a function of genomic separation, known as \"scaling plots\", P(s)."
                         " Frequency of interactions for pairs of different strand orientations"
@@ -242,6 +243,25 @@ class MultiqcModule(BaseMultiqcModule):
                         " - WOULD REQUIRE SOME JAVASCRIPTING - PROBABLY NOT FOR THE FIRST ITERATION... ]",
             plot = self.pairs_with_genomic_separation()
         )
+
+
+        self.add_section (
+            name = 'Frequency of interactions by orientation and genomic separation',
+            anchor = 'read orientation',
+            description="Frequency of interactions (usable pairs) reported"
+                        " as a function of genomic separation, known as \"scaling plots\", P(s)."
+                        " Frequency of interactions for pairs of different strand orientations"
+                        " ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into technical artifacts:"
+                        " typically manifested as unequal fractions of FF, FR, RF, RR at a given separation."
+                        " In order to avoid showing 4 lines per sample we plot std(FF,FR,RF,RR), as a measure"
+                        " of \"divergence\" between pairs of different strand orientations."
+                        " [THIS SECTION IS MY BIGGEST STRUGGLE - NOT SURE IF STANDARD DEVIATION DOES A GOOD JOB"
+                        " AT SHOWING THE DIVERGENCE OF A \"BROOM\"-PLOT, CONSIDERED MAX(FF,FR,RF,RR)-MIN(FF,FR,RF,RR)"
+                        " BEST THING WOULD BE TO SHOW 4-LINES FF,FR,RF,RR, AFTER CLICKING ON A GIVEN SAMPLE"
+                        " - WOULD REQUIRE SOME JAVASCRIPTING - PROBABLY NOT FOR THE FIRST ITERATION... ]",
+            plot = self.pairs_by_strand_orientation()
+        )
+
 
         self.add_section (
             name = 'Usable pairs grouped by chromosomes',
@@ -394,6 +414,56 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(_datawtrans, sorted_keys, pconfig=config)
+
+
+    # dist_freq/56234133-100000000/-+
+    def pairs_by_strand_orientation(self):
+        """ number of cis-pairs with genomic separation """
+
+        _report_field = "dist_freq"
+
+        distances = [100,500,1000,2000,5000,10000,15000,20000]
+
+        # Construct a data structure for the plot
+        _data = dict()
+        for _d in distances:
+            _data[_d] = dict()
+            for s_name in self.pairtools_stats:
+                _data[_d][s_name] = dict()
+
+
+        for s_name in self.pairtools_stats:
+            # given a set of fixed distance ranges extract FF,RR,FR,RF:
+            prev_idx_dist = 0
+            for _dist in [100,500,1000,2000,5000,10000,15000,20000]:
+                current_idx_dist = np.searchsorted(self.pairtools_stats[s_name]['dist_bins'],_dist)
+                # scalings data structure ...
+                sample_dist_freq = self.pairtools_stats[s_name][_report_field]
+                # slice of the scaling for a given range of distances:
+                sample_slice_dist = lambda orient: sample_dist_freq[orient][prev_idx_dist:current_idx_dist].astype(float)
+                # calculate ratios of FF FR RF RR ...
+                _data[_dist][s_name]['FF'] = np.sum(sample_slice_dist("++"))
+                _data[_dist][s_name]['RR'] = np.sum(sample_slice_dist("--"))
+                _data[_dist][s_name]['RF'] = np.sum(sample_slice_dist("-+"))
+                _data[_dist][s_name]['FR'] = np.sum(sample_slice_dist("+-"))
+                #
+                prev_idx_dist = current_idx_dist
+
+
+
+        # Config for the plot
+        config = {
+            'id': 'pair_by_orient_cis_ranges',
+            'title': 'pairtools: cis pairs broken into ranges and read orintations',
+            'ylab': '# Reads',
+            'cpswitch_counts_label': 'Number of Reads',
+            'data_labels': [f"{_d}" for _d in distances]
+        }
+
+        _sorted_keys = ['FF','RF','FR','RR']
+
+        return bargraph.plot([_data[_d] for _d in distances], _sorted_keys, pconfig=config)
+
 
 
     # dist_freq/56234133-100000000/-+
