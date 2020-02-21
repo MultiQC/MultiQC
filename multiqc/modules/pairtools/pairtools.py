@@ -9,10 +9,13 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 
 from itertools import combinations, combinations_with_replacement
+import os
 import re
+import json
 import numpy as np
 from copy import copy, deepcopy
 from multiqc.plots import bargraph, linegraph, heatmap
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -198,6 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found {} reports".format(len(self.pairtools_stats)))
         # self.write_data_file(self.pairtools_stats, 'multiqc_pairtools')
+
 
         self.pairtools_general_stats()
 
@@ -405,14 +409,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         _report_field = "dist_freq"
 
-        # Construct a data structure for the plot
-        _data_std = dict()
-        _data_spread = dict()
+        # # Construct a data structure for the plot
+        # _data_std = dict()
+        # _data_spread = dict()
         _data_mean = dict()
+        _data_FF = dict()
+        _data_FR = dict()
+        _data_RR = dict()
+        _data_RF = dict()
         for s_name in self.pairtools_stats:
-            _data_std[s_name] = dict()
-            _data_spread[s_name] = dict()
+            # _data_std[s_name] = dict()
+            # _data_spread[s_name] = dict()
             _data_mean[s_name] = dict()
+            _data_FF[s_name] = dict()
+            _data_FR[s_name] = dict()
+            _data_RR[s_name] = dict()
+            _data_RF[s_name] = dict()
             # pre-calculate geom-mean of dist-bins for P(s):
             _dist_bins = self.pairtools_stats[s_name]['dist_bins']
             _areas = _contact_areas( _dist_bins, scaffold_length=2_000_000_000_000 )
@@ -422,31 +434,31 @@ class MultiqcModule(BaseMultiqcModule):
                 _dist_bins_geom.append(int(geom_dist))
             # _dist_bins_geom are calcualted
             sample_dist_freq = self.pairtools_stats[s_name][_report_field]
-            # that's how it is for now ...
-            # stat_from_file[key][dirs][bin_idx] = int(fields[1])
-            dir_std = np.std([
-                        sample_dist_freq["++"],
-                        sample_dist_freq["+-"],
-                        sample_dist_freq["-+"],
-                        sample_dist_freq["--"]
-                                ],axis=0)[1:].astype(float)
-            # consider using max-min instead ...
-            # amount of information sum(f*log(f) ) ?!...
+            # # that's how it is for now ...
+            # # stat_from_file[key][dirs][bin_idx] = int(fields[1])
+            # dir_std = np.std([
+            #             sample_dist_freq["++"],
+            #             sample_dist_freq["+-"],
+            #             sample_dist_freq["-+"],
+            #             sample_dist_freq["--"]
+            #                     ],axis=0)[1:].astype(float)
+            # # consider using max-min instead ...
+            # # amount of information sum(f*log(f) ) ?!...
 
-            # data spread max(++,+-,-+,--) - min(++,+-,-+,--)
-            dir_spread = \
-                    np.max([
-                        sample_dist_freq["++"],
-                        sample_dist_freq["+-"],
-                        sample_dist_freq["-+"],
-                        sample_dist_freq["--"]
-                                ],axis=0)[1:].astype(float) - \
-                    np.min([
-                        sample_dist_freq["++"],
-                        sample_dist_freq["+-"],
-                        sample_dist_freq["-+"],
-                        sample_dist_freq["--"]
-                                ],axis=0)[1:].astype(float)
+            # # data spread max(++,+-,-+,--) - min(++,+-,-+,--)
+            # dir_spread = \
+            #         np.max([
+            #             sample_dist_freq["++"],
+            #             sample_dist_freq["+-"],
+            #             sample_dist_freq["-+"],
+            #             sample_dist_freq["--"]
+            #                     ],axis=0)[1:].astype(float) - \
+            #         np.min([
+            #             sample_dist_freq["++"],
+            #             sample_dist_freq["+-"],
+            #             sample_dist_freq["-+"],
+            #             sample_dist_freq["--"]
+            #                     ],axis=0)[1:].astype(float)
 
             dir_mean = np.sum([
                         sample_dist_freq["++"],
@@ -456,16 +468,32 @@ class MultiqcModule(BaseMultiqcModule):
                                 ],axis=0)[1:].astype(float)
             # / self.pairtools_stats[s_name]["cis_1kb+"]
 
-            # dir_std /= _areas#+0.01
-            # dir_spread /= _areas#+0.01
-            dir_mean /= _areas#+0.01
+            dir_FF = np.asarray(sample_dist_freq["++"])[1:].astype(float)
+            dir_FR = np.asarray(sample_dist_freq["+-"])[1:].astype(float)
+            dir_RF = np.asarray(sample_dist_freq["-+"])[1:].astype(float)
+            dir_RR = np.asarray(sample_dist_freq["--"])[1:].astype(float)
+
+            dir_mean /= _areas
+
+            dir_FF /= _areas
+            dir_FR /= _areas
+            dir_RF /= _areas
+            dir_RR /= _areas
             #
             # fill in the data ...
-            for i,(k,v1,v2,v3) in enumerate(zip(_dist_bins_geom, dir_std, dir_spread, dir_mean)):
+            for i, (k,v1) in enumerate(zip(_dist_bins_geom, dir_mean)):
                 if i>3:
-                    _data_std[s_name][k] = v1
-                    _data_spread[s_name][k] = v2
-                    _data_mean[s_name][k] = v3
+                    # _data_std[s_name][k] = v1
+                    # _data_spread[s_name][k] = v2
+                    _data_mean[s_name][k] = v1
+
+
+            for i, (k,_FF,_FR,_RF,_RR) in enumerate(zip(_dist_bins_geom, dir_FF, dir_FR, dir_RF, dir_RR)):
+                if i>3:
+                    _data_FF[s_name][k] = _FF
+                    _data_FR[s_name][k] = _FR
+                    _data_RF[s_name][k] = _RF
+                    _data_RR[s_name][k] = _RR
 
         # # Specify the order of the different possible categories
         # keys = sorted_keys
@@ -473,7 +501,7 @@ class MultiqcModule(BaseMultiqcModule):
         # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
 
         pconfig = {
-            'id': 'broom plot',
+            'id': 'broom_plot',
             'title': 'Pairs by distance and by read orientation',
             # 'ylab': 'Counts',
             'xlab': 'Genomic separation (bp)',
@@ -482,14 +510,163 @@ class MultiqcModule(BaseMultiqcModule):
             # 'xDecimals': False,
             # 'ymin': 0,
             # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-            'data_labels': [{'name': 'Spread: std', 'ylab': 'frequency of interactions'},
-                            {'name': 'Spread: max-min', 'ylab': 'frequency of interactions'},
-                            {'name': 'P(s): sum', 'ylab': 'frequency of interactions'}]
+            'data_labels': [{'name': 'P(s)', 'ylab': 'frequency of interactions'},
+                            {'name': 'FF', 'ylab': 'frequency of interactions'},
+                            {'name': 'FR', 'ylab': 'frequency of interactions'},
+                            {'name': 'RF', 'ylab': 'frequency of interactions'},
+                            {'name': 'RR', 'ylab': 'frequency of interactions'}],
+            # 'data_labels': [{'name': 'Spread: std', 'ylab': 'frequency of interactions'},
+            #                 {'name': 'Spread: max-min', 'ylab': 'frequency of interactions'},
+            #                 {'name': 'P(s): sum', 'ylab': 'frequency of interactions'}],
+            'click_func': self.plot_single()
         }
 
         # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
 
-        return linegraph.plot([_data_std, _data_spread, _data_mean], pconfig=pconfig)
+        return linegraph.plot([_data_mean, _data_FF, _data_FR, _data_RF, _data_RR], pconfig=pconfig)
+        # return linegraph.plot(_data_mean, pconfig=pconfig)
+
+
+    def plot_single(self):
+        """ Return JS code required for plotting a single sample
+        RSeQC plot. Attempt to make it look as much like the original as possible.
+        Note: this code is injected by `eval(str)`, not <script type="text/javascript"> """
+
+        return """
+    function(e){
+        // In case of repeated modules: #rseqc_junction_saturation_plot, #rseqc_junction_saturation_plot-1, ..
+        var rseqc_junction_saturation_plot = $(e.currentTarget).closest('.hc-plot');
+        var rseqc_junction_saturation_plot_id = rseqc_junction_saturation_plot.attr('id');
+        var junction_sat_single_hint = rseqc_junction_saturation_plot.closest('.mqc-section').find('#junction_sat_single_hint');
+
+
+        // Get the three datasets for this sample
+        var data = [
+            {'name': 'FF'},
+            {'name': 'FR'},
+            {'name': 'RF'},
+            {'name': 'RR'},
+        ];
+        var k = 0;
+        for (var i = 1; i < 5; i++) {
+            var ds = mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i];
+            for (k = 0; k < ds.length; k++){
+                if(ds[k]['name'] == this.series.name){
+                    data[i-1]['data'] = JSON.parse(JSON.stringify(ds[k]['data']));
+                    break;
+                }
+            }
+        }
+
+        // Create single plot div, and hide overview
+        var newplot = $('<div id="rseqc_junction_saturation_single"> \
+            <div id="rseqc_junction_saturation_single_controls"> \
+              <button class="btn btn-primary btn-sm" id="rseqc-junction_sat_single_return"> \
+                Return to overview \
+              </button> \
+              <div class="btn-group btn-group-sm"> \
+                <button class="btn btn-default rseqc-junction_sat_single_prevnext" data-action="prev">&laquo; Prev</button> \
+                <button class="btn btn-default rseqc-junction_sat_single_prevnext" data-action="next">Next &raquo;</button> \
+              </div> \
+            </div> \
+            <div class="hc-plot-wrapper"> \
+              <div class="hc-plot hc-line-plot"> \
+                <small>loading..</small> \
+              </div> \
+            </div> \
+          </div>');
+        var pwrapper = rseqc_junction_saturation_plot.parent().parent();
+        newplot.insertAfter(pwrapper).hide().slideDown();
+        pwrapper.slideUp();
+        junction_sat_single_hint.slideUp();
+
+        // Listener to return to overview
+        newplot.find('#rseqc-junction_sat_single_return').click(function(e){
+          e.preventDefault();
+          newplot.slideUp(function(){
+            $(this).remove();
+          });
+          pwrapper.slideDown();
+          junction_sat_single_hint.slideDown();
+        });
+
+        // Listeners for previous / next plot
+        newplot.find('.rseqc-junction_sat_single_prevnext').click(function(e){
+          e.preventDefault();
+          if($(this).data('action') == 'prev'){
+            k--;
+            if(k < 0){
+              k = mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][1].length - 1;
+            }
+          } else {
+            k++;
+            if(k >= mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][1].length){
+              k = 0;
+            }
+          }
+          var hc = newplot.find('.hc-plot').highcharts();
+          for (var i = 1; i < 5; i++) {
+              hc.series[i-1].setData(mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i][k]['data'], false);
+          }
+          var ptitle = 'frequency of interactions: '+mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][1][k]['name'];
+          hc.setTitle({text: ptitle});
+          hc.redraw({ duration: 200 });
+        });
+
+        // Plot the single data
+        newplot.find('.hc-plot').highcharts({
+          chart: {
+            type: 'line',
+            zoomType: 'x'
+          },
+          colors: ['red','green','blue','orange'],
+          title: {
+            text: 'frequency of interaction for '+this.series.name,
+            x: 30 // fudge to center over plot area rather than whole plot
+          },
+          xAxis: {
+            title: { text: 'Genomic separation (bp)' },
+            allowDecimals: false,
+            type: 'logarithmic',
+          },
+          yAxis: {
+            title: { text: 'frequency of interactions' },
+            type: 'logarithmic',
+          },
+          legend: {
+            floating: true,
+            layout: 'vertical',
+            align: 'left',
+            verticalAlign: 'top',
+            x: 60,
+            y: 40
+          },
+          tooltip: {
+            shared: true,
+            crosshairs: true,
+            headerFormat: '<strong>{point.key}% of reads</strong><br/>'
+          },
+          plotOptions: {
+            series: {
+              animation: false,
+              lineWidth: 2,
+              marker: {
+                lineColor: null,
+                fillColor: 'transparent',
+                lineWidth: 0,
+                symbol: 'circle'
+              },
+            }
+          },
+          exporting: { buttons: { contextButton: {
+            menuItems: window.HCDefaults.exporting.buttons.contextButton.menuItems,
+            onclick: window.HCDefaults.exporting.buttons.contextButton.onclick
+          } } },
+          series: data
+        });
+    }
+    """
+
 
 
     # chrom_freq/chr1/chrX ...
