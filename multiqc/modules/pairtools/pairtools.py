@@ -158,12 +158,10 @@ def _from_file(file_handle):
     # should the following be divided by mapped or by total ?!
     stat_from_file['frac_mapped'] = stat_from_file['total_mapped']/stat_from_file['total']*100.
     stat_from_file['frac_dups'] = stat_from_file['total_dups']/stat_from_file['total']*100.
-    stat_from_file['frac_nodups'] = stat_from_file['total_nodups']/stat_from_file['total']*100.
     ########################################
     # the rest of stats are based on nodups:
     ########################################
     stat_from_file['cis_percent'] = stat_from_file['cis']/stat_from_file['total_nodups']*100.
-    stat_from_file['trans_percent'] = stat_from_file['trans']/stat_from_file['total_nodups']*100.
 
     #
     return stat_from_file
@@ -224,92 +222,53 @@ class MultiqcModule(BaseMultiqcModule):
                         " separations for <it>cis-</it>pairs and <it>trans-</it>pairs as a separate group.",
             helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
             High fraction of trans interactions typically suggests increased noise levels''',
-            plot = self.cis_breakdown_chart()
+            plot = self.pairs_by_cisrange_trans()
         )
+
 
         self.add_section (
             name = 'Frequency of interactions as a function of genomic separation',
             anchor = 'scalings-plots',
-            description="Frequency of interactions (usable pairs) reported"
-                        " as a function of genomic separation, known as \"scaling plots\", P(s)."
-                        " Frequency of interactions for pairs of different strand orientations"
-                        " ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into technical artifacts:"
-                        " typically manifested as unequal fractions of FF, FR, RF, RR at a given separation."
-                        " In order to avoid showing 4 lines per sample we plot std(FF,FR,RF,RR), as a measure"
-                        " of \"divergence\" between pairs of different strand orientations."
-                        " [THIS SECTION IS MY BIGGEST STRUGGLE - NOT SURE IF STANDARD DEVIATION DOES A GOOD JOB"
-                        " AT SHOWING THE DIVERGENCE OF A \"BROOM\"-PLOT, CONSIDERED MAX(FF,FR,RF,RR)-MIN(FF,FR,RF,RR)"
-                        " BEST THING WOULD BE TO SHOW 4-LINES FF,FR,RF,RR, AFTER CLICKING ON A GIVEN SAMPLE"
-                        " - WOULD REQUIRE SOME JAVASCRIPTING - PROBABLY NOT FOR THE FIRST ITERATION... ]",
+            description="Frequency of interactions (usable pairs) as a function"
+                        " of genomic separation, known as \"scaling plots\", P(s)."
+                        " Click on an individual curve to reveal P(s) for different"
+                        " read pair orientations.",
+            helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
+            Frequency of interactions for read pairs of different orientations
+            ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into these technical artifacts.
+            Different technical artifacts manifest themselves with only single type of read orientation
+            (dangling-ends - FR, self-circles - RF). Thus enrichment of FR/RF pairs at a given genomic
+            separation can hint at the level of contamination.''',
             plot = self.pairs_with_genomic_separation()
         )
 
 
         self.add_section (
-            name = 'Frequency of interactions by orientation and genomic separation',
-            anchor = 'read orientation',
-            description="Frequency of interactions (usable pairs) reported"
-                        " as a function of genomic separation, known as \"scaling plots\", P(s)."
-                        " Frequency of interactions for pairs of different strand orientations"
-                        " ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into technical artifacts:"
-                        " typically manifested as unequal fractions of FF, FR, RF, RR at a given separation."
-                        " In order to avoid showing 4 lines per sample we plot std(FF,FR,RF,RR), as a measure"
-                        " of \"divergence\" between pairs of different strand orientations."
-                        " [THIS SECTION IS MY BIGGEST STRUGGLE - NOT SURE IF STANDARD DEVIATION DOES A GOOD JOB"
-                        " AT SHOWING THE DIVERGENCE OF A \"BROOM\"-PLOT, CONSIDERED MAX(FF,FR,RF,RR)-MIN(FF,FR,RF,RR)"
-                        " BEST THING WOULD BE TO SHOW 4-LINES FF,FR,RF,RR, AFTER CLICKING ON A GIVEN SAMPLE"
-                        " - WOULD REQUIRE SOME JAVASCRIPTING - PROBABLY NOT FOR THE FIRST ITERATION... ]",
+            name = 'Fraction of read pairs by strand orientation',
+            anchor = 'read-orientation',
+            description="Number of interactions (usable pairs) reported for every type"
+                        " of read pair orientation. Numbers are reported for different"
+                        " ranges of genomic separation and combined.",
+            helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
+            Frequency of interactions for read pairs of different orientations
+            ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into these technical artifacts.
+            Different technical artifacts manifest themselves with only single type of read orientation
+            (dangling-ends - FR, self-circles - RF). Thus enrichment of FR/RF pairs at a given genomic
+            separation can hint at the level of contamination.''',
             plot = self.pairs_by_strand_orientation()
         )
 
 
         self.add_section (
             name = 'Usable pairs grouped by chromosomes',
-            anchor = 'pairs chrom/chroms ...',
-            description="Number of usable pairs interacting within each chromosome"
-                        " or for a combination of chromosomes."
-                        " Numbers of pairs are normalized by the total number of"
-                        " usable pairs per sample."
-                        " Number are reported only for chromosomes/combinations that have >1% of usable pairs."
-                        " [THERE SEEM TO BE A BUG IN MULTIQC HEATMAP - OBVIOUS WHEN USE HIGHLIGHTING,RENAMING ETC]",
+            anchor = 'pairs-by-chroms',
+            description="Number of usable interactions (pairs) within a single chromosome"
+                        " or for a pair of chromosomes.",
+            helptext = '''Numbers of pairs are normalized by the total number of usable pairs per sample.
+            Number are reported only for chromosomes/pairs that have >1% of usable pairs.
+            [THERE SEEM TO BE A BUG IN MULTIQC HEATMAP - OBVIOUS WHEN USE HIGHLIGHTING,RENAMING ETC]''',
             plot = self.pairs_by_chrom_pairs()
         )
-
-        self.add_section (
-            name = 'Inter-sample correlation [ATTEMPT]',
-            anchor = 'pairs chrom/chroms corr...',
-            description="An attempt to characterize inter-sample similarity"
-                        " using different available metrics:"
-                        " distribution of pairs per chromosome pair"
-                        " Samples with translocations would 'cluster' away from the 'normal' ones with this metric..."
-                        " If we add chromsizes as part of stats, we could display # of cis-pairs ~ chromlen, or"
-                        " # of trans-pairs ~inter-chromosomal 'area' (these are supposed to be ~linear relationships)"
-                        " so, samples with translocations and other stuff would pop-up ....(maybe)"
-                        " Another thing to do (bassed on this) - show 'coverage' per chromosome ....",
-            plot = self.samples_similarity_chrom_pairs()
-        )
-
-        self.add_section (
-            name = 'Inter-sample correlation [ATTEMPT#2]',
-            anchor = 'pairs by separation groups...',
-            description="An attempt #2 to characterize inter-sample similarity"
-                        " using different available metrics:"
-                        " distribution of pairs by distance (and trans)"
-                        " Samples with translocations would 'cluster' away from the 'normal' ones with this metric..."
-                        " Overall this should show similar 'clustering' as in attempt #1 ...",
-            plot = self.samples_similarity_cis_pairs()
-        )
-
-
-        self.add_section (
-            name = 'Inter-sample correlation [ATTEMPT#3]',
-            anchor = 'pairs by alignment status...',
-            description="An attempt #3 to characterize inter-sample similarity"
-                        " using different available metrics:"
-                        " distribution of pairs alignment status (UU,NN,MM,...)",
-            plot = self.samples_similarity_mapped_pairs()
-        )
-
 
 
     def parse_pairtools_stats(self, f):
@@ -351,8 +310,9 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(_data, pconfig=config)
 
 
-    def cis_breakdown_chart(self):
-        """ cis-pairs split into several ranges """
+    def pairs_by_cisrange_trans(self):
+        """ cis-pairs split into several ranges
+        of genomic separation, and trans-category."""
 
         cis_dist_pattern = r"cis_(\d+)kb\+"
 
@@ -395,13 +355,6 @@ class MultiqcModule(BaseMultiqcModule):
             dist_range_key = "trans"
             _datawtrans[s_name][dist_range_key] = copy(sample_stats['trans'])
             sorted_keys.append(dist_range_key)
-
-        # # Specify the order of the different possible categories
-        # keys = sorted_keys
-        # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
-        # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
-
-        self.pairs_breakdown = _datawtrans
 
         # Config for the plot
         config = {
@@ -504,31 +457,6 @@ class MultiqcModule(BaseMultiqcModule):
                 _dist_bins_geom.append(int(geom_dist))
             # _dist_bins_geom are calcualted
             sample_dist_freq = self.pairtools_stats[s_name][_report_field]
-            # # that's how it is for now ...
-            # # stat_from_file[key][dirs][bin_idx] = int(fields[1])
-            # dir_std = np.std([
-            #             sample_dist_freq["++"],
-            #             sample_dist_freq["+-"],
-            #             sample_dist_freq["-+"],
-            #             sample_dist_freq["--"]
-            #                     ],axis=0)[1:].astype(float)
-            # # consider using max-min instead ...
-            # # amount of information sum(f*log(f) ) ?!...
-
-            # # data spread max(++,+-,-+,--) - min(++,+-,-+,--)
-            # dir_spread = \
-            #         np.max([
-            #             sample_dist_freq["++"],
-            #             sample_dist_freq["+-"],
-            #             sample_dist_freq["-+"],
-            #             sample_dist_freq["--"]
-            #                     ],axis=0)[1:].astype(float) - \
-            #         np.min([
-            #             sample_dist_freq["++"],
-            #             sample_dist_freq["+-"],
-            #             sample_dist_freq["-+"],
-            #             sample_dist_freq["--"]
-            #                     ],axis=0)[1:].astype(float)
 
             dir_mean = np.sum([
                         sample_dist_freq["++"],
@@ -536,7 +464,7 @@ class MultiqcModule(BaseMultiqcModule):
                         sample_dist_freq["-+"],
                         sample_dist_freq["--"]
                                 ],axis=0)[1:].astype(float)
-            # / self.pairtools_stats[s_name]["cis_1kb+"]
+            # ++,--,+-,-+ spread was used before ...
 
             dir_FF = np.asarray(sample_dist_freq["++"])[1:].astype(float)
             dir_FR = np.asarray(sample_dist_freq["+-"])[1:].astype(float)
@@ -714,7 +642,7 @@ class MultiqcModule(BaseMultiqcModule):
           tooltip: {
             shared: true,
             crosshairs: true,
-            headerFormat: '<strong>{point.key}% of reads</strong><br/>'
+            headerFormat: '<strong>genomic separation: {point.key} bp</strong><br/>'
           },
           plotOptions: {
             series: {
@@ -807,119 +735,6 @@ class MultiqcModule(BaseMultiqcModule):
                 ycats)#, pconfig)
 
 
-
-
-
-    # chrom_freq/chr1/chrX ...
-    def samples_similarity_chrom_pairs(self):
-        """ number of pairs by chromosome pairs """
-
-        _report_field = "chrom_freq"
-
-        # figure infer list of chromosomes (beware of scaffolds):
-        # tuple(key_fields)
-        _chromset = set()
-        for s_name in self.pairtools_stats:
-            _chrom_freq_sample = \
-                self.pairtools_stats[s_name][_report_field]
-            # unzip list of tuples:
-            _chroms1, _chroms2 = list(
-                    zip(*_chrom_freq_sample.keys())
-                )
-            _chromset |= set(_chroms1)
-            _chromset |= set(_chroms2)
-        # done:
-        _chroms = sorted(list(_chromset))
-
-        # cis-only for now:
-        # Construct a data structure for the plot
-        _data = dict()
-        for s_name in self.pairtools_stats:
-            _data[s_name] = []
-            _chrom_freq_sample = \
-                self.pairtools_stats[s_name][_report_field]
-            # go over chroms:
-            for c1,c2 in combinations_with_replacement( _chroms, 2):
-                if (c1,c2) in _chrom_freq_sample:
-                    _num_pairs = _chrom_freq_sample[(c1,c2)]
-                elif (c2,c1) in _chrom_freq_sample:
-                    _num_pairs = _chrom_freq_sample[(c2,c1)]
-                else:
-                    _num_pairs = 0
-                # let's take ALL data in ...
-                # we'll try to normalize it afterwards ...
-                _num_pairs /= (self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans'])
-                # pass
-                _data[s_name].append(_num_pairs)
-
-        #
-
-
-        # prepare for the heatmap:
-        ycats = sorted(_data)
-        the_data = np.asarray([ _data[_] for _ in ycats ])
-        corrs = np.corrcoef(the_data)
-        #
-
-
-        # let's try other metric here as well ...
-        the_data2 = [[self.pairs_breakdown[s][k] for k in sorted(self.pairs_breakdown[s])] for s in ycats]
-        corrs2 = np.corrcoef(the_data2)
-
-
-        return heatmap.plot(
-                corrs.tolist(),
-                ycats,
-                ycats)#, pconfig)
-
-
-    def samples_similarity_cis_pairs(self):
-        """ number of pairs by chromosome pairs """
-
-        # prepare for the heatmap:
-        ycats = sorted(self.pairs_breakdown)
-
-        # let's try other metric here as well ...
-        # normalize the data - i.e. use percentage instead of the counts ...
-        the_data = [
-                        [
-                          float(self.pairs_breakdown[s][k])/sum(self.pairs_breakdown[s].values()) \
-                            for k in sorted(self.pairs_breakdown[s])
-                        ] \
-                      for s in ycats]
-
-        corrs = np.corrcoef(the_data)
-
-
-        return heatmap.plot(
-                corrs.tolist(),
-                ycats,
-                ycats)#, pconfig)
-
-
-    def samples_similarity_mapped_pairs(self):
-        """ number of pairs by chromosome pairs """
-
-        # prepare for the heatmap:
-        ycats = sorted(self.pair_types_chart_data)
-
-        # let's try other metric here as well ...
-        # normalize the data - i.e. use percentage instead of the counts ...
-        the_data = [
-                    [
-                     float(self.pair_types_chart_data[s][k])/sum(self.pair_types_chart_data[s].values()) \
-                       for k in sorted(self.pair_types_chart_data[s])
-                    ] for s in ycats
-                   ]
-        corrs = np.corrcoef(the_data)
-
-
-        return heatmap.plot(
-                corrs.tolist(),
-                ycats,
-                ycats)#, pconfig)
-
-
     def pairtools_general_stats(self):
         """ Add columns to General Statistics table """
         headers = OrderedDict()
@@ -960,14 +775,6 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%',
             'scale': 'YlGn-rev',
         }
-        headers['frac_nodups'] = {
-            'title': 'unique',
-            'description': 'fraction of unique',
-            'max': 100,
-            'min': 0,
-            'suffix': '%',
-            'scale': 'YlGn-rev',
-        }
         headers['cis_percent'] = {
             'title': 'cis',
             'description': 'cis percent',
@@ -976,15 +783,4 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%',
             'scale': 'YlGn-rev',
         }
-        # this is redundant
-        # headers['trans_percent'] = {
-        #     'title': 'trans',
-        #     'description': 'trans percent',
-        #     'max': 100,
-        #     'min': 0,
-        #     'suffix': '%',
-        #     'scale': 'YlGn-rev',
-        # }
         self.general_stats_addcols(self.pairtools_stats, headers, 'pairtools')
-        # self.general_stats_addcols(self.pairtools_stats)
-
