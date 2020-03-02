@@ -94,6 +94,17 @@ class DragenTimeMetrics(BaseMultiqcModule):
             for step in d:
                 if step not in all_bargraph_steps:
                     all_bargraph_steps.append(step)
+
+        for sn, data in data_by_sample.items():
+            sorted_data = OrderedDict()
+            for step in all_bargraph_steps:
+                if step in data:
+                    sorted_data[step] = data[step]
+            for step in data.keys():
+                if step not in sorted_data:
+                    sorted_data[step] = data[step]
+            data_by_sample[sn] = sorted_data
+
         self.add_section(
             name='Run time metrics',
             anchor='dragen-time-metrics',
