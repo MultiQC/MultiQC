@@ -78,7 +78,18 @@ class DragenTimeMetrics(BaseMultiqcModule):
 
         # Alternatively can consider bargraph plots. Howevew since the steps don't nesesseraly sum up to total run time
         # due to parallelization, bargraph without overlapping bars can be misleading.
-        all_bargraph_steps = []
+
+        all_bargraph_steps = [
+            'Total runtime',
+            'Time partitioning',
+            'Time loading reference'
+            'Time aligning reads',
+            'Time sorting and marking duplicates',
+            'Time DRAGStr calibration',
+            'Time saving map/align output',
+            'Time partial reconfiguration',
+            'Time variant calling',
+        ]
         for sn, d in data_by_sample.items():
             for step in d:
                 if step not in all_bargraph_steps:
