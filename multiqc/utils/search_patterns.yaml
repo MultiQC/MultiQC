@@ -408,6 +408,9 @@ picard/quality_by_cycle:
 picard/quality_score_distribution:
     contents: 'COUNT_OF_Q'
     shared: true
+picard/quality_yield_metrics:
+    contents: 'QualityYieldMetrics'
+    shared: true
 picard/rnaseqmetrics:
     contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
     shared: true

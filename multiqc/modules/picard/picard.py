@@ -18,6 +18,7 @@ from . import MarkDuplicates
 from . import OxoGMetrics
 from . import QualityByCycleMetrics
 from . import QualityScoreDistributionMetrics
+from . import QualityYieldMetrics
 from . import RnaSeqMetrics
 from . import RrbsSummaryMetrics
 from . import TargetedPcrMetrics
@@ -84,6 +85,10 @@ class MultiqcModule(BaseMultiqcModule):
         n['QualityScoreDistributionMetrics'] = QualityScoreDistributionMetrics.parse_reports(self)
         if n['QualityScoreDistributionMetrics'] > 0:
             log.info("Found {} QualityScoreDistributionMetrics reports".format(n['QualityScoreDistributionMetrics']))
+        
+        n['QualityYieldMetrics'] = QualityYieldMetrics.parse_reports(self)
+        if n['QualityYieldMetrics'] > 0:
+            log.info("Found {} QualityYieldMetrics reports".format(n['QualityYieldMetrics']))
 
         n['RnaSeqMetrics'] = RnaSeqMetrics.parse_reports(self)
         if n['RnaSeqMetrics'] > 0:

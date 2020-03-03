@@ -29,7 +29,6 @@ def read_sample_name(line_iter, clean_fn, program_name):
     except StopIteration:
         return None
 
-
 def read_histogram(self, program_key, program_name, headers, formats):
     """
     Reads a Picard HISTOGRAM file.
@@ -87,4 +86,4 @@ def read_histogram(self, program_key, program_name, headers, formats):
         if sample_data:
             all_data[s_name] = sample_data
 
-    return all_data
+    return self.ignore_samples(all_data)
