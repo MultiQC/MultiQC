@@ -8,7 +8,7 @@ from collections import OrderedDict
 from multiqc.modules.base_module import BaseMultiqcModule
 
 
-from itertools import combinations, combinations_with_replacement
+from itertools import combinations, combinations_with_replacement, zip_longest
 import os
 import re
 import json
@@ -16,6 +16,7 @@ import numpy as np
 from copy import copy, deepcopy
 from multiqc.plots import bargraph, linegraph, heatmap
 from multiqc.utils import report
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -183,13 +184,11 @@ class MultiqcModule(BaseMultiqcModule):
             " extract 3C-specific information and perform common tasks, such as sorting,"
             " filtering and deduplication.")
 
-
         # Find and load any pairtools stats summaries
         self.pairtools_stats = dict()
         for f in self.find_log_files('pairtools', filehandles=True):
             s_name = f['s_name']
             self.pairtools_stats[s_name] = self.parse_pairtools_stats(f)
-
 
         # Filter to strip out ignored sample names
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
@@ -200,6 +199,11 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.pairtools_stats)))
         # self.write_data_file(self.pairtools_stats, 'multiqc_pairtools')
 
+        # max total reads for general stats:
+        self.max_total_reads = 0
+        for s_name in self.pairtools_stats:
+            self.max_total_reads = \
+                max(self.max_total_reads, self.pairtools_stats[s_name]['total'])
 
         self.pairtools_general_stats()
 
@@ -216,11 +220,12 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section (
-            name = 'Usable pairs grouped by genomic separations',
+            name = 'Pre-filtered pairs grouped by genomic separations',
             anchor = 'cis-ranges-trans',
-            description="Distribution of usable pairs (UU, UR and RU) by genomic"
+            description="Distribution of pre-filtered pairs (UU, UR and RU) by genomic"
                         " separations for <it>cis-</it>pairs and <it>trans-</it>pairs as a separate group.",
-            helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
+            helptext = '''Pre-filtered read pairs might still include artifacts:
+            Short-range cis-pairs are typically enriched in technical artifacts, such as self-circles, dangling-ends, etc.
             High fraction of trans interactions typically suggests increased noise levels''',
             plot = self.pairs_by_cisrange_trans()
         )
@@ -229,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Frequency of interactions as a function of genomic separation',
             anchor = 'scalings-plots',
-            description="Frequency of interactions (usable pairs) as a function"
+            description="Frequency of interactions (pre-filtered pairs) as a function"
                         " of genomic separation, known as \"scaling plots\", P(s)."
                         " Click on an individual curve to reveal P(s) for different"
                         " read pair orientations.",
@@ -246,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Fraction of read pairs by strand orientation',
             anchor = 'read-orientation',
-            description="Number of interactions (usable pairs) reported for every type"
+            description="Number of interactions (pre-filtered pairs) reported for every type"
                         " of read pair orientation. Numbers are reported for different"
                         " ranges of genomic separation and combined.",
             helptext = '''Short-range cis-pairs are typically enriched in technical artifacts.
@@ -260,12 +265,12 @@ class MultiqcModule(BaseMultiqcModule):
 
 
         self.add_section (
-            name = 'Usable pairs grouped by chromosomes',
+            name = 'Pre-filtered pairs grouped by chromosomes',
             anchor = 'pairs-by-chroms',
-            description="Number of usable interactions (pairs) within a single chromosome"
+            description="Number of pre-filtered interactions (pairs) within a single chromosome"
                         " or for a pair of chromosomes.",
-            helptext = '''Numbers of pairs are normalized by the total number of usable pairs per sample.
-            Number are reported only for chromosomes/pairs that have >1% of usable pairs.
+            helptext = '''Numbers of pairs are normalized by the total number of pre-filtered pairs per sample.
+            Number are reported only for chromosomes/pairs that have >1% of pre-filtered pairs.
             [THERE SEEM TO BE A BUG IN MULTIQC HEATMAP - OBVIOUS WHEN USE HIGHLIGHTING,RENAMING ETC]''',
             plot = self.pairs_by_chrom_pairs()
         )
@@ -285,17 +290,41 @@ class MultiqcModule(BaseMultiqcModule):
 
         _report_field = "pair_types"
 
+        known_keys = ['UU', 'RU', 'UR', 'WW', 'DD', 'MR', 'MU', 'MM', 'NM', 'NU', 'NN', 'XX']
+        matching_colors = ['#33a02c',
+                            '#b2df8a',
+                            '#a6cee3',
+                            '#1f78b4',
+                            '#fff900',
+                            '#fb9a99',
+                            '#fdbf6f',
+                            '#ff7f00',
+                            '#e31a1c',
+                            '#cab2d6',
+                            '#6a3d9a',
+                            '#000000']
+
         # Construct a data structure for the plot
+        # and keep track of the observed keys - for nice visuals:
         _data = dict()
+        unknown_keys = set()
         for s_name in self.pairtools_stats:
             _data[s_name] = dict()
             for k in self.pairtools_stats[s_name][_report_field]:
                 _data[s_name][k] = self.pairtools_stats[s_name][_report_field][k]
+                # updated the list of unseen keys
+                if k not in known_keys:
+                    unknown_keys.add(k)
 
-        # # Specify the order of the different possible categories
-        # keys = OrderedDict()
-        # keys['Not_Truncated_Reads'] = { 'color': '#2f7ed8', 'name': 'Not Truncated' }
-        # keys['Truncated_Read']      = { 'color': '#0d233a', 'name': 'Truncated' }
+        # Specify the order of the different possible categories
+        keys_anotated = OrderedDict()
+        for key, col in zip(known_keys, matching_colors):
+            keys_anotated[key] = {'color': col, 'name': key}
+        # we have to take care of "unseen" keys like that
+        # otherwise they are going to be present on the bar-chart
+        for key in unknown_keys:
+            keys_anotated[key] = {'name': key}
+
 
         # Config for the plot
         config = {
@@ -305,9 +334,8 @@ class MultiqcModule(BaseMultiqcModule):
             'cpswitch_counts_label': 'Number of Reads'
         }
 
-        self.pair_types_chart_data = _data
-
-        return bargraph.plot(_data, pconfig=config)
+        # self.pair_types_chart_data = _data
+        return bargraph.plot(_data, keys_anotated, pconfig=config)
 
 
     def pairs_by_cisrange_trans(self):
@@ -318,7 +346,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Construct a data structure for the plot
         _data = dict()
-        _datawtrans = dict()
         _tmp = dict()
         for s_name in self.pairtools_stats:
             sample_stats = self.pairtools_stats[s_name]
@@ -333,7 +360,8 @@ class MultiqcModule(BaseMultiqcModule):
                     _count = int(sample_stats[k])
                     # fill in _tmp
                     _tmp[s_name][dist] = _count
-            # after all cis-dist ones are extracted:
+            # after all cis-dist ones are extracted,
+            # undo the cumulative distribution:
             prev_counter = copy(sample_stats['cis'])
             prev_dist = 0
             sorted_keys = []
@@ -351,57 +379,93 @@ class MultiqcModule(BaseMultiqcModule):
             sorted_keys.append(dist_range_key)
 
             # add trans here as well ...
-            _datawtrans[s_name] = dict(_data[s_name])
             dist_range_key = "trans"
-            _datawtrans[s_name][dist_range_key] = copy(sample_stats['trans'])
+            _data[s_name][dist_range_key] = copy(sample_stats['trans'])
             sorted_keys.append(dist_range_key)
+
+        # add color to sorted keys:
+        colors_genomic_separations = ['#8c2d04', # short-range cis
+                                      '#cc4c02',
+                                      '#ec7014',
+                                      '#fe9929',
+                                      '#fec44f',
+                                      '#fee391',
+                                      '#ffffd4'] #long-range cis
+        key_dict = OrderedDict()
+        for col,key in zip_longest(colors_genomic_separations, sorted_keys):
+            if col is not None:
+                key_dict[key] = {'color': col, 'name': key}
+            else:
+                # use auto-color when we run out of prescribed ones:
+                key_dict[key] = {'name': key}
 
         # Config for the plot
         config = {
             'id': 'pair_cis_ranges',
             'title': 'pairtools: cis pairs broken into ranges',
             'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads',
-            # 'logswitch': True - useless for that
-            # 'data_labels': ['cis-only','cis-n-trans']
+            'cpswitch_counts_label': 'Number of Reads'
         }
 
-        return bargraph.plot(_datawtrans, sorted_keys, pconfig=config)
+        return bargraph.plot(_data, key_dict, pconfig=config)
 
 
-    # dist_freq/56234133-100000000/-+
     def pairs_by_strand_orientation(self):
         """ number of cis-pairs with genomic separation """
 
         _report_field = "dist_freq"
 
-        distances = [100,500,1000,2000,5000,10000,15000,20000]
+        dist_edges = [100,500,1000,2000,5000,10000,15000,20000]
+
+        orientation_keys = ['++','-+','+-','--']
+        _sorted_keys = ['FF','RF','FR','RR']
+        _matching_colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3']
+
+        distances_start = [0]+dist_edges
+        distances_end = dist_edges
+
+        dist_ranges = list(zip_longest(distances_start,distances_end))
 
         # Construct a data structure for the plot
         _data = dict()
-        for _d in distances:
-            _data[_d] = dict()
+        for key in dist_ranges:
+            _data[key] = dict()
             for s_name in self.pairtools_stats:
-                _data[_d][s_name] = dict()
+                _data[key][s_name] = dict()
 
 
         for s_name in self.pairtools_stats:
+            # extract scalings data structure per sample:
+            sample_bins = self.pairtools_stats[s_name]['dist_bins']
+            sample_dist_freq = self.pairtools_stats[s_name][_report_field]
             # given a set of fixed distance ranges extract FF,RR,FR,RF:
-            prev_idx_dist = 0
-            for _dist in [100,500,1000,2000,5000,10000,15000,20000]:
-                current_idx_dist = np.searchsorted(self.pairtools_stats[s_name]['dist_bins'],_dist)
-                # scalings data structure ...
-                sample_dist_freq = self.pairtools_stats[s_name][_report_field]
-                # slice of the scaling for a given range of distances:
-                sample_slice_dist = lambda orient: sample_dist_freq[orient][prev_idx_dist:current_idx_dist].astype(float)
+            for start, end in dist_ranges:
+                # determine start index, according to "dist_bins"
+                start_idx = np.searchsorted(sample_bins, start) if start else 0
+                # determine end index, according to "dist_bins"
+                end_idx = np.searchsorted(sample_bins, end) if end is not None else None
                 # calculate ratios of FF FR RF RR ...
-                _data[_dist][s_name]['FF'] = np.sum(sample_slice_dist("++"))
-                _data[_dist][s_name]['RR'] = np.sum(sample_slice_dist("--"))
-                _data[_dist][s_name]['RF'] = np.sum(sample_slice_dist("-+"))
-                _data[_dist][s_name]['FR'] = np.sum(sample_slice_dist("+-"))
-                #
-                prev_idx_dist = current_idx_dist
+                for orient in orientation_keys:
+                    # slice of the scaling for a given range of distances:
+                    sliced_data = sample_dist_freq[orient][start_idx:end_idx]
+                    _data[(start,end)][s_name][orient] = np.sum(sliced_data.astype(float))
 
+        kb=1000
+        data_labels = []
+        for start,end in dist_ranges:
+            if start == 0:
+                data_labels.append(f"<{end}")
+            elif end is None:
+                # switch to kb if needed
+                start_str = f"{start//kb}kb" if start//kb else f"{start}"
+                data_labels.append(f">{start_str}")
+            else:
+                # switch to kb if needed
+                if start//kb and end//kb:
+                    data_labels.append(f"{start//kb}-{end//kb} kb")
+                else:
+                    end_str = f"{end//kb}kb" if end//kb else f"{end}"
+                    data_labels.append(f"{start}-{end_str}")
 
 
         # Config for the plot
@@ -410,12 +474,18 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'pairtools: cis pairs broken into ranges and read orintations',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
-            'data_labels': [f"{_d}" for _d in distances]
+            'data_labels': data_labels
         }
 
-        _sorted_keys = ['FF','RF','FR','RR']
+        # annotate read orientations with nice colors:
+        keys_annotated = OrderedDict()
+        for key, name, col in zip(orientation_keys, _sorted_keys, _matching_colors):
+            keys_annotated[key] = {'color': col, 'name': name}
 
-        return bargraph.plot([_data[_d] for _d in distances], _sorted_keys, pconfig=config)
+        return bargraph.plot(
+                [_data[_d] for _d in dist_ranges],
+                [keys_annotated for _d in dist_ranges],
+                pconfig=config)
 
 
 
@@ -739,48 +809,50 @@ class MultiqcModule(BaseMultiqcModule):
         """ Add columns to General Statistics table """
         headers = OrderedDict()
         headers['total'] = {
-            'title': 'total',
-            'description': 'total number of pairs per sample',
+            'title': '{} read pairs'.format(config.read_count_prefix),
+            'description': 'Total read pairs ({})'.format(config.read_count_desc),
             'min': 0,
+            'modify': lambda x: x * config.read_count_multiplier,
+            'scale': 'Blues',
         }
         headers['frac_unmapped'] = {
-            'title': 'unmapped',
-            'description': 'fraction of unmapped',
+            'title': '% unmapped',
+            'description': '% of pairs (w.r.t. total) with both sides unmapped',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn-rev',
+            'scale': 'OrRd',
         }
         headers['frac_single_sided_mapped'] = {
-            'title': 'single-side mapped',
-            'description': 'fraction of single-side mapped',
+            'title': '% single-side mapped',
+            'description': '% of pairs (w.r.t. total) with one side mapped',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn-rev',
+            'scale': 'YlGn',
         }
         headers['frac_mapped'] = {
-            'title': 'both-side mapped',
-            'description': 'fraction of both-side mapped',
+            'title': '% both-side mapped',
+            'description': '% of pairs (w.r.t. total) with both sides mapped',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn-rev',
+            'scale': 'RdYlGn',
         }
         headers['frac_dups'] = {
-            'title': 'duplicates',
-            'description': 'fraction of duplicates',
+            'title': '% duplicated',
+            'description': '% of duplicated pairs (w.r.t. mapped)',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn-rev',
+            'scale': 'OrRd',
         }
         headers['cis_percent'] = {
-            'title': 'cis',
-            'description': 'cis percent',
+            'title': '% cis',
+            'description': '% of cis-pairs (w.r.t mapped)',
             'max': 100,
             'min': 0,
             'suffix': '%',
-            'scale': 'YlGn-rev',
+            'scale': 'YlGn',
         }
         self.general_stats_addcols(self.pairtools_stats, headers, 'pairtools')
