@@ -402,6 +402,9 @@ picard/oxogmetrics:
 picard/pcr_metrics:
     contents: 'TargetedPcrMetrics'
     shared: true
+picard/quality_by_cycle:
+    contents: 'MEAN_QUALITY'
+    shared: true
 picard/rnaseqmetrics:
     contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
     shared: true
