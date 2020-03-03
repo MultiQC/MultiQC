@@ -7,7 +7,7 @@ import os
 import re
 
 from multiqc.plots import linegraph
-from .util import read_sample_name
+from .util import read_histogram
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,48 +15,9 @@ log = logging.getLogger(__name__)
 def parse_reports(self):
     """ Find Picard QualityByCycleMetrics reports and parse their data """
 
-    all_data = dict()
-
-    # Go through logs and find Metrics
-    for f in self.find_log_files('picard/quality_by_cycle', filehandles=True):
-        lines = iter(f['f'])
-
-        # read through the header of the file to obtain the
-        # sample name
-        clean_fn = lambda n: self.clean_s_name(n, f['root'])
-        s_name = read_sample_name(lines, clean_fn)
-        if s_name is None:
-            continue
-
-        sample_data = dict()
-
-        try:
-            # skip to the histogram
-            line = next(lines)
-            while not line.startswith('## HISTOGRAM'):
-                line = next(lines)
-
-            # check the header
-            line = next(lines)
-            headers = line.strip().split("\t")
-            if headers != ['CYCLE', 'MEAN_QUALITY']:
-                continue
-
-            # slurp the data
-            line = next(lines).rstrip()
-            while line:
-                fields = line.split('\t')
-                fields[0] = int(fields[0])
-                fields[1] = float(fields[1])
-                sample_data[fields[0]] = dict(zip(headers, fields))
-                line = next(lines).rstrip()
-
-        except StopIteration:
-            pass
-
-        # append the data
-        if sample_data:
-            all_data[s_name] = sample_data
+    headers = ['CYCLE', 'MEAN_QUALITY']
+    formats = [int, float]
+    all_data = read_histogram(self, 'picard/quality_by_cycle', 'MeanQualityByCycle', headers, formats)
 
     if not all_data:
         return 0

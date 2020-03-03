@@ -75,7 +75,7 @@ def parse_reports(self):
             # read through the header of the file to obtain the
             # sample name
             clean_fn = lambda n: self.clean_s_name(n, f['root'])
-            s_name = read_sample_name(lines, clean_fn)
+            s_name = read_sample_name(lines, clean_fn, 'BaseDistributionByCycle')
             assert s_name is not None
 
             # pull out the data

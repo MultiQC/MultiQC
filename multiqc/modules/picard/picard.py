@@ -17,6 +17,7 @@ from . import InsertSizeMetrics
 from . import MarkDuplicates
 from . import OxoGMetrics
 from . import QualityByCycleMetrics
+from . import QualityScoreDistributionMetrics
 from . import RnaSeqMetrics
 from . import RrbsSummaryMetrics
 from . import TargetedPcrMetrics
@@ -79,6 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
         n['QualityByCycleMetrics'] = QualityByCycleMetrics.parse_reports(self)
         if n['QualityByCycleMetrics'] > 0:
             log.info("Found {} QualityByCycleMetrics reports".format(n['QualityByCycleMetrics']))
+        
+        n['QualityScoreDistributionMetrics'] = QualityScoreDistributionMetrics.parse_reports(self)
+        if n['QualityScoreDistributionMetrics'] > 0:
+            log.info("Found {} QualityScoreDistributionMetrics reports".format(n['QualityScoreDistributionMetrics']))
 
         n['RnaSeqMetrics'] = RnaSeqMetrics.parse_reports(self)
         if n['RnaSeqMetrics'] > 0:

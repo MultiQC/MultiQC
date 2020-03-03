@@ -405,6 +405,9 @@ picard/pcr_metrics:
 picard/quality_by_cycle:
     contents: 'MEAN_QUALITY'
     shared: true
+picard/quality_score_distribution:
+    contents: 'COUNT_OF_Q'
+    shared: true
 picard/rnaseqmetrics:
     contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
     shared: true
