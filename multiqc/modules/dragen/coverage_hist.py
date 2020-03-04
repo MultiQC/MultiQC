@@ -132,33 +132,8 @@ def parse_wgs_fine_hist(f):
         data[depth] = cnt
         cum_data[depth] = cum_pct
 
-    m = re.search(r'(.*).wgs_fine_hist_(\S*).csv', f['fn'])
+    m = re.search(r'(.*).wgs_fine_hist_?(\S*)?.csv', f['fn'])
     sample, phenotype = m.group(1), m.group(2)
     f['s_name'] = sample
     return {phenotype: (data, cum_data, depth_1pc)}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
