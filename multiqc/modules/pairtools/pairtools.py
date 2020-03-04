@@ -611,8 +611,8 @@ class MultiqcModule(BaseMultiqcModule):
         // Get the three datasets for this sample
         var data = [
             {'name': 'FF'},
-            {'name': 'FR'},
             {'name': 'RF'},
+            {'name': 'FR'},
             {'name': 'RR'},
         ];
         var k = 0;
@@ -687,24 +687,25 @@ class MultiqcModule(BaseMultiqcModule):
             type: 'line',
             zoomType: 'x'
           },
-          colors: ['red','green','blue','orange'],
+          colors: ['#e41a1c','#377eb8','#4daf4a','#984ea3'],
           title: {
             text: 'frequency of interaction for '+this.series.name,
             x: 30 // fudge to center over plot area rather than whole plot
           },
           xAxis: {
+            type: 'logarithmic',
             title: { text: 'Genomic separation (bp)' },
             allowDecimals: false,
-            type: 'logarithmic',
           },
           yAxis: {
-            title: { text: 'frequency of interactions' },
             type: 'logarithmic',
+            title: { text: 'frequency of interactions' },
+            allowDecimal: true,
           },
           legend: {
             floating: true,
             layout: 'vertical',
-            align: 'left',
+            align: 'right',
             verticalAlign: 'top',
             x: 60,
             y: 40
@@ -717,7 +718,7 @@ class MultiqcModule(BaseMultiqcModule):
           plotOptions: {
             series: {
               animation: false,
-              lineWidth: 2,
+              lineWidth: 4,
               marker: {
                 lineColor: null,
                 fillColor: 'transparent',
@@ -743,15 +744,24 @@ class MultiqcModule(BaseMultiqcModule):
 
         _report_field = "chrom_freq"
 
-        # figure infer list of chromosomes (beware of scaffolds):
+        # perhaps we should prune list of
+        # inter chromosomal interactions and go from there:
+        def prune_dhrom_freq(chrom_freq_dict, threshold):
+            return {k:v for k,v in chrom_freq_dict.items() if v > threshold }
+
+        # infer list of chromosomes (beware of scaffolds):
         # tuple(key_fields)
         _chromset = set()
+        _data_pruned = dict()
         for s_name in self.pairtools_stats:
+            pairs_min = 0.001*self.pairtools_stats[s_name]['cis']
             _chrom_freq_sample = \
                 self.pairtools_stats[s_name][_report_field]
+            _data_pruned[s_name] = \
+                prune_dhrom_freq(_chrom_freq_sample,pairs_min)
             # unzip list of tuples:
             _chroms1, _chroms2 = list(
-                    zip(*_chrom_freq_sample.keys())
+                    zip(*_data_pruned[s_name].keys())
                 )
             _chromset |= set(_chroms1)
             _chromset |= set(_chroms2)
@@ -761,9 +771,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Construct a data structure for the plot
         _data = dict()
         for s_name in self.pairtools_stats:
+            pairs_min = 0.001*self.pairtools_stats[s_name]['cis']
+            pairs_tot = self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans']
             _data[s_name] = dict()
             _chrom_freq_sample = \
-                self.pairtools_stats[s_name][_report_field]
+                _data_pruned[s_name]
             # go over chroms:
             for c1,c2 in combinations_with_replacement( _chroms, 2):
                 # record the chromosome combination:
@@ -777,11 +789,11 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     _num_pairs = 0
                 # let's filter by # of pairs - by doing some masking ...
-                if _num_pairs < 0.0007*self.pairtools_stats[s_name]['cis']:
+                if _num_pairs < pairs_min:
                     _num_pairs = 0
                 else:
                     # we'll try to normalize it afterwards ...
-                    _num_pairs /= (self.pairtools_stats[s_name]['cis']+self.pairtools_stats[s_name]['trans'])
+                    _num_pairs /= pairs_tot
                     # pass
                 _data[s_name][_chrom_combo] = _num_pairs
 
