@@ -50,7 +50,7 @@ def parse_reports(self):
                     s_name = self.clean_s_name(s_name, f['root'])
 
             if s_name is not None:
-                if 'CollectWgsMetrics$WgsMetrics' in l and '## METRICS CLASS' in l:
+                if 'WgsMetrics' in l and '## METRICS CLASS' in l:
                     if s_name in self.picard_wgsmetrics_data:
                         log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f['fn'], s_name))
                     self.add_data_source(f, s_name, section='WgsMetrics')
