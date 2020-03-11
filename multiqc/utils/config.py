@@ -206,6 +206,27 @@ def load_sample_names(snames_file):
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
 
+def load_show_hide(sh_file):
+    global show_hide_buttons, show_hide_patterns, show_or_hide
+    try:
+        with open(sh_file) as f:
+            logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
+            show_hide_buttons.append("all")
+            show_hide_patterns.append("")
+            show_or_hide.append("show")
+            for l in f:
+                s = l.strip().split("\t")
+                if len(s) == 3:
+                    show_hide_buttons.append(s[0])
+                    show_hide_patterns.append(s[1])
+                    if not s[2] in ["show", "hide"]:
+                        raise IOError
+                    show_or_hide.append(s[2])
+
+    except (IOError, AttributeError) as e:
+        logger.error("Error loading show patterns file: {}".format(e))
+    logger.debug("Found {} show/hide patterns".format(len(show_hide_buttons) - 1))
+
 def update(u):
     return update_dict(globals(), u)
 

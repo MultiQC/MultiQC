@@ -37,6 +37,32 @@ $(function () {
     }
   });
 
+  // Show/hide buttons
+  $('.mqc_hide_switches').click(function(e){
+    e.preventDefault();
+    if($(this).hasClass('active')){
+      return false;
+    }
+    $('#mqc_hide_switches button').removeClass('active');
+    $(this).addClass('active');
+
+    // Clear previous show/hide group
+    $('#mqc_hidesamples_filters').empty();
+
+    // Get requested pattern and whether to show or hide the pattern
+    var j = $(this).data('index');
+    if(j == 0){
+      apply_mqc_hidesamples();
+    } else {
+      var pattern = mqc_config['show_hide_patterns'][j];
+      var show_or_hide = mqc_config['show_or_hide'][j];
+
+      // Apply the changes
+      $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="' + pattern + '" tabindex=" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+      apply_mqc_hidesamples(show_or_hide);
+    }
+  });
+
   // Hide toolbox when clicking outside
   $(document).mouseup(function (e){
     if (!$(".mqc-toolbox").is(e.target) && $(".mqc-toolbox").has(e.target).length === 0){
@@ -656,9 +682,11 @@ function apply_mqc_renamesamples () {
 //////////////////////////////////////////////////////
 // HIDE SAMPLES
 //////////////////////////////////////////////////////
-function apply_mqc_hidesamples(){
+function apply_mqc_hidesamples(mode){
   // Collect the filters into an array
-  var mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
+  if (mode === undefined) {
+    mode = $('.mqc_hidesamples_showhide:checked').val() == 'show' ? 'show' : 'hide';
+  }
   var regex_mode = $('#mqc_hidesamples .mqc_regex_mode .re_mode').hasClass('on');
   var f_texts = [];
   var num_errors = 0;

@@ -98,6 +98,25 @@ sample_names_rename:
     - ["SRR1067510_1", "Sample_3", "MYBESTSAMP_3"]
 ```
 
+## Show / Hide samples buttons
+It is possible to filter which samples are visible through the [report toolbox](#hiding-samples), 
+but it can be desirable to embed such patterns into the report so that they can be shared 
+with others. One example can be to add filters for batches, to easily scan if certain 
+quality metrics overlap between these batches. 
+
+It's possible to supply a file with one or more patterns to filter samples on using the
+`--show-patterns` command line option. This file should be a tab-delimited file with any number 
+of rows containing the button name, the pattern, and whether the pattern should be hidden 
+or shown. For example your want to be able to filter on read pair groups, you can add a file 
+like this:
+
+```
+read_group_1  _R1 show
+read_group_2  _R2 show
+```
+
+Note that MultiQC automatically adds an `all` button which reverts back to showing all samples. 
+
 ## Module and section comments
 Sometimes you may want to add a custom comment above specific sections in the report. You can
 do this with the config option `section_comments` as follows:
