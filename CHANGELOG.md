@@ -8,6 +8,7 @@
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
+* Added option to add show/hide buttons which filter your samples. 
     
 #### Module updates:
 
