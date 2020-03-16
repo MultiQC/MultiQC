@@ -30,7 +30,7 @@ Once conda is installed, you can create a Python environment with the following 
 
 ```bash
 conda create --name py3.7 python=3.7
-conda activate py3.6
+conda activate py3.7
 ```
 
 You'll want to add the `conda activate py3.7` line to your `.bashrc` file so
