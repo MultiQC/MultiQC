@@ -37,12 +37,15 @@ print("""-----------------------------------
 networkx_version = ''
 numpy_version = ''
 matplotlib_version = '>=2.1.1'
+jinja2_version = ''
 if sys.version_info[0:2] < (3, 6):
     # MatPlotLib v3 dropped Python 2 support. Version 3.1 onwards only supports Python 3.5+
     matplotlib_version += ',<3.0.0'
     # Numpy v1.17 dropped Python 2 and Python 3.4 support
     numpy_version = '<1.17'
     networkx_version = '<2.3'
+    jinja2_version = '<3.0'
+
 else:
     # Unlike pip, setuptools install_requires will install pre-releases!
     # Matplotlib often ships these and they very often break
@@ -57,7 +60,7 @@ install_requires = [
         'click',
         'coloredlogs',
         'future>0.14.0',
-        'jinja2>=2.9',
+        'jinja2' + jinja2_version,
         'lzstring',
         'markdown',
         'pyyaml>=4',
