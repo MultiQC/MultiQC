@@ -5,7 +5,8 @@ from multiqc import config
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -17,13 +18,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.mod_data = dict()
         for file in self.find_log_files('hicexplorer'):
             if file['s_name'] != "QC_table":
+
                 s_name = file['root'] + "_" + file['s_name']
-
                 self.mod_data[s_name] = self.parse_logs(file['f'])
-                self.mod_data[s_name]['File'][0] = self.clean_s_name(file['root'] + "_" + s_name + "_" + self.mod_data[s_name]['File'][0], file['root'])
-
+                self.mod_data[s_name]['File'][0] = self.clean_s_name(
+                    file['root'] + "_" + s_name + "_" + self.mod_data[s_name]['File'][0], file['root'])
                 self.add_data_source(file)
-
         if len(self.mod_data) == 0:
             raise UserWarning
         self.colors = ["#1f77b4",
@@ -37,15 +37,37 @@ class MultiqcModule(BaseMultiqcModule):
                        "#17becf",
                        "#D2691E"]
 
-        # compatibility to HiCExplorer <= 1.7 version QC files
+        # detect version of QC file
+        # no 'Pairs mappable, unique and high quality' --> version 1.7
+        # Contains 'pairs used' --> 1.8 - 3.1
+        # Contains 'Hi-C contacts' --> since 3.2
+        version = 0
         for data_ in self.mod_data:
-            if not 'Pairs mappable, unique and high quality' in self.mod_data[data_]:
-                self.mod_data[data_]['Pairs mappable, unique and high quality'] = self.mod_data[data_]['Sequenced reads']
-                keys = ['One mate unmapped', 'One mate not unique', 'Low mapping quality']
+            # compatibility to HiCExplorer <= 1.7 version QC files
+            if not 'Pairs mappable, unique and high quality' in self.mod_data[data_] and 'Pairs considered' in self.mod_data[data_]:
+                version = 1.7
+                self.mod_data[data_]['Pairs mappable, unique and high quality'] = self.mod_data[data_]['Pairs considered']
+                keys = ['One mate unmapped',
+                        'One mate not unique', 'One mate low quality']
                 for key in keys:
                     self.mod_data[data_]['Pairs mappable, unique and high quality'][0] -= self.mod_data[data_][key][0]
+            # compatibility to HiCExplorer <= 3.1 version QC files
+            if 'Pairs considered' in self.mod_data[data_]:
+                self.mod_data[data_]['Sequenced reads'] = self.mod_data[data_]['Pairs considered']
+                self.mod_data[data_]['Hi-c contacts'] = self.mod_data[data_]['Pairs used']
+                self.mod_data[data_]['Low mapping quality'] = self.mod_data[data_]['One mate low quality']
+                self.mod_data[data_]['Intra short range (< 20kb)'] = self.mod_data[data_]['Short range']
+                self.mod_data[data_]['Intra long range (>= 20kb)'] = self.mod_data[data_]['Long range']
+                self.mod_data[data_]['Read pair type: inward pairs'] = self.mod_data[data_]['Inward pairs']
+                self.mod_data[data_]['Read pair type: outward pairs'] = self.mod_data[data_]['Outward pairs']
+                self.mod_data[data_]['Read pair type: left pairs'] = self.mod_data[data_]['Left pairs']
+                self.mod_data[data_]['Read pair type: right pairs'] = self.mod_data[data_]['Right pairs']
 
-        log.debug('self.mod_data {}'.format(self.mod_data))
+            elif 'Sequenced reads' in self.mod_data[data_]:
+                version = 3.2
+
+        log.debug('version: {}'.format(version))
+
         # prepare the basic statistics for hicexplorer
         self.hicexplorer_basic_statistics()
 
@@ -54,14 +76,17 @@ class MultiqcModule(BaseMultiqcModule):
                                                    'One mate not unique', 'Low mapping quality']
         keys_mappable_unique_and_high_quality = ['Hi-c contacts', 'Self ligation (removed)', 'Same fragment', 'Self circle',
                                                  'Dangling end', 'One mate not close to rest site', 'Duplicated pairs']
-        keys_list_contact_distance = ['Intra short range (< 20kb)', 'Intra long range (>= 20kb)', 'Inter chromosomal']
-        keys_list_read_orientation = ['Read pair type: inward pairs', 'Read pair type: outward pairs', 'Read pair type: left pairs', 'Read pair type: right pairs', 'Inter chromosomal']
+        keys_list_contact_distance = [
+            'Intra short range (< 20kb)', 'Intra long range (>= 20kb)', 'Inter chromosomal']
+        keys_list_read_orientation = ['Read pair type: inward pairs', 'Read pair type: outward pairs',
+                                      'Read pair type: left pairs', 'Read pair type: right pairs', 'Inter chromosomal']
 
         # prepare the detail report section
         self.add_section(
             name='Mapping statistics',
             anchor='hicexplorer_categorization_of_considered_reads',
-            plot=self.hicexplorer_create_plot(keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads', 'categorization'),
+            plot=self.hicexplorer_create_plot(
+                keys_categorization_of_reads_considered, 'HiCExplorer: Categorization of considered reads', 'categorization'),
             description='This shows how the sequenced read pairs were mapped and those filtered due to mapping problems.',
             helptext='''
                 * **Pairs mappable, unique and high quality**
@@ -78,7 +103,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Read filtering',
             anchor='hicexplorer_pairs_categorized',
-            plot=self.hicexplorer_create_plot(keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads - Pairs mappable, unique and high quality', 'mapping'),
+            plot=self.hicexplorer_create_plot(
+                keys_mappable_unique_and_high_quality, 'HiCExplorer: Categorization of reads - Pairs mappable, unique and high quality', 'mapping'),
             description='This figure contains the number of reads that were finally used to build the '
             'Hi-C matrix along with the reads that where filtered out.',
             helptext="""
@@ -96,7 +122,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Contact distance',
             anchor='hicexplorer_contact_distance',
-            plot=self.hicexplorer_create_plot(keys_list_contact_distance, 'HiCExplorer: Contact distance', 'contact_distance'),
+            plot=self.hicexplorer_create_plot(
+                keys_list_contact_distance, 'HiCExplorer: Contact distance', 'contact_distance'),
             description='This figure contains information about the distance and location of the valid pairs used.',
             helptext='''
             * **Intra long range**
@@ -111,7 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Read orientation',
             anchor='hicexplorer_read_orientation',
-            plot=self.hicexplorer_create_plot(keys_list_read_orientation, 'HiCExplorer: Read orientation', 'orientation'),
+            plot=self.hicexplorer_create_plot(
+                keys_list_read_orientation, 'HiCExplorer: Read orientation', 'orientation'),
             description='This figure contains information about the orientation of the read pairs.',
             helptext='''
                 * **Inward pairs**
@@ -156,6 +184,8 @@ class MultiqcModule(BaseMultiqcModule):
                 s[0] = 'Intra short range (< 20kb)'
             elif s[0].startswith('same fragment'):
                 s[0] = 'same fragment'
+            elif s[0].startswith('short range'):
+                s[0] = 'short range'
             s[0] = s[0].capitalize()
             data[s[0]] = data_
         return data
@@ -227,7 +257,8 @@ class MultiqcModule(BaseMultiqcModule):
         for data_ in self.mod_data:
             data['{}'.format(self.mod_data[data_]['File'][0])] = {}
             for key_ in pKeyList:
-                data['{}'.format(self.mod_data[data_]['File'][0])][key_] = self.mod_data[data_][key_][0]
+                data['{}'.format(self.mod_data[data_]['File'][0])
+                     ][key_] = self.mod_data[data_][key_][0]
 
         config = {
             'id': 'hicexplorer_' + pId + '_plot',
