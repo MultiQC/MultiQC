@@ -174,7 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_data[lane]["unknown_barcodes"] = unknown_barcode
 
             for demuxResult in conversionResult.get("DemuxResults", []):
-                if demuxResult["SampleName"] == demuxResult["SampleName"]:
+                if demuxResult["SampleName"] == demuxResult["SampleId"]:
                     sample = demuxResult["SampleName"]
                 else:
                     sample = "{}-{}".format(demuxResult["SampleId"], demuxResult["SampleName"])
