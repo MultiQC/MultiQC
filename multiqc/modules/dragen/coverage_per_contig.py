@@ -33,7 +33,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
             for phenotype in perchrom_data_by_phenotype_by_sample[sn]:
                 new_sn = sn
                 if phenotype == 'normal':
-                    new_sn = sn + ' normal'
+                    new_sn = sn + '_normal'
                 perchrom_data_by_sample[new_sn] = perchrom_data_by_phenotype_by_sample[sn][phenotype]
 
         if not perchrom_data_by_sample:
