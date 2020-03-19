@@ -746,7 +746,8 @@ def run(
             for f in os.listdir(config.data_tmp_dir):
                 fn = os.path.join(config.data_tmp_dir, f)
                 logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
-                shutil.move(fn, config.data_dir)
+                shutil.copy(fn, config.data_dir)
+                os.remove(fn)
 
         # Copy across the static plot images if requested
         if config.export_plots:
@@ -767,7 +768,8 @@ def run(
             for f in os.listdir(config.plots_tmp_dir):
                 fn = os.path.join(config.plots_tmp_dir, f)
                 logger.debug("Moving plots directory from '{}' to '{}'".format(fn, config.plots_dir))
-                shutil.move(fn, config.plots_dir)
+                shutil.copy(fn, config.plots_dir)
+                os.remove(fn)
 
     plugin_hooks.mqc_trigger('before_template')
 
