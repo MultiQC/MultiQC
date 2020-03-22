@@ -162,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
                     td['linkedTo'] = ':previous'
                 data.append(td)
 
-        plot_id = report.save_htmlid('fq_screen_plot')
+        plot_id = report.save_htmlid('fq_screen_plot', skiplint=True)
         html = '''<div id={plot_id} class="fq_screen_plot hc-plot"></div>
         <script type="application/json" class="fq_screen_dict">{dict}</script>
         '''.format(
