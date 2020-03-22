@@ -126,98 +126,92 @@ class MultiqcModule(BaseMultiqcModule):
     def fqscreen_plot (self):
         """ Makes a fancy custom plot which replicates the plot seen in the main
         FastQ Screen program. Not useful if lots of samples as gets too wide. """
-        return 'non working'
-        # categories = list()
-        # getCats = True
-        # data = list()
-        # p_types = OrderedDict()
-        # p_types['multiple_hits_multiple_libraries'] = {'col': '#7f0000', 'name': 'Multiple Hits, Multiple Genomes' }
-        # p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Genomes' }
-        # p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Genome' }
-        # p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Genome' }
-        # for k, t in p_types.items():
-        #     first = True
-        #     for s in sorted(self.fq_screen_data.keys()):
-        #         thisdata = list()
-        #         if len(categories) > 0:
-        #             getCats = False
-        #         for org in sorted(self.fq_screen_data[s]):
-        #             if org == 'total_reads':
-        #                 continue
-        #             try:
-        #                 thisdata.append(self.fq_screen_data[s][org]['percentages'][k])
-        #             except KeyError:
-        #                 thisdata.append(None)
-        #             if getCats:
-        #                 categories.append(org)
-        #         td = {
-        #             'name': t['name'],
-        #             'stack': s,
-        #             'data': thisdata,
-        #             'color': t['col']
-        #         }
-        #         if first:
-        #             first = False
-        #         else:
-        #             td['linkedTo'] = ':previous'
-        #         data.append(td)
-        # id_for_plot = 'fq_screen_plot'
-        # id_for_plot_loop = id_for_plot
-        # i = 0
-        # while id_for_plot_loop in report.html_ids:
-        #     id_for_plot_loop = id_for_plot + '-' + str(i)
-        #     i += 1
-        # id_for_plot = id_for_plot_loop
-        # plot_id = report.save_htmlid(id_for_plot)
-        # html = '''<div id={plot_id} class="fq_screen_plot hc-plot"></div>
-        # <script type="application/json" class="fq_screen_dict">{dict}</script>
-        # '''.format(
-        #     plot_id=json.dumps(plot_id),
-        #     dict=json.dumps({ 'plot_id': plot_id, 'data': data, 'categories': categories }),
-        # )
 
-        # html += '''<script type="text/javascript">
-        #     fq_screen_dict = { }; // { <plot_id>: data, categories }
-        #     $('.fq_screen_dict').each(function (i, elem) {
-        #         var dict = JSON.parse(elem.innerHTML);
-        #         fq_screen_dict[dict.plot_id] = dict;
-        #     });
+        categories = list()
+        getCats = True
+        data = list()
+        p_types = OrderedDict()
+        p_types['multiple_hits_multiple_libraries'] = {'col': '#7f0000', 'name': 'Multiple Hits, Multiple Genomes' }
+        p_types['one_hit_multiple_libraries'] = {'col': '#ff0000', 'name': 'One Hit, Multiple Genomes' }
+        p_types['multiple_hits_one_library'] = {'col': '#00007f', 'name': 'Multiple Hits, One Genome' }
+        p_types['one_hit_one_library'] = {'col': '#0000ff', 'name': 'One Hit, One Genome' }
+        for k, t in p_types.items():
+            first = True
+            for s in sorted(self.fq_screen_data.keys()):
+                thisdata = list()
+                if len(categories) > 0:
+                    getCats = False
+                for org in sorted(self.fq_screen_data[s]):
+                    if org == 'total_reads':
+                        continue
+                    try:
+                        thisdata.append(self.fq_screen_data[s][org]['percentages'][k])
+                    except KeyError:
+                        thisdata.append(None)
+                    if getCats:
+                        categories.append(org)
+                td = {
+                    'name': t['name'],
+                    'stack': s,
+                    'data': thisdata,
+                    'color': t['col']
+                }
+                if first:
+                    first = False
+                else:
+                    td['linkedTo'] = ':previous'
+                data.append(td)
 
-        #     $(function () {
-        #         // In case of repeated modules: #fq_screen_plot, #fq_screen_plot-1, ..
-        #         $(".fq_screen_plot").each(function () {
-        #             var plot_id = $(this).attr('id');
+        plot_id = report.save_htmlid('fq_screen_plot')
+        html = '''<div id={plot_id} class="fq_screen_plot hc-plot"></div>
+        <script type="application/json" class="fq_screen_dict">{dict}</script>
+        '''.format(
+            plot_id=json.dumps(plot_id),
+            dict=json.dumps({ 'plot_id': plot_id, 'data': data, 'categories': categories }),
+        )
 
-        #             $(this).highcharts({
-        #                 chart: { type: "column", backgroundColor: null },
-        #                 title: { text: "FastQ Screen Results" },
-        #                 xAxis: { categories: fq_screen_dict[plot_id].categories },
-        #                 yAxis: {
-        #                     max: 100,
-        #                     min: 0,
-        #                     title: { text: "Percentage Aligned" }
-        #                 },
-        #                 tooltip: {
-        #                     formatter: function () {
-        #                         return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
-        #                             this.series.name + ": " + this.y + "%<br/>" +
-        #                             "Total Alignment: " + this.point.stackTotal + "%";
-        #                     },
-        #                 },
-        #                 plotOptions: {
-        #                     column: {
-        #                         pointPadding: 0,
-        #                         groupPadding: 0.02,
-        #                         stacking: "normal"
-        #                     }
-        #                 },
-        #                 series: fq_screen_dict[plot_id].data
-        #             });
-        #         });
-        #     });
-        # </script>'''
+        html += '''<script type="text/javascript">
+            fq_screen_dict = { }; // { <plot_id>: data, categories }
+            $('.fq_screen_dict').each(function (i, elem) {
+                var dict = JSON.parse(elem.innerHTML);
+                fq_screen_dict[dict.plot_id] = dict;
+            });
 
-        # return html
+            $(function () {
+                // In case of repeated modules: #fq_screen_plot, #fq_screen_plot-1, ..
+                $(".fq_screen_plot").each(function () {
+                    var plot_id = $(this).attr('id');
+
+                    $(this).highcharts({
+                        chart: { type: "column", backgroundColor: null },
+                        title: { text: "FastQ Screen Results" },
+                        xAxis: { categories: fq_screen_dict[plot_id].categories },
+                        yAxis: {
+                            max: 100,
+                            min: 0,
+                            title: { text: "Percentage Aligned" }
+                        },
+                        tooltip: {
+                            formatter: function () {
+                                return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
+                                    this.series.name + ": " + this.y + "%<br/>" +
+                                    "Total Alignment: " + this.point.stackTotal + "%";
+                            },
+                        },
+                        plotOptions: {
+                            column: {
+                                pointPadding: 0,
+                                groupPadding: 0.02,
+                                stacking: "normal"
+                            }
+                        },
+                        series: fq_screen_dict[plot_id].data
+                    });
+                });
+            });
+        </script>'''
+
+        return html
 
 
     def fqscreen_simple_plot(self):
@@ -257,10 +251,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastq_screen',
-            'title': 'FastQ Screen: Report',
+            'title': 'FastQ Screen',
             'cpswitch_c_active': False,
-            'hide_zero_cats': False,
-            'ylab' : ''
+            'hide_zero_cats': False
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
