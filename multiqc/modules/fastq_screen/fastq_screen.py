@@ -251,9 +251,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'fastq_screen',
-            'title': 'FastQ Screen',
+            'title': 'FastQ Screen: Report',
             'cpswitch_c_active': False,
-            'hide_zero_cats': False
+            'hide_zero_cats': False,
+            'ylab' : ''
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
