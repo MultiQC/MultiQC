@@ -95,7 +95,7 @@ You can update MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc)
 at any time by running the following command:
 
 ```bash
-pip --update multiqc
+pip install --upgrade multiqc
 ```
 
 To update the development version, use:
