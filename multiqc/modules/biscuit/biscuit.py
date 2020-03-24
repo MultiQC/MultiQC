@@ -46,8 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
             'covdist_cpg_q40_botgc': {},
             'covdist_cpg_q40_topgc': {},
             # Uniformity
-            #'qc_cv': {},
-            #'qc_cpg_cv': {},
+            'qc_cv': {},
+            'qc_cpg_cv': {},
             # CpG distribution
             #'qc_cpg_dist': {},
             # Duplicate reporting
@@ -570,3 +570,128 @@ class MultiqcModule(BaseMultiqcModule):
     ########################################
     ####      Depths and Uniformity     ####
     ########################################
+    def parse_logs_qc_cv(self, f, fn):
+        '''
+        Parses _all_cv_table.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of depth uniformity measures
+        '''
+
+        data = {}
+        targets = ['all', 'all_topgc', 'all_botgc']
+        for k in targets:
+            m = re.search('_{}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)'.format(k),
+                          f, re.MULTILINE)
+            if m is None:
+                data[k] = {'mu': -1, 'sigma': -1, 'cv': -1}
+            else:
+                data[k] = {'mu': float(m.group(1)),
+                           'sigma': float(m.group(2)),
+                           'cv': float(m.group(3))}
+
+        return data
+
+    def chart_qc_cv(self):
+        '''
+        Charts _all_cv_table.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates Sequencing Depth - Whole Genome chart
+        '''
+
+        # Whole Genome - Sequencing depth and uniformity
+        pd_wg = OrderedDict()
+        for sid, dd in self.mdata['qc_cv'].items():
+            pd_wg[sid] = OrderedDict()
+            for ctg in ['all', 'all_topgc', 'all_botgc']:
+                if ctg in dd:
+                    pd_wg[sid]['mu_'+ctg] = dd[ctg]['mu']
+                    pd_wg[sid]['sigma_'+ctg] = dd[ctg]['sigma']
+                    pd_wg[sid]['cv_'+ctg] = dd[ctg]['cv']
+
+        pheader_wg = OrderedDict()
+        pheader_wg['mu_all'] = {'title': 'Mu.Genome', 'description': 'Whole Genome Mean'}
+        pheader_wg['mu_all_topgc'] = {'title': 'Mu.High.GC', 'description': 'Top Decile for GC Content Mean'}
+        pheader_wg['mu_all_botgc'] = {'title': 'Mu.Low.GC', 'description': 'Bottom Decile for GC Content Mean'}
+        pheader_wg['sigma_all'] = {'title': 'Sigma.Genome', 'description': 'Whole Genome Std. Dev.'}
+        pheader_wg['sigma_all_topgc'] = {'title': 'Sigma.High.GC', 'description': 'Top Decile for GC Content Std. Dev.'}
+        pheader_wg['sigma_all_botgc'] = {'title': 'Sigma.Low.GC', 'description': 'Bottom Decile for GC Content Std. Dev.'}
+        pheader_wg['cv_all'] = {'title': 'CV.Genome', 'description': 'Whole Genome Coeff. of Var.'}
+        pheader_wg['cv_all_topgc'] = {'title': 'CV.High.GC', 'description': 'Top Decile for GC Content Coeff. of Var.'}
+        pheader_wg['cv_all_botgc'] = {'title': 'CV.Low.GC', 'description': 'Bottom Decile for GC Content Coeff. of Var.'}
+
+        self.add_section(
+            name = 'Sequencing Depth - Whole Genome',
+            anchor = 'biscuit-seq-depth-all',
+            description = 'Shows the sequence depth mean, standard deviation, and uniformity measured by the ' \
+            'Coefficient of Variation (sigma/mu) for reads with MAPQ>40 across the entire genome. The top and ' \
+            'bottom deciles for GC content were measured on 100bp non-overlapping windows.',
+            plot = table.plot(pd_wg, pheader_wg)
+        )
+
+    def parse_logs_qc_cpg_cv(self, f, fn):
+        '''
+        Parses _cpg_cv_table.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of depth uniformity measures
+        '''
+
+        data = {}
+        targets = ['cpg', 'cpg_topgc', 'cpg_botgc']
+        for k in targets:
+            m = re.search('_{}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)'.format(k),
+                          f, re.MULTILINE)
+            if m is None:
+                data[k] = {'mu': -1, 'sigma': -1, 'cv': -1}
+            else:
+                data[k] = {'mu': float(m.group(1)),
+                           'sigma': float(m.group(2)),
+                           'cv': float(m.group(3))}
+
+        return data
+
+    def chart_qc_cpg_cv(self):
+        '''
+        Charts _cpg_cv_table.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates Sequencing Depth - CpGs Only chart
+        '''
+
+        # CpGs Only - Sequencing depth and uniformity
+        pd_cg = OrderedDict()
+        for sid, dd in self.mdata['qc_cpg_cv'].items():
+            pd_cg[sid] = OrderedDict()
+            for ctg in ['cpg', 'cpg_topgc', 'cpg_botgc']:
+                if ctg in dd:
+                    pd_cg[sid]['mu_'+ctg] = dd[ctg]['mu']
+                    pd_cg[sid]['sigma_'+ctg] = dd[ctg]['sigma']
+                    pd_cg[sid]['cv_'+ctg] = dd[ctg]['cv']
+
+        pheader_cg = OrderedDict()
+        pheader_cg['mu_cpg'] = {'title': 'CG.Mu.Genome', 'description': 'All CpGs Mean'}
+        pheader_cg['mu_cpg_topgc'] = {'title': 'CG.Mu.High.GC', 'description': 'CpGs in Top Decile for GC Content Mean'}
+        pheader_cg['mu_cpg_botgc'] = {'title': 'CG.Mu.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Mean'}
+        pheader_cg['sigma_cpg'] = {'title': 'CG.Sigma.Genome', 'description': 'All CpGs Std. Dev.'}
+        pheader_cg['sigma_cpg_topgc'] = {'title': 'CG.Sigma.High.GC', 'description': 'CpGs in Top Decile for GC Content Std. Dev.'}
+        pheader_cg['sigma_cpg_botgc'] = {'title': 'CG.Sigma.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Std. Dev.'}
+        pheader_cg['cv_cpg'] = {'title': 'CG.CV.Genome', 'description': 'All CpGs Coeff. of Var.'}
+        pheader_cg['cv_cpg_topgc'] = {'title': 'CG.CV.High.GC', 'description': 'CpGs in Top Decile for GC Content Coeff. of Var.'}
+        pheader_cg['cv_cpg_botgc'] = {'title': 'CG.CV.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Coeff. of Var.'}
+
+        self.add_section(
+            name = 'Sequencing Depth - CpGs Only',
+            anchor = 'biscuit-seq-depth-cpg',
+            description = 'Shows the sequence depth mean, standard deviation, and uniformity measured by the ' \
+            'Coefficient of Variation (sigma/mu) at CpG locations in reads with MAPQ>40. The top and ' \
+            'bottom deciles for GC content were measured on 100bp non-overlapping windows.',
+            plot = table.plot(pd_cg, pheader_cg)
+        )
