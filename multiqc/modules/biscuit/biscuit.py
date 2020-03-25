@@ -206,8 +206,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name = 'Mapping Summary',
             anchor = 'biscuit-mapping',
-            description = 'Shows the number of optimally aligned reads (defined by MAPQ >= 40), ' \
-            'suboptimally aligned reads (MAPQ < 40), and unmapped reads. ' \
+            description = 'Shows the number of optimally aligned reads (defined by MAPQ>=40), ' \
+            'suboptimally aligned reads (MAPQ<40), and unmapped reads. ' \
             'A good library should have a high fraction of reads that are optimally aligned. ' \
             'Note, Suboptimally aligned reads include both nonunique alignments and imperfect alignments.',
             plot = bargraph.plot(pd,
@@ -628,7 +628,7 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Sequencing Depth - Whole Genome',
             anchor = 'biscuit-seq-depth-all',
             description = 'Shows the sequence depth mean, standard deviation, and uniformity measured by the ' \
-            'Coefficient of Variation (sigma/mu) for reads with MAPQ>40 across the entire genome. The top and ' \
+            'Coefficient of Variation (sigma/mu) for reads with MAPQ>=40 across the entire genome. The top and ' \
             'bottom deciles for GC content were measured on 100bp non-overlapping windows.',
             plot = table.plot(pd_wg, pheader_wg)
         )
@@ -691,7 +691,112 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Sequencing Depth - CpGs Only',
             anchor = 'biscuit-seq-depth-cpg',
             description = 'Shows the sequence depth mean, standard deviation, and uniformity measured by the ' \
-            'Coefficient of Variation (sigma/mu) at CpG locations in reads with MAPQ>40. The top and ' \
+            'Coefficient of Variation (sigma/mu) at CpG locations in reads with MAPQ>=40. The top and ' \
             'bottom deciles for GC content were measured on 100bp non-overlapping windows.',
             plot = table.plot(pd_cg, pheader_cg)
+        )
+
+    ########################################
+    ####        CpG Distribution        ####
+    ########################################
+    def parse_logs_qc_cpg_dist(self, f, fn):
+        '''
+        Parses _cpg_dist_table.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of CpG coverage distributions
+        '''
+
+        data = {}
+        for ctg in ['TotalCpGs', 'ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
+            m = re.search('{}\t(\d+)\t(\d+)\t(\d+)'.format(ctg), f, re.MULTILINE)
+            if m is None:
+                data[ctg] = {'a': -1, 'uc': -1, 'ac': -1}
+            else:
+                data[ctg] = {'a': int(m.group(1)),
+                             'uc': int(m.group(2)),
+                             'ac': int(m.group(3))}
+
+        #TODO: Assumes this value is in _cpg_dist_table.txt -
+        #      may need to change this in future
+        m = re.search(r'#CpG Islands\t(\d+)', f, re.MULTILINE)
+        num_cgi = int(m.group(1))
+
+        patterns = [
+            (r'one CpG\t(\d+)', 'one'),
+            (r'three CpGs\t(\d+)', 'three'),
+            (r'five CpGs\t(\d+)', 'five'),
+            (r'ten CpGs\t(\d+)', 'ten')]
+
+        data['cgi_coverage'] = {}
+        for pat, k in patterns:
+            m = re.search(pat, f, re.MULTILINE)
+            if m is None:
+                data['cgi_coverage'][k] = -1
+            else:
+                data['cgi_coverage'][k] = 100 * float(m.group(1)) / num_cgi
+
+        return data
+
+    def chart_qc_cpg_dist(self):
+        '''
+        Charts _cpg_dist_table.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates CpG Coverage by Genomic Feature
+            and CpG Island Coverage charts
+        '''
+
+        if len(self.mdata['qc_cpg_dist']) == 0:
+            return
+
+        # Assorted regions
+        hdr = OrderedDict()
+        pd = OrderedDict()
+
+        # TODO: Try to figure out what is meant to be shown here
+        # If figured out, put back in and update add_section description note
+        #pd['Genome'] = OrderedDict()
+        #dd = list(self.mdata['qc_cpg_dist'].values())[0]
+        #for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
+        #    ctg1 = ctg.replace('CpGs','')
+        #    pd['Genome'][ctg1] = 100 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
+
+        hdr['Exonic']['description'] = 'Exonic CpGs'
+        hdr['Repeat']['description'] = 'Repeat-Masked CpGs'
+        hdr['Genic']['description'] = 'Genic CpGs'
+        hdr['CGI']['description'] = 'CpG Island CpGs'
+        for sid, dd in self.mdata['qc_cpg_dist'].items():
+            pd[sid] = OrderedDict()
+            for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
+                ctg1 = ctg.replace('CpGs','')
+                hdr[ctg1] = {'max': 100, 'min': 0, 'suffix': '%'}
+                pd[sid][ctg1] = 100 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
+
+        self.add_section(
+            name = 'CpG Coverage by Genomic Feature'
+            anchor = 'biscuit-coverage-cpg-dist',
+            description = 'Shows the fraction of uniquely covered CpGs for different categories ' \
+            '(exonic, repeat-masked, genic, and CpG islands) relative to the total number of uniquely ' \
+            'covered CpGs in the dataset. CpGs are from reads with MAPQ>=40.'
+            plot = table.plot(pd, hdr)
+        )
+
+        # CpG Islands
+        pd = dict([sid, dd['cgi_coverage']) for sid, dd in self.mdata['qc_cpg_dist'].items()])
+
+        self.add_section(
+            name = 'CpG Island Coverage',
+            anchor = 'biscuit-coverage-cgi',
+            description = 'Shows the percentage of CpG islands (out of all CpG islands in the genome) ' \
+            'that have at least 1, 3, 5, or 10 different CpGs covered. Coverage is based on reads with MAPQ>=40.',
+            plot = table.plot(pd,
+                              OrderedDict([('one', {'title': '>=1', 'suffix': '%', 'description': 'CpG islands with at least one CpG covered'}),
+                                           ('three', {'title': '>=3', 'suffix': '%', 'description': 'CpG islands with at least three CpGs covered'}),
+                                           ('five', {'title': '>=5', 'suffix': '%', 'description': 'CpG islands with at least five CpGs covered'}),
+                                           ('ten', {'title': '>=10', 'suffix': '%', 'description': 'CpG islands with at least ten CpGs covered'})]),
+                              {'id':'cgi-cov-table'})
         )
