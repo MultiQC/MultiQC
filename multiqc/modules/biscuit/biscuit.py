@@ -49,10 +49,10 @@ class MultiqcModule(BaseMultiqcModule):
             'qc_cv': {},
             'qc_cpg_cv': {},
             # CpG distribution
-            #'qc_cpg_dist': {},
+            'qc_cpg_dist': {},
             # Duplicate reporting
-            #'dup_report': {},
-            #'markdup_report': {},
+            'dup_report': {},
+            'markdup_report': {},
             # Retention
             #'retention_dist': {},
             #'retention_dist_byread': {},
@@ -84,6 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
             '_cpg_dist_table',
             # Duplicate reporting
             '_dup_report',
+            '_markdup_report',
             # Retention
             '_CpGRetentionDist',
             '_freqOfTotalRetentionPerRead',
@@ -141,18 +142,18 @@ class MultiqcModule(BaseMultiqcModule):
                 allreads = sum([int(_) for _ in dd.values()])
                 pd[sid] = {'%aligned': 100 * float(allreads - int(dd['unmapped'])) / allreads}
 
-        #for sid, dd in self.mdata['dup_report'].items():
-        #    if sid not in pd:
-        #        pd[sid] = {}
-        #    if 'all' in dd and dd['all'] is not None:
-        #        pd[sid]['%dupRate_All'] = dd['all']
-        #    if 'all-q40' in dd and dd['all-q40'] is not None:
-        #        pd[sid]['%dupRate_All-q40'] = dd['all-q40']
+        for sid, dd in self.mdata['dup_report'].items():
+            if sid not in pd:
+                pd[sid] = {}
+            if 'all' in dd and dd['all'] is not None:
+                pd[sid]['%dupRate_All'] = dd['all']
+            if 'all-q40' in dd and dd['all-q40'] is not None:
+                pd[sid]['%dupRate_All-q40'] = dd['all-q40']
 
         pheader = OrderedDict()
-        pheader['%aligned']          = {'title':'% Aligned', 'max':100, 'min':0, 'suffix':'%', 'scale':'Greens'}
-        #pheader['%dupRate_All']     = {'title':'% Overall Dup Rate', 'max':100, 'min':0, 'suffix':'%', 'scale':'Reds'}
-        #pheader['%dupRate_All-q40'] = {'title':'% Q40 Overall Dup Rate', 'max':100, 'min':0, 'suffix':'%', 'scale':'Reds'}
+        pheader['%aligned']         = {'title':'% Aligned', 'max':100, 'min':0, 'suffix':'%', 'scale':'Greens'}
+        pheader['%dupRate_All']     = {'title':'% Overall Dup Rate', 'max':100, 'min':0, 'suffix':'%', 'scale':'Reds'}
+        pheader['%dupRate_All-q40'] = {'title':'% Q40 Overall Dup Rate', 'max':100, 'min':0, 'suffix':'%', 'scale':'Reds'}
         self.general_stats_addcols(pd, pheader)
 
     ########################################
@@ -722,7 +723,11 @@ class MultiqcModule(BaseMultiqcModule):
         #TODO: Assumes this value is in _cpg_dist_table.txt -
         #      may need to change this in future
         m = re.search(r'#CpG Islands\t(\d+)', f, re.MULTILINE)
-        num_cgi = int(m.group(1))
+        num_cgi = -999
+        if m is None:
+            num_cgi = -1
+        else:
+            num_cgi = int(m.group(1))
 
         patterns = [
             (r'one CpG\t(\d+)', 'one'),
@@ -733,7 +738,7 @@ class MultiqcModule(BaseMultiqcModule):
         data['cgi_coverage'] = {}
         for pat, k in patterns:
             m = re.search(pat, f, re.MULTILINE)
-            if m is None:
+            if m is None or num_cgi == -1:
                 data['cgi_coverage'][k] = -1
             else:
                 data['cgi_coverage'][k] = 100 * float(m.group(1)) / num_cgi
@@ -754,7 +759,6 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Assorted regions
-        hdr = OrderedDict()
         pd = OrderedDict()
 
         # TODO: Try to figure out what is meant to be shown here
@@ -765,28 +769,28 @@ class MultiqcModule(BaseMultiqcModule):
         #    ctg1 = ctg.replace('CpGs','')
         #    pd['Genome'][ctg1] = 100 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
 
-        hdr['Exonic']['description'] = 'Exonic CpGs'
-        hdr['Repeat']['description'] = 'Repeat-Masked CpGs'
-        hdr['Genic']['description'] = 'Genic CpGs'
-        hdr['CGI']['description'] = 'CpG Island CpGs'
         for sid, dd in self.mdata['qc_cpg_dist'].items():
             pd[sid] = OrderedDict()
             for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
                 ctg1 = ctg.replace('CpGs','')
-                hdr[ctg1] = {'max': 100, 'min': 0, 'suffix': '%'}
                 pd[sid][ctg1] = 100 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
 
         self.add_section(
-            name = 'CpG Coverage by Genomic Feature'
+            name = 'CpG Coverage by Genomic Feature',
             anchor = 'biscuit-coverage-cpg-dist',
             description = 'Shows the fraction of uniquely covered CpGs for different categories ' \
             '(exonic, repeat-masked, genic, and CpG islands) relative to the total number of uniquely ' \
-            'covered CpGs in the dataset. CpGs are from reads with MAPQ>=40.'
-            plot = table.plot(pd, hdr)
+            'covered CpGs in the dataset. CpGs are from reads with MAPQ>=40.',
+            plot = table.plot(pd,
+                              OrderedDict([('Exonic', {'title': 'Exonic CpGs', 'max': 100, 'min': 0, 'suffix': '%'}),
+                                           ('Repeat', {'title': 'Repeat-Masked CpGs', 'max': 100, 'min': 0, 'suffix': '%'}),
+                                           ('Genic', {'title': 'Genic CpGs', 'max': 100, 'min': 0, 'suffix': '%'}),
+                                           ('CGI', {'title': 'CpG Island CpGs', 'max': 100, 'min': 0, 'suffix': '%'})]),
+                              {'id': 'cpg-cov-gen-feature'})
         )
 
         # CpG Islands
-        pd = dict([sid, dd['cgi_coverage']) for sid, dd in self.mdata['qc_cpg_dist'].items()])
+        pd = dict([(sid, dd['cgi_coverage']) for sid, dd in self.mdata['qc_cpg_dist'].items()])
 
         self.add_section(
             name = 'CpG Island Coverage',
@@ -798,5 +802,117 @@ class MultiqcModule(BaseMultiqcModule):
                                            ('three', {'title': '>=3', 'suffix': '%', 'description': 'CpG islands with at least three CpGs covered'}),
                                            ('five', {'title': '>=5', 'suffix': '%', 'description': 'CpG islands with at least five CpGs covered'}),
                                            ('ten', {'title': '>=10', 'suffix': '%', 'description': 'CpG islands with at least ten CpGs covered'})]),
-                              {'id':'cgi-cov-table'})
+                              {'id': 'cgi-cov-table'})
         )
+
+    ########################################
+    ####        Duplicate Report        ####
+    ########################################
+    def parse_logs_dup_report(self, f, fn):
+        '''
+        Parses _dup_report.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of duplicate fractions
+        '''
+        patterns = [
+            (r'#bases covered by all reads: (\d+)',
+             r'#bases covered by duplicate reads: (\d+)', 'all'),
+            (r'#high-GC bases covered by all reads: (\d+)',
+             r'#high-GC bases covered by duplicate reads: (\d+)', 'topGC'),
+            (r'#low-GC bases covered by all reads: (\d+)',
+             r'#low-GC bases covered by duplicate reads: (\d+)', 'lowGC'),
+            (r'#bases covered by all q40-reads: (\d+)',
+             r'#bases covered by duplicate q40-reads: (\d+)', 'all-q40'),
+            (r'#high-GC bases covered by all q40-reads: (\d+)',
+             r'#high-GC bases covered by duplicate q40-reads: (\d+)', 'topGC-q40'),
+            (r'#low-GC bases covered by all q40-reads: (\d+)',
+             r'#low-GC bases covered by duplicate q40-reads: (\d+)', 'botGC-q40')]
+
+        data = {}
+        for pat_all, pat_dup, k in patterns:
+            m1 = re.search(pat_all, f, re.MULTILINE)
+            m2 = re.search(pat_dup, f, re.MULTILINE)
+            if m1 is not None and m2 is not None and float(m1.group(1)) > 0:
+                data[k] = (100 * float(m2.group(1)) / float(m1.group(1)))
+            else:
+                data[k] = -1.0
+
+        return data
+
+    def chart_dup_report(self):
+        '''
+        Charts _dup_report.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates CpG Coverage by Genomic Feature
+            and CpG Island Coverage charts
+        '''
+
+        pd = dict([(sid, dd) for sid, dd in self.mdata['dup_report'].items()])
+
+        self.add_section(
+            name = 'Duplicate Rates',
+            anchor = 'biscuit-dup-report',
+            description = 'Shows the percentage of bases that are duplicates out of the total number of bases' \
+            'High and low GC content regions are the top and bottom 10% of 100bp windows for GC content, respectively.',
+            plot = table.plot(pd,
+                              OrderedDict([('all', {'title': 'Overall', 'suffix': '%', 'max': 100, 'min': 0}),
+                                           ('topGC', {'title': 'Overall High GC', 'suffix': '%', 'max': 100, 'min': 0}),
+                                           ('lowGC', {'title': 'Overall Low GC', 'suffix': '%', 'max': 100, 'min': 0}),
+                                           ('all-q40', {'title': 'Q40', 'suffix': '%', 'max': 100, 'min': 0}),
+                                           ('topGC-q40', {'title': 'Q40 High GC', 'suffix': '%', 'max': 100, 'min': 0}),
+                                           ('botGC-q40', {'title': 'Q40 Low GC', 'suffix': '%', 'max': 100, 'min': 0})]),
+                              {'id': 'biscuit_dup_report'})
+        )
+
+    # TODO: Remove when biscuit markdup is officially removed from code base
+    def parse_logs_markdup_report(self, f, fn):
+        '''
+        Parses _markdup_report.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of duplicate rates from biscuit markdup
+        '''
+        data = {}
+        m = re.search(r'marked (\d+) duplicates from (\d+) paired-end reads', f, re.MULTILINE)
+        if m is None:
+            data = {'PE': None, 'PEdup': None, 'dupRatePE': None}
+        else:
+            data['PEdup'] = int(m.group(1))
+            data['PE'] = int(m.group(2))
+            if data['PE'] > 0:
+                data['dupRatePE'] = 100 * float(data['PEdup']) / data['PE']
+            else:
+                data['dupRatePE'] = None
+
+        m = re.search(r'marked (\d+) duplicates from (\d+) single-end reads', f, re.MULTILINE)
+        if m is None:
+            data = {'SE': None, 'SEdup': None, 'dupRateSE': None}
+        else:
+            data['SEdup'] = int(m.group(1))
+            data['SE'] = int(m.group(2))
+            if data['SE'] > 0:
+                data['dupRateSE'] = 100 * float(data['SEdup']) / data['SE']
+            else:
+                data['dupRateSE'] = None
+                
+        m = re.search(r'identified (\d+) dangling paired-end reads', f, re.MULTILINE)
+        if m is None:
+            data['PEdangling'] = None
+        else:
+            data['PEdangling'] = int(m.group(1))
+        
+        return data
+
+    def chart_markdup_report(self):
+        '''
+        biscuit markdup is being deprecated, so pass until officially removed
+        '''
+        pass
+
