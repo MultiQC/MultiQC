@@ -54,12 +54,12 @@ class MultiqcModule(BaseMultiqcModule):
             'dup_report': {},
             'markdup_report': {},
             # Retention
-            #'retention_dist': {},
-            #'retention_dist_byread': {},
-            #'retention_cpg_readpos': {},
-            #'retention_cph_readpos': {},
-            #'retention_rate_bybase': {},
-            #'retention_rate_byread': {}
+            'retention_dist': {},
+            'retention_dist_byread': {},
+            'retention_cpg_readpos': {},
+            'retention_cph_readpos': {},
+            'retention_rate_bybase': {},
+            'retention_rate_byread': {}
         }
 
         file_suffixes = [
@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sid, dd in self.mdata['align_mapq'].items():
             if 'data_is_missing' not in dd.keys():
                 allreads = sum([int(_) for _ in dd.values()])
-                pd[sid] = {'%aligned': 100 * float(allreads - int(dd['unmapped'])) / allreads}
+                pd[sid] = {'%aligned': 100.0 * float(allreads - int(dd['unmapped'])) / allreads}
 
         for sid, dd in self.mdata['dup_report'].items():
             if sid not in pd:
@@ -233,7 +233,7 @@ class MultiqcModule(BaseMultiqcModule):
                 mapqcnts = []
                 for mapq in range(61):
                     if str(mapq) in dd:
-                        mapqcnts.append(100 * float(dd[str(mapq)]) / total[sid])
+                        mapqcnts.append(100.0 * float(dd[str(mapq)]) / total[sid])
                     else:
                         mapqcnts.append(0)
                 pd_mapping[sid] = dict(zip(range(61), mapqcnts))
@@ -342,7 +342,7 @@ class MultiqcModule(BaseMultiqcModule):
         for l in file_data:
             fields = l.split()
             if fields[0] == 'I':
-                data[fields[0]][int(fields[1])] = float(fields[2]) * 100
+                data[fields[0]][int(fields[1])] = float(fields[2]) * 100.0
             elif fields[0] == 'S':
                 data[fields[0]][fields[1]] = float(fields[2])
 
@@ -548,25 +548,32 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def chart_covdist_q40(self):
-        pass # handled in chart_covdist
+        ''' Handled in chart_covdist() '''
+        pass
 
     def chart_covdist_q40_botgc(self):
-        pass # handled in chart_covdist
+        ''' Handled in chart_covdist() '''
+        pass
 
     def chart_covdist_q40_topgc(self):
-        pass # handled in chart_covdist
+        ''' Handled in chart_covdist() '''
+        pass
 
     def chart_covdist_cpg(self):
-        pass # handled in chart_covdist
+        ''' Handled in chart_covdist() '''
+        pass
 
     def chart_covdist_cpg_q40(self):
-        pass # handled in chart_covdist
+        ''' Handled in chart_covdist() '''
+        pass
 
     def chart_covdist_cpg_q40_botgc(self):
-        pass # handled in chart_covdist
+        ''' Handled in chart_covdist() '''
+        pass
 
     def chart_covdist_cpg_q40_topgc(self):
-        pass # handled in chart_covdist
+        ''' Handled in chart_covdist() '''
+        pass
 
     ########################################
     ####      Depths and Uniformity     ####
@@ -615,15 +622,15 @@ class MultiqcModule(BaseMultiqcModule):
                     pd_wg[sid]['cv_'+ctg] = dd[ctg]['cv']
 
         pheader_wg = OrderedDict()
-        pheader_wg['mu_all'] = {'title': 'Mu.Genome', 'description': 'Whole Genome Mean'}
-        pheader_wg['mu_all_topgc'] = {'title': 'Mu.High.GC', 'description': 'Top Decile for GC Content Mean'}
-        pheader_wg['mu_all_botgc'] = {'title': 'Mu.Low.GC', 'description': 'Bottom Decile for GC Content Mean'}
-        pheader_wg['sigma_all'] = {'title': 'Sigma.Genome', 'description': 'Whole Genome Std. Dev.'}
-        pheader_wg['sigma_all_topgc'] = {'title': 'Sigma.High.GC', 'description': 'Top Decile for GC Content Std. Dev.'}
-        pheader_wg['sigma_all_botgc'] = {'title': 'Sigma.Low.GC', 'description': 'Bottom Decile for GC Content Std. Dev.'}
-        pheader_wg['cv_all'] = {'title': 'CV.Genome', 'description': 'Whole Genome Coeff. of Var.'}
-        pheader_wg['cv_all_topgc'] = {'title': 'CV.High.GC', 'description': 'Top Decile for GC Content Coeff. of Var.'}
-        pheader_wg['cv_all_botgc'] = {'title': 'CV.Low.GC', 'description': 'Bottom Decile for GC Content Coeff. of Var.'}
+        pheader_wg['mu_all'] = {'title': 'Mu.Genome', 'description': 'Whole Genome Mean', 'format': '{:,.3f}'}
+        pheader_wg['mu_all_topgc'] = {'title': 'Mu.High.GC', 'description': 'Top Decile for GC Content Mean', 'format': '{:,.3f}'}
+        pheader_wg['mu_all_botgc'] = {'title': 'Mu.Low.GC', 'description': 'Bottom Decile for GC Content Mean', 'format': '{:,.3f}'}
+        pheader_wg['sigma_all'] = {'title': 'Sigma.Genome', 'description': 'Whole Genome Std. Dev.', 'format': '{:,.3f}'}
+        pheader_wg['sigma_all_topgc'] = {'title': 'Sigma.High.GC', 'description': 'Top Decile for GC Content Std. Dev.', 'format': '{:,.3f}'}
+        pheader_wg['sigma_all_botgc'] = {'title': 'Sigma.Low.GC', 'description': 'Bottom Decile for GC Content Std. Dev.', 'format': '{:,.3f}'}
+        pheader_wg['cv_all'] = {'title': 'CV.Genome', 'description': 'Whole Genome Coeff. of Var.', 'format': '{:,.3f}'}
+        pheader_wg['cv_all_topgc'] = {'title': 'CV.High.GC', 'description': 'Top Decile for GC Content Coeff. of Var.', 'format': '{:,.3f}'}
+        pheader_wg['cv_all_botgc'] = {'title': 'CV.Low.GC', 'description': 'Bottom Decile for GC Content Coeff. of Var.', 'format': '{:,.3f}'}
 
         self.add_section(
             name = 'Sequencing Depth - Whole Genome',
@@ -678,15 +685,15 @@ class MultiqcModule(BaseMultiqcModule):
                     pd_cg[sid]['cv_'+ctg] = dd[ctg]['cv']
 
         pheader_cg = OrderedDict()
-        pheader_cg['mu_cpg'] = {'title': 'CG.Mu.Genome', 'description': 'All CpGs Mean'}
-        pheader_cg['mu_cpg_topgc'] = {'title': 'CG.Mu.High.GC', 'description': 'CpGs in Top Decile for GC Content Mean'}
-        pheader_cg['mu_cpg_botgc'] = {'title': 'CG.Mu.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Mean'}
-        pheader_cg['sigma_cpg'] = {'title': 'CG.Sigma.Genome', 'description': 'All CpGs Std. Dev.'}
-        pheader_cg['sigma_cpg_topgc'] = {'title': 'CG.Sigma.High.GC', 'description': 'CpGs in Top Decile for GC Content Std. Dev.'}
-        pheader_cg['sigma_cpg_botgc'] = {'title': 'CG.Sigma.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Std. Dev.'}
-        pheader_cg['cv_cpg'] = {'title': 'CG.CV.Genome', 'description': 'All CpGs Coeff. of Var.'}
-        pheader_cg['cv_cpg_topgc'] = {'title': 'CG.CV.High.GC', 'description': 'CpGs in Top Decile for GC Content Coeff. of Var.'}
-        pheader_cg['cv_cpg_botgc'] = {'title': 'CG.CV.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Coeff. of Var.'}
+        pheader_cg['mu_cpg'] = {'title': 'CG.Mu.Genome', 'description': 'All CpGs Mean', 'format': '{:,.3f}'}
+        pheader_cg['mu_cpg_topgc'] = {'title': 'CG.Mu.High.GC', 'description': 'CpGs in Top Decile for GC Content Mean', 'format': '{:,.3f}'}
+        pheader_cg['mu_cpg_botgc'] = {'title': 'CG.Mu.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Mean', 'format': '{:,.3f}'}
+        pheader_cg['sigma_cpg'] = {'title': 'CG.Sigma.Genome', 'description': 'All CpGs Std. Dev.', 'format': '{:,.3f}'}
+        pheader_cg['sigma_cpg_topgc'] = {'title': 'CG.Sigma.High.GC', 'description': 'CpGs in Top Decile for GC Content Std. Dev.', 'format': '{:,.3f}'}
+        pheader_cg['sigma_cpg_botgc'] = {'title': 'CG.Sigma.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Std. Dev.', 'format': '{:,.3f}'}
+        pheader_cg['cv_cpg'] = {'title': 'CG.CV.Genome', 'description': 'All CpGs Coeff. of Var.', 'format': '{:,.3f}'}
+        pheader_cg['cv_cpg_topgc'] = {'title': 'CG.CV.High.GC', 'description': 'CpGs in Top Decile for GC Content Coeff. of Var.', 'format': '{:,.3f}'}
+        pheader_cg['cv_cpg_botgc'] = {'title': 'CG.CV.Low.GC', 'description': 'CpGs in Bottom Decile for GC Content Coeff. of Var.', 'format': '{:,.3f}'}
 
         self.add_section(
             name = 'Sequencing Depth - CpGs Only',
@@ -741,7 +748,7 @@ class MultiqcModule(BaseMultiqcModule):
             if m is None or num_cgi == -1:
                 data['cgi_coverage'][k] = -1
             else:
-                data['cgi_coverage'][k] = 100 * float(m.group(1)) / num_cgi
+                data['cgi_coverage'][k] = 100.0 * float(m.group(1)) / num_cgi
 
         return data
 
@@ -767,13 +774,13 @@ class MultiqcModule(BaseMultiqcModule):
         #dd = list(self.mdata['qc_cpg_dist'].values())[0]
         #for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
         #    ctg1 = ctg.replace('CpGs','')
-        #    pd['Genome'][ctg1] = 100 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
+        #    pd['Genome'][ctg1] = 100.0 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
 
         for sid, dd in self.mdata['qc_cpg_dist'].items():
             pd[sid] = OrderedDict()
             for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
                 ctg1 = ctg.replace('CpGs','')
-                pd[sid][ctg1] = 100 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
+                pd[sid][ctg1] = 100.0 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
 
         self.add_section(
             name = 'CpG Coverage by Genomic Feature',
@@ -836,7 +843,7 @@ class MultiqcModule(BaseMultiqcModule):
             m1 = re.search(pat_all, f, re.MULTILINE)
             m2 = re.search(pat_dup, f, re.MULTILINE)
             if m1 is not None and m2 is not None and float(m1.group(1)) > 0:
-                data[k] = (100 * float(m2.group(1)) / float(m1.group(1)))
+                data[k] = (100.0 * float(m2.group(1)) / float(m1.group(1)))
             else:
                 data[k] = -1.0
 
@@ -887,7 +894,7 @@ class MultiqcModule(BaseMultiqcModule):
             data['PEdup'] = int(m.group(1))
             data['PE'] = int(m.group(2))
             if data['PE'] > 0:
-                data['dupRatePE'] = 100 * float(data['PEdup']) / data['PE']
+                data['dupRatePE'] = 100.0 * float(data['PEdup']) / data['PE']
             else:
                 data['dupRatePE'] = None
 
@@ -898,7 +905,7 @@ class MultiqcModule(BaseMultiqcModule):
             data['SEdup'] = int(m.group(1))
             data['SE'] = int(m.group(2))
             if data['SE'] > 0:
-                data['dupRateSE'] = 100 * float(data['SEdup']) / data['SE']
+                data['dupRateSE'] = 100.0 * float(data['SEdup']) / data['SE']
             else:
                 data['dupRateSE'] = None
                 
@@ -911,8 +918,291 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     def chart_markdup_report(self):
-        '''
-        biscuit markdup is being deprecated, so pass until officially removed
-        '''
+        ''' biscuit markdup is being deprecated, so pass until officially removed '''
         pass
 
+    ########################################
+    ####          CpG Retention         ####
+    ########################################
+    def parse_logs_retention_dist(self, f, fn):
+        '''
+        Parses _CpGRetentionDist.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of distribution of CpG retention
+        '''
+        file_data = f.splitlines()[2:]
+
+        # Handle missing data
+        if len(file_data) == 0:
+            log.warning('Missing data in {}. Will not fill corresponding entries.'.format(fn))
+            return {'data_is_missing': 1}
+
+        sumcounts = 0
+        for l in file_data:
+            fields = l.split('\t')
+            if fields[0] != -1:
+                sumcounts += int(fields[1])
+
+        data = {}
+        for l in file_data:
+            fields = l.split('\t')
+            if fields[0] != -1:
+                data[int(fields[0])] = int(fields[1]) / float(sumcounts)
+
+        if len(data) == 0:
+            log.warning('Only low coverage entries in {}. Will not fill corresponding entries.'.format(fn))
+            return {'data_is_missing': 1}
+
+        return data
+
+    def chart_retention_dist(self):
+        '''
+        Charts _CpGRetentionDist.txt
+               _freqOfTotalRetentionPerRead.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates Number of Retention Distribution chart
+        '''
+
+        mdata_meth = {}
+        for sid, dd in self.mdata['retention_dist'].items():
+            if 'data_is_missing' not in dd.keys():
+                mdata_meth[sid] = dd
+
+        mdata = self.mdata['retention_dist_byread']
+
+        pd = [mdata_meth,
+              dict([(sid, dd['CA']) for sid, dd in mdata.items() if 'data_is_missing' not in dd.keys()]),
+              dict([(sid, dd['CC']) for sid, dd in mdata.items() if 'data_is_missing' not in dd.keys()]),
+              dict([(sid, dd['CG']) for sid, dd in mdata.items() if 'data_is_missing' not in dd.keys()]),
+              dict([(sid, dd['CT']) for sid, dd in mdata.items() if 'data_is_missing' not in dd.keys()])]
+
+        # TODO: Improve description on plot
+        self.add_section(
+            name = 'Number of Retention Distribution',
+            anchor = 'biscuit-retention-read',
+            description = 'Shows the distribution of the number of retained cytosines in each read, up to 10.',
+            plot = linegraph.plot(pd,
+                                  {'id': 'biscuit_retention_read_cpa',
+                                   'xlab': 'Number of Retention Within Read',
+                                   'title': 'BISCUIT: Retention Distribution',
+                                   'data_labels': [{'name': 'CpG Retention', 'ylab': 'Fraction of Cytosines in CpG Context', 'xlab': 'Retention Level (%)'},
+                                                   {'name': 'Within-read CpA', 'ylab': 'Number of Reads'},
+                                                   {'name': 'Within-read CpC', 'ylab': 'Number of Reads'},
+                                                   {'name': 'Within-read CpG', 'ylab': 'Number of Reads'},
+                                                   {'name': 'Within-read CpT', 'ylab': 'Number of Reads'}]})
+        )
+
+    def parse_logs_retention_dist_byread(self, f, fn):
+        '''
+        Parses _freqOfTotalRetentionPerRead.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of distribution of CpG retention by read in a given context
+        '''
+        file_data = f.splitlines()[2:]
+
+        # Handle missing data
+        if len(file_data) == 0:
+            log.warning('Missing data in {}. Will not fill corresponding entries.'.format(fn))
+            return {'data_is_missing': 1}
+
+        data = OrderedDict([('CA', {}),
+                            ('CC', {}),
+                            ('CG', {}),
+                            ('CT', {})])
+        for l in file_data:
+            fields = l.strip().split('\t')
+            if fields[0] not in data:
+                return {}
+            if int(fields[1]) <= 10: # remove number retained greater than 10
+                data[fields[0]][int(fields[1])] = int(fields[2])
+
+        return data
+
+    def chart_retention_dist_byread(self):
+        ''' Handled in chart_retention_dist() '''
+        pass
+
+    def parse_logs_retention_cpg_readpos(self, f, fn):
+        '''
+        Parses _CpGRetentionByReadPos.txt
+               _CpHRetentionByReadPos.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of fraction of retained cytosines for reads 1 and 2
+            in either a CpH or CpG context
+        '''
+        file_data = f.splitlines()[2:]
+
+        # Handle missing data
+        if len(file_data) == 0:
+            log.warning('Missing data in {}. Will not fill corresponding entries.'.format(fn))
+            return {'data_is_missing': 1}
+
+        r1 = {'C': {}, 'R': {}}
+        r2 = {'C': {}, 'R': {}}
+        for l in file_data:
+            fields = l.strip().split('\t')
+
+            if fields[0] not in ['1', '2'] or fields[2] not in ['C', 'R']:
+                return {}
+            if fields[0] == '1':
+                r1[fields[2]][int(fields[1])] = int(fields[3])
+            elif fields[0] == '2':
+                r2[fields[2]][int(fields[1])] = int(fields[3])
+
+        r1rate = OrderedDict()
+        for k in sorted(r1['C'].keys()):
+            if k in r1['R']:
+                r1rate[k] = 100.0 * float(r1['R'][k]) / (r1['R'][k] + r1['C'][k])
+
+        r2rate = OrderedDict()
+        for k in sorted(r2['C'].keys()):
+            if k in r2['R']:
+                r2rate[k] = 100.0 * float(r2['R'][k]) / (r2['R'][k] + r2['C'][k])
+
+        return {'1': r1rate, '2': r2rate}
+
+    def chart_retention_cpg_readpos(self):
+        '''
+        Charts _CpGRetentionByReadPos.txt
+               _CpHRetentionByReadPos.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates Retenion vs. Base Position in Read chart
+        '''
+        
+        mdata = [dict([(sid, dd['1']) for sid, dd in self.mdata['retention_cph_readpos'].items() if 'data_is_missing' not in dd.keys()]),
+                 dict([(sid, dd['2']) for sid, dd in self.mdata['retention_cph_readpos'].items() if 'data_is_missing' not in dd.keys()]),
+                 dict([(sid, dd['1']) for sid, dd in self.mdata['retention_cpg_readpos'].items() if 'data_is_missing' not in dd.keys()]),
+                 dict([(sid, dd['2']) for sid, dd in self.mdata['retention_cpg_readpos'].items() if 'data_is_missing' not in dd.keys()])]
+
+        self.add_section(
+            name = 'Retention vs. Base Position in Read',
+            anchor = 'biscuit-retention-cytosine',
+            description = 'Shows the distribution of cytosine retention rate in the read (i.e. the M-bias plot).',
+            plot = linegraph.plot(mdata,
+                                  {'id': 'biscuit_retention_cytosine',
+                                   'xlab': 'Position in Read',
+                                   'ymin': 0,
+                                   'ymax': 100,
+                                   'yMinRange': 0,
+                                   'yFloor': 0,
+                                   'title': 'BISCUIT: Retention vs. Base Position in Read',
+                                   'data_labels': [{'name': 'CpH Read 1', 'ylab': 'CpH Retention Rate (%)'},
+                                                   {'name': 'CpH Read 2', 'ylab': 'CpH Retention Rate (%)'},
+                                                   {'name': 'CpG Read 1', 'ylab': 'CpG Retention Rate (%)'},
+                                                   {'name': 'CpG Read 2', 'ylab': 'CpG Retention Rate (%)'}]})
+        )
+
+    def parse_logs_retention_cph_readpos(self, f, fn):
+        ''' Handled by parse_logs_retention_cpg_readpos() '''
+        return self.parse_logs_retention_cpg_readpos(f, fn)
+
+    def chart_retention_cph_readpos(self):
+        ''' Handled by chart_retention_cpg_readpos() '''
+        pass
+
+    def parse_logs_retention_rate_byread(self, f, fn):
+        '''
+        Parses _totalReadConversionRate.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of read averaged fraction of retainied cytosines by context
+        '''
+
+        data = {}
+        try:
+            m = re.match(r'([\d.]+)\t([\d.]+)\t([\d.]+)\t([\d.]+)', f.splitlines()[2])
+        except IndexError:
+            return {}
+        else:
+            if m is not None:
+                data['rca'] = 100.0 * float(m.group(1))
+                data['rcc'] = 100.0 * float(m.group(2))
+                data['rcg'] = 100.0 * float(m.group(3))
+                data['rct'] = 100.0 * float(m.group(4))
+
+        return data
+
+    def chart_retention_rate_byread(self):
+        '''
+        Charts _totalReadConversionRate.txt
+               _totalBaseConversionRate.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates Retenion vs. Base Position in Read chart
+        '''
+
+        mdata_byread = {}
+        for sid, dd in self.mdata['retention_rate_byread'].items():
+            mdata_byread[sid] = dd
+
+        mdata_bybase = {}
+        for sid, dd in self.mdata['retention_rate_bybase'].items():
+            mdata_bybase[sid] = dd
+
+        pdata = {}
+        for sid, dd in mdata_byread.items():
+            pdata[sid] = dict(list(dd.items()) + list(mdata_bybase[sid].items()))
+
+        pheader = OrderedDict()
+        pheader['rca'] = {'title':'r.CpA', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpA Retention', 'suffix':'%'}
+        pheader['rcc'] = {'title':'r.CpC', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpC Retention', 'suffix':'%'}
+        pheader['rcg'] = {'title':'r.CpG', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpG Retention', 'suffix':'%'}
+        pheader['rct'] = {'title':'r.CpT', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpT Retention', 'suffix':'%'}
+        pheader['bca'] = {'title':'b.CpA', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpA Retention', 'suffix':'%'}
+        pheader['bcc'] = {'title':'b.CpC', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpC Retention', 'suffix':'%'}
+        pheader['bcg'] = {'title':'b.CpG', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpG Retention', 'suffix':'%'}
+        pheader['bct'] = {'title':'b.CpT', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpT Retention', 'suffix':'%'}
+
+        self.add_section(
+            name = 'Cytosine Retention',
+            anchor = 'biscuit-retention',
+            description = 'Shows the cytosine retention rate for different contexts. `r.` stands for read-averaged rates and ' \
+            '`b.` stands for base-averaged rates. Note, the cytosine retention rate is `1 - (cytosine conversion rate)` and ' \
+            'assuming complete, but not over, bisulfite conversion, the cytosine retention rate is the average cytosine ' \
+            'modification (including 5mC, 5hmC, etc) rate.',
+            plot = table.plot(pdata, pheader)
+        )
+
+    def parse_logs_retention_rate_bybase(self, f, fn):
+        '''
+        Parses _totalBaseConversionRate.txt
+        Inputs:
+            f - current matched file
+            fn - filename
+        Returns:
+            data - dictionary of base averaged fraction of retainied cytosines by context
+        '''
+
+        data = {}
+        try:
+            m = re.match(r'([\d.]+)\t([\d.]+)\t([\d.]+)\t([\d.]+)', f.splitlines()[2])
+        except IndexError:
+            return {}
+        else:
+            if m is not None:
+                data['bca'] = 100.0 * float(m.group(1))
+                data['bcc'] = 100.0 * float(m.group(2))
+                data['bcg'] = 100.0 * float(m.group(3))
+                data['bct'] = 100.0 * float(m.group(4))
+
+        return data
+
+    def chart_retention_rate_bybase(self):
+        ''' Handled by chart_retention_rate_byread() '''
+        pass
