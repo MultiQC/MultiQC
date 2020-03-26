@@ -199,6 +199,9 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.pairtools_stats)))
         # self.write_data_file(self.pairtools_stats, 'multiqc_pairtools')
 
+        # Add to self.js to be included in template
+        self.js = {'assets/js/multiqc_pairtools.js' : os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_pairtools.js') }
+
         # max total reads for general stats:
         self.max_total_reads = 0
         for s_name in self.pairtools_stats:
@@ -586,7 +589,8 @@ class MultiqcModule(BaseMultiqcModule):
             # 'data_labels': [{'name': 'Spread: std', 'ylab': 'frequency of interactions'},
             #                 {'name': 'Spread: max-min', 'ylab': 'frequency of interactions'},
             #                 {'name': 'P(s): sum', 'ylab': 'frequency of interactions'}],
-            'click_func': self.plot_single()
+            # 'click_func': self.plot_single()
+            'click_func': 'single_scaling'
         }
 
         # plot = linegraph.plot(self.cutadapt_length_counts, pconfig)
@@ -595,146 +599,12 @@ class MultiqcModule(BaseMultiqcModule):
         # return linegraph.plot(_data_mean, pconfig=pconfig)
 
 
-    def plot_single(self):
-        """ Return JS code required for plotting a single sample
-        RSeQC plot. Attempt to make it look as much like the original as possible.
-        Note: this code is injected by `eval(str)`, not <script type="text/javascript"> """
+    # def plot_single(self):
+    #     """ Return JS code required for plotting a single sample
+    #     RSeQC plot. Attempt to make it look as much like the original as possible.
+    #     Note: this code is injected by `eval(str)`, not <script type="text/javascript"> """
 
-        return """
-    function(e){
-        // In case of repeated modules: #rseqc_junction_saturation_plot, #rseqc_junction_saturation_plot-1, ..
-        var rseqc_junction_saturation_plot = $(e.currentTarget).closest('.hc-plot');
-        var rseqc_junction_saturation_plot_id = rseqc_junction_saturation_plot.attr('id');
-        var junction_sat_single_hint = rseqc_junction_saturation_plot.closest('.mqc-section').find('#junction_sat_single_hint');
-
-
-        // Get the three datasets for this sample
-        var data = [
-            {'name': 'FF'},
-            {'name': 'RF'},
-            {'name': 'FR'},
-            {'name': 'RR'},
-        ];
-        var k = 0;
-        for (var i = 1; i < 5; i++) {
-            var ds = mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i];
-            for (k = 0; k < ds.length; k++){
-                if(ds[k]['name'] == this.series.name){
-                    data[i-1]['data'] = JSON.parse(JSON.stringify(ds[k]['data']));
-                    break;
-                }
-            }
-        }
-
-        // Create single plot div, and hide overview
-        var newplot = $('<div id="rseqc_junction_saturation_single"> \
-            <div id="rseqc_junction_saturation_single_controls"> \
-              <button class="btn btn-primary btn-sm" id="rseqc-junction_sat_single_return"> \
-                Return to overview \
-              </button> \
-              <div class="btn-group btn-group-sm"> \
-                <button class="btn btn-default rseqc-junction_sat_single_prevnext" data-action="prev">&laquo; Prev</button> \
-                <button class="btn btn-default rseqc-junction_sat_single_prevnext" data-action="next">Next &raquo;</button> \
-              </div> \
-            </div> \
-            <div class="hc-plot-wrapper"> \
-              <div class="hc-plot hc-line-plot"> \
-                <small>loading..</small> \
-              </div> \
-            </div> \
-          </div>');
-        var pwrapper = rseqc_junction_saturation_plot.parent().parent();
-        newplot.insertAfter(pwrapper).hide().slideDown();
-        pwrapper.slideUp();
-        junction_sat_single_hint.slideUp();
-
-        // Listener to return to overview
-        newplot.find('#rseqc-junction_sat_single_return').click(function(e){
-          e.preventDefault();
-          newplot.slideUp(function(){
-            $(this).remove();
-          });
-          pwrapper.slideDown();
-          junction_sat_single_hint.slideDown();
-        });
-
-        // Listeners for previous / next plot
-        newplot.find('.rseqc-junction_sat_single_prevnext').click(function(e){
-          e.preventDefault();
-          if($(this).data('action') == 'prev'){
-            k--;
-            if(k < 0){
-              k = mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][1].length - 1;
-            }
-          } else {
-            k++;
-            if(k >= mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][1].length){
-              k = 0;
-            }
-          }
-          var hc = newplot.find('.hc-plot').highcharts();
-          for (var i = 1; i < 5; i++) {
-              hc.series[i-1].setData(mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i][k]['data'], false);
-          }
-          var ptitle = 'frequency of interactions: '+mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][1][k]['name'];
-          hc.setTitle({text: ptitle});
-          hc.redraw({ duration: 200 });
-        });
-
-        // Plot the single data
-        newplot.find('.hc-plot').highcharts({
-          chart: {
-            type: 'line',
-            zoomType: 'x'
-          },
-          colors: ['#e41a1c','#377eb8','#4daf4a','#984ea3'],
-          title: {
-            text: 'frequency of interaction for '+this.series.name,
-            x: 30 // fudge to center over plot area rather than whole plot
-          },
-          xAxis: {
-            type: 'logarithmic',
-            title: { text: 'Genomic separation (bp)' },
-            allowDecimals: false,
-          },
-          yAxis: {
-            type: 'logarithmic',
-            title: { text: 'frequency of interactions' },
-            allowDecimal: true,
-          },
-          legend: {
-            floating: true,
-            layout: 'vertical',
-            align: 'right',
-            verticalAlign: 'top',
-            x: 60,
-            y: 40
-          },
-          tooltip: {
-            shared: true,
-            crosshairs: true,
-            headerFormat: '<strong>genomic separation: {point.key} bp</strong><br/>'
-          },
-          plotOptions: {
-            series: {
-              animation: false,
-              lineWidth: 4,
-              marker: {
-                lineColor: null,
-                fillColor: 'transparent',
-                lineWidth: 0,
-                symbol: 'circle'
-              },
-            }
-          },
-          exporting: { buttons: { contextButton: {
-            menuItems: window.HCDefaults.exporting.buttons.contextButton.menuItems,
-            onclick: window.HCDefaults.exporting.buttons.contextButton.onclick
-          } } },
-          series: data
-        });
-    }
-    """
+    #     return """single_scaling(e)"""
 
 
 
