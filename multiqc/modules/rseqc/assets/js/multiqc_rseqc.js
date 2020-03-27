@@ -2,6 +2,30 @@
 // RSeQC plot. Attempt to make it look as much like the original as possible.
 // Note: this code is injected by `eval(str)`, not <script type="text/javascript">
 
+function get_current_name(name) {
+  // a helper function that applies renaming
+  // to the sample names when needed:
+  // some local vars to make the code readable
+  const renameFrom = window.mqc_rename_f_texts;
+  const renameTo = window.mqc_rename_t_texts;
+  const regexp_mode = window.mqc_rename_regex_mode;
+  var current_name = name;
+  // apply all renamings to the current_name (if there are any):
+  if(renameFrom.length > 0){
+    $.each(renameFrom, function(idx, f_text){
+      if(regexp_mode){
+        var re = new RegExp(f_text,"g");
+        current_name = current_name.replace(re, renameTo[idx]);
+      } else {
+        current_name = current_name.replace(f_text, renameTo[idx]);
+      }
+    });
+  }
+  // return after renaming applied (if any)
+  return current_name;
+}
+
+
 
 function single_sample_plot(e){
     // In case of repeated modules: #rseqc_junction_saturation_plot, #rseqc_junction_saturation_plot-1, ..
@@ -20,7 +44,10 @@ function single_sample_plot(e){
     for (var i = 0; i < 3; i++) {
         var ds = mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i];
         for (k = 0; k < ds.length; k++){
-            if(ds[k]['name'] == this.series.name){
+            // explicitly take renaming into account, however
+            // there is no protection against degenerate renaming:
+            let current_sample_name = get_current_name(ds[k]['name']);
+            if( current_sample_name == this.series.name ) {
                 data[i]['data'] = JSON.parse(JSON.stringify(ds[k]['data']));
                 break;
             }
@@ -77,7 +104,9 @@ function single_sample_plot(e){
       for (var i = 0; i < 3; i++) {
           hc.series[i].setData(mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][i][k]['data'], false);
       }
-      var ptitle = 'RSeQC Junction Saturation: '+mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][0][k]['name'];
+      // take renaming into account when generating ptitle:
+      let current_sample_name = get_current_name(mqc_plots[rseqc_junction_saturation_plot_id]['datasets'][0][k]['name']);
+      var ptitle = 'RSeQC Junction Saturation: ' + current_sample_name;
       hc.setTitle({text: ptitle});
       hc.redraw({ duration: 200 });
     });
