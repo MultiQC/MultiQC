@@ -76,6 +76,17 @@ function single_sample_plot(e){
     pwrapper.slideUp();
     junction_sat_single_hint.slideUp();
 
+    // Listener to any toolbox changes - making sure single-sample/side by side
+    // view hides away while report sections are redrawn:
+    $(document).on('mqc_highlights mqc_renamesamples mqc_hidesamples', function(e){
+      e.preventDefault();
+      newplot.slideUp(function(){
+        $(this).remove();
+      });
+      pwrapper.slideDown();
+      junction_sat_single_hint.slideDown();
+    });
+
     // Listener to return to overview
     newplot.find('#rseqc-junction_sat_single_return').click(function(e){
       e.preventDefault();
