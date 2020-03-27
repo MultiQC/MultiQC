@@ -15,6 +15,8 @@
     * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **RSeqC**
+    * single sample view in the "Junction saturation" section of RSeqC will now be compatible with MultiQC toolbox operations (rename,hide,highlight) ([#1133](https://github.com/ewels/MultiQC/issues/1133))
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
