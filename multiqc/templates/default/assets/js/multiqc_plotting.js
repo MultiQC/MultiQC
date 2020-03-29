@@ -1254,9 +1254,15 @@ function plot_heatmap(target, ds){
   $('#'+target).closest('.hc-plot-wrapper').parent().find('.samples-hidden-warning').remove();
   $('#'+target).closest('.hc-plot-wrapper').show();
   if(window.mqc_hide_f_texts.length > 0){
+    // debug
+    console.log("Before hiding...");
+    console.log(data);
+    console.log(xcats);
+    console.log(ycats);
     var remove = Array();
     var i = xcats.length;
     var xhidden = 0;
+    // iterate over x-categories (rows)
     while (i--) {
       var match = false;
       for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
@@ -1270,18 +1276,25 @@ function plot_heatmap(target, ds){
       if(window.mqc_hide_mode == 'show'){
         match = !match;
       }
+      // modify data if "i" is match for "hiding"
       if(match){
         xcats.splice(i, 1);
         for (n=0; n < data.length; n++) {
-          var x = data[n][1];
+          // extract "x-coord"(row) of n-th data element
+          // "data" is sparse in COO format: (row, col ,val)
+          let x = data[n][0];
+          // add to "remove", if "i" matches "x-coord"(row)
           if (x == i){ remove.push(n); }
-          else if(x > i){ data[n][1] -= 1; }
+          // shift "x-coord"(row) of n-th element by 1
+          // to replace the hidden row, when x>i
+          else if(x > i){ data[n][0]  = x - 1; }
         }
         xhidden += 1;
       }
     }
     var i = ycats.length;
     var yhidden = 0;
+    // iterate over y-categories (cols)
     while (i--) {
       var match = false;
       for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
@@ -1295,13 +1308,19 @@ function plot_heatmap(target, ds){
       if(window.mqc_hide_mode == 'show'){
         match = !match;
       }
+      // modify data if "i" is match for "hiding"
       if(match){
         ycats.splice(i, 1);
         for (n=0; n < data.length; n++) {
-          var y = data[n][0];
+          // extract "y-coord"(col) of n-th data element
+          // "data" is sparse in COO format: (row, col ,val)
+          let y = data[n][1];
           if (y == i){
+            // add to "remove", if "i" matches "y-coord"(col)
             if(remove.indexOf(n) < 0){ remove.push(n); }
-          } else if(y > i){ data[n][0] -= 1; }
+            // shift "y-coord"(col) of n-th element by 1
+            // to replace the hidden col, when y>i
+          } else if(y > i){ data[n][1] = y - 1; }
         }
         yhidden += 1;
       }
@@ -1312,6 +1331,11 @@ function plot_heatmap(target, ds){
     while(r--){
       data.splice( remove[r], 1);
     }
+    // debug
+    console.log("After hiding...");
+    console.log(data);
+    console.log(xcats);
+    console.log(ycats);
     // Report / hide the plot if we're hiding stuff
     var num_hidden = Math.max(xhidden, yhidden);
     // Some series hidden. Show a warning text string.
