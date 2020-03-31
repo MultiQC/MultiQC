@@ -37,12 +37,17 @@ print("""-----------------------------------
 networkx_version = ''
 numpy_version = ''
 matplotlib_version = '>=2.1.1'
+jinja2_version = ''
+markdown_version = ''
 if sys.version_info[0:2] < (3, 6):
     # MatPlotLib v3 dropped Python 2 support. Version 3.1 onwards only supports Python 3.5+
     matplotlib_version += ',<3.0.0'
     # Numpy v1.17 dropped Python 2 and Python 3.4 support
     numpy_version = '<1.17'
     networkx_version = '<2.3'
+    jinja2_version = '<3.0'
+    markdown_version = '<=3.1'
+
 else:
     # Unlike pip, setuptools install_requires will install pre-releases!
     # Matplotlib often ships these and they very often break
@@ -57,9 +62,9 @@ install_requires = [
         'click',
         'coloredlogs',
         'future>0.14.0',
-        'jinja2>=2.9',
+        'jinja2' + jinja2_version,
         'lzstring',
-        'markdown',
+        'markdown' + markdown_version,
         'pyyaml>=4',
         'requests',
         'simplejson',
@@ -109,7 +114,7 @@ setup(
             'dedup = multiqc.modules.dedup:MultiqcModule',
             'deeptools = multiqc.modules.deeptools:MultiqcModule',
             'fastp = multiqc.modules.fastp:MultiqcModule',
-            'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
+            # 'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
             'fgbio = multiqc.modules.fgbio:MultiqcModule',
