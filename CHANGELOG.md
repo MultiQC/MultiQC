@@ -79,6 +79,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Highlighting samples from status - respect chosen highlight colour in the toolbox ([#742](https://github.com/ewels/MultiQC/issues/742))
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+    * Fixed MultiQC linting errors
 * **GATK**
     * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
     * Handle zero count errors in BaseRecalibrator
