@@ -16,6 +16,10 @@
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
 
+#### Bug Fixes:
+* `heatmap` plotting function is now compatible with MultiQC toolbox `hide` and `highlight`
+
+
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
