@@ -90,19 +90,27 @@ def parse_reports(self,
                 self.general_stats_data[s_name] = dict()
             self.general_stats_data[s_name].update( self.picard_dupMetrics_data[s_name] )
 
-
         # Make the bar plot and add to the MarkDuplicates section
-        # NOTE: I had a hard time getting these numbers to add up as expected.
-        # If you think I've done something wrong, let me know! Please add an
-        # issue here: https://github.com/ewels/MultiQC/issues
-        for sn in self.picard_dupMetrics_data.keys():
-            self.picard_dupMetrics_data[sn]['UNPAIRED_READ_UNIQUE'] = self.picard_dupMetrics_data[sn]['UNPAIRED_READS_EXAMINED'] - self.picard_dupMetrics_data[sn]['UNPAIRED_READ_DUPLICATES']
-            self.picard_dupMetrics_data[sn]['READ_PAIR_NOT_OPTICAL_DUPLICATES'] = self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES'] - self.picard_dupMetrics_data[sn]['READ_PAIR_OPTICAL_DUPLICATES']
-            self.picard_dupMetrics_data[sn]['READ_PAIR_UNIQUE'] = self.picard_dupMetrics_data[sn]['READ_PAIRS_EXAMINED'] - self.picard_dupMetrics_data[sn]['READ_PAIR_DUPLICATES']
+        #
+        # The table in the Picard metrics file contains some columns referring
+        # read pairs and some referring to single reads.
+        for key in self.picard_dupMetrics_data.keys():
+            metr = self.picard_dupMetrics_data[key]
+            #
+            metr["READS_IN_DUPLICATE_PAIRS"]    = 2.0 * metr["READ_PAIR_DUPLICATES"]
+            metr["READS_IN_UNIQUE_PAIRS"]       = 2.0 * (metr["READ_PAIRS_EXAMINED"] - metr["READ_PAIR_DUPLICATES"])
+            metr["READS_UNMAPPED"]              = metr["UNMAPPED_READS"]
+            metr["READS_IN_DUPLICATE_UNPAIRED"] = metr["UNPAIRED_READ_DUPLICATES"]
+            metr["READS_IN_UNIQUE_UNPAIRED"]    = metr["UNPAIRED_READS_EXAMINED"] - metr["UNPAIRED_READ_DUPLICATES"]
+            metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"] = 2.0 * metr["READ_PAIR_OPTICAL_DUPLICATES"]
+            metr["READS_IN_DUPLICATE_PAIRS_NONOPTICAL"] = metr["READS_IN_DUPLICATE_PAIRS"] - metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"]
+            #
+            #for subkey in self.picard_dupMetrics_data[key].keys():
+            #   log.warn("MarkDuplicates ["+key+","+subkey+"]="+str(self.picard_dupMetrics_data[key][subkey]))
 
         keys = OrderedDict()
-        keys_r = ['READ_PAIR_UNIQUE', 'UNPAIRED_READ_UNIQUE', 'READ_PAIR_NOT_OPTICAL_DUPLICATES',
-                'READ_PAIR_OPTICAL_DUPLICATES', 'UNPAIRED_READ_DUPLICATES', 'UNMAPPED_READS']
+        keys_r = ['READS_IN_UNIQUE_PAIRS', 'READS_IN_UNIQUE_UNPAIRED', 'READS_IN_DUPLICATE_PAIRS_NONOPTICAL',
+                'READS_IN_DUPLICATE_PAIRS_OPTICAL', 'READS_IN_DUPLICATE_UNPAIRED', 'READS_UNMAPPED']
         for k in keys_r:
             keys[k] = {'name': k.replace('_',' ').title()}
 
