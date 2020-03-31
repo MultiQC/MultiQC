@@ -1306,8 +1306,8 @@ function plot_heatmap(target, ds){
         match = !match;
       }
       // modify data if "i" is match for "hiding"
-      // mark elements from "i"-th row (x) for removal,
-      // shift "x" of elements from "i+" rows up
+      // mark elements from "i"-th row (y) for removal,
+      // shift "y" of elements from "i+" rows up
       if(match){
         ycats.splice(i, 1);
         for (n=0; n < data.length; n++) {
@@ -1349,10 +1349,9 @@ function plot_heatmap(target, ds){
         if(f_text == ''){ return true; }
         if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
-            // data[n] element is [x,y,val], get "x"
-            let x = data[n][0];
             highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
-            if (x == i){ highlight_cells[idx].push(n); }
+            // data[n] element is [x,y,val], get "x"
+            if (data[n][0] == i){ highlight_cells[idx].push(n); }
           }
         }
       });
@@ -1363,8 +1362,7 @@ function plot_heatmap(target, ds){
         if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
             // data[n] element is [x,y,val], get "y"
-            let y = data[n][1];
-            if (y == i){
+            if (data[n][1] == i){
               highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
               if(highlight_cells[idx].indexOf(n) < 0){ highlight_cells[idx].push(n); }
             }
@@ -1383,7 +1381,7 @@ function plot_heatmap(target, ds){
           // data[i] element is [x,y,val]
           x: data[i][0] === undefined ? data[i]['x'] : data[i][0],
           y: data[i][1] === undefined ? data[i]['y'] : data[i][1],
-          value: data[i][2] === undefined ? data[i]['value'] : data[i][2],
+          value:data[i][2] === undefined ? data[i]['value'] : data[i][2],
           borderWidth:2,
           borderColor: window.mqc_highlight_f_cols[idx]
         }
