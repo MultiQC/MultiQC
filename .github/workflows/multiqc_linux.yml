@@ -12,7 +12,7 @@ jobs:
     steps:
 
     # Check out MultiQC code
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     # Set up Python
     - name: Set up Python ${{ matrix.python-version }}
