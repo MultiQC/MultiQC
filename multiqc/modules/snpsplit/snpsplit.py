@@ -26,11 +26,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse log files generated with newer versions of SNPsplit
         parsed_logs = []
-        for f in self.find_log_files('snpsplit/new'):
+        for f in self.find_log_files('snpsplit/new', filehandles=True):
             parsed_logs.append(self.parse_new_snpsplit_log(f))
 
         # Parse log files generated with older versions of SNPsplit
-        for f in self.find_log_files('snpsplit/old', filehandles=True):
+        for f in self.find_log_files('snpsplit/old'):
             parsed_logs.append(self.parse_old_snpsplit_log(f))
 
         # Go through all results and save if we got something
@@ -78,11 +78,11 @@ class MultiqcModule(BaseMultiqcModule):
 
             regex_patterns = [
                 # Allele-tagging report
-                ['tagging_skipped', r"Reads were unaligned and hence skipped: (\d+)"],
+                ['tagging_unaligned', r"Reads were unaligned and hence skipped: (\d+)"],
                 ['tagging_unassignable', r"(\d+) reads were unassignable"],
-                ['tagging_genome1', r"(\d+) reads were specific for genome 1"],
-                ['tagging_genome2', r"(\d+) reads were specific for genome 2"],
-                ['tagging_unassignableCT', r"(\d+) reads that were unassignable contained C>T SNPs"],
+                ['tagging_g1', r"(\d+) reads were specific for genome 1"],
+                ['tagging_g2', r"(\d+) reads were specific for genome 2"],
+                ['tagging_CT_positions_skipped', r"(\d+) reads that were unassignable contained C>T SNPs"],
                 ['tagging_ambiguous', r"(\d+) reads did not contain one of the expected bases"],
                 ['tagging_conflictingSNPs', r"(\d+) contained conflicting allele-specific SNPs"],
                 # Allele-specific sorting report
@@ -117,9 +117,9 @@ class MultiqcModule(BaseMultiqcModule):
     def allele_tagging_section(self):
         ''' Allele-tagging report '''
         cats = OrderedDict()
-        cats['tagging_genome1'] = {'name':'Genome 1'}
-        cats['tagging_genome2'] = {'name':'Genome 2'}
-        cats['tagging_skipped'] = {'name':'Unaligned reads'}
+        cats['tagging_g1'] = {'name':'Genome 1'}
+        cats['tagging_g2'] = {'name':'Genome 2'}
+        cats['tagging_unaligned'] = {'name':'Unaligned reads'}
         cats['tagging_unassignable'] = {'name':'Not assigned'}
         cats['tagging_ambiguous'] = {'name':'No match'}
         cats['tagging_conflictingSNPs'] = {'name':'Conflicting SNPs'}
@@ -129,11 +129,11 @@ class MultiqcModule(BaseMultiqcModule):
         for k, v in self.snpsplit_data.items():
             if 'tagging_unassignable' and 'tagging_ambiguous' in v:
                 v['tagging_unassignable'] -= v['tagging_ambiguous']
-            if 'tagging_unassignable' and 'tagging_unassignableCT' in v:
-                v['tagging_unassignable'] -= v['tagging_unassignableCT']
+            if 'tagging_unassignable' and 'tagging_CT_positions_skipped' in v:
+                v['tagging_unassignable'] -= v['tagging_CT_positions_skipped']
                 CT = True
         if CT:
-            cats['tagging_unassignableCT'] = {'name': 'C->T SNP'}
+            cats['tagging_CT_positions_skipped'] = {'name': 'C->T SNP'}
 
         pconfig = {
             'id': 'snpsplit-allele-tagging-plot',
