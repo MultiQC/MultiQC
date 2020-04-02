@@ -526,6 +526,9 @@ slamdunk/tcperutrpos:
 snpeff:
     contents: 'SnpEff_version'
     max_filesize: 5000000
+SNPsplit:
+    contents: 'Writing allele-flagged output file to:'
+    num_lines: 2
 sortmerna:
     contents: 'Minimal SW score based on E-value'
     shared: true

@@ -450,6 +450,12 @@ module_order:
     - bowtie1:
         module_tag:
             - RNA
+    - snpsplit:
+        module_tag:
+            - DNA
+            - RNA
+            - methylation
+            - allele-specific
 
     # Pre-alignment QC
     - kat:

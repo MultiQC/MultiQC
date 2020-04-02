@@ -459,6 +459,8 @@ string beginning with the name of your module, anything you like after the first
 * [**HiCExplorer**](https://github.com/maxplanck-ie/HiCExplorer)
     * New module to parse the log files of `hicBuildMatrix`.
     * Module written by [@joachimwolff](https://github.com/joachimwolff/)
+* [**SNPsplit**](https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/) - new module!
+    * Parse log files and create plots from tagging and sorting reports
 
 #### Module updates:
 * **AfterQC**

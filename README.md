@@ -46,10 +46,10 @@ Currently, supported tools include:
 |[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]     |[methylQA][methylqa]                  |
 |[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[miRTrace][mirtrace]                  |
 |[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]                  |
-|[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
-|[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
-|[FLASh][flash]                   |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |                             |[QoRTs][qorts]                        |
+|[Fastp][fastp]                   |[STAR][star]             |[SNPsplit][snpsplit]         |[Peddy][peddy]               |
+|[fgbio][fgbio]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
+|[FLASh][flash]                   |                         |[Stacks][stacks]             |[Preseq][preseq]                      |
+|[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
@@ -262,6 +262,7 @@ MultiQC is released under the GPL v3 or later licence.
 [skewer]:         http://multiqc.info/docs/#skewer
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
+[snpsplit]:       http://multiqc.info/docs/#snpsplit
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
 [stacks]:         http://multiqc.info/docs/#stacks
 [star]:           http://multiqc.info/docs/#star

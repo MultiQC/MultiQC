@@ -153,6 +153,7 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
+            'snpsplit = multiqc.modules.snpsplit:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
