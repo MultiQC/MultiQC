@@ -242,8 +242,8 @@ MultiQC is released under the GPL v3 or later licence.
 [minionqc]:       http://multiqc.info/docs/#minionqc
 [mirtrace]:       http://multiqc.info/docs/#mirtrace
 [mosdepth]:       http://multiqc.info/docs/#mosdepth
-[pairtools]:      http://multiqc.info/docs/#peddy
-[peddy]:          http://multiqc.info/docs/#pairtools
+[pairtools]:      http://multiqc.info/docs/#pairtools
+[peddy]:          http://multiqc.info/docs/#peddy
 [phantompeakqualtools]: http://multiqc.info/docs/#phantompeakqualtools
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq
