@@ -3,6 +3,7 @@
 from collections import OrderedDict
 import logging
 import re
+import yaml
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -21,10 +22,19 @@ class MultiqcModule(BaseMultiqcModule):
             info='A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes'
         )
 
-        # Parse reports
         self.snpsplit_data = dict()
-        for f in self.find_log_files('SNPsplit'):
-            parsed = self.parseSNPsplitOutput(f)
+
+        # Parse log files generated with newer versions of SNPsplit
+        parsed_logs = []
+        for f in self.find_log_files('snpsplit/new'):
+            parsed_logs.append(self.parse_new_snpsplit_log(f))
+
+        # Parse log files generated with older versions of SNPsplit
+        for f in self.find_log_files('snpsplit/old', filehandles=True):
+            parsed_logs.append(self.parse_old_snpsplit_log(f))
+
+        # Go through all results and save if we got something
+        for parsed in parsed_logs:
             if parsed:
                 s_name = self.clean_s_name(parsed[0], f['root'])
                 if s_name in self.snpsplit_data:
@@ -36,10 +46,22 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         log.info("Found {} reports".format(len(self.snpsplit_data)))
 
+        self.write_data_file(self.snpsplit_data, 'multiqc_snpsplit')
+
         self.allele_tagging_section()
         self.allele_sorting_section()
 
-    def parseSNPsplitOutput(self, f):
+    def parse_new_snpsplit_log(self, f):
+        data = next(yaml.load_all(f['f'], Loader=yaml.SafeLoader))
+        flat_data = {}
+        for k in data:
+            for sk in data[k]:
+                newkey = '{}_{}'.format(k.lower(), sk)
+                flat_data[newkey] = data[k][sk]
+        input_fn = data['Meta']['infile']
+        return [input_fn, flat_data]
+
+    def parse_old_snpsplit_log(self, f):
         input_fn = None
         d = dict()
 
