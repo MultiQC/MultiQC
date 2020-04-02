@@ -51,6 +51,7 @@ The coverage levels available for WgsMetrics are
 1, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90 and 100X.
 
 To customise this, add the following to your MultiQC config:
+
 ```yaml
 picard_config:
     general_stats_target_coverage:
@@ -60,8 +61,13 @@ picard_config:
 
 #### ValidateSamFile Search Pattern
 Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
+
 ```yaml
 sp:
     picard/sam_file_validation:
         fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 ```
+
+#### HsMetrics
+
+Note that the _Target Region Coverage_ plot is generated using the `PCT_TARGET_BASES_` table columns from the HsMetrics output (not immediately obvious when looking at the log files).
