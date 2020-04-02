@@ -13,17 +13,18 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(name='SNPsplit',
-                                            anchor='SNPsplit',
-                                            target='SNPsplit',
-                                            href='https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/',
-                                            info='A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes')
+        super(MultiqcModule, self).__init__(
+            name='SNPsplit',
+            anchor='SNPsplit',
+            target='SNPsplit',
+            href='https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/',
+            info='A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes'
+        )
 
-        n = self.parse_SNPsplit()
-        if n > 0:
-            log.info("Found {} SNPsplit outputs".format(n))
-        else:
-            log.debug("Could not find any SNPsplit outputs in {}".format(config.analysis_dir))
+        num_reports = self.parse_SNPsplit()
+        if num_reports== 0:
+            raise UserWarning
+        log.info("Found {} reports".format(n))
 
     def parse_SNPsplit(self):
         d = dict()
@@ -38,10 +39,12 @@ class MultiqcModule(BaseMultiqcModule):
         if len(d) > 0:
             # Allele-tagging report, the order matches that in the text file
             cats = OrderedDict()
+            cats['genome1'] = dict(name='Genome 1')
+            cats['genome2'] = dict(name='Genome 2')
             cats['skipped'] = dict(name='Unaligned reads')
-            cats['unassignable'] = dict(name='Reads that could not be assigned to a genome')
-            cats['genome1'] = dict(name='Reads assigned to genome 1')
-            cats['genome2'] = dict(name='Reads assigned to genome 2')
+            cats['unassignable'] = dict(name='Not assigned')
+            cats['ambiguous'] = dict(name='No match')
+            cats['conflictingSNPs'] = dict(name='Conflicting SNPs')
             # Subtract ambiguous and C->T from unassignable
             CT = False
             for k, v in d.items():
@@ -51,30 +54,68 @@ class MultiqcModule(BaseMultiqcModule):
                     v['unassignable'] -= v['unassignableCT']
                     CT = True
             if CT:
-                cats['unassignableCT'] = dict(name='Reads unassigned due to a C->T SNP')
-            cats['ambiguous'] = dict(name='Reads did not match either genome')
-            cats['conflictingSNPs'] = dict(name='Reads containing conflicting SNPs')
+                cats['unassignableCT'] = dict(name='C->T SNP')
+            pconfig = {
+                'id': 'snpsplit-allele-tagging-plot',
+                'title': "SNPsplit: Allele-tagging report",
+                'ylab': "Reads",
+                'cpswitch_counts_label': 'Reads'
+            }
+            self.add_section(
+                name="Allele-tagging report",
+                description="Per-sample metrics of how many reads were assigned to each genome.",
+                helptext="""
+                    Bar graph categories are:
 
-            self.add_section(name="Allele-tagging report",
-                             description="Per-sample metrics of how many reads were assigned to each genome.",
-                             helptext="Possible reasons for not assigning reads to a genome are that they aren't aligned (`Unaligned reads`), they don't overlap a SNP (`Reads that could not be assigned to a genome`), they overlap informative SNPs, but don't contain the expected nucleotide for either genome (`Reads did not match either genome`), or the reads overlapped multiple informative SNPs, but there was a conflict in support for assignment to one genome over the other between the SNPs (`Reads contain conflicting SNPs`). Additionally, for bisulfite sequencing data reads overlapping C->T SNPs may be unassigned (`Reads unassigned due to a C->T SNP`).",
-                             anchor="SNPsplit",
-                             plot=bargraph.plot(d, cats))
+                    * `Genome 1`: Reads assigned to Genome 1
+                    * `Genome 2`: Reads assigned to Genome 2
+                    * `Unaligned reads`: Reads aren't aligned
+                    * `Not assigned`: Reads don't overlap a SNP
+                    * `No match`: Reads overlap informative SNPs, but don't contain the expected nucleotide for either genome
+                    * `Conflicting SNPs`: Reads overlapped multiple informative SNPs, but there was a conflict in support for assignment to one genome over the other between the SNPs
+                    * `C->T SNP`: (Bisulfite sequencing data only) Reads overlapping `C->T` SNPs may be unassigned
+                    """,
+                plot=bargraph.plot(d, cats, pconfig)
+            )
 
             # Allele-specific sorting report
             cats = OrderedDict()
-            cats['unassignableReads'] = dict(name='Reads that could not be assigned to a genome')
-            cats['genome1Reads'] = dict(name='Reads assigned to genome 1')
-            cats['genome2Reads'] = dict(name='Reads assigned to genome 2')
-            cats['G1UA'] = dict(name='PE Reads with one mate assigned to genome 1 and the other unassignable')
-            cats['G2UA'] = dict(name='PE Reads with one mate assigned to genome 2 and the other unassignable')
-            cats['G1G2'] = dict(name='PE Reads with mates assigned to different genomes')
-            cats['conflictingReads'] = dict(name='Reads containing conflicting SNPs')
-            self.add_section(name="Allele-specific sorting",
-                             description="Per-sample metrics of how reads and pairs of reads were sorted into each genome.",
-                             helptext="Note that metrics here may differ from those in the allele-tagging report. This occurs when paired-end reads are used, since 'tagging' only one read in a pair as arising from one genome can suffice in both reads being sorted there. Similarly, if two reads in a pair are tagged as arising from different genomes then the pair becomes unassignable.",
-                             anchor="SNPsplit",
-                             plot=bargraph.plot(d, cats))
+            cats['genome1Reads'] = dict(name='Genome 1')
+            cats['genome2Reads'] = dict(name='Genome 2')
+            cats['unassignableReads'] = dict(name='Not assigned')
+            cats['G1UA'] = dict(name='Genome 1 / unassignable')
+            cats['G2UA'] = dict(name='Genome 2 / unassignable')
+            cats['G1G2'] = dict(name='Different genomes')
+            cats['conflictingReads'] = dict(name='Conflicting SNPs')
+            pconfig = {
+                'id': 'snpsplit-sorting-plot',
+                'title': "SNPsplit: Allele-specific sorting",
+                'ylab': "Reads",
+                'cpswitch_counts_label': 'Reads'
+            }
+            self.add_section(
+                name="Allele-specific sorting",
+                description="Per-sample metrics of how reads and pairs of reads were sorted into each genome.",
+                helptext="""
+                    Bargraph categories are:
+
+                    * `Genome 1`: Reads assigned to Genome 1
+                    * `Genome 2`: Reads assigned to Genome 2
+                    * `Not assigned`: Reads don't overlap a SNP
+                    * `Genome 1 / unassignable`: One paired-end read assigned to Genome 1, one unassignable (doesn't overlap a SNP)
+                    * `Genome 2 / unassignable`: One paired-end read assigned to Genome 2, one unassignable (doesn't overlap a SNP)
+                    * `Different genomes`: Paired-end reads assigned to different genomes
+                    * `Conflicting SNPs`: Reads overlapped multiple informative SNPs, but there was a conflict in support for assignment to one genome over the other between the SNPs
+
+                    Note that metrics here may differ from those in the allele-tagging report.
+                    This occurs when paired-end reads are used, since 'tagging' only one read in
+                    a pair as arising from one genome can suffice in both reads being sorted there.
+
+                    Similarly, if two reads in a pair are tagged as arising from different genomes
+                    then the pair becomes unassignable.
+                """,
+                plot=bargraph.plot(d, cats, pconfig)
+            )
 
         return len(d)
 
