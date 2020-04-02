@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='RNA-SeQC', anchor='rna_seqc',
-        href='http://archive.broadinstitute.org/cancer/cga/rna_seqc',
+        href='https://software.broadinstitute.org/cancer/cga/rna-seqc',
         info="is a java program which computes a series of quality control metrics for RNA-seq data.")
 
         # Parse metrics information.
@@ -54,7 +54,6 @@ class MultiqcModule(BaseMultiqcModule):
         if self.rna_seqc_spearman is not None:
             num_found += 1
         if num_found == 0:
-            log.debug("Could not find any RNA-SeQC data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} samples".format(num_found))
@@ -105,6 +104,15 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'Bu',
             'format': '{:,.0f}'
+        }
+        headers['rRNA rate'] = {
+            'title': '% rRNA Alignment',
+            'description': ' rRNA reads (non-duplicate and duplicate reads) per total reads',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'Reds',
+            'modify': lambda x: float(x) * 100.0
         }
 
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
@@ -189,6 +197,17 @@ class MultiqcModule(BaseMultiqcModule):
     def coverage_lineplot (self):
         """ Make HTML for coverage line plots """
         # Add line graph to section
+        data = list()
+        data_labels = list()
+        if len(self.rna_seqc_norm_high_cov) > 0:
+            data.append(self.rna_seqc_norm_high_cov)
+            data_labels.append({'name': 'High Expressed'})
+        if len(self.rna_seqc_norm_medium_cov) > 0:
+            data.append(self.rna_seqc_norm_medium_cov)
+            data_labels.append({'name': 'Medium Expressed'})
+        if len(self.rna_seqc_norm_low_cov) > 0:
+            data.append(self.rna_seqc_norm_low_cov)
+            data_labels.append({'name': 'Low Expressed'})
         pconfig = {
             'id': 'rna_seqc_mean_coverage_plot',
             'title': 'RNA-SeQC: Gene Body Coverage',
@@ -197,22 +216,15 @@ class MultiqcModule(BaseMultiqcModule):
             'xmin': 0,
             'xmax': 100,
             'tt_label': "<strong>{point.x}% from 5'</strong>: {point.y:.2f}",
-            'data_labels': [
-                {'name': 'High Expressed'},
-                {'name': 'Medium Expressed'},
-                {'name': 'Low Expressed'}
-            ]
+            'data_labels': data_labels
         }
-        self.add_section (
-            name = 'Gene Body Coverage',
-            anchor = 'rseqc-rna_seqc_mean_coverage',
-            helptext = 'The metrics are calculated across the transcripts with tiered expression levels.',
-            plot = linegraph.plot( [
-                self.rna_seqc_norm_high_cov,
-                self.rna_seqc_norm_medium_cov,
-                self.rna_seqc_norm_low_cov
-                ], pconfig)
-        )
+        if len(data) > 0:
+            self.add_section (
+                name = 'Gene Body Coverage',
+                anchor = 'rseqc-rna_seqc_mean_coverage',
+                helptext = 'The metrics are calculated across the transcripts with tiered expression levels.',
+                plot = linegraph.plot(data, pconfig)
+            )
 
     def parse_correlation(self, f):
         """ Parse RNA-SeQC correlation matrices """

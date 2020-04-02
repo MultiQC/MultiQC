@@ -55,7 +55,7 @@ class StatsReportMixin():
             stats_headers = OrderedDict()
             stats_headers['error_rate'] = {
                 'title': 'Error rate',
-                'description': 'Error rate using CIGAR',
+                'description': 'Error rate: mismatches (NM) / bases mapped (CIGAR)',
                 'min': 0,
                 'max': 100,
                 'suffix': '%',
@@ -85,6 +85,24 @@ class StatsReportMixin():
                 'min': 0,
                 'suffix': '%',
                 'scale': 'RdYlGn'
+            }
+            stats_headers['reads_properly_paired_percent'] = {
+                'title': '% Proper Pairs',
+                'description': '% Properly Paired Reads',
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'scale': 'RdYlGn',
+                'hidden': True if (max([x['reads_mapped_and_paired'] for x in self.samtools_stats.values()]) == 0) else False
+            }
+            stats_headers['reads_MQ0_percent'] = {
+                'title': '% MapQ 0 Reads',
+                'description': '% of Reads that are Ambiguously Placed (MapQ=0)',
+                'max': 100,
+                'min': 0,
+                'suffix': '%',
+                'scale': 'OrRd',
+                'hidden': True
             }
             stats_headers['raw_total_sequences'] = {
                 'title': '{} Total seqs'.format(config.read_count_prefix),
@@ -120,7 +138,7 @@ class StatsReportMixin():
             keys['reads_duplicated'] = dict(reads, **{'title': 'Duplicated', 'description': 'PCR or optical duplicate bit set'})
             keys['reads_QC_failed'] = dict(reads, **{'title': 'QC Failed'})
             keys['reads_MQ0'] = dict(reads, **{'title': 'Reads MQ0', 'description': 'Reads mapped and MQ=0'})
-            keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (cigar)', 'description': 'Mapped bases (cigar)'})
+            keys['bases_mapped_(cigar)'] = dict(bases, **{'title': 'Mapped bases (CIGAR)', 'description': 'Mapped bases (CIGAR)'})
             keys['bases_trimmed'] = dict(bases, **{'title': 'Bases Trimmed'})
             keys['bases_duplicated'] = dict(bases, **{'title': 'Duplicated bases'})
             keys['pairs_on_different_chromosomes'] = dict(reads, **{'title': 'Diff chromosomes', 'description': 'Pairs on different chromosomes'})

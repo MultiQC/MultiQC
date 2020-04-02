@@ -5,7 +5,6 @@
 from __future__ import print_function
 
 import logging
-from multiqc import config
 from multiqc.plots import linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -30,7 +29,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.jellyfish_max_x = 2*self.max_key #in this case the area plotted is a function of the maximum x
 
         if len(self.jellyfish_data) == 0:
-            log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.jellyfish_data)))
@@ -70,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
             `1,2,.., N` times and represent this as a plot.
             This plot tell us for each x, how many k-mers (y-axis) are present in the
             dataset in exactly x-copies.
-            
+
             In an ideal world (no errors in sequencing, no bias, no  repeated regions)
             this plot should be as close as  possible to a gaussian distribution.
             In reality we will always see a peak for `x=1` (_i.e._, the errors)

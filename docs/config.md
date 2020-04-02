@@ -16,12 +16,6 @@ it collects the configuration settings from the following places in this order
 7. Command line config (`--cl_config`)
 8. Specific command line options (_e.g._ `--force`)
 
-You can find an example configuration file with the MultiQC source code, called
-[`multiqc_config.example.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
-If you installed MultiQC with `pip` or `conda` you won't have this file locally,
-but you can find it on GitHub:
-[github.com/ewels/MultiQC](https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml).
-
 ## Sample name cleaning
 MultiQC typically generates sample names by taking the input or log file name,
 and 'cleaning' it. To do this, it uses the `fn_clean_exts` settings and looks
@@ -200,7 +194,8 @@ sp:
 ```
 
 Search patterns can specify a filename match (`fn`) or a file contents
-match (`contents`).
+match (`contents`), as well as a number of additional search keys.
+See [below](#step-1-find-log-files) for the full reference.
 
 ## Ignoring Files
 MultiQC begins by indexing all of the files that you specified and building a list
@@ -285,6 +280,14 @@ of samples. Hovering on a dot will highlight the same sample in other rows.
 By default, MultiQC starts using beeswarm plots when a table has 500 rows or more. This
 can be changed by setting the `max_table_rows` config option.
 
+## Coloured log output
+As of MultiQC version 1.8, log output is coloured using the [coloredlogs](https://pypi.org/project/coloredlogs/)
+Python package. The code attempts to detect if the logs on the terminal are being redirected to a file
+or piped to another tool and will disable colours if so. If the colours annoy you or you're ending
+up with weird characters in your MultiQC output, you can disable this feature with the command line
+flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the logger is initilised
+before configs are loaded.
+
 ## Command-line config
 Sometimes it's useful to specify a single small config option just once, where creating
 a config file for the occasion may be overkill. In these cases you can use the
@@ -300,4 +303,3 @@ Qualimap module: _(as [described in the docs](http://multiqc.info/docs/#qualimap
 ```bash
 multiqc ./datadir --cl_config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
-

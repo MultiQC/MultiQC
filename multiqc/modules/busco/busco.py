@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import re
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -42,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.busco_data = self.ignore_samples(self.busco_data)
 
         if len(self.busco_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.busco_data)))

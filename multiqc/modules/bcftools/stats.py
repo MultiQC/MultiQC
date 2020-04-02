@@ -5,7 +5,7 @@
 import logging
 from collections import OrderedDict
 from multiqc import config
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -31,6 +31,10 @@ class StatsReportMixin():
 
         self.bcftools_stats = dict()
         self.bcftools_stats_indels = dict()
+        self.bcftools_stats_vqc_snp = dict()
+        self.bcftools_stats_vqc_transi = dict()
+        self.bcftools_stats_vqc_transv = dict()
+        self.bcftools_stats_vqc_indels = dict()
         depth_data = dict()
         for f in self.find_log_files('bcftools/stats'):
             s_names = list()
@@ -45,6 +49,10 @@ class StatsReportMixin():
                     self.add_data_source(f, s_name, section='stats')
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
+                    self.bcftools_stats_vqc_snp[s_name] = dict()
+                    self.bcftools_stats_vqc_transi[s_name] = dict()
+                    self.bcftools_stats_vqc_transv[s_name] = dict()
+                    self.bcftools_stats_vqc_indels[s_name] = dict()
                     depth_data[s_name] = OrderedDict()
                     self.bcftools_stats_indels[s_name][0] = None # Avoid joining line across missing 0
 
@@ -101,6 +109,15 @@ class StatsReportMixin():
                     percent_sites = float(s[-1].strip())
                     depth_data[s_name][bin_name] = percent_sites
 
+                # Variant Qualities
+                if s[0] == "QUAL" and len(s_names) > 0:
+                    s_name = s_names[int(s[1])]
+                    quality = float(s[2].strip())
+                    self.bcftools_stats_vqc_snp[s_name][quality] = float(s[3].strip())
+                    self.bcftools_stats_vqc_transi[s_name][quality] = float(s[4].strip())
+                    self.bcftools_stats_vqc_transv[s_name][quality] = float(s[5].strip())
+                    self.bcftools_stats_vqc_indels[s_name][quality] = float(s[6].strip())
+
         # Filter to strip out ignored sample names
         self.bcftools_stats = self.ignore_samples(self.bcftools_stats)
 
@@ -109,8 +126,15 @@ class StatsReportMixin():
             # Write parsed report data to a file
             self.write_data_file(self.bcftools_stats, 'multiqc_bcftools_stats')
 
-            # General Stats Table
-            self.bcftools_stats_genstats_table()
+            # Stats Table
+            stats_headers = self.bcftools_stats_genstats_headers()
+            if getattr(config, 'bcftools', {}).get('write_general_stats', True):
+                self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')
+            if getattr(config, 'bcftools', {}).get('write_separate_table', False):
+                self.add_section(
+                    name='Bcftools Stats',
+                    anchor='bcftools-stats',
+                    plot=table.plot(self.bcftools_stats, stats_headers))
 
             # Make bargraph plot of substitution types
             keys = OrderedDict()
@@ -128,6 +152,34 @@ class StatsReportMixin():
                 plot = bargraph.plot(self.bcftools_stats, keys, pconfig)
             )
 
+            # Make histograms of variant quality
+            if len(self.bcftools_stats_vqc_snp) > 0:
+                pconfig = {
+                    'id': 'bcftools_stats_vqc',
+                    'title': 'Bcftools Stats: Variant Quality Count',
+                    'ylab': 'Count',
+                    'xlab': 'Quality',
+                    'xDecimals': False,
+                    'ymin': 0,
+                    'smooth_points': 600,
+                    # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
+                    'data_labels': [
+                        {'name': 'Count SNP', 'ylab': 'Quality'},
+                        {'name': 'Count Transitions', 'ylab': 'Quality'},
+                        {'name': 'Count Transversions', 'ylab': 'Quality'},
+                        {'name': 'Count Indels', 'ylab': 'Quality'}
+                    ]
+                }
+                self.add_section (
+                    name = 'Variant Quality',
+                    anchor = 'bcftools-stats_variant_quality_plot',
+                    plot = linegraph.plot (
+                        [self.bcftools_stats_vqc_snp,
+                        self.bcftools_stats_vqc_transi,
+                        self.bcftools_stats_vqc_transv,
+                        self.bcftools_stats_vqc_indels], pconfig)
+                )
+
             # Make line graph of indel lengths
             if len(self.bcftools_stats_indels) > 0:
                 pconfig = {
@@ -137,7 +189,6 @@ class StatsReportMixin():
                     'xlab': 'InDel Length (bp)',
                     'xDecimals': False,
                     'ymin': 0,
-                    # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
                 }
                 self.add_section (
                     name = 'Indel Distribution',
@@ -165,7 +216,7 @@ class StatsReportMixin():
         # Return the number of logs that were found
         return len(self.bcftools_stats)
 
-    def bcftools_stats_genstats_table(self):
+    def bcftools_stats_genstats_headers(self):
         """ Add key statistics to the General Stats table """
         stats_headers = OrderedDict()
         stats_headers['number_of_records'] = {
@@ -203,4 +254,4 @@ class StatsReportMixin():
             'description': 'Variation multinucleotide polymorphisms',
             'min': 0, 'format': '{:,.0f}', "hidden": True,
         }
-        self.general_stats_addcols(self.bcftools_stats, stats_headers, 'Bcftools Stats')
+        return stats_headers

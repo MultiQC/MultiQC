@@ -7,7 +7,6 @@ from collections import defaultdict, OrderedDict
 import logging
 import os
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -47,7 +46,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Add to the General Stats table (has to be called once per MultiQC module)

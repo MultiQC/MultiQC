@@ -51,6 +51,7 @@ class RmdupReportMixin():
             pconfig = {
                 'id': 'samtools_rmdup_plot',
                 'title': 'Samtools rmdup: Duplicate alignments',
+                'ylab': 'Number of reads',
                 'yDecimals': False
             }
             self.add_section (

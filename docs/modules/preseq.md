@@ -28,10 +28,8 @@ preseq:
 
 Preseq reports its numbers as "Molecule counts". This isn't always very intuitive, 
 and it's often easier to talk about sequencing depth in terms of coverage.
-
-You can plot with approximate coverage on the axes instead by specifying the 
-reference genome or target size, and the read length in your 
-[MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+You can plot the estimated coverage instead by specifying the reference genome or target size, 
+and the read length in your [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
 ```yaml
 preseq:
     genome_size: 3049315783
@@ -43,6 +41,15 @@ These parameters make the script take every molecule count and divide it by
 MultiQC comes with effective genome size presets for Human and Mouse, so you can 
 provide the genome build name instead, like this: `genome_size: hg38_genome`. The
 following values are supported: `hg19_genome`, `hg38_genome`, `mm10_genome`.
+
+When the genome and read sizes are provided, MultiQC will plot the molecule counts 
+on the X axis ("total" data) and coverages on the Y axis ("unique" data). 
+However, you can customize what to plot on each axis (counts or coverage), e.g.:
+```yaml
+preseq:
+    x_axis: counts
+    y_axis: coverage
+```
 
 #### Plotting externally calculated read counts
 

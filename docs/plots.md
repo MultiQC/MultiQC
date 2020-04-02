@@ -32,6 +32,16 @@ self.add_section (
 )
 ```
 
+## Common options
+All plots should as a minimum have a config with an `id` and a `title`.
+MultiQC is written to work with sensible defaults, so won't complain if you
+don't supply these, but it's good practice for usability (the ID is used as
+a filename when exporting plots, and all plots should have a title when exported).
+
+Plot titles should use the format _Module name: Plot name_ (this is partly for
+ease of use within MegaQC and other downstream tools).
+
+
 ## Bar graphs
 Simple data can be plotted in bar graphs. Many MultiQC modules make use
 of stacked bar graphs. Here, the `bargraph.plot()` function comes to
@@ -89,7 +99,7 @@ config = {
     'logswitch_label': 'Log10',             # Label for 'Log10' button
     'hide_zero_cats': True,                 # Hide categories where data for all samples is 0
     # Customising the plot
-    'title': None,                          # Plot title
+    'title': None,                          # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                           # X axis label
     'ylab': None,                           # Y axis label
     'ymax': None,                           # Max y limit
@@ -197,7 +207,7 @@ config = {
     'colors': dict()             # Provide dict with keys = sample names and values colours
     'extra_series': None,        # See section below
     # Plot configuration
-    'title': None,               # Plot title
+    'title': None,               # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                # X axis label
     'ylab': None,                # Y axis label
     'xCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
@@ -243,8 +253,8 @@ supply names to the buttons and graph labels:
 ```python
 config = {
     'data_labels': [
-        {'name': 'DS 1', 'ylab': 'Dataset 1'},
-        {'name': 'DS 2', 'ylab': 'Dataset 2'}
+        {'name': 'DS 1', 'ylab': 'Dataset 1', 'xlab': 'x Axis 1'},
+        {'name': 'DS 2', 'ylab': 'Dataset 2', 'xlab': 'x Axis 2'}
     ]
 }
 ```
@@ -346,14 +356,14 @@ key should match the keys used in the data dictionary, but values can
 customise the output. If you want to specify the order of the columns, you
 must use an `OrderedDict`.
 
-Finally, a the function accepts a third parameter, a config dictionary.
+Finally, the function accepts a config dictionary as a third parameter.
 This can set global options for the table (eg. a title) and can also hold
 default values to customise the output of all table columns.
 
 The default header keys are:
 ```python
 single_header = {
-    'namespace': '',                # Name for grouping in table
+    'namespace': '',                # Name for grouping. Prepends desc and is in Config Columns modal
     'title': '[ dict key ]',        # Short title, table column title
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
@@ -364,7 +374,7 @@ single_header = {
     'scale': 'GnBu',                # Colour scale for colour coding. False to disable.
     'colour': '<auto>',             # Colour for column grouping
     'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Output format() string
+    'format': '{:,.1f}',            # Value format string - default 1 decimal place
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False                 # Set to True to hide the column on page load
@@ -373,7 +383,7 @@ single_header = {
 A third parameter can be specified with settings for the whole table:
 ```python
 table_config = {
-    'namespace': '',                         # Module / section that table is in. Prepends header descriptions.
+    'namespace': '',                         # Name for grouping. Prepends desc and is in Config Columns modal
     'id': '<random string>',                 # ID used for the table
     'table_title': '<table id>',             # Title of the table. Used in the column config modal
     'save_file': False,                      # Whether to save the table data to a file
@@ -385,9 +395,6 @@ table_config = {
 ```
 Header keys such as `max`, `min` and `scale` can also be specified in the table config.
 These will then be applied to all columns.
-
-Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/). The following are available:
-![color brewer](images/cbrewer_scales.png)
 
 A very basic example is shown below:
 ```python
@@ -405,7 +412,7 @@ table_html = table.plot(data)
 ```
 
 A more complicated version with ordered columns, defaults and column-specific
-settings:
+settings (eg. no decimal places):
 ```python
 data = {
     'sample 1': {
@@ -425,6 +432,7 @@ headers['aligned_percent'] = {
     'description': 'Percentage of reads that aligned',
     'suffix': '%',
     'max': 100,
+    'format': '{:,.0f}' # No decimal places please
 }
 headers['aligned'] = {
     'title': '{} Aligned'.format(config.read_count_prefix),
@@ -439,6 +447,22 @@ config = {
 }
 table_html = table.plot(data, headers, config)
 ```
+
+### Table decimal places
+You can customise how many decimal places a number has by using the `format` config
+key for that column. The default format string is `'{:,.1f}'`, which specifies a
+float number with a single decimal place. To remove decimals use `'{:,.0f}'`.
+To have two decimal places, use `'{:,.2f}'`.
+
+### Table colour scales
+
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
+Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
+
+The following scales are available:
+
+![color brewer](images/cbrewer_scales.png)
+
 
 ## Beeswarm plots (dot plots)
 Beeswarm plots work from the exact same data structure as tables, so the
@@ -485,7 +509,7 @@ using a config dictionary:
 
 ```python
 pconfig = {
-    'title': None,                 # Plot title
+    'title': None,                 # Plot title - should be in format "Module Name: Plot Title"
     'xTitle': None,                # X-axis title
     'yTitle': None,                # Y-axis title
     'min': None,                   # Minimum value (default: auto)

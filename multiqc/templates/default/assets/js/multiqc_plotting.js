@@ -65,7 +65,7 @@ $(function () {
   $('.hc-plot.not_rendered:visible:not(.gt_max_num_ds)').each(function(){
     var target = $(this).attr('id');
     // Only one point per dataset, so multiply limit by arbitrary number.
-    var max_num = num_datasets_plot_limit * 50;
+    var max_num = mqc_config['num_datasets_plot_limit'] * 50;
     // Deferring each plot call prevents browser from locking up
     setTimeout(function(){
         plot_graph(target, undefined, max_num);
@@ -123,6 +123,10 @@ $(function () {
       if(ylab != undefined){
         $('#'+target).highcharts().yAxis[0].setTitle({ text: ylab });
       }
+      var xlab = $(this).data('xlab');
+      if(xlab != undefined){
+        $('#'+target).highcharts().xAxis[0].setTitle({ text: xlab });
+      }
     }
     // Switch to log10 axis
     if(action == 'set_log'){
@@ -134,9 +138,13 @@ $(function () {
       var ds = $(this).data('newdata');
       plot_graph(target, ds);
       var ylab = $(this).data('ylab');
+      var xlab = $(this).data('xlab');
       var ymax = $(this).data('ymax');
       if(ylab != undefined){
         $('#'+target).highcharts().yAxis[0].setTitle({ text: ylab });
+      }
+      if(xlab != undefined){
+        $('#'+target).highcharts().xAxis[0].setTitle({ text: xlab });
       }
       if(ymax != undefined){
         $('#'+target).highcharts().yAxis[0].setExtremes(null, ymax);
@@ -276,7 +284,14 @@ function plot_xy_line_graph(target, ds){
   var data = mqc_plots[target]['datasets'];
   if(ds === undefined){ ds = 0; }
 
-  if(config['tt_label'] === undefined){ config['tt_label'] = '{point.x}: {point.y:.2f}'; }
+  if(config['tt_label'] === undefined){
+    config['tt_label'] = '{point.x}: {point.y:.2f}';
+    if(config['categories']){
+      config['tt_formatter'] = function(){
+        return '<div style="background-color:'+this.series.color+'; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">'+this.series.name+'</span><br><strong>'+this.key+':</strong> '+this.y;
+      }
+    }
+  }
   if(config['click_func'] === undefined){ config['click_func'] = function(){}; }
   else {
     config['click_func'] = eval("("+config['click_func']+")");
@@ -420,8 +435,9 @@ function plot_xy_line_graph(target, ds){
     },
     tooltip: {
       headerFormat: '',
-			pointFormat: config['pointFormat'],
-			useHTML: true
+      pointFormat: config['pointFormat'],
+      formatter: config['tt_formatter'],
+      useHTML: true
     },
     series: data
   });
@@ -441,6 +457,8 @@ function plot_stacked_bar_graph(target, ds){
   var config = JSON.parse(JSON.stringify(mqc_plots[target]['config']));
 
   if (config['stacking'] === undefined){ config['stacking'] = 'normal'; }
+  if (config['stacking'] === 'normal'){ config['groupPadding'] = '0.02'; config['pointPadding'] = '0.1'; }
+  else { config['groupPadding'] = '0.1'; config['pointPadding'] = 0 }
   if (config['ytype'] === undefined){ config['ytype'] = 'linear'; }
   if (config['reversedStacks'] === undefined){ config['reversedStacks'] = false; }
   if (config['use_legend'] === undefined){ config['use_legend'] = true; }
@@ -571,7 +589,8 @@ function plot_stacked_bar_graph(target, ds){
     plotOptions: {
       series: {
         stacking: config['stacking'],
-        groupPadding: 0.02,
+        pointPadding: config['pointPadding'],
+        groupPadding: config['groupPadding'],
         borderWidth: config['borderWidth']
       },
       cursor: config['cursor'],
@@ -1411,14 +1430,6 @@ function plot_heatmap(target, ds){
     },
     plotOptions: {
       series: {
-        point: {
-          events: {
-            mouseOver: function() {
-              // Stop highcharts making squares blue on hover
-              this.pointAttr.hover.fill = this.color;
-            }
-          }
-        },
         states: {
           hover: {
             borderWidth: 2,

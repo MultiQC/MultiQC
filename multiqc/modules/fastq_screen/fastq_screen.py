@@ -11,6 +11,7 @@ import re
 from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -41,7 +42,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.fq_screen_data = self.ignore_samples(self.fq_screen_data)
 
         if len(self.fq_screen_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.fq_screen_data)))
@@ -162,37 +162,54 @@ class MultiqcModule(BaseMultiqcModule):
                     td['linkedTo'] = ':previous'
                 data.append(td)
 
-        html = '<div id="fq_screen_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            fq_screen_data = {};\n\
-            fq_screen_categories = {};\n\
-            $(function () {{ \n\
-                $("#fq_screen_plot").highcharts({{ \n\
-                    chart: {{ type: "column", backgroundColor: null }}, \n\
-                    title: {{ text: "FastQ Screen Results" }}, \n\
-                    xAxis: {{ categories: fq_screen_categories }}, \n\
-                    yAxis: {{ \n\
-                        max: 100, \n\
-                        min: 0, \n\
-                        title: {{ text: "Percentage Aligned" }} \n\
-                    }}, \n\
-                    tooltip: {{ \n\
-                        formatter: function () {{ \n\
-                            return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" + \n\
-                                this.series.name + ": " + this.y + "%<br/>" + \n\
-                                "Total Alignment: " + this.point.stackTotal + "%"; \n\
-                        }}, \n\
-                    }}, \n\
-                    plotOptions: {{ \n\
-                        column: {{ \n\
-                            pointPadding: 0, \n\
-                            groupPadding: 0.02, \n\
-                            stacking: "normal" }} \n\
-                    }}, \n\
-                    series: fq_screen_data \n\
-                }}); \n\
-            }}); \n\
-        </script>'.format(json.dumps(data), json.dumps(categories))
+        plot_id = report.save_htmlid('fq_screen_plot')
+        html = '''<div id={plot_id} class="fq_screen_plot hc-plot"></div>
+        <script type="application/json" class="fq_screen_dict">{dict}</script>
+        '''.format(
+            plot_id=json.dumps(plot_id),
+            dict=json.dumps({ 'plot_id': plot_id, 'data': data, 'categories': categories }),
+        )
+
+        html += '''<script type="text/javascript">
+            fq_screen_dict = { }; // { <plot_id>: data, categories }
+            $('.fq_screen_dict').each(function (i, elem) {
+                var dict = JSON.parse(elem.innerHTML);
+                fq_screen_dict[dict.plot_id] = dict;
+            });
+
+            $(function () {
+                // In case of repeated modules: #fq_screen_plot, #fq_screen_plot-1, ..
+                $(".fq_screen_plot").each(function () {
+                    var plot_id = $(this).attr('id');
+
+                    $(this).highcharts({
+                        chart: { type: "column", backgroundColor: null },
+                        title: { text: "FastQ Screen Results" },
+                        xAxis: { categories: fq_screen_dict[plot_id].categories },
+                        yAxis: {
+                            max: 100,
+                            min: 0,
+                            title: { text: "Percentage Aligned" }
+                        },
+                        tooltip: {
+                            formatter: function () {
+                                return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
+                                    this.series.name + ": " + this.y + "%<br/>" +
+                                    "Total Alignment: " + this.point.stackTotal + "%";
+                            },
+                        },
+                        plotOptions: {
+                            column: {
+                                pointPadding: 0,
+                                groupPadding: 0.02,
+                                stacking: "normal"
+                            }
+                        },
+                        series: fq_screen_dict[plot_id].data
+                    });
+                });
+            });
+        </script>'''
 
         return html
 
@@ -204,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
         # First, sum the different types of alignment counts
         data = OrderedDict()
         cats = OrderedDict()
-        for s_name in self.fq_screen_data:
+        for s_name in sorted(self.fq_screen_data):
             data[s_name] = OrderedDict()
             sum_alignments = 0
             for org in self.fq_screen_data[s_name]:
@@ -233,14 +250,13 @@ class MultiqcModule(BaseMultiqcModule):
                 del data[s_name]
 
         pconfig = {
-            'id': 'fastq_screen',
-            'title': 'FastQ Screen',
-            'cpswitch_c_active': False
+            'id': 'fastq_screen_plot',
+            'title': 'FastQ Screen: Mapped Reads',
+            'cpswitch_c_active': False,
+            'hide_zero_cats': False,
+            'ylab': 'Percentages'
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
 
         return bargraph.plot(data, cats, pconfig)
-
-
-

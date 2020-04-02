@@ -9,7 +9,7 @@ the main MultiQC framework and submit a pull request.
 
 ## Entry Points
 The plugin system works using setuptools
-[entry points](https://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins).
+[entry points](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
 In `setup.py` you will see a section of code that looks like this _(truncated)_:
 ```python
 entry_points = {

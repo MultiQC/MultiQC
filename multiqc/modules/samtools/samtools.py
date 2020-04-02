@@ -4,7 +4,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Samtools submodules
@@ -57,7 +56,6 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Add to the General Stats table (has to be called once per MultiQC module)

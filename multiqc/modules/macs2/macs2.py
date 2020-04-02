@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import re
 
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -32,7 +31,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.macs_data = self.ignore_samples(self.macs_data)
 
         if len(self.macs_data) == 0:
-            log.debug("Could not find any MACS2 data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.macs_data)))
@@ -41,17 +39,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.macs_general_stats()
         self.macs_filtered_reads_plot()
 
+
     def parse_macs(self, f):
         regexes = {
             'name': r"# name = (.+)$",
-            'fragment_size': r"# fragment size is determined as (\d+) bps",
-            'treatment_fragments_total': r"# total fragments in treatment: (\d+)",
-            'treatment_fragments_after_filtering': r"# fragments after filtering in treatment: (\d+)",
-            'treatment_max_duplicates': r"# maximum duplicate fragments in treatment = (\d+)",
+            'fragment_size': r"# (?:fragment|tag) size is determined as (\d+) bps",
+            'treatment_fragments_total': r"# total (?:fragments|tags) in treatment: (\d+)",
+            'treatment_fragments_after_filtering': r"# (?:fragments|tags) after filtering in treatment: (\d+)",
+            'treatment_max_duplicates': r"# maximum duplicate (?:fragments|tags at the same position) in treatment = (\d+)",
             'treatment_redundant_rate': r"# Redundant rate in treatment: ([\d\.]+)",
-            'control_fragments_total': r"# total fragments in control: (\d+)",
-            'control_fragments_after_filtering': r"# fragments after filtering in control: (\d+)",
-            'control_max_duplicates': r"# maximum duplicate fragments in control = (\d+)",
+            'control_fragments_total': r"# total (?:fragments|tags) in control: (\d+)",
+            'control_fragments_after_filtering': r"# (?:fragments|tags) after filtering in control: (\d+)",
+            'control_max_duplicates': r"# maximum duplicate (?:fragments|tags at the same position) in control = (\d+)",
             'control_redundant_rate': r"# Redundant rate in control: ([\d\.]+)",
             'd': r"# d = (\d+)",
         }
@@ -110,6 +109,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data['{}: Control'.format(s_name)]['fragments_not_filtered'] = d['control_fragments_after_filtering']
                 data['{}: Treatment'.format(s_name)]['fragments_filtered'] = d['treatment_fragments_total'] - d['treatment_fragments_after_filtering']
                 data['{}: Treatment'.format(s_name)]['fragments_not_filtered'] = d['treatment_fragments_after_filtering']
+
+        # Check that we have something to plot
+        if len(data) == 0:
+            return
 
         # Specify the order of the different possible categories
         keys = OrderedDict()

@@ -32,8 +32,12 @@ it prints the contents of these files into the report.
     {{ include_file('assets/css/default_multiqc.css') }}
     {{ include_file('assets/css/jquery.toast.css') }}
 </style>
+{% set included_css = [] %}
 {%- for m in report.modules_output %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.values() %}
+{% if css_href not in included_css -%}
+{{ '' if included_css.append( css_href ) }}
 <style type="text/css">{{ include_file(css_href, None) }}</style>
+{% endif %}
 {%- endfor %}{% endif %}{% endfor %}
 
 <!-- Include javascript files -->
@@ -55,11 +59,10 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/multiqc_plotting.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_mpl.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_toolbox.js') }}</script>
+{% set included_js = [] %}
 {%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.values() %}
+{% if js_href not in included_js -%}
+{{ '' if included_js.append( js_href ) }}
 <script type="text/javascript">{{ include_file( js_href, None ) }}</script>
+{% endif %}
 {%- endfor %}{% endif %}{% endfor %}
-<script type="text/javascript">
-mqc_config = {}
-{% if config.decimalPoint_format is not none %}mqc_config['decimalPoint_format'] = '{{ config.decimalPoint_format }}'; {% endif %}
-{% if config.thousandsSep_format is not none %}mqc_config['thousandsSep_format'] = '{{ config.thousandsSep_format }}'; {% endif %}
-</script>

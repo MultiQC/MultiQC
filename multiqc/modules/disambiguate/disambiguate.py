@@ -3,7 +3,6 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -43,7 +42,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.data = self.ignore_samples(self.data)
 
         if len(self.data) == 0:
-            log.debug("Could not find any data in %s", config.analysis_dir)
             raise UserWarning
 
         log.info("Found %d reports", len(self.data))

@@ -5,7 +5,7 @@
 import logging
 import random
 
-from multiqc.utils import report
+from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
@@ -20,27 +20,37 @@ def plot (data, pconfig=None):
     if pconfig is None:
         pconfig = {}
 
+    # Allow user to overwrite any given config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            pconfig[k] = v
+
     # Given one dataset - turn it into a list
     if type(data) is not list:
         data = [data]
 
     # Generate the data dict structure expected by HighCharts series
     plotdata = list()
-    for ds in data:
+    for data_index, ds in enumerate(data):
         d = list()
         for s_name in ds:
+            # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
+            series_config = pconfig.copy()
+            if 'data_labels' in pconfig and type(pconfig['data_labels'][data_index]) is dict:  # if not a dict: only dataset name is provided
+                series_config.update(pconfig['data_labels'][data_index])
+
             if type(ds[s_name]) is not list:
                 ds[s_name] = [ ds[s_name] ]
             for k in ds[s_name]:
                 if k['x'] is not None:
-                    if 'xmax' in pconfig and float(k['x']) > float(pconfig['xmax']):
+                    if 'xmax' in series_config and float(k['x']) > float(series_config['xmax']):
                         continue
-                    if 'xmin' in pconfig and float(k['x']) < float(pconfig['xmin']):
+                    if 'xmin' in series_config and float(k['x']) < float(series_config['xmin']):
                         continue
                 if k['y'] is not None:
-                    if 'ymax' in pconfig and float(k['y']) > float(pconfig['ymax']):
+                    if 'ymax' in series_config and float(k['y']) > float(series_config['ymax']):
                         continue
-                    if 'ymin' in pconfig and float(k['y']) < float(pconfig['ymin']):
+                    if 'ymin' in series_config and float(k['y']) < float(series_config['ymin']):
                         continue
                 this_series = { 'x': k['x'], 'y': k['y'] }
                 try:
@@ -51,7 +61,7 @@ def plot (data, pconfig=None):
                     this_series['color'] = k['color']
                 except KeyError:
                     try:
-                        this_series['color'] = pconfig['colors'][s_name]
+                        this_series['color'] = series_config['colors'][s_name]
                     except KeyError:
                         pass
                 d.append(this_series)
@@ -59,9 +69,16 @@ def plot (data, pconfig=None):
 
     # Add on annotation data series
     try:
-        for s in pconfig['extra_series']:
-            plotdata[0].append(s)
-    except KeyError:
+        if pconfig.get('extra_series'):
+            extra_series = pconfig['extra_series']
+            if type(pconfig['extra_series']) == dict:
+                extra_series = [[ pconfig['extra_series'] ]]
+            elif type(pconfig['extra_series']) == list and type(pconfig['extra_series'][0]) == dict:
+                extra_series = [ pconfig['extra_series'] ]
+            for i, es in enumerate(extra_series):
+                for s in es:
+                    plotdata[i].append(s)
+    except (KeyError, IndexError):
         pass
 
     # Make a plot
@@ -102,7 +119,11 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
+            try:
+                xlab = 'data-xlab="{}"'.format(pconfig['data_labels'][k]['xlab'])
+            except:
+                xlab = 'data-xlab="{}"'.format(name) if name != k+1 else ''
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {xl} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, xl=xlab, k=k)
         html += '</div>\n\n'
 
     # The plot div
@@ -117,4 +138,3 @@ def highcharts_scatter_plot (plotdata, pconfig=None):
     }
 
     return html
-

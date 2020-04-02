@@ -4,9 +4,11 @@
 Code to initilise the MultiQC logging
 """
 
+import coloredlogs
 import logging
 import os
 import shutil
+import sys
 import tempfile
 
 from multiqc.utils import config, util_functions
@@ -15,7 +17,7 @@ LEVELS = {0: 'INFO', 1: 'DEBUG'}
 log_tmp_dir = None
 log_tmp_fn = '/dev/null'
 
-def init_log(logger, loglevel=0):
+def init_log(logger, loglevel=0, no_ansi=False):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -40,10 +42,18 @@ def init_log(logger, loglevel=0):
     # Set up the console logging stream
     console = logging.StreamHandler()
     console.setLevel(getattr(logging, loglevel))
+    level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
+    level_styles['debug'] = {'faint': True}
     if loglevel == 'DEBUG':
-        console.setFormatter(logging.Formatter(debug_template))
+        if no_ansi or not sys.stderr.isatty():
+            console.setFormatter(logging.Formatter(debug_template))
+        else:
+            console.setFormatter(coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles))
     else:
-        console.setFormatter(logging.Formatter(info_template))
+        if no_ansi or not sys.stderr.isatty():
+            console.setFormatter(logging.Formatter(info_template))
+        else:
+            console.setFormatter(coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles))
     logger.addHandler(console)
 
     # Now set up the file logging stream if we have a data directory

@@ -1,5 +1,5 @@
 # Writing New Templates
-MultiQC is built around a templating system that uses the 
+MultiQC is built around a templating system that uses the
 [Jinja](http://jinja.pocoo.org/) python package. This makes it very
 easy to create new report templates that fit your needs.
 
@@ -17,8 +17,8 @@ acts as a plugin. For more information about this, see the
 ## Creating a template skeleton
 For a new template to be recognised by MultiQC, it must be a python submodule
 directory with a `__init__.py` file. This must be referenced in the `setup.py`
-installation script as an 
-[entry point](https://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins).
+installation script as an
+[entry point](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
 
 You can see the bundled templates defined in this way:
 
@@ -39,9 +39,9 @@ sure that `multiqc.templates.v1` is the same.
 
 Once you've added the entry point, remember to install the package again:
 ```
-python setup.py develop
+pip install -e .
 ```
-Using `develop` tells setuptools to softlink the plugin files instead of
+Using `-e` tells `pip` to softlink the plugin files instead of
 copying, so changes made whilst editing files will be reflected when you
 run MultiQC.
 
@@ -123,7 +123,7 @@ either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
 def custom_linegraph(plotdata, pconfig):
     return '<h1>Awesome line graph here</h1>'
 linegraph = custom_linegraph
-  
+
 def custom_bargraph(plotdata, plotseries, pconfig):
     return '<h1>Awesome bar graph here</h1>'
 bargraph = custom_bargraph
@@ -131,4 +131,3 @@ bargraph = custom_bargraph
 
 These particular examples don't do very much, but hopefully you get the idea.
 Note that you have to set the variable `linegraph` or `bargraph` to your function.
-

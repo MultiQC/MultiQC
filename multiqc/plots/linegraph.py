@@ -2,7 +2,7 @@
 
 """ MultiQC functions to plot a linegraph """
 
-from __future__ import print_function
+from __future__ import print_function, division
 from collections import OrderedDict
 import base64
 import io
@@ -19,6 +19,7 @@ try:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
 except Exception as e:
     # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
     # The lack of the library will be handled when plots are attempted
@@ -43,10 +44,15 @@ def plot (data, pconfig=None):
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    # Why not just set {} as a default argument? See:
+    # Don't just use {} as the default argument as it's mutable. See:
     # http://python-guide-pt-br.readthedocs.io/en/latest/writing/gotchas/
     if pconfig is None:
         pconfig = {}
+
+    # Allow user to overwrite any given config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            pconfig[k] = v
 
     # Given one dataset - turn it into a list
     if type(data) is not list:
@@ -62,14 +68,37 @@ def plot (data, pconfig=None):
                 sumc = sumcounts
             data[i] = smooth_line_data(d, pconfig['smooth_points'], sumc)
 
+    # Add sane plotting config defaults
+    for idx, yp in enumerate(pconfig.get('yPlotLines', [])):
+        pconfig['yPlotLines'][idx]["width"] = pconfig['yPlotLines'][idx].get("width", 2)
+
+    # Add initial axis labels if defined in `data_labels` but not main config
+    if pconfig.get('ylab') is None:
+        try:
+            pconfig['ylab'] = pconfig['data_labels'][0]['ylab']
+        except (KeyError, IndexError):
+            pass
+    if pconfig.get('xlab') is None:
+        try:
+            pconfig['xlab'] = pconfig['data_labels'][0]['xlab']
+        except (KeyError, IndexError):
+            pass
+
     # Generate the data dict structure expected by HighCharts series
     plotdata = list()
-    for d in data:
+    for data_index, d in enumerate(data):
         thisplotdata = list()
+
         for s in sorted(d.keys()):
+
+            # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
+            series_config = pconfig.copy()
+            if 'data_labels' in pconfig and type(pconfig['data_labels'][data_index]) is dict:  # if not a dict: only dataset name is provided
+                series_config.update(pconfig['data_labels'][data_index])
+
             pairs = list()
             maxval = 0
-            if 'categories' in pconfig:
+            if 'categories' in series_config:
                 pconfig['categories'] = list()
                 for k in d[s].keys():
                     pconfig['categories'].append(k)
@@ -78,24 +107,24 @@ def plot (data, pconfig=None):
             else:
                 for k in sorted(d[s].keys()):
                     if k is not None:
-                        if 'xmax' in pconfig and float(k) > float(pconfig['xmax']):
+                        if 'xmax' in series_config and float(k) > float(series_config['xmax']):
                             continue
-                        if 'xmin' in pconfig and float(k) < float(pconfig['xmin']):
+                        if 'xmin' in series_config and float(k) < float(series_config['xmin']):
                             continue
                     if d[s][k] is not None:
-                        if 'ymax' in pconfig and float(d[s][k]) > float(pconfig['ymax']):
+                        if 'ymax' in series_config and float(d[s][k]) > float(series_config['ymax']):
                             continue
-                        if 'ymin' in pconfig and float(d[s][k]) < float(pconfig['ymin']):
+                        if 'ymin' in series_config and float(d[s][k]) < float(series_config['ymin']):
                             continue
                     pairs.append([k, d[s][k]])
                     try:
                         maxval = max(maxval, d[s][k])
                     except TypeError:
                         pass
-            if maxval > 0 or pconfig.get('hide_empty') is not True:
+            if maxval > 0 or series_config.get('hide_empty') is not True:
                 this_series = { 'name': s, 'data': pairs }
                 try:
-                    this_series['color'] = pconfig['colors'][s]
+                    this_series['color'] = series_config['colors'][s]
                 except:
                     pass
                 thisplotdata.append(this_series)
@@ -122,8 +151,9 @@ def plot (data, pconfig=None):
         if config.plots_force_flat or (not config.plots_force_interactive and len(plotdata[0]) > config.plots_flat_numseries):
             try:
                 return matplotlib_linegraph(plotdata, pconfig)
-            except:
+            except Exception as e:
                 logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
+                logger.debug(e, exc_info=True)
                 return highcharts_linegraph(plotdata, pconfig)
         else:
             # Use MatPlotLib to generate static plots if requested
@@ -169,7 +199,11 @@ def highcharts_linegraph (plotdata, pconfig=None):
                 ymax = 'data-ymax="{}"'.format(pconfig['data_labels'][k]['ymax'])
             except:
                 ymax = ''
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, k=k)
+            try:
+                xlab = 'data-xlab="{}"'.format(pconfig['data_labels'][k]['xlab'])
+            except:
+                xlab = ''
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {x} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(a=active, id=pconfig['id'], n=name, y=ylab, ym=ymax, x=xlab, k=k)
         html += '</div>\n\n'
 
     # The plot div
@@ -210,7 +244,7 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         except:
             name = k+1
         pid = 'mqc_{}_{}'.format(pconfig['id'], name)
-        pid = report.save_htmlid(pid)
+        pid = report.save_htmlid(pid, skiplint=True)
         pids.append(pid)
 
     html = '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ' + \
@@ -314,13 +348,13 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         ymin = default_ylimits[0]
         if 'ymin' in pconfig:
             ymin = pconfig['ymin']
-        elif 'yCeiling' in pconfig:
-            ymin = min(pconfig['yCeiling'], default_ylimits[0])
+        elif 'yFloor' in pconfig:
+            ymin = max(pconfig['yFloor'], default_ylimits[0])
         ymax = default_ylimits[1]
         if 'ymax' in pconfig:
             ymax = pconfig['ymax']
-        elif 'yFloor' in pconfig:
-            ymax = max(pconfig['yCeiling'], default_ylimits[1])
+        elif 'yCeiling' in pconfig:
+            ymax = min(pconfig['yCeiling'], default_ylimits[1])
         if (ymax - ymin) < pconfig.get('yMinRange', 0):
             ymax = ymin + pconfig['yMinRange']
         axes.set_ylim((ymin, ymax))
@@ -335,13 +369,13 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         xmin = default_xlimits[0]
         if 'xmin' in pconfig:
             xmin = pconfig['xmin']
-        elif 'xCeiling' in pconfig:
-            xmin = min(pconfig['xCeiling'], default_xlimits[0])
+        elif 'xFloor' in pconfig:
+            xmin = max(pconfig['xFloor'], default_xlimits[0])
         xmax = default_xlimits[1]
         if 'xmax' in pconfig:
             xmax = pconfig['xmax']
-        elif 'xFloor' in pconfig:
-            xmax = max(pconfig['xCeiling'], default_xlimits[1])
+        elif 'xCeiling' in pconfig:
+            xmax = min(pconfig['xCeiling'], default_xlimits[1])
         if (xmax - xmin) < pconfig.get('xMinRange', 0):
             xmax = xmin + pconfig['xMinRange']
         axes.set_xlim((xmin, xmax))
@@ -369,11 +403,11 @@ def matplotlib_linegraph (plotdata, pconfig=None):
         if 'yPlotBands' in pconfig:
             xlim = axes.get_xlim()
             for pb in pconfig['yPlotBands']:
-                axes.barh(pb['from'], xlim[1], height = pb['to']-pb['from'], left=xlim[0], color=pb['color'], linewidth=0, zorder=0)
+                axes.barh(pb['from'], xlim[1], height = pb['to']-pb['from'], left=xlim[0], color=pb['color'], linewidth=0, zorder=0, align='edge')
         if 'xPlotBands' in pconfig:
             ylim = axes.get_ylim()
             for pb in pconfig['xPlotBands']:
-                axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0)
+                axes.bar(pb['from'], ylim[1], width = pb['to']-pb['from'], bottom=ylim[0], color=pb['color'], linewidth=0, zorder=0, align='edge')
 
         # Tight layout - makes sure that legend fits in and stuff
         if len(pdata) <= 15:
@@ -424,35 +458,38 @@ def matplotlib_linegraph (plotdata, pconfig=None):
 
 def smooth_line_data(data, numpoints, sumcounts=True):
     """
-    Function to take an x-y dataset and use binning to
-    smooth to a maximum number of datapoints.
-    """
-    smoothed = {}
-    for s_name, d in data.items():
+    Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
+    Each datapoint in a smoothed dataset corresponds to the first point in a bin.
 
+    Examples to show the idea:
+
+    d=[0 1 2 3 4 5 6 7 8 9], numpoints=6
+    we want to keep the first and the last element, thus excluding the last element from the binning:
+    binsize = len([0 1 2 3 4 5 6 7 8]))/(numpoints-1) = 9/5 = 1.8
+    taking points in indices rounded from multiples of 1.8: [0, 1.8, 3.6, 5.4, 7.2, 9],
+    ...which evaluates to first_element_in_bin_indices=[0, 2, 4, 5, 7, 9]
+    picking up the elements: [0 _ 2 _ 4 5 _ 7 _ 9]
+
+    d=[0 1 2 3 4 5 6 7 8 9], numpoints=9
+    binsize = 9/8 = 1.125
+    indices: [0.0, 1.125, 2.25, 3.375, 4.5, 5.625, 6.75, 7.875, 9] -> [0, 1, 2, 3, 5, 6, 7, 8, 9]
+    picking up the elements: [0 1 2 3 _ 5 6 7 8 9]
+
+    d=[0 1 2 3 4 5 6 7 8 9], numpoints=3
+    binsize = len(d)/numpoints = 9/2 = 4.5
+    incides: [0.0, 4.5, 9] -> [0, 5, 9]
+    picking up the elements: [0 _ _ _ _ 5 _ _ _ 9]
+    """
+    smoothed_data = dict()
+    for s_name, d in data.items():
         # Check that we need to smooth this data
-        if len(d) <= numpoints:
-            smoothed[s_name] = d
+        if len(d) <= numpoints or len(d) == 0:
+            smoothed_data[s_name] = d
             continue
 
-        smoothed[s_name] = OrderedDict();
-        p = 0
-        binsize = len(d) / numpoints
-        if binsize < 1:
-            binsize = 1
-        binvals = []
-        for x in sorted(d):
-            y = d[x]
-            if p < binsize:
-                binvals.append(y)
-                p += 1
-            else:
-                if sumcounts is True:
-                    v = sum(binvals)
-                else:
-                    v = sum(binvals) / binsize
-                smoothed[s_name][x] = v
-                p = 0
-                binvals = []
-    return smoothed
+        binsize = (len(d) - 1) / (numpoints - 1)
+        first_element_indices = [round(binsize * i) for i in range(numpoints)]
+        smoothed_d = OrderedDict(xy for i, xy in enumerate(d.items()) if i in first_element_indices)
+        smoothed_data[s_name] = smoothed_d
 
+    return smoothed_data

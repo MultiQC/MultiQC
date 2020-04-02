@@ -8,7 +8,6 @@ import json
 import logging
 import os
 
-from multiqc import config
 from multiqc.plots import linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -52,7 +51,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_fld = self.ignore_samples(self.salmon_fld)
 
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
-            log.debug("Could not find any Salmon data in {}".format(config.analysis_dir))
             raise UserWarning
 
         if len(self.salmon_meta) > 0:
@@ -93,4 +91,3 @@ class MultiqcModule(BaseMultiqcModule):
             'tt_label': '<b>{point.x:,.0f} bp</b>: {point.y:,.0f}',
         }
         self.add_section( plot = linegraph.plot(self.salmon_fld, pconfig) )
-

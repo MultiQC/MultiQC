@@ -7,7 +7,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 import re
-from multiqc import config
 from multiqc.plots import linegraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -34,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data = self.ignore_samples(self.skewer_data)
 
         if len(self.skewer_data) == 0:
-            log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
 
         headers = OrderedDict()
@@ -82,7 +80,6 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': '% of Reads',
             'xlab': 'Read Length',
             'xmin': 0,
-            'ymax': 100,
             'ymin': 0,
             'tt_label': '<b>{point.x}</b>: {point.y:.1f}%',
         }
@@ -152,4 +149,3 @@ class MultiqcModule(BaseMultiqcModule):
         self.skewer_data[s_name]['pct_avail'] = 100.0 * float(data['r_avail']) / float(data['r_processed'])
         self.skewer_data[s_name]['pct_trimmed'] = 100.0 * float(data['r_trimmed']) / float(data['r_avail'])
         self.skewer_data[s_name]['pct_untrimmed'] = 100.0 * float(data['r_untrimmed']) / float(data['r_avail'])
-

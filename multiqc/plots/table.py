@@ -23,6 +23,11 @@ def plot (data, headers=None, pconfig=None):
     if pconfig is None:
         pconfig = {}
 
+    # Allow user to overwrite any given config for this plot
+    if 'id' in pconfig and pconfig['id'] and pconfig['id'] in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig['id']].items():
+            pconfig[k] = v
+
     # Make a datatable object
     dt = table_object.datatable(data, headers, pconfig)
 
@@ -55,6 +60,7 @@ def make_table (dt):
     t_headers = OrderedDict()
     t_modal_headers = OrderedDict()
     t_rows = OrderedDict()
+    t_rows_empty = OrderedDict()
     dt.raw_vals = defaultdict(lambda: dict())
     empty_cells = dict()
     hidden_cols = 1
@@ -64,7 +70,7 @@ def make_table (dt):
 
     for idx, k, header in dt.get_headers_in_order():
 
-        rid = report.save_htmlid(header['rid'])
+        rid = header['rid']
 
         # Build the table header cell
         shared_key = ''
@@ -135,7 +141,7 @@ def make_table (dt):
                 try:
                     dmin = header['dmin']
                     dmax = header['dmax']
-                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100;
+                    percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
                     percentage = min(percentage, 100)
                     percentage = max(percentage, 0)
                 except (ZeroDivisionError,ValueError):
@@ -162,11 +168,47 @@ def make_table (dt):
                 # Percentage suffixes etc
                 valstring += header.get('suffix', '')
 
+                # Conditional formatting
+                cmatches = { cfck: False for cfc in config.table_cond_formatting_colours for cfck in cfc }
+                # Find general rules followed by column-specific rules
+                for cfk in ['all_columns', rid]:
+                    if cfk in config.table_cond_formatting_rules:
+                        # Loop through match types
+                        for ftype in cmatches.keys():
+                            # Loop through array of comparison types
+                            for cmp in config.table_cond_formatting_rules[cfk].get(ftype, []):
+                                try:
+                                    # Each comparison should be a dict with single key: val
+                                    if 's_eq' in cmp and str(cmp['s_eq']).lower() == str(val).lower():
+                                        cmatches[ftype] = True
+                                    if 's_contains' in cmp and str(cmp['s_contains']).lower() in str(val).lower():
+                                        cmatches[ftype] = True
+                                    if 's_ne' in cmp and str(cmp['s_ne']).lower() != str(val).lower():
+                                        cmatches[ftype] = True
+                                    if 'eq' in cmp and float(cmp['eq']) == float(val):
+                                        cmatches[ftype] = True
+                                    if 'ne' in cmp and float(cmp['ne']) != float(val):
+                                        cmatches[ftype] = True
+                                    if 'gt' in cmp and float(cmp['gt']) < float(val):
+                                        cmatches[ftype] = True
+                                    if 'lt' in cmp and float(cmp['lt']) > float(val):
+                                        cmatches[ftype] = True
+                                except:
+                                    logger.warn("Not able to apply table conditional formatting to '{}' ({})".format(val, cmp))
+                # Apply HTML in order of config keys
+                bgcol = None
+                for cfc in config.table_cond_formatting_colours:
+                    for cfck in cfc: # should always be one, but you never know
+                        if cmatches[cfck]:
+                            bgcol = cfc[cfck]
+                if bgcol is not None:
+                    valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(bgcol, valstring)
+
                 # Build HTML
                 if not header['scale']:
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=val)
+                    t_rows[s_name][rid] = '<td class="{rid} {h}">{v}</td>'.format(rid=rid, h=hide, v=valstring)
                 else:
                     if c_scale is not None:
                         col = ' background-color:{};'.format(c_scale.get_colour(val))
@@ -179,6 +221,11 @@ def make_table (dt):
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
                     t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
+
+                # Is this cell hidden or empty?
+                if s_name not in t_rows_empty:
+                    t_rows_empty[s_name] = dict()
+                t_rows_empty[s_name][rid] = header.get('hidden', False) or str(val).strip() == ''
 
         # Remove header if we don't have any filled cells for it
         if sum([len(rows) for rows in t_rows.values()]) == 0:
@@ -202,7 +249,7 @@ def make_table (dt):
         """.format(tid=table_id)
 
         # Configure Columns Button
-        if len(t_headers) > 2:
+        if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure Columns
@@ -217,7 +264,7 @@ def make_table (dt):
         """.format(tid=table_id)
 
         # Scatter Plot Button
-        if len(t_headers) > 2:
+        if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
                 <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
@@ -225,9 +272,11 @@ def make_table (dt):
             """.format(tid=table_id)
 
         # "Showing x of y columns" text
+        row_visibilities = [ all(t_rows_empty[s_name].values()) for s_name in t_rows_empty ]
+        visible_rows = [ x for x in row_visibilities if not x ]
         html += """
-        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nrows}</sup>/<sub>{nrows}</sub> rows and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns.</small>
-        """.format(tid=table_id, nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
+        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nvisrows}</sup>/<sub>{nrows}</sub> rows and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns.</small>
+        """.format(tid=table_id, nvisrows=len(visible_rows), nrows=len(t_rows), ncols_vis = (len(t_headers)+1)-hidden_cols, ncols=len(t_headers))
 
     # Build the table itself
     collapse_class = 'mqc-table-collapse' if len(t_rows) > 10 and config.collapse_tables else ''
@@ -247,7 +296,9 @@ def make_table (dt):
     if dt.pconfig.get('sortRows') is not False:
         t_row_keys = sorted(t_row_keys)
     for s_name in t_row_keys:
-        html += '<tr>'
+        # Hide the row if all cells are empty or hidden
+        row_hidden = ' style="display:none"' if all(t_rows_empty[s_name].values()) else  ''
+        html += '<tr{}>'.format(row_hidden)
         # Sample name row header
         html += '<th class="rowheader" data-original-sn="{sn}">{sn}</th>'.format(sn=s_name)
         for k in t_headers:
@@ -302,9 +353,3 @@ def make_table (dt):
         report.saved_raw_data[fn] = dt.raw_vals
 
     return html
-
-
-
-
-
-

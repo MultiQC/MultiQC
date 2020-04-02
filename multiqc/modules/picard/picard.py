@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import the Picard submodules
@@ -20,7 +19,10 @@ from . import OxoGMetrics
 from . import RnaSeqMetrics
 from . import RrbsSummaryMetrics
 from . import TargetedPcrMetrics
+from . import VariantCallingMetrics
+from . import ValidateSamFile
 from . import WgsMetrics
+
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -85,13 +87,20 @@ class MultiqcModule(BaseMultiqcModule):
         if n['TargetedPcrMetrics'] > 0:
             log.info("Found {} TargetedPcrMetrics reports".format(n['TargetedPcrMetrics']))
 
+        n['VariantCallingMetrics'] = VariantCallingMetrics.parse_reports(self)
+        if n['VariantCallingMetrics'] > 0:
+            log.info("Found {} VariantCallingMetrics reports".format(n['VariantCallingMetrics']))
+
+        n['ValidateSamFile'] = ValidateSamFile.parse_reports(self)
+        if n['ValidateSamFile'] > 0:
+            log.info("Found {} ValidateSamFile reports".format(n['ValidateSamFile']))
+
         n['WgsMetrics'] = WgsMetrics.parse_reports(self)
         if n['WgsMetrics'] > 0:
             log.info("Found {} WgsMetrics reports".format(n['WgsMetrics']))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Add to the General Stats table (has to be called once per MultiQC module)

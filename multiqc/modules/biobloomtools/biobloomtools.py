@@ -6,7 +6,6 @@ from __future__ import print_function
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -39,7 +38,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.bbt_data = self.ignore_samples(self.bbt_data)
 
         if len(self.bbt_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.bbt_data)))
@@ -93,13 +91,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             'id': 'biobloom_tools',
-            'title': 'BioBloom Tools',
+            'title': 'BioBloom Tools: Alignment counts per species',
+            'ylab': 'Number of hits',
             'hide_zero_cats': False
         }
         cats['multiMatch'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['noMatch'] = { 'name': 'No Match', 'color': '#cccccc' }
 
         return bargraph.plot(data, cats, pconfig)
-
-
-

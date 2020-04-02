@@ -5,9 +5,9 @@
 from __future__ import print_function
 from collections import OrderedDict
 import re
+import os
 import logging
 
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -35,7 +35,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_data = self.ignore_samples(self.qorts_data)
 
         if len(self.qorts_data) == 0:
-            log.debug("Could not find any QoRTs data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} logs".format(len(self.qorts_data)))
@@ -54,8 +53,11 @@ class MultiqcModule(BaseMultiqcModule):
             s = l.split("\t")
             if s_names is None:
                 s_names = [ self.clean_s_name(s_name, f['root']) for s_name in s[1:] ]
-                if len(s_names) == 1 and s_names[0] == 'COUNT':
-                    s_names = [ f['s_name'] ]
+                if len(s_names) <= 2 and s_names[0].endswith('COUNT'):
+                    if f['fn'] == 'QC.summary.txt':
+                        s_names = [ self.clean_s_name( os.path.basename(os.path.normpath(f['root'])), f['root']) ]
+                    else:
+                        s_names = [ f['s_name'] ]
                 for s_name in s_names:
                     if s_name in self.qorts_data:
                         log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
@@ -120,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             description = "This plot displays the rate for which the sample's read-pairs are assigned to the different categories.",
             helptext = '''
             The [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf) describes the categories in this plot as follows:
-            
+
             * **Unique Gene**: The read-pair overlaps with the exonic segments of one and only one gene. For many
               downstream analyses tools, such as DESeq, DESeq2 and EdgeR, only read-pairs in this category
               are used.
@@ -133,9 +135,9 @@ class MultiqcModule(BaseMultiqcModule):
               is within 10 kilobases from the nearest annotated gene.
             * **No Gene: Middle Of Nowhere**: The read-pair does not overlap with the exons of any annotated gene,
               and is more than 10 kilobases from the nearest annotated gene.
-            
+
             _What it means and what to look for:_
-            
+
             Outliers in these plots can indicate biological variations or the presence of large mapping problems.
             They may also suggest the presence of large, highly-expressed, unannotated transcripts or genes.
             ''',
@@ -172,22 +174,22 @@ class MultiqcModule(BaseMultiqcModule):
             description = "This plot shows the number of splice junction loci of each type that appear in the sample's reads.",
             helptext = '''
             The [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf) describes the categories in this plot as follows:
-            
+
             * **Known**: The splice junction locus is found in the supplied transcript annotation gtf file.
             * **Novel**: The splice junction locus is NOT found in the supplied transcript annotation gtf file.
             * **Known: Few reads**: The locus is known, and is only covered by 1-3 read-pairs.
             * **Known: Many reads**: The locus is known, and is covered by 4 or more read-pairs.
             * **Novel: Few reads**: The locus is novel, and is only covered by 1-3 read-pairs.
             * **Novel: Many reads**: The locus is novel, and is covered by 4 or more read-pairs
-            
+
             _What it means and what to look for:_
-            
+
             This plot can be used to detect a number of anomalies. For example:
             whether mapping or sequencing artifacts caused a disproportionate discovery of novel splice junctions in
             one sample or batch. It can also be used as an indicator of the comprehensiveness the genome annotation.
             Replicates that are obvious outliers may have sequencing/technical issues causing false detection of splice
             junctions.
-            
+
             Abnormalities in the splice junction rates are generally a symptom of larger issues which will generally be
             picked up by other metrics. Numerous factors can reduce the efficacy by which aligners map across splice
             junctions, and as such these plots become very important if the intended downstream analyses include
@@ -228,20 +230,20 @@ class MultiqcModule(BaseMultiqcModule):
             description = "This plot shows the number of splice junction events falling into different junction categories.",
             helptext = '''
             From the [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf):
-            
+
             A splice junction "event" is one instance of a read-pair bridging a splice junction.
             Some reads may contain multiple splice junction events, some may contain none. If a splice junction appears
             on both reads of a read-pair, this is still only counted as a single "event".
-            
+
             Note that because different samples/runs may have different total read counts and/or library sizes, this function
             is generally not the best for comparing between samples. In general, the event rates per read-pair should be
             used instead.
             This plot is used to detect whether sample-specific or batch effects have a substantial or biased effect on splice
             junction appearance, either due to differences in the original RNA, or due to artifacts that alter the rate at
             which the aligner maps across splice junctions.
-            
+
             _What it means and what to look for:_
-            
+
             This plot is useful for identifying mapping and/or annotation issues,
             and can indicate the comprehensiveness the genome annotation. Replicates that are obvious outliers may
             have sequencing/technical issues causing false detection of splice junctions.
@@ -269,7 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            'id': 'qorts_splice_events',
+            'id': 'qorts_strand_test',
             'title': 'QoRTs: Strand Test',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads',
@@ -281,11 +283,10 @@ class MultiqcModule(BaseMultiqcModule):
             description = "This plot shows the rate at which reads appear to follow different library-type strandedness rules.",
             helptext = '''
             From the [QoRTs vignette](http://hartleys.github.io/QoRTs/doc/QoRTs-vignette.pdf):
-            
+
             This plot is used to detect whether your data is indeed stranded, and whether you are using the correct
             stranded data library type option. For unstranded libraries, one would expect close to 50-50
             First Strand - Second Strand. For stranded libraries, all points should fall closer to 99% one or the other.
             ''',
             plot = bargraph.plot(self.qorts_data, cats, pconfig)
         )
-

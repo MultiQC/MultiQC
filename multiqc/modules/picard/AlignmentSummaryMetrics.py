@@ -29,7 +29,7 @@ def parse_reports(self):
                 s_name = None
                 keys = None
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT=(\[?[^\s]+\]?)", l)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip('[]'))
                     s_name = self.clean_s_name(s_name, f['root'])
@@ -118,7 +118,7 @@ def parse_reports(self):
         self.add_section (
             name = 'Alignment Summary',
             anchor = 'picard-alignmentsummary',
-            description = "Plase note that Picard's read counts are divided by two for paired-end data.",
+            description = "Please note that Picard's read counts are divided by two for paired-end data.",
             plot = bargraph.plot(pdata, keys, pconfig)
         )
 

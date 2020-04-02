@@ -22,6 +22,22 @@ you can write it as part of a custom plugin. The process is almost identical,
 though it keeps the code bases separate. For more information about this,
 see the docs about _MultiQC Plugins_ below.
 
+## Linting
+MultiQC has been developed to be as forgiving as possible and will handle lots of
+invalid or ignored code. This is useful most of the time but can be difficult when
+writing new MultiQC modules (especially during pull-request reviews).
+
+To help with this, you can run with the `--lint` flag, which will give explicit
+warnings about anything that is not optimally configured. For example:
+
+```
+multiqc --lint test_data
+```
+
+Note that the automated MultiQC continuous integration testing runs in this mode,
+so you will need to pass all lint tests for those checks to pass. This is required
+for any pull-requests.
+
 ## Initial setup
 ### Submodule
 MultiQC modules are Python submodules - as such, they need their own
@@ -37,7 +53,7 @@ from .modname import MultiqcModule
 ### Entry points
 Once your submodule files are in place, you need to tell MultiQC that they
 are available as an analysis module. This is done within `setup.py` using
-[entry points](https://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins).
+[entry points](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
 In `setup.py` you will see some code that looks like this:
 ```python
 entry_points = {
@@ -51,7 +67,7 @@ Copy one of the existing module lines and change it to use your module name.
 The order is irrelevant, so stick to alphabetical if in doubt.
 Once this is done, you will need to update your installation of MultiQC:
 ```
-python setup.py develop
+pip install -e .
 ```
 
 ### MultiQC config
@@ -181,6 +197,14 @@ The following search criteria sub-keys can then be used:
 * `contents_re`
   * A regex to match within the file contents (checked line by line)
   * NB: Regex must match entire line (add `.*` to start and end of pattern to avoid this)
+* `exclude_fn`
+  * A glob filename pattern which will exclude a file if matched
+* `exclude_fn_re`
+  * A regex filename pattern which will exclude a file if matched
+* `exclude_contents`
+  * A string which will exclude the file if matched within the file contents (checked line by line)
+* `exclude_contents_re`
+  * A regex which will exclude the file if matched within the file contents (checked line by line)
 * `num_lines`
   * The number of lines to search through for the `contents` string. Default: all lines.
 * `shared`
@@ -190,6 +214,9 @@ The following search criteria sub-keys can then be used:
 
 Please try to use `num_lines` and `max_filesize` where possible as they will speed up
 MultiQC execution time.
+
+Note that `exclude_` keys are tested after a file is detected with one or
+more of the other patterns.
 
 For example, two typical modules could specify search patterns as follows:
 
@@ -220,6 +247,21 @@ myothermod:
       contents: 'What are these files anyway?'
 ```
 Here, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
+
+You can match subsets of files by using `exclude_` keys as follows:
+
+```yaml
+mymod:
+    fn: '*.myprog.txt'
+    exclude_fn: 'not_these_*'
+myothermod:
+    fn: 'mylog.txt'
+    exclude_contents:
+        - 'trimmed'
+        - 'sorted'
+```
+Note that the `exclude_` patterns can have either a single value or a list of values.
+They are always considered using OR logic - any matches will reject the file.
 
 Remember that users can overwrite these defaults in their own config files.
 This is helpful as people have weird and wonderful processing pipelines with
@@ -258,7 +300,7 @@ What most MultiQC modules do once they have found matching analysis files
 is to pass the matched file contents to another function, responsible
 for parsing the data from the file. How this parsing is done will depend
 on the format of the log file and the type of data being read. See below
-for a basic example, based loosly on the preseq module:
+for a basic example, based loosely on the preseq module:
 
 ```python
 class MultiqcModule(BaseMultiqcModule):
@@ -298,7 +340,6 @@ exception of type `UserWarning`. This tells the core MultiQC program
 that no modules were found. For example:
 ```python
 if len(self.mod_data) == 0:
-    log.debug("Could not find any data in {}".format(config.analysis_dir))
     raise UserWarning
 ```
 
@@ -403,7 +444,7 @@ self.general_stats_addcols(data, headers)
 Here are all options for headers, with defaults:
 ```python
 headers['name'] = {
-    'namespace': '',                # Module name. Auto-generated for General Statistics.
+    'namespace': '',                # Module name. Auto-generated for core modules in General Statistics.
     'title': '[ dict key ]',        # Short title, table column title
     'description': '[ dict key ]',  # Longer description, goes in mouse hover text
     'max': None,                    # Minimum value in range, for bar / colour coding
@@ -414,12 +455,14 @@ headers['name'] = {
     'shared_key': None              # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False,                # Set to True to hide the column on page load
-    'placement' : 1000.0,           # Alter the default ordering of coumns in the table
+    'placement' : 1000.0,           # Alter the default ordering of columns in the table
 }
 ```
 * `namespace`
   * This prepends the column title in the mouse hover: _Namespace: Title_.
-    It's automatically generated for the General Statistics table.
+  * The 'Configure Columns' modal displays this under the 'Group' column.
+  * It's automatically generated for core modules in the General Statistics table,
+    though this can be overwritten (useful for example with custom-content).
 * `scale`
   * Colour scales are the names of ColorBrewer palettes. See below for available scales.
   * Add `-rev` to the name of a colour scale to reverse it
@@ -456,12 +499,18 @@ that should be used to allow users to change the multiplier for read counts: `re
 Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
 `base_count_desc`.
 
-The colour scales are from [ColorBrewer2](http://colorbrewer2.org/) and are named as follows:
-![color brewer](images/cbrewer_scales.png)
-
 A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
 the function and uses this. However, sometimes it can be useful to overwrite this.
+
+
+### Table colour scales
+Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
+Colour scales can be reversed by adding the suffix `-rev` to the name. For example, `RdYlGn-rev`.
+
+The following scales are available:
+
+![color brewer](images/cbrewer_scales.png)
 
 ## Step 4 - Writing data to a file
 In addition to printing data to the General Stats, MultiQC modules typically
@@ -529,6 +578,40 @@ Ok, you have some data, now the fun bit - visualising it! Each of the plot
 types is described in the _Plotting Functions_ section of the docs.
 
 ## Appendices
+
+### User configuration
+Instead of hardcoding defaults, it's a great idea to allow users to configure
+the behaviour of MultiQC module code.
+
+It's pretty easy to use the built in MultiQC configuration settings to do this,
+so that users can set up their config as described
+[above in the docs](http://multiqc.info/docs/#configuring-multiqc).
+
+To do this, just assume that your configuration variables are available in the
+MultiQC `config` module and have sensible defaults. For example:
+
+```python
+from multiqc import config
+
+mymod_config = getattr(config, mymod_config, {})
+my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
+```
+
+You now have a variable `my_custom_config_var` with a default value of 5, but that
+can be configured by a user as follows:
+
+```yaml
+mymod_config:
+    my_custom_config_var: 200
+```
+
+Please be sure to use a unique top-level config name to avoid clashes - prefixing
+with your module name is a good idea as in the example above. Keep all module config
+options under the same top-level name for clarity.
+
+Finally, don't forget to document the usage of your module-specific configuration
+in `docs/modules/mymodule.md` so that people know how to use it.
+
 
 ### Profiling Performance
 It's important that MultiQC runs quickly and efficiently, especially on big

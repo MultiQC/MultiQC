@@ -33,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.hicup_data = self.ignore_samples(self.hicup_data)
 
         if len(self.hicup_data) == 0:
-            log.debug("Could not find any HiCUP data in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.hicup_data)))
@@ -185,6 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
+            'id': 'hicup_truncated_reads_plot',
             'title': 'HiCUP: Truncated Reads',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
@@ -218,6 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
+            'id': 'hicup_mapping_stats_plot',
             'title': 'HiCUP: Mapping Statistics',
             'ylab': '# Reads',
             'cpswitch_counts_label': 'Number of Reads'
@@ -240,6 +241,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
+            'id': 'hicup_filtering_plot',
             'title': 'HiCUP: Filtering Statistics',
             'ylab': '# Read Pairs',
             'cpswitch_counts_label': 'Number of Read Pairs',
@@ -260,6 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         config = {
+            'id': 'hicup_dedup_plot',
             'title': 'HiCUP: De-Duplication Statistics',
             'ylab': '# Di-Tags',
             'cpswitch_counts_label': 'Number of Di-Tags',

@@ -33,12 +33,12 @@ data_dir_name: 'multiqc_data'
 plots_dir_name: 'multiqc_plots'
 data_format: 'tsv'
 module_tag: []
-
 force: false
 prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: ' | '
 file_list: false
+
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: true
@@ -54,10 +54,32 @@ collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
 table_columns_placement: {}
+table_cond_formatting_colours:
+    - blue: '#337ab7'
+    - lbue: '#5bc0de'
+    - pass: '#5cb85c'
+    - warn: '#f0ad4e'
+    - fail: '#d9534f'
+table_cond_formatting_rules:
+    all_columns:
+        pass:
+            - s_eq: 'pass'
+            - s_eq: 'true'
+        warn:
+            - s_eq: 'warn'
+            - s_eq: 'unknown'
+        fail:
+            - s_eq: 'fail'
+            - s_eq: 'false'
 decimalPoint_format: null
 thousandsSep_format: null
+remove_sections: []
 section_comments: {}
+lint: False
+custom_plot_config: {}
 
+ignore_symlinks: false
+ignore_images: true
 fn_ignore_dirs:
     - 'multiqc_data'
     - 'icarus_viewers'       # quast
@@ -106,8 +128,12 @@ fn_clean_exts:
     - '.log'
     - '.stderr'
     - '.out'
+    - '.spp'
     - '.fa'
     - '.fasta'
+    - '.png'
+    - '.jpg'
+    - '.jpeg'
     - 'Log.final'
     - 'ReadsPerGene'
     - '.flagstat'
@@ -139,11 +165,28 @@ fn_clean_exts:
     - '.concordance'
     - '.contamination'
     - '.BEST.results'
-    - '_summary'
-    - '.summary'
     - '_peaks.xls'
     - '.relatedness'
     - '.cnt'
+    - '.aqhist'
+    - '.bhist'
+    - '.bincov'
+    - '.bqhist'
+    - '.covhist'
+    - '.covstats'
+    - '.ehist'
+    - '.gchist'
+    - '.idhist'
+    - '.ihist'
+    - '.indelhist'
+    - '.lhist'
+    - '.mhist'
+    - '.qahist'
+    - '.qhist'
+    - '.rpkm'
+    - '.selfSM'
+    - '.extendedFrags'
+    - '_SummaryStatistics'
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -156,18 +199,27 @@ fn_clean_trim:
     - '_val'
     - '.idxstats'
     - '_trimmed'
+    - '.trimmed'
     - '.csv'
     - '.yaml'
     - '.yml'
     - '.json'
     - '_mqc'
     - 'short_summary_'
+    - '_summary'
+    - '.summary'
+    - '.align'
+    - '.h5'
+    - '_matrix'
+    - '.stats'
+    - '.hist'
 
 # Files to ignore when indexing files.
 # Grep file match patterns.
 fn_ignore_files:
     - '.DS_Store'
     - '*.bam'
+    - '*.bai'
     - '*.sam'
     - '*.fq.gz'
     - '*.fastq.gz'
@@ -180,6 +232,7 @@ fn_ignore_files:
     - '*.txt.gz'
     - '*.pdf'
     - '*.html'
+    - '*.md5'
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -203,6 +256,9 @@ module_order:
         module_tag:
             - Methylation
             - DNA
+    - phantompeakqualtools:
+        module_tag:
+            - chip
     - qualimap:
         module_tag:
             - DNA
@@ -237,6 +293,29 @@ module_order:
     - disambiguate:
         module_tag:
             - RNA
+    - supernova:
+        module_tag:
+            - DNA
+            - Denovo
+    - deeptools:
+        module_tag:
+            - DNA
+            - RNA
+            - chip
+    - sargasso:
+        module_tag:
+            - RNA
+    - verifybamid:
+        module_tag:
+            - DNA
+    - mirtrace:
+        module_tag:
+            - smRNA
+            - miRNA
+    - happy:
+        module_tag:
+            - DNA
+
     # Post-alignment processing
     - homer:
         module_tag:
@@ -267,6 +346,27 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - fgbio:
+        module_tag:
+            - DNA
+            - RNA
+            - umi
+    - dedup:
+        module_tag:
+            - DNA
+            - ancient
+    - damageprofiler:
+        module_tag:
+            - DNA
+            - ancient
+    - biobambam2:
+        module_tag:
+            - DNA
+            - RNA
+    - mtnucratio:
+        module_tag:
+            - DNA
+            - ancient
     - picard:
         module_tag:
             - DNA
@@ -274,7 +374,7 @@ module_order:
     - prokka:
         module_tag:
             - prokarytotic
-            - Denovo
+            - denovo
     - samblaster:
         module_tag:
             - DNA
@@ -283,6 +383,9 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - sexdeterrmine:
+        module_tag:
+            - DNA
     - bamtools:
         module_tag:
             - DNA
@@ -293,13 +396,34 @@ module_order:
     - vcftools:
         module_tag:
             - DNA
+    - longranger:
+        module_tag:
+            - DNA
+            - WGS
+    - stacks:
+        module_tag:
+            - DNA
 
     # Alignment tool stats
+    - bbmap:
+        module_tag:
+            - DNA
+            - RNA
     - bismark:
         module_tag:
             - DNA
             - methylation
+    - biscuit:
+        module_tag:
+            - DNA
+            - methylation
+    - hicexplorer:
+        module_tag:
+            - hi-c
     - hicup:
+        module_tag:
+            - hi-c
+    - hicpro:
         module_tag:
             - hi-c
     - salmon:
@@ -334,6 +458,9 @@ module_order:
             - allele-specific
 
     # Pre-alignment QC
+    - kat:
+        module_tag:
+            - DNA
     - leehom:
         module_tag:
             - RNA
@@ -342,6 +469,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - clipandmerge:
+        module_tag:
+            - DNA
+            - ancient
     - cutadapt:
         module_tag:
             - RNA
@@ -370,10 +501,26 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - afterqc:
+        module_tag:
+            - RNA
+            - DNA
+    - fastp:
+        module_tag:
+            - RNA
+            - DNA
     - fastqc:
         module_tag:
             - RNA
             - DNA
+    - minionqc:
+        module_tag:
+            - DNA
+            - RNA
+    - mosdepth:
+        module_tag:
+            - DNA
+            - RNA
     - clusterflow:
         module_tag:
             - RNA
@@ -384,3 +531,17 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - interop:
+        module_tag:
+            - RNA
+            - DNA
+            - methylation
+    - flash:
+        module_tag:
+            - DNA
+            - RNA
+
+    - seqyclean:
+        module_tag:
+            - DNA
+            - RNA

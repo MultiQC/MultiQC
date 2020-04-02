@@ -25,6 +25,19 @@ class MultiqcModule(BaseMultiqcModule):
         info="is a quality assessment tool for genome assemblies, written by " \
              "the Center for Algorithmic Biotechnology.")
 
+        # Get modifiers from config file
+        qconfig = getattr(config, "quast_config", {})
+
+        self.contig_length_multiplier = qconfig.get('contig_length_multiplier', 0.001)
+        self.contig_length_suffix = qconfig.get('contig_length_suffix', 'Kbp')
+
+        self.total_length_multiplier = qconfig.get('total_length_multiplier', 0.000001)
+        self.total_length_suffix = qconfig.get('total_length_suffix', 'Mbp')
+
+        self.total_number_contigs_multiplier = qconfig.get('total_number_contigs_multiplier', 0.001)
+        self.total_number_contigs_suffix = qconfig.get('total_number_contigs_suffix', 'K')
+
+
         # Find and load any QUAST reports
         self.quast_data = dict()
         for f in self.find_log_files('quast'):
@@ -34,7 +47,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.quast_data = self.ignore_samples(self.quast_data)
 
         if len(self.quast_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.quast_data)))
@@ -69,6 +81,16 @@ class MultiqcModule(BaseMultiqcModule):
                           assembly, broken down by length.""",
                 plot = ng_pdata
             )
+        # Number of partial genes plot
+        ng_pdata = self.quast_predicted_genes_barplot(partial=True)
+        if ng_pdata:
+            self.add_section (
+                name = 'Number of Partially Predicted Genes',
+                anchor = 'quast-partial-genes',
+                description = """This plot shows the number of partially predicted genes found for each
+                          assembly, broken down by length.""",
+                plot = ng_pdata
+            )
 
     def parse_quast_log(self, f):
         lines = f['f'].splitlines()
@@ -90,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
             k = s[0]
             for i, v in enumerate(s[1:]):
                 s_name = s_names[i+1]
-                partials = re.search("(\d+) \+ (\d+) part", v)
+                partials = re.search(r"(\d+) \+ (\d+) part", v)
                 if partials:
                     whole = partials.group(1)
                     partial = partials.group(2)
@@ -112,76 +134,80 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['N50'] = {
-            'title': 'N50 (Kbp)',
+            'title': 'N50 ({})'.format(self.contig_length_suffix),
             'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x * self.contig_length_multiplier
         }
         headers['Total length'] = {
-            'title': 'Length (Mbp)',
+            'title': 'Length ({})'.format(self.total_length_suffix),
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': self.total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x * self.total_length_multiplier
         }
         self.general_stats_addcols(self.quast_data, headers)
 
     def quast_table(self):
         """ Write some more statistics about the assemblies in a table. """
-
         headers = OrderedDict()
+
         headers['N50'] = {
-            'title': 'N50 (Kbp)',
-            'description': 'N50 is the contig length such that using longer or equal length contigs produces 50% of the bases of the assembly (kilo base pairs)',
+            'title': 'N50 ({})'.format(self.contig_length_suffix),
+            'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x * self.contig_length_multiplier
         }
 
         headers['N75'] = {
-            'title': 'N75 (Kbp)',
-            'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly (kilo base pairs)',
+            'title': 'N75 ({})'.format(self.contig_length_suffix),
+            'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': self.contig_length_suffix,
             'scale': 'RdYlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x * self.contig_length_multiplier
         }
+
         headers['L50'] = {
-            'title': 'L50 (k)',
+            'title': 'L50 ({})'.format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else 'L50',
             'description': 'L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.',
             'min': 0,
-            'suffix': '',
+            'suffix': self.total_number_contigs_suffix,
             'scale': 'GnYlRd',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x * self.total_number_contigs_multiplier
         }
+
         headers['L75'] = {
-            'title': 'L75 (k)',
+            'title': 'L75 ({})'.format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else 'L75',
             'description': 'L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.',
             'min': 0,
-            'suffix': '',
+            'suffix': self.total_number_contigs_suffix,
             'scale': 'GnYlRd',
-            'modify': lambda x: x / 1000
+            'mofidy': lambda x: x * self.total_number_contigs_multiplier
         }
         headers['Largest contig'] = {
-            'title': 'Largest contig (Kbp)',
-            'description': 'The total number of bases in the assembly (mega base pairs).',
+            'title': 'Largest contig ({})'.format(self.contig_length_suffix),
+            'description': 'The size of the largest contig of the assembly',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': self.contig_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000
+            'modify': lambda x: x * self.contig_length_multiplier
         }
+
         headers['Total length'] = {
-            'title': 'Length (Mbp)',
-            'description': 'The total number of bases in the assembly (mega base pairs).',
+            'title': 'Length ({})'.format(self.total_length_suffix),
+            'description': 'The total number of bases in the assembly.',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': self.total_length_suffix,
             'scale': 'YlGn',
-            'modify': lambda x: x / 1000000
+            'modify': lambda x: x * self.total_length_multiplier
         }
+
         headers['# misassemblies'] = {
             'title': 'Misassemblies',
             'description': 'The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).',
@@ -244,9 +270,9 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.quast_data.items():
             nums_by_t = dict()
             for k, v in d.items():
-                m = re.match('# contigs \(>= (\d+) bp\)', k)
-                if m:
-                    nums_by_t[int(m.groups()[0])] = v
+                m = re.match(r'# contigs \(>= (\d+) bp\)', k)
+                if m and v != '-':
+                    nums_by_t[int(m.groups()[0])] = int(v)
 
             tresholds = sorted(nums_by_t.keys(), reverse=True)
             p = dict()
@@ -262,9 +288,6 @@ class MultiqcModule(BaseMultiqcModule):
                     p[c] = nums_by_t[t] - nums_by_t[tresholds[i - 1]]
             if not categories:
                 categories = cats
-            elif set(cats) != set(categories):
-                log.warning("Different contig threshold categories for samples, skip plotting barplot".format(s_name))
-                continue
             data[s_name] = p
 
         pconfig = {
@@ -276,7 +299,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(data, categories, pconfig)
 
-    def quast_predicted_genes_barplot(self):
+    def quast_predicted_genes_barplot(self, partial=False):
         """
         Make a bar plot showing the number and length of predicted genes
         for each assembly
@@ -284,44 +307,48 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Prep the data
         # extract the ranges given to quast with "--gene-thresholds"
-        prefix = '# predicted genes (>= '
-        suffix = ' bp)'
-        all_thresholds = sorted(list(set([
-            int(key[len(prefix):-len(suffix)])
-            for _, d in self.quast_data.items()
-            for key in d.keys()
-            if key.startswith(prefix)
-            ])))
+        # keys look like:
+        #   `# predicted genes (>= 300 bp)`
+        #   `# predicted genes (>= 300 bp)_partial`
+        pattern = re.compile(r'# predicted genes \(>= (\d+) bp\)' + ('_partial' if partial else ''))
 
         data = {}
-        ourpat = '>= {}{} bp'
-        theirpat = prefix+"{}"+suffix
+        all_categories = []
+        data_key = '# predicted genes (>= {} bp)' + ('_partial' if partial else '')
         for s_name, d in self.quast_data.items():
-            thresholds = sorted(list(set([
-                int(key[len(prefix):-len(suffix)])
-                for _, x in self.quast_data.items()
-                for key in x.keys()
-                if key.startswith(prefix)
-            ])))
-            if len(thresholds)<2: continue
+            thresholds = []
+            for k in d.keys():
+                m = re.match(pattern, k)
+                if m:
+                    thresholds.append(int(m.groups()[0]))
+            thresholds = sorted(list(set(thresholds)))
+            if len(thresholds) < 2:
+                continue
 
-            p = dict()
+            highest_threshold = thresholds[-1]
+            highest_cat = (highest_threshold, '>= {} bp'.format(highest_threshold))  # tuple (key-for-sorting, label)
+            all_categories.append(highest_cat)
+            plot_data = { highest_cat[1]: d[data_key.format(highest_threshold)] }
+
+            # converting >=T1, >=T2,.. into 0-T1, T1-T2,..
+            for low, high in zip(thresholds[:-1], thresholds[1:]):
+                cat = (low, '{}-{} bp'.format(low, high))
+                all_categories.append(cat)
+                plot_data[cat[1]] = d[data_key.format(low)] - d[data_key.format(high)]
+
             try:
-                p = { ourpat.format(thresholds[-1],""): d[theirpat.format(thresholds[-1])] }
-                for low,high in zip(thresholds[:-1], thresholds[1:]):
-                    p[ourpat.format(low,-high)] = d[theirpat.format(low)] - d[theirpat.format(high)]
-
-                assert sum(p.values()) == d[theirpat.format(0)]
+                assert sum(plot_data.values()) == d[data_key.format(0)]
             except AssertionError:
-                log.warning("Predicted gene counts didn't add up properly for \"{}\"".format(s_name))
-            except KeyError:
-                log.warning("Not all predicted gene thresholds available for \"{}\"".format(s_name))
-            data[s_name] = p
+                raise UserWarning("Predicted gene counts didn't add up properly for \"{}\"".format(s_name))
 
-        cats = [ ourpat.format(low,-high if high else "")
-                 for low,high in zip(all_thresholds, all_thresholds[1:]+[None]) ]
+            data[s_name] = plot_data
 
-        if len(cats) > 0:
-            return bargraph.plot(data, cats, {'id': 'quast_predicted_genes', 'title': 'QUAST: Number of predicted genes'})
+        all_categories = [label for k, label in sorted(list(set(all_categories)))]
+
+        if len(all_categories) > 0:
+            return bargraph.plot(data, all_categories,
+                                 {'id': 'quast_' + ('partially_' if partial else '') + 'predicted_genes',
+                                  'title': 'QUAST: Number of ' + ('partially ' if partial else '') + 'predicted genes',
+                                  'ylab': 'Number of ' + ('partially ' if partial else '') + 'predicted genes'})
         else:
             return None

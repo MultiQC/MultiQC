@@ -10,7 +10,6 @@ import re
 import os
 import time
 
-from multiqc import config
 from multiqc.plots import table
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -47,7 +46,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.clusterflow_runfiles = self.ignore_samples(self.clusterflow_runfiles)
 
         if len(self.clusterflow_commands) == 0 and len(self.clusterflow_runfiles) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         # Count pipelines
@@ -138,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         table_config = {
             'namespace': 'Cluster Flow',
-            'id': 'clusterflow-commands',
+            'id': 'clusterflow-commands-table',
             'table_title': 'Cluster Flow Commands',
             'col1_header': 'Tool',
             'sortRows': False,
@@ -308,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers['num_starting_files'] = {'title': '# Starting Files', 'format': '{:,.0f}', 'description': 'Number of input files at start of pipeline run.'}
         table_config = {
             'namespace': 'Cluster Flow',
-            'id': 'clusterflow-pipelines',
+            'id': 'clusterflow-pipelines-table',
             'table_title': 'Cluster Flow Pipelines',
             'col1_header': 'Pipeline ID',
             'no_beeswarm': True,
@@ -341,4 +339,3 @@ class MultiqcModule(BaseMultiqcModule):
                 </div>
                 '''.format(pid, d[0], d[1])
         return html
-

@@ -56,7 +56,10 @@ class datatable (object):
             for k in list(headers[idx].keys()):
                 headers[idx][str(k)] = headers[idx].pop(k)
             # Ensure that all sample names are strings as well
-            data[idx] = {str(k):v for k,v in data[idx].items()}
+            cdata = OrderedDict()
+            for k,v in data[idx].items():
+                cdata[str(k)] = v
+            data[idx] = cdata
             for s_name in data[idx].keys():
                 for k in list(data[idx][s_name].keys()):
                     data[idx][s_name][str(k)] = data[idx][s_name].pop(k)
@@ -76,7 +79,23 @@ class datatable (object):
 
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                headers[idx][k]['rid'] = report.save_htmlid(re.sub(r'\W+', '_', k))
+                if 'rid' not in headers[idx][k]:
+                    headers[idx][k]['rid'] = report.save_htmlid(re.sub(r'\W+', '_', k).strip().strip('_'))
+
+                # Applying defaults presets for data keys if shared_key is set to base_count or read_count
+                shared_key = headers[idx][k].get('shared_key', None)
+                if shared_key in ['read_count', 'base_count']:
+                    if shared_key == 'read_count':
+                        multiplier = config.read_count_multiplier
+                    else:
+                        multiplier = config.base_count_multiplier
+                    if headers[idx][k].get('modify') is None:
+                        headers[idx][k]['modify'] = lambda x: x * multiplier
+                    if headers[idx][k].get('min') is None:
+                        headers[idx][k]['min'] = 0
+                    if headers[idx][k].get('format') is None:
+                        if multiplier == 1:
+                            headers[idx][k]['format'] = '{:,.0f}'
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]['namespace']   = headers[idx][k].get('namespace', pconfig.get('namespace', ''))
@@ -102,17 +121,30 @@ class datatable (object):
                     headers[idx][k]['colour'] = sectcols[cidx]
 
                 # Overwrite hidden if set in user config
-                try:
-                    # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
-                    headers[idx][k]['hidden'] = not config.table_columns_visible[ headers[idx][k]['namespace'] ][k]
-                except KeyError:
-                    pass
+                for ns in config.table_columns_visible.keys():
+                    # Make namespace key case insensitive
+                    if ns.lower() == headers[idx][k]['namespace'].lower():
+
+                        # First - if config value is a bool, set all module columns to that value
+                        if isinstance(config.table_columns_visible[ns], bool):
+                            headers[idx][k]['hidden'] = not config.table_columns_visible[ns]
+
+                        # Not a bool, assume a dict of the specific column IDs
+                        else:
+                            try:
+                                # Config has True = visibile, False = Hidden. Here we're setting "hidden" which is inverse
+                                headers[idx][k]['hidden'] = not config.table_columns_visible[ns][k]
+                            except KeyError:
+                                pass
 
                 # Also overwite placement if set in config
                 try:
                     headers[idx][k]['placement'] = float(config.table_columns_placement[ headers[idx][k]['namespace'] ][k])
                 except (KeyError, ValueError):
-                    pass
+                    try:
+                        headers[idx][k]['placement'] = float(config.table_columns_placement[ pconfig['id'] ][k])
+                    except (KeyError, ValueError):
+                        pass
 
                 # Work out max and min value if not given
                 setdmax = False

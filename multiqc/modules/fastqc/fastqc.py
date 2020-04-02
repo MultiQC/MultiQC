@@ -20,8 +20,9 @@ import re
 import zipfile
 
 from multiqc import config
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import linegraph, bargraph, heatmap
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -71,7 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
 
         if len(self.fastqc_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.fastqc_data)))
@@ -101,9 +101,12 @@ class MultiqcModule(BaseMultiqcModule):
                     statuses[section][s_name] = status
                 except KeyError:
                     statuses[section] = {s_name: status}
-        self.intro += '<script type="text/javascript">fastqc_passfails = {};</script>'.format(json.dumps(statuses))
+        self.intro += '<script type="application/json" class="fastqc_passfails">{}</script>'.format(json.dumps([self.anchor.replace('-', '_'), statuses ]))
+
+        self.intro += '<script type="text/javascript">load_fastqc_passfails();</script>'
 
         # Now add each section in order
+        self.read_count_plot()
         self.sequence_quality_plot()
         self.per_seq_quality_plot()
         self.sequence_content_plot()
@@ -113,6 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.seq_dup_levels_plot()
         self.overrepresented_sequences()
         self.adapter_content_plot()
+        self.status_heatmap()
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
         """ Takes contents from a fastq_data.txt file and parses out required
@@ -265,6 +269,62 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(data, headers)
 
 
+    def read_count_plot (self):
+        """ Stacked bar plot showing counts of reads """
+        pconfig = {
+            'id': 'fastqc_sequence_counts_plot',
+            'title': 'FastQC: Sequence Counts',
+            'ylab': 'Number of reads',
+            'cpswitch_counts_label': 'Number of reads',
+            'hide_zero_cats': False
+        }
+        pdata = dict()
+        has_dups = False
+        has_total = False
+        for s_name in self.fastqc_data:
+            pd = self.fastqc_data[s_name]['basic_statistics']
+            pdata[s_name] = dict()
+            try:
+                pdata[s_name]['Duplicate Reads'] = int(((100.0 - float(pd['total_deduplicated_percentage']))/100.0) * pd['Total Sequences'])
+                pdata[s_name]['Unique Reads'] = pd['Total Sequences'] - pdata[s_name]['Duplicate Reads']
+                has_dups = True
+            except KeyError:
+                # Older versions of FastQC don't have duplicate reads
+                pdata[s_name] = { 'Total Sequences': pd['Total Sequences'] }
+                has_total = True
+        pcats = list()
+        duptext = ''
+        if has_total:
+            pcats.append('Total Sequences')
+        if has_dups:
+            pcats.extend(['Unique Reads', 'Duplicate Reads'])
+            duptext = ' Duplicate read counts are an estimate only.'
+        if has_total and not has_dups:
+            pconfig['use_legend'] = False
+            pconfig['cpswitch'] = False
+        self.add_section (
+            name = 'Sequence Counts',
+            anchor = 'fastqc_sequence_counts',
+            description = 'Sequence counts for each sample.'+duptext,
+            helptext = '''
+            This plot show the total number of reads, broken down into unique and duplicate
+            if possible (only more recent versions of FastQC give duplicate info).
+
+            You can read more about duplicate calculation in the
+            [FastQC documentation](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html).
+            A small part has been copied here for convenience:
+
+            _Only sequences which first appear in the first 100,000 sequences
+            in each file are analysed. This should be enough to get a good impression
+            for the duplication levels in the whole file. Each sequence is tracked to
+            the end of the file to give a representative count of the overall duplication level._
+
+            _The duplication detection requires an exact sequence match over the whole length of
+            the sequence. Any reads over 75bp in length are truncated to 50bp for this analysis._
+            ''',
+            plot = bargraph.plot(pdata, pcats, pconfig)
+        )
+
     def sequence_quality_plot (self):
         """ Create the HTML for the phred quality score plot """
 
@@ -296,8 +356,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Sequence Quality Histograms',
             anchor = 'fastqc_per_base_sequence_quality',
-            description = 'The mean quality value across each base position in the read. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html" target="_blank">FastQC help</a>.',
+            description = 'The mean quality value across each base position in the read.',
+            helptext = '''
+            To enable multiple samples to be plotted on the same graph, only the mean quality
+            scores are plotted (unlike the box plots seen in FastQC reports).
+
+            Taken from the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/2%20Per%20Base%20Sequence%20Quality.html):
+
+            _The y-axis on the graph shows the quality scores. The higher the score, the better
+            the base call. The background of the graph divides the y axis into very good quality
+            calls (green), calls of reasonable quality (orange), and calls of poor quality (red).
+            The quality of calls on most platforms will degrade as the run progresses, so it is
+            common to see base calls falling into the orange area towards the end of a read._
+            ''',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -334,17 +405,21 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Per Sequence Quality Scores',
             anchor = 'fastqc_per_sequence_quality_scores',
-            description = 'The number of reads with average quality scores. Shows if a subset of reads has poor quality. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html" target="_blank">FastQC help</a>.',
+            description = 'The number of reads with average quality scores. Shows if a subset of reads has poor quality.',
+            helptext = '''
+            From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/3%20Per%20Sequence%20Quality%20Scores.html):
+
+            _The per sequence quality score report allows you to see if a subset of your
+            sequences have universally low quality values. It is often the case that a
+            subset of sequences will have universally poor quality, however these should
+            represent only a small percentage of the total sequences._
+            ''',
             plot = linegraph.plot(data, pconfig)
         )
 
 
     def sequence_content_plot (self):
         """ Create the epic HTML for the FastQC sequence content heatmap """
-
-        html =  '<p>The proportion of each base position for which each of the four normal DNA bases has been called. \
-                    See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html" target="_blank">FastQC help</a>.</p>'
 
         # Prep the data
         data = OrderedDict()
@@ -365,7 +440,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('sequence_content not found in FastQC reports')
             return None
 
-        html += '''<div id="fastqc_per_base_sequence_content_plot_div">
+        html = '''<div id="fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
                <span class="glyphicon glyphicon-hand-up"></span>
                Click a sample row to see a line plot for that dataset.
@@ -380,20 +455,52 @@ class MultiqcModule(BaseMultiqcModule):
                 <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
             </div>
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="fastqc_per_base_sequence_content_plot" class="hc-plot has-custom-export">
+                <div id="{id}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
                 </div>
             </div>
             <div class="clearfix"></div>
         </div>
-        <script type="text/javascript">
-            fastqc_seq_content_data = {d};
-            $(function () {{ fastqc_seq_content_heatmap(); }});
-        </script>'''.format(d=json.dumps(data))
+        <script type="application/json" class="fastqc_seq_content">{d}</script>
+        '''.format(
+            # Generate unique plot ID, needed in mqc_export_selectplots
+            id=report.save_htmlid('fastqc_per_base_sequence_content_plot'),
+            d=json.dumps([self.anchor.replace('-', '_'), data]),
+        )
 
         self.add_section (
             name = 'Per Base Sequence Content',
             anchor = 'fastqc_per_base_sequence_content',
+            description = 'The proportion of each base position for which each of the four normal DNA bases has been called.',
+            helptext = '''
+            To enable multiple samples to be shown in a single plot, the base composition data
+            is shown as a heatmap. The colours represent the balance between the four bases:
+            an even distribution should give an even muddy brown colour. Hover over the plot
+            to see the percentage of the four bases under the cursor.
+
+            **To see the data as a line plot, as in the original FastQC graph, click on a sample track.**
+
+            From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html):
+
+            _Per Base Sequence Content plots out the proportion of each base position in a
+            file for which each of the four normal DNA bases has been called._
+
+            _In a random library you would expect that there would be little to no difference
+            between the different bases of a sequence run, so the lines in this plot should
+            run parallel with each other. The relative amount of each base should reflect
+            the overall amount of these bases in your genome, but in any case they should
+            not be hugely imbalanced from each other._
+
+            _It's worth noting that some types of library will always produce biased sequence
+            composition, normally at the start of the read. Libraries produced by priming
+            using random hexamers (including nearly all RNA-Seq libraries) and those which
+            were fragmented using transposases inherit an intrinsic bias in the positions
+            at which reads start. This bias does not concern an absolute sequence, but instead
+            provides enrichement of a number of different K-mers at the 5' end of the reads.
+            Whilst this is a true technical bias, it isn't something which can be corrected
+            by trimming and in most cases doesn't seem to adversely affect the downstream
+            analysis._
+            ''',
             content = html
         )
 
@@ -420,7 +527,6 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'fastqc_per_sequence_gc_content_plot',
             'title': 'FastQC: Per Sequence GC Content',
-            'ylab': 'Count',
             'xlab': '% GC',
             'ymin': 0,
             'xmax': 100,
@@ -469,8 +575,8 @@ class MultiqcModule(BaseMultiqcModule):
                     except (TypeError, IndexError):
                         pass
 
-        desc = '''The average GC content of reads. Normal random library typically have a roughly normal distribution of GC content.
-                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html" target="_blank">FastQC help</a>.</p>'''
+        desc = '''The average GC content of reads. Normal random library typically have a
+        roughly normal distribution of GC content.'''
         if theoretical_gc is not None:
             # Calculate the count version of the theoretical data based on the largest data store
             max_total = max([sum (d.values()) for d in data.values() ])
@@ -486,12 +592,31 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig['extra_series'] = [ [dict(esconfig)], [dict(esconfig)] ]
             pconfig['extra_series'][0][0]['data'] = theoretical_gc
             pconfig['extra_series'][1][0]['data'] = [ [ d[0], (d[1]/100.0)*max_total ] for d in theoretical_gc ]
-            desc = '</p><p>The dashed black line shows theoretical GC content: {}.'.format(theoretical_gc_name)
+            desc = " **The dashed black line shows theoretical GC content:** `{}`".format(theoretical_gc_name)
 
         self.add_section (
             name = 'Per Sequence GC Content',
             anchor = 'fastqc_per_sequence_gc_content',
             description = desc,
+            helptext = '''
+            From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/5%20Per%20Sequence%20GC%20Content.html):
+
+            _This module measures the GC content across the whole length of each sequence
+            in a file and compares it to a modelled normal distribution of GC content._
+
+            _In a normal random library you would expect to see a roughly normal distribution
+            of GC content where the central peak corresponds to the overall GC content of
+            the underlying genome. Since we don't know the the GC content of the genome the
+            modal GC content is calculated from the observed data and used to build a
+            reference distribution._
+
+            _An unusually shaped distribution could indicate a contaminated library or
+            some other kinds of biased subset. A normal distribution which is shifted
+            indicates some systematic bias which is independent of base position. If there
+            is a systematic bias which creates a shifted normal distribution then this won't
+            be flagged as an error by the module since it doesn't know what your genome's
+            GC content should be._
+            ''',
             plot = linegraph.plot([data_norm, data], pconfig)
         )
 
@@ -531,8 +656,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Per Base N Content',
             anchor = 'fastqc_per_base_n_content',
-            description = 'The percentage of base calls at each position for which an N was called. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html" target="_blank">FastQC help</a>.',
+            description = 'The percentage of base calls at each position for which an `N` was called.',
+            helptext = '''
+            From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/6%20Per%20Base%20N%20Content.html):
+
+            _If a sequencer is unable to make a base call with sufficient confidence then it will
+            normally substitute an `N` rather than a conventional base call. This graph shows the
+            percentage of base calls at each position for which an `N` was called._
+
+            _It's not unusual to see a very low proportion of Ns appearing in a sequence, especially
+            nearer the end of a sequence. However, if this proportion rises above a few percent
+            it suggests that the analysis pipeline was unable to interpret the data well enough to
+            make valid base calls._
+            ''',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -577,12 +713,11 @@ class MultiqcModule(BaseMultiqcModule):
                 'colors': self.get_status_cols('sequence_length_distribution'),
                 'tt_label': '<b>{point.x} bp</b>: {point.y}',
             }
-            desc =  'The distribution of fragment sizes (read lengths) found. \
-                See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html" target="_blank">FastQC help</a>.'
             self.add_section (
                 name = 'Sequence Length Distribution',
                 anchor = 'fastqc_sequence_length_distribution',
-                description = desc,
+                description = '''The distribution of fragment sizes (read lengths) found.
+                    See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)''',
                 plot = linegraph.plot(data, pconfig)
             )
 
@@ -591,13 +726,17 @@ class MultiqcModule(BaseMultiqcModule):
         """ Create the HTML for the Sequence Duplication Levels plot """
 
         data = dict()
+        max_dupval = 0
         for s_name in self.fastqc_data:
             try:
-                d = {d['duplication_level']: d['percentage_of_total'] for d in self.fastqc_data[s_name]['sequence_duplication_levels']}
+                thisdata = {}
+                for d in self.fastqc_data[s_name]['sequence_duplication_levels']:
+                    thisdata[d['duplication_level']] = d['percentage_of_total']
+                    max_dupval = max(max_dupval, d['percentage_of_total'])
                 data[s_name] = OrderedDict()
                 for k in self.dup_keys:
                     try:
-                        data[s_name][k] = d[k]
+                        data[s_name][k] = thisdata[k]
                     except KeyError:
                         pass
             except KeyError:
@@ -605,14 +744,13 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) == 0:
             log.debug('sequence_length_distribution not found in FastQC reports')
             return None
-
         pconfig = {
             'id': 'fastqc_sequence_duplication_levels_plot',
             'title': 'FastQC: Sequence Duplication Levels',
             'categories': True,
             'ylab': '% of Library',
             'xlab': 'Sequence Duplication Level',
-            'ymax': 100,
+            'ymax': 100 if max_dupval <= 100.0 else None,
             'ymin': 0,
             'yMinTickInterval': 0.1,
             'colors': self.get_status_cols('sequence_duplication_levels'),
@@ -622,8 +760,32 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Sequence Duplication Levels',
             anchor = 'fastqc_sequence_duplication_levels',
-            description = 'The relative level of duplication found for every sequence. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html" target="_bkank">FastQC help</a>.',
+            description = 'The relative level of duplication found for every sequence.',
+            helptext = '''
+            From the [FastQC Help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/8%20Duplicate%20Sequences.html):
+
+            _In a diverse library most sequences will occur only once in the final set.
+            A low level of duplication may indicate a very high level of coverage of the
+            target sequence, but a high level of duplication is more likely to indicate
+            some kind of enrichment bias (eg PCR over amplification). This graph shows
+            the degree of duplication for every sequence in a library: the relative
+            number of sequences with different degrees of duplication._
+
+            _Only sequences which first appear in the first 100,000 sequences
+            in each file are analysed. This should be enough to get a good impression
+            for the duplication levels in the whole file. Each sequence is tracked to
+            the end of the file to give a representative count of the overall duplication level._
+
+            _The duplication detection requires an exact sequence match over the whole length of
+            the sequence. Any reads over 75bp in length are truncated to 50bp for this analysis._
+
+            _In a properly diverse library most sequences should fall into the far left of the
+            plot in both the red and blue lines. A general level of enrichment, indicating broad
+            oversequencing in the library will tend to flatten the lines, lowering the low end
+            and generally raising other categories. More specific enrichments of subsets, or
+            the presence of low complexity contaminants will tend to produce spikes towards the
+            right of the plot._
+            ''',
             plot = linegraph.plot(data, pconfig)
         )
 
@@ -675,8 +837,29 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Overrepresented sequences',
             anchor = 'fastqc_overrepresented_sequences',
-            description = 'The total amount of overrepresented sequences found in each library. ' +
-                    'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html" target="_bkank">FastQC help for further information</a>.',
+            description = 'The total amount of overrepresented sequences found in each library.',
+            helptext = '''
+            FastQC calculates and lists overrepresented sequences in FastQ files. It would not be
+            possible to show this for all samples in a MultiQC report, so instead this plot shows
+            the _number of sequences_ categorized as over represented.
+
+            Sometimes, a single sequence  may account for a large number of reads in a dataset.
+            To show this, the bars are split into two: the first shows the overrepresented reads
+            that come from the single most common sequence. The second shows the total count
+            from all remaining overrepresented sequences.
+
+            From the [FastQC Help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html):
+
+            _A normal high-throughput library will contain a diverse set of sequences, with no
+            individual sequence making up a tiny fraction of the whole. Finding that a single
+            sequence is very overrepresented in the set either means that it is highly biologically
+            significant, or indicates that the library is contaminated, or not as diverse as you expected._
+
+            _FastQC lists all of the sequences which make up more than 0.1% of the total.
+            To conserve memory only sequences which appear in the first 100,000 sequences are tracked
+            to the end of the file. It is therefore possible that a sequence which is overrepresented
+            but doesn't appear at the start of the file for some reason could be missed by this module._
+            ''',
             plot  = plot_html
         )
 
@@ -739,10 +922,95 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section (
             name = 'Adapter Content',
             anchor = 'fastqc_adapter_content',
-            description = 'The cumulative percentage count of the proportion of your library which has seen each of the adapter sequences at each position. ' +
-                        'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html" target="_bkank">FastQC help</a>. ' +
-                        'Only samples with &ge; 0.1% adapter contamination are shown.',
+            description = '''The cumulative percentage count of the proportion of your
+            library which has seen each of the adapter sequences at each position.''',
+            helptext = '''
+            Note that only samples with &ge; 0.1% adapter contamination are shown.
+
+            There may be several lines per sample, as one is shown for each adapter
+            detected in the file.
+
+            From the [FastQC Help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html):
+
+            _The plot shows a cumulative percentage count of the proportion
+            of your library which has seen each of the adapter sequences at each position.
+            Once a sequence has been seen in a read it is counted as being present
+            right through to the end of the read so the percentages you see will only
+            increase as the read length goes on._
+            ''',
             plot = plot_html
+        )
+
+    def status_heatmap(self):
+        """ Heatmap showing all statuses for every sample """
+        status_numbers = {
+            'pass': 1,
+            'warn': 0.5,
+            'fail': 0.25
+        }
+        data = []
+        s_names = []
+        status_cats = OrderedDict()
+        for s_name in sorted(self.fastqc_data.keys()):
+            s_names.append(s_name)
+            for status_cat, status in self.fastqc_data[s_name]['statuses'].items():
+                if status_cat not in status_cats:
+                    status_cats[status_cat] = status_cat.replace('_', ' ').title().replace('Gc', 'GC')
+        for s_name in s_names:
+            row = []
+            for status_cat in status_cats:
+                try:
+                    row.append(status_numbers[self.fastqc_data[s_name]['statuses'][status_cat]])
+                except KeyError:
+                    row.append(0)
+            data.append(row)
+
+        pconfig = {
+            'id': 'fastqc-status-check-heatmap',
+            'title': 'FastQC: Status Checks',
+            'xTitle': 'Section Name',
+            'yTitle': 'Sample',
+            'min': 0,
+            'max': 1,
+            'square': False,
+            'colstops': [
+                [0, '#ffffff'],
+                [0.25, '#d9534f'],
+                [0.5, '#fee391'],
+                [1, '#5cb85c'],
+            ],
+            'decimalPlaces': 1,
+            'legend': False,
+            'datalabels': False
+        }
+
+        self.add_section (
+            name = 'Status Checks',
+            anchor = 'fastqc_status_checks',
+            description = '''
+            Status for each FastQC section showing whether results seem entirely normal (green),
+            slightly abnormal (orange) or very unusual (red).
+            ''',
+            helptext = '''
+            FastQC assigns a status for each section of the report.
+            These give a quick evaluation of whether the results of the analysis seem
+            entirely normal (green), slightly abnormal (orange) or very unusual (red).
+
+            It is important to stress that although the analysis results appear to give a pass/fail result,
+            these evaluations must be taken in the context of what you expect from your library.
+            A 'normal' sample as far as FastQC is concerned is random and diverse.
+            Some experiments may be expected to produce libraries which are biased in particular ways.
+            You should treat the summary evaluations therefore as pointers to where you should concentrate
+            your attention and understand why your library may not look random and diverse.
+
+            Specific guidance on how to interpret the output of each module can be found in the relevant
+            report section, or in the [FastQC help](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/).
+
+            In this heatmap, we summarise all of these into a single heatmap for a quick overview.
+            Note that not all FastQC sections have plots in MultiQC reports, but all status checks
+            are shown in this heatmap.
+            ''',
+            plot = heatmap.plot(data, list(status_cats.values()), s_names, pconfig)
         )
 
 

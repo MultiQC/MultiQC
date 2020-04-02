@@ -61,7 +61,7 @@ fn_ignore_dirs:
 fn_ignore_paths:
     - '*/path/to/*_files/'
 
-# Ignore files larger than this when searcing for logs (bytes)
+# Ignore files larger than this when searching for logs (bytes)
 log_filesize_limit: 5000000
 
 # MultiQC skips a couple of debug messages when searching files as the

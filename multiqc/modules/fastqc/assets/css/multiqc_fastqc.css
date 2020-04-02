@@ -4,7 +4,7 @@
 .fastqc_passfail_progress .progress-bar {
   cursor: pointer;
 }
-.mqc-section-fastqc .popover .popover-content {
+.popover-fastqc-status .popover-content {
   font-size: 11px;
   max-height: 300px;
   white-space: nowrap;
@@ -108,6 +108,9 @@
   display: inline-block;
   width: 120px;
   margin: 0 8px;
+}
+#fastqc_seq_heatmap_key_pos {
+  width: 80px;
 }
 .fastqc_seq_heatmap_key > span, .fastqc_seq_heatmap_key div > span {
   display:inline-block;

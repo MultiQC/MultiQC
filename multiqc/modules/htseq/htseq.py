@@ -36,7 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.htseq_data = self.ignore_samples(self.htseq_data)
 
         if len(self.htseq_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.htseq_data)))
@@ -68,7 +67,10 @@ class MultiqcModule(BaseMultiqcModule):
         if len(parsed_data) > 0:
             parsed_data['assigned'] = assigned_counts
             parsed_data['total_count'] = sum([v for v in parsed_data.values()])
-            parsed_data['percent_assigned'] = (float(parsed_data['assigned']) / float(parsed_data['total_count'])) * 100.0
+            try:
+                parsed_data['percent_assigned'] = (float(parsed_data['assigned']) / float(parsed_data['total_count'])) * 100.0
+            except ZeroDivisionError:
+                parsed_data['percent_assigned'] = 0
             return parsed_data
         return None
 

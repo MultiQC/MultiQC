@@ -112,6 +112,48 @@ Comments can be written in Markdown. The `section_comments` keys should correspo
 of the report section. You can find these by clicking on a navigation link in the report and seeing
 the `#section_id` at the end of the browser URL.
 
+## Removing modules or sections
+If you don't want an entire module to be used in a MultiQC report, use the `-e`/`--exclude`
+command line flags to skip running that tool. You can also use the config option `exclude_modules`:
+
+```yaml
+exclude_modules:
+    - fastqc
+    - cutadapt
+```
+
+If you want to run _only_ specific modules, you can do that with `-m`/`--module` or the
+config option `run_modules`:
+
+```yaml
+run_modules:
+    - fastqc
+    - cutadapt
+```
+
+If you would like to remove just one section of a module report, you can do so with the
+`remove_sections` config option as follows:
+
+```yaml
+remove_sections:
+    - section-id-one
+    - second-section-id
+```
+
+The section ID is the string appended to the URL when clicking a report section in the navigation.
+For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
+in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
+appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
+
+#### Removing General Statistics
+The General Statistics is a bit of a special case in MultiQC, but there is added code to make it
+behave well with the above mechanism. On the command line, you can specify `-e general_stats`.
+Alternatively, you can set the following config flag in your MultiQC config:
+
+```yaml
+skip_generalstats: true
+```
+
 ## Order of modules
 By default, modules are included in the report as in the order specified in `config.module_order`.
 Any modules found which aren't in this list are appended at the top of the report.
@@ -140,11 +182,22 @@ top_modules:
             - '*_special.txt'
             - '*_others.txt'
     - moduleName:
-        name: 'Module (all)'
+        name: 'Module (not-special)'
+        path_filters_exclude:
+            - '*_special.txt'
 ```
-These overwrite the defaults that are hardcoded in the module code. `path_filters` is the
-exception, which filters the file searches for a given list of glob filename patterns.
-The available options are:
+These overwrite the defaults that are hardcoded in the module code. `path_filters` and `path_filters_exclude` being the exception. These filter the file searches for a given list of glob filename patterns:
+
+| Pattern | Meaning                             |
+|---------|-------------------------------------|
+| \*       | matches everything                 |
+| ?       | matches any single character        |
+| [seq]   | matches any character in seq        |
+| [!seq]  | matches any character not in seq    |
+
+Note that exclusion superseeds inclusion for the path filters.
+
+The other available configuration options are:
 
 * `name`: Section name
 * `anchor`: Section report ID
@@ -152,6 +205,7 @@ The available options are:
 * `href`: Intro link URL
 * `info`: Intro text
 * `extra`: Additional HTML after intro.
+* `custom_config`: Custom module-level settings. Translated into `config.moduleName`, but specifically for this section.
 
 For example, to run the FastQC module twice, before and after adapter trimming, you could
 use the following config:
@@ -179,35 +233,109 @@ the first iteration.
 > Let me know if this is a problem..
 
 
-## Order of sections
-Sometimes it's desirable to customise the order of specific sections in a report, independent of
-module execution. For example, the `custom_content` module can generate multiple sections from
-different input files.
+### Order of module and module subsection output
+The `module_order` config changes the order in which each MultiQC module is executed.
+However, sometimes it's desirable to customise the order of specific sections in a report,
+independent of the order of module execution. For example, the `custom_content` module can
+generate multiple sections from different input files.
+Also, `module_order` does not allow you to change the sequence of sections within a MultiQC module.
 
-To do this, follow a link in a report navigation to skip to the section you want to move (must
-be a major section header, not a subheading). Find the ID of that section by looking at the URL.
+To change the order of MultiQC outputs, follow a link in a report navigation to skip to the section
+you want to move (either a major section header or a subheading). Find the ID of that section by looking at the URL.
 For example, clicking on _FastQC_ changes the URL to `multiqc_report.html#fastqc` -  the ID is
-the text after (not including) the `#` symbol.
+the text after (not including) the `#` symbol: `fastqc`.
+The FastQC _Status Checks_ subsection is `multiqc_report.html#fastqc_status_checks` and has the id `fastqc_status_checks`.
 
-Next, specify the `report_section_order` option in your MultiQC config file. Section in
+Next, specify the `report_section_order` option in your MultiQC config file. Modules and sections in
 the report are given a number ranging from 10 (section at bottom of report), incrementing by +10
 for each section. You can change this number (eg. a very low number to always get at the bottom
 of the report or very high to always be at the top), or you can move a section to before or after
 another existing section (has no effect if the other named ID is not in the report).
 
-For example, add the following to your MultiQC config file:
+> Note that module sub-sections can only be move _within_ their module. So you can't have the
+> FastQC _Adapter Content_ section shown under the GATK module header.
+
+You can also use this config option to completely remove module sub-sections.
+To do this, just set the subsection ID to `remove` (NB: no `:` or `-`).
+This only works for module subsections. To remove an entire module, use the `-e`/`--exclude` flag.
+
+For example, you could add the following to your MultiQC config file:
 
 ```yaml
 report_section_order:
-    section1:
+    module_output_1:
         order: -1000
-    section2:
-        before: 'othersection'
-    section3:
+    module_output_2:
         after: 'diffsection'
+    mod_section_1:
+        before: 'othersection'
+    mod_section_2:
+        remove
+```
+
+## Customising plots
+Almost every plot in all MultiQC reports are created using standard plotting functions
+and a plot config. You can override any plot config variable you like for any plot to
+customise how these are generated.
+
+To do this, first find the plot that you would like to customise and copy it's unique ID.
+You can find this by clicking export - the name next to the checkbox is the ID.
+
+Next, you need to find the plot config key(s) that you would like to change.
+You can find these by reading the MultiQC documentation below.
+
+For example, to set a new limit for the Picard InsertSizeMetrics x-axis, you can use the following:
+
+```yaml
+custom_plot_config:
+    picard_insert_size:
+        xmax: 300
+```
+
+You can customise multiple variables for multiple plots:
+
+```yaml
+custom_plot_config:
+    # Show the percentages tab by default for the FastQC sequence counts plot
+    fastqc_sequence_counts_plot:
+        cpswitch_c_active: False
+
+    # Only show up to 20bp on the x axis for cutadapt, change the title
+    cutadapt_plot:
+        xmax: 20
+        title: "How many base pairs have been removed from the data"
+
+    # Add a coloured band in the background to show what is a good result
+    # Yes I know this doesn't make sense for this plot, it's just an example ;)
+    bismark_mbias:
+        yPlotBands:
+            - from: 0
+              to: 40
+              color: '#e6c3c3'
+            - from: 40
+              to: 80
+              color: '#e6dcc3'
+            - from: 80
+              to: 100
+              color: '#c3e6c3'
+```
+
+As of version 1.8, this also works for customising the config of bargraph categories:
+
+```yaml
+custom_plot_config:
+  bowtie1_alignment:
+    reads_aligned:
+      color: '#d84e2f'
+    multimapped:
+      color: '#f2e63f'
+    not_aligned:
+      color: '#8bbc21'
 ```
 
 ## Customising tables
+
+### Hiding columns
 Report tables such as the General Statistics table can get quite wide. To help with this,
 columns in the report can be hidden. Some MultiQC modules include columns which are hidden
 by default, others may be uninteresting to some users.
@@ -225,9 +353,18 @@ table_columns_visible:
         percent_duplicates: False
 ```
 
-Note that you can set these to `True` to show columns that would otherwise be hidden
+You can also specify a value for an entire module / table namespace.
+This will then show or hide all columns for that module. For example:
+
+```yaml
+table_columns_visible:
+    FastQC: False
+```
+
+Note that you can set these values to `True` to show columns that would otherwise be hidden
 by default.
 
+### Column order
 In the same way, you can force a column to appear at the start or end of the table, or
 indeed impose a custom ordering on all the columns, by setting the `table_columns_placement`.
 High values push columns to the right hand side of the table and low to the left. The default
@@ -243,6 +380,74 @@ table_columns_placement:
 
 In this case, since the default placement weighting is `1000`, the `reads_mapped` will end up as the
 leftmost column and the other two will and up as the final columns on the right of the table.
+
+The columns are organised by either _namespace_ or table ID, then column ID.
+In the above example, `Samtools` is the namespace in the General Statistics table -
+the text that is at the start of the tooltip. For custom tables, the ID may be easier to use.
+
+### Conditional formatting
+It's possible to highlight values in tables based on their value. This is done using the `table_cond_formatting_rules` config setting. Rules can be applied to every table column, or to specific columns only, using that column's unique ID.
+
+The default rules are as follows:
+
+```yaml
+table_cond_formatting_rules:
+    all_columns:
+        pass:
+            - s_eq: 'pass'
+            - s_eq: 'true'
+        warn:
+            - s_eq: 'warn'
+            - s_eq: 'unknown'
+        fail:
+            - s_eq: 'fail'
+            - s_eq: 'false'
+```
+
+These make any table cells that match the string `pass` or `true` have text with a green background, orange for `warn`, red for `fail` and so on. There can be multiple tests for each style of formatting - if there is a match for any, it will be applied. The following comparison operators are available:
+
+* `s_eq` - String exactly equals (case insensitive)
+* `s_contains` - String contains (case insensitive)
+* `s_ne` - String does not equal (case insensitive)
+* `eq` - Value equals
+* `ne` - Value does not equal
+* `gt` - Value is greater than
+* `lt` - Value is less than
+
+To have matches for a specific column, use that column's ID instead of `all_columns`. For example:
+
+```yaml
+table_cond_formatting_rules:
+    mqc-generalstats-uniquely_mapped_percent:
+        pass:
+            - gt: 80
+        warn:
+            - lt: 80
+        fail:
+            - lt: 70
+```
+
+Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by default, so that anything matching both `warn` and `fail` will be formatted as `fail` for example. This can be customised with `table_cond_formatting_colours` (see below).
+
+To find the unique ID for your column, right click a table cell in a report and inspect it's HTML (_Inpsect_ in Chrome). It should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
+
+> I know this isn't the same method of IDs as above and isn't super easy to do. Sorry!
+
+It's possible to highlight matches in any number of colours. MultiQC comes with the following defaults:
+
+```yaml
+table_cond_formatting_colours:
+    - blue: '#337ab7'
+    - lbue: '#5bc0de'
+    - pass: '#5cb85c'
+    - warn: '#f0ad4e'
+    - fail: '#d9534f'
+```
+
+These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example http://htmlcolorcodes.com/
+
+Note that the different sets of rules are formatted in order. So if a value matches both `pass` and `fail` then it will be formatted as a `fail`
+
 
 ## Number base (multiplier)
 To make numbers in the General Statistics table easier to read and compare quickly,

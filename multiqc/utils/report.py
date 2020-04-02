@@ -10,6 +10,7 @@ import click
 import fnmatch
 import io
 import json
+import inspect
 import lzstring
 import mimetypes
 import os
@@ -35,9 +36,11 @@ general_stats_html = ''
 data_sources = defaultdict(lambda:defaultdict(lambda:defaultdict()))
 plot_data = dict()
 html_ids = list()
+lint_errors = list()
 num_hc_plots = 0
 num_mpl_plots = 0
 saved_raw_data = dict()
+last_found_file = None
 
 # Make a dict of discovered files for each seach key
 searchfiles = list()
@@ -49,6 +52,7 @@ def get_filelist(run_module_names):
     """
     # Prep search patterns
     spatterns = [{},{},{},{},{},{},{}]
+    epatterns = [{}, {}]
     ignored_patterns = []
     for key, sps in config.sp.items():
         mod_name = key.split('/', 1)[0]
@@ -60,7 +64,20 @@ def get_filelist(run_module_names):
             sps = [sps]
 
         # Warn if we have any unrecognised search pattern keys
-        unrecognised_keys = [y for x in sps for y in x.keys() if y not in ['fn', 'fn_re', 'contents', 'contents_re', 'num_lines', 'shared', 'max_filesize']]
+        expected_sp_keys = [
+            'fn',
+            'fn_re',
+            'contents',
+            'contents_re',
+            'num_lines',
+            'shared',
+            'max_filesize',
+            'exclude_fn',
+            'exclude_fn_re',
+            'exclude_contents',
+            'exclude_contents_re'
+        ]
+        unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
             logger.warn("Unrecognised search pattern keys for '{}': {}".format(key, ', '.join(unrecognised_keys)))
 
@@ -83,7 +100,7 @@ def get_filelist(run_module_names):
             spatterns[0][key] = sps
 
     if len(ignored_patterns) > 0:
-        logger.debug("Ignored search patterns as didn't match running modules: {}".format(', '.join(ignored_patterns)))
+        logger.debug("Ignored {} search patterns as didn't match running modules.".format(len(ignored_patterns)))
 
     def add_file(fn, root):
         """
@@ -116,9 +133,11 @@ def get_filelist(run_module_names):
         for patterns in spatterns:
             for key, sps in patterns.items():
                 for sp in sps:
-                    if search_file (sp, f):
-                        # Looks good! Remember this file
-                        files[key].append(f)
+                    if search_file (sp, f, key):
+                        # Check that we shouldn't exclude this file
+                        if not exclude_file(sp, f):
+                            # Looks good! Remember this file
+                            files[key].append(f)
                         # Don't keep searching this file for other modules
                         if not sp.get('shared', False):
                             return
@@ -127,11 +146,14 @@ def get_filelist(run_module_names):
                             break
 
     # Go through the analysis directories and get file list
+    multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'setup.py', '.gitignore']
     for path in config.analysis_dir:
-        if os.path.isfile(path):
+        if os.path.islink(path) and config.ignore_symlinks:
+            continue
+        elif os.path.isfile(path):
             searchfiles.append([os.path.basename(path), os.path.dirname(path)])
         elif os.path.isdir(path):
-            for root, dirnames, filenames in os.walk(path, followlinks=True, topdown=True):
+            for root, dirnames, filenames in os.walk(path, followlinks=(not config.ignore_symlinks), topdown=True):
                 bname = os.path.basename(root)
 
                 # Skip any sub-directories matching ignore params
@@ -157,6 +179,15 @@ def get_filelist(run_module_names):
                 if len(p_matches) > 0:
                     logger.debug("Ignoring directory as matched fn_ignore_paths: {}".format(root))
                     continue
+
+                # Sanity check - make sure that we're not just running in the installation directory
+                if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
+                    logger.error("Error: MultiQC is running in source code directory! {}".format(root))
+                    logger.warn("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
+                    dirnames[:] = []
+                    filenames[:] = []
+                    continue
+
                 # Search filenames in this directory
                 for fn in filenames:
                     searchfiles.append([fn, root])
@@ -165,7 +196,7 @@ def get_filelist(run_module_names):
         for sf in sfiles:
             add_file(sf[0], sf[1])
 
-def search_file (pattern, f):
+def search_file (pattern, f, module_key):
     """
     Function to searach a single file for a single search pattern.
     """
@@ -174,15 +205,17 @@ def search_file (pattern, f):
     contents_matched = False
 
     # Use mimetypes to exclude binary files where possible
-    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
-    if encoding is not None:
-        return False
-    if ftype is not None and ftype.startswith('image'):
-        return False
+    if not re.match(r'.+_mqc\.(png|jpg|jpeg)', f['fn']) and config.ignore_images:
+        (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+        if encoding is not None:
+            return False
+        if ftype is not None and ftype.startswith('image'):
+            return False
 
     # Search pattern specific filesize limit
     if pattern.get('max_filesize') is not None and 'filesize' in f:
         if f['filesize'] > pattern.get('max_filesize'):
+            logger.debug("File ignored by {} because it exceeded search pattern filesize limit: {}".format(module_key, f['fn']))
             return False
 
     # Search by file name (glob)
@@ -201,6 +234,8 @@ def search_file (pattern, f):
 
     # Search by file contents
     if pattern.get('contents') is not None or pattern.get('contents_re') is not None:
+        if pattern.get('contents_re') is not None:
+            repattern = re.compile(pattern['contents_re'])
         try:
             with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as f:
                 l = 1
@@ -214,7 +249,7 @@ def search_file (pattern, f):
                             break
                     # Search by file contents (regex)
                     elif pattern.get('contents_re') is not None:
-                        if re.match( pattern['contents_re'], line):
+                        if re.search(repattern, line):
                             contents_matched = True
                             if pattern.get('fn') is None and pattern.get('fn_re') is None:
                                 return True
@@ -229,6 +264,46 @@ def search_file (pattern, f):
                 return False
 
     return fn_matched and contents_matched
+
+def exclude_file(sp, f):
+    """
+    Exclude discovered files if they match the special exclude_
+    search pattern keys
+    """
+    # Make everything a list if it isn't already
+    for k in sp:
+        if k in ['exclude_fn', 'exclude_fn_re' 'exclude_contents', 'exclude_contents_re']:
+            if not isinstance(sp[k], list):
+                sp[k] = [sp[k]]
+
+    # Search by file name (glob)
+    if 'exclude_fn' in sp:
+        for pat in sp['exclude_fn']:
+            if fnmatch.fnmatch(f['fn'], pat):
+                return True
+
+    # Search by file name (regex)
+    if 'exclude_fn_re' in sp:
+        for pat in sp['exclude_fn_re']:
+            if re.match( pat, f['fn']):
+                return True
+
+    # Search the contents of the file
+    if 'exclude_contents' in sp or 'exclude_contents_re' in sp:
+        # Compile regex patterns if we have any
+        if 'exclude_contents_re' in sp:
+            sp['exclude_contents_re'] = [re.compile(pat) for pat in sp['exclude_contents_re']]
+        with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
+            for line in fh:
+                if 'exclude_contents' in sp:
+                    for pat in sp['exclude_contents']:
+                        if pat in line:
+                            return True
+                if 'exclude_contents_re' in sp:
+                    for pat in sp['exclude_contents_re']:
+                        if re.search(pat, line):
+                            return True
+    return False
 
 def data_sources_tofile ():
     fn = 'multiqc_sources.{}'.format(config.data_format_extensions[config.data_format])
@@ -247,31 +322,55 @@ def data_sources_tofile ():
             body = '\n'.join(["\t".join(l) for l in lines])
             print( body.encode('utf-8', 'ignore').decode('utf-8'), file=f)
 
-def save_htmlid(html_id):
+def save_htmlid(html_id, skiplint=False):
     """ Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID """
     global html_ids
+    global lint_errors
 
     # Trailing whitespace
-    html_id = html_id.strip()
+    html_id_clean = html_id.strip()
+
+    # Trailing underscores
+    html_id_clean = html_id_clean.strip('_')
 
     # Must begin with a letter
-    if re.match(r'^[a-zA-Z]', html_id) is None:
-        html_id = 'mqc-{}'.format(html_id)
+    if re.match(r'^[a-zA-Z]', html_id_clean) is None:
+        html_id_clean = 'mqc_{}'.format(html_id_clean)
 
     # Replace illegal characters
-    html_id = re.sub('[^a-zA-Z0-9_-]+', '-', html_id)
+    html_id_clean = re.sub('[^a-zA-Z0-9_-]+', '_', html_id_clean)
+
+    # Validate if linting
+    if config.lint and not skiplint:
+        modname = ''
+        codeline = ''
+        callstack = inspect.stack()
+        for n in callstack:
+            if 'multiqc/modules/' in n[1] and 'base_module.py' not in n[1]:
+                callpath = n[1].split('multiqc/modules/',1)[-1]
+                modname = '>{}< '.format(callpath)
+                codeline = n[4][0].strip()
+                break
+    if config.lint and not skiplint and html_id != html_id_clean:
+        errmsg = "LINT: {}HTML ID was not clean ('{}' -> '{}') ## {}".format(modname, html_id, html_id_clean, codeline)
+        logger.error(errmsg)
+        lint_errors.append(errmsg)
 
     # Check for duplicates
     i = 1
-    html_id_base = html_id
-    while html_id in html_ids:
-        html_id = '{}-{}'.format(html_id_base, i)
+    html_id_base = html_id_clean
+    while html_id_clean in html_ids:
+        html_id_clean = '{}-{}'.format(html_id_base, i)
         i += 1
+        if config.lint and not skiplint:
+            errmsg = "LINT: {}HTML ID was a duplicate ({}) ## {}".format(modname, html_id_clean, codeline)
+            logger.error(errmsg)
+            lint_errors.append(errmsg)
 
     # Remember and return
-    html_ids.append(html_id)
-    return html_id
+    html_ids.append(html_id_clean)
+    return html_id_clean
 
 
 def compress_json(data):
@@ -281,4 +380,3 @@ def compress_json(data):
     json_string = json_string.replace('NaN', 'null');
     x = lzstring.LZString()
     return x.compressToBase64(json_string)
-

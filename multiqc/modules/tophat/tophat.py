@@ -30,7 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files('tophat'):
             parsed_data = self.parse_tophat_log(f['f'])
             if parsed_data is not None:
-                if f['s_name'] == "align_summary.txt":
+                if (f['s_name'] == "align" or
+                        f['s_name'] == 'align_summary.txt'):
                     s_name = os.path.basename(f['root'])
                 else:
                     s_name = f['s_name'].split("align_summary.txt",1)[0]
@@ -44,7 +45,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_data = self.ignore_samples(self.tophat_data)
 
         if len(self.tophat_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.tophat_data)))
@@ -86,7 +86,11 @@ class MultiqcModule(BaseMultiqcModule):
             r_search = re.search(r, raw_data, re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
-        if len(parsed_data) == 0: return None
+
+        # Exit if we didn't manage to parse enough fields - probably not a TopHat log
+        # Note that Bowtie2 / HiSAT2 logs contain some but not all of these strings
+        if len(parsed_data) < 4: return None
+
         parsed_data['concordant_aligned_percent'] = parsed_data.get('concordant_aligned_percent', 0)
         parsed_data['aligned_total'] = parsed_data.get('aligned_total', 0)
         parsed_data['aligned_multimap'] = parsed_data.get('aligned_multimap', 0)

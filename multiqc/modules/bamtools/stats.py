@@ -109,8 +109,8 @@ def parse_reports(self):
         keys['paired_end_pct'] = dict(defaults, **{'title': 'Paired-end', 'description': 'Paired-end reads' })
         keys['proper_pairs_pct'] = dict(defaults, **{'title': 'Proper-pairs' })
         keys['both_mapped_pct'] = dict(defaults, **{'title': 'Both mapped', 'description': 'Both pairs mapped' })
-        keys['read_1'] = dict(num_defaults, **{'title': 'Read 1', 'description': 'Read 1 (millions)' });
-        keys['read_2'] = dict(num_defaults, **{'title': 'Read 2', 'description': 'Read 2 (millions)' });
+        keys['bt_read_1'] = dict(num_defaults, **{'title': 'Read 1', 'description': 'Read 1 (millions)' });
+        keys['bt_read_2'] = dict(num_defaults, **{'title': 'Read 2', 'description': 'Read 2 (millions)' });
         keys['singletons_pct'] = dict(defaults, **{'title': 'Singletons' })
 
         self.add_section (
@@ -121,4 +121,3 @@ def parse_reports(self):
 
     # Return number of samples found
     return len(self.bamtools_stats_data)
-

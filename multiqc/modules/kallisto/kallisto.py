@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 from collections import OrderedDict
+import os
 import logging
 import re
 
@@ -33,7 +34,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.kallisto_data = self.ignore_samples(self.kallisto_data)
 
         if len(self.kallisto_data) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         log.info("Found {} reports".format(len(self.kallisto_data)))
@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Get input filename
             match = re.search(r'\[quant\] will process (pair|file) 1: (\S+)', l)
             if match:
-                s_name = self.clean_s_name(match.group(2), f['root'])
+                s_name = self.clean_s_name(os.path.basename(match.group(2)), f['root'])
 
             if s_name is not None:
                 # Alignment rates

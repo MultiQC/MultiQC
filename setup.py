@@ -22,8 +22,9 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 """
 
 from setuptools import setup, find_packages
+import sys
 
-version = '1.3dev'
+version = '1.9dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -31,6 +32,36 @@ print("""-----------------------------------
 -----------------------------------
 
 """.format(version))
+
+# Set version requirements according to what version of Python we're running
+networkx_version = ''
+numpy_version = ''
+matplotlib_version = '>=2.1.1'
+jinja2_version = '>=2.9'
+markdown_version = ''
+if sys.version_info[0:2] < (3, 6):
+    # Lots of tools have dropped Python 3 support, so limit their versions
+    matplotlib_version += ',<3.0.0'
+    numpy_version = '<1.17'
+    networkx_version = '<2.3'
+    jinja2_version += ',<3.0'
+    markdown_version = '<3.2'
+
+install_requires = [
+        'matplotlib' + matplotlib_version,
+        'networkx' + networkx_version,
+        'numpy' + numpy_version,
+        'click',
+        'coloredlogs',
+        'future>0.14.0',
+        'jinja2' + jinja2_version,
+        'lzstring',
+        'markdown' + markdown_version,
+        'pyyaml>=4',
+        'requests',
+        'simplejson',
+        'spectra>=0.0.10',
+    ]
 
 setup(
     name = 'multiqc',
@@ -46,54 +77,64 @@ setup(
     packages = find_packages(),
     include_package_data = True,
     zip_safe = False,
-    scripts = ['scripts/multiqc'],
-    install_requires = [
-        'click',
-        'future>0.14.0',
-        'lzstring',
-        'jinja2>=2.9',
-        'matplotlib',
-        'markdown',
-        'numpy',
-        'pyyaml',
-        'requests',
-        'simplejson',
-        'spectra',
-        'networkx<2',
-    ],
+    install_requires = install_requires,
     entry_points = {
+        "console_scripts": [
+            "multiqc=multiqc.__main__:multiqc",
+        ],
         'multiqc.modules.v1': [
             'adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule',
             'afterqc = multiqc.modules.afterqc:MultiqcModule',
             'bamtools = multiqc.modules.bamtools:MultiqcModule',
+            'bbmap = multiqc.modules.bbmap:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
+            'biobambam2 = multiqc.modules.biobambam2:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
+            'biscuit = multiqc.modules.biscuit:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
+            'clipandmerge = multiqc.modules.clipandmerge:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'damageprofiler = multiqc.modules.damageprofiler:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
+            'dedup = multiqc.modules.dedup:MultiqcModule',
+            'deeptools = multiqc.modules.deeptools:MultiqcModule',
+            'fastp = multiqc.modules.fastp:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'fgbio = multiqc.modules.fgbio:MultiqcModule',
+            'flash = multiqc.modules.flash:MultiqcModule',
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
+            'happy = multiqc.modules.happy:MultiqcModule',
+            'hicexplorer = multiqc.modules.hicexplorer:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
+            'hicpro = multiqc.modules.hicpro:MultiqcModule',
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
             'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
+            'interop = multiqc.modules.interop:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
+            'kat = multiqc.modules.kat:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
+            'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
+            'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
+            'minionqc = multiqc.modules.minionqc:MultiqcModule',
+            'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
+            'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
+            'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
@@ -106,16 +147,22 @@ setup(
             'salmon = multiqc.modules.salmon:MultiqcModule',
             'samblaster = multiqc.modules.samblaster:MultiqcModule',
             'samtools = multiqc.modules.samtools:MultiqcModule',
+            'sargasso = multiqc.modules.sargasso:MultiqcModule',
+            'seqyclean = multiqc.modules.seqyclean:MultiqcModule',
+            'sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule',
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'snpsplit = multiqc.modules.snpsplit:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
+            'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
+            'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
-            'vcftools = multiqc.modules.vcftools:MultiqcModule'
+            'vcftools = multiqc.modules.vcftools:MultiqcModule',
+            'verifybamid = multiqc.modules.verifybamid:MultiqcModule'
         ],
         'multiqc.templates.v1': [
             'default = multiqc.templates.default',

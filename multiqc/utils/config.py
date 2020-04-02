@@ -17,7 +17,7 @@ import multiqc
 
 # Default logger will be replaced by caller
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('multiqc')
 
 # Get the MultiQC version
 version = pkg_resources.get_distribution("multiqc").version
@@ -29,7 +29,7 @@ try:
     git_hash = subprocess.check_output( ['git', 'rev-parse', 'HEAD'],
                                         cwd=script_path,
                                         stderr=subprocess.STDOUT,
-                                        universal_newlines=True )
+                                        universal_newlines=True ).strip()
     git_hash_short = git_hash[:7]
     version = '{} ({})'.format(version, git_hash_short)
 except:
@@ -42,13 +42,13 @@ MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 # Default MultiQC config
 searchp_fn = os.path.join( MULTIQC_DIR, 'utils', 'config_defaults.yaml')
 with open(searchp_fn) as f:
-    configs = yaml.load(f)
+    configs = yaml.safe_load(f)
     for c, v in configs.items():
         globals()[c] = v
 # Module filename search patterns
 searchp_fn = os.path.join( MULTIQC_DIR, 'utils', 'search_patterns.yaml')
 with open(searchp_fn) as f:
-    sp = yaml.load(f)
+    sp = yaml.safe_load(f)
 
 # Other defaults that can't be set in YAML
 data_tmp_dir = '/tmp' # will be overwritten by core script
@@ -57,6 +57,7 @@ creation_date = datetime.now().strftime("%Y-%m-%d, %H:%M")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
+megaqc_access_token = os.environ.get('MEGAQC_ACCESS_TOKEN')
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
@@ -86,7 +87,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
         print("Error - No MultiQC templates found.", file=sys.stderr)
     print("Could not load MultiQC - has it been installed? \n\
         Please either install with pip (pip install multiqc) or by using \n\
-        the installation script (python setup.py install)", file=sys.stderr)
+        the local files (pip install .)", file=sys.stderr)
     sys.exit(1)
 
 ##### Functions to load user config files. These are called by the main MultiQC script.
@@ -117,7 +118,7 @@ def mqc_load_config(yaml_config):
     if os.path.isfile(yaml_config):
         try:
             with open(yaml_config) as f:
-                new_config = yaml.load(f)
+                new_config = yaml.safe_load(f)
                 logger.debug("Loading config settings from: {}".format(yaml_config))
                 mqc_add_config(new_config, yaml_config)
         except (IOError, AttributeError) as e:
@@ -131,11 +132,11 @@ def mqc_load_config(yaml_config):
 def mqc_cl_config(cl_config):
     for clc_str in cl_config:
         try:
-            parsed_clc = yaml.load(clc_str)
+            parsed_clc = yaml.safe_load(clc_str)
             # something:var fails as it needs a space. Fix this (a common mistake)
             if isinstance(parsed_clc, str) and ':' in clc_str:
                 clc_str = ': '.join(clc_str.split(':'))
-                parsed_clc = yaml.load(clc_str)
+                parsed_clc = yaml.safe_load(clc_str)
             assert(isinstance(parsed_clc, dict))
         except yaml.scanner.ScannerError as e:
             logger.error("Could not parse command line config: {}\n{}".format(clc_str, e))
@@ -172,12 +173,12 @@ def mqc_add_config(conf, conf_path=None):
                 logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
                 continue
             logger.debug("New config '{}': {}".format(c, fpath))
-            update_dict(globals(), {c: fpath})
+            update({c: fpath})
         else:
             logger.debug("New config '{}': {}".format(c, v))
-            update_dict(globals(), {c: v})
+            update({c: v})
 
-#### Function to load file containinga list of alternative sample-name swaps
+#### Function to load file containing a list of alternative sample-name swaps
 # Essentially a fancy way of loading stuff into the sample_names_rename config var
 # As such, can also be done directly using a config file
 def load_sample_names(snames_file):
@@ -194,15 +195,19 @@ def load_sample_names(snames_file):
                         num_cols = len(s)
                     elif num_cols != len(s):
                         logger.warn("Inconsistent number of columns found in sample names file (skipping line): '{}'".format(l.strip()))
+                    # Parse the line
+                    if len(sample_names_rename_buttons) == 0:
+                        sample_names_rename_buttons = s
                     else:
-                        # Parse the line
-                        if len(sample_names_rename_buttons) == 0:
-                            sample_names_rename_buttons = s
-                        else:
-                            sample_names_rename.append(s)
+                        sample_names_rename.append(s)
+                elif len(l.strip()) > 0:
+                    logger.warn("Sample names file line did not have columns (must use tabs): {}".format(l.strip()))
     except (IOError, AttributeError) as e:
         logger.error("Error loading sample names file: {}".format(e))
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+
+def update(u):
+    return update_dict(globals(), u)
 
 def update_dict(d, u):
     """ Recursively updates nested dict d from nested dict u

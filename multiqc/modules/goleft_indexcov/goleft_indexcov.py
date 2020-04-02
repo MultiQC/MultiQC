@@ -21,7 +21,6 @@ class MultiqcModule(BaseMultiqcModule):
         roc_plot = self.roc_plot()
         bin_plot = self.bin_plot()
         if not roc_plot and not bin_plot:
-            log.debug("Did not find goleft indexcov outputs in {}".format(config.analysis_dir))
             raise UserWarning
 
     def _short_chrom(self, chrom):
@@ -130,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
                 'yCeiling': 1.0, 'yFloor': 0.0, 'xCeiling': 1.0, 'xFloor': 0.0}
             self.add_section (
                 name = 'Problem coverage bins',
-                anchor = 'goleft_indexcov-roc',
+                anchor = 'goleft_indexcov-bin',
                 description = 'This plot identifies problematic samples using binned coverage distributions.',
                 helptext = helptext,
                 plot = scatter.plot(data, pconfig)

@@ -69,20 +69,19 @@ def parse_reports(self):
         commadecimal = None
         for l in f['f']:
             # New log starting
-            if 'picard.analysis.directed.CalculateHsMetrics' in l or \
-               'picard.analysis.directed.CollectHsMetrics' in l and 'INPUT' in l:
+            if 'CalculateHsMetrics' in l or 'CollectHsMetrics' in l and 'INPUT' in l:
                 s_name = None
                 keys = None
 
                 # Pull sample name from input
-                fn_search = re.search(r"INPUT=(\[?[^\s]+\]?)", l)
+                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip('[]'))
                     s_name = self.clean_s_name(s_name, f['root'])
                     parsed_data[s_name] = dict()
 
             if s_name is not None:
-                if 'picard.analysis.directed.HsMetrics' in l and '## METRICS CLASS' in l:
+                if 'HsMetrics' in l and '## METRICS CLASS' in l:
                     keys = f['f'].readline().strip("\n").split("\t")
                 elif keys:
                     vals = l.strip("\n").split("\t")
@@ -275,22 +274,24 @@ def _add_hs_penalty(data):
     for s in data:
         for h in data[s]:
             if h.startswith("HS_PENALTY"):
-                data_clean[s][(h.replace("HS_PENALTY_", " ")[:-1])] = data[s][h]
+                data_clean[s][int(h.lstrip('HS_PENALTY_').rstrip('X'))] = data[s][h]
                 if data[s][h] > 0:
                     any_non_zero = True
 
-    pconfig = { 'id': 'picard_hybrid_selection_penalty',
-                'title': 'Picard: Hybrid Selection Penalty',
-                'xlab': 'Fold Coverage',
-                'ylab': 'Pct of bases',
-                'ymax': 100,
-                'ymin': 0,
-                'xmin': 0,
-                'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',}
+    pconfig = {
+        'id': 'picard_hybrid_selection_penalty',
+        'title': 'Picard: Hybrid Selection Penalty',
+        'xlab': 'Fold Coverage',
+        'ylab': 'Penalty',
+        'ymin': 0,
+        'xmin': 0,
+        'xDecimals': False,
+        'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%'
+    }
 
     if any_non_zero:
         return {
-            'name': 'HS penalty',
+            'name': 'HS Penalty',
             'anchor': 'picard_hsmetrics_hs_penalty',
             'description': subtitle,
             'plot': linegraph.plot(data_clean, pconfig)

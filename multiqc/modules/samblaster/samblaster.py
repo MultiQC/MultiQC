@@ -7,7 +7,6 @@ import os
 from collections import OrderedDict
 import logging
 import re
-from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -32,7 +31,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.samblaster_data = self.ignore_samples(self.samblaster_data)
 
         if len(self.samblaster_data) == 0:
-            log.debug("Could not find any data in {}".format(config.analysis_dir))
             raise UserWarning
 
         headers = OrderedDict()
@@ -63,6 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'samblaster_duplicates',
             'title': 'Samblaster: Number of duplicate reads',
+            'ylab': 'Number of reads'
         }
         self.add_section( plot = bargraph.plot(self.samblaster_data, cats, pconfig) )
 

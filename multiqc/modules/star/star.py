@@ -61,7 +61,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.star_genecounts_second_strand = self.ignore_samples(self.star_genecounts_second_strand)
 
         if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
-            log.debug("Could not find any reports in {}".format(config.analysis_dir))
             raise UserWarning
 
         if len(self.star_data) > 0:

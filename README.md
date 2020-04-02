@@ -1,4 +1,5 @@
-<img src="multiqc/templates/default/assets/img/MultiQC_logo.png" width="300" title="MultiQC">
+# ![MultiQC](https://raw.githubusercontent.com/ewels/MultiQC/master/docs/images/MultiQC_logo.png)
+
 
 ### Aggregate bioinformatics results across many samples into a single report.
 
@@ -6,17 +7,19 @@
 
 [![PyPI Version](https://img.shields.io/pypi/v/multiqc.svg?style=flat-square)](https://pypi.python.org/pypi/multiqc/)
 [![Conda Version](https://anaconda.org/bioconda/multiqc/badges/version.svg)](https://anaconda.org/bioconda/multiqc)
-[![Build Status](https://img.shields.io/travis/ewels/MultiQC.svg?style=flat-square)](https://travis-ci.org/ewels/MultiQC)
+[![Docker](https://img.shields.io/docker/automated/ewels/multiqc.svg?style=flat-square)](https://hub.docker.com/r/ewels/multiqc/)
+[![GitHub Workflow Status - Linux](https://img.shields.io/github/workflow/status/ewels/MultiQC/MultiQC%20-%20Linux?label=build%20-%20Linux&logo=ubuntu&logoColor=white&style=flat-square)](https://github.com/ewels/MultiQC/actions?query=workflow%3A%22MultiQC+-+Linux%22)
+[![GitHub Workflow Status - Windows](https://img.shields.io/github/workflow/status/ewels/MultiQC/MultiQC%20-%20Windows?label=build%20-%20Windows&logo=windows&style=flat-square)](https://github.com/ewels/MultiQC/actions?query=workflow%3A%22MultiQC+-+Windows%22)
+
 [![Gitter](https://img.shields.io/badge/gitter-%20join%20chat%20%E2%86%92-4fb99a.svg?style=flat-square)](https://gitter.im/ewels/MultiQC)
 [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fbioinformatics%2Fbtw354-lightgrey.svg?style=flat-square)](http://dx.doi.org/10.1093/bioinformatics/btw354)
-
 
 -----
 
 MultiQC is a tool to create a single report with interactive plots
 for multiple bioinformatics analyses across many samples.
 
-MultiQC is written in Python (tested with v2.7, 3.4, 3.5 and 3.6). It is
+MultiQC is written in Python (tested with v3.6+). It is
 available on the [Python Package Index](https://pypi.python.org/pypi/multiqc/)
 and through conda using [Bioconda](http://bioconda.github.io/).
 
@@ -29,24 +32,34 @@ it ideal for routine fast quality control.
 Currently, supported tools include:
 
 
+|Read QC & pre-processing         | Aligners / quantifiers  | Post-alignment processing   | Post-alignment QC                    |
+|---------------------------------|-------------------------|-----------------------------|--------------------------------------|
+|[Adapter Removal][adapterremoval]|[BBMap][bbmap]           |[Bamtools][bamtools]         |[biobambam2][biobambam2]              |
+|[AfterQC][afterqc]               |[BISCUIT][biscuit]       |[Bcftools][bcftools]         |[BUSCO][busco]                        |
+|[Bcl2fastq][bcl2fastq]           |[Bismark][bismark]       |[GATK][gatk]                 |[Conpair][conpair]                    |
+|[BBTools][bbmap]                 |[Bowtie][bowtie-1]       |[HOMER][homer]               |[DamageProfiler][damageprofiler]      |
+|[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]     |[HTSeq][htseq]               |[DeDup][dedup]                        |
+|[ClipAndMerge][clipandmerge]     |[HiCUP][hicup]           |[MACS2][macs2]               |[deepTools][deeptools]                |
+|[Cluster Flow][clusterflow]      |[HiC-Pro][hicpro]        |[Picard][picard]             |[Disambiguate][disambiguate]          |
+|[Cutadapt][cutadapt]             |[HISAT2][hisat2]         |[Prokka][prokka]             |[goleft][goleft]                      |
+|[leeHom][leehom]                 |[Kallisto][kallisto]     |[RSEM][rsem]                 |[HiCExplorer][hicexplorer]            |
+|[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]     |[methylQA][methylqa]                  |
+|[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[miRTrace][mirtrace]                  |
+|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]                  |
+|[Fastp][fastp]                   |[STAR][star]             |[SNPsplit][snpsplit]         |[Peddy][peddy]               |
+|[fgbio][fgbio]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
+|[FLASh][flash]                   |                         |[Stacks][stacks]             |[Preseq][preseq]                      |
+|[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[QoRTs][qorts]                        |
+|[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
+|[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
+|[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
+|[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
+|[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
+|[SeqyClean][seqyclean]           |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
+|                                 |                         |                             |[Supernova][supernova]                |
+|                                 |                         |                             |[VCFTools][vcftools]                  |
+|                                 |                         |                             |[VerifyBAMID][verifybamid]            |
 
-|Read QC & pre-processing         | Aligners / quantifiers | Post-alignment processing | Post-alignment QC    |
-|---------------------------------|------------------------|---------------------------|----------------------|
-|[Adapter Removal][adapterremoval]|[Bismark][bismark]      |[Bamtools][bamtools]       |[BUSCO][busco]        |
-|[AfterQC][afterqc]               |[Bowtie][bowtie-1]      |[Bcftools][bcftools]       |[Conpair][conpair]    |
-|[Bcl2fastq][bcl2fastq]           |[Bowtie 2][bowtie-2]    |[GATK][gatk]               |[Disambiguate][disambiguate]|
-|[BioBloom Tools][biobloomtools]  |[HiCUP][hicup]          |[HOMER][homer]             |[goleft][goleft]      |
-|[Cluster Flow][clusterflow]      |[HISAT2][hisat2]        |[HTSeq][htseq]             |[methylQA][methylqa]  |
-|[Cutadapt][cutadapt]             |[Kallisto][kallisto]    |[MACS2][macs2]             |[Peddy][peddy]        |
-|[leeHom][leehom]                 |[Salmon][salmon]        |[Picard][picard]           |[Preseq][preseq]      |
-|[FastQC][fastqc]                 |[Slamdunk][slamdunk]    |[Prokka][prokka]           |[QoRTs][qorts]        |
-|[FastQ Screen][fastq-screen]     |[STAR][star]            |[RSEM][rsem]               |[Qualimap][qualimap]  |
-|[Flexbar][flexbar]               |[Tophat][tophat]        |[Samblaster][samblaster]   |[QUAST][quast]        |
-|[Jellyfish][jellyfish]           |                        |[Samtools][samtools]       |[RNA-SeQC][rna_seqc]  |
-|[Skewer][skewer]                 |                        |[SnpEff][snpeff]           |[RSeQC][rseqc]        |
-|[SortMeRNA][sortmerna]           |                        |[SNPsplit][snpsplit]       |[VCFTools][vcftools]  |
-|[Trimmomatic][trimmomatic]       |                        |[Subread featureCounts][featurecounts]|                      |
-|                                 |                        |[THetA2][theta2]           |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -141,56 +154,96 @@ If in doubt, feel free to get in touch with the author directly:
 Project lead and main author: [@ewels](https://github.com/ewels)
 
 Code contributions from:
-[@moonso](https://github.com/moonso),
-[@lpantano](https://github.com/lpantano),
-[@dakl](https://github.com/dakl),
-[@robinandeer](https://github.com/robinandeer),
-[@mlusignan](https://github.com/mlusignan),
-[@HLWiencko](https://github.com/HLWiencko),
-[@guillermo-carrasco](https://github.com/guillermo-carrasco),
-[@avilella](https://github.com/avilella),
-[@vladsaveliev](https://github.com/vladsaveliev),
-[@t-neumann](https://github.com/t-neumann),
 [@ahvigil](https://github.com/ahvigil),
+[@aledj2](https://github.com/aledj2),
+[@apeltzer](https://github.com/apeltzer),
+[@avilella](https://github.com/avilella),
+[@boulund](https://github.com/boulund),
 [@bschiffthaler](https://github.com/bschiffthaler),
-[@jrderuiter](https://github.com/jrderuiter),
+[@chuan-wang](https://github.com/chuan-wang),
+[@cpavanrun](https://github.com/cpavanrun),
+[@dakl](https://github.com/dakl),
+[@elizabethcook21](https://github.com/elizabethcook21),
+[@ehsueh](https://github.com/ehsueh),
+[@epruesse](https://github.com/epruesse),
+[@florianduclot](https://github.com/florianduclot/),
+[@guillermo-carrasco](https://github.com/guillermo-carrasco),
+[@HLWiencko](https://github.com/HLWiencko),
 [@iimog](https://github.com/iimog),
+[@joachimwolff](https://github.com/joachimwolff),
+[@jrderuiter](https://github.com/jrderuiter),
+[@lpantano](https://github.com/lpantano),
+[@matthdsm](https://github.com/matthdsm),
+[@MaxUlysse](https://github.com/MaxUlysse),
+[@mlusignan](https://github.com/mlusignan),
+[@moonso](https://github.com/moonso),
+[@noirot](https://github.com/noirot),
+[@remiolsen](https://github.com/remiolsen),
+[@rdali](https://github.com/rdali),
 [@rlegendre](https://github.com/rlegendre),
-[@ehsueh](https://github.com/ehsueh)
-[@noirot](https://github.com/noirot)
+[@robinandeer](https://github.com/robinandeer),
+[@Rotholandus](https://github.com/Rotholandus),
+[@sachalau](https://github.com/sachalau/),
+[@smeds](https://github.com/smeds/),
+[@t-neumann](https://github.com/t-neumann),
+[@vladsaveliev](https://github.com/vladsaveliev),
+[@winni2k](https://github.com/winni2k),
+[@wkretzsch](https://github.com/wkretzsch),
+[@nservant](https://github.com/nservant),
 
 and many others. Thanks for your support!
 
-[adapterremoval]: http://multiqc.info/docs/#adapteremoval
+MultiQC is released under the GPL v3 or later licence.
+
+[adapterremoval]: http://multiqc.info/docs/#adapter-removal
 [afterqc]:        http://multiqc.info/docs/#afterqc
 [bamtools]:       http://multiqc.info/docs/#bamtools
+[bbmap]:          http://multiqc.info/docs/#bbmap
 [bcftools]:       http://multiqc.info/docs/#bcftools
 [bcl2fastq]:      http://multiqc.info/docs/#bcl2fastq
+[biobambam2]:     http://multiqc.info/docs/#biobambam2
 [biobloomtools]:  http://multiqc.info/docs/#biobloom-tools
+[biscuit]:        http://multiqc.info/docs/#biscuit
 [bismark]:        http://multiqc.info/docs/#bismark
 [bowtie-1]:       http://multiqc.info/docs/#bowtie-1
 [bowtie-2]:       http://multiqc.info/docs/#bowtie-2
 [busco]:          http://multiqc.info/docs/#busco
+[clipandmerge]:   http://multiqc.info/docs/#clipandmerge
 [clusterflow]:    http://multiqc.info/docs/#cluster-flow
 [conpair]:        http://multiqc.info/docs/#conpair
 [cutadapt]:       http://multiqc.info/docs/#cutadapt
+[damageprofiler]: http://multiqc.info/docs/#damageprofiler
+[dedup]:          http://multiqc.info/docs/#dedup
+[deeptools]:      http://multiqc.info/docs/#deeptools
 [disambiguate]:   http://multiqc.info/docs/#disambiguate
 [fastq-screen]:   http://multiqc.info/docs/#fastq-screen
 [fastqc]:         http://multiqc.info/docs/#fastqc
+[fastp]:          http://multiqc.info/docs/#fastp
 [featurecounts]:  http://multiqc.info/docs/#featurecounts
+[fgbio]:          http://multiqc.info/docs/#fgbio
+[flash]:          http://multiqc.info/docs/#flash
 [flexbar]:        http://multiqc.info/docs/#flexbar
 [gatk]:           http://multiqc.info/docs/#gatk
 [goleft]:         http://multiqc.info/docs/#goleft-indexcov
-[jellyfish]:      http://multiqc.info/docs/#jellyfish
+[hicexplorer]:    http://multiqc.info/docs/#hicexplorer
 [hicup]:          http://multiqc.info/docs/#hicup
+[hicpro]:         http://multiqc.info/docs/#hic-pro
 [hisat2]:         http://multiqc.info/docs/#hisat2
 [homer]:          http://multiqc.info/docs/#homer
 [htseq]:          http://multiqc.info/docs/#htseq
+[interop]:        http://multiqc.info/docs/#interop
+[jellyfish]:      http://multiqc.info/docs/#jellyfish
 [kallisto]:       http://multiqc.info/docs/#kallisto
+[kat]:            http://multiqc.info/docs/#kat
 [leehom]:         http://multiqc.info/docs/#leehom
+[longranger]:     http://multiqc.info/docs/#longranger
 [macs2]:          http://multiqc.info/docs/#macs2
 [methylqa]:       http://multiqc.info/docs/#methylqa
+[minionqc]:       http://multiqc.info/docs/#minionqc
+[mirtrace]:       http://multiqc.info/docs/#mirtrace
+[mosdepth]:       http://multiqc.info/docs/#mosdepth
 [peddy]:          http://multiqc.info/docs/#peddy
+[phantompeakqualtools]: http://multiqc.info/docs/#phantompeakqualtools
 [picard]:         http://multiqc.info/docs/#picard
 [preseq]:         http://multiqc.info/docs/#preseq
 [prokka]:         http://multiqc.info/docs/#prokka
@@ -202,14 +255,20 @@ and many others. Thanks for your support!
 [rseqc]:          http://multiqc.info/docs/#rseqc
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster
-[slamdunk]:       http://multiqc.info/docs/#slamdunk
+[samtools]:       http://multiqc.info/docs/#samtools
+[sargasso]:       http://multiqc.info/docs/#sargasso
+[seqyclean]:      http://multiqc.info/docs/#seqyclean
+[sexdeterrmine]:  http://multiqc.info/docs/#sex.deterrmine
 [skewer]:         http://multiqc.info/docs/#skewer
+[slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
 [snpsplit]:       http://multiqc.info/docs/#snpsplit
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
+[stacks]:         http://multiqc.info/docs/#stacks
 [star]:           http://multiqc.info/docs/#star
-[samtools]:       http://multiqc.info/docs/#samtools
+[supernova]:      http://multiqc.info/docs/#supernova
 [theta2]:         http://multiqc.info/docs/#theta2
-[trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [tophat]:         http://multiqc.info/docs/#tophat
+[trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [vcftools]:       http://multiqc.info/docs/#vcftools
+[verifyBAMID]:    http://multiqc.info/docs/#verifybamid
