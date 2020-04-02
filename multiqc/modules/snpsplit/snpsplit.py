@@ -13,17 +13,18 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(name='SNPsplit',
-                                            anchor='SNPsplit',
-                                            target='SNPsplit',
-                                            href='https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/',
-                                            info='A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes')
+        super(MultiqcModule, self).__init__(
+            name='SNPsplit',
+            anchor='SNPsplit',
+            target='SNPsplit',
+            href='https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/',
+            info='A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes'
+        )
 
-        n = self.parse_SNPsplit()
-        if n > 0:
-            log.info("Found {} SNPsplit outputs".format(n))
-        else:
-            log.debug("Could not find any SNPsplit outputs in {}".format(config.analysis_dir))
+        num_reports = self.parse_SNPsplit()
+        if num_reports== 0:
+            raise UserWarning
+        log.info("Found {} reports".format(n))
 
     def parse_SNPsplit(self):
         d = dict()
