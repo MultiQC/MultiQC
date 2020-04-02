@@ -54,95 +54,64 @@ class MultiqcModule(BaseMultiqcModule):
                     input_fn = match.group(1)
                 continue
 
-            # Allele-tagging report
-            match = re.match(r"Reads were unaligned and hence skipped: (\d+)", line)
-            if match:
-                d["skipped"] = int(match.group(1))
-                continue
-            match = re.match(r"(\d+) reads were unassignable", line)
-            if match:
-                d["unassignable"] = int(match.group(1))
-                continue
-            match = re.match(r"(\d+) reads were specific for genome 1", line)
-            if match:
-                d["genome1"] = int(match.group(1))
-                continue
-            match = re.match(r"(\d+) reads were specific for genome 2", line)
-            if match:
-                d["genome2"] = int(match.group(1))
-                continue
-            # Generally not present
-            match = re.match(r"(\d+) reads that were unassignable contained C>T SNPs", line)
-            if match:
-                d["unassignableCT"] = int(match.group(1))
-                continue
-            match = re.match(r"(\d+) reads did not contain one of the expected bases", line)
-            if match:
-                d["ambiguous"] = int(match.group(1))
-                continue
-            match = re.match(r"(\d+) contained conflicting allele-specific SNPs", line)
-            if match:
-                d["conflictingSNPs"] = int(match.group(1))
-                continue
+            regex_patterns = [
+                # Allele-tagging report
+                ['tagging_skipped', r"Reads were unaligned and hence skipped: (\d+)"],
+                ['tagging_unassignable', r"(\d+) reads were unassignable"],
+                ['tagging_genome1', r"(\d+) reads were specific for genome 1"],
+                ['tagging_genome2', r"(\d+) reads were specific for genome 2"],
+                ['tagging_unassignableCT', r"(\d+) reads that were unassignable contained C>T SNPs"],
+                ['tagging_ambiguous', r"(\d+) reads did not contain one of the expected bases"],
+                ['tagging_conflictingSNPs', r"(\d+) contained conflicting allele-specific SNPs"],
+                # Allele-specific sorting report
+                ['sorting_conflictingReads', r"Reads contained conflicting SNP information:\W+(\d+)"]
+            ]
+            for (k, regex) in regex_patterns:
+                match = re.match(regex, line)
+                if match:
+                    d[k] = int(match.group(1))
+                    break
 
             # Allele-specific sorting report
-            if line.startswith("Reads were unassignable"):
-                d["unassignableReads"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Read pairs were unassignable (UA/UA):"):
-                d["unassignableReads"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Reads were specific for genome 1"):
-                d["genome1Reads"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Read pairs were specific for genome 1 (G1/G1)"):
-                d["genome1Reads"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Reads were specific for genome 2"):
-                d["genome2Reads"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Read pairs were specific for genome 2 (G2/G2)"):
-                d["genome2Reads"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Read pairs were a mix of G1 and UA"):
-                d["G1UA"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Read pairs were a mix of G2 and UA"):
-                d["G2UA"] = int(line.split("\t")[-1].split()[0])
-                continue
-            if line.startswith("Read pairs were a mix of G1 and G2"):
-                d["G1G2"] = int(line.split("\t")[-1].split()[0])
-                continue
-            match = re.match(r"Reads contained conflicting SNP information:\W+(\d+)", line)
-            if match:
-                d["conflictingReads"] = int(match.group(1))
-                continue
-            if line.startswith("Read pairs contained conflicting SNP information"):
-                d["conflictingReads"] = int(line.split("\t")[-1].split()[0])
-                continue
+            sorting_patterns = [
+                ['sorting_unassignableReads', "Reads were unassignable"],
+                ['sorting_unassignableReads', "Read pairs were unassignable (UA/UA):"],
+                ['sorting_genome1Reads', "Reads were specific for genome 1"],
+                ['sorting_genome1Reads', "Read pairs were specific for genome 1 (G1/G1)"],
+                ['sorting_genome2Reads', "Reads were specific for genome 2"],
+                ['sorting_genome2Reads', "Read pairs were specific for genome 2 (G2/G2)"],
+                ['sorting_G1UA', "Read pairs were a mix of G1 and UA"],
+                ['sorting_G2UA', "Read pairs were a mix of G2 and UA"],
+                ['sorting_G1G2', "Read pairs were a mix of G1 and G2"],
+                ['sorting_conflictingReads', "Read pairs contained conflicting SNP information"]
+            ]
+            for (k, pattern) in sorting_patterns:
+                if line.startswith(pattern):
+                    d[k] = int(line.split("\t")[-1].split()[0])
+                    break
 
         return [input_fn, d]
 
     def allele_tagging_section(self):
         ''' Allele-tagging report '''
         cats = OrderedDict()
-        cats['genome1'] = {'name':'Genome 1'}
-        cats['genome2'] = {'name':'Genome 2'}
-        cats['skipped'] = {'name':'Unaligned reads'}
-        cats['unassignable'] = {'name':'Not assigned'}
-        cats['ambiguous'] = {'name':'No match'}
-        cats['conflictingSNPs'] = {'name':'Conflicting SNPs'}
+        cats['tagging_genome1'] = {'name':'Genome 1'}
+        cats['tagging_genome2'] = {'name':'Genome 2'}
+        cats['tagging_skipped'] = {'name':'Unaligned reads'}
+        cats['tagging_unassignable'] = {'name':'Not assigned'}
+        cats['tagging_ambiguous'] = {'name':'No match'}
+        cats['tagging_conflictingSNPs'] = {'name':'Conflicting SNPs'}
 
         # Subtract ambiguous and C->T from unassignable
         CT = False
         for k, v in self.snpsplit_data.items():
-            if 'unassignable' and 'ambiguous' in v:
-                v['unassignable'] -= v['ambiguous']
-            if 'unassignable' and 'unassignableCT' in v:
-                v['unassignable'] -= v['unassignableCT']
+            if 'tagging_unassignable' and 'tagging_ambiguous' in v:
+                v['tagging_unassignable'] -= v['tagging_ambiguous']
+            if 'tagging_unassignable' and 'tagging_unassignableCT' in v:
+                v['tagging_unassignable'] -= v['tagging_unassignableCT']
                 CT = True
         if CT:
-            cats['unassignableCT'] = {'name': 'C->T SNP'}
+            cats['tagging_unassignableCT'] = {'name': 'C->T SNP'}
 
         pconfig = {
             'id': 'snpsplit-allele-tagging-plot',
@@ -171,13 +140,13 @@ class MultiqcModule(BaseMultiqcModule):
     def allele_sorting_section(self):
         ''' Allele-specific sorting report '''
         cats = OrderedDict()
-        cats['genome1Reads'] = {'name': 'Genome 1'}
-        cats['genome2Reads'] = {'name': 'Genome 2'}
-        cats['unassignableReads'] = {'name': 'Not assigned'}
-        cats['G1UA'] = {'name': 'Genome 1 / unassignable'}
-        cats['G2UA'] = {'name': 'Genome 2 / unassignable'}
-        cats['G1G2'] = {'name': 'Different genomes'}
-        cats['conflictingReads'] = {'name': 'Conflicting SNPs'}
+        cats['sorting_genome1Reads'] = {'name': 'Genome 1'}
+        cats['sorting_genome2Reads'] = {'name': 'Genome 2'}
+        cats['sorting_unassignableReads'] = {'name': 'Not assigned'}
+        cats['sorting_G1UA'] = {'name': 'Genome 1 / unassignable'}
+        cats['sorting_G2UA'] = {'name': 'Genome 2 / unassignable'}
+        cats['sorting_G1G2'] = {'name': 'Different genomes'}
+        cats['sorting_conflictingReads'] = {'name': 'Conflicting SNPs'}
 
         pconfig = {
             'id': 'snpsplit-sorting-plot',
