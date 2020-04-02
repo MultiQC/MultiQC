@@ -2,13 +2,36 @@
 
 ## MultiQC v1.9dev
 
+#### Dropped official support for Python 2
+
+Python 2 had its [official sunset date](https://www.python.org/doc/sunset-python-2/)
+on January 1st 2020, meaning that it will no longer be developed by the Python community.
+Part of the [python.org statement](https://www.python.org/doc/sunset-python-2/) reads:
+
+> That means that we will not improve it anymore after that day,
+> even if someone finds a security problem in it.
+> You should upgrade to Python 3 as soon as you can.
+
+[Very many Python packages no longer support Python 2](https://python3statement.org/)
+and it whilst the MultiQC code is currently compatible with both Python 2 and Python 3,
+it is increasingly difficult to maintain compatibility with the dependency packages it
+uses, such as MatPlotLib, numpy and more.
+
+As of MultiQC version 1.9, **Python 2 is no longer officially supported**.
+Automatic CI tests will no longer run with Python 2 and Python 2 specific workarounds
+are no longer guaranteed.
+
+Whilst it may be possible to continue using MultiQC with Python 2 for a short time by
+pinning dependencies, MultiQC compatibility for Python 2 will now slowly drift and start
+to break. If you haven't already, **you need to switch to Python 3 now**.
+
 #### New MultiQC Features
 
 * Now using [GitHub Actions](https://github.com/features/actions) for all CI testing
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
-    
+
 #### Module updates:
 
 * **MTNucRatioCalculator**
@@ -56,11 +79,14 @@
     * Highlighting samples from status - respect chosen highlight colour in the toolbox ([#742](https://github.com/ewels/MultiQC/issues/742))
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+    * Fixed MultiQC linting errors
 * **GATK**
     * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
     * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
-    * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+    * Fixed bug where module tries to parse `QC_table.txt`, a new log file in hicexplorer v2.2.
+    * Updated the format of the report to fits the changes which have been applied to the QC report of hicexplorer v3.3
+    * Updated code to save parsed results to `multiqc_data`
 * **HTSeq**
     * Fixed bug where module would crash if a sample had zero reads ([#1006](https://github.com/ewels/MultiQC/issues/1006))
 * **LongRanger**
