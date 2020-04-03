@@ -1,5 +1,13 @@
 # MultiQC Version History
 
+#### Module updates:
+* **sortmerna**
+    * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
+
+
+
+
+
 ## MultiQC v1.9dev
 
 #### Dropped official support for Python 2
