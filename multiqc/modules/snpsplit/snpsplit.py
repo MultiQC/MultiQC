@@ -40,6 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(self.snpsplit_data, 'multiqc_snpsplit')
 
+        self.add_general_stats()
         self.allele_tagging_section()
         self.allele_sorting_section()
 
@@ -79,6 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
                     input_fn = match.group(1)
                 continue
 
+            # Log format 1: XXX description
             regex_patterns = [
                 # Allele-tagging report
                 ['tagging_g1', r"(\d+) reads were specific for genome 1"],
@@ -96,8 +98,14 @@ class MultiqcModule(BaseMultiqcModule):
                     d[k] = int(match.group(1))
                     break
 
-            # Allele-specific sorting report
+            # Format 2: Decription: XXX
             sorting_patterns = [
+                # Tagging meta
+                ['tagging_SNP_annotation', "SNP annotation file"],
+                ['tagging_SNPs_stored', "SNPs stored in total"],
+                ['tagging_N_was_known_SNP', "N was present in the list of known SNPs"],
+                ['tagging_N_not_known', "N was not present in the list of SNPs"],
+                # Allele sorting
                 ['sorting_genome1', "Reads were specific for genome 1"],
                 ['sorting_genome2', "Reads were specific for genome 2"],
                 ['sorting_unassignable', "Reads were unassignable"],
@@ -112,10 +120,45 @@ class MultiqcModule(BaseMultiqcModule):
             ]
             for (k, pattern) in sorting_patterns:
                 if line.startswith(pattern):
-                    d[k] = int(line.split("\t")[-1].split()[0])
+                    try:
+                        d[k] = int(line.split("\t")[-1].split()[0])
+                    except ValueError:
+                        d[k] = line.split("\t")[-1].split()[0]
                     break
 
+            if 'tagging_N_was_known_SNP' in d and 'tagging_N_not_known' in d:
+                n_total = d['tagging_N_was_known_SNP'] + d['tagging_N_not_known']
+                d['tagging_percent_N_was_known_SNP'] = (d['tagging_N_was_known_SNP'] / float(n_total)) * 100.0
+
         return [input_fn, d]
+
+    def add_general_stats(self):
+        """ Add some columns to the General Statistics table at the top of the report """
+        headers = OrderedDict()
+        headers['tagging_SNP_annotation'] = {
+            'title': 'SNP annotation',
+            'description': 'Annotation file used for differentiating genomes',
+            'scale': False,
+            'modify': lambda x: '<code>{}</code>'.format(x),
+            'hidden': True
+        }
+        headers['tagging_percent_N_was_known_SNP'] = {
+            'title': '% Ns known SNP',
+            'description': 'Percentage of detected SNPs in the sample that were also present in the annotation',
+            'scale': 'RdYlGn',
+            'format': '{:,.2f}',
+            'max': 100,
+            'min': 0,
+            'suffix': '%'
+        }
+        headers['tagging_SNPs_stored'] = {
+            'title': 'SNPs stored',
+            'description': 'Total number of SNPs used for the analysis',
+            'scale': 'PrGn',
+            'format': '{:,.0f}',
+            'hidden': True
+        }
+        self.general_stats_addcols(self.snpsplit_data, headers)
 
     def allele_tagging_section(self):
         ''' Allele-tagging report '''
@@ -145,6 +188,15 @@ class MultiqcModule(BaseMultiqcModule):
             name="Allele-tagging report",
             description="Per-sample metrics of how many reads were assigned to each genome.",
             helptext="""
+                Allele tagging works on a per-read basis. The results may therefore differ considerably
+                from the Allele-specific sorting results if the samples were paired-end or Hi-C samples.
+
+                For single hybrid genomes, Genome 1-specific reads are specific for the reference sequence
+                and Genome 2-specific reads are specific for the straing specified with `--strain`.
+
+                For dual hybrid genomes, Genome 1-specific reads are specific for the strain specified
+                with `--strain`, and Genome 2-specific reads are specific for the straing specified with `--strain2`.
+
                 Bar graph categories are:
 
                 * `Genome 1`: Reads assigned to Genome 1
@@ -200,6 +252,8 @@ class MultiqcModule(BaseMultiqcModule):
                 * `Genome 2 / unassignable`: One paired-end read assigned to Genome 2, one unassignable (doesn't overlap a SNP)
                 * `Different genomes`: Paired-end reads assigned to different genomes
                 * `Conflicting SNPs`: Reads contained allele-specific information for both alleles within the same read
+
+                Allele-specific sorting takes both reads of read pairs or Hi-C samples into account.
 
                 Note that metrics here may differ from those in the allele-tagging report.
                 This occurs when paired-end reads are used, since 'tagging' only one read in
