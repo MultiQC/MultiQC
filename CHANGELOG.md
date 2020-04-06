@@ -55,6 +55,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
+    * Allele-specific alignment sorting
 
 #### Module updates:
 * **bcl2fastq**

@@ -84,6 +84,7 @@ MultiQC Modules:
     SexDetErrmine: modules/sexdeterrmine.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    SNPsplit: modules/snpsplit.md
     Supernova: modules/supernova.md
     Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
