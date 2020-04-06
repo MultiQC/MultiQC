@@ -55,6 +55,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
+    * Allele-specific alignment sorting
 
 #### Module updates:
 * **bcl2fastq**
@@ -459,8 +461,6 @@ string beginning with the name of your module, anything you like after the first
 * [**HiCExplorer**](https://github.com/maxplanck-ie/HiCExplorer)
     * New module to parse the log files of `hicBuildMatrix`.
     * Module written by [@joachimwolff](https://github.com/joachimwolff/)
-* [**SNPsplit**](https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/) - new module!
-    * Parse log files and create plots from tagging and sorting reports
 
 #### Module updates:
 * **AfterQC**
