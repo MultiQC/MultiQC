@@ -40,26 +40,26 @@ Currently, supported tools include:
 |[BBTools][bbmap]                 |[Bowtie][bowtie-1]       |[HOMER][homer]               |[DamageProfiler][damageprofiler]      |
 |[BioBloom Tools][biobloomtools]  |[Bowtie 2][bowtie-2]     |[HTSeq][htseq]               |[DeDup][dedup]                        |
 |[ClipAndMerge][clipandmerge]     |[HiCUP][hicup]           |[MACS2][macs2]               |[deepTools][deeptools]                |
-|[Cluster Flow][clusterflow]      |[HiC-Pro][hicpro]        |[mirtop][mirtop]             |[Disambiguate][disambiguate]          |
-|[Cutadapt][cutadapt]             |[HISAT2][hisat2]         |[Picard][picard]             |[goleft][goleft]                      |
-|[leeHom][leehom]                 |[Kallisto][kallisto]     |[Prokka][prokka]             |[HiCExplorer][hicexplorer]            |
-|[InterOp][interop]               |[Long Ranger][longranger]|[RSEM][rsem]                 |[methylQA][methylqa]                  |
-|[FastQC][fastqc]                 |[Salmon][salmon]         |[Samblaster][samblaster]     |[miRTrace][mirtrace]                  |
-|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[Samtools][samtools]         |[mosdepth][mosdepth]                  |
-|[Fastp][fastp]                   |[STAR][star]             |[SnpEff][snpeff]             |[Peddy][peddy]                        |
-|[fgbio][fgbio]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
-|[FLASh][flash]                   |                         |[Stacks][stacks]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[QoRTs][qorts]                        |
-|[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
-|[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
-|[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
-|[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
-|[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
-|[SeqyClean][seqyclean]           |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
-|                                 |                         |                             |[Supernova][supernova]                |
-|                                 |                         |                             |[VCFTools][vcftools]                  |
-|                                 |                         |                             |[VerifyBAMID][verifybamid]            |
-
+|[Cluster Flow][clusterflow]      |[HiC-Pro][hicpro]        |[Picard][picard]             |[Disambiguate][disambiguate]          |
+|[Cutadapt][cutadapt]             |[HISAT2][hisat2]         |[Prokka][prokka]             |[goleft][goleft]                      |
+|[leeHom][leehom]                 |[Kallisto][kallisto]     |[RSEM][rsem]                 |[HiCExplorer][hicexplorer]            |
+|[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]     |[methylQA][methylqa]                  |
+|[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[mirtop][mirtop]                      |
+|[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[miRTrace][mirtrace]                  |	  
+|[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[mosdepth][mosdepth]         |	  
+|[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[Peddy][peddy]                        |	  
+|[FLASh][flash]                   |                         |[THetA2][theta2]             |[phantompeakqualtools][phantompeakqualtools]|  
+|[Flexbar][flexbar]               |                         |                             |[Preseq][preseq]                      |	  
+|[Jellyfish][jellyfish]           |                         |                             |[QoRTs][qorts]                        |	  
+|[KAT][kat]                       |                         |                             |[Qualimap][qualimap]                  |	  
+|[MinIONQC][minionqc]             |                         |                             |[QUAST][quast]                        |	  
+|[Skewer][skewer]                 |                         |                             |[RNA-SeQC][rna_seqc]                  |	  
+|[SortMeRNA][sortmerna]           |                         |                             |[RSeQC][rseqc]                        |	  
+|[SeqyClean][seqyclean]           |                         |                             |[Sargasso][sargasso]                  |	  
+|                                 |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |	  
+|                                 |                         |                             |[Supernova][supernova]                |	  
+|                                 |                         |                             |[VCFTools][vcftools]                  |	  
+|                                 |                         |                             |[VerifyBAMID][verifybamid]            |        
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
