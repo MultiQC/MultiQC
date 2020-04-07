@@ -75,13 +75,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'IsomiR reads',
             'description': 'Read counts summed over all isomiRs',
             'shared_key': 'reads',
-            'scale': 'PuBu'
+            'scale': 'Oranges'
         }
         headers['read_count'] = {
             'title': 'Total reads',
             'description': 'Total read counts (both isomiRs and reference miRNA)',
             'shared_key': 'reads',
-            'scale': 'PuBu'
+            'scale': 'BuGn'
         } 
         headers['isomiR_perc'] = {
             'title': 'IsomiR %',
@@ -109,14 +109,16 @@ class MultiqcModule(BaseMultiqcModule):
             "helptext" : "For each sample, the number of miRNAs with each type of isomiRs, is displayed in a different color." + general_helptext}
         plots_info["mean"] = {
             "name" : "Means for each isomiR type",
-            "description" : "Mean counts, for each isomiR type, over all detected miRNAs. The mean counts of reads detected as reference miRNA sequences is also shown",
+            "description" : "Mean counts, for each isomiR type, over all detected miRNAs. The mean counts of reads detected as reference miRNA sequences is also shown.",
             "helptext" : "For each sample, the mean counts of each type of isomiRs over all detected miRNAs is displayed in a different color." + general_helptext}
 
+        # Each isomiR cat (combining mirtop current and previous versions)
         cats = ["ref_miRNA", "iso_3p", "iso_5p", "iso_add3p", "iso_add5p", "iso_add", "iso_snv", "iso_snv_seed", "iso_snv_central_offset", "iso_snv_central", "iso_snv_central_supp", "iso_snp", "iso_snp_seed", "iso_snp_central_offset", "iso_snp_central", "iso_snp_central_supp"]
 
+        # Y axis label definition
         ylab_dict = {"sum": "Read counts (stacked)", "count": "Unique sequences (stacked)", "mean": "Means (stacked)"}
         
-        # Aggregate infos for iso_snp isomiRs (for clarity). "Mean" section is recomputed
+        # Aggregate infos for iso_snp isomiRs (for clarity). "Mean" section will be recomputed
         def aggregate_snps_in_samples():
             snv_aggr = {} ## sub dict with all infos except for snps
             for sample in self.mirtop_data:
