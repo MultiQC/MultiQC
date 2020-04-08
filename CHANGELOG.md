@@ -57,6 +57,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Relative coverage and error rate of X and Y chromosomes
 * [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
     * Allele-specific alignment sorting
+* [**somalier**](https://github.com/brentp/somalier)
+    * relatedness checking and QC for BAM/CRAM/VCF for cancer,DNA,BS-Seq,exome, etc.
 
 #### Module updates:
 * **bcl2fastq**
@@ -123,7 +125,6 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Fixed a bug where `tstv_by_qual.py` produced invalid json from infinity-values.
 * **snpEff**
     * Added plot of effects
-
 
 #### New MultiQC Features:
 * Added some installation docs for windows

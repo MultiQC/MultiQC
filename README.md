@@ -56,6 +56,7 @@ Currently, supported tools include:
 |[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
 |[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
 |[SeqyClean][seqyclean]           |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
+|                                 |                         |                             |[Somalier][somalier]
 |                                 |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
@@ -263,6 +264,7 @@ MultiQC is released under the GPL v3 or later licence.
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
 [snpsplit]:       http://multiqc.info/docs/#snpsplit
+[somalier]:       http://multiqc.info/docs/#somalier
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
 [stacks]:         http://multiqc.info/docs/#stacks
 [star]:           http://multiqc.info/docs/#star

@@ -252,6 +252,14 @@ module_order:
     - peddy:
         module_tag:
             - DNA
+    - somalier:
+        module_tag:
+            - DNA
+            - Methylation
+            - WGS
+            - cancer
+            - chip
+            - RNA
     - methylQA:
         module_tag:
             - Methylation
