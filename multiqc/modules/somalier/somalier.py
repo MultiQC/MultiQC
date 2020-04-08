@@ -605,7 +605,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = "Ancestry PCA",
                 description = "Principal components of samples against background PCs.",
                 helptext = """Sample PCs are plotted against background PCs from the
-                backgorund data supplied to somalier.
+                background data supplied to somalier.
                 Color indicates predicted ancestry of sample. Data points in close 
                 proximity are predicted to be of similar ancestry. Consider whether
                 the samples cluster as expected.""",
