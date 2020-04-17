@@ -38,6 +38,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **iVar**
+    * Added support for [iVar](https://github.com/andersen-lab/ivar)
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 

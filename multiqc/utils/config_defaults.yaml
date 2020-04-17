@@ -536,6 +536,11 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - ivar:
+        module_tag:
+            - RNA
+            - epidemiology
+            - virus
     - flash:
         module_tag:
             - DNA
