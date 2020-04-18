@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load iVar trim results
         self.ivar_data = dict()
         for f in self.find_log_files('ivar/trim', filehandles=True):
-            parsed_data = self.parse_ivar(f['f'])
+            parsed_data = self.parse_ivar(f)
             if parsed_data is not None and len(parsed_data) > 0:
                 self.ivar_data[f['s_name']] = parsed_data
                 self.add_data_source(f, f['s_name'])
