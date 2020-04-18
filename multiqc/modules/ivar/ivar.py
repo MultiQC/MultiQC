@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         #Basic barplot section
         self.add_section(
-            description = 'This plot shows primer trimming read categories for iVar, created via ivar trim.',
+            description = 'This plot shows primer trimming read categories for iVar, created via ivar trim. Note that the plot numbers do NOT necessarily add up to 100\%, as the report of iVar does not display all categories.',
             plot = self.ivar_metrics_plot()
         )
         
@@ -63,6 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_ivar(self, f):
         parsed_data = dict()
         regexes = {
+            'mapped_reads': r'(?:Found\s)(\d+)(?:\smapped)',
             'total_reads': r'(?:Trimmed primers from )(?:\d+\.\d+\% \()?(\d+)',
             'reads_outside_primer_region': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\s(?:that\s)?started',
             'reads_too_short_after_trimming': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\swere(?: quality trimmed | shortened)'
@@ -90,6 +91,13 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table"""
 
         headers = OrderedDict()
+        headers['mapped_reads'] = {
+            'title': 'Mapped reads',
+            'description': 'Total number of mapped reads in iVar input.',
+            'min': 0,
+            'scale': 'RdYlGn-rev',
+            'format': '{:,.0f}'
+        }
         headers['total_reads'] = {
             'title': 'Total input reads',
             'description': 'Total number of reads where trimming was performed.',
