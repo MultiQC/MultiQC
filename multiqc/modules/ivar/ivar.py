@@ -21,8 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name = 'ivar',
-            anchor = 'ivar',
+            name = 'iVar',
+            anchor = 'iVar',
             href = 'https://github.com/andersen-lab/ivar',
             info = "is a computational package that contains functions broadly useful for viral amplicon-based sequencing."
         )
@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = dict()
         regexes = {
             'total_reads': r'(?:Trimmed primers from )(?:\d+\.\d+\% \()?(\d+)',
-            'reads_outside_primer_region': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\sstarted',
+            'reads_outside_primer_region': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\s(?:that\s)?started',
             'reads_too_short_after_trimming': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\swere(?: quality trimmed | shortened)'
         }
         for l in f['f']:
