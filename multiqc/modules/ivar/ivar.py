@@ -101,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Properly primer trimmed',
             'description': 'Correctly primer trimmed reads',
             'min': 0,
-            'scale': 'PuRd',
+            'scale': 'YlGn',
             'format': '{:,.0f}'
         }
         headers['reads_too_short_after_trimming'] = {
