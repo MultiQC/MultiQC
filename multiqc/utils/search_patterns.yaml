@@ -322,8 +322,7 @@ interop/summary:
 interop/index-summary:
     contents: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
 ivar/trim:
-    contents: 'Trimmed primers from'
-
+    contents: 'Number of references'
 jellyfish:
     fn: '*_jf.hist'
 kallisto:
