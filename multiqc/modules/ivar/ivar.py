@@ -101,8 +101,8 @@ class MultiqcModule(BaseMultiqcModule):
         for l in f['f']:
             match = re.search(regex, l)
             if match:
-                primer = matches.group(1)
-                counts = int(matches.group(2))
+                primer = match.group(1)
+                counts = int(match.group(2))
                 primers[primer] = counts
         
         return primers
