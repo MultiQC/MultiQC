@@ -36,15 +36,15 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
     * combining multiple VCF files into one coherent report and format for downstream analysis.
-* [**RNASeQC2**](https://github.com/broadinstitute/rnaseqc)
-    * New module to handle the parsing of more recent RNAseQC metric files. 
 
 #### Module updates:
 
-* **MTNucRatioCalculator**
-    * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **MTNucRatioCalculator**
+    * Fixed misleading value suffix in general stats table
+* **RNASeQC2**
+    * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 

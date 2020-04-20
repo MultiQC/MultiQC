@@ -1,23 +1,29 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from rna_seqc """
+""" MultiQC module to parse output from RNA-SeQC """
 
-import logging
+from __future__ import print_function
 from collections import OrderedDict
+import logging
 
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, beeswarm, linegraph, heatmap
-from multiqc import config
+
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-
 class MultiqcModule(BaseMultiqcModule):
+
     def __init__(self):
-        super(MultiqcModule, self).__init__(name="RNA-SeQC", anchor="rna_seqc",
-                                            href="https://github.com/broadinstitute/rnaseqc",
-                                            info="Fast, efficient RNA-Seq metrics for quality control and process optimization")
+        # Initialise the parent object
+        super(MultiqcModule, self).__init__(
+            name="RNA-SeQC",
+            anchor="rna_seqc",
+            href="https://github.com/broadinstitute/rnaseqc",
+            info="Fast, efficient RNA-Seq metrics for quality control and process optimization"
+        )
 
         # Check if metrics is version 1 or 2.
         self.rna_seqc_metrics = dict()
@@ -283,7 +289,6 @@ class MultiqcModule(BaseMultiqcModule):
             'modify': lambda x: float(x) * 100.0
         }
         headers['Genes Detected'] = {
-            'namespace': 'RNA-SeQCv1',
             'title': '# Genes',
             'description': 'Number of genes detected with at least 5 reads.',
             'min': 0,
@@ -291,7 +296,6 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         headers['rRNA rate'] = {
-            'namespace': 'RNA-SeQCv1',
             'title': '% rRNA Alignment',
             'description': ' rRNA reads (non-duplicate and duplicate reads) per total reads',
             'max': 100,
@@ -314,7 +318,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Config for the plot
         pconfig = {
-            'id': 'transcript_plot_v1',
+            'id': 'rna_seqc_position_plot',
             'title': 'RNA-SeQC: Transcript-associated reads',
             'ylab': 'Ratio of Reads',
             'cpswitch': False,
@@ -325,7 +329,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section (
             name = 'Transcript-associated reads',
-            anchor = 'Transcript_associated_rnaseqc1',
+            anchor = 'rna_seqc_transcript_associated',
             helptext = 'All of the above rates are per mapped read. Exonic Rate is the fraction mapping within exons. '
                        'Intronic Rate is the fraction mapping within introns. '
                        'Intergenic Rate is the fraction mapping in the genomic space between genes. ',
@@ -340,7 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys = [ 'End 1 Sense', 'End 1 Antisense', 'End 2 Sense', 'End 2 Antisense' ]
         # Config for the plot
         pconfig = {
-            'id': 'strand_spec_v1',
+            'id': 'rna_seqc_strandedness_plot',
             'title': 'RNA-SeQC: Strand Specificity',
             'ylab': '% Reads',
             'cpswitch_counts_label': '# Reads',
@@ -395,7 +399,7 @@ class MultiqcModule(BaseMultiqcModule):
             data.append(self.rna_seqc_norm_low_cov)
             data_labels.append({'name': 'Low Expressed'})
         pconfig = {
-            'id': 'gene_body_coverage_rnaseqc',
+            'id': 'rna_seqc_gene_body_coverage_plot',
             'title': 'RNA-SeQC: Gene Body Coverage',
             'ylab': '% Coverage',
             'xlab': "Gene Body Percentile (5' -> 3')",
@@ -441,7 +445,7 @@ class MultiqcModule(BaseMultiqcModule):
             corr_type = 'Pearson'
         if data is not None:
             pconfig = {
-                'id': 'plot_correlation_rnaseqc',
+                'id': 'rna_seqc_correlation_heatmap',
                 'title': 'RNA-SeQC: {} Sample Correlation'.format(corr_type)
             }
             self.add_section (

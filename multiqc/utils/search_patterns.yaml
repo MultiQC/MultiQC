@@ -449,6 +449,8 @@ quast:
     shared: true
 rna_seqc/metrics:
     fn: '*metrics.tsv'
+    contents: 'Expression Profiling Efficiency'
+    num_lines: 20
     shared: true
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'

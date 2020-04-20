@@ -52,10 +52,10 @@ Currently, supported tools include:
 |[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
-|[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |             
-|[SortMeRNA][sortmerna]           |                         |                             |[RSeQC][rseqc]                        |
-|[SeqyClean][seqyclean]           |                         |                             |[Sargasso][sargasso]                  |
-|[Skewer][skewer]                 |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
+|[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
+|[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
+|[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
+|[SeqyClean][seqyclean]           |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
 |                                 |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
@@ -251,7 +251,7 @@ MultiQC is released under the GPL v3 or later licence.
 [qorts]:          http://multiqc.info/docs/#qorts
 [qualimap]:       http://multiqc.info/docs/#qualimap
 [quast]:          http://multiqc.info/docs/#quast
-[rna_seqc]:      http://multiqc.info/docs/#rna_seqc
+[rna_seqc]:       http://multiqc.info/docs/#rna_seqc
 [rsem]:           http://multiqc.info/docs/#rsem
 [rseqc]:          http://multiqc.info/docs/#rseqc
 [salmon]:         http://multiqc.info/docs/#salmon
