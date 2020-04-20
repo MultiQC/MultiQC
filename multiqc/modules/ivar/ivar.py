@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
     #Parse Primer stats appropriately
     def parse_ivar_primer_stats(self, f):
         primers = OrderedDict()
-        regex = "^(.*[LEFT]|[RIGHT]*)(?:\s+)(\d+$)"
+        regex = "^(.*)(?:\t+)(\d+$)"
         # Search regexes for stats
         for l in f['f'].splitlines():
             match = re.search(regex, l)
