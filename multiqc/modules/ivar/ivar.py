@@ -32,10 +32,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.parsed_primers = dict()
         for f in self.find_log_files('ivar/trim', filehandles=True):
             parsed_data = self.parse_ivar(f)
-            parsed_primers = self.parse_ivar_primer_stats(f)
             if parsed_data is not None and len(parsed_data) > 0:
                 self.ivar_data[f['s_name']] = parsed_data
                 self.add_data_source(f, f['s_name'])
+        for f in self.find_log_files('ivar/trim'):
+            parsed_primers = self.parse_ivar_primer_stats(f)
             if parsed_primers is not None and len(parsed_primers) > 0:
                 self.parsed_primers[f['s_name']] = parsed_primers
                 self.add_data_source(f, f['s_name'])
@@ -51,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.ivar_data, 'multiqc_ivar_summary')
         
         #Primers too
-        self.write_data_file(parsed_primers, 'multiqc_ivar_primers')
+        #self.write_data_file(parsed_primers, 'multiqc_ivar_primers')
         
         #Found reports or not?
         log.info("Found {} reports".format(len(self.ivar_data)))
@@ -98,13 +99,13 @@ class MultiqcModule(BaseMultiqcModule):
         primers = OrderedDict()
         regex = "^(.*[LEFT]|[RIGHT]*)(?:\s+)(\d+$)"
         # Search regexes for stats
-        for l in f['f']:
+        for l in f['f'].splitlines():
             match = re.search(regex, l)
             if match:
                 primer = match.group(1)
                 counts = int(match.group(2))
                 primers[primer] = counts
-        
+        log.info("Found {} primers".format(len(primers)))
         return primers
 
     # Add to general stats table
