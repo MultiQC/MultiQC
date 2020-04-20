@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.ivar_data, 'multiqc_ivar_summary')
         
         #Primers too
-        #self.write_data_file(parsed_primers, 'multiqc_ivar_primers')
+        self.write_data_file(self.parsed_primers, 'multiqc_ivar_primers')
         
         #Found reports or not?
         log.info("Found {} reports".format(len(self.ivar_data)))
@@ -174,15 +174,34 @@ class MultiqcModule(BaseMultiqcModule):
     def status_heatmap(self):
         """ Heatmap showing information on each primer found for every sample """
         data = self.parsed_primers
+        print(len(self.parsed_primers))
+        #Top level dict contains sample IDs + dict(primer, counts)
+        
+        final_data = OrderedDict()
+        final_xcats = OrderedDict()
+        final_ycats = list()
+
+        for k,v in data:
+            sample = data[k][v]
+            final_ycats.append(k)
+            tmp_prim_val = list()
+            tmp_xcat = list()
+            for prim,val in sample:
+                tmp_xcat.append(prim)
+                tmp_prim_val.append(val)
+            final_data[k] = tmp_prim_val
+
+
+
+
         
         if data is not None:
             pconfig = {
                 'id': 'rna_seqc_correlation_heatmap',
                 'title': 'iVar: Number of primers found for each sample'
             }
-            #names = data.keys()
-            #hmdata = data.values()
+
             self.add_section (
                 name = 'iVar Primer Counts',
-                plot = heatmap.plot(data, data, pconfig)
+                plot = heatmap.plot(final_data, final_xcats, final_ycats, pconfig)
             )
