@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
         """ Make the HighCharts HTML to plot the sortmerna rates """
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
+        keys = {}
         metrics = set()
         for sample in self.sortmerna:
             for key in self.sortmerna[sample]:
@@ -140,4 +140,4 @@ class MultiqcModule(BaseMultiqcModule):
             'ylab': 'Reads'
         }
 
-        self.add_section( plot = bargraph.plot(self.sortmerna, keys, pconfig) )
+        self.add_section( plot = bargraph.plot(self.sortmerna, sorted(keys), pconfig) )
