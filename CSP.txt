@@ -2,13 +2,16 @@
 # (Content Security Policy), you will need the following scripts whitelisted:
 
 script-src 'self'
-    # v1.8dev with support for multiple fastq modules
+    # v1.9
+    'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='
+
+    # v1.8 with support for multiple fastq modules
     'sha256-QikgYLXjlBzwXG+ymKSgvpKRMD9n0vZIOHtNOwYJjPo=' # multiqc_fastqc.js
     'sha256-pMsBH3T9O1Z2ybOWP9nXEnBjBiYNE7W0JnFTJc2udmw=' # fastq screen inline script
     'sha256-kvXmFPx65wSwMACCymANGTV/YPyA4cby1tDgjq1/138=' # multiqc_plotting.js
     'sha256-pSkR6mTLjv5YR+gLPA69aBzr+/34tLq+OtZ/ajFK+oE=' # multiqc_tables.js
 
-    # v1.8dev
+    # v1.8
     'sha256-Q8T2P8EmA90icfsFreWNkgqXzeAUtRDu2cLsJfgN1aY=' # load mqc_compressed_plotdata and mqc_config
     'sha256-+F66a8s8ponoNnBnP06kgZ4LvQ6IBedFeTJHpTbA0O0=' # load_fastqc_passfails();
     'sha256-6Iyez8LRQbIQe12+IHNW66k9OJvzlLF1yPb2gK11T5o=' # fastq screen inline script
