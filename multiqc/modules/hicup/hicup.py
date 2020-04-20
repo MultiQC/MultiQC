@@ -5,7 +5,6 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-
 from multiqc import config
 from multiqc.plots import bargraph
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -88,7 +87,9 @@ class MultiqcModule(BaseMultiqcModule):
                     return None
                 header = s[1:]
             else:
-                s_name = self.clean_s_name(s[0], f['root']).lstrip('HiCUP_output/')
+                s_name = self.clean_s_name(s[0], f['root'])
+                if s_name.startswith('HiCUP_output/'):
+                    s_name = s_name[13:]
                 parsed_data = {}
                 for idx, num in enumerate(s[1:]):
                     try:
