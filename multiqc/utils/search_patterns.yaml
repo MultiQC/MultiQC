@@ -328,6 +328,9 @@ kallisto:
     shared: true
 kat:
     fn: '*.dist_analysis.json'
+kraken2:
+    contents_re: '^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([UDKPCOFGS-])\t(\d+)\s+(.+)'
+    num_lines: 2
 leehom:
     contents: 'Adapter dimers/chimeras'
     shared: true
