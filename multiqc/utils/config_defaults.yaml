@@ -450,6 +450,12 @@ module_order:
     - bowtie1:
         module_tag:
             - RNA
+    - snpsplit:
+        module_tag:
+            - DNA
+            - RNA
+            - methylation
+            - allele-specific
 
     # Pre-alignment QC
     - kat:
@@ -515,6 +521,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - multivcfanalyzer:
+        module_tag:
+            - DNA
+            - ancient
     - clusterflow:
         module_tag:
             - RNA

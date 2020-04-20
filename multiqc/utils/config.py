@@ -87,7 +87,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
         print("Error - No MultiQC templates found.", file=sys.stderr)
     print("Could not load MultiQC - has it been installed? \n\
         Please either install with pip (pip install multiqc) or by using \n\
-        the installation script (python setup.py install)", file=sys.stderr)
+        the local files (pip install .)", file=sys.stderr)
     sys.exit(1)
 
 ##### Functions to load user config files. These are called by the main MultiQC script.

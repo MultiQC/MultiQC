@@ -19,7 +19,7 @@
 MultiQC is a tool to create a single report with interactive plots
 for multiple bioinformatics analyses across many samples.
 
-MultiQC is written in Python (tested with v2.7, 3.4, 3.5 and 3.6). It is
+MultiQC is written in Python (tested with v3.6+). It is
 available on the [Python Package Index](https://pypi.python.org/pypi/multiqc/)
 and through conda using [Bioconda](http://bioconda.github.io/).
 
@@ -46,10 +46,10 @@ Currently, supported tools include:
 |[InterOp][interop]               |[Long Ranger][longranger]|[Samblaster][samblaster]     |[methylQA][methylqa]                  |
 |[FastQC][fastqc]                 |[Salmon][salmon]         |[Samtools][samtools]         |[miRTrace][mirtrace]                  |
 |[FastQ Screen][fastq-screen]     |[Slamdunk][slamdunk]     |[SnpEff][snpeff]             |[mosdepth][mosdepth]                  |
-|[Fastp][fastp]                   |[STAR][star]             |[Subread featureCounts][featurecounts]|[Peddy][peddy]               |
-|[fgbio][fgbio]                   |[Tophat][tophat]         |[Stacks][stacks]             |[phantompeakqualtools][phantompeakqualtools]|
-|[FLASh][flash]                   |                         |[THetA2][theta2]             |[Preseq][preseq]                      |
-|[Flexbar][flexbar]               |                         |                             |[QoRTs][qorts]                        |
+|[Fastp][fastp]                   |[STAR][star]             |[SNPsplit][snpsplit]         |[Peddy][peddy]               |
+|[fgbio][fgbio]                   |[Tophat][tophat]         |[Subread featureCounts][featurecounts]|[phantompeakqualtools][phantompeakqualtools]|
+|[FLASh][flash]                   |                         |[Stacks][stacks]             |[Preseq][preseq]                      |
+|[Flexbar][flexbar]               |                         |[THetA2][theta2]             |[QoRTs][qorts]                        |
 |[Jellyfish][jellyfish]           |                         |                             |[Qualimap][qualimap]                  |
 |[KAT][kat]                       |                         |                             |[QUAST][quast]                        |
 |[MinIONQC][minionqc]             |                         |                             |[RNA-SeQC][rna_seqc]                  |
@@ -190,6 +190,7 @@ Code contributions from:
 [@winni2k](https://github.com/winni2k),
 [@wkretzsch](https://github.com/wkretzsch),
 [@nservant](https://github.com/nservant),
+[@m-ish](https://github.com/m-ish)
 
 and many others. Thanks for your support!
 
@@ -262,6 +263,7 @@ MultiQC is released under the GPL v3 or later licence.
 [skewer]:         http://multiqc.info/docs/#skewer
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
+[snpsplit]:       http://multiqc.info/docs/#snpsplit
 [sortmerna]:      http://multiqc.info/docs/#sortmerna
 [stacks]:         http://multiqc.info/docs/#stacks
 [star]:           http://multiqc.info/docs/#star
