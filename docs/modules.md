@@ -593,7 +593,7 @@ MultiQC `config` module and have sensible defaults. For example:
 ```python
 from multiqc import config
 
-mymod_config = getattr(config, mymod_config, {})
+mymod_config = getattr(config, 'mymod_config', {})
 my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
 ```
 

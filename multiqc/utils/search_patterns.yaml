@@ -363,6 +363,8 @@ mosdepth/global_dist:
     fn: '*.mosdepth.global.dist.txt'
 mosdepth/region_dist:
     fn: '*.mosdepth.region.dist.txt'
+multivcfanalyzer:
+    fn: 'MultiVCFAnalyzer.json'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
@@ -447,8 +449,13 @@ qualimap/rnaseq/coverage:
 quast:
     fn: 'report.tsv'
     shared: true
-rna_seqc/metrics:
-    fn: 'metrics.tsv'
+rna_seqc/metrics_v1:
+    fn: '*metrics.tsv'
+    contents: 'Sample	Note	'
+    shared: true
+rna_seqc/metrics_v2:
+    fn: '*metrics.tsv'
+    contents: 'High Quality Ambiguous Alignment Rate'
     shared: true
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'

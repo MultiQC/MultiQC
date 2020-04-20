@@ -190,6 +190,7 @@ Code contributions from:
 [@winni2k](https://github.com/winni2k),
 [@wkretzsch](https://github.com/wkretzsch),
 [@nservant](https://github.com/nservant),
+[@m-ish](https://github.com/m-ish)
 
 and many others. Thanks for your support!
 

@@ -32,14 +32,29 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
 
-#### Module updates:
+#### New Modules:
 
-* **MTNucRatioCalculator**
-    * Fixed misleading value suffix in general stats table
-* **bcl2fastq**
-    * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+    * combining multiple VCF files into one coherent report and format for downstream analysis.
 * **iVar**
     * Added support for [iVar](https://github.com/andersen-lab/ivar)
+
+#### Module updates:
+
+* **bcl2fastq**
+    * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **DamageProfiler**
+    * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
+* **MTNucRatioCalculator**
+    * Fixed misleading value suffix in general stats table
+* **Picard HsMetrics**
+    * Updated large HsMetrics table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
+* **QualiMap**
+    * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
+* **RNASeQC2**
+    * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
+* **Samtools**
+    * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076)).
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
