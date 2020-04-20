@@ -43,6 +43,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
+* **Picard HsMetrics**
+    * Updated large HsMetrics table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
 * **RNASeQC2**
     * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
 
