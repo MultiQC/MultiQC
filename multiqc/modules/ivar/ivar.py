@@ -60,12 +60,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.ivar_general_stats_table()
 
-        #Basic barplot section
-        self.add_section(
-            description = 'This plot shows primer trimming read categories for iVar, created via ivar trim. Note that the plot numbers do NOT necessarily add up to 100\%, as the report of iVar does not display all categories.',
-            plot = self.ivar_metrics_plot()
-        )
-
         #Heatmap info
         self.status_heatmap()
         
@@ -85,13 +79,6 @@ class MultiqcModule(BaseMultiqcModule):
                 if match:
                     parsed_data[k] = int(match.group(1))
         
-        # Compute properly trimmed from given values
-        parsed_data['properly_trimmed'] = (
-            parsed_data['total_reads']
-                - parsed_data['reads_outside_primer_region']
-                - parsed_data['reads_too_short_after_trimming']
-        )
-
         return parsed_data
 
     #Parse Primer stats appropriately
@@ -151,25 +138,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.ivar_data, headers)
     
-    def ivar_metrics_plot (self):
-        """ Make the HighCharts HTML to plot the duplication rates """
-
-        # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys['properly_trimmed'] =   { 'name': 'Properly Trimmed' }
-        keys['reads_too_short_after_trimming'] = { 'name': 'Too short (<30)' }
-        keys['reads_outside_primer_region'] =   { 'name': 'Outside primer region' }
-
-        # Config for the plot
-        config = {
-            'id': 'ivar_groups',
-            'title': 'iVAR: Primer trimming',
-            'ylab': '# Reads',
-            'cpswitch_counts_label': 'Number of Reads',
-            'hide_zero_cats': False
-        }
-
-        return bargraph.plot(self.ivar_data, keys, config)
 
     def status_heatmap(self):
         """ Heatmap showing information on each primer found for every sample """
