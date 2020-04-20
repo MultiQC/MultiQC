@@ -447,10 +447,13 @@ qualimap/rnaseq/coverage:
 quast:
     fn: 'report.tsv'
     shared: true
-rna_seqc/metrics:
+rna_seqc/metrics_v1:
     fn: '*metrics.tsv'
-    contents: 'Expression Profiling Efficiency'
-    num_lines: 20
+    contents: 'Sample	Note	'
+    shared: true
+rna_seqc/metrics_v2:
+    fn: '*metrics.tsv'
+    contents: 'High Quality Ambiguous Alignment Rate'
     shared: true
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
