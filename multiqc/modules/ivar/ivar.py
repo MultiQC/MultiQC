@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_ivar(self, f):
         parsed_data = dict()
         regexes = {
-            'mapped_reads': r'(?:Found\s)(\d+)(?:\smapped)  ',
+            'mapped_reads': r'(?:Found\s)(\d+)(?:\smapped)',
             'total_reads': r'(?:Trimmed primers from )(?:\d+\.\d+\% \()?(\d+)',
             'reads_outside_primer_region': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\s(?:that\s)?started',
             'reads_too_short_after_trimming': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\swere(?: quality trimmed | shortened)'
