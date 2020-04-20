@@ -32,6 +32,11 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
 
+#### New Modules:
+
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+    * combining multiple VCF files into one coherent report and format for downstream analysis.
+
 #### Module updates:
 
 * **MTNucRatioCalculator**

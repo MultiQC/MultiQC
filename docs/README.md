@@ -67,6 +67,7 @@ MultiQC Modules:
     mosdepth: modules/mosdepth.md
     miRTrace: modules/mirtrace.md
     MTNucRatio: modules/mtnucratio.md
+    MultiVCFAnalyzer: modules/multivcfanalyzer.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
