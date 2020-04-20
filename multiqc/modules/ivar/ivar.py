@@ -103,28 +103,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = OrderedDict()
         headers['mapped_reads'] = {
-            'title': 'Mapped reads',
+            'title': 'Total mapped reads',
             'description': 'Total number of mapped reads in iVar input.',
             'min': 0,
             'scale': 'RdYlGn-rev',
             'format': '{:,.0f}'
         }
         headers['total_reads'] = {
-            'title': 'Total input reads',
-            'description': 'Total number of reads where trimming was performed.',
+            'title': 'Primer trimmed reads',
+            'description': 'Total number of reads where primer trimming was performed.',
             'min': 0,
             'scale': 'PuRd',
             'format': '{:,.0f}'
         }
-        headers['properly_trimmed'] = {
-            'title': 'Properly primer trimmed',
-            'description': 'Correctly primer trimmed reads',
-            'min': 0,
-            'scale': 'YlGn',
-            'format': '{:,.0f}'
-        }
         headers['reads_too_short_after_trimming'] = {
-            'title': 'Number of reads too short after trimming',
+            'title': 'Fail minimum length reads',
             'description': 'Number of reads too short (<30bp) after primer trimming',
             'min': 0,
             'scale': 'RdYlGn',
