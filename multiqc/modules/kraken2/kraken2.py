@@ -47,7 +47,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_kraken_log(self, f):
         regex = "^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([UDKPCOFGS-])\t(\d+)\s+(.+)"
         for l in f['f']:
-            #TODO
+            #TODO the regex parses 6 groups per matched line (
+            # Example line:  11.66	98148	98148	U	0	unclassified
+            # G1: 11.66, G2: 98148, G3: 98148, G4: U, G5: 0 , G6:Unclassified
+            # Works on all 5 input files provided at MultiQC Testdata - will now parse this to a Dict and then think about vis
+            # Worst case: Top Level info in main table and/or table info
 
 
             
