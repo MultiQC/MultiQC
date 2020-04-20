@@ -65,3 +65,22 @@ sp:
     picard/sam_file_validation:
         fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 ```
+
+#### HsMetrics Table
+
+You can customise the columns shown in the HsMetrics table with the config keys `HsMetrics_table_cols` and `HsMetrics_table_cols_hidden`. For example:
+
+```yaml
+picard_config:
+    HsMetrics_table_cols:
+        - NEAR_BAIT_BASES
+        - OFF_BAIT_BASES
+        - ON_BAIT_BASES
+    HsMetrics_table_cols_hidden:
+        - MAX_TARGET_COVERAGE
+        - MEAN_BAIT_COVERAGE
+        - MEAN_TARGET_COVERAGE
+```
+
+Only values listed in `HsMetrics_table_cols` will be included in the table.
+Anything listed in `HsMetrics_table_cols_hidden` will be hidden by default.
