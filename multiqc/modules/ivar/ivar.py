@@ -174,30 +174,28 @@ class MultiqcModule(BaseMultiqcModule):
     def status_heatmap(self):
         """ Heatmap showing information on each primer found for every sample """
         data = self.parsed_primers
-        print(len(self.parsed_primers))
-        #Top level dict contains sample IDs + dict(primer, counts)
+        #print(data)
+        #Top level dict contains sample IDs + OrderedDict(primer, counts)
         
-        final_data = OrderedDict()
-        final_xcats = OrderedDict()
+        final_data = list()
+        final_xcats = list()
         final_ycats = list()
 
-        for k,v in data:
-            sample = data[k][v]
+        for k,v in data.items():
+            sample = data[k]
             final_ycats.append(k)
             tmp_prim_val = list()
             tmp_xcat = list()
-            for prim,val in sample:
+            for prim,val in sample.items():
                 tmp_xcat.append(prim)
                 tmp_prim_val.append(val)
-            final_data[k] = tmp_prim_val
+            final_xcats = tmp_xcat #just need this once
+            final_data.append(tmp_prim_val)
 
-
-
-
-        
         if data is not None:
             pconfig = {
-                'id': 'rna_seqc_correlation_heatmap',
+                'id': 'ivar-primer-count-heatmap',
+                'decimalPlaces': 0,
                 'title': 'iVar: Number of primers found for each sample'
             }
 
