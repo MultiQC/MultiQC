@@ -9,7 +9,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, heatmap
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -29,11 +29,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load iVar trim results
         self.ivar_data = dict()
+        self.parsed_primers = dict()
         for f in self.find_log_files('ivar/trim', filehandles=True):
             parsed_data = self.parse_ivar(f)
             parsed_primers = self.parse_ivar_primer_stats(f)
             if parsed_data is not None and len(parsed_data) > 0:
                 self.ivar_data[f['s_name']] = parsed_data
+                self.add_data_source(f, f['s_name'])
+            if parsed_primers is not None and len(parsed_primers) > 0:
+                self.parsed_primers[f['s_name']] = parsed_primers
                 self.add_data_source(f, f['s_name'])
 
         # Filter to strip out ignored sample names
@@ -45,9 +49,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write parsed data to a file
         self.write_data_file(self.ivar_data, 'multiqc_ivar_summary')
+        
         #Primers too
-        if parsed_primers is not None and len(parsed_primers) > 0:
-            self.write_data_file(parsed_primers, 'multiqc_ivar_primers')
+        self.write_data_file(parsed_primers, 'multiqc_ivar_primers')
+        
         #Found reports or not?
         log.info("Found {} reports".format(len(self.ivar_data)))
 
@@ -59,6 +64,9 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'This plot shows primer trimming read categories for iVar, created via ivar trim. Note that the plot numbers do NOT necessarily add up to 100\%, as the report of iVar does not display all categories.',
             plot = self.ivar_metrics_plot()
         )
+
+        #Heatmap info
+        self.status_heatmap()
         
     # Parse an ivar report
     def parse_ivar(self, f):
@@ -87,22 +95,17 @@ class MultiqcModule(BaseMultiqcModule):
 
     #Parse Primer stats appropriately
     def parse_ivar_primer_stats(self, f):
-        parsed_primer_data = dict()
-        primers = dict()
-        regexes = {
-            'primer_stats': r'^(.*[LEFT]|[RIGHT]*)(?:\s+)(\d+$)'
-        }
+        primers = OrderedDict()
+        regex = "^(.*[LEFT]|[RIGHT]*)(?:\s+)(\d+$)"
         # Search regexes for stats
-        for k, r in regexes.items():
-            for l in f['f']:
-                matches = re.search(r, l)
+        for l in f['f']:
+            match = re.search(regex, l)
+            if match:
                 primer = matches.group(1)
                 counts = int(matches.group(2))
                 primers[primer] = counts
-                log.info(primer)
-                log.info(counts)
-            parsed_primer_data[k] = primers
-        return parsed_primer_data
+        
+        return primers
 
     # Add to general stats table
 
@@ -166,3 +169,19 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(self.ivar_data, keys, config)
+
+    def status_heatmap(self):
+        """ Heatmap showing information on each primer found for every sample """
+        data = self.parsed_primers
+        
+        if data is not None:
+            pconfig = {
+                'id': 'rna_seqc_correlation_heatmap',
+                'title': 'iVar: Number of primers found for each sample'
+            }
+            #names = data.keys()
+            #hmdata = data.values()
+            self.add_section (
+                name = 'iVar Primer Counts',
+                plot = heatmap.plot(data, data, pconfig)
+            )
