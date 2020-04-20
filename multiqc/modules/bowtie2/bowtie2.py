@@ -19,10 +19,14 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(name="Bowtie 2", anchor="bowtie2",
-        href='http://bowtie-bio.sourceforge.net/bowtie2/',
-        info="is an ultrafast and memory-efficient tool for aligning sequencing"\
-                " reads to long reference sequences.")
+        super(MultiqcModule, self).__init__(name="Bowtie 2 / HiSAT2", anchor="bowtie2",
+        target='',
+        info="""<a href="http://bowtie-bio.sourceforge.net/bowtie2/">Bowtie 2</a>
+                and <a href="https://ccb.jhu.edu/software/hisat2/">HISAT2</a> are fast
+                and memory-efficient tools for aligning sequencing reads against a reference genome.
+                Unfortunately both tools have identical log output by default, so it is impossible
+                to distiguish which tool was used.
+                """)
 
         # Find and load any Bowtie 2 reports
         self.bowtie2_data = dict()
@@ -208,7 +212,9 @@ class MultiqcModule(BaseMultiqcModule):
         half_warning = ''
         for s_name in self.bowtie2_data:
             if 'paired_aligned_mate_one_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_multi_halved' in self.bowtie2_data[s_name] or 'paired_aligned_mate_none_halved' in self.bowtie2_data[s_name]:
-                half_warning = '<em>Please note that single mate alignment counts are halved to tally with pair counts properly.</em>'
+                half_warning = '''
+                <div class="alert alert-warning">Please note that single mate alignment counts are halved to tally with pair counts properly.</div>
+                '''
         description_text = 'This plot shows the number of reads aligning to the reference in different ways.'
 
         # Config for the plot
@@ -226,12 +232,15 @@ class MultiqcModule(BaseMultiqcModule):
             config['id'] = 'bowtie2_se_plot'
             config['title'] = 'Bowtie 2: SE Alignment Scores'
             self.add_section(
+                name = 'Single-end alignments',
+                anchor = 'bowtie2-align-se',
                 description = description_text,
                 helptext = '''
                 There are 3 possible types of alignment:
-                * **SE Mapped uniquely**: Read has only one occurence in the reference genome.
-                * **SE Multimapped**: Read has multiple occurence.
-                * **SE No aligned**: Read has no occurence.
+
+                * **SE mapped uniquely**: Read has only one occurence in the reference genome.
+                * **SE multimapped**: Read has multiple occurence.
+                * **SE not aligned**: Read has no occurence.
                 ''',
                 plot = bargraph.plot(self.bowtie2_data, sekeys, config)
             )
@@ -248,9 +257,12 @@ class MultiqcModule(BaseMultiqcModule):
             config['id'] = 'bowtie2_pe_plot'
             config['title'] = 'Bowtie 2: PE Alignment Scores'
             self.add_section(
-                description = "<br>".join([description_text,half_warning]),
+                name = 'Paired-end alignments',
+                anchor = 'bowtie2-align-pe',
+                description = description_text + half_warning,
                 helptext = '''
                 There are 6 possible types of alignment:
+
                 * **PE mapped uniquely**: Pair has only one occurence in the reference genome.
                 * **PE mapped discordantly uniquely**: Pair has only one occurence but not in proper pair.
                 * **PE one mate mapped uniquely**: One read of a pair has one occurence.

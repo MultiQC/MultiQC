@@ -22,6 +22,8 @@ def parse_reports(self):
     for f in self.find_log_files('qualimap/bamqc/genome_results'):
         parse_genome_results(self, f)
     self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
+    if len(self.qualimap_bamqc_genome_results) > 0:
+        self.write_data_file(self.qualimap_bamqc_genome_results, 'multiqc_qualimap_bamqc_genome_results')
 
     # Coverage - coverage_histogram.txt
     self.qualimap_bamqc_coverage_hist = dict()
@@ -138,15 +140,22 @@ def parse_coverage(self, f):
         log.debug("Couldn't parse contents of coverage histogram file {}".format(f['fn']))
         return None
 
-    # Find median without importing anything to do it for us
+    # Find median and mean without importing anything to do it for us
     num_counts = sum(d.values())
     cum_counts = 0
+    total_cov = 0
     median_coverage = None
     for thiscov, thiscount in d.items():
         cum_counts += thiscount
+        total_cov += thiscov*thiscount
         if cum_counts >= num_counts/2:
             median_coverage = thiscov
             break
+    try:
+        self.general_stats_data[s_name]['mean_coverage'] = total_cov / num_counts
+    except ZeroDivisionError:
+        self.general_stats_data[s_name]['mean_coverage'] = 0
+
     self.general_stats_data[s_name]['median_coverage'] = median_coverage
 
     # Save results
@@ -521,8 +530,15 @@ def general_stats_headers (self):
             'hidden': c in hidecovs
         }
     self.general_stats_headers['median_coverage'] = {
-        'title': 'Coverage',
+        'title': 'Median cov',
         'description': 'Median coverage',
+        'min': 0,
+        'suffix': 'X',
+        'scale': 'BuPu'
+    }
+    self.general_stats_headers['mean_coverage'] = {
+        'title': 'Mean cov',
+        'description': 'Mean coverage',
         'min': 0,
         'suffix': 'X',
         'scale': 'BuPu'

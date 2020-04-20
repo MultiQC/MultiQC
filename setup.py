@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = '1.8dev'
+version = '1.9dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -33,22 +33,30 @@ print("""-----------------------------------
 
 """.format(version))
 
+# Set version requirements according to what version of Python we're running
+networkx_version = ''
+numpy_version = ''
 matplotlib_version = '>=2.1.1'
-if sys.version_info[0] == 2:
+jinja2_version = '>=2.9'
+markdown_version = ''
+if sys.version_info[0:2] < (3, 6):
+    # Lots of tools have dropped Python 3 support, so limit their versions
     matplotlib_version += ',<3.0.0'
-else:
-    matplotlib_version += ',<3.1.0'
+    numpy_version = '<1.17'
+    networkx_version = '<2.3'
+    jinja2_version += ',<3.0'
+    markdown_version = '<3.2'
 
 install_requires = [
+        'matplotlib' + matplotlib_version,
+        'networkx' + networkx_version,
+        'numpy' + numpy_version,
         'click',
         'coloredlogs',
         'future>0.14.0',
-        'jinja2>=2.9',
+        'jinja2' + jinja2_version,
         'lzstring',
-        'markdown',
-        'matplotlib' + matplotlib_version,
-        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
-        'numpy',
+        'markdown' + markdown_version,
         'pyyaml>=4',
         'requests',
         'simplejson',
@@ -125,6 +133,7 @@ setup(
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
             'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
+            'multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
@@ -145,6 +154,7 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
+            'snpsplit = multiqc.modules.snpsplit:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',

@@ -67,6 +67,7 @@ MultiQC Modules:
     mosdepth: modules/mosdepth.md
     miRTrace: modules/mirtrace.md
     MTNucRatio: modules/mtnucratio.md
+    MultiVCFAnalyzer: modules/multivcfanalyzer.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
@@ -84,6 +85,7 @@ MultiQC Modules:
     SexDetErrmine: modules/sexdeterrmine.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    SNPsplit: modules/snpsplit.md
     Supernova: modules/supernova.md
     Stacks: modules/stacks.md
     THeTA2: modules/theta2.md

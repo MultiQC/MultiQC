@@ -1,6 +1,52 @@
 # MultiQC Version History
 
-## MultiQC v1.8dev
+## MultiQC v1.9dev
+
+#### Dropped official support for Python 2
+
+Python 2 had its [official sunset date](https://www.python.org/doc/sunset-python-2/)
+on January 1st 2020, meaning that it will no longer be developed by the Python community.
+Part of the [python.org statement](https://www.python.org/doc/sunset-python-2/) reads:
+
+> That means that we will not improve it anymore after that day,
+> even if someone finds a security problem in it.
+> You should upgrade to Python 3 as soon as you can.
+
+[Very many Python packages no longer support Python 2](https://python3statement.org/)
+and it whilst the MultiQC code is currently compatible with both Python 2 and Python 3,
+it is increasingly difficult to maintain compatibility with the dependency packages it
+uses, such as MatPlotLib, numpy and more.
+
+As of MultiQC version 1.9, **Python 2 is no longer officially supported**.
+Automatic CI tests will no longer run with Python 2 and Python 2 specific workarounds
+are no longer guaranteed.
+
+Whilst it may be possible to continue using MultiQC with Python 2 for a short time by
+pinning dependencies, MultiQC compatibility for Python 2 will now slowly drift and start
+to break. If you haven't already, **you need to switch to Python 3 now**.
+
+#### New MultiQC Features
+
+* Now using [GitHub Actions](https://github.com/features/actions) for all CI testing
+    * Dropped Travis and AppVeyor, everything is now just on GitHub
+    * Still testing on both Linux and Windows, with multiple versions of Python
+    * CI tests should now run automatically for anyone who forks the MultiQC repository
+
+#### New Modules:
+
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+    * combining multiple VCF files into one coherent report and format for downstream analysis.
+* [**RNASeQC2**](https://github.com/broadinstitute/rnaseqc)
+    * New module to handle the parsing of more recent RNAseQC metric files. 
+
+#### Module updates:
+
+* **MTNucRatioCalculator**
+    * Fixed misleading value suffix in general stats table
+* **bcl2fastq**
+    * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+
+## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
@@ -16,8 +62,8 @@
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
-* [**RNASeQC2**](https://github.com/broadinstitute/rnaseqc)
-    * New module to handle the parsing of more recent RNAseQC metric files. 
+* [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
+    * Allele-specific alignment sorting
 
 #### Module updates:
 * **bcl2fastq**
@@ -38,13 +84,18 @@
 * **FastQC**
     * When including a FastQC section multiple times in one report, the Per Base Sequence Content heatmaps now behave as you would expect.
     * Added heatmap showing FastQC status checks for every section report across all samples
+    * Made sequence content individual plots work after samples have been renamed ([#777](https://github.com/ewels/MultiQC/issues/777))
+    * Highlighting samples from status - respect chosen highlight colour in the toolbox ([#742](https://github.com/ewels/MultiQC/issues/742))
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+    * Fixed MultiQC linting errors
 * **GATK**
     * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
     * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
-    * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+    * Fixed bug where module tries to parse `QC_table.txt`, a new log file in hicexplorer v2.2.
+    * Updated the format of the report to fits the changes which have been applied to the QC report of hicexplorer v3.3
+    * Updated code to save parsed results to `multiqc_data`
 * **HTSeq**
     * Fixed bug where module would crash if a sample had zero reads ([#1006](https://github.com/ewels/MultiQC/issues/1006))
 * **LongRanger**
@@ -58,6 +109,9 @@
     * Modified OxoGMetrics.py so that it will find files created with GATK CollectMultipleMetrics and ConvertSequencingArtifactToOxoG.
 * **QoRTs**
     * Fixed bug where `--dirs` broke certain input files. ([#821](https://github.com/ewels/MultiQC/issues/821))
+* **Qualimap**
+    * Added in mean coverage computation for general statistics report
+    * Creates now tables of collected data in `multiqc_data`
 * **RNA-SeQC**
     * Updated broken URL link
 * **RSeQC**
@@ -68,6 +122,8 @@
     * Utilize in-built `read_count_multiplier` functionality to plot `flagstat` results more nicely
 * **SnpEff**
     * Increased the default summary csv file-size limit from 1MB to 5MB.
+* **Stacks**
+    * Fixed bug where multi-population sum stats are parsed correctly ([#906](https://github.com/ewels/MultiQC/issues/906))
 * **TopHat**
     * Fixed bug where TopHat would try to run with files from Bowtie2 or HiSAT2 and crash
 * **VCFTools**
@@ -101,6 +157,10 @@
 * Hide `multiqc_config_example.yaml` in the `test` directory to stop people from using it without modification.
 * Fixed matplotlib background colour issue (@epakarin - [#886](https://github.com/ewels/MultiQC/issues))
 * Table rows that are empty due to hidden columns are now properly hidden on page load ([#835](https://github.com/ewels/MultiQC/issues/835))
+* Sample name cleaning: All sample names are now truncated to their basename, without a path.
+  * This includes for `regex` and `replace` (before was only the default `truncate`).
+  * Only affects modules that take sample names from file contents, such as cutadapt.
+  * See [#897](https://github.com/ewels/MultiQC/issues/897) for discussion.
 
 
 

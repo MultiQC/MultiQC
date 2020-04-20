@@ -7,8 +7,9 @@ This checklist is for my own reference, as I forget the steps every time.
 4. Link the changelog subheading to the as yet non-existant release URL. Add date.
 5. Install the package again in `install` mode:
     ```bash
-    python setup.py install
+    pip install .
     ```
+    * This removes the commit hash from the version number when MultiQC runs
 6. Run using test data
     * Check for any command line or javascript errors
     * Check version numbers are printed correctly
