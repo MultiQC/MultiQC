@@ -315,7 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def bam_statplot(self):
         pconfig = {
-            'id': 'rna_seqc_bam_stat',
+            'id': 'rna_seqc_bam_stat_beeswarm',
             'title': 'RNA-SeQC: Read metrics'
         }
         columns = [
