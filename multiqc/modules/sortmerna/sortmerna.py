@@ -65,9 +65,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         for l in f["f"]:
             if "Reads file" in l:
-                s_name = self.clean_s_name( l.split(':')[-1], f['root'] )
+                parts = re.split(':|=', l)
+                s_name = self.clean_s_name( parts[-1], f['root'] )
                 self.sortmerna[s_name] = dict()
-            if "Total reads = " in l and not post_results_start:
+            if "Results:" in l and not post_results_start: # old versions
+                post_results_start = True
+            if "Total reads = " in l and not post_results_start: # v4.2.0 onwards
                 post_results_start = True
             if not post_results_start:
                 continue
@@ -93,20 +96,23 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         err = True
             if post_database_start:
+
+                # Stop when we hit empty lines
                 if not l.strip():
                     break
+
                 db_number = db_number + 1
-                m = re.search("    .*		", l)
-                if m:
-                    db = m.group().strip()
-                    db = os.path.splitext(os.path.basename(db))[0]
-                    pct = float(re.search("\d+\.\d+", l).group())
-                    count = int(self.sortmerna[s_name]["total"]) * (pct / 100)
+                parts = re.split("\t+", l.strip())
+                if len(parts) == 2:
+                    db = os.path.splitext( os.path.basename( parts[0] ) )[0]
+                    pct = float(parts[1].replace('%', ''))
+                    count = int(self.sortmerna[s_name]["total"]) * (pct / 100.0)
                     self.sortmerna[s_name][db + "_pct"] = pct
                     self.sortmerna[s_name][db + "_count"] = count
                 else:
                     err = True
-            if "Coverage by database:" in l and not post_database_start:
+
+            if "By database:" in l or "Coverage by database:" in l:
                 post_database_start = True
         if err:
             log.warning("Error parsing data in: " + s_name)
