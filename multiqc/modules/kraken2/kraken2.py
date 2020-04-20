@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load any kraken2 reports
         self.kraken2_data = dict()
-        for f in self.find_log_files('kraken2', filehandles=True):
+        for f in self.find_log_files('kraken2'):
             self.parse_kraken2_log(f)
 
         # Filter to strip out ignored sample names
@@ -45,6 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
     def parse_kraken_log(self, f):
+        kraken_data = OrderedDict()
         regex = "^\s{1,2}(\d{1,2}\.\d{1,2})\t(\d+)\t(\d+)\t([UDKPCOFGS-])\t(\d+)\s+(.+)"
         for l in f['f']:
             #TODO the regex parses 6 groups per matched line (
@@ -52,6 +53,20 @@ class MultiqcModule(BaseMultiqcModule):
             # G1: 11.66, G2: 98148, G3: 98148, G4: U, G5: 0 , G6:Unclassified
             # Works on all 5 input files provided at MultiQC Testdata - will now parse this to a Dict and then think about vis
             # Worst case: Top Level info in main table and/or table info
+        # Search regexes for stats
+        for l in f['f'].splitlines():
+            match = re.search(regex, l)
+            if match:
+                percent = float(match.group(1))
+                counts = int(match.group(2))
+                counts_2 = int(match.group(3))
+                tax = match.group(4)
+                counts_3 = int(match.group(5))
+                classif = match.group(6)
+                
+                primers[primer] = counts
+        log.info("Found {} primers".format(len(primers)))
+        return primers
 
 
             
