@@ -196,6 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig = {
                 'id': 'ivar-primer-count-heatmap',
                 'decimalPlaces': 0,
+                'square': False, 
                 'title': 'iVar: Number of primers found for each sample'
             }
 
