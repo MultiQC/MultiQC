@@ -106,7 +106,8 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Total number of mapped reads in iVar input.',
             'min': 0,
             'scale': 'RdYlGn-rev',
-            'format': '{:,.0f}'
+            'format': '{:,.0f}', 
+            'shared_key': 'read_counts'
         }
         headers['total_reads'] = {
             'title': 'Primer trimmed reads',
@@ -126,6 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Reads outside primer region',
             'description': 'Number of reads outside the primer region',
             'scale': 'RdYlGn-rev',
+            'min': 0,
             'format': '{:,.0f}'
         }
         self.general_stats_addcols(self.ivar_data, headers)
@@ -143,11 +145,11 @@ class MultiqcModule(BaseMultiqcModule):
             final_ycats.append(k)
             tmp_prim_val = list()
             for prim,val in v.items():
-                final_xcats.add(prim)
+                final_xcats.append(prim)
                 tmp_prim_val.append(val)
             final_data.append(tmp_prim_val)
 
-        if data is not None:
+        if self.parsed_primers is not None:
             pconfig = {
                 'id': 'ivar-primer-count-heatmap',
                 'decimalPlaces': 0,
@@ -157,5 +159,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section (
                 name = 'iVar Primer Counts',
+                anchor = 'ivar-primers-heatmap',
+                description ='Counts observed for each primer per sample.',
+                helptext = 'This lists the number of times a specific primer was found in the respective sample.',
                 plot = heatmap.plot(final_data, final_xcats, final_ycats, pconfig)
             )
