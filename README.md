@@ -81,6 +81,14 @@ or `json` instead).
 For more detailed instructions, run `multiqc -h` or see the
 [documentation](http://multiqc.info/docs/#running-multiqc).
 
+## Development
+
+MultiQC has been written in a way to make extension and customisation as easy as possible.
+The documentation has a large section describing how to [code with MultiQC](https://multiqc.info/docs/#coding-with-multiqc) and you can find an example plugin at [https://github.com/MultiQC/example-plugin](https://github.com/MultiQC/example-plugin).
+
+Pull-requests for fixes and additions are very welcome.
+Please see the [contributing notes](https://github.com/ewels/MultiQC/blob/master/.github/CONTRIBUTING.md) for more information about how the process works.
+
 ## Citation
 Please consider citing MultiQC if you use it in your analysis.
 
@@ -90,7 +98,7 @@ Please consider citing MultiQC if you use it in your analysis.
 > doi: [10.1093/bioinformatics/btw354](http://dx.doi.org/10.1093/bioinformatics/btw354) <br/>
 > PMID: [27312411](http://www.ncbi.nlm.nih.gov/pubmed/27312411)
 
-```TeX
+```BibTeX
 @article{doi:10.1093/bioinformatics/btw354,
 author = {Ewels, Philip and Magnusson, Måns and Lundin, Sverker and Käller, Max},
 title = {MultiQC: summarize analysis results for multiple tools and samples in a single report},
