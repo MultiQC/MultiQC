@@ -100,16 +100,16 @@ Please consider citing MultiQC if you use it in your analysis.
 
 ```BibTeX
 @article{doi:10.1093/bioinformatics/btw354,
-author = {Ewels, Philip and Magnusson, Måns and Lundin, Sverker and Käller, Max},
-title = {MultiQC: summarize analysis results for multiple tools and samples in a single report},
-journal = {Bioinformatics},
-volume = {32},
-number = {19},
-pages = {3047},
-year = {2016},
-doi = {10.1093/bioinformatics/btw354},
-URL = { + http://dx.doi.org/10.1093/bioinformatics/btw354},
-eprint = {/oup/backfile/Content_public/Journal/bioinformatics/32/19/10.1093_bioinformatics_btw354/3/btw354.pdf}
+ author = {Ewels, Philip and Magnusson, Måns and Lundin, Sverker and Käller, Max},
+ title = {MultiQC: summarize analysis results for multiple tools and samples in a single report},
+ journal = {Bioinformatics},
+ volume = {32},
+ number = {19},
+ pages = {3047},
+ year = {2016},
+ doi = {10.1093/bioinformatics/btw354},
+ URL = { + http://dx.doi.org/10.1093/bioinformatics/btw354},
+ eprint = {/oup/backfile/Content_public/Journal/bioinformatics/32/19/10.1093_bioinformatics_btw354/3/btw354.pdf}
 }
 ```
 
