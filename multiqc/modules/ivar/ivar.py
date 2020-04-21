@@ -34,12 +34,11 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_ivar(f)
             if parsed_data is not None and len(parsed_data) > 0:
                 self.ivar_data[f['s_name']] = parsed_data
-                self.add_data_source(f, f['s_name'])
+                self.add_data_source(f, section='trimming')
         for f in self.find_log_files('ivar/trim'):
             parsed_primers = self.parse_ivar_primer_stats(f)
             if parsed_primers is not None and len(parsed_primers) > 0:
                 self.parsed_primers[f['s_name']] = parsed_primers
-                self.add_data_source(f, f['s_name'])
 
         # Filter to strip out ignored sample names
         self.ivar_data = self.ignore_samples(self.ivar_data)
@@ -134,23 +133,18 @@ class MultiqcModule(BaseMultiqcModule):
 
     def status_heatmap(self):
         """ Heatmap showing information on each primer found for every sample """
-        data = self.parsed_primers
-        #print(data)
         #Top level dict contains sample IDs + OrderedDict(primer, counts)
         
         final_data = list()
         final_xcats = list()
         final_ycats = list()
 
-        for k,v in data.items():
-            sample = data[k]
+        for k,v in self.parsed_primers.items():
             final_ycats.append(k)
             tmp_prim_val = list()
-            tmp_xcat = list()
-            for prim,val in sample.items():
-                tmp_xcat.append(prim)
+            for prim,val in v.items():
+                final_xcats.add(prim)
                 tmp_prim_val.append(val)
-            final_xcats = tmp_xcat #just need this once
             final_data.append(tmp_prim_val)
 
         if data is not None:

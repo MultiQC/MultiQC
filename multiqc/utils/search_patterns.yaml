@@ -323,6 +323,7 @@ interop/index-summary:
     contents: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
 ivar/trim:
     contents: 'Number of references'
+    num_lines: 8
 jellyfish:
     fn: '*_jf.hist'
 kallisto:

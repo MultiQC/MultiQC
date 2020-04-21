@@ -36,8 +36,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
     * combining multiple VCF files into one coherent report and format for downstream analysis.
-* **iVar**
-    * Added support for [iVar](https://github.com/andersen-lab/ivar)
+* **[iVar](https://github.com/andersen-lab/ivar)**
+    * Added support for iVar: a computational package that contains functions broadly useful for viral amplicon-based sequencing.
 
 #### Module updates:
 
