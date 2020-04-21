@@ -47,6 +47,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Fixed misleading value suffix in general stats table
 * **Picard HsMetrics**
     * Updated large HsMetrics table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
+* **Picard WgsMetrics**
+    * Updated parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
 * **QualiMap**
     * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
 * **RNASeQC2**
