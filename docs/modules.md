@@ -67,7 +67,7 @@ Copy one of the existing module lines and change it to use your module name.
 The order is irrelevant, so stick to alphabetical if in doubt.
 Once this is done, you will need to update your installation of MultiQC:
 ```
-python setup.py develop
+pip install -e .
 ```
 
 ### MultiQC config
@@ -593,7 +593,7 @@ MultiQC `config` module and have sensible defaults. For example:
 ```python
 from multiqc import config
 
-mymod_config = getattr(config, mymod_config, {})
+mymod_config = getattr(config, 'mymod_config', {})
 my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
 ```
 
