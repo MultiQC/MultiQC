@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pycoqc_data) == 0:
             raise UserWarning
 
-        self.table_data, self.reads_data, self.bases_data, self.read_lenght_plot_data, self.quality_plot_data = self.parse_data()
+        self.table_data, self.reads_data, self.bases_data, self.read_length_plot_data, self.quality_plot_data = self.parse_data()
 
         self.general_stats_headers = self.setup_stats_header()
         self.general_stats_addcols(self.table_data, self.general_stats_headers)
@@ -60,6 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.read_qual_config = self.setup_qual_bar_config()
+        cats = ['passed_bases', 'non_passed_bases']
         self.add_section(
             name = 'pycoQC Bases',
             anchor = 'pycoqc_bases',
@@ -67,13 +68,13 @@ class MultiqcModule(BaseMultiqcModule):
             plot = bargraph.plot(self.bases_data, cats, self.read_qual_config)
         )
 
-        if self.read_lenght_plot_data[0]:
+        if self.read_length_plot_data[0]:
             self.read_length_config = self.setup_read_length_config()
             self.add_section(
                 name = 'pycoQC read length distribution',
                 anchor = 'pycoqc_read_len',
                 description = 'pycoQC read length distribution',
-                plot = linegraph.plot(self.read_lenght_plot_data, self.read_length_config)
+                plot = linegraph.plot(self.read_length_plot_data, self.read_length_config)
             )
 
         if self.quality_plot_data[0]:
@@ -233,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
         run_duration_headers['all_run_duration'] = {
             'namespace': 'pycoQC',
             'title': 'Run duration',
-            'description': 'Run duration',
+            'description': 'Run duration (h)',
             'scale': 'PuBuGn'
         }
         return(run_duration_headers)
