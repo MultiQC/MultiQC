@@ -278,6 +278,9 @@ module_order:
     - rna_seqc:
         module_tag:
             - RNA
+    - rockhopper:
+        module_tag:
+            - RNA
     - rsem:
         module_tag:
             - RNA
