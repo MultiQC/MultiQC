@@ -176,13 +176,13 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Number of Bases (All)',
             'description': 'Number of Bases all',
             'scale': 'OrRd',
-            'shared_key': 'bases_count',
+            'shared_key': 'base_count',
         }
         general_stats_headers['passed_bases'] = {
             'title': 'Number of Bases (Pass)',
             'description': 'Number of Bases pass',
             'scale': 'OrRd',
-            'shared_key': 'bases_count',
+            'shared_key': 'base_count',
         }
         return general_stats_headers
 
