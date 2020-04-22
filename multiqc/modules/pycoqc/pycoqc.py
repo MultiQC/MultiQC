@@ -36,11 +36,46 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.pycoqc_table_headers = self.setup_pycoqc_table_headers()
         self.add_section (
-            name = 'pycoQC Statistics table',
+            name = 'Statistics',
             anchor = 'pycoqc_stats',
-            description = 'Statistics from pycoQC',
             plot = table.plot(self.table_data, self.pycoqc_table_headers)
         )
+
+        self.read_bar_config = self.setup_read_bar_config()
+        cats = ['passed_reads', 'non_passed_reads']
+        self.add_section(
+            name = 'Reads counts',
+            anchor = 'pycoqc_reads',
+            description = 'Number of sequenced reads passing / failing the QC thresholds.',
+            plot = bargraph.plot(self.reads_data, cats, self.read_bar_config)
+        )
+
+        self.bases_bar_config = self.setup_bases_bar_config()
+        cats = ['passed_bases', 'non_passed_bases']
+        self.add_section(
+            name = 'Bases counts',
+            anchor = 'pycoqc_bases',
+            description = 'Number of sequenced bases passing / failing the QC thresholds.',
+            plot = bargraph.plot(self.bases_data, cats, self.bases_bar_config)
+        )
+
+        if self.read_length_plot_data[0]:
+            self.read_length_config = self.setup_read_length_config()
+            self.add_section(
+                name = 'Read length',
+                anchor = 'pycoqc_read_len',
+                description = 'Distribution of read lengt for all / passed reads.',
+                plot = linegraph.plot(self.read_length_plot_data, self.read_length_config)
+            )
+
+        if self.quality_plot_data[0]:
+            self.qual_config = self.setup_qual_config()
+            self.add_section(
+                name = 'Quality scores',
+                anchor = 'pycoqc_read_qual',
+                description = 'Distribution of quality scores for all / passed reads.',
+                plot = linegraph.plot(self.quality_plot_data, self.qual_config)
+            )
 
         self.run_duration_headers = self.setup_run_duration_headers()
         self.add_section(
@@ -50,44 +85,12 @@ class MultiqcModule(BaseMultiqcModule):
             plot = table.plot(self.table_data, self.run_duration_headers)
         )
 
-        self.read_lenth_bar_config = self.setup_read_lenth_bar_config()
-        cats = ['passed_reads', 'non_passed_reads']
-        self.add_section(
-            name = 'pycoQC Reads',
-            anchor = 'pycoqc_reads',
-            description = 'Reads',
-            plot = bargraph.plot(self.reads_data, cats, self.read_lenth_bar_config)
-        )
-
-        self.read_qual_config = self.setup_qual_bar_config()
-        cats = ['passed_bases', 'non_passed_bases']
-        self.add_section(
-            name = 'pycoQC Bases',
-            anchor = 'pycoqc_bases',
-            description = 'Bases',
-            plot = bargraph.plot(self.bases_data, cats, self.read_qual_config)
-        )
-
-        if self.read_length_plot_data[0]:
-            self.read_length_config = self.setup_read_length_config()
-            self.add_section(
-                name = 'pycoQC read length distribution',
-                anchor = 'pycoqc_read_len',
-                description = 'pycoQC read length distribution',
-                plot = linegraph.plot(self.read_length_plot_data, self.read_length_config)
-            )
-
-        if self.quality_plot_data[0]:
-            self.qual_config = self.setup_qual_config()
-            self.add_section(
-                name = 'pycoQC PHRED quality score distribution',
-                anchor = 'pycoqc_read_qual',
-                description = 'pycoQC PHRED quality score distribution',
-                plot = linegraph.plot(self.quality_plot_data, self.qual_config)
-            )
-
     def load_data(self, f):
-        data = yaml.load(f, Loader=yaml.FullLoader)
+        data = {}
+        try:
+            data = yaml.load(f, Loader=yaml.FullLoader)
+        except Exception as e:
+            log.warn("An error occurred when opening '{}'.".format(f))
         return data
 
     def parse_data(self):
@@ -140,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
                 qual_y_vals_pass = sample_data['Pass Reads']['basecall']['qual_score_hist']['y']
                 qual_plot_pass[sample] = dict(zip(qual_x_vals_pass,qual_y_vals_pass))
             except KeyError:
-                log.warn("No plot data found for sample " + sample + ". Please make sure you are using pycoQC v2.5.0.20 or newer.")
+                log.warn("No plot data found for sample '{}'. Please make sure you are using pycoQC v2.5.0.20 or newer.".format(sample))
         return data_for_table, reads_data, bases_data, [length_plot_all, length_plot_pass], [qual_plot_all, qual_plot_pass]
 
     def setup_stats_header(self):
@@ -239,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return(run_duration_headers)
 
-    def setup_read_lenth_bar_config(self):
+    def setup_read_bar_config(self):
         read_length_bar_plot_config = {
             'id': 'pycoqc_length_plot',
             'title': 'pycoQC: Read Length',
@@ -247,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return read_length_bar_plot_config
 
-    def setup_qual_bar_config(self):
+    def setup_bases_bar_config(self):
         read_qual_bar_plot_config = {
             'id': 'pycoqc_qual_plot',
             'title': 'pycoQC: Read Quality',
