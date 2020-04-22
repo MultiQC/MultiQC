@@ -1,29 +1,29 @@
 #!/usr/bin/env python
 
-''' MultiQC module to parse output from BISCUIT '''
+''' MultiQC module to parse output from BISCUITqc '''
 
 from __future__ import print_function
 from collections import OrderedDict
 import logging
 import re
 
-from multiqc.plots import linegraph, bargraph, table
+from multiqc.plots import linegraph, bargraph, table, beeswarm
 from multiqc.modules.base_module import BaseMultiqcModule
 
-# Initialise the logger
+# Initialize the logger
 log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     '''
-    Inherit from base module class
-    Initializie data structures and prepare BISCUIT report
+    Inherits from base module class
+    Initialize data structures and prepare BISCUIT report
     Inputs:
         No inputs
     Returns:
         BISCUIT report for MultiQC
     '''
     def __init__(self):
-        #Initialize the parent object
+        # Initialize the parent object
         super(MultiqcModule, self).__init__(name='BISCUIT', anchor='biscuit',
             href='https://github.com/huishenlab/biscuit',
             info='is a tool to map bisulfite converted DNA sequence reads and' \
@@ -37,57 +37,53 @@ class MultiqcModule(BaseMultiqcModule):
             'align_isize': {},
             # Duplicate reporting
             'dup_report': {},
-            'markdup_report': {},
-            # Base coverage
-            'covdist': {},
-            'covdist_q40': {},
-            'covdist_q40_botgc': {},
-            'covdist_q40_topgc': {},
-            # CpG coverage
-            'covdist_cpg': {},
-            'covdist_cpg_q40': {},
-            'covdist_cpg_q40_botgc': {},
-            'covdist_cpg_q40_topgc': {},
             # Uniformity
             'qc_cv': {},
-            'qc_cpg_cv': {},
-            # CpG distribution
-            'qc_cpg_dist': {},
-            # Retention
-            'retention_dist': {},
-            'retention_dist_byread': {},
-            'retention_cpg_readpos': {},
-            'retention_cph_readpos': {},
-            'retention_rate_bybase': {},
-            'retention_rate_byread': {}
+            # Base coverage
+            'covdist_all_base_botgc': {},
+            'covdist_all_base': {},
+            'covdist_all_base_topgc': {},
+            'covdist_q40_base_botgc': {},
+            'covdist_q40_base': {},
+            'covdist_q40_base_topgc': {},
+            # CpG coverage
+            'covdist_all_cpg_botgc': {},
+            'covdist_all_cpg': {},
+            'covdist_all_cpg_topgc': {},
+            'covdist_q40_cpg_botgc': {},
+            'covdist_q40_cpg': {},
+            'covdist_q40_cpg_topgc': {},
+            # Cytosine retention
+            'cpg_retention_readpos': {},
+            'cph_retention_readpos': {},
+            'base_avg_retention_rate': {},
+            'read_avg_retention_rate': {}
         }
 
         file_suffixes = [
             # General statistics
             '_mapq_table',
             '_strand_table',
-            '_isize_score_table',
+            '_isize_table',
             # Duplicate reporting
             '_dup_report',
-            '_markdup_report',
-            # Base coverage
-            '_covdist_table',
-            '_covdist_q40_table',
-            '_covdist_q40_botgc_table',
-            '_covdist_q40_topgc_table',
-            # CpG coverage
-            '_covdist_cpg_table',
-            '_covdist_cpg_q40_table',
-            '_covdist_cpg_q40_botgc_table',
-            '_covdist_cpg_q40_topgc_table',
             # Uniformity
-            '_all_cv_table',
-            '_cpg_cv_table',
-            # CpG distribution
-            '_cpg_dist_table',
-            # Retention
-            '_CpGRetentionDist',
-            '_freqOfTotalRetentionPerRead',
+            '_cv_table',
+            # Base coverage
+            '_covdist_all_base_botgc_table',
+            '_covdist_all_base_table',
+            '_covdist_all_base_topgc_table',
+            '_covdist_q40_base_botgc_table',
+            '_covdist_q40_base_table',
+            '_covdist_q40_base_topgc_table',
+            # CpG coverage
+            '_covdist_all_cpg_botgc_table',
+            '_covdist_all_cpg_table',
+            '_covdist_all_cpg_topgc_table',
+            '_covdist_q40_cpg_botgc_table',
+            '_covdist_q40_cpg_table',
+            '_covdist_q40_cpg_topgc_table',
+            # Cytosine retention
             '_CpGRetentionByReadPos',
             '_CpHRetentionByReadPos',
             '_totalBaseConversionRate',
@@ -97,16 +93,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse alignment reports
         for k in self.mdata:
             for f in self.find_log_files('biscuit/{}'.format(k)):
-
                 # Add source file to multiqc_sources.txt
                 self.add_data_source(f)
 
                 # Clean s_name before further processing
                 s_name = self.clean_s_name(f['s_name'], f['root'])
 
-                # Clean uncommon file suffixes
-                for file_suffix in file_suffixes:
-                    s_name = s_name.replace(file_suffix, '')
+                # Clean file suffixes unique to biscuit
+                for suffix in file_suffixes:
+                    s_name = s_name.replace(suffix, '')
 
                 if s_name in self.mdata[k]:
                     log.debug('Duplicate sample name found in {}! Overwriting: {}'.format(f['fn'], s_name))
@@ -116,48 +111,52 @@ class MultiqcModule(BaseMultiqcModule):
         for k in self.mdata:
             self.mdata[k] = self.ignore_samples(self.mdata[k])
 
-        if sum([len(self.mdata[k]) for k in self.mdata]) == 0:
+        n_reports = sum([len(self.mdata[k]) for k in self.mdata])
+
+        if n_reports == 0:
             raise UserWarning
 
         # Basic stats table
         self.biscuit_stats_table()
 
         # Write out BISCUIT MultiQC report
-        log.info('Found {} reports'.format(sum([len(self.mdata[k]) for k in self.mdata])))
+        log.info('Found {} reports'.format(n_reports))
         for k in self.mdata:
             if len(self.mdata[k]) > 0:
-                self.write_data_file(self.mdata[k], 'multiqc_biscuit_{}'.format(k), data_format='json')
                 log.debug('Found {} {} reports'.format(len(self.mdata[k]), k))
+                self.write_data_file(self.mdata[k],
+                                     'multiqc_biscuit_{}'.format(k),
+                                     data_format='json')
                 getattr(self, 'chart_{}'.format(k))()
 
     def biscuit_stats_table(self):
         '''
         Create general statistics table for BISCUIT data
         Inputs:
-            No true inputs, but
-                needs mdata['align_mapq'] and mdata['dup_report'] filled
+            Uses mdata['align_mapq'] and mdata['dup_report']
         Returns:
-            No true returns, but creates stats table
+            Add columns to MultiQC general statistics table
         '''
         pd = {}
 
         for sid, dd in self.mdata['align_mapq'].items():
-            if 'no_data_available' not in dd.keys():
-                allreads = sum([int(_) for _ in dd.values()])
-                pd[sid] = {'%aligned': 100.0 * float(allreads - int(dd['unmapped'])) / allreads}
+            if len(dd) > 0:
+                total = sum([int(_) for _ in dd.values()])
+                pd[sid] = {'aligned': 100.0 * float(total - int(dd['unmapped'])) / total}
 
         for sid, dd in self.mdata['dup_report'].items():
             if sid not in pd:
                 pd[sid] = {}
             if 'all' in dd and dd['all'] != -1:
-                pd[sid]['%dupRate_All'] = dd['all']
-            if 'all-q40' in dd and dd['all'] != -1:
-                pd[sid]['%dupRate_All-q40'] = dd['all-q40']
+                pd[sid]['dup_all'] = dd['all']
+            if 'q40' in dd and dd['q40'] != -1:
+                pd[sid]['dup_q40'] = dd['q40']
 
         pheader = OrderedDict()
-        pheader['%aligned']         = {'title':'% Aligned', 'max':100, 'min':0, 'suffix':'%', 'scale':'Reds'}
-        pheader['%dupRate_All']     = {'title':'% Overall Dup Rate', 'max':100, 'min':0, 'suffix':'%', 'scale':'Reds'}
-        pheader['%dupRate_All-q40'] = {'title':'% Q40 Overall Dup Rate', 'max':100, 'min':0, 'suffix':'%', 'scale':'Purples'}
+        pheader['aligned'] = {'title': '% Aligned', 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'}
+        pheader['dup_all'] = {'title': 'Dup. % for All Reads', 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Reds'}
+        pheader['dup_q40'] = {'title': 'Dup. % for Q40 Reads', 'min': 0, 'max': 100, 'suffix': '%', 'scale': 'Purples'}
+
         self.general_stats_addcols(pd, pheader)
 
     ########################################
@@ -177,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Handle missing data
         if len(file_data) == 0:
             log.debug('No data available in {}. Will not fill corresponding entries.'.format(fn))
-            return {'no_data_available': 1}
+            return {}
 
         data = {}
         for l in file_data:
@@ -192,21 +191,35 @@ class MultiqcModule(BaseMultiqcModule):
         Inputs:
             No inputs
         Returns:
-            No returns, generates Mapping Summary and Mapping Quality Distribution charts
+            No returns, generates Mapping Overview and Mapping Quality
+            Distribution charts
         '''
 
-        # Number of optimally and suboptimally mapped reads and unmapping reads
+        # Mapping Overview
         pd = {}
+
         for sid, dd in self.mdata['align_mapq'].items():
-            if 'no_data_available' not in dd.keys():
-                pd[sid] = {'OAligned': 0, 'SAligned': 0, 'UAligned': 0}
+            if len(dd) > 0:
+                pd[sid] = {'opt_align': 0, 'sub_align': 0, 'not_align': 0}
                 for mapq, cnt in dd.items():
                     if mapq == 'unmapped':
-                        pd[sid]['UAligned'] += int(cnt)
+                        pd[sid]['not_align'] += int(cnt)
                     elif int(mapq) >= 40:
-                        pd[sid]['OAligned'] += int(cnt)
+                        pd[sid]['opt_align'] += int(cnt)
                     else:
-                        pd[sid]['SAligned'] += int(cnt)
+                        pd[sid]['sub_align'] += int(cnt)
+
+        pheader = OrderedDict()
+        pheader['opt_align'] = {'color': '#a6cee3', 'name': 'Optimally Aligned Reads'}
+        pheader['sub_align'] = {'color': '#1f78b4', 'name': 'Suboptimally Aligned Reads'}
+        pheader['not_align'] = {'color': '#b2df8a', 'name': 'Unaligned Reads'}
+
+        pconfig = {
+            'id': 'biscuit_mapping_overview',
+            'title': 'BISCUIT: Mapping Overview',
+            'ylab': 'Number of Reads',
+            'cpswitch_counts_label': '# Reads'
+        }
 
         self.add_section(
             name = 'Mapping Overview',
@@ -218,47 +231,43 @@ class MultiqcModule(BaseMultiqcModule):
             helptext = 'A good library should have a high fraction of reads ' \
             'that are optimally aligned. Note, suboptimally aligned reads ' \
             'include both non-unique alignments and imperfect alignments.',
-            plot = bargraph.plot(pd,
-                                 OrderedDict([('OAligned', {'color': '#a6cee3', 'name': 'Optimally Aligned Reads'}),
-                                              ('SAligned', {'color': '#1f78b4', 'name': 'Suboptimally Aligned Reads'}),
-                                              ('UAligned', {'color': '#b2df8a', 'name': 'Unaligned Reads'})]),
-                                 {'id': 'biscuit_mapping_overview',
-                                  'title': 'BISCUIT: Mapping Overview',
-                                  'ylab': 'Number of Reads',
-                                  'cpswitch_counts_label': '# Reads'})
+            plot = bargraph.plot(pd, pheader, pconfig)
         )
 
-        # Mapping quality distribution
+        # Mapping Quality Distribution
         total = {}
         for sid, dd in self.mdata['align_mapq'].items():
-            if 'no_data_available' not in dd.keys():
+            if len(dd) > 0:
                 total[sid] = sum([int(cnt) for _, cnt in dd.items() if _ != 'unmapped'])
 
-        pd_mapping = {}
+        pd_mapq = {}
         for sid, dd in self.mdata['align_mapq'].items():
-            if 'no_data_available' not in dd.keys():
-                mapqcnts = []
+            if len(dd) > 0:
+                cnts = []
                 for mapq in range(61):
                     if str(mapq) in dd:
-                        mapqcnts.append(100.0 * float(dd[str(mapq)]) / total[sid])
+                        cnts.append(100.0 * float(dd[str(mapq)]) / total[sid])
                     else:
-                        mapqcnts.append(0)
-                pd_mapping[sid] = dict(zip(range(61), mapqcnts))
+                        cnts.append(0)
+                pd_mapq[sid] = dict(zip(range(61), cnts))
+
+        pconfig = {
+            'id': 'biscuit_mapq',
+            'title': 'BISCUIT: Distribution of Mapping Qualities',
+            'ymin': 0,
+            'xmin': 0,
+            'yLabelFormat': '{value}%',
+            'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of mapped reads',
+            'ylab': '% of Primary Mapped Reads',
+            'xlab': 'Mapping Quality Score'
+        }
 
         self.add_section(
             name = 'Mapping Quality Distribution',
             anchor = 'biscuit-mapq',
             description = 'Shows the percentage of the total number of mapped ' \
-            'reads each mapping quality has (for primary alignments only).',
-            plot = linegraph.plot(pd_mapping,
-                                  {'id': 'biscuit_mapq',
-                                   'title': 'BISCUIT: Distribution of Mapping Qualities',
-                                   'ymin': 0,
-                                   'xmin': 0,
-                                   'yLabelFormat': '{value}%',
-                                   'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of reads',
-                                   'ylab': '% of Primary Mapped Reads',
-                                   'xlab': 'Mapping Quality'})
+            'reads each mapping quality score has (for primary alignments only).',
+            plot = linegraph.plot(pd_mapq, pconfig)
         )
 
     def parse_logs_align_strand(self, f, fn):
@@ -270,21 +279,31 @@ class MultiqcModule(BaseMultiqcModule):
         Returns:
             data - dictionary of strand data for reads 1 and 2
         '''
-        file_data = f.splitlines()[1:]
-
-        # Handle missing data
-        if len(file_data) == 0:
-            log.debug('No data available in {}. Will not fill corresponding entries.'.format(fn))
-            return {'no_data_available': 1}
+        patterns = [
+            r'     R1 \(f\)\:   (\d+)(\s+)(\d+)(\s+)',
+            r'     R1 \(r\)\:   (\d+)(\s+)(\d+)(\s+)',
+            r'     R2 \(f\)\:   (\d+)(\s+)(\d+)(\s+)',
+            r'     R2 \(r\)\:   (\d+)(\s+)(\d+)(\s+)'
+        ]
 
         data = {'read1': {}, 'read2': {}}
-        for l in file_data:
-            m = re.search(r'strand\t([12])([+-]*)\t(\d+)', l)
+        for pat in patterns:
+            m = re.search(pat, f, re.MULTILINE)
             if m is not None:
-                if m.group(1) == '1':
-                    data['read1'][m.group(2)] = int(m.group(3))
-                if m.group(1) == '2':
-                    data['read2'][m.group(2)] = int(m.group(3))
+                if (m.group(0)[5:7]) == 'R1':
+                    if (m.group(0)[9]) == 'f':
+                        data['read1']['ff'] = int(float(m.group(1)))
+                        data['read1']['fr'] = int(float(m.group(3)))
+                    else:
+                        data['read1']['rf'] = int(float(m.group(1)))
+                        data['read1']['rr'] = int(float(m.group(3)))
+                else:
+                    if (m.group(0)[9]) == 'f':
+                        data['read2']['ff'] = int(float(m.group(1)))
+                        data['read2']['fr'] = int(float(m.group(3)))
+                    else:
+                        data['read2']['rf'] = int(float(m.group(1)))
+                        data['read2']['rr'] = int(float(m.group(3)))
 
         return data
 
@@ -297,13 +316,32 @@ class MultiqcModule(BaseMultiqcModule):
             No returns, generates Mapping Strand Distribution chart
         '''
 
-        # Mapping strand distribution
         pd1 = {}
         pd2 = {}
         for sid, dd in self.mdata['align_strand'].items():
-            if 'no_data_available' not in dd.keys():
-                pd1[sid] = dd['read1']
-                pd2[sid] = dd['read2']
+            pd1[sid] = dd['read1']
+            pd2[sid] = dd['read2']
+
+        pd = [pd1, pd2]
+
+        pheader = [
+            OrderedDict([('ff', {'color': '#F53855', 'name': 'ff: Waston-Aligned, Waston-Bisulfite Conversion'}),
+                         ('fr', {'color': '#E37B40', 'name': 'fr: Waston-Aligned, Crick-Bisulfite Conversion' }),
+                         ('rf', {'color': '#46B29D', 'name': 'rf: Crick-Aligned, Waston-Bisulfite Conversion' }),
+                         ('rr', {'color': '#324D5C', 'name': 'rr: Crick-Aligned, Crick-Bisulfite Conversion'  })]),
+            OrderedDict([('ff', {'color': '#F53855', 'name': 'ff: Waston-Aligned, Waston-Bisulfite Conversion'}),
+                         ('fr', {'color': '#E37B40', 'name': 'fr: Waston-Aligned, Crick-Bisulfite Conversion' }),
+                         ('rf', {'color': '#46B29D', 'name': 'rf: Crick-Aligned, Waston-Bisulfite Conversion' }),
+                         ('rr', {'color': '#324D5C', 'name': 'rr: Crick-Aligned, Crick-Bisulfite Conversion'  })])
+        ]
+
+        pconfig = {
+            'id': 'biscuit_strands',
+            'title': 'BISCUIT: Mapping Strand Distribution',
+            'ylab': 'Number of Reads',
+            'cpswitch_counts_label': '# Reads',
+            'data_labels': [{'name': 'Read 1'}, {'name': 'Read 2'}]
+        }
 
         # TODO: When PBAT mode is implemented, add comment in help text about
         #       how to interpret PBAT mode results
@@ -313,34 +351,20 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'For primary alignments, shows the number of reads ' \
             'mapped to each strand. See Help for more details',
             helptext = 'Most bisulfite libraries map read 1 to the parent ' \
-            'strand (`++` or `--`) and read 2 to the daughter/synthesized ' \
-            'strand (`+-` or `-+`). PBAT and most single-cell/low input ' \
+            'strand (`ff` or `rr`) and read 2 to the daughter/synthesized ' \
+            'strand (`fr` or `rf`). PBAT and most single-cell/low input ' \
             'libraries often do not follow this assumption.',
-            plot = bargraph.plot([pd1, pd2],
-                                 [OrderedDict([('++', {'color': '#F53855', 'name': '++: Waston-Aligned, Waston-Bisulfite Conversion'}),
-                                               ('+-', {'color': '#E37B40', 'name': '+-: Waston-Aligned, Crick-Bisulfite Conversion' }),
-                                               ('-+', {'color': '#46B29D', 'name': '-+: Crick-Aligned, Waston-Bisulfite Conversion' }),
-                                               ('--', {'color': '#324D5C', 'name': '--: Crick-Aligned, Crick-Bisulfite Conversion'  })]),
-                                  OrderedDict([('++', {'color': '#F53855', 'name': '++: Waston-Aligned, Waston-Bisulfite Conversion'}),
-                                               ('+-', {'color': '#E37B40', 'name': '+-: Waston-Aligned, Crick-Bisulfite Conversion' }),
-                                               ('-+', {'color': '#46B29D', 'name': '-+: Crick-Aligned, Waston-Bisulfite Conversion' }),
-                                               ('--', {'color': '#324D5C', 'name': '--: Crick-Aligned, Crick-Bisulfite Conversion'  })])],
-                                 {'id': 'biscuit_strands',
-                                  'title': 'BISCUIT: Mapping Strand Distribution',
-                                  'ylab': 'Number of Reads',
-                                  'cpswitch_counts_label': '# Reads',
-                                  'data_labels': [{'name': 'Read 1'},
-                                                  {'name': 'Read 2'}]})
+            plot = bargraph.plot(pd, pheader, pconfig)
         )
 
     def parse_logs_align_isize(self, f, fn):
         '''
-        Parse _isize_score_table.txt
+        Parse _isize_table.txt
         Inputs:
             f - current matched file
             fn - filename
         Returns:
-            data - dictionary of insert size and SW-score data
+            data - dictionary of insert size data
         '''
         file_data = f.splitlines()[2:]
 
@@ -349,29 +373,44 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug('No data available in {}. Will not fill corresponding entries.'.format(fn))
             return {'no_data_available': 1}
 
-        data = {'I': {}, 'S': {}} # I = insert size, S = SW-score
+        data = {'percent': {}, 'readcnt': {}}
         for l in file_data:
-            fields = l.split()
-            if fields[0] == 'I':
-                data[fields[0]][int(fields[1])] = float(fields[2]) * 100.0
-            elif fields[0] == 'S':
-                data[fields[0]][fields[1]] = float(fields[2])
+            fields = l.split('\t')
+            data['percent'][int(fields[0])] = 100.0 * float(fields[1])
+            data['readcnt'][int(fields[0])] = float(fields[2]) / 1000000.0
 
         return data
 
     def chart_align_isize(self):
         '''
-        Chart _isize_score_table.txt
+        Chart _isize_table.txt
         Inputs:
             No inputs
         Returns:
             No returns, generates Insert Size Distribution chart
         '''
 
-        pd_isize = {}
+        pd_p = {}
+        pd_r = {}
         for sid, dd in self.mdata['align_isize'].items():
             if 'no_data_available' not in dd.keys():
-                pd_isize[sid] = dd['I']
+                pd_p[sid] = dd['percent']
+                pd_r[sid] = dd['readcnt']
+
+        pd = [pd_p, pd_r]
+
+        pconfig = {
+            'id': 'biscuit_isize',
+            'title': 'BISCUIT: Insert Size Distribution',
+            'ymin': 0,
+            'xmin': 0,
+            'yLabelFormat': '{value}',
+            'smooth_points': 1000, # limit number of points / smooth data
+            'tt_label': '<strong>IS{point.x}:</strong> {point.y:.2f}',
+            'xlab': 'Insert Size',
+            'data_labels': [{'name': 'Percent of Reads', 'ylab':'% of Mapped Reads'},
+                            {'name': 'Millions of Reads', 'ylab':'Millions of Mapped Reads'}]
+        }
 
         self.add_section(
             name = 'Insert Size Distribution',
@@ -381,18 +420,8 @@ class MultiqcModule(BaseMultiqcModule):
             helptext = 'Insert size is defined as: `(right-most coordinate ' \
             'of reverse-mate read) - (left-most coordinate of forward-mate ' \
             'read)`. Insert sizes are calculated for reads with a "mapped in ' \
-            'proper pair" `samtools` flag, an alignment score >= 40, and ' \
-            'MAPQ>=40.',
-            plot = linegraph.plot(pd_isize,
-                                  {'id': 'biscuit_isize',
-                                   'title': 'BISCUIT: Insert Size Distribution',
-                                   'ymin': 0,
-                                   'xmin': 0,
-                                   'yLabelFormat': '{value}%',
-                                   'smooth_points': 500, # limit number of points / smooth data
-                                   'tt_label': '<strong>IS{point.x}:</strong> {point.y:.2f}% of reads',
-                                   'ylab': '% Mapped Reads',
-                                   'xlab': 'Insert Size'})
+            'proper pair" `samtools` flag, and MAPQ >= 40.',
+            plot = linegraph.plot(pd, pconfig)
         )
 
     ########################################
@@ -408,27 +437,22 @@ class MultiqcModule(BaseMultiqcModule):
             data - dictionary of duplicate fractions
         '''
         patterns = [
-            (r'#bases covered by all reads: (\d+)',
-             r'#bases covered by duplicate reads: (\d+)', 'all'),
-            (r'#high-GC bases covered by all reads: (\d+)',
-             r'#high-GC bases covered by duplicate reads: (\d+)', 'topGC'),
-            (r'#low-GC bases covered by all reads: (\d+)',
-             r'#low-GC bases covered by duplicate reads: (\d+)', 'lowGC'),
-            (r'#bases covered by all q40-reads: (\d+)',
-             r'#bases covered by duplicate q40-reads: (\d+)', 'all-q40'),
-            (r'#high-GC bases covered by all q40-reads: (\d+)',
-             r'#high-GC bases covered by duplicate q40-reads: (\d+)', 'topGC-q40'),
-            (r'#low-GC bases covered by all q40-reads: (\d+)',
-             r'#low-GC bases covered by duplicate q40-reads: (\d+)', 'botGC-q40')]
+            (r'Number of duplicate reads:\t(\d+)',
+             r'Number of reads:\t(\d+)',
+             'all'),
+            (r'Number of duplicate q40-reads:\t(\d+)',
+             r'Number of q40-reads:\t(\d+)',
+             'q40')
+        ]
 
         data = {}
-        for pat_all, pat_dup, k in patterns:
-            m1 = re.search(pat_all, f, re.MULTILINE)
-            m2 = re.search(pat_dup, f, re.MULTILINE)
-            if m1 is not None and m2 is not None and float(m1.group(1)) > 0:
-                data[k] = (100.0 * float(m2.group(1)) / float(m1.group(1)))
+        for pat_dup, pat_tot, key in patterns:
+            m1 = re.search(pat_dup, f, re.MULTILINE)
+            m2 = re.search(pat_tot, f, re.MULTILINE)
+            if m1 is not None and m2 is not None:
+                data[key] = (100.0 * float(m1.group(1)) / float(m2.group(1)))
             else:
-                data[k] = -1
+                data[key] = -1
 
         return data
 
@@ -438,90 +462,159 @@ class MultiqcModule(BaseMultiqcModule):
         Inputs:
             No inputs
         Returns:
-            No returns, generates CpG Coverage by Genomic Feature
-            and CpG Island Coverage charts
+            No returns, generates Duplicate Rates chart
         '''
 
         pd = dict([(sid, dd) for sid, dd in self.mdata['dup_report'].items() if dd['all'] != -1])
 
+        pheader = OrderedDict()
+        pheader['all'] = {'title': 'Overall', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'Reds'}
+        pheader['q40'] = {'title': 'MAPQ >= 40', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'Purples'}
+
+        pconfig = {
+            'id': 'biscuit_dup_report',
+            'table_title': 'BISCUIT: Duplicate Rates',
+            'save_file': True,
+            'sortRows': False
+        }
+
         self.add_section(
             name = 'Duplicate Rates',
             anchor = 'biscuit-dup-report',
-            description = 'Shows the percentage of bases that are duplicates ' \
-            'out of the total number of bases. See Help for more details.',
-            helptext = '"High GC" and "low GC" content regions are the top ' \
-            'and bottom 10% of 100bp windows for GC content, respectively.',
-            plot = table.plot(pd,
-                              OrderedDict([('all', {'title': 'Overall', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'Reds'}),
-                                           ('topGC', {'title': 'Overall High GC', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'PuRd'}),
-                                           ('lowGC', {'title': 'Overall Low GC', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'PuRd'}),
-                                           ('all-q40', {'title': 'Q40', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'Purples'}),
-                                           ('topGC-q40', {'title': 'Q40 High GC', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'PuBuGn'}),
-                                           ('botGC-q40', {'title': 'Q40 Low GC', 'suffix': '%', 'max': 100, 'min': 0, 'scale': 'PuBuGn'})]),
-                              {'id': 'biscuit_dup_report',
-                               'table_title': 'BISCUIT: Duplicate Rates',
-                               'save_file': True,
-                               'sortRows': False})
+            description = 'Shows the percentage of reads that are duplicates ' \
+            'out of the total number of reads. See Help for more details.',
+            helptext = 'MAPQ >= 40 shows the duplicate rate for reads having ' \
+            'a MAPQ >= 40.',
+            plot = table.plot(pd, pheader, pconfig)
         )
 
-    # TODO: Remove when biscuit markdup is officially removed from code base
-    def parse_logs_markdup_report(self, f, fn):
+    ########################################
+    ####      Depths and Uniformity     ####
+    ########################################
+    def parse_logs_qc_cv(self, f, fn):
         '''
-        Parses _markdup_report.txt
+        Parses _cv_table.txt
         Inputs:
             f - current matched file
             fn - filename
         Returns:
-            data - dictionary of duplicate rates from biscuit markdup
+            data - dictionary of depth uniformity measures
         '''
-        data = {}
-        m = re.search(r'marked (\d+) duplicates from (\d+) paired-end reads', f, re.MULTILINE)
-        if m is None:
-            data = {'PE': None, 'PEdup': None, 'dupRatePE': None}
-        else:
-            data['PEdup'] = int(m.group(1))
-            data['PE'] = int(m.group(2))
-            if data['PE'] > 0:
-                data['dupRatePE'] = 100.0 * float(data['PEdup']) / data['PE']
-            else:
-                data['dupRatePE'] = None
 
-        m = re.search(r'marked (\d+) duplicates from (\d+) single-end reads', f, re.MULTILINE)
-        if m is None:
-            data = {'SE': None, 'SEdup': None, 'dupRateSE': None}
-        else:
-            data['SEdup'] = int(m.group(1))
-            data['SE'] = int(m.group(2))
-            if data['SE'] > 0:
-                data['dupRateSE'] = 100.0 * float(data['SEdup']) / data['SE']
+        data = {}
+        targets = ['all_base', 'all_cpg',
+                   'q40_base', 'q40_cpg',
+                   'all_base_botgc', 'all_cpg_botgc',
+                   'q40_base_botgc', 'q40_cpg_botgc',
+                   'all_base_topgc', 'all_cpg_topgc',
+                   'q40_base_topgc', 'q40_cpg_topgc']
+        for t in targets:
+            m = re.search('{}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)'.format(t),
+                          f, re.MULTILINE)
+            if m is not None:
+                data[t] = {'mu': float(m.group(1)),
+                           'sigma': float(m.group(2)),
+                           'cv': float(m.group(3))}
             else:
-                data['dupRateSE'] = None
-                
-        m = re.search(r'identified (\d+) dangling paired-end reads', f, re.MULTILINE)
-        if m is None:
-            data['PEdangling'] = None
-        else:
-            data['PEdangling'] = int(m.group(1))
-        
+                data[t] = {'mu': -1, 'sigma': -1, 'cv': -1}
+
         return data
 
-    def chart_markdup_report(self):
-        ''' biscuit markdup is being deprecated, so pass until officially removed '''
-        pass
+    def chart_qc_cv(self):
+        '''
+        Charts _cv_table.txt
+        Inputs:
+            No inputs
+        Returns:
+            No returns, generates Sequencing Depth - Whole Genome chart
+        '''
+
+        cats = [('all_base', 'a_b'), ('q40_base', 'q_b'),
+                ('all_base_botgc', 'a_b_b'), ('q40_base_botgc', 'q_b_b'),
+                ('all_base_topgc', 'a_b_t'), ('q40_base_topgc', 'q_b_t'),
+                ('all_cpg', 'a_c'), ('q40_cpg', 'q_c'),
+                ('all_cpg_botgc', 'a_c_b'), ('q40_cpg_botgc', 'q_c_b'),
+                ('all_cpg_topgc', 'a_c_t'), ('q40_cpg_topgc', 'q_c_t')]
+                   
+        pd = OrderedDict()
+        for sid, dd in self.mdata['qc_cv'].items():
+            pd[sid] = OrderedDict()
+            for cat, key in cats:
+                if cat in dd:
+                    if dd[cat]['mu'] != -1:
+                        pd[sid]['mu_'+key] = dd[cat]['mu']
+                        pd[sid]['cv_'+key] = dd[cat]['cv']
+
+        shared_mean = {'min': 0, 'format': '{:,3f}', 'minRange': 10}
+        shared_cofv = {'min': 0, 'format': '{:,3f}', 'minRange': 50}
+
+        pheader = OrderedDict()
+        pheader['mu_a_b'] = dict(shared_mean, **{'title': 'All Genome Mean', 'description': 'Mean Sequencing Depth for All Reads'})
+        pheader['mu_q_b'] = dict(shared_mean, **{'title': 'Q40 Genome Mean', 'description': 'Mean Sequencing Depth for Q40 Reads'})
+        pheader['mu_a_b_b'] = dict(shared_mean, **{'title': 'Low GC All Gen. Mean', 'description': 'Mean Sequencing Depth for All Reads in Low GC-Content Regions'})
+        pheader['mu_q_b_b'] = dict(shared_mean, **{'title': 'Low GC Q40 Gen. Mean', 'description': 'Mean Sequencing Depth for Q40 Reads in Low GC-Content Regions'})
+        pheader['mu_a_b_t'] = dict(shared_mean, **{'title': 'High GC All Gen. Mean', 'description': 'Mean Sequencing Depth for All Reads in High GC-Content Regions'})
+        pheader['mu_q_b_t'] = dict(shared_mean, **{'title': 'High GC Q40 Gen. Mean', 'description': 'Mean Sequencing Depth for Q40 Reads in High GC-Content Regions'})
+        pheader['cv_a_b'] = dict(shared_cofv, **{'title': 'All Genome CoV', 'description': 'Sequencing Depth CoV for All Reads'})
+        pheader['cv_q_b'] = dict(shared_cofv, **{'title': 'Q40 Genome CoV', 'description': 'Sequencing Depth CoV for Q40 Reads'})
+        pheader['cv_a_b_b'] = dict(shared_cofv, **{'title': 'Low GC All Gen. CoV', 'description': 'Sequencing Depth CoV for All Reads in Low GC-Content Regions'})
+        pheader['cv_q_b_b'] = dict(shared_cofv, **{'title': 'Low GC Q40 Gen. CoV', 'description': 'Sequencing Depth CoV for Q40 Reads in Low GC-Content Regions'})
+        pheader['cv_a_b_t'] = dict(shared_cofv, **{'title': 'High GC All Gen. CoV', 'description': 'Sequencing Depth CoV for All Reads in High GC-Content Regions'})
+        pheader['cv_q_b_t'] = dict(shared_cofv, **{'title': 'High GC Q40 Gen. CoV', 'description': 'Sequencing Depth CoV for Q40 Reads in High GC-Content Regions'})
+
+        pheader['mu_a_c'] = dict(shared_mean, **{'title': 'All CpGs Mean', 'description': 'Mean Sequencing Depth for All CpGs'})
+        pheader['mu_q_c'] = dict(shared_mean, **{'title': 'Q40 CpGs Mean', 'description': 'Mean Sequencing Depth for Q40 CpGs'})
+        pheader['mu_a_c_b'] = dict(shared_mean, **{'title': 'Low GC All CpGs Mean', 'description': 'Mean Sequencing Depth for All CpGs in Low GC-Content Regions'})
+        pheader['mu_q_c_b'] = dict(shared_mean, **{'title': 'Low GC Q40 CpGs Mean', 'description': 'Mean Sequencing Depth for Q40 CpGs in Low GC-Content Regions'})
+        pheader['mu_a_c_t'] = dict(shared_mean, **{'title': 'High GC All CpGs Mean', 'description': 'Mean Sequencing Depth for All CpGs in High GC-Content Regions'})
+        pheader['mu_q_c_t'] = dict(shared_mean, **{'title': 'High GC Q40 CpGs Mean', 'description': 'Mean Sequencing Depth for Q40 CpGs in High GC-Content Regions'})
+        pheader['cv_a_c'] = dict(shared_cofv, **{'title': 'All CpGs CoV', 'description': 'Sequencing Depth CoV for All CpGs'})
+        pheader['cv_q_c'] = dict(shared_cofv, **{'title': 'Q40 CpGs CoV', 'description': 'Sequencing Depth CoV for Q40 CpGs'})
+        pheader['cv_a_c_b'] = dict(shared_cofv, **{'title': 'Low GC All CpGs CoV', 'description': 'Sequencing Depth CoV for All CpGs in Low GC-Content Regions'})
+        pheader['cv_q_c_b'] = dict(shared_cofv, **{'title': 'Low GC Q40 CpGs CoV', 'description': 'Sequencing Depth CoV for Q40 CpGs in Low GC-Content Regions'})
+        pheader['cv_a_c_t'] = dict(shared_cofv, **{'title': 'High GC All CpGs CoV', 'description': 'Sequencing Depth CoV for All CpGs in High GC-Content Regions'})
+        pheader['cv_q_c_t'] = dict(shared_cofv, **{'title': 'High GC Q40 CpGs CoV', 'description': 'Sequencing Depth CoV for Q40 CpGs in High GC-Content Regions'})
+
+        pconfig = {
+            'id': 'biscuit_seq_depth',
+            'table_title': 'BISCUIT: Sequencing Depth',
+            'save_file': True,
+            'sortRows': False
+        }
+
+        self.add_section(
+            name = 'Sequencing Depth Statistics',
+            anchor = 'biscuit-seq-depth',
+            description = 'Shows the sequence depth mean and uniformity ' \
+            'measured by the Coefficient of Variation (CoV, defined as ' \
+            'std. dev./mean). See Help for more details.',
+            helptext = 'The "Genome" (Gen.) show statistics for all bases ' \
+            'across the entire genome, while "CpGs" shows the corresponding ' \
+            'statistics for CpGs. "All" shows statistics for any mapped ' \
+            'bases/CpGs, while "Q40" shows statistics only those bases/CpGs ' \
+            'with MAPQ >= 40. "High GC" and "low GC" shows bases/CpGs that ' \
+            'overlap with the top and bottom 10% of 100bp windows for ' \
+            'GC-content, respectively.',
+            plot = beeswarm.plot(pd, pheader, pconfig)
+        )
 
     ########################################
     #### Base Coverage and CpG Coverage ####
     ########################################
-    def parse_logs_covdist(self, f, fn):
+    def parse_logs_covdist_all_base(self, f, fn):
         '''
-        Parses _covdist_table.txt
-               _covdist_q40_table.txt
-               _covdist_q40_botgc_table.txt
-               _covdist_q40_topgc_table.txt
-               _covdist_cpg_table.txt
-               _covdist_cpg_q40_table.txt
-               _covdist_cpg_q40_botgc_table.txt
-               _covdist_cpg_q40_topgc_table.txt
+        Parses _covdist_all_base_botgc_table.txt
+               _covdist_all_base_table.txt
+               _covdist_all_base_topgc_table.txt
+               _covdist_all_cpg_botgc_table.txt
+               _covdist_all_cpg_table.txt
+               _covdist_all_cpg_topgc_table.txt
+               _covdist_q40_base_botgc_table.txt
+               _covdist_q40_base_table.txt
+               _covdist_q40_base_topgc_table.txt
+               _covdist_q40_cpg_botgc_table.txt
+               _covdist_q40_cpg_table.txt
+               _covdist_q40_cpg_topgc_table.txt
         Inputs:
             f - current matched file
             fn - filename
@@ -545,545 +638,171 @@ class MultiqcModule(BaseMultiqcModule):
 
         ccov_cnts = []
         for cov in covs:
-            ccov_cnts.append(_ccov_cnt/1000000.)
+            ccov_cnts.append(_ccov_cnt/1000000.0)
             _ccov_cnt -= dd[cov]
 
         return dict(zip(covs, ccov_cnts))
 
-    def parse_logs_covdist_q40(self, f, fn):
-        ''' Handled by parse_logs_covdist() '''
-        return self.parse_logs_covdist(f, fn)
+    def parse_logs_covdist_all_base_botgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
 
-    def parse_logs_covdist_q40_botgc(self, f, fn):
-        ''' Handled by parse_logs_covdist() '''
-        return self.parse_logs_covdist(f, fn)
+    def parse_logs_covdist_all_base_topgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
 
-    def parse_logs_covdist_q40_topgc(self, f, fn):
-        ''' Handled by parse_logs_covdist() '''
-        return self.parse_logs_covdist(f, fn)
+    def parse_logs_covdist_q40_base(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
 
-    def parse_logs_covdist_cpg(self, f, fn):
-        ''' Handled by parse_logs_covdist() '''
-        return self.parse_logs_covdist(f, fn)
+    def parse_logs_covdist_q40_base_botgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
 
-    def parse_logs_covdist_cpg_q40(self, f, fn):
-        ''' Handled by parse_logs_covdist() '''
-        return self.parse_logs_covdist(f, fn)
+    def parse_logs_covdist_q40_base_topgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
 
-    def parse_logs_covdist_cpg_q40_botgc(self, f, fn):
-        ''' Handled by parse_logs_covdist() '''
-        return self.parse_logs_covdist(f, fn)
+    def parse_logs_covdist_all_cpg(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
 
-    def parse_logs_covdist_cpg_q40_topgc(self, f, fn):
-        ''' Handled by parse_logs_covdist() '''
-        return self.parse_logs_covdist(f, fn)
+    def parse_logs_covdist_all_cpg_botgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
 
-    def chart_covdist(self):
+    def parse_logs_covdist_all_cpg_topgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
+
+    def parse_logs_covdist_q40_cpg(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
+
+    def parse_logs_covdist_q40_cpg_botgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
+
+    def parse_logs_covdist_q40_cpg_topgc(self, f, fn):
+        ''' Handled by parse_logs_covdist_all_base() '''
+        return self.parse_logs_covdist_all_base(f, fn)
+
+    def chart_covdist_all_base(self):
         '''
-        Charts _covdist_table.txt
-               _covdist_q40_table.txt
-               _covdist_q40_botgc_table.txt
-               _covdist_q40_topgc_table.txt
-               _covdist_cpg_table.txt
-               _covdist_cpg_q40_table.txt
-               _covdist_cpg_q40_botgc_table.txt
-               _covdist_cpg_q40_topgc_table.txt
+        Charts _covdist_all_base_botgc_table.txt
+               _covdist_all_base_table.txt
+               _covdist_all_base_topgc_table.txt
+               _covdist_all_cpg_botgc_table.txt
+               _covdist_all_cpg_table.txt
+               _covdist_all_cpg_topgc_table.txt
+               _covdist_q40_base_botgc_table.txt
+               _covdist_q40_base_table.txt
+               _covdist_q40_base_topgc_table.txt
+               _covdist_q40_cpg_botgc_table.txt
+               _covdist_q40_cpg_table.txt
+               _covdist_q40_cpg_topgc_table.txt
         Inputs:
             No inputs
         Returns:
-            No returns, generates Overall Coverage chart
+            No returns, generates Cumulative Coverage chart
         '''
 
-        mdata = [
-            self.mdata['covdist'],
-            self.mdata['covdist_q40'],
-            self.mdata['covdist_q40_botgc'],
-            self.mdata['covdist_q40_topgc'],
-            self.mdata['covdist_cpg'],
-            self.mdata['covdist_cpg_q40'],
-            self.mdata['covdist_cpg_q40_botgc'],
-            self.mdata['covdist_cpg_q40_topgc']
+        pd = [
+            self.mdata['covdist_all_base'],
+            self.mdata['covdist_q40_base'],
+            self.mdata['covdist_all_cpg'],
+            self.mdata['covdist_q40_cpg'],
+            self.mdata['covdist_all_base_botgc'],
+            self.mdata['covdist_q40_base_botgc'],
+            self.mdata['covdist_all_cpg_botgc'],
+            self.mdata['covdist_q40_cpg_botgc'],
+            self.mdata['covdist_all_base_topgc'],
+            self.mdata['covdist_q40_base_topgc'],
+            self.mdata['covdist_all_cpg_topgc'],
+            self.mdata['covdist_q40_cpg_topgc']
         ]
+
+        pconfig = {
+            'id': 'biscuit_cumulative',
+            'title': 'BISCUIT: Cumulative Coverage',
+            'ymin': 0,
+            'xLabelFormat': '{value}X',
+            'tt_label': '<strong>{point.x}X:</strong> {point.y:.2f}M',
+            'xlab': 'Coverage',
+            'data_labels': [{'name': 'All Bases', 'ylab': 'Millions of Bases'},
+                            {'name': 'Q40 Bases', 'ylab': 'Millions of Bases'},
+                            {'name': 'All CpGs', 'ylab': 'Millions of CpGs'},
+                            {'name': 'Q40 CpGs', 'ylab': 'Millions of CpGs'},
+                            {'name': 'Low GC All Bases', 'ylab': 'Millions of Bases'},
+                            {'name': 'Low GC Q40 Bases', 'ylab': 'Millions of Bases'},
+                            {'name': 'Low GC All CpGs', 'ylab': 'Millions of CpGs'},
+                            {'name': 'Low GC Q40 CpGs', 'ylab': 'Millions of CpGs'},
+                            {'name': 'High GC All Bases', 'ylab': 'Millions of Bases'},
+                            {'name': 'High GC Q40 Bases', 'ylab': 'Millions of Bases'},
+                            {'name': 'High GC All CpGs', 'ylab': 'Millions of CpGs'},
+                            {'name': 'High GC Q40 CpGs', 'ylab': 'Millions of CpGs'}]
+        }
 
         self.add_section(
             name = 'Cumulative Coverage',
             anchor = 'biscuit-cumulative-coverage',
-            description = 'Shows the number of reads covering all bases or ' \
-            'CpGs only. See Help for more details.',
-            helptext = '"Q40" shows only those reads with mapping quality ' \
-            'greater than or equal to 40. "High GC" and "low GC" content ' \
-            'regions are the top and bottom 10% of 100bp windows for GC ' \
-            'content, respectively.',
-            plot = linegraph.plot(mdata,
-                                  {'id': 'biscuit_cumulative',
-                                   'title': 'BISCUIT: Cumulative Coverage',
-                                   'ymin': 0,
-                                   'xLabelFormat': '{value}X',
-                                   'tt_label': '<strong>{point.x}X:</strong> {point.y:.2f}M',
-                                   'xlab': 'Sequencing Depth',
-                                   'data_labels': [{'name': 'Bases (all)', 'ylab':'Millions of Bases'},
-                                                   {'name': 'Bases Q40', 'ylab':'Millions of Bases (Q40)'},
-                                                   {'name': 'Bases Q40 low GC', 'ylab':'Millions of Low-GC Bases (Q40)'},
-                                                   {'name': 'Bases Q40 high GC', 'ylab':'Millions of High-GC Bases (Q40)'},
-                                                   {'name': 'CpG (all)', 'ylab':'Millions of CpGs'},
-                                                   {'name': 'CpG Q40', 'ylab':'Millions of CpGs (Q40)'},
-                                                   {'name': 'CpG Q40 low GC', 'ylab':'Millions of Low-GC CpGs (Q40)'},
-                                                   {'name': 'CpG Q40 high GC', 'ylab':'Millions of High-GC CpGs (Q40)'}]})
+            description = 'Shows the number of bases or CpGs covered by a given ' \
+            'number of reads. See Help for more details.',
+            helptext = '"All" shows the coverage for any mapped reads, while ' \
+            '"Q40" shows only those reads with MAPQ >= 40. "High GC" and ' \
+            '"low GC" shows reads that overlap with the top and bottom 10% ' \
+            'of 100bp windows for GC-content, respectively.',
+            plot = linegraph.plot(pd, pconfig)
         )
 
-        basecov = OrderedDict()
-        for sid, dd in mdata[0].items():
-            if sid not in basecov:
-                basecov[sid] = {}
-
-            if dd[0] != -1:
-                basecov[sid]['all'] = float(dd[1])/float(dd[0])*100.0
-
-        for sid, dd in mdata[1].items():
-            if sid not in basecov:
-                basecov[sid] = {}
-
-            if dd[0] != -1:
-                basecov[sid]['q40'] = float(dd[1])/float(dd[0])*100.0
-
-        for sid, dd in mdata[4].items():
-            if sid not in basecov:
-                basecov[sid] = {}
-
-            if dd[0] != -1:
-                basecov[sid]['cpg_all'] = float(dd[1])/float(dd[0])*100.0
-
-        for sid, dd in mdata[5].items():
-            if sid not in basecov:
-                basecov[sid] = {}
-
-            if dd[0] != -1:
-                basecov[sid]['cpg_q40'] = float(dd[1])/float(dd[0])*100.0
-
-        # base coverage >=1x table
-        if len(basecov) == 0:
-            return
-
-        self.add_section(
-            name = 'Coverage by at Least One Read',
-            anchor = 'biscuit-one-read-coverage',
-            description = 'The fraction of the genome and genomic CpGs ' \
-            'covered by at least one read. See Help for more details',
-            helptext = '"Q40" shows the percentage for reads with MAPQ>=40',
-            plot = table.plot(basecov,
-                              OrderedDict([('all', {'title': 'Genome (All)', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Reds'}),
-                                           ('q40', {'title': 'Genome (Q40)', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Purples'}),
-                                           ('cpg_all', {'title': 'CpG (All)', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Blues'}),
-                                           ('cpg_q40', {'title': 'CpG (Q40)', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Oranges'})]),
-                              {'id': 'biscuit_one_read_coverage',
-                               'table_title': 'BISCUIT: Coverage by at Least One Read',
-                               'save_file': True,
-                               'sortRows': False})
-        )
-
-    def chart_covdist_q40(self):
-        ''' Handled in chart_covdist() '''
+    def chart_covdist_all_base_botgc(self):
+        ''' Handled by chart_covdist_all_base() '''
         pass
 
-    def chart_covdist_q40_botgc(self):
-        ''' Handled in chart_covdist() '''
+    def chart_covdist_all_base_topgc(self):
+        ''' Handled by chart_covdist_all_base() '''
         pass
 
-    def chart_covdist_q40_topgc(self):
-        ''' Handled in chart_covdist() '''
+    def chart_covdist_q40_base(self):
+        ''' Handled by chart_covdist_all_base() '''
         pass
 
-    def chart_covdist_cpg(self):
-        ''' Handled in chart_covdist() '''
+    def chart_covdist_q40_base_botgc(self):
+        ''' Handled by chart_covdist_all_base() '''
         pass
 
-    def chart_covdist_cpg_q40(self):
-        ''' Handled in chart_covdist() '''
+    def chart_covdist_q40_base_topgc(self):
+        ''' Handled by chart_covdist_all_base() '''
         pass
 
-    def chart_covdist_cpg_q40_botgc(self):
-        ''' Handled in chart_covdist() '''
+    def chart_covdist_all_cpg(self):
+        ''' Handled by chart_covdist_all_base() '''
         pass
 
-    def chart_covdist_cpg_q40_topgc(self):
-        ''' Handled in chart_covdist() '''
+    def chart_covdist_all_cpg_botgc(self):
+        ''' Handled by chart_covdist_all_base() '''
         pass
 
-    ########################################
-    ####      Depths and Uniformity     ####
-    ########################################
-    def parse_logs_qc_cv(self, f, fn):
-        '''
-        Parses _all_cv_table.txt
-        Inputs:
-            f - current matched file
-            fn - filename
-        Returns:
-            data - dictionary of depth uniformity measures
-        '''
+    def chart_covdist_all_cpg_topgc(self):
+        ''' Handled by chart_covdist_all_base() '''
+        pass
 
-        data = {}
-        targets = ['all', 'all_topgc', 'all_botgc']
-        for k in targets:
-            m = re.search('_{}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)'.format(k),
-                          f, re.MULTILINE)
-            if m is None:
-                data[k] = {'mu': -1, 'sigma': -1, 'cv': -1}
-            else:
-                data[k] = {'mu': float(m.group(1)),
-                           'sigma': float(m.group(2)),
-                           'cv': float(m.group(3))}
+    def chart_covdist_q40_cpg(self):
+        ''' Handled by chart_covdist_all_base() '''
+        pass
 
-        return data
+    def chart_covdist_q40_cpg_botgc(self):
+        ''' Handled by chart_covdist_all_base() '''
+        pass
 
-    def chart_qc_cv(self):
-        '''
-        Charts _all_cv_table.txt
-        Inputs:
-            No inputs
-        Returns:
-            No returns, generates Sequencing Depth - Whole Genome chart
-        '''
-
-        # Whole Genome - Sequencing depth and uniformity
-        pd_wg = OrderedDict()
-        for sid, dd in self.mdata['qc_cv'].items():
-            pd_wg[sid] = OrderedDict()
-            for ctg in ['all', 'all_topgc', 'all_botgc']:
-                if ctg in dd:
-                    if dd[ctg]['mu'] != -1:
-                        pd_wg[sid]['mu_'+ctg] = dd[ctg]['mu']
-                    if dd[ctg]['cv'] != -1:
-                        pd_wg[sid]['cv_'+ctg] = dd[ctg]['cv']
-
-        if len(pd_wg) == 0:
-            return
-
-        pheader_wg = OrderedDict()
-        pheader_wg['mu_all'] = {'title': 'Genome Mean', 'description': 'Whole Genome Mean', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'Reds'}
-        pheader_wg['mu_all_topgc'] = {'title': 'High GC Mean', 'description': 'Top Decile for GC Content Mean', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'PuRd'}
-        pheader_wg['mu_all_botgc'] = {'title': 'Low GC Mean', 'description': 'Bottom Decile for GC Content Mean', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'PuRd'}
-        pheader_wg['cv_all'] = {'title': 'Genome CV', 'description': 'Whole Genome Coeff. of Var.', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'Reds'}
-        pheader_wg['cv_all_topgc'] = {'title': 'High GC CV', 'description': 'Top Decile for GC Content Coeff. of Var.', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'PuRd'}
-        pheader_wg['cv_all_botgc'] = {'title': 'Low GC CV', 'description': 'Bottom Decile for GC Content Coeff. of Var.', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'PuRd'}
-
-        self.add_section(
-            name = 'Sequencing Depth - Whole Genome',
-            anchor = 'biscuit-seq-depth-all',
-            description = 'Shows the sequence depth mean and uniformity ' \
-            'measured by the Coefficient of Variation (CV, defined as ' \
-            'std. dev./mean). See Help for more details.',
-            helptext = 'Mean and CV are calculated for reads with MAPQ>=40 ' \
-            'across the entire genome. "High GC" and "Low GC" are defined as ' \
-            'the top and bottom deciles for GC content as measured in 100bp ' \
-            'non-overlapping windows, respectively.',
-            plot = table.plot(pd_wg,
-                              pheader_wg,
-                              {'id': 'biscuit_seq_depth_all',
-                               'table_title': 'BISCUIT: Sequencing Depth - Whole Genome',
-                               'save_file': True,
-                               'sortRows': False})
-        )
-
-    def parse_logs_qc_cpg_cv(self, f, fn):
-        '''
-        Parses _cpg_cv_table.txt
-        Inputs:
-            f - current matched file
-            fn - filename
-        Returns:
-            data - dictionary of depth uniformity measures
-        '''
-
-        data = {}
-        targets = ['cpg', 'cpg_topgc', 'cpg_botgc']
-        for k in targets:
-            m = re.search('_{}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)'.format(k),
-                          f, re.MULTILINE)
-            if m is None:
-                data[k] = {'mu': -1, 'sigma': -1, 'cv': -1}
-            else:
-                data[k] = {'mu': float(m.group(1)),
-                           'sigma': float(m.group(2)),
-                           'cv': float(m.group(3))}
-
-        return data
-
-    def chart_qc_cpg_cv(self):
-        '''
-        Charts _cpg_cv_table.txt
-        Inputs:
-            No inputs
-        Returns:
-            No returns, generates Sequencing Depth - CpGs Only chart
-        '''
-
-        # CpGs Only - Sequencing depth and uniformity
-        pd_cg = OrderedDict()
-        for sid, dd in self.mdata['qc_cpg_cv'].items():
-            pd_cg[sid] = OrderedDict()
-            for ctg in ['cpg', 'cpg_topgc', 'cpg_botgc']:
-                if ctg in dd:
-                    if dd[ctg]['mu'] != -1:
-                        pd_cg[sid]['mu_'+ctg] = dd[ctg]['mu']
-                    if dd[ctg]['cv'] != -1:
-                        pd_cg[sid]['cv_'+ctg] = dd[ctg]['cv']
-
-        if len(pd_cg) == 0:
-            return
-
-        pheader_cg = OrderedDict()
-        pheader_cg['mu_cpg'] = {'title': 'All CpG Mean', 'description': 'All CpGs Mean', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'Oranges'}
-        pheader_cg['mu_cpg_topgc'] = {'title': 'High GC CpG Mean', 'description': 'CpGs in Top Decile for GC Content Mean', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'YlOrRd'}
-        pheader_cg['mu_cpg_botgc'] = {'title': 'Low GC CpG Mean', 'description': 'CpGs in Bottom Decile for GC Content Mean', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'YlOrRd'}
-        pheader_cg['cv_cpg'] = {'title': 'All CpG CV', 'description': 'All CpGs Coeff. of Var.', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'Oranges'}
-        pheader_cg['cv_cpg_topgc'] = {'title': 'High GC CpG CV', 'description': 'CpGs in Top Decile for GC Content Coeff. of Var.', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'YlOrRd'}
-        pheader_cg['cv_cpg_botgc'] = {'title': 'Low GC CpG CV', 'description': 'CpGs in Bottom Decile for GC Content Coeff. of Var.', 'max': 50, 'min': 0, 'format': '{:,.3f}', 'scale': 'YlOrRd'}
-
-        self.add_section(
-            name = 'Sequencing Depth - CpGs Only',
-            anchor = 'biscuit-seq-depth-cpg',
-            description = 'Shows the sequence depth mean and uniformity ' \
-            'measured by the Coefficient of Variation (CV, defined as ' \
-            'std. dev./mean) for CpG locations. See Help for more details.',
-            helptext = 'Mean and CV are calculated for CpGs in reads with ' \
-            'MAPQ>=40 across the entire genome. "High GC" and "Low GC" are ' \
-            'defined as the top and bottom deciles for GC content as measured ' \
-            'in 100bp non-overlapping windows, respectively.',
-            plot = table.plot(pd_cg,
-                              pheader_cg,
-                              {'id': 'biscuit_seq_depth_cpg',
-                               'table_title': 'BISCUIT: Sequencing Depth - CpGs Only',
-                               'save_file': True,
-                               'sortRows': False})
-        )
-
-    ########################################
-    ####        CpG Distribution        ####
-    ########################################
-    def parse_logs_qc_cpg_dist(self, f, fn):
-        '''
-        Parses _cpg_dist_table.txt
-        Inputs:
-            f - current matched file
-            fn - filename
-        Returns:
-            data - dictionary of CpG coverage distributions
-        '''
-
-        data = {}
-        for ctg in ['TotalCpGs', 'ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
-            m = re.search('{}\t(\d+)\t(\d+)\t(\d+)'.format(ctg), f, re.MULTILINE)
-            if m is None:
-                data[ctg] = {'a': -1, 'uc': -1, 'ac': -1}
-            else:
-                data[ctg] = {'a': int(m.group(1)),
-                             'uc': int(m.group(2)),
-                             'ac': int(m.group(3))}
-
-        num_cgi = -999
-        m = re.search(r'#CpG Islands\t(\d+)', f, re.MULTILINE)
-        if m is None:
-            num_cgi = -1
-        else:
-            num_cgi = int(m.group(1))
-
-        patterns = [
-            (r'one CpG\t(\d+)', 'one'),
-            (r'three CpGs\t(\d+)', 'three'),
-            (r'five CpGs\t(\d+)', 'five'),
-            (r'ten CpGs\t(\d+)', 'ten')]
-
-        data['cgi_coverage'] = {}
-        for pat, k in patterns:
-            m = re.search(pat, f, re.MULTILINE)
-            if m is None or num_cgi == -1:
-                data['cgi_coverage'][k] = -1
-            else:
-                data['cgi_coverage'][k] = 100.0 * float(m.group(1)) / num_cgi
-
-        return data
-
-    def chart_qc_cpg_dist(self):
-        '''
-        Charts _cpg_dist_table.txt
-        Inputs:
-            No inputs
-        Returns:
-            No returns, generates CpG Coverage by Genomic Feature
-            and CpG Island Coverage charts
-        '''
-
-        if len(self.mdata['qc_cpg_dist']) == 0:
-            return
-
-        # Assorted regions
-        pd = OrderedDict()
-
-        # TODO: Try to figure out what is meant to be shown here
-        # If figured out, put back in and update add_section description note
-        #pd['Genome'] = OrderedDict()
-        #dd = list(self.mdata['qc_cpg_dist'].values())[0]
-        #for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
-        #    ctg1 = ctg.replace('CpGs','')
-        #    pd['Genome'][ctg1] = 100.0 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
-
-        for sid, dd in self.mdata['qc_cpg_dist'].items():
-            pd[sid] = OrderedDict()
-            for ctg in ['ExonicCpGs', 'RepeatCpGs', 'GenicCpGs', 'CGICpGs']:
-                if dd[ctg]['uc'] != -1:
-                    ctg1 = ctg.replace('CpGs','')
-                    pd[sid][ctg1] = 100.0 * float(dd[ctg]['uc']) / dd['TotalCpGs']['uc']
-
-        self.add_section(
-            name = 'CpG Coverage by Genomic Feature',
-            anchor = 'biscuit-coverage-cpg-dist',
-            description = 'Shows the fraction of uniquely covered CpGs for ' \
-            'different categories relative to the total number of uniquely ' \
-            'covered CpGs in the dataset. CpGs are from reads with MAPQ>=40.',
-            plot = table.plot(pd,
-                              OrderedDict([('Exonic', {'title': 'Exonic CpGs', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Oranges'}),
-                                           ('Repeat', {'title': 'Repeat-Masked CpGs', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Oranges'}),
-                                           ('Genic', {'title': 'Genic CpGs', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Oranges'}),
-                                           ('CGI', {'title': 'CpG Island CpGs', 'max': 100, 'min': 0, 'suffix': '%', 'scale': 'Oranges'})]),
-                              {'id': 'biscuit_coverage_cpg_dist',
-                               'table_title': 'BISCUIT: CpG Coverage by Genomic Feature',
-                               'save_file': True,
-                               'sortRows': False})
-        )
-
-        # CpG Islands
-        pd = dict([(sid, dd['cgi_coverage']) for sid, dd in self.mdata['qc_cpg_dist'].items() if dd['cgi_coverage']['one'] != -1])
-
-        self.add_section(
-            name = 'CpG Island Coverage',
-            anchor = 'biscuit-coverage-cgi',
-            description = 'Shows the percentage of CpG islands (out of all ' \
-            'CpG islands in the genome) that have at least 1, 3, 5, or 10 ' \
-            'different CpGs covered. Coverage is based on reads with MAPQ>=40.',
-            plot = table.plot(pd,
-                              OrderedDict([('one', {'title': '>=1', 'max': 100, 'min': 0, 'suffix': '%', 'description': 'CpG islands with at least one CpG covered', 'scale': 'Oranges'}),
-                                           ('three', {'title': '>=3', 'max': 100, 'min': 0, 'suffix': '%', 'description': 'CpG islands with at least three CpGs covered', 'scale': 'Oranges'}),
-                                           ('five', {'title': '>=5', 'max': 100, 'min': 0, 'suffix': '%', 'description': 'CpG islands with at least five CpGs covered', 'scale': 'Oranges'}),
-                                           ('ten', {'title': '>=10', 'max': 100, 'min': 0, 'suffix': '%', 'description': 'CpG islands with at least ten CpGs covered', 'scale': 'Oranges'})]),
-                              {'id': 'biscuit_coverage_cgi',
-                               'table_title': 'BISCUIT: CpG Island Coverage',
-                               'save_file': True,
-                               'sortRows': False})
-        )
+    def chart_covdist_q40_cpg_topgc(self):
+        ''' Handled by chart_covdist_all_base() '''
+        pass
 
     ########################################
     ####          CpG Retention         ####
     ########################################
-    def parse_logs_retention_dist(self, f, fn):
-        '''
-        Parses _CpGRetentionDist.txt
-        Inputs:
-            f - current matched file
-            fn - filename
-        Returns:
-            data - dictionary of distribution of CpG retention
-        '''
-        file_data = f.splitlines()[2:]
-
-        # Handle missing data
-        if len(file_data) == 0:
-            log.debug('No data available in {}. Will not fill corresponding entries.'.format(fn))
-            return {'no_data_available': 1}
-
-        sumcounts = 0
-        for l in file_data:
-            fields = l.split('\t')
-            if fields[0] != -1:
-                sumcounts += int(fields[1])
-
-        data = {}
-        for l in file_data:
-            fields = l.split('\t')
-            if fields[0] != -1:
-                data[int(fields[0])] = int(fields[1]) / float(sumcounts)
-
-        if len(data) == 0:
-            log.debug('Only low coverage entries in {}. Will not fill corresponding entries.'.format(fn))
-            return {'no_data_available': 1}
-
-        return data
-
-    def chart_retention_dist(self):
-        '''
-        Charts _CpGRetentionDist.txt
-               _freqOfTotalRetentionPerRead.txt
-        Inputs:
-            No inputs
-        Returns:
-            No returns, generates Number of Retention Distribution chart
-        '''
-
-        mdata_meth = {}
-        for sid, dd in self.mdata['retention_dist'].items():
-            if 'no_data_available' not in dd.keys():
-                mdata_meth[sid] = dd
-
-        mdata = self.mdata['retention_dist_byread']
-
-        pd = [mdata_meth,
-              dict([(sid, dd['CA']) for sid, dd in mdata.items() if 'no_data_available' not in dd.keys()]),
-              dict([(sid, dd['CC']) for sid, dd in mdata.items() if 'no_data_available' not in dd.keys()]),
-              dict([(sid, dd['CG']) for sid, dd in mdata.items() if 'no_data_available' not in dd.keys()]),
-              dict([(sid, dd['CT']) for sid, dd in mdata.items() if 'no_data_available' not in dd.keys()])]
-
-        # TODO: Improve description on plot
-        self.add_section(
-            name = 'Number of Retention Distribution',
-            anchor = 'biscuit-retention-read',
-            description = 'The "CpG Retention" tab shows the cytosine retention ' \
-            'percentage and the fraction of CpGs having this percentage. ' \
-            'The "Within-read CpN" tabs show how many reads have a given ' \
-            'number of retained cytosines per read. See Help for more details.',
-            helptext = 'The "Within-read CpN" tabs are truncated at 10 retained ' \
-            'cytosines for ease of viewing.',
-            plot = linegraph.plot(pd,
-                                  {'id': 'biscuit_retention_read',
-                                   'title': 'BISCUIT: Retention Distribution',
-                                   'xlab': 'Number of Retained Cytosines Within Read',
-                                   'data_labels': [{'name': 'CpG Retention', 'ylab': 'Fraction of CpGs', 'xlab': 'Cytosine Retention Percentage'},
-                                                   {'name': 'Within-read CpA', 'ylab': 'Millions of Reads'},
-                                                   {'name': 'Within-read CpC', 'ylab': 'Millions of Reads'},
-                                                   {'name': 'Within-read CpG', 'ylab': 'Millions of Reads'},
-                                                   {'name': 'Within-read CpT', 'ylab': 'Millions of Reads'}]})
-        )
-
-    def parse_logs_retention_dist_byread(self, f, fn):
-        '''
-        Parses _freqOfTotalRetentionPerRead.txt
-        Inputs:
-            f - current matched file
-            fn - filename
-        Returns:
-            data - dictionary of distribution of CpG retention by read in a given context
-        '''
-        file_data = f.splitlines()[2:]
-
-        # Handle missing data
-        if len(file_data) == 0:
-            log.debug('No data available in {}. Will not fill corresponding entries.'.format(fn))
-            return {'no_data_available': 1}
-
-        data = {'CA': {}, 'CC': {}, 'CG': {}, 'CT': {}}
-        for l in file_data:
-            fields = l.strip().split('\t')
-            if fields[0] not in data:
-                return {}
-            if int(fields[1]) <= 10: # remove number retained greater than 10
-                data[fields[0]][int(fields[1])] = float(fields[2]) / 1000000.
-
-        return data
-
-    def chart_retention_dist_byread(self):
-        ''' Handled in chart_retention_dist() '''
-        pass
-
-    def parse_logs_retention_cpg_readpos(self, f, fn):
+    def parse_logs_cpg_retention_readpos(self, f, fn):
         '''
         Parses _CpGRetentionByReadPos.txt
                _CpHRetentionByReadPos.txt
@@ -1125,7 +844,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return {'1': r1rate, '2': r2rate}
 
-    def chart_retention_cpg_readpos(self):
+    def chart_cpg_retention_readpos(self):
         '''
         Charts _CpGRetentionByReadPos.txt
                _CpHRetentionByReadPos.txt
@@ -1135,10 +854,25 @@ class MultiqcModule(BaseMultiqcModule):
             No returns, generates Retenion vs. Base Position in Read chart
         '''
         
-        mdata = [dict([(sid, dd['1']) for sid, dd in self.mdata['retention_cpg_readpos'].items() if 'no_data_available' not in dd.keys()]),
-                 dict([(sid, dd['2']) for sid, dd in self.mdata['retention_cpg_readpos'].items() if 'no_data_available' not in dd.keys()]),
-                 dict([(sid, dd['1']) for sid, dd in self.mdata['retention_cph_readpos'].items() if 'no_data_available' not in dd.keys()]),
-                 dict([(sid, dd['2']) for sid, dd in self.mdata['retention_cph_readpos'].items() if 'no_data_available' not in dd.keys()])]
+        pd = [dict([(sid, dd['1']) for sid, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
+              dict([(sid, dd['2']) for sid, dd in self.mdata['cpg_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
+              dict([(sid, dd['1']) for sid, dd in self.mdata['cph_retention_readpos'].items() if 'no_data_available' not in dd.keys()]),
+              dict([(sid, dd['2']) for sid, dd in self.mdata['cph_retention_readpos'].items() if 'no_data_available' not in dd.keys()])]
+
+        pconfig = {
+            'id': 'biscuit_retention_cytosine',
+            'title': 'BISCUIT: Retention vs. Base Position in Read',
+            'xlab': 'Position in Read',
+            'ymin': 0,
+            'ymax': 100,
+            'yMinRange': 0,
+            'yFloor': 0,
+            'tt_label': '<strong>Position {point.x}:</strong> {point.y:.2f}%',
+            'data_labels': [{'name': 'CpG Read 1', 'ylab': 'CpG Retention Rate (%)'},
+                            {'name': 'CpG Read 2', 'ylab': 'CpG Retention Rate (%)'},
+                            {'name': 'CpH Read 1', 'ylab': 'CpH Retention Rate (%)'},
+                            {'name': 'CpH Read 2', 'ylab': 'CpH Retention Rate (%)'}]
+        }
 
         self.add_section(
             name = 'Retention vs. Base Position in Read',
@@ -1146,30 +880,18 @@ class MultiqcModule(BaseMultiqcModule):
             description = 'Shows the distribution of cytosine retention rates ' \
             'across base positions in the read (a.k.a. the M-bias plot). Shown ' \
             'for cytosines in both a CpG and CpH context.',
-            plot = linegraph.plot(mdata,
-                                  {'id': 'biscuit_retention_cytosine',
-                                   'title': 'BISCUIT: Retention vs. Base Position in Read',
-                                   'xlab': 'Position in Read',
-                                   'ymin': 0,
-                                   'ymax': 100,
-                                   'yMinRange': 0,
-                                   'yFloor': 0,
-                                   'tt_label': '<strong>Position {point.x}:</strong> {point.y:.2f}%',
-                                   'data_labels': [{'name': 'CpG Read 1', 'ylab': 'CpG Retention Rate (%)'},
-                                                   {'name': 'CpG Read 2', 'ylab': 'CpG Retention Rate (%)'},
-                                                   {'name': 'CpH Read 1', 'ylab': 'CpH Retention Rate (%)'},
-                                                   {'name': 'CpH Read 2', 'ylab': 'CpH Retention Rate (%)'}]})
+            plot = linegraph.plot(pd, pconfig)
         )
 
-    def parse_logs_retention_cph_readpos(self, f, fn):
-        ''' Handled by parse_logs_retention_cpg_readpos() '''
-        return self.parse_logs_retention_cpg_readpos(f, fn)
+    def parse_logs_cph_retention_readpos(self, f, fn):
+        ''' Handled by parse_logs_cpg_retention_readpos() '''
+        return self.parse_logs_cpg_retention_readpos(f, fn)
 
-    def chart_retention_cph_readpos(self):
-        ''' Handled by chart_retention_cpg_readpos() '''
+    def chart_cph_retention_readpos(self):
+        ''' Handled by chart_cpg_retention_readpos() '''
         pass
 
-    def parse_logs_retention_rate_byread(self, f, fn):
+    def parse_logs_read_avg_retention_rate(self, f, fn):
         '''
         Parses _totalReadConversionRate.txt
         Inputs:
@@ -1193,7 +915,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return data
 
-    def chart_retention_rate_byread(self):
+    def chart_read_avg_retention_rate(self):
         '''
         Charts _totalReadConversionRate.txt
                _totalBaseConversionRate.txt
@@ -1204,26 +926,41 @@ class MultiqcModule(BaseMultiqcModule):
         '''
 
         mdata_byread = {}
-        for sid, dd in self.mdata['retention_rate_byread'].items():
+        for sid, dd in self.mdata['read_avg_retention_rate'].items():
             mdata_byread[sid] = dd
 
         mdata_bybase = {}
-        for sid, dd in self.mdata['retention_rate_bybase'].items():
+        for sid, dd in self.mdata['base_avg_retention_rate'].items():
             mdata_bybase[sid] = dd
 
         pdata = {}
         for sid, dd in mdata_byread.items():
             pdata[sid] = dict(list(dd.items()) + list(mdata_bybase[sid].items()))
 
+        shared = {
+            'format':'{:,.2f}',
+            'min':0,
+            'max':100,
+            'suffix':'%',
+            'scale': 'YlGnBu'
+        }
+
         pheader = OrderedDict()
-        pheader['rca'] = {'title':'RA CpA', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpA Retention', 'suffix':'%', 'scale': 'YlGnBu'}
-        pheader['rcc'] = {'title':'RA CpC', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpC Retention', 'suffix':'%', 'scale': 'YlGnBu'}
-        pheader['rcg'] = {'title':'RA CpG', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpG Retention', 'suffix':'%', 'scale': 'YlGnBu'}
-        pheader['rct'] = {'title':'RA CpT', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Read Averaged CpT Retention', 'suffix':'%', 'scale': 'YlGnBu'}
-        pheader['bca'] = {'title':'BA CpA', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpA Retention', 'suffix':'%', 'scale': 'YlGnBu'}
-        pheader['bcc'] = {'title':'BA CpC', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpC Retention', 'suffix':'%', 'scale': 'YlGnBu'}
-        pheader['bcg'] = {'title':'BA CpG', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpG Retention', 'suffix':'%', 'scale': 'YlGnBu'}
-        pheader['bct'] = {'title':'BA CpT', 'format':'{:,.2f}', 'min':0, 'max':100, 'description':'Base Averaged CpT Retention', 'suffix':'%', 'scale': 'YlGnBu'}
+        pheader['rca'] = dict(shared, **{'title':'RA CpA', 'description':'Read Averaged CpA Retention'})
+        pheader['rcc'] = dict(shared, **{'title':'RA CpC', 'description':'Read Averaged CpC Retention'})
+        pheader['rcg'] = dict(shared, **{'title':'RA CpG', 'description':'Read Averaged CpG Retention'})
+        pheader['rct'] = dict(shared, **{'title':'RA CpT', 'description':'Read Averaged CpT Retention'})
+        pheader['bca'] = dict(shared, **{'title':'BA CpA', 'description':'Base Averaged CpA Retention'})
+        pheader['bcc'] = dict(shared, **{'title':'BA CpC', 'description':'Base Averaged CpC Retention'})
+        pheader['bcg'] = dict(shared, **{'title':'BA CpG', 'description':'Base Averaged CpG Retention'})
+        pheader['bct'] = dict(shared, **{'title':'BA CpT', 'description':'Base Averaged CpT Retention'})
+
+        pconfig = {
+            'id': 'biscuit_retention',
+            'table_title': 'BISCUIT: Cytosine Retention',
+            'save_file': True,
+            'sortRows': False
+        }
 
         self.add_section(
             name = 'Cytosine Retention',
@@ -1236,15 +973,10 @@ class MultiqcModule(BaseMultiqcModule):
             'but not over, bisulfite conversion, the cytosine retention rate ' \
             'is the average cytosine modification (including 5mC, 5hmC, ' \
             'etc) rate.',
-            plot = table.plot(pdata,
-                              pheader,
-                              {'id': 'biscuit_retention',
-                               'table_title': 'BISCUIT: Cytosine Retention',
-                               'save_file': True,
-                               'sortRows': False})
+            plot = table.plot(pdata, pheader, pconfig)
         )
 
-    def parse_logs_retention_rate_bybase(self, f, fn):
+    def parse_logs_base_avg_retention_rate(self, f, fn):
         '''
         Parses _totalBaseConversionRate.txt
         Inputs:
@@ -1268,6 +1000,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         return data
 
-    def chart_retention_rate_bybase(self):
-        ''' Handled by chart_retention_rate_byread() '''
+    def chart_base_avg_retention_rate(self):
+        ''' Handled by chart_read_avg_retention_rate() '''
         pass

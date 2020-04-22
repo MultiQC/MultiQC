@@ -11,6 +11,10 @@
     
 #### Module updates:
 
+* **BISCUIT**
+    * Fixed error when missing data in log files ([#1101](https://github.com/ewels/MultiQC/issues/1101))
+    * Overhauled module to work with new BISCUIT QC script
+
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
