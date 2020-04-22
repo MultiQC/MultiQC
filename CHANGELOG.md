@@ -2,23 +2,66 @@
 
 ## MultiQC v1.9dev
 
+#### Dropped official support for Python 2
+
+Python 2 had its [official sunset date](https://www.python.org/doc/sunset-python-2/)
+on January 1st 2020, meaning that it will no longer be developed by the Python community.
+Part of the [python.org statement](https://www.python.org/doc/sunset-python-2/) reads:
+
+> That means that we will not improve it anymore after that day,
+> even if someone finds a security problem in it.
+> You should upgrade to Python 3 as soon as you can.
+
+[Very many Python packages no longer support Python 2](https://python3statement.org/)
+and it whilst the MultiQC code is currently compatible with both Python 2 and Python 3,
+it is increasingly difficult to maintain compatibility with the dependency packages it
+uses, such as MatPlotLib, numpy and more.
+
+As of MultiQC version 1.9, **Python 2 is no longer officially supported**.
+Automatic CI tests will no longer run with Python 2 and Python 2 specific workarounds
+are no longer guaranteed.
+
+Whilst it may be possible to continue using MultiQC with Python 2 for a short time by
+pinning dependencies, MultiQC compatibility for Python 2 will now slowly drift and start
+to break. If you haven't already, **you need to switch to Python 3 now**.
+
 #### New MultiQC Features
 
 * Now using [GitHub Actions](https://github.com/features/actions) for all CI testing
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
-    
+
+#### New Modules:
+
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+    * combining multiple VCF files into one coherent report and format for downstream analysis.
+
 #### Module updates:
 
 * **BISCUIT**
     * Fixed error when missing data in log files ([#1101](https://github.com/ewels/MultiQC/issues/1101))
     * Overhauled module to work with new BISCUIT QC script
-
-* **MTNucRatioCalculator**
-    * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **BUSCO**
+    * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
+* **DamageProfiler**
+    * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
+* **MTNucRatioCalculator**
+    * Fixed misleading value suffix in general stats table
+* **Picard HsMetrics**
+    * Updated large HsMetrics table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
+* **Picard WgsMetrics**
+    * Updated parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
+* **QualiMap**
+    * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
+* **RNASeQC2**
+    * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
+* **Samtools**
+    * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076)).
+* **sortmerna**
+    * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
@@ -36,6 +79,8 @@
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
+    * Allele-specific alignment sorting
 
 #### Module updates:
 * **bcl2fastq**
@@ -60,11 +105,14 @@
     * Highlighting samples from status - respect chosen highlight colour in the toolbox ([#742](https://github.com/ewels/MultiQC/issues/742))
 * **FastQ Screen**
     * When including a FastQ Screen section multiple times in one report, the plots now behave as you would expect.
+    * Fixed MultiQC linting errors
 * **GATK**
     * Refactored BaseRecalibrator code to be more consistent with MultiQC Python style
     * Handle zero count errors in BaseRecalibrator
 * **HiC Explorer**
-    * Fixed bug where module tries to parse QC_table.txt, a new log file in hicexplorer v2.2.
+    * Fixed bug where module tries to parse `QC_table.txt`, a new log file in hicexplorer v2.2.
+    * Updated the format of the report to fits the changes which have been applied to the QC report of hicexplorer v3.3
+    * Updated code to save parsed results to `multiqc_data`
 * **HTSeq**
     * Fixed bug where module would crash if a sample had zero reads ([#1006](https://github.com/ewels/MultiQC/issues/1006))
 * **LongRanger**
