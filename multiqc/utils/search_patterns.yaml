@@ -182,7 +182,7 @@ bowtie2:
         - 'HiC-Pro'
     shared: true
 busco:
-    fn: 'short_summary_*'
+    fn: 'short_summary*'
     contents: 'BUSCO version is:'
     num_lines: 1
 custom_content:

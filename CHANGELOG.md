@@ -41,6 +41,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **BUSCO**
+    * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
 * **DamageProfiler**
     * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
 * **MTNucRatioCalculator**
