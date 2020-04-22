@@ -286,7 +286,7 @@ htseq:
 hicexplorer:
     contents: 'Min rest. site distance'
     max_filesize: 4096
-    num_lines: 5
+    num_lines: 26
 hicup:
     fn: 'HiCUP_summary_report*'
 hicpro/mmapstat:
@@ -361,6 +361,8 @@ mosdepth/global_dist:
     fn: '*.mosdepth.global.dist.txt'
 mosdepth/region_dist:
     fn: '*.mosdepth.region.dist.txt'
+multivcfanalyzer:
+    fn: 'MultiVCFAnalyzer.json'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
@@ -448,8 +450,13 @@ qualimap/rnaseq/coverage:
 quast:
     fn: 'report.tsv'
     shared: true
-rna_seqc/metrics:
-    fn: 'metrics.tsv'
+rna_seqc/metrics_v1:
+    fn: '*metrics.tsv'
+    contents: 'Sample	Note	'
+    shared: true
+rna_seqc/metrics_v2:
+    fn: '*metrics.tsv'
+    contents: 'High Quality Ambiguous Alignment Rate'
     shared: true
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
@@ -529,6 +536,11 @@ slamdunk/tcperutrpos:
 snpeff:
     contents: 'SnpEff_version'
     max_filesize: 5000000
+snpsplit/old:
+    contents: 'Writing allele-flagged output file to:'
+    num_lines: 2
+snpsplit/new:
+    fn: '*SNPsplit_report.yaml'
 sortmerna:
     contents: 'Minimal SW score based on E-value'
     shared: true
