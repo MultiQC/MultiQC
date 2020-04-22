@@ -144,7 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
                 qual_plot_pass[sample] = dict(zip(qual_x_vals_pass,qual_y_vals_pass))
             except KeyError:
                 log.warn("No plot data found for sample '{}'. Please make sure you are using pycoQC v2.5.0.20 or newer.".format(sample))
-        return data_for_table, reads_data, bases_data, [length_plot_all, length_plot_pass], [qual_plot_all, qual_plot_pass]
+        return data_for_table, reads_data, bases_data, [length_plot_pass, length_plot_all], [qual_plot_pass, qual_plot_all]
 
     def setup_stats_header(self):
         general_stats_headers = OrderedDict()
@@ -261,8 +261,8 @@ class MultiqcModule(BaseMultiqcModule):
     def setup_read_length_config(self):
         read_length_config = {
             'data_labels': [
-                {'name': 'All', 'ylab': 'Read Density', 'xlab': 'Basecalled Length'},
-                {'name': 'Pass', 'ylab': 'Read Density', 'xlab': 'Basecalled Length'}
+                {'name': 'Pass', 'ylab': 'Read Density', 'xlab': 'Basecalled Length'},
+                {'name': 'All', 'ylab': 'Read Density', 'xlab': 'Basecalled Length'}
             ]
         }
         return read_length_config
@@ -270,8 +270,8 @@ class MultiqcModule(BaseMultiqcModule):
     def setup_qual_config(self):
         qual_config = {
             'data_labels': [
-                {'name': 'All', 'ylab': 'Read Density', 'xlab': 'Read Quality Score'},
-                {'name': 'Pass', 'ylab': 'Read Density', 'xlab': 'Read Quality Score'}
+                {'name': 'Pass', 'ylab': 'Read Density', 'xlab': 'Read Quality Score'},
+                {'name': 'All', 'ylab': 'Read Density', 'xlab': 'Read Quality Score'}
             ]
         }
         return qual_config
