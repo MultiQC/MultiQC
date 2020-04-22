@@ -37,6 +37,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
     * combining multiple VCF files into one coherent report and format for downstream analysis.
 
+* [**Rockhopper**](https://cs.wellesley.edu/~btjaden/Rockhopper/)
+    * RNA-seq tool for bacteria, includes bar plot showing where features map.
+
 #### Module updates:
 
 * **bcl2fastq**
