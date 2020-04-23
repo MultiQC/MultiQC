@@ -25,6 +25,9 @@ pandoc_template: null
 read_count_multiplier: 0.000001
 read_count_prefix: 'M'
 read_count_desc: 'millions'
+long_read_count_multiplier: 0.001
+long_read_count_prefix: 'K'
+long_read_count_desc: 'thousands'
 base_count_multiplier: 0.000001
 base_count_prefix: 'Mb'
 base_count_desc: 'millions'

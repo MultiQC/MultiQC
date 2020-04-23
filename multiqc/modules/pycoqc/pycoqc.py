@@ -4,6 +4,7 @@
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table, linegraph
+from multiqc import config
 from collections import OrderedDict
 import yaml
 import logging
@@ -161,27 +162,31 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'median_read_len',
         }
         general_stats_headers['all_reads'] = {
-            'title': 'Number of Reads (All)',
-            'description': 'Number of Reads all',
+            'title': '{} reads (All)'.format(config.long_read_count_prefix),
+            'description': 'Number of reads all ({})'.format(config.long_read_count_desc),
             'scale': 'BuGn',
+            'modify': lambda x: x * config.long_read_count_multiplier,
             'shared_key': 'long_read_count',
         }
         general_stats_headers['passed_reads'] = {
-            'title': 'Number of Reads (Pass)',
-            'description': 'Number of Reads pass',
+            'title': '{} reads (Pass)'.format(config.long_read_count_prefix),
+            'description': 'Number of reads pass ({})'.format(config.long_read_count_desc),
             'scale': 'BuGn',
+            'modify': lambda x: x * config.long_read_count_multiplier,
             'shared_key': 'long_read_count',
         }
         general_stats_headers['all_bases'] = {
-            'title': 'Number of Bases (All)',
-            'description': 'Number of Bases all',
+            'title': '{} Bases (All)'.format(config.base_count_prefix),
+            'description': 'Number of bases all ({})'.format(config.base_count_desc),
             'scale': 'OrRd',
+            'modify': lambda x: x * config.base_count_multiplier,
             'shared_key': 'base_count',
         }
         general_stats_headers['passed_bases'] = {
-            'title': 'Number of Bases (Pass)',
-            'description': 'Number of Bases pass',
+            'title': '{} Bases (Pass)'.format(config.base_count_prefix),
+            'description': 'Number of bases pass ({})'.format(config.base_count_desc),
             'scale': 'OrRd',
+            'modify': lambda x: x * config.base_count_multiplier,
             'shared_key': 'base_count',
         }
         return general_stats_headers
