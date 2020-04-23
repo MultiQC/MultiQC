@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pycoqc_data) == 0:
             raise UserWarning
 
-        self.table_data, self.reads_data, self.bases_data, self.read_length_plot_data, self.quality_plot_data = self.parse_data()
+        self.parse_data()
 
         self.general_stats_headers = self.setup_stats_header()
         self.general_stats_addcols(self.table_data, self.general_stats_headers)
@@ -95,16 +95,16 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     def parse_data(self):
-        data_for_table = {}
-        reads_data = {}
-        bases_data = {}
+        self.table_data = {}
+        self.reads_data = {}
+        self.bases_data = {}
         length_plot_all = {}
         length_plot_pass = {}
         qual_plot_all = {}
         qual_plot_pass = {}
 
         for sample, sample_data in self.pycoqc_data.items():
-            data_for_table[sample] = {
+            self.table_data[sample] = {
                 'all_median_read_length': sample_data['All Reads']['basecall']['len_percentiles'][50],
                 'all_median_phred_score': sample_data['All Reads']['basecall']['qual_score_percentiles'][50],
                 'all_n50': sample_data['All Reads']['basecall']['N50'],
@@ -120,12 +120,12 @@ class MultiqcModule(BaseMultiqcModule):
                 'passed_bases': sample_data['Pass Reads']['basecall']['bases_number'],
                 }
 
-            reads_data[sample] = {
+            self.reads_data[sample] = {
                 'passed_reads': sample_data['Pass Reads']['basecall']['reads_number'],
                 'non_passed_reads': sample_data['All Reads']['basecall']['reads_number'] - sample_data['Pass Reads']['basecall']['reads_number'],
             }
 
-            bases_data[sample] = {
+            self.bases_data[sample] = {
                 'passed_bases': sample_data['Pass Reads']['basecall']['bases_number'],
                 'non_passed_bases': sample_data['All Reads']['basecall']['bases_number'] - sample_data['Pass Reads']['basecall']['bases_number'],
             }
@@ -145,7 +145,9 @@ class MultiqcModule(BaseMultiqcModule):
                 qual_plot_pass[sample] = dict(zip(qual_x_vals_pass,qual_y_vals_pass))
             except KeyError:
                 log.warn("No plot data found for sample '{}'. Please make sure you are using pycoQC v2.5.0.20 or newer.".format(sample))
-        return data_for_table, reads_data, bases_data, [length_plot_pass, length_plot_all], [qual_plot_pass, qual_plot_all]
+
+        self.read_length_plot_data = [length_plot_pass, length_plot_all]
+        self.quality_plot_data = [qual_plot_pass, qual_plot_all]
 
     def setup_stats_header(self):
         general_stats_headers = OrderedDict()
