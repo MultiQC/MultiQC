@@ -87,7 +87,7 @@ def make_headers(parsed_metric_ids, metrics):
             if metric.in_own_tabl is not None:
                 show = metric.in_own_tabl == '%'
                 own_tabl_headers[metric.id + ' pct'] = dict(pct_col, hidden=not show)
-            if metric.in_genstats is not None and metric.in_own_tabl == '%':
+            if metric.in_genstats is not None and metric.in_own_tabl != '#':
                 genstats_headers[metric.id + ' pct'] = dict(pct_col, hidden=metric.in_genstats == 'hid')
 
         if metric.unit == 'reads':

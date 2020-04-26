@@ -57,15 +57,15 @@ class DragenVCMetrics(BaseMultiqcModule):
 VC_METRICS = [Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, descr=m.descr, unit=m.unit,
                      namespace=m.namespace or NAMESPACE, the_higher_the_worse=m.the_higher_the_worse)
               for m in [
-    # id_in_data                                              title (display name)   gen_stats  vc_table  unit description
+    # id_in_data                                        title (display name)   gen_stats  vc_table  unit description
     # Read stats:
     Metric('Total'                                      , 'Variants'            , '#'  , '#'  , '', 'Total number of variants (SNPs + MNPs + INDELS).'),
-    Metric('Biallelic'                                  , 'Biallelic'           , 'hid', 'hid', '', 'Number of sites in a genome that contains two observed alleles, counting the reference as one, and therefore allowing for one variant allele'),
+    Metric('Biallelic'                                  , 'Biallelic'           , None , 'hid', '', 'Number of sites in a genome that contains two observed alleles, counting the reference as one, and therefore allowing for one variant allele'),
     Metric('Multiallelic'                               , 'Multiallelic'        , 'hid', '%'  , '', 'Number of sites in the VCF that contain three or more observed alleles. The reference is counted as one, therefore allowing for two or more variant alleles'),
     Metric('SNPs'                                       , 'SNP'                 , 'hid', '%'  , '', 'Number of SNPs in the variant set. A variant is counted as an SNP when the reference, allele 1, and allele2 are all length 1'),
     Metric('Indels'                                     , 'Indel'               , 'hid', 'hid', '', 'Number of insetions and deletions in the variant set.'),
-    Metric('Insertions'                                 , 'Ins'                 , 'hid', '%'  , '', 'Number of insetions in the variant set.'),
-    Metric('Deletions'                                  , 'Del'                 , 'hid', '%'  , '', 'Number of deletions in the variant set.'),
+    Metric('Insertions'                                 , 'Ins'                 , None , '%'  , '', 'Number of insetions in the variant set.'),
+    Metric('Deletions'                                  , 'Del'                 , None , '%'  , '', 'Number of deletions in the variant set.'),
     Metric('Insertions (Hom)'                           , 'Hom ins'             , None , 'hid', '', 'Number of variants that contains homozygous insertions'),
     Metric('Insertions (Het)'                           , 'Het ins'             , None , 'hid', '', 'Number of variants where both alleles are insertions, but not homozygous'),
     Metric('Deletions (Hom)'                            , 'Hom del'             , None , 'hid', '', 'Number of variants that contains homozygous deletions'),
