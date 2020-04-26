@@ -54,10 +54,6 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.report_mapping_metrics(data_by_sample, data_by_rg_by_sample)
 
     def report_mapping_metrics(self, data_by_sample, data_by_rg_by_sample):
-        # general metrics that differrent between different samples are to be moved into per-sample stats,
-        # those that are common for all samples will stay to be reported in the report header section
-        maybe_add_general_metrics(data_by_sample)
-
         # merging all read group data
         data_by_rg = dict()
         for sname in data_by_rg_by_sample:
@@ -155,32 +151,6 @@ class DragenMappingMetics(BaseMultiqcModule):
                 'cpswitch_counts_label': 'Number of reads'
             })
         )
-
-
-def maybe_add_general_metrics(data_by_sample):
-    general_stats_by_sample_by_metric = defaultdict(dict)
-
-    for sname, data in data_by_sample.items():
-        for metric, val in data.items():
-            if metric in [metric for (metric, title, fmt, modify) in GENERAL_METRICS]:
-                general_stats_by_sample_by_metric[metric][sname] = val
-
-    for metric, title, fmt, modify in GENERAL_METRICS:
-        vals_by_sample = general_stats_by_sample_by_metric[metric]
-        # if general stats are shared for different samples, adding into the report header section:
-        if len(list(set(vals_by_sample.values()))) == 1:
-            if config.report_header_info is None:
-                config.report_header_info = list()
-
-            v = list(set(vals_by_sample.values()))[0]
-            if v != 'NA':
-                if modify:
-                    v = modify(v)
-                config.report_header_info.append({title: fmt.format(v)})
-
-            # and removing them from general stats:
-            for sname, data in data_by_sample.items():
-                del data[metric]
 
 
 def parse_mapping_metrics_file(f):
@@ -429,11 +399,6 @@ MAPPING_METRICS = [
     Metric('Q30 bases R1'                                           , 'Q30 R1'                     , 'hid', 'hid', 'bases', 'Number of raw bases on R1 reads with BQ >= 30, {}'),
     Metric('Q30 bases R2'                                           , 'Q30 R2'                     , 'hid', 'hid', 'bases', 'Number of raw bases on R2 reads with BQ >= 30, {}'),
     Metric('Q30 bases (excl. dups & clipped bases)'                 , 'Q30 excl dup & clipped'     , 'hid', 'hid', 'bases', 'Number of non-clipped bases with BQ >= 30 on non-duplicate reads, {}'),
-    # General metrics. Showing only when general metrics are different for different samples, otherwise showing in the header
-    Metric('Bases in reference genome'                              , 'Bases in ref. genome'       , '#',   None , 'bases', 'Bases in reference genome'              ),
-    Metric('Bases in target bed [% of genome]'                      , 'Bases in target bed'        , '#',   None , '%'    , 'Bases in target bed [% of genome]'      ),
-    Metric('Provided sex chromosome ploidy'                         , 'Provided sex chrom ploidy'  , 'hid', None , None   , 'Provided sex chromosome ploidy'         ),
-    Metric('DRAGEN mapping rate [mil. reads/second]'                , 'DRAGEN map rate'            , 'hid', None , None   , 'DRAGEN mapping rate [mil. reads/second]'),
     # Alignments stats:
     Metric('Total alignments'                                       , 'Alignments'                 , 'hid', '#'  , 'reads', 'Total number of alignments with MQ > 0, {}'),
     Metric('Secondary alignments'                                   , 'Sec\'ry'                    , 'hid', '%'  , 'reads', 'Number of secondary alignments, {}. Secondary alignment occurs when '
@@ -447,13 +412,6 @@ MAPPING_METRICS = [
     Metric('Average sequenced coverage over genome'                 , 'Raw cov'                    , '#' ,  '#'  , 'x'    , 'Average sequenced coverage over genome (including duplicate, clipped and low quality bases and reads)'),
 ]
 
-GENERAL_METRICS = [
-    # id_in_data                              title                      format                           modify
-    ('Bases in reference genome'              , 'Bases in ref. genome:'  , base_format                    , lambda v: v * config.base_count_multiplier ),
-    ('Bases in target bed [% of genome]'      , 'Bases in target bed:'   , '{} % of genome'               , None                                       ),
-    ('Provided sex chromosome ploidy'         , 'Prov. sex chrom ploidy:', '{}'                           , None                                       ),
-    ('DRAGEN mapping rate [mil. reads/second]', 'DRAGEN mapping rate:'   , '{:,.2f} [mil. reads/second]'  , None                                       ),
-]
 
 
 
