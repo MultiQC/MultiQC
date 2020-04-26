@@ -15,7 +15,7 @@ MIN_CNT_TO_SHOW_ON_PLOT = 5
 
 
 class DragenFragmentLength(BaseMultiqcModule):
-    def parse_fragment_length_hist(self):
+    def add_fragment_length_hist(self):
         data_by_rg_by_sample = defaultdict(dict)
 
         for f in self.find_log_files('dragen/fragment_length_hist'):

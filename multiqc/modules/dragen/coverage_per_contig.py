@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class DragenCoveragePerContig(BaseMultiqcModule):
-    def parse_coverage_per_contig(self):
+    def add_coverage_per_contig(self):
         perchrom_data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files('dragen/wgs_contig_mean_cov'):

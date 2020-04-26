@@ -15,7 +15,7 @@ NAMESPACE = 'Ploidy estimation'
 
 
 class DragenPloidyEstimationMetrics(BaseMultiqcModule):
-    def parse_ploidy_estimation_metrics(self):
+    def add_ploidy_estimation_metrics(self):
         data_by_sample = dict()
 
         for f in self.find_log_files('dragen/ploidy_estimation_metrics'):

@@ -19,18 +19,8 @@ from .utils import make_headers, Metric
 NAMESPACE = 'DRAGEN coverage'
 
 
-BASES_USED_NOTICE = """Considering only bases usable for variant calling, i.e. excluding:
-1. clipped bases,
-2. bases in duplicate reads,
-3. reads with MAPQ < min MAPQ (default 20),
-4. bases with BQ < min BQ (default 10) 
-5. reads with MAPQ = 0 (multimappers); 
-6. overlapping mates are double-counted.
-"""
-
-
 class DragenCoverageMetrics(BaseMultiqcModule):
-    def parse_coverage_metrics(self):
+    def add_coverage_metrics(self):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files('dragen/wgs_coverage_metrics'):
@@ -69,7 +59,17 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             anchor='dragen-cov-metrics',
             description='Coverage metrics over a region (where the region can be a target region, '
                         'a QC coverage region, or the whole genome). Press the `Help` button for details.',
-            helptext=BASES_USED_NOTICE.replace('\n', '<br>'),
+            helptext="""The following criteria are used when calculating coverage:
+            - Duplicate reads and clipped bases are ignored.
+            - Only reads with MAPQ > min MAPQ and bases with BQ > min BQ are considered
+            Considering only bases usable for variant calling, i.e. excluding:
+                        1. clipped bases,
+                        2. bases in duplicate reads,
+                        3. reads with MAPQ < min MAPQ (default 20),
+                        4. bases with BQ < min BQ (default 10) 
+                        5. reads with MAPQ = 0 (multimappers); 
+                        6. overlapping mates are double-counted.
+                        """.replace('\n', '<br>'),
             plot=table.plot(data_by_sample, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )
 
@@ -85,7 +85,7 @@ COV_METRICS = list(itertools.chain.from_iterable([[
     Metric('Aligned reads in region'                        , 'Reads on trg'    , 'hid', '%'  , 'reads', 'Number of uniquely mapped reads to region relative to the number of uniquely mapped reads to the genome. When region is the target BED, this metric is equivalent to and replaces Capture Specificity based on target region.'),
     Metric('Aligned bases'                                  , 'Aln bases'       , 'hid', '#'  , 'bases', 'Total number of aligned bases.'),
     Metric('Aligned bases in region'                        , 'Bases on trg'    , 'hid', '%'  , 'bases', 'Number of uniquely mapped bases to the region relative to the number of uniquely mapped bases to the genome.'),
-    Metric('Average alignment coverage over {}'             , 'Cov'             , '#'  , '#'  , 'x'    , 'Coverage alignment over {}: number of uniquely mapped bases to {} divided by the number of sites in {}.'),
+    Metric('Average alignment coverage over {}'             , 'Depth'           , '#'  , '#'  , 'x'    , 'Coverage depth over {}: number of uniquely mapped bases to {} divided by the number of sites in {}.'),
     Metric('Uniformity of coverage (PCT > 0.2*mean) over {}', '>0.2×mean'       , 'hid', '#'  , '%'    , 'Percentage of sites with coverage greater than 20% of the mean coverage in region. Demonstrates the uniformity of coverage. The lower the better.'),
     Metric('Average chr X coverage over {}'                 , 'X cov'           , None , 'hid', 'x'    , 'Average chromosome X coverage over {}. Calculated as the number of bases that aligned to the chromosome X (or to the intersection of chromosome X with the target region) divided by the total number of loci in the chromosome X (or the intersection with the target region). If there is no chromosome X in the reference genome or the region does not intersect chromosome X, this metric shows as NA.'),
     Metric('Average chr Y coverage over {}'                 , 'Y cov'           , None , 'hid', 'x'    , 'Average chromosome Y coverage over {}. Calculated as the number of bases that aligned to the chromosome Y (or to the intersection of chromosome Y with the target region) divided by the total number of loci in the chromosome Y (or the intersection with the target region). If there is no chromosome Y in the reference genome or the region does not intersect chromosome Y, this metric shows as NA.'),

@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class DragenCoverageHist(BaseMultiqcModule):
-    def parse_coverage_hist(self):
+    def add_coverage_hist(self):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files('dragen/wgs_fine_hist'):

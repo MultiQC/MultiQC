@@ -20,7 +20,7 @@ NAMESPACE = 'DRAGEN mapping'
 
 
 class DragenMappingMetics(BaseMultiqcModule):
-    def parse_mapping_metrics(self):
+    def add_mapping_metrics(self):
         data_by_rg_by_sample = defaultdict(dict)
         data_by_phenotype_by_sample = defaultdict(dict)
 
@@ -348,8 +348,9 @@ def parse_mapping_metrics_file(f):
 MAPPING_METRICS = [
     # id_in_data                                                    # title (display name)  # in_genstats  # in_own_tabl # unit  # description
     # Read stats:
-    Metric('Total input reads'                                      , 'Raw reads'                  , '#'  , None , 'reads', 'Total number of input reads for this sample (or total number of reads in all input read groups combined), {}'),
-    Metric('Total reads in RG'                                      , 'Raw reads'                  , None , '#'  , 'reads', 'Total number of reads in this RG, {}'),
+    Metric('Total input reads'                                      , 'Input reads'                , '#'  , None , 'reads', 'Total number of input reads for this sample (or total number of reads in all input read groups combined), {}'),
+    Metric('Total reads in RG'                                      , 'Input reads'                , None , '#'  , 'reads', 'Total number of reads in this RG, {}'),
+    Metric('Average sequenced coverage over genome'                 , 'Raw depth'                  , 'hid', '#'  , 'x'    , 'Average sequenced coverage over genome, based on all input reads (including duplicate, clipped and low quality bases and reads)'),
     Metric('Reads with mate sequenced'                              , 'Paired'                     , 'hid', '%'  , 'reads', 'Number of reads with a mate sequenced, {}'),
     Metric('Reads without mate sequenced'                           , 'Single'                     , None , 'hid', 'reads', 'Number of reads without a mate sequenced, {}', the_higher_the_worse=True),
     Metric('QC-failed reads'                                        , 'QC-fail'                    , 'hid', '%'  , 'reads', 'Number of reads not passing platform/vendor quality checks (SAM flag 0x200), {}', precision=2, the_higher_the_worse=True),
@@ -364,24 +365,24 @@ MAPPING_METRICS = [
     Metric('Number of unique reads (excl. duplicate marked reads)'  , 'Uniq'                       , None , 'hid', 'reads', 'Number of unique reads (all reads minus duplicate marked reads), {}'),
     Metric('Number of unique & mapped reads (excl. duplicate marked reads)', 'Uniq map'            , 'hid', 'hid', 'reads', 'Number of unique & mapped reads (mapped reads minus duplicate marked reads), {}'),
     Metric('Paired reads (itself & mate mapped)'                    , 'Self & mate map'            , 'hid', 'hid', 'reads', 'Number of reads mapped in pairs (itself & mate mapped), {}'),
-    Metric('Properly paired reads'                                  , 'Prop pair'                  , 'hid', '%'  , 'reads', 'Number of properly paired reads, {} (both reads in pair are mapped and '
+    Metric('Properly paired reads'                                  , 'Prop pair'                  , '%'  , '%'  , 'reads', 'Number of properly paired reads, {} (both reads in pair are mapped and '
                                                                                                                               'fall within an acceptable range from each other based on the estimated insert length distribution). '
                                                                                                                               'Duplicate and low quality reads are not excluded, i.e. the percentage is calculated relative to the total number of reads.'),
     Metric('Not properly paired reads (discordant)'                 , 'Discord'                    , 'hid', '%'  , 'reads', 'Number of discordant reads: paired reads minus properly paired reads , {}', precision=2, the_higher_the_worse=True),
     Metric('Singleton reads (itself mapped; mate unmapped)'         , 'Singleton'                  , None , '%'  , 'reads', 'Number of singleton reads: itself mapped; mate unmapped, {}', precision=2, the_higher_the_worse=True),
-    Metric('Paired reads mapped to different chromosomes'           , 'Diff chrom'                 , 'hid', '%'  , 'reads', 'Number of paired reads with a mate mapped to a different chromosome, {}', precision=2, the_higher_the_worse=True),
-    Metric('Paired reads mapped to different chromosomes (MAPQ>=10)', 'Diff chr, MQ⩾10'            , None , '%'  , 'reads', 'Number of paired reads, mapped with MAPQ>=10 and with a mate mapped to a different chromosome, {}', precision=2, the_higher_the_worse=True),
+    Metric('Paired reads mapped to different chromosomes'           , 'Diff chrom'                 , 'hid', 'hid', 'reads', 'Number of paired reads with a mate mapped to a different chromosome, {}', precision=2, the_higher_the_worse=True),
+    Metric('Paired reads mapped to different chromosomes (MAPQ>=10)', 'Diff chr, MQ⩾10'            , 'hid', '%'  , 'reads', 'Number of paired reads, mapped with MAPQ>=10 and with a mate mapped to a different chromosome, {}', precision=2, the_higher_the_worse=True),
     Metric('Reads with indel R1'                                    , 'Reads with indel R1'        , None , 'hid', 'reads', 'Number of R1 reads containing at least 1 indel, {}', the_higher_the_worse=True),
     Metric('Reads with indel R2'                                    , 'Reads with indel R2'        , None , 'hid', 'reads', 'Number of R2 reads containing at least 1 indel, {}', the_higher_the_worse=True),
     # Read length stats
-    Metric('Estimated read length'                                  , 'Read len'                   , '#'  , 'hid', 'bp'   , 'Estimated read length. Total number of input bases divided by the number of reads'),
+    Metric('Estimated read length'                                  , 'Read len'                   , 'hid', 'hid', 'bp'   , 'Estimated read length. Total number of input bases divided by the number of reads'),
     Metric('Insert length: mean'                                    , 'Avg IS'                     , 'hid', 'hid', 'bp'   , 'Mean insert size'),
-    Metric('Insert length: median'                                  , 'Med IS'                     , '#'  , 'hid', 'bp'   , 'Median insert size'),
+    Metric('Insert length: median'                                  , 'Med IS'                     , '#'  , '#'  , 'bp'   , 'Median insert size'),
     Metric('Insert length: standard deviation'                      , 'IS std'                     , 'hid', 'hid', 'bp'   , 'Standard deviation of insert size deviation'),
     # Bases stats:
-    Metric('Total bases'                                            , 'Raw bases'                  , '#'  , 'hid', 'bases', 'Total number of bases sequenced, {}'),
-    Metric('Total bases R1'                                         , 'Raw bases R1'               , None , 'hid', 'bases', 'Total number of bases sequenced on R1 reads, {}'),
-    Metric('Total bases R2'                                         , 'Raw bases R2'               , None , 'hid', 'bases', 'Total number of bases sequenced on R2 reads, {}'),
+    Metric('Total bases'                                            , 'Input bases'                , 'hid', 'hid', 'bases', 'Total number of bases sequenced, {}'),
+    Metric('Total bases R1'                                         , 'Input bases R1'             , None , 'hid', 'bases', 'Total number of bases sequenced on R1 reads, {}'),
+    Metric('Total bases R2'                                         , 'Input bases R2'             , None , 'hid', 'bases', 'Total number of bases sequenced on R2 reads, {}'),
     Metric('Mapped bases R1'                                        , 'Mapped bases R1'            , None , 'hid', 'bases', 'Number of mapped bases on R1 reads, {}'),
     Metric('Mapped bases R2'                                        , 'Mapped bases R2'            , None , 'hid', 'bases', 'Number of mapped bases on R2 reads, {}'),
     Metric('Soft-clipped bases R1'                                  , 'Soft-clip bases R1'         , None , 'hid', 'bases', 'Number of soft-clipped bases on R1 reads, {}', the_higher_the_worse=True),
@@ -411,8 +412,6 @@ MAPPING_METRICS = [
     Metric('Supplementary (chimeric) alignments'                    , 'Suppl\'ry'                  , 'hid', '%'  , 'reads', 'Number of supplementary (chimeric) alignments, {}. A chimeric read is split '
                                                                                                                               'over multiple loci (possibly due to structural variants). One alignment is '
                                                                                                                               'referred to as the representative alignment, the other are supplementary', precision=2),
-    # Coverage:
-    Metric('Average sequenced coverage over genome'                 , 'Raw cov'                    , '#' ,  '#'  , 'x'    , 'Average sequenced coverage over genome (including duplicate, clipped and low quality bases and reads)'),
 ]
 
 
