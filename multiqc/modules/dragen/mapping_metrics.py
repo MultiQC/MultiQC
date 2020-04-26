@@ -143,9 +143,9 @@ class DragenMappingMetics(BaseMultiqcModule):
             description="Mapping and pairing read metrics per read group: "
                         "properly paired vs. discordant vs. unpaired vs. unmapped reads.",
             plot=bargraph.plot(chart_data, {
-                'Properly paired reads':                          {'color': '#00cc00', 'name': 'Paired, properly'},
-                'Not properly paired reads (discordant)':         {'color': '#ff9900', 'name': 'Paired, discordant'},
-                'Singleton reads (itself mapped; mate unmapped)': {'color': '#ff33cc', 'name': 'Singleton'},
+                'Properly paired reads':                          {'color': '#099109', 'name': 'Paired, properly'},
+                'Not properly paired reads (discordant)':         {'color': '#c27a0e', 'name': 'Paired, discordant'},
+                'Singleton reads (itself mapped; mate unmapped)': {'color': '#912476', 'name': 'Singleton'},
                 'Unmapped reads':                                 {'color': '#b1084c', 'name': 'Unmapped'},
             }, {
                 'id': 'mapping_paired_percentage_plot',
