@@ -16,8 +16,10 @@ log = logging.getLogger(__name__)
 from .utils import make_headers, Metric
 
 
-BASES_USED_NOTICE = """
-Considering only bases usable for variant calling, i.e. excluding:
+NAMESPACE = 'DRAGEN coverage'
+
+
+BASES_USED_NOTICE = """Considering only bases usable for variant calling, i.e. excluding:
 1. clipped bases,
 2. bases in duplicate reads,
 3. reads with MAPQ < min MAPQ (default 20),
@@ -60,21 +62,22 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 all_metric_names.add(m)
         gen_stats_headers, own_tabl_headers = make_headers(all_metric_names, COV_METRICS)
 
-        self.general_stats_addcols(data_by_sample, gen_stats_headers, 'Coverage')
+        self.general_stats_addcols(data_by_sample, gen_stats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name='Coverage metrics',
             anchor='dragen-cov-metrics',
-            description='Coverage metrics over a region, where the region can be the genome, a target region, '
-                        'or a QC coverage region. ' + BASES_USED_NOTICE.replace('\n', '<br>'),
-            plot=table.plot(data_by_sample, own_tabl_headers, pconfig={'namespace': 'Coverage'})
+            description='Coverage metrics over a region (where the region can be a target region, '
+                        'a QC coverage region, or the whole genome). Press the `Help` button for details.',
+            helptext=BASES_USED_NOTICE.replace('\n', '<br>'),
+            plot=table.plot(data_by_sample, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )
 
 
 COV_METRICS = list(itertools.chain.from_iterable([[
-      Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, unit=m.unit, descr=m.descr + ' ' + BASES_USED_NOTICE, namespace='Coverage', precision=m.precision),
-      Metric(m.id.replace('{}', 'genome'), m.title.replace('{}', 'genome'), in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, unit=m.unit, descr=m.descr.replace('{}', 'genome') + ' ' + BASES_USED_NOTICE, namespace='Coverage', precision=m.precision),
-      Metric(m.id.replace('{}', 'genome'), m.title.replace('{}', 'region'), in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, unit=m.unit, descr=m.descr.replace('{}', 'region') + ' ' + BASES_USED_NOTICE, namespace='Coverage', precision=m.precision),
+      Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, unit=m.unit, descr=m.descr, namespace=NAMESPACE, precision=m.precision),
+      Metric(m.id.replace('{}', 'genome'), m.title.replace('{}', 'genome'), in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, unit=m.unit, descr=m.descr.replace('{}', 'genome'), namespace=NAMESPACE, precision=m.precision),
+      Metric(m.id.replace('{}', 'genome'), m.title.replace('{}', 'region'), in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, unit=m.unit, descr=m.descr.replace('{}', 'region'), namespace=NAMESPACE, precision=m.precision),
   ] for m in [
     # id_in_data                                            title (display name)  gen_stats  cov_table  unit  description  precision
     # Read stats:

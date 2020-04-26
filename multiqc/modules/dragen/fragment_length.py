@@ -8,7 +8,6 @@ from multiqc.plots import linegraph
 
 # Initialise the logger
 import logging
-
 log = logging.getLogger(__name__)
 
 

@@ -8,8 +8,10 @@ from multiqc.plots import linegraph
 
 # Initialise the logger
 import logging
-
 log = logging.getLogger(__name__)
+
+
+NAMESPACE = 'Ploidy estimation'
 
 
 class DragenPloidyEstimationMetrics(BaseMultiqcModule):
@@ -35,7 +37,7 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
             'description': 'Sex chromosome ploidy estimation (XX, XY, X0, 00, etc.)',
             'scale': 'Set3',
         }
-        self.general_stats_addcols(data_by_sample, headers, 'Ploidy estimation')
+        self.general_stats_addcols(data_by_sample, headers, namespace=NAMESPACE)
 
 
 def parse_ploidy_estimation_metrics_file(f):

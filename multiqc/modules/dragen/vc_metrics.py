@@ -13,6 +13,9 @@ import logging
 log = logging.getLogger(__name__)
 
 
+NAMESPACE = 'DRAGEN variant calling'
+
+
 class DragenVCMetrics(BaseMultiqcModule):
     def parse_vc_metrics(self):
         data_by_sample = dict()
@@ -37,7 +40,7 @@ class DragenVCMetrics(BaseMultiqcModule):
 
         gen_stats_headers, vc_table_headers = make_headers(all_metric_names, VC_METRICS)
 
-        self.general_stats_addcols(data_by_sample, gen_stats_headers, 'Variant calling')
+        self.general_stats_addcols(data_by_sample, gen_stats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name='Variant calling',
@@ -47,12 +50,12 @@ class DragenVCMetrics(BaseMultiqcModule):
                         'VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs, '
                         'except for the "Filtered" metrics which represent how many variants were filtered out '
                         'from pre-filter VCF to generate the post-filter VCF.',
-            plot=table.plot(data_by_sample, vc_table_headers, pconfig={'namespace': 'Variant calling'})
+            plot=table.plot(data_by_sample, vc_table_headers, pconfig={'namespace': NAMESPACE})
         )
 
 
 VC_METRICS = [Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, descr=m.descr, unit=m.unit,
-                     namespace=m.namespace or 'Variants', the_higher_the_worse=m.the_higher_the_worse)
+                     namespace=m.namespace or NAMESPACE, the_higher_the_worse=m.the_higher_the_worse)
               for m in [
     # id_in_data                                              title (display name)   gen_stats  vc_table  unit description
     # Read stats:

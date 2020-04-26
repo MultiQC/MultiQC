@@ -9,8 +9,10 @@ from multiqc.plots import linegraph, bargraph, table, beeswarm
 
 # Initialise the logger
 import logging
-
 log = logging.getLogger(__name__)
+
+
+NAMESPACE = 'DRAGEN runtime'
 
 
 class DragenTimeMetrics(BaseMultiqcModule):
@@ -61,7 +63,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
                     }
                 max_time = max(time, max_time)
 
-        self.general_stats_addcols(data_by_sample, genstats_headers, 'Time metrics')
+        self.general_stats_addcols(data_by_sample, genstats_headers, namespace=NAMESPACE)
 
         # self.add_section(
         #     name='Run time metrics',
@@ -71,7 +73,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
         #                 'time (in hours) this stage took to execute. Some steps may run in parallel, '
         #                 'so the numbers don\'t nesesseraly sum up to total runtime.',
         #     plot=beeswarm.plot(data_by_sample, headers, pconfig={
-        #         'namespace': 'Time metrics',
+        #         'namespace': NAMESPACE,
         #         'max': max_time
         #     })
         # )

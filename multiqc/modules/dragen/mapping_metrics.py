@@ -16,6 +16,9 @@ import logging
 log = logging.getLogger(__name__)
 
 
+NAMESPACE = 'DRAGEN mapping'
+
+
 class DragenMappingMetics(BaseMultiqcModule):
     def parse_mapping_metrics(self):
         data_by_rg_by_sample = defaultdict(dict)
@@ -72,7 +75,7 @@ class DragenMappingMetics(BaseMultiqcModule):
         # headers, beeswarm_keys = make_mapping_stats_headers(all_metric_names)
         genstats_headers, own_tabl_headers = make_headers(all_metric_names, MAPPING_METRICS)
 
-        self.general_stats_addcols(data_by_sample, genstats_headers, 'Mapping metrics')
+        self.general_stats_addcols(data_by_sample, genstats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name='Mapping metrics per RG',
@@ -80,7 +83,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             description='Mapping metrics, similar to the metrics computed by the samtools-stats command. '
                         'Shown on per read group level. To see per-sample level metrics, refer to the general '
                         'stats table.',
-            plot=table.plot(data_by_rg, own_tabl_headers, pconfig={'namespace': 'Mapping metrics'})
+            plot=table.plot(data_by_rg, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )
 
         # Make bargraph plots of mapped, dupped and paired reads
