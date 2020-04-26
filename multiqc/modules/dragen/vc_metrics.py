@@ -57,48 +57,48 @@ VC_METRICS = [Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_
     # id_in_data                                              title (display name)   gen_stats  vc_table  unit description
     # Read stats:
     Metric('Total'                                      , 'Variants'            , '#'  , '#'  , '', 'Total number of variants (SNPs + MNPs + INDELS).'),
-    Metric('Reads Processed'                            , 'VC reads'            , 'hid', 'hid', '', 'The number of reads used for variant calling, excluding any duplicate marked reads and reads falling outside of the target region'),
+    Metric('Reads Processed'                            , 'VC reads'            , None , 'hid', '', 'The number of reads used for variant calling, excluding any duplicate marked reads and reads falling outside of the target region'),
     Metric('Biallelic'                                  , 'Biallelic'           , 'hid', 'hid', '', 'Number of sites in a genome that contains two observed alleles, counting the reference as one, and therefore allowing for one variant allele'),
     Metric('Multiallelic'                               , 'Multiallelic'        , 'hid', '%'  , '', 'Number of sites in the VCF that contain three or more observed alleles. The reference is counted as one, therefore allowing for two or more variant alleles'),
     Metric('SNPs'                                       , 'SNPs'                , 'hid', '%'  , '', 'Number of SNPs in the variant set. A variant is counted as an SNP when the reference, allele 1, and allele2 are all length 1'),
     Metric('Indels'                                     , 'Indels'              , 'hid', '%'  , '', 'Number of insetions and deletions in the variant set.'),
     Metric('Insertions'                                 , 'Ins'                 , 'hid', 'hid', '', 'Number of insetions in the variant set.'),
     Metric('Deletions'                                  , 'Del'                 , 'hid', 'hid', '', 'Number of deletions in the variant set.'),
-    Metric('Insertions (Hom)'                           , 'Hom ins'             , 'hid', 'hid', '', 'Number of variants that contains homozygous insertions'),
-    Metric('Insertions (Het)'                           , 'Het ins'             , 'hid', 'hid', '', 'Number of variants where both alleles are insertions, but not homozygous'),
-    Metric('Deletions (Hom)'                            , 'Hom del'             , 'hid', 'hid', '', 'Number of variants that contains homozygous deletions'),
-    Metric('Deletions (Het)'                            , 'Het del'             , 'hid', 'hid', '', 'Number of variants where both alleles are deletion, but not homozygous'),
-    Metric('Indels (Het)'                               , 'Het indel'           , 'hid', 'hid', '', 'Number of variants where genotypes are either [insertion+deletion], [insertion+snp] or [deletion+snp].'),
-    Metric('DeNovo SNPs'                                , 'DeNovo SNPs'         , 'hid', 'hid', '', 'Number of DeNovo marked SNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
-    Metric('DeNovo INDELs'                              , 'DeNovo indel'        , 'hid', 'hid', '', 'Number of DeNovo marked indels, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
-    Metric('DeNovo MNPs'                                , 'DeNovo MNPs'         , 'hid', 'hid', '', 'Number of DeNovo marked MNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
-    Metric('Chr X number of SNPs over genome'           , 'ChrX SNP'            , 'hid', 'hid', '', 'Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region). '
+    Metric('Insertions (Hom)'                           , 'Hom ins'             , None , 'hid', '', 'Number of variants that contains homozygous insertions'),
+    Metric('Insertions (Het)'                           , 'Het ins'             , None , 'hid', '', 'Number of variants where both alleles are insertions, but not homozygous'),
+    Metric('Deletions (Hom)'                            , 'Hom del'             , None , 'hid', '', 'Number of variants that contains homozygous deletions'),
+    Metric('Deletions (Het)'                            , 'Het del'             , None , 'hid', '', 'Number of variants where both alleles are deletion, but not homozygous'),
+    Metric('Indels (Het)'                               , 'Het indel'           , None , 'hid', '', 'Number of variants where genotypes are either [insertion+deletion], [insertion+snp] or [deletion+snp].'),
+    Metric('DeNovo SNPs'                                , 'DeNovo SNPs'         , None , None , '', 'Number of DeNovo marked SNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
+    Metric('DeNovo INDELs'                              , 'DeNovo indel'        , None , None , '', 'Number of DeNovo marked indels, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
+    Metric('DeNovo MNPs'                                , 'DeNovo MNPs'         , None , None , '', 'Number of DeNovo marked MNPs, with DQ > 0.05. Set the --qc-snp-denovo-quality-threshold option to the required threshold. The default is 0.05.'),
+    Metric('Chr X number of SNPs over genome'           , 'ChrX SNP'            , None , None , '', 'Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region). '
                                                                                                 '', 'If there was no alignment to either chromosome X, this metric shows as NA'),
-    Metric('Chr Y number of SNPs over genome'           , 'ChrY SNP'            , 'hid', 'hid', '', 'Number of SNPs in chromosome Y (or in the intersection of chromosome Y with the target region). '
+    Metric('Chr Y number of SNPs over genome'           , 'ChrY SNP'            , None , None , '', 'Number of SNPs in chromosome Y (or in the intersection of chromosome Y with the target region). '
                                                                                                 '', 'If there was no alignment to either chromosome Y, this metric shows as NA'),
-    Metric('(Chr X SNPs)/(chr Y SNPs) ratio over genome', 'X/Y SNP ratio'       , 'hid', 'hid', '', 'Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region) '
+    Metric('(Chr X SNPs)/(chr Y SNPs) ratio over genome', 'X/Y SNP ratio'       , None , 'hid', '', 'Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region) '
                                                                                                 '', 'divided by the number of SNPs in chromosome Y (or in the intersection of chromosome Y with the '
                                                                                                 '', 'target region). If there was no alignment to either chromosome X or chromosome Y, this metric '
                                                                                                 '', 'shows as NA'),
-    Metric('SNP Transitions'                            , 'SNP Ti'              , 'hid', 'hid', '', 'Number of transitions - interchanges of two purines (A<->G) or two pyrimidines (C<->T)'),
-    Metric('SNP Transversions'                          , 'SNP Tv'              , 'hid', 'hid', '', 'Number of transversions - interchanges of purine and pyrimidine bases'),
+    Metric('SNP Transitions'                            , 'SNP Ti'              , None , None , '', 'Number of transitions - interchanges of two purines (A<->G) or two pyrimidines (C<->T)'),
+    Metric('SNP Transversions'                          , 'SNP Tv'              , None , None , '', 'Number of transversions - interchanges of purine and pyrimidine bases'),
     Metric('Ti/Tv ratio'                                , 'Ti/Tv'               , 'hid', '#'  , '', 'Ti/Tv ratio: ratio of transitions to transitions.'),
     Metric('Heterozygous'                               , 'Het'                 , 'hid', 'hid', '', 'Number of heterozygous variants'),
     Metric('Homozygous'                                 , 'Hom'                 , 'hid', 'hid', '', 'Number of homozygous variants'),
     Metric('Het/Hom ratio'                              , 'Het/Hom'             , 'hid', '%'  , '', 'Heterozygous/ homozygous ratio'),
-    Metric('In dbSNP'                                   , 'In dbSNP'            , 'hid', '%'  , '', 'Number of variants detected that are present in the dbsnp reference file. If no dbsnp file '
+    Metric('In dbSNP'                                   , 'In dbSNP'            , None , None , '', 'Number of variants detected that are present in the dbsnp reference file. If no dbsnp file '
                                                                                                 '',  'is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.', the_higher_the_worse=True),
-    Metric('Not in dbSNP'                               , 'Novel'               , 'hid', 'hid', '', 'Number of all variants minus number of variants in dbSNP. If no dbsnp file '
+    Metric('Not in dbSNP'                               , 'Novel'               , None , None , '', 'Number of all variants minus number of variants in dbSNP. If no dbsnp file '
                                                                                                 '', 'is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.'),
-    Metric('Percent Callability'                        , 'Callability'         , 'hid', '#'  , '', 'Available only in germline mode with gVCF output. The percentage of non-N reference '
+    Metric('Percent Callability'                        , 'Callability'         , None , '#'  , '', 'Available only in germline mode with gVCF output. The percentage of non-N reference '
                                                                                                 '', 'positions having a PASSing genotype call. Multi-allelic variants are not counted. '
                                                                                                 '', 'Deletions are counted for all the deleted reference positions only for homozygous calls. '
                                                                                                 '', 'Only autosomes and chromosomes X, Y and M are considered.'),
-    Metric('Percent Autosome Callability'               , 'Autosome callability', 'hid', 'hid', '', 'Available only in germline mode with gVCF output. The percentage of non-N reference '
+    Metric('Percent Autosome Callability'               , 'Autosome callability', None , 'hid', '', 'Available only in germline mode with gVCF output. The percentage of non-N reference '
                                                                                                 '', 'positions having a PASSing genotype call. Multi-allelic variants are not counted. '
                                                                                                 '', 'Deletions are counted for all the deleted reference positions only for homozygous calls. '
                                                                                                 '', 'Only autosomes are considered (for all chromosomes, see the Callability metric).'),
-    Metric('Filtered vars'                              , 'Filt var'            , '%'  , '%'  , '', 'Number of raw variants minus the number of PASSed variants', the_higher_the_worse=True),
+    Metric('Filtered vars'                              , 'Filt var'            , 'hid',  '%' , '', 'Number of raw variants minus the number of PASSed variants', the_higher_the_worse=True),
     Metric('Filtered SNPs'                              , 'Filt SNPs'           , 'hid', 'hid', '', 'Number of raw SNPs minus the number of PASSed SNPs', the_higher_the_worse=True),
     Metric('Filtered indels'                            , 'Filt indels'         , 'hid', 'hid', '', 'Number of raw indels minus the number of PASSed indels', the_higher_the_worse=True),
 ]]

@@ -84,12 +84,11 @@ def make_headers(parsed_metric_ids, metrics):
             if metric.precision is not None:
                 pct_col['format'] = '{:,.' + str(metric.precision) + 'f}'
 
-            if metric.in_genstats is not None:
-                show = metric.in_genstats == '%'
-                genstats_headers[metric.id + ' pct'] = dict(pct_col, hidden=not show)
             if metric.in_own_tabl is not None:
                 show = metric.in_own_tabl == '%'
                 own_tabl_headers[metric.id + ' pct'] = dict(pct_col, hidden=not show)
+            if metric.in_genstats is not None and metric.in_own_tabl == '%':
+                genstats_headers[metric.id + ' pct'] = dict(pct_col, hidden=metric.in_genstats == 'hid')
 
         if metric.unit == 'reads':
             col['description'] = col['description'].format(config.read_count_desc)
@@ -115,9 +114,12 @@ def make_headers(parsed_metric_ids, metrics):
         if metric.precision is not None:
             col['format'] = '{:,.' + str(metric.precision) + 'f}'
 
-        if metric.in_genstats is not None:
-            genstats_headers[metric.id] = dict(col, hidden=metric.in_genstats != '#')
         if metric.in_own_tabl is not None:
             own_tabl_headers[metric.id] = dict(col, hidden=metric.in_own_tabl != '#')
+        if metric.in_genstats is not None:
+            if metric.in_genstats == '#':
+                genstats_headers[metric.id] = dict(col)
+            elif metric.in_genstats == 'hid' and metric.in_own_tabl == '#':
+                genstats_headers[metric.id] = dict(col, hidden=metric.in_genstats == 'hid')
 
     return genstats_headers, own_tabl_headers
