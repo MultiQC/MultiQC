@@ -55,6 +55,6 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         self.parse_vc_metrics()
         # <output prefix>.vc_metrics.csv                   - a dedicated table and the total number of Variants into the general stats table
 
-        self.parse_time_metrics()
+        # self.parse_time_metrics()
         # <output prefix>.time_metrics.csv                 - ideally an overlapping barplot, but for now a beeswarm plot with dots for time each stage for each sample has finished
 
