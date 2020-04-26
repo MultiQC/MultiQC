@@ -39,7 +39,7 @@ class DragenCoverageHist(BaseMultiqcModule):
 
         if not data_by_sample:
             return
-        log.info('Found Dragen coverage histogram for {} Dragen output prefixes'.format(len(data_by_sample)))
+        log.info('Found DRAGEN coverage histogram for {} DRAGEN output prefixes'.format(len(data_by_sample)))
 
         dist_data  = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
         cum_data   = {sn: cum  for sn, (dist, cum, depth_1pc) in data_by_sample.items()}

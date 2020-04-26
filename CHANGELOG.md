@@ -107,7 +107,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Relative coverage and error rate of X and Y chromosomes
 * [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
     * Allele-specific alignment sorting
-* [**Dragen**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
+* [**DRAGEN**](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
     * Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis
 
 #### Module updates:

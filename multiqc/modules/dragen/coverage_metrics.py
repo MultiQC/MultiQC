@@ -54,7 +54,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         if not data_by_sample:
             return
-        log.info('Found Dragen coverage metrics for {} Dragen output prefixes'.format(len(data_by_sample)))
+        log.info('Found DRAGEN coverage metrics for {} DRAGEN output prefixes'.format(len(data_by_sample)))
 
         all_metric_names = set()
         for sn, sdata in data_by_sample.items():

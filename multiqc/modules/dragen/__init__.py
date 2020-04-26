@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics, DragenTimeMetrics,
                     DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics, DragenCoverageHist):
-    """ Dragen has a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+    """ DRAGEN has a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     For each stage, it generates QC files with metrics resembling those of samtools-stats, mosdepth, bcftools-stats
     and alike. This MultiQC module supports some of the output but not all.
@@ -26,7 +26,7 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name='Dragen', anchor='Dragen', target='Dragen',
+            name='DRAGEN', anchor='DRAGEN', target='DRAGEN',
             href='https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html',
             info=(" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data"
                   " using field-programmable gate array technology (FPGA)."))

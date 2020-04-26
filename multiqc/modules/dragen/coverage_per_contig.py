@@ -38,7 +38,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
 
         if not perchrom_data_by_sample:
             return
-        log.info('Found Dragen per-contig coverage histogram for {} Dragen output prefixes'.format(
+        log.info('Found DRAGEN per-contig coverage histogram for {} DRAGEN output prefixes'.format(
             len(perchrom_data_by_sample)))
 
         main_contigs_by_sample = {sn: data[0] for sn, data in perchrom_data_by_sample.items()}

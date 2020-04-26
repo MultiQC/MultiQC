@@ -31,7 +31,7 @@ class DragenVCMetrics(BaseMultiqcModule):
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
             return
-        log.info('Found variant calling metrics for {} Dragen output prefixes'.format(len(data_by_sample)))
+        log.info('Found variant calling metrics for {} DRAGEN output prefixes'.format(len(data_by_sample)))
 
         all_metric_names = set()
         for sn, sdata in data_by_sample.items():

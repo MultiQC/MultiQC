@@ -46,7 +46,7 @@ MultiQC Modules:
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
-    Dragen: modules/dragen.md 
+    DRAGEN: modules/dragen.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
@@ -96,7 +96,7 @@ MultiQC Modules:
     VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md
-    Dragen: modules/dragen.md 
+    DRAGEN: modules/dragen.md
 Custom Content:
   Introduction: custom_content.md
 Coding with MultiQC:

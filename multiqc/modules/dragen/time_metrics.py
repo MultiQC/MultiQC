@@ -117,7 +117,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
                 step: {'name': step} for step in all_bargraph_steps
             }, {
                 'id': 'dragen_time_metrics',
-                'title': 'Dragen: Run time metrics',
+                'title': 'DRAGEN: Run time metrics',
                 'ylab': 'hours',
                 'cpswitch_counts_label': 'Hours'
             })

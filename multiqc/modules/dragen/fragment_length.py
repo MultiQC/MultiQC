@@ -33,7 +33,7 @@ class DragenFragmentLength(BaseMultiqcModule):
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
         if not data_by_rg_by_sample:
             return
-        log.info('Found fragment length histograms for {} Dragen output prefixes'.format(
+        log.info('Found fragment length histograms for {} DRAGEN output prefixes'.format(
             len(data_by_rg_by_sample)))
 
         # Merging all data
