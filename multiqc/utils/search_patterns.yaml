@@ -397,13 +397,14 @@ picard/markdups:
     contents: 'DuplicationMetrics'
     shared: true
 picard/oxogmetrics:
-    contents: 'CollectOxoGMetrics'
+    contents: 'OxoGMetrics'
     shared: true
 picard/pcr_metrics:
     contents: 'TargetedPcrMetrics'
     shared: true
 picard/rnaseqmetrics:
-    contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
+    contents_re: '[Rr]na[Ss]eq[Mm]etrics'
+    contents: '## METRICS CLASS'
     shared: true
 picard/rrbs_metrics:
     contents: 'RrbsSummaryMetrics'
