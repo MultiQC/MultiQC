@@ -499,7 +499,7 @@ that should be used to allow users to change the multiplier for read counts: `re
 Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
 `base_count_desc`.
 
-And for the read count of long reads: `long_read_count_multiplier`, `long_read_count_prexix` and
+And for the read count of long reads: `long_read_count_multiplier`, `long_read_count_prefix` and
 `long_read_count_desc`.
 
 A third parameter can be passed to this function, `namespace`. This is usually
