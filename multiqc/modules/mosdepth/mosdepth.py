@@ -93,6 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext=genome_fraction_helptext,
                 plot=linegraph.plot(dist_data, {
                     'id': 'mosdepth-coverage-dist-id',
+                    'title': 'Mosdepth: Coverage Distribution',
                     'xlab': 'Coverage (X)',
                     'ylab': '% bases in genome/regions covered by least X reads',
                     'ymax': 100,
@@ -109,6 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext=coverage_histogram_helptext,
                 plot=linegraph.plot(cov_data, {
                     'id': 'mosdepth-coverage-plot-id',
+                    'title': 'Mosdepth: Coverage Depth',
                     'xlab': 'Coverage (X)',
                     'ylab': '% bases in genome/regions covered at X reads',
                     'ymax': 100,
@@ -124,6 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description='Average coverage per contig or chromosome',
                 plot=linegraph.plot(perchrom_avg_data, {
                     'id': 'mosdepth-coverage-per-contig',
+                    'title': 'Mosdepth: Coverage per contig',
                     'xlab': 'region',
                     'ylab': 'average coverage',
                     'categories': True,
