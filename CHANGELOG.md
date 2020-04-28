@@ -46,12 +46,14 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
 * **DamageProfiler**
     * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
+* **fgbio**
+    * New: Plot error rate by read position from `ErrorRateByReadPosition`
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
-* **Picard HsMetrics**
-    * Updated large HsMetrics table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
-* **Picard WgsMetrics**
-    * Updated parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
+* **Picard**
+    * New: Submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics` ([#1116](https://github.com/ewels/MultiQC/issues/1114))
+    * Updated large `HsMetrics` table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
+    * Updated `WgsMetrics` parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
 * **QualiMap**
     * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
 * **RNASeQC2**
@@ -65,7 +67,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 #### New Modules:
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
-    * Process family size count hist data from GroupReadsByUmi
+    * Process family size count hist data from `GroupReadsByUmi`
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming

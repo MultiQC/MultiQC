@@ -259,7 +259,10 @@ featurecounts:
     shared: true
 fgbio/groupreadsbyumi:
     contents: 'fraction_gt_or_eq_family_size'
-    num_lines: 1
+    num_lines: 3
+fgbio/errorratebyreadposition:
+    contents: 'read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate'
+    num_lines: 3
 flash/log:
     contents: '[FLASH]'
     shared: true
@@ -401,6 +404,17 @@ picard/oxogmetrics:
     shared: true
 picard/pcr_metrics:
     contents: 'TargetedPcrMetrics'
+    shared: true
+picard/quality_by_cycle:
+    contents_re: '[Qq]uality[Bb]y[Cc]ycle'
+    contents: 'MEAN_QUALITY'
+    shared: true
+picard/quality_score_distribution:
+    contents_re: '[Qq]uality[Ss]core[Dd]istribution'
+    contents: 'COUNT_OF_Q'
+    shared: true
+picard/quality_yield_metrics:
+    contents: 'QualityYieldMetrics'
     shared: true
 picard/rnaseqmetrics:
     contents_re: '[Rr]na[Ss]eq[Mm]etrics'

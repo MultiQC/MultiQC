@@ -24,6 +24,9 @@ Supported commands:
 * `RrbsSummaryMetrics`
 * `ValidateSamFile`
 * `VariantCallingMetrics`
+* `QualityByCycleMetrics`
+* `QualityScoreDistributionMetrics`
+* `QualityYieldMetrics`
 
 #### InsertSizeMetrics
 By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
