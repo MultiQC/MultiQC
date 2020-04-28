@@ -167,7 +167,6 @@ class MultiqcModule(BaseMultiqcModule):
     def make_pycoqc_table(self):
         pycoqc_table_headers = OrderedDict()
         pycoqc_table_headers['passed_n50'] = {
-            'namespace': 'pycoQC',
             'title': 'N50 - Pass (bp)',
             'description': 'N50 - passing reads (base pairs)',
             'scale': 'BuGn',
@@ -175,7 +174,6 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         pycoqc_table_headers['all_n50'] = {
-            'namespace': 'pycoQC',
             'title': 'N50 - All (bp)',
             'description': 'N50 - all reads (base pairs)',
             'scale': 'BuGn',
@@ -183,21 +181,18 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         pycoqc_table_headers['passed_median_phred_score'] = {
-            'namespace': 'pycoQC',
             'title': 'Median read qual - Pass',
             'description': 'Median PHRED quality score - passing reads',
             'scale': 'PuRd',
             'shared_key': 'phred',
         }
         pycoqc_table_headers['all_median_phred_score'] = {
-            'namespace': 'pycoQC',
             'title': 'Median read qual - All',
             'description': 'Median PHRED quality score - all reads',
             'scale': 'PuRd',
             'shared_key': 'phred',
         }
         pycoqc_table_headers['passed_channels'] = {
-            'namespace': 'pycoQC',
             'title': 'Active Channels - Pass',
             'description': 'Number of active channels - passing reads',
             'scale': 'OrRd',
@@ -205,7 +200,6 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         pycoqc_table_headers['all_channels'] = {
-            'namespace': 'pycoQC',
             'title': 'Active Channels - All',
             'description': 'Number of active channels - all reads',
             'scale': 'OrRd',
@@ -213,17 +207,20 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         pycoqc_table_headers['all_run_duration'] = {
-            'id': 'pycoqc_stats_table',
-            'namespace': 'pycoQC',
             'title': 'Run duration (h)',
             'description': 'Run duration (hours)',
             'scale': 'PuBuGn'
         }
 
+        pycoqc_table_config = {
+            'id': 'pycoqc_stats_table',
+            'namespace': 'pycoQC'
+        }
+
         self.add_section (
             name = 'Statistics',
             anchor = 'pycoqc_stats',
-            plot = table.plot(self.table_data, pycoqc_table_headers)
+            plot = table.plot(self.table_data, pycoqc_table_headers, pycoqc_table_config)
         )
 
     def read_base_count_plot(self):
