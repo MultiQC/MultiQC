@@ -213,6 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         pycoqc_table_headers['all_run_duration'] = {
+            'id': 'pycoqc_stats_table',
             'namespace': 'pycoQC',
             'title': 'Run duration (h)',
             'description': 'Run duration (hours)',
