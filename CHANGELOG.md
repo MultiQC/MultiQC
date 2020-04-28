@@ -8,24 +8,23 @@
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
-    
+
 #### Module updates:
 
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **fgbio**
+    * New: Plot error rate by read position from `ErrorRateByReadPosition`
 * **Picard**
-	* New `QualityByCycleMetrics` Submodule!
-    * New `QualityScoreDistributionMetrics` Submodule!
-    * New `QualityYieldMetrics` Submodule!
+    * New: Submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics`
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
     * Process family size count hist data from `GroupReadsByUmi`
-	* Plot error rate by read position from `ErrorRateByReadPosition`
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
