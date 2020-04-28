@@ -30,10 +30,9 @@ def parse_reports(self):
         'id': 'picard_quality_by_cycle',
         'title': 'Picard: Mean Base Quality by Cycle',
         'ylab': 'Mean Base Quality',
-        'xlab': 'Cycle #',
+        'xlab': 'Cycle Number',
         'xDecimals': False,
-        'tt_label': '<b>cycle {point.x}</b>: {point.y:.2f} %',
-        'ymax': 100,
+        'tt_label': '<b>cycle {point.x}</b>: {point.y:.2f}',
         'ymin': 0,
     }
 
@@ -45,6 +44,14 @@ def parse_reports(self):
         name = 'Mean Base Quality by Cycle',
         anchor = 'picard-quality-by-cycle',
         description = 'Plot shows the mean base quality by cycle.',
+        helptext = '''
+        This metric gives an overall snapshot of sequencing machine performance.
+        For most types of sequencing data, the output is expected to show a slight
+        reduction in overall base quality scores towards the end of each read.
+
+        Spikes in quality within reads are not expected and may indicate that technical
+        problems occurred during sequencing.
+        ''',
         plot = linegraph.plot([lg], pconfig)
     )
 

@@ -15,19 +15,19 @@ from .util import read_sample_name
 log = logging.getLogger(__name__)
 
 DESC = OrderedDict([
-        ('TOTAL_READS', 'The total number of reads in the input file'),
-        ('PF_READS', 'The number of reads that are PF - pass filter'),
-        ('READ_LENGTH', 'The average read length of all the reads (will be fixed for a lane)'),
-        ('TOTAL_BASES', 'The total number of bases in all reads'),
-        ('PF_BASES', 'The total number of bases in all PF reads'),
-        ('Q20_BASES', 'The number of bases in all reads that achieve quality score 20 or higher'),
-        ('PF_Q20_BASES', 'The number of bases in PF reads that achieve quality score 20 or higher'),
-        ('Q30_BASES', 'The number of bases in all reads that achieve quality score 30 or higher'),
-        ('PF_Q30_BASES', 'The number of bases in PF reads that achieve quality score 30 or higher'),
-        ('Q20_EQUIVALENT_YIELD', 'The sum of quality scores of all bases divided by 20'),
-        ('PF_Q20_EQUIVALENT_YIELD', 'The sum of quality scores of all bases in PF reads divided by 20'),
-        ])
-        
+    ('TOTAL_READS', 'The total number of reads in the input file'),
+    ('PF_READS', 'The number of reads that are PF - pass filter'),
+    ('READ_LENGTH', 'The average read length of all the reads (will be fixed for a lane)'),
+    ('TOTAL_BASES', 'The total number of bases in all reads'),
+    ('PF_BASES', 'The total number of bases in all PF reads'),
+    ('Q20_BASES', 'The number of bases in all reads that achieve quality score 20 or higher'),
+    ('PF_Q20_BASES', 'The number of bases in PF reads that achieve quality score 20 or higher'),
+    ('Q30_BASES', 'The number of bases in all reads that achieve quality score 30 or higher'),
+    ('PF_Q30_BASES', 'The number of bases in PF reads that achieve quality score 30 or higher'),
+    ('Q20_EQUIVALENT_YIELD', 'The sum of quality scores of all bases divided by 20'),
+    ('PF_Q20_EQUIVALENT_YIELD', 'The sum of quality scores of all bases in PF reads divided by 20'),
+])
+
 
 
 def parse_reports(self):
@@ -63,7 +63,7 @@ def parse_reports(self):
             line = next(lines)
             if header != line.strip().split('\t'):
                 continue
-            
+
             # one row
             line = next(lines)
             fields = [int(field) for field in line.strip('\n').split('\t')]
@@ -73,23 +73,24 @@ def parse_reports(self):
 
         if sample_data:
             all_data[s_name] = OrderedDict(zip(header, fields))
-        
+
 
     # Filter to strip out ignored sample names
     all_data = self.ignore_samples(all_data)
-    
+
     if not all_data:
         return 0
 
     # Write parsed data to a file
     self.write_data_file(all_data, 'multiqc_picard_QualityYieldMetrics')
-    
+
     # Add to the general stats table
     self.general_stats_headers['TOTAL_READS'] = {
-        'title': 'Total Reads',
-        'min': 0,
-        'format': '{:,.0f}',
+        'title': '{} Reads'.format(config.read_count_prefix),
+        'description': 'The total number of reads in the input file ({})'.format(config.read_count_desc),
+        'modify': lambda x: x * config.read_count_multiplier,
         'scale': 'Blues',
+        'shared_key': 'read_count',
     }
     for s_name in all_data:
         if s_name not in self.general_stats_data:

@@ -405,9 +405,11 @@ picard/pcr_metrics:
     contents: 'TargetedPcrMetrics'
     shared: true
 picard/quality_by_cycle:
+    contents_re: '[Qq]uality[Bb]y[Cc]ycle'
     contents: 'MEAN_QUALITY'
     shared: true
 picard/quality_score_distribution:
+    contents_re: '[Qq]uality[Ss]core[Dd]istribution'
     contents: 'COUNT_OF_Q'
     shared: true
 picard/quality_yield_metrics:

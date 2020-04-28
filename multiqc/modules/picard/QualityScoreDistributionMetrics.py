@@ -30,8 +30,8 @@ def parse_reports(self):
     pconfig = {
         'id': 'picard_quality_score_distribution',
         'title': 'Picard: Base Quality Distribution',
-        'ylab': 'Count',
-        'xlab': 'Base Quality',
+        'ylab': 'Number of Bases',
+        'xlab': 'Base Quality Score',
         'xDecimals': False,
         'tt_label': '<b>base quality{point.x}</b>: {point.y}',
         'ymin': 0,
