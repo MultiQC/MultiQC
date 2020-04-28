@@ -45,7 +45,7 @@ class FlagstatReportMixin():
                 'shared_key': 'read_count',
                 'placement' : 100.0
             }
-            self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, 'Samtools Flagstat')
+            self.general_stats_addcols(self.samtools_flagstat, flagstats_headers)
 
             # Make dot plot of counts
             keys = OrderedDict()

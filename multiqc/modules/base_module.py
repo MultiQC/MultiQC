@@ -78,7 +78,7 @@ class BaseMultiqcModule(object):
         if isinstance(sp_key, dict):
             report.files[self.name] = list()
             for sf in report.searchfiles:
-                if report.search_file(sp_key, {'fn': sf[0], 'root': sf[1]}):
+                if report.search_file(sp_key, {'fn': sf[0], 'root': sf[1]}, module_key=None):
                     report.files[self.name].append({'fn': sf[0], 'root': sf[1]})
             sp_key = self.name
             logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)

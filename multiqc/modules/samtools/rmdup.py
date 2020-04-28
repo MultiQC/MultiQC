@@ -71,6 +71,6 @@ class RmdupReportMixin():
                 'suffix': '%',
                 'scale': 'OrRd'
             }
-            self.general_stats_addcols(self.samtools_rmdup, stats_headers, 'Samtools rmdup')
+            self.general_stats_addcols(self.samtools_rmdup, stats_headers)
 
         return len(self.samtools_rmdup)

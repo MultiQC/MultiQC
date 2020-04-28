@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sid, dd in self.mdata['align_mapq'].items():
             allreads = sum([int(_) for _ in dd.values()])
             pd[sid] = {'%aligned': float(allreads-int(dd['unmapped']))/allreads*100}
-        
+
         for sid, dd in self.mdata['markdup_report'].items():
             if sid not in pd:
                 pd[sid] = {}
@@ -193,8 +193,8 @@ class MultiqcModule(BaseMultiqcModule):
             description = "This plot shows the distribution of primary mapping quality.",
             plot = linegraph.plot(pd_mapping,
                 {'id':'biscuit_mapping',
-                 'title': 'BISCUIT: Mapping Information', 
-                 'ymin': 0, 'yLabelFormat': '{value}%', 
+                 'title': 'BISCUIT: Mapping Information',
+                 'ymin': 0, 'yLabelFormat': '{value}%',
                  'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of reads',
                  'name':'Mapping Quality', 'ylab': '% Primary Mapped Reads','xlab': 'Mapping Quality'}))
 
@@ -225,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor='biscuit-strands',
             description = "This plot shows the distribution of strand of mapping and strand of bisulfite conversion.",
             helptext="Most bisulfite libraries has read 1 goes to parent `++` or `--` and read 2 goes to daughter/synthesized `+-` or `-+`. PBAT or most single-cell/low input libraries typically don't observe this rule.",
-            plot = bargraph.plot([pd1, pd2], 
+            plot = bargraph.plot([pd1, pd2],
                 [OrderedDict([
                     ('++', {'name':'++: Waston-Aligned, Waston-Bisulfite Conversion', 'color': '#F53855'}),
                     ('+-', {'name':'+-: Waston-Aligned, Crick-Bisulfite Conversion', 'color': '#E37B40'}),
@@ -235,7 +235,7 @@ class MultiqcModule(BaseMultiqcModule):
                     ('++', {'name':'++: Waston-Aligned, Waston-Bisulfite Conversion', 'color': '#F53855'}),
                     ('+-', {'name':'+-: Waston-Aligned, Crick-Bisulfite Conversion', 'color': '#E37B40'}),
                     ('-+', {'name':'-+: Crick-Aligned, Waston-Bisulfite Conversion', 'color': '#46B29D'}),
-                    ('--', {'name':'--: Crick-Aligned, Crick-Bisulfite Conversion', 'color': '#324D5C'})])], 
+                    ('--', {'name':'--: Crick-Aligned, Crick-Bisulfite Conversion', 'color': '#324D5C'})])],
                 {'id':'biscuit_strands',
                  'title':'BISCUIT: Mapping Strand Distribution',
                  'ylab':'Number of Reads',
@@ -259,9 +259,9 @@ class MultiqcModule(BaseMultiqcModule):
                 data[fields[0]][int(fields[1])] = float(fields[2]) * 100
             elif fields[0] == 'S':
                 data[fields[0]][fields[1]] = float(fields[2])
-                
+
         return data
-    
+
     def chart_align_isize(self):
 
         pd_isize = {}
@@ -272,11 +272,11 @@ class MultiqcModule(BaseMultiqcModule):
             name = 'Insert Size Distribution',
             anchor = 'biscuit-isize',
             description = "This plot shows the distribution of insert size.",
-            plot = linegraph.plot(pd_isize, 
+            plot = linegraph.plot(pd_isize,
                 {'id':'biscuit_isize', 'title': 'BISCUIT: Insert Size Distribution',
-                 'ymin': 0, 'yLabelFormat': '{value}%', 
+                 'ymin': 0, 'yLabelFormat': '{value}%',
                  'smooth_points': 500,       # limit number of points / smooth data
-                 'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of reads', 
+                 'tt_label': '<strong>Q{point.x}:</strong> {point.y:.2f}% of reads',
                  'ylab': '% Mapped Reads', 'xlab': 'Insert Size'}))
 
     #######################################
@@ -350,15 +350,16 @@ class MultiqcModule(BaseMultiqcModule):
                 'title': 'BISCUIT: Cumulative Base Coverage',
                 'xLabelFormat':'{value}X',
                 'xlab': 'Sequencing Depth',
+                'ylab':'Million Bases',
                 'data_labels': [
-                    {'name': 'All', 'ylab':'Million Bases'}, 
-                    {'name': 'Q40', 'ylab':'Million Bases (Q40)'}, 
-                    {'name': 'Q40 low GC', 'ylab':'Million Low-GC Bases (Q40)'}, 
-                    {'name': 'Q40 high GC', 'ylab':'Million High-GC Bases (Q40)'}, 
-                    {'name': 'CpG (all)', 'ylab':'Million CpGs'}, 
-                    {'name': 'CpG Q40', 'ylab':'Million CpGs (Q40)'}, 
-                    {'name': 'CpG Q40 low GC', 'ylab':'Million Low-GC CpGs (Q40)'}, 
-                    {'name': 'CpG Q40 high GC', 'ylab':'Million High-GC CpGs (Q40)'}, 
+                    {'name': 'All', 'ylab':'Million Bases'},
+                    {'name': 'Q40', 'ylab':'Million Bases (Q40)'},
+                    {'name': 'Q40 low GC', 'ylab':'Million Low-GC Bases (Q40)'},
+                    {'name': 'Q40 high GC', 'ylab':'Million High-GC Bases (Q40)'},
+                    {'name': 'CpG (all)', 'ylab':'Million CpGs'},
+                    {'name': 'CpG Q40', 'ylab':'Million CpGs (Q40)'},
+                    {'name': 'CpG Q40 low GC', 'ylab':'Million Low-GC CpGs (Q40)'},
+                    {'name': 'CpG Q40 high GC', 'ylab':'Million High-GC CpGs (Q40)'},
                 ]})
         )
 
@@ -432,12 +433,12 @@ class MultiqcModule(BaseMultiqcModule):
                 data[k] = {'mu': -1, 'sigma': -1, 'cv': -1}
             else:
                 data[k] = {
-                    'mu': float(m.group(1)), 
-                    'sigma': float(m.group(2)), 
+                    'mu': float(m.group(1)),
+                    'sigma': float(m.group(2)),
                     'cv': float(m.group(3))}
         return data
 
-    def chart_qc_cv(self): 
+    def chart_qc_cv(self):
 
         # sequencing depth and uniformity
         pd = OrderedDict()
@@ -486,8 +487,8 @@ class MultiqcModule(BaseMultiqcModule):
                 data[k] = {'mu': -1, 'sigma': -1, 'cv': -1}
             else:
                 data[k] = {
-                    'mu': float(m.group(1)), 
-                    'sigma': float(m.group(2)), 
+                    'mu': float(m.group(1)),
+                    'sigma': float(m.group(2)),
                     'cv': float(m.group(3))}
         return data
 
@@ -523,11 +524,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         return data
 
-    def chart_qc_cpg_dist(self): 
+    def chart_qc_cpg_dist(self):
 
         # cpg distribution
         if len(self.mdata['qc_cpg_dist']) == 0:
-            return 
+            return
 
         hdr = OrderedDict()
         pd = OrderedDict()
@@ -562,13 +563,13 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'biscuit-coverage-cgi',
             description = "Each row shows the percentage of CpG islands (out of all CpG islands in the genome) that are covered in different numbers of CpGs. Coverage is based on reads with mapQ >= 40.",
             plot = table.plot(pd, OrderedDict([
-                ('one', {'title':'>=1', 
+                ('one', {'title':'>=1',
                  'suffix':'%', 'description':'CpG islands with at least one CpG covered'}),
-                ('three', {'title':'>=2', 
+                ('three', {'title':'>=2',
                  'suffix':'%', 'description':'CpG islands with at least three CpGs covered'}),
-                ('five', {'title':'>=5', 
+                ('five', {'title':'>=5',
                  'suffix':'%', 'description':'CpG islands with at least five CpGs covered'}),
-                ('ten', {'title':'>=10', 
+                ('ten', {'title':'>=10',
                  'suffix':'%', 'description':'CpG islands with at least ten CpGs covered'}),
             ]), {'id':'cgi-cov-table'})
         )
@@ -631,29 +632,29 @@ class MultiqcModule(BaseMultiqcModule):
                 data['dupRateSE'] = float(data['SEdup']) / data['SE'] * 100
             else:
                 data['dupRateSE'] = None
-                
+
         m = re.search(r'identified (\d+) dangling paired-end reads', f, re.MULTILINE)
         if m is None:
             data['PEdangling'] = None
         else:
             data['PEdangling'] = int(m.group(1))
-        
+
         return data
 
     def chart_markdup_report(self):
-        pass # duplication uniformity is currently skipped 
+        pass # duplication uniformity is currently skipped
 
     ###################
     #### retention ####
     ###################
 
     def parse_logs_retention_dist(self, f, fn): # _CpGRetentionDist.txt
-        
+
         sumcounts = 0
         for l in f.splitlines()[2:]:
             fields = l.split('\t')
             sumcounts += int(fields[1])
-        
+
         data = {}
         for l in f.splitlines()[2:]:
             fields = l.split('\t')
@@ -679,8 +680,9 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'biscuit-retention-read',
             description = "This plot shows the distribution of the number of retained cytosine in each read, up to 10.",
             plot = linegraph.plot(pd, {
-                'id': 'biscuit_retention_read_cpa', 
+                'id': 'biscuit_retention_read_cpa',
                 'xlab': 'Number of Retention within Read',
+                'ylab': 'Fraction of cytosine in CpG context',
                 'title': 'BISCUIT: Retention Distribution',
                 'data_labels': [
                     {'name': 'CpG retention', 'ylab': 'Fraction of cytosine in CpG context', 'xlab': 'Retention Level (%)'},
@@ -749,6 +751,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot = linegraph.plot(mdata, {
                 'id': 'biscuit_retention_cytosine',
                 'xlab': 'Position in Read', 'ymin':0, 'ymax':100, 'yMinRange':0, 'yFloor':0,
+                'ylab': 'CpH Retention Rate (%)',
                 'title': 'BISCUIT: Retention vs. Base Position in Read',
                 'data_labels': [
                     {'name': 'CpH Read 1', 'ylab': 'CpH Retention Rate (%)', 'ymin':0, 'ymax':100},
@@ -821,6 +824,3 @@ class MultiqcModule(BaseMultiqcModule):
 
     def chart_retention_rate_bybase(self):
         pass # handled in chart_retention_rate_byread
-
-
-
