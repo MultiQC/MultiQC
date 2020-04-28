@@ -199,8 +199,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
         config_distribs = {
             'id': 'distribs_plot',
+            'title': 'Stacks: Population plots',
             'namespace': 'stacks',
             'tt_label': '{point.y} loci, {point.x} samples/SNPs',
+            'ylab': '# loci',
             'data_labels': [
                 {'name': 'Samples per loci', 'ylab': '# loci', 'xlab': '# samples'},
                 {'name': 'SNPs per loci', 'ylab': '# loci', 'xlab': '# SNPs'}

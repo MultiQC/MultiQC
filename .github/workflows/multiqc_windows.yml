@@ -7,12 +7,12 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [2.7, 3.6, 3.7]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
 
     # Check out MultiQC code
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     # Set up Windows with C++ for numpy
     - name: Visual Studio Command Prompt tool
@@ -24,9 +24,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    # Update core packages
+    - name: Install dependencies for CI tests
+      run: |
+        python -m pip install --upgrade pip setuptools
+
     # Install MultiQC
     - name: Install MultiQC
-      run: python setup.py install
+      run: pip install .
 
     # Fetch the MultiQC test data
     # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
