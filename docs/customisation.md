@@ -496,6 +496,12 @@ base_count_prefix: 'Mb'
 base_count_desc: 'millions'
 ```
 
+And for long reads:
+```yaml
+long_read_count_multiplier: 0.001
+long_read_count_prefix: 'K'
+long_read_count_desc: 'thousands'
+```
 
 ## Number formatting
 By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand

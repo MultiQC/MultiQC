@@ -31,20 +31,45 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
-* Added option to add show/hide buttons which filter your samples. 
+* Linting with `--lint` now checks line graphs as well as bar graphs
+* New `gathered` template with no tool name sections ([#1119](https://github.com/ewels/MultiQC/issues/1119))
+* Added option to add _show_/_hide_ buttons at the top of the report, which filter your samples based on a supplied list of sample names.
+
+#### New Modules:
+
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+    * combining multiple VCF files into one coherent report and format for downstream analysis.
 
 #### Module updates:
 
-* **MTNucRatioCalculator**
-    * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **BUSCO**
+    * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
+* **DamageProfiler**
+    * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
+* **fgbio**
+    * New: Plot error rate by read position from `ErrorRateByReadPosition`
+* **MTNucRatioCalculator**
+    * Fixed misleading value suffix in general stats table
+* **Picard**
+    * New: Submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics` ([#1116](https://github.com/ewels/MultiQC/issues/1114))
+    * Updated large `HsMetrics` table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
+    * Updated `WgsMetrics` parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
+* **QualiMap**
+    * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
+* **RNASeQC2**
+    * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
+* **Samtools**
+    * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076)).
+* **sortmerna**
+    * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
-    * Process family size count hist data from GroupReadsByUmi
+    * Process family size count hist data from `GroupReadsByUmi`
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming
@@ -56,6 +81,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 * [**SexDetErrmine**](https://github.com/TCLamnidis/Sex.DetERRmine)
     * Relative coverage and error rate of X and Y chromosomes
+* [**SNPsplit**](https://github.com/FelixKrueger/SNPsplit)
+    * Allele-specific alignment sorting
 
 #### Module updates:
 * **bcl2fastq**
