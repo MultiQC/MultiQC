@@ -32,6 +32,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
 * Linting with `--lint` now checks line graphs as well as bar graphs
+* New `gathered` template with no tool name sections ([#1119](https://github.com/ewels/MultiQC/issues/1119))
 
 #### New Modules:
 
