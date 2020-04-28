@@ -85,16 +85,15 @@ def parse_reports(self):
     self.write_data_file(all_data, 'multiqc_picard_QualityYieldMetrics')
 
     # Add to the general stats table
-    self.general_stats_headers['TOTAL_READS'] = {
-        'title': '{} Reads'.format(config.read_count_prefix),
-        'description': 'The total number of reads in the input file ({})'.format(config.read_count_desc),
-        'modify': lambda x: x * config.read_count_multiplier,
-        'scale': 'Blues',
-        'shared_key': 'read_count',
+    headers = {
+        'TOTAL_READS': {
+            'title': '{} Reads'.format(config.read_count_prefix),
+            'description': 'The total number of reads in the input file ({})'.format(config.read_count_desc),
+            'modify': lambda x: x * config.read_count_multiplier,
+            'scale': 'Blues',
+            'shared_key': 'read_count',
+        }
     }
-    for s_name in all_data:
-        if s_name not in self.general_stats_data:
-            self.general_stats_data[s_name] = dict()
-        self.general_stats_data[s_name].update( all_data[s_name] )
+    self.general_stats_addcols(all_data, headers)
 
     return len(all_data)

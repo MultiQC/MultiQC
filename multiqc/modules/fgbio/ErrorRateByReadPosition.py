@@ -8,7 +8,7 @@ from multiqc.plots import linegraph
 
 def parse_reports(self):
     """Parser metric files for fgbio ErrorRateByReadPosition.
-    
+
     Stores the per-read-per-position metrics into a data file and adds a section
     with a per-sample plot.
     """
@@ -22,7 +22,7 @@ def parse_reports(self):
         header = fh.readline().rstrip('\r\n').split('\t')
         if not header or header[0] != 'read_number':
             continue
-        
+
         # slurp in the data for this sample
         s_name = f['s_name']
         s_data = dict()
@@ -71,13 +71,13 @@ def parse_reports(self):
         'ymax': y_max,
         'ymin': 0,
         'data_labels': [
-            {'name': 'Error Rate', 'ylab': 'Error_Rate'},
-            {'name': 'A to C error rate', 'ylab': 'A to C error rate'},
-            {'name': 'A to G error rate', 'ylab': 'A to G error rate'},
-            {'name': 'A to T error rate', 'ylab': 'A to T error rate'},
-            {'name': 'C to A error rate', 'ylab': 'C to A error rate'},
-            {'name': 'C to G error rate', 'ylab': 'C to G error rate'},
-            {'name': 'C to T error rate', 'ylab': 'C to T error rate'},
+            {'name': 'Error Rate', 'ylab': 'Error Rate'},
+            {'name': 'A > C', 'ylab': 'A to C error rate'},
+            {'name': 'A > G', 'ylab': 'A to G error rate'},
+            {'name': 'A > T', 'ylab': 'A to T error rate'},
+            {'name': 'C > A', 'ylab': 'C to A error rate'},
+            {'name': 'C > G', 'ylab': 'C to G error rate'},
+            {'name': 'C > T', 'ylab': 'C to T error rate'},
         ]
     }
 
@@ -94,28 +94,40 @@ def parse_reports(self):
     self.add_section (
         name = 'Error Rate by Read Position',
         anchor = 'fgbio-error-rate-by-read-position',
-        description = 'Plot shows the error rate by read position.',
+        description = 'Error rate by read position. Plot tabs show the error rates for specific substitution types.',
+        helptext = '''
+        The error rate by read position. Substitution types are collapsed based on the
+        reference or expected base, with only six substitution types being reported:
+        `A>C`, `A>G`, `A>T`, `C>A`, `C>G` and `C>T`.
+        For example, `T>G` is grouped in with `A>C`.
+
+        The following are reads / bases are excluded from the analysis:
+
+        * Unmapped reads
+        * Reads marked as failing vendor quality
+        * Reads marked as duplicates (unless `--include-duplicates` was specified)
+        * Secondary and supplemental records
+        * Soft-clipped bases in records
+        * Reads with MAPQ < `--min-mapping-quality` (default: `20`)
+        * Bases with base quality < `--min-base-quality` (default: `0`)
+        * Bases where either the read base or the reference base is non-ACGT
+        ''',
         plot = linegraph.plot(linegraph_data, pconfig)
     )
 
     # Add to general stats table
-    y_max = 0.02
-    for s_name in error_rates:
-        if error_rates[s_name]['error_rate'] > y_max:
-            y_max = error_rates[s_name]['error_rate']
-    self.general_stats_headers['error_rate'] = {
-        'title': 'Percent Error',
-        'description': 'Percent error across all read positions',
-        'min': 0,
-        'max': y_max * 100.0,
-        'scale': 'GnYlRd',
-        'suffix': '%',
-        'format': '{:,.2f}',
-        'modify': lambda x: 100.0 * x
+    headers = {
+        'error_rate': {
+            'title': '% Error',
+            'description': 'Percent error across all read positions',
+            'min': 0,
+            'max': 100.0,
+            'scale': 'GnYlRd',
+            'suffix': '%',
+            'format': '{:,.2f}',
+            'modify': lambda x: 100.0 * x
+        }
     }
-    for s_name in error_rates:
-        if s_name not in self.general_stats_data:
-            self.general_stats_data[s_name] = dict()
-        self.general_stats_data[s_name].update(error_rates[s_name])
+    self.general_stats_addcols(error_rates, headers)
 
     return len(all_data)

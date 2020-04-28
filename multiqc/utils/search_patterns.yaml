@@ -259,9 +259,10 @@ featurecounts:
     shared: true
 fgbio/groupreadsbyumi:
     contents: 'fraction_gt_or_eq_family_size'
-    num_lines: 1
+    num_lines: 3
 fgbio/errorratebyreadposition:
     contents: 'read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate'
+    num_lines: 3
 flash/log:
     contents: '[FLASH]'
     shared: true
