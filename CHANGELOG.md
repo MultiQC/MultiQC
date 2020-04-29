@@ -72,6 +72,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Removed use of `shutil.copy` to avoid problems with working on multiple filesystems ([#1130](https://github.com/ewels/MultiQC/issues/1130))
 * Made folder naming behaviour of `multiqc_plots` consistent with `multiqc_data`
     * Incremental numeric suffixes now added if folder already exists
+    * Plots folder properly renamed if using `-n`/`--filename`
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
