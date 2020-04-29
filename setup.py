@@ -37,18 +37,15 @@ print("""-----------------------------------
 networkx_version = ''
 numpy_version = ''
 matplotlib_version = '>=2.1.1'
+jinja2_version = '>=2.9'
+markdown_version = ''
 if sys.version_info[0:2] < (3, 6):
-    # MatPlotLib v3 dropped Python 2 support. Version 3.1 onwards only supports Python 3.5+
+    # Lots of tools have dropped Python 3 support, so limit their versions
     matplotlib_version += ',<3.0.0'
-    # Numpy v1.17 dropped Python 2 and Python 3.4 support
     numpy_version = '<1.17'
     networkx_version = '<2.3'
-else:
-    # Unlike pip, setuptools install_requires will install pre-releases!
-    # Matplotlib often ships these and they very often break
-    # Pinning a maximum version prevents this, but can make dependency management more difficult, sorry!
-    # See: https://github.com/pypa/setuptools/issues/855
-    matplotlib_version += ',<3.1.2'
+    jinja2_version += ',<3.0'
+    markdown_version = '<3.2'
 
 install_requires = [
         'matplotlib' + matplotlib_version,
@@ -57,9 +54,9 @@ install_requires = [
         'click',
         'coloredlogs',
         'future>0.14.0',
-        'jinja2>=2.9',
+        'jinja2' + jinja2_version,
         'lzstring',
-        'markdown',
+        'markdown' + markdown_version,
         'pyyaml>=4',
         'requests',
         'simplejson',
@@ -136,12 +133,14 @@ setup(
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
             'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
+            'multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule',
             'pairtools = multiqc.modules.pairtools:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
+            'pycoqc = multiqc.modules.pycoqc:MultiqcModule',
             'qorts = multiqc.modules.qorts:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
@@ -157,6 +156,7 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
+            'snpsplit = multiqc.modules.snpsplit:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
@@ -172,6 +172,7 @@ setup(
             'default_dev = multiqc.templates.default_dev',
             'sections = multiqc.templates.sections',
             'simple = multiqc.templates.simple',
+            'gathered = multiqc.templates.gathered',
             'geo = multiqc.templates.geo',
         ],
         # 'multiqc.cli_options.v1': [

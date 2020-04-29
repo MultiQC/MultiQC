@@ -1171,6 +1171,8 @@ function plot_heatmap(target, ds){
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
   var xcats = JSON.parse(JSON.stringify(mqc_plots[target]['xcats']));
   var ycats = JSON.parse(JSON.stringify(mqc_plots[target]['ycats']));
+  // "xcats" and "ycats" are labels of columns and rows respectively
+  // data[n] has form of [x,y,value], x/y are indices of columns/rows
 
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
@@ -1228,6 +1230,7 @@ function plot_heatmap(target, ds){
           if(xcat_hl[i] == hl){
             new_xcats.push(xcats[i])
             for (j=0; j < data.length; j++) {
+              // data[j] element is [x,y,val], get "x"
               if(data[j][0] == i){ newdata[j][0] = xidx; }
             }
             xidx += 1;
@@ -1237,6 +1240,7 @@ function plot_heatmap(target, ds){
           if(ycat_hl[i] == hl){
             new_ycats.push(ycats[i])
             for (j=0; j < data.length; j++) {
+              // data[j] element is [x,y,val], get "y"
               if(data[j][1] == i){ newdata[j][1] = yidx; }
             }
             yidx += 1;
@@ -1257,6 +1261,7 @@ function plot_heatmap(target, ds){
     var remove = Array();
     var i = xcats.length;
     var xhidden = 0;
+    // iterate over x-categories (columns)
     while (i--) {
       var match = false;
       for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
@@ -1270,18 +1275,23 @@ function plot_heatmap(target, ds){
       if(window.mqc_hide_mode == 'show'){
         match = !match;
       }
+      // modify data if "i" is match for "hiding":
+      // mark elements from "i"-th column (x) for removal,
+      // shift "x" of elements from "i+" columns to the left
       if(match){
         xcats.splice(i, 1);
         for (n=0; n < data.length; n++) {
-          var x = data[n][1];
+          // data[n] element is [x,y,val], get "x"
+          let x = data[n][0];
           if (x == i){ remove.push(n); }
-          else if(x > i){ data[n][1] -= 1; }
+          else if(x > i){ data[n][0]  = x - 1; }
         }
         xhidden += 1;
       }
     }
     var i = ycats.length;
     var yhidden = 0;
+    // iterate over y-categories (rows)
     while (i--) {
       var match = false;
       for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
@@ -1295,13 +1305,17 @@ function plot_heatmap(target, ds){
       if(window.mqc_hide_mode == 'show'){
         match = !match;
       }
+      // modify data if "i" is match for "hiding"
+      // mark elements from "i"-th row (y) for removal,
+      // shift "y" of elements from "i+" rows up
       if(match){
         ycats.splice(i, 1);
         for (n=0; n < data.length; n++) {
-          var y = data[n][0];
+          // data[n] element is [x,y,val], get "y"
+          let y = data[n][1];
           if (y == i){
             if(remove.indexOf(n) < 0){ remove.push(n); }
-          } else if(y > i){ data[n][0] -= 1; }
+          } else if(y > i){ data[n][1] = y - 1; }
         }
         yhidden += 1;
       }
@@ -1336,7 +1350,8 @@ function plot_heatmap(target, ds){
         if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
             highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
-            if (data[n][1] == i){ highlight_cells[idx].push(n); }
+            // data[n] element is [x,y,val], get "x"
+            if (data[n][0] == i){ highlight_cells[idx].push(n); }
           }
         }
       });
@@ -1346,7 +1361,8 @@ function plot_heatmap(target, ds){
         if(f_text == ''){ return true; }
         if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
-            if (data[n][0] == i){
+            // data[n] element is [x,y,val], get "y"
+            if (data[n][1] == i){
               highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
               if(highlight_cells[idx].indexOf(n) < 0){ highlight_cells[idx].push(n); }
             }
@@ -1362,8 +1378,9 @@ function plot_heatmap(target, ds){
       while(h--){
         var i = hl[h];
         data[i] = {
-          x: data[i][1] === undefined ? data[i]['x'] : data[i][1],
-          y: data[i][0] === undefined ? data[i]['y'] : data[i][0],
+          // data[i] element is [x,y,val]
+          x: data[i][0] === undefined ? data[i]['x'] : data[i][0],
+          y: data[i][1] === undefined ? data[i]['y'] : data[i][1],
           value:data[i][2] === undefined ? data[i]['value'] : data[i][2],
           borderWidth:2,
           borderColor: window.mqc_highlight_f_cols[idx]
