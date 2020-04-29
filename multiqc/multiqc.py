@@ -113,9 +113,9 @@ logger = config.logger
                     type = click.Path(exists=True, readable=True),
                     help = "File containing alternative sample names"
 )
-@click.option('--show-patterns', 'show_patterns',
+@click.option('--sample-filters', 'sample_filters',
                     type = click.Path(exists=True, readable=True),
-                    help = "File containing show/hide patterns"
+                    help = "File containing show/hide patterns for the report"
 )
 @click.option('-l', '--file-list',
                     is_flag = True,
@@ -197,7 +197,7 @@ logger = config.logger
 @click.version_option(config.version, prog_name='multiqc')
 
 def run_cli(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
-ignore, ignore_samples, sample_names, show_patterns, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
+ignore, ignore_samples, sample_names, sample_filters, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
 export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, no_ansi, **kwargs):
     """
     Main MultiQC run command for use with the click command line, complete with all click function decorators.
@@ -220,7 +220,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
         ignore=ignore,
         ignore_samples=ignore_samples,
         sample_names=sample_names,
-        show_patterns=show_patterns,
+        sample_filters=sample_filters,
         file_list=file_list,
         filename=filename,
         make_data_dir=make_data_dir,
@@ -262,7 +262,7 @@ def run(
         ignore = (),
         ignore_samples = (),
         sample_names = None,
-        show_patterns = None,
+        sample_filters = None,
         file_list = False,
         filename = None,
         make_data_dir = False,
@@ -376,8 +376,7 @@ def run(
         config.megaqc_upload = True
     if sample_names:
         config.load_sample_names(sample_names)
-    if show_patterns:
-        config.load_show_hide(show_patterns)
+    config.load_show_hide(sample_filters)
     if module_tag is not None:
         config.module_tag = module_tag
     if len(module) > 0:

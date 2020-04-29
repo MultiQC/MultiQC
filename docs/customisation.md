@@ -99,23 +99,52 @@ sample_names_rename:
 ```
 
 ## Show / Hide samples buttons
-It is possible to filter which samples are visible through the [report toolbox](#hiding-samples), 
-but it can be desirable to embed such patterns into the report so that they can be shared 
-with others. One example can be to add filters for batches, to easily scan if certain 
-quality metrics overlap between these batches. 
+
+It is possible to filter which samples are visible through the [report toolbox](#hiding-samples),
+but it can be desirable to embed such patterns into the report so that they can be shared
+with others. One example can be to add filters for batches, to easily scan if certain
+quality metrics overlap between these batches.
 
 It's possible to supply a file with one or more patterns to filter samples on using the
-`--show-patterns` command line option. This file should be a tab-delimited file with any number 
-of rows containing the button name, the pattern, and whether the pattern should be hidden 
-or shown. For example your want to be able to filter on read pair groups, you can add a file 
-like this:
+`--show-patterns` command line option. This file should be a tab-delimited file with each
+row containing the button name, whether the pattern should be hidden (`hide`) or shown (`show`)
+and the patterns to be applied (all subsequent columns).
 
-```
-read_group_1  _R1 show
-read_group_2  _R2 show
+For example, to filter on read pair groups, you could use the following file:
+
+```tsv
+Read Group 1	show	_R1
+Read Group 2	show	_R2
 ```
 
-Note that MultiQC automatically adds an `all` button which reverts back to showing all samples. 
+To filter on controls and sample groups you could use:
+
+```tsv
+Controls	show	input_
+Conditions	show	group_1_	group_2_	group_3_
+```
+
+MultiQC automatically adds an `Show all` button at the start, which reverts back to showing all samples.
+
+If you prefer, you can also add these buttons using a MultiQC config file:
+
+```yaml
+show_hide_buttons:
+  - Read Group 1
+  - Read Group 2
+  - Controls
+  - Conditions
+show_hide_mode:
+  - show
+  - show
+  - show
+  - show
+show_hide_patterns:
+  - _R1
+  - _R2
+  - input_
+  - [ "group_1_", "group_2_", "group_3_" ]
+```
 
 ## Module and section comments
 Sometimes you may want to add a custom comment above specific sections in the report. You can

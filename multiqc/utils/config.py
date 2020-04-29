@@ -207,25 +207,27 @@ def load_sample_names(snames_file):
     logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
 
 def load_show_hide(sh_file):
-    global show_hide_buttons, show_hide_patterns, show_or_hide
-    try:
-        with open(sh_file) as f:
-            logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
-            show_hide_buttons.append("all")
-            show_hide_patterns.append("")
-            show_or_hide.append("show")
-            for l in f:
-                s = l.strip().split("\t")
-                if len(s) == 3:
-                    show_hide_buttons.append(s[0])
-                    show_hide_patterns.append(s[1])
-                    if not s[2] in ["show", "hide"]:
-                        raise IOError
-                    show_or_hide.append(s[2])
+    global show_hide_buttons, show_hide_patterns, show_hide_mode
+    if sh_file:
+        try:
+            with open(sh_file, 'r') as f:
+                logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
+                for l in f:
+                    s = l.strip().split("\t")
+                    if len(s) >= 3 and s[1] in ["show", "hide"]:
+                        show_hide_buttons.append(s[0])
+                        show_hide_mode.append(s[1])
+                        show_hide_patterns.append(s[2:])
+        except (AttributeError) as e:
+            logger.error("Error loading show patterns file: {}".format(e))
 
-    except (IOError, AttributeError) as e:
-        logger.error("Error loading show patterns file: {}".format(e))
-    logger.debug("Found {} show/hide patterns".format(len(show_hide_buttons) - 1))
+    # Prepend a "Show all" button if we have anything
+    # Do this outside of the file load block in case it was set in the config
+    if len(show_hide_buttons) > 0:
+        logger.debug("Found {} show/hide patterns".format(len(show_hide_buttons)))
+        show_hide_buttons.insert(0, 'Show all')
+        show_hide_mode.insert(0, 'hide')
+        show_hide_patterns.insert(0, [])
 
 def update(u):
     return update_dict(globals(), u)

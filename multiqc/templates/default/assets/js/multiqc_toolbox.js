@@ -51,16 +51,21 @@ $(function () {
 
     // Get requested pattern and whether to show or hide the pattern
     var j = $(this).data('index');
-    if(j == 0){
-      apply_mqc_hidesamples();
-    } else {
-      var pattern = mqc_config['show_hide_patterns'][j];
-      var show_or_hide = mqc_config['show_or_hide'][j];
-
-      // Apply the changes
-      $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="' + pattern + '" tabindex=" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
-      apply_mqc_hidesamples(show_or_hide);
+    var pattern = mqc_config['show_hide_patterns'][j];
+    var show_hide_mode = mqc_config['show_hide_mode'][j];
+    if(!Array.isArray(pattern)){
+      pattern = [pattern];
     }
+    if(show_hide_mode === undefined){
+      show_hide_mode = 'show';
+    }
+
+    // Apply the changes
+    $('.mqc_hidesamples_showhide[value='+show_hide_mode+']').prop('checked', true);
+    $(pattern).each(function(idx, val){
+      $('#mqc_hidesamples_filters').append('<li><input class="f_text" value="'+val+'" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>');
+    });
+    apply_mqc_hidesamples(show_hide_mode);
   });
 
   // Hide toolbox when clicking outside
