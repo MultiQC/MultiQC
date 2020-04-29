@@ -250,10 +250,11 @@ class MultiqcModule(BaseMultiqcModule):
                 del data[s_name]
 
         pconfig = {
-            'id': 'fastq_screen',
-            'title': 'FastQ Screen',
+            'id': 'fastq_screen_plot',
+            'title': 'FastQ Screen: Mapped Reads',
             'cpswitch_c_active': False,
-            'hide_zero_cats': False
+            'hide_zero_cats': False,
+            'ylab': 'Percentages'
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
