@@ -55,6 +55,7 @@ def plot_aqhist(samples, file_type, **plot_args):
             'title': 'BBTools: ' + plot_args['plot_title'],
             'xmax': xmax,
             'xlab': 'Quality score',
+            'ylab': 'Read count',
             'data_labels': [
                 {'name': 'Count data', 'ylab': 'Read count'},
                 {'name': 'Proportion data', 'ylab': 'Proportion of reads'},
