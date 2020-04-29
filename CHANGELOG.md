@@ -33,6 +33,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * CI tests should now run automatically for anyone who forks the MultiQC repository
 * Linting with `--lint` now checks line graphs as well as bar graphs
 * New `gathered` template with no tool name sections ([#1119](https://github.com/ewels/MultiQC/issues/1119))
+* Added `--sample-filters` option to add _show_/_hide_ buttons at the top of the report ([#1125](https://github.com/ewels/MultiQC/issues/1125))
+    * Buttons control the report toolbox Show/Hide tool, filtering your samples
+    * Allows reports to be pre-configured based on a supplied list of sample names at report-generation time.
 
 #### New Modules:
 

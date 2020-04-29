@@ -96,6 +96,9 @@ sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
 sample_names_rename: []
+show_hide_buttons: []
+show_hide_patterns: []
+show_hide_mode: []
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false
