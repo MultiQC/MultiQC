@@ -73,9 +73,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Made folder naming behaviour of `multiqc_plots` consistent with `multiqc_data`
     * Incremental numeric suffixes now added if folder already exists
     * Plots folder properly renamed if using `-n`/`--filename`
-
-#### Bug Fixes:
-* `heatmap` plotting function is now compatible with MultiQC toolbox `hide` and `highlight`
+* Heatmap plotting function is now compatible with MultiQC toolbox `hide` and `highlight` ([#1136](https://github.com/ewels/MultiQC/issues/1136))
 
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
