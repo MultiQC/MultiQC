@@ -106,7 +106,7 @@ with others. One example can be to add filters for batches, to easily scan if ce
 quality metrics overlap between these batches.
 
 It's possible to supply a file with one or more patterns to filter samples on using the
-`--show-patterns` command line option. This file should be a tab-delimited file with each
+`--sample-filters` command line option. This file should be a tab-delimited file with each
 row containing the button name, whether the pattern should be hidden (`hide`) or shown (`show`)
 and the patterns to be applied (all subsequent columns).
 
