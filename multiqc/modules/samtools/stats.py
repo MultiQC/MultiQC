@@ -111,7 +111,7 @@ class StatsReportMixin():
                 'modify': lambda x: x * config.read_count_multiplier,
                 'shared_key': 'read_count'
             }
-            self.general_stats_addcols(self.samtools_stats, stats_headers, 'Samtools Stats')
+            self.general_stats_addcols(self.samtools_stats, stats_headers)
 
             # Make bargraph plot of mapped/unmapped reads
             self.alignment_section(self.samtools_stats)
