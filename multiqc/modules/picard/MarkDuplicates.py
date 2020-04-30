@@ -94,25 +94,26 @@ def parse_reports(self,
         #
         # The table in the Picard metrics file contains some columns referring
         # read pairs and some referring to single reads.
-        for key in self.picard_dupMetrics_data.keys():
-            metr = self.picard_dupMetrics_data[key]
-            #
+        for s_name, metr in self.picard_dupMetrics_data.items():
             metr["READS_IN_DUPLICATE_PAIRS"]    = 2.0 * metr["READ_PAIR_DUPLICATES"]
             metr["READS_IN_UNIQUE_PAIRS"]       = 2.0 * (metr["READ_PAIRS_EXAMINED"] - metr["READ_PAIR_DUPLICATES"])
-            metr["READS_UNMAPPED"]              = metr["UNMAPPED_READS"]
-            metr["READS_IN_DUPLICATE_UNPAIRED"] = metr["UNPAIRED_READ_DUPLICATES"]
             metr["READS_IN_UNIQUE_UNPAIRED"]    = metr["UNPAIRED_READS_EXAMINED"] - metr["UNPAIRED_READ_DUPLICATES"]
             metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"] = 2.0 * metr["READ_PAIR_OPTICAL_DUPLICATES"]
             metr["READS_IN_DUPLICATE_PAIRS_NONOPTICAL"] = metr["READS_IN_DUPLICATE_PAIRS"] - metr["READS_IN_DUPLICATE_PAIRS_OPTICAL"]
-            #
-            #for subkey in self.picard_dupMetrics_data[key].keys():
-            #   log.warn("MarkDuplicates ["+key+","+subkey+"]="+str(self.picard_dupMetrics_data[key][subkey]))
+            metr["READS_IN_DUPLICATE_UNPAIRED"] = metr["UNPAIRED_READ_DUPLICATES"]
+            metr["READS_UNMAPPED"]              = metr["UNMAPPED_READS"]
 
         keys = OrderedDict()
-        keys_r = ['READS_IN_UNIQUE_PAIRS', 'READS_IN_UNIQUE_UNPAIRED', 'READS_IN_DUPLICATE_PAIRS_NONOPTICAL',
-                'READS_IN_DUPLICATE_PAIRS_OPTICAL', 'READS_IN_DUPLICATE_UNPAIRED', 'READS_UNMAPPED']
+        keys_r = [
+            'READS_IN_UNIQUE_PAIRS',
+            'READS_IN_UNIQUE_UNPAIRED',
+            'READS_IN_DUPLICATE_PAIRS_OPTICAL',
+            'READS_IN_DUPLICATE_PAIRS_NONOPTICAL',
+            'READS_IN_DUPLICATE_UNPAIRED',
+            'READS_UNMAPPED'
+        ]
         for k in keys_r:
-            keys[k] = {'name': k.replace('_',' ').title()}
+            keys[k] = {'name': k.replace('READS_', '').replace('IN_', '').replace('_',' ').title()}
 
         # Config for the plot
         pconfig = {
@@ -126,6 +127,22 @@ def parse_reports(self,
         self.add_section (
             name = section_name,
             anchor = section_anchor,
+            description = 'Number of reads, categorised by duplication state. **Pair counts are doubled** - see help text for details.',
+            helptext = '''
+            The table in the Picard metrics file contains some columns referring
+            read pairs and some referring to single reads.
+
+            To make the numbers in this plot sum correctly, values referring to pairs are doubled
+            according to the scheme below:
+
+            * `READS_IN_DUPLICATE_PAIRS = 2 * READ_PAIR_DUPLICATES`
+            * `READS_IN_UNIQUE_PAIRS = 2 * (READ_PAIRS_EXAMINED - READ_PAIR_DUPLICATES)`
+            * `READS_IN_UNIQUE_UNPAIRED = UNPAIRED_READS_EXAMINED - UNPAIRED_READ_DUPLICATES`
+            * `READS_IN_DUPLICATE_PAIRS_OPTICAL = 2 * READ_PAIR_OPTICAL_DUPLICATES`
+            * `READS_IN_DUPLICATE_PAIRS_NONOPTICAL = READS_IN_DUPLICATE_PAIRS - READS_IN_DUPLICATE_PAIRS_OPTICAL`
+            * `READS_IN_DUPLICATE_UNPAIRED = UNPAIRED_READ_DUPLICATES`
+            * `READS_UNMAPPED = UNMAPPED_READS`
+            ''',
             plot = bargraph.plot(self.picard_dupMetrics_data, keys, pconfig)
         )
 

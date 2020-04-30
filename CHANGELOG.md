@@ -59,6 +59,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * New: Submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics` ([#1116](https://github.com/ewels/MultiQC/issues/1114))
     * Updated large `HsMetrics` table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
     * Updated `WgsMetrics` parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
+    * Updated `MarkDuplicates` bar plot to double the read-pair counts, so that the numbers stack correctly. ([#1142](https://github.com/ewels/MultiQC/issues/1142))
 * **QualiMap**
     * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
 * **RSeqC**
