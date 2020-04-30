@@ -502,6 +502,9 @@ seqyclean:
     fn: '*_SummaryStatistics.tsv'
 sexdeterrmine:
     fn: 'sexdeterrmine.json'
+sickle:
+    contents_re: 'FastQ \w*\s?records kept: .*'
+    num_lines: 2
 skewer:
     contents: 'maximum error ratio allowed (-r):'
     shared: true

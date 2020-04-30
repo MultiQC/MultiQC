@@ -27,6 +27,7 @@ MultiQC Modules:
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
     SeqyClean: modules/seqyclean.md
+    Sickle: modules/sickle.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md

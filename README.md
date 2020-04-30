@@ -56,7 +56,7 @@ Currently, supported tools include:
 |[Skewer][skewer]                 |                         |                             |[RSeQC][rseqc]                        |
 |[SortMeRNA][sortmerna]           |                         |                             |[Sargasso][sargasso]                  |
 |[SeqyClean][seqyclean]           |                         |                             |[Sex.DetERRmine][sexdeterrmine]       |
-|                                 |                         |                             |[Supernova][supernova]                |
+|[Sickle][sickle]                 |                         |                             |[Supernova][supernova]                |
 |                                 |                         |                             |[VCFTools][vcftools]                  |
 |                                 |                         |                             |[VerifyBAMID][verifybamid]            |
 
