@@ -22,10 +22,12 @@ MultiQC Modules:
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
+    iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
+    pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
     Sickle: modules/sickle.md
     Skewer: modules/skewer.md
@@ -67,7 +69,9 @@ MultiQC Modules:
     Methyl QA: modules/methylQA.md
     mosdepth: modules/mosdepth.md
     miRTrace: modules/mirtrace.md
+    mirtop: modules/mirtop.md
     MTNucRatio: modules/mtnucratio.md
+    MultiVCFAnalyzer: modules/multivcfanalyzer.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md

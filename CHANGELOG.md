@@ -31,13 +31,61 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Dropped Travis and AppVeyor, everything is now just on GitHub
     * Still testing on both Linux and Windows, with multiple versions of Python
     * CI tests should now run automatically for anyone who forks the MultiQC repository
+* Linting with `--lint` now checks line graphs as well as bar graphs
+* New `gathered` template with no tool name sections ([#1119](https://github.com/ewels/MultiQC/issues/1119))
+* Added `--sample-filters` option to add _show_/_hide_ buttons at the top of the report ([#1125](https://github.com/ewels/MultiQC/issues/1125))
+    * Buttons control the report toolbox Show/Hide tool, filtering your samples
+    * Allows reports to be pre-configured based on a supplied list of sample names at report-generation time.
+* Line graphs can now have `Log10` buttons (same functionality as bar graphs)
+
+#### New Modules:
+
+* [**iVar**](https://github.com/andersen-lab/ivar)
+    * Added support for iVar: a computational package that contains functions broadly useful for viral amplicon-based sequencing.
+* [**miRTop**](https://github.com/miRTop/mirtop)
+    * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
+    * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
+* [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
+    * combining multiple VCF files into one coherent report and format for downstream analysis.
 
 #### Module updates:
 
-* **MTNucRatioCalculator**
-    * Fixed misleading value suffix in general stats table
 * **bcl2fastq**
     * Samples with multiple library preps (i.e barcodes) will now be handled correctly ([#1094](https://github.com/ewels/MultiQC/issues/1094))
+* **BUSCO**
+    * Updated log search pattern to match new format in v4 with auto-lineage detection option ([#1163](https://github.com/ewels/MultiQC/issues/1163))
+* **DamageProfiler**
+    * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
+* **fgbio**
+    * New: Plot error rate by read position from `ErrorRateByReadPosition`
+    * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))
+* **MTNucRatioCalculator**
+    * Fixed misleading value suffix in general stats table
+* **Picard**
+    * New: Submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics` ([#1116](https://github.com/ewels/MultiQC/issues/1114))
+    * Updated large `HsMetrics` table to use columns specified in the MultiQC config. See [docs](https://multiqc.info/docs/#hsmetrics). ([#831](https://github.com/ewels/MultiQC/issues/831))
+    * Updated `WgsMetrics` parsing code to recognise new java class string ([#1114](https://github.com/ewels/MultiQC/issues/1114))
+    * Updated `MarkDuplicates` bar plot to double the read-pair counts, so that the numbers stack correctly. ([#1142](https://github.com/ewels/MultiQC/issues/1142))
+* **QualiMap**
+    * Fixed QualiMap mean coverage calculation [#1082](https://github.com/ewels/MultiQC/issues/1082), [#1077](https://github.com/ewels/MultiQC/issues/1082)
+* **RSeqC**
+    * Single sample view in the _"Junction saturation"_ plot now works with the toolbox properly _(rename, hide, highlight)_ ([#1133](https://github.com/ewels/MultiQC/issues/1133))
+* **RNASeQC2**
+    * Updated to handle the parsing metric files from the [newer rewrite of RNA-SeqQC](https://github.com/broadinstitute/rnaseqc).
+* **Samtools**
+    * Removes hardcoding of general stats column names. This allows column names to indicate when a module has been run twice ([https://github.com/ewels/MultiQC/issues/1076](https://github.com/ewels/MultiQC/issues/1076)).
+    * Added an observed over expected read count plot for `idxstats` ([#1118](https://github.com/ewels/MultiQC/issues/1118))
+* **sortmerna**
+    * Fix the bug for the latest sortmerna version 4.2.0 ([#1121](https://github.com/ewels/MultiQC/issues/1121))
+
+#### Bug Fixes:
+
+* Removed use of `shutil.copy` to avoid problems with working on multiple filesystems ([#1130](https://github.com/ewels/MultiQC/issues/1130))
+* Made folder naming behaviour of `multiqc_plots` consistent with `multiqc_data`
+    * Incremental numeric suffixes now added if folder already exists
+    * Plots folder properly renamed if using `-n`/`--filename`
+* Heatmap plotting function is now compatible with MultiQC toolbox `hide` and `highlight` ([#1136](https://github.com/ewels/MultiQC/issues/1136))
+* Plot config `logswitch_active` now works as advertised
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
@@ -45,7 +93,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * [**sickle**](https://github.com/najoshi/sickle)
     * A windowed adaptive trimming tool for FASTQ files using quality
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
-    * Process family size count hist data from GroupReadsByUmi
+    * Process family size count hist data from `GroupReadsByUmi`
 * [**biobambam2**](https://github.com/gt1/biobambam2)
     * Added submodule for `bamsormadup` tool
     * Totally cheating - it uses Picard MarkDuplicates but with a custom search pattern and naming

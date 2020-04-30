@@ -319,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add molecules plot
             config_molecules = {
                 'id': 'supernova_molecules',
-                'title': 'Supernova Molecule Lengths',
+                'title': 'Supernova: Molecule Lengths',
                 'xlab': 'Inferred molecule length (bp)',
                 'ylab': '# molecules',
                 'smooth_points': 300,
@@ -346,7 +346,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add kmers plot
             config_kmers = {
                 'id': 'supernova_kmers',
-                'title': 'Supernova Kmer Counts',
+                'title': 'Supernova: Kmer Counts',
                 'xlab': 'Filtered kmer multiplicity',
                 'ylab': 'Counts',
                 'smooth_points_sumcounts': False,

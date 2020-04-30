@@ -57,10 +57,11 @@ jobs:
         cd test_data
         multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
 
-    - name: Empty directory
+    - name: Empty directory (confirm no report)
       run: |
         mkdir empty_dir
-        multiqc -f empty_dir
+        multiqc -n empty empty_dir
+        [[ ! -f empty.html ]]
 
     - name: Test for missing CSPs
       run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
