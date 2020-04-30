@@ -193,14 +193,15 @@ class MultiqcModule(BaseMultiqcModule):
 
             description = """
             Total counts of reads aligned for each isomiR type, over all detected miRNAs.
+            """,
+
+            helptext = """
             The total counts of reads detected as reference miRNA sequences is also shown.
 
             Since a read can belong to 2 (or more) different isomiRs types (e.g `iso_3p` and `iso_5p`),
             the cumulative read counts shown in this plot for a sample can be higher than its total
             read count shown in the general statistics.
-            """,
 
-            helptext = """
             For each sample, the mean counts of each type of isomiRs over all detected
             miRNAs is displayed in a different color.
             """ + self.general_helptext,
@@ -225,11 +226,12 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'mirtop_unique_read_count',
 
             description = """
-            For each isomiR type, number of distinct sequences detected, over all miRNAs.
-            The number of reference miRNA sequences detected is also shown.
+            The number of distinct sequences detected for each isomiR type, over all miRNAs.
             """,
 
             helptext = """
+            The number of reference miRNA sequences detected is also shown.
+
             For each sample, the number of miRNAs with each type of isomiRs, is displayed in a different color.
             """ + self.general_helptext,
 
@@ -253,11 +255,12 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'mirtop_mean_read_count',
 
             description = """
-            Mean counts, for each isomiR type, over all detected miRNAs.
-            The mean counts of reads detected as reference miRNA sequences is also shown.
+            Mean counts for each isomiR type, over all detected miRNAs.
             """,
 
             helptext = """
+            The mean counts of reads detected as reference miRNA sequences is also shown.
+
             For each sample, the mean counts of each type of isomiRs over all detected miRNAs is displayed in a different color.
             """ + self.general_helptext,
 
