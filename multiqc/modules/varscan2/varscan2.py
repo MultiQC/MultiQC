@@ -148,7 +148,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'Spectral',
             'format': '{:,.0f}',
-            'shared_key': 'variants'
+            'shared_key': 'variants',
+            'hidden': True
         }
         headers['variant_snps'] = {
             'title': 'SNPs',
@@ -156,7 +157,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'BrBg',
             'format': '{:,.0f}',
-            'shared_key': 'snps'
+            'shared_key': 'snps',
+            'hidden': True
         }
         headers['variant_indels'] = {
             'title': 'INDELs',
@@ -164,7 +166,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'BrBg',
             'format': '{:,.0f}',
-            'shared_key': 'indels'
+            'shared_key': 'indels',
+            'hidden': True
         }
         headers['variant_total'] = {
             'title': 'Variants',
@@ -172,7 +175,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'BrBg',
             'format': '{:,.0f}',
-            'shared_key': 'variants'
+            'shared_key': 'variants',
+            'hidden': True
         }
         headers['failed_strand_filter'] = {
             'title': 'Failed Strand Filter',
@@ -180,7 +184,8 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'scale': 'YlOrBr',
             'format': '{:,.0f}',
-            'shared_key': 'variants'
+            'shared_key': 'variants',
+            'hidden': True
         }
         headers['bases_in_pileup'] = {
             'title': '{} Bases in Pileup'.format(config.base_count_prefix),
