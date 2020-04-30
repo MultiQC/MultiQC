@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.ivar_general_stats_table()
 
         # Heatmap info
-        self.status_heatmap()
+        self.primer_heatmap()
 
     # Parse an ivar report
     def parse_ivar(self, f):
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         count_regexes = {
             'mapped_reads': re.compile(r'(?:Found\s)(\d+)(?:\smapped)'),
-            'total_reads': re.compile(r'(?:Trimmed primers from )(?:\d+\.\d+\% \()?(\d+)'),
+            'trimmed_reads': re.compile(r'(?:Trimmed primers from )(?:\d+\.\d+\% \()?(\d+)'),
             'reads_outside_primer_region': re.compile(r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\s(?:that\s)?started'),
             'reads_too_short_after_trimming': re.compile(r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\swere(?: quality trimmed | shortened)')
         }
@@ -109,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'read_counts',
             'modify': lambda x: x * config.read_count_multiplier
         }
-        headers['total_reads'] = {
+        headers['trimmed_reads'] = {
             'title': '{} Primer trimmed'.format(config.read_count_prefix),
             'description': 'Total number of reads where primer trimming was performed. ({})'.format(config.read_count_desc),
             'scale': 'Purples',
@@ -125,8 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(self.ivar_data, headers)
 
-
-    def status_heatmap(self):
+    def primer_heatmap(self):
         """ Heatmap showing information on each primer found for every sample """
         # Top level dict contains sample IDs + OrderedDict(primer, counts)
 
