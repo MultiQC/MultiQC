@@ -29,119 +29,112 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and load iVar trim results
         self.ivar_data = dict()
-        self.parsed_primers = dict()
+        self.ivar_primers = dict()
         for f in self.find_log_files('ivar/trim', filehandles=True):
-            parsed_data = self.parse_ivar(f)
-            if parsed_data is not None and len(parsed_data) > 0:
-                self.ivar_data[f['s_name']] = parsed_data
-                self.add_data_source(f, section='trimming')
-        for f in self.find_log_files('ivar/trim'):
-            parsed_primers = self.parse_ivar_primer_stats(f)
-            if parsed_primers is not None and len(parsed_primers) > 0:
-                self.parsed_primers[f['s_name']] = parsed_primers
+            self.parse_ivar(f)
 
         # Filter to strip out ignored sample names
         self.ivar_data = self.ignore_samples(self.ivar_data)
+        self.ivar_primers = self.ignore_samples(self.ivar_primers)
 
-        # Warning when no files are found
-        if len(self.ivar_data) == 0:
+        # Stop if no files are found
+        num_samples = max(len(self.ivar_data), len(self.ivar_primers))
+        if num_samples == 0:
             raise UserWarning
+
+        # Log number of reports
+        log.info("Found {} reports".format(num_samples))
 
         # Write parsed data to a file
         self.write_data_file(self.ivar_data, 'multiqc_ivar_summary')
-        
-        #Primers too
-        self.write_data_file(self.parsed_primers, 'multiqc_ivar_primers')
-        
-        #Found reports or not?
-        log.info("Found {} reports".format(len(self.ivar_data)))
+        self.write_data_file(self.ivar_primers, 'multiqc_ivar_primers')
 
         # Basic Stats Table
         self.ivar_general_stats_table()
 
-        #Heatmap info
+        # Heatmap info
         self.status_heatmap()
-        
+
     # Parse an ivar report
     def parse_ivar(self, f):
-        parsed_data = dict()
-        regexes = {
-            'mapped_reads': r'(?:Found\s)(\d+)(?:\smapped)',
-            'total_reads': r'(?:Trimmed primers from )(?:\d+\.\d+\% \()?(\d+)',
-            'reads_outside_primer_region': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\s(?:that\s)?started',
-            'reads_too_short_after_trimming': r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\swere(?: quality trimmed | shortened)'
+        """ Parse iVar log file, either v1.1_beta or v1.2
+        """
+        count_regexes = {
+            'mapped_reads': re.compile(r'(?:Found\s)(\d+)(?:\smapped)'),
+            'total_reads': re.compile(r'(?:Trimmed primers from )(?:\d+\.\d+\% \()?(\d+)'),
+            'reads_outside_primer_region': re.compile(r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\s(?:that\s)?started'),
+            'reads_too_short_after_trimming': re.compile(r'^(?:\d+\.\d+\% \()?(\d+)(?:\))?(?:.*[of]?)reads\swere(?: quality trimmed | shortened)')
         }
-        for l in f['f']:
-            # Search regexes for stats
-            for k, r in regexes.items():
-                match = re.search(r, l)
-                if match:
-                    parsed_data[k] = int(match.group(1))
-        
-        return parsed_data
-
-    #Parse Primer stats appropriately
-    def parse_ivar_primer_stats(self, f):
+        primer_regex = re.compile(r'^(.*)(?:\t+)(\d+$)')
+        parsed_data = dict()
         primers = OrderedDict()
-        regex = "^(.*)(?:\t+)(\d+$)"
-        # Search regexes for stats
-        for l in f['f'].splitlines():
-            match = re.search(regex, l)
-            if match:
-                primer = match.group(1)
-                counts = int(match.group(2))
-                primers[primer] = counts
-        log.info("Found {} primers".format(len(primers)))
-        return primers
+        for l in f['f']:
+            # Search count regexes for stats
+            for k, count_regex in count_regexes.items():
+                count_match = count_regex.search(l)
+                if count_match:
+                    parsed_data[k] = int(count_match.group(1))
+
+            # Try to match the primer regex
+            primer_match = primer_regex.search(l)
+            if primer_match:
+                primers[ primer_match.group(1) ] = int(primer_match.group(2))
+
+        if parsed_data is not None and len(parsed_data) > 0:
+            self.ivar_data[f['s_name']] = parsed_data
+            self.add_data_source(f, section='trimming')
+
+        if primers is not None and len(primers) > 0:
+            self.ivar_primers[f['s_name']] = primers
+            self.add_data_source(f, section='trimming')
+
 
     # Add to general stats table
-
     def ivar_general_stats_table(self):
         """ Take the parsed stats from the iVAR report and add it to the
         basic stats table"""
 
         headers = OrderedDict()
-        headers['mapped_reads'] = {
-            'title': 'Total mapped reads',
-            'description': 'Total number of mapped reads in iVar input.',
-            'min': 0,
-            'scale': 'RdYlGn-rev',
-            'format': '{:,.0f}', 
-            'shared_key': 'read_counts'
-        }
-        headers['total_reads'] = {
-            'title': 'Primer trimmed reads',
-            'description': 'Total number of reads where primer trimming was performed.',
-            'min': 0,
-            'scale': 'PuRd',
-            'format': '{:,.0f}'
-        }
         headers['reads_too_short_after_trimming'] = {
-            'title': 'Fail minimum length reads',
-            'description': 'Number of reads too short (<30bp) after primer trimming',
-            'min': 0,
+            'title': '{} Too short'.format(config.read_count_prefix),
+            'description': 'Number of reads too short (<30bp) after primer trimming ({})'.format(config.read_count_desc),
             'scale': 'RdYlGn',
-            'format': '{:,.0f}'
+            'shared_key': 'read_counts',
+            'modify': lambda x: x * config.read_count_multiplier
         }
         headers['reads_outside_primer_region'] = {
-            'title': 'Reads outside primer region',
-            'description': 'Number of reads outside the primer region',
+            'title': '{} Outside primer'.format(config.read_count_prefix),
+            'description': 'Number of reads outside the primer region ({})'.format(config.read_count_desc),
             'scale': 'RdYlGn-rev',
-            'min': 0,
-            'format': '{:,.0f}'
+            'shared_key': 'read_counts',
+            'modify': lambda x: x * config.read_count_multiplier
+        }
+        headers['total_reads'] = {
+            'title': '{} Primer trimmed'.format(config.read_count_prefix),
+            'description': 'Total number of reads where primer trimming was performed. ({})'.format(config.read_count_desc),
+            'scale': 'PuRd',
+            'shared_key': 'read_counts',
+            'modify': lambda x: x * config.read_count_multiplier
+        }
+        headers['mapped_reads'] = {
+            'title': '{} Mapped'.format(config.read_count_prefix),
+            'description': 'Total number of mapped reads in iVar input. ({})'.format(config.read_count_desc),
+            'scale': 'RdYlGn-rev',
+            'shared_key': 'read_counts',
+            'modify': lambda x: x * config.read_count_multiplier
         }
         self.general_stats_addcols(self.ivar_data, headers)
-    
+
 
     def status_heatmap(self):
         """ Heatmap showing information on each primer found for every sample """
-        #Top level dict contains sample IDs + OrderedDict(primer, counts)
-        
+        # Top level dict contains sample IDs + OrderedDict(primer, counts)
+
         final_data = list()
         final_xcats = list()
         final_ycats = list()
 
-        for k,v in self.parsed_primers.items():
+        for k,v in self.ivar_primers.items():
             final_ycats.append(k)
             tmp_prim_val = list()
             for prim,val in v.items():
@@ -149,11 +142,11 @@ class MultiqcModule(BaseMultiqcModule):
                 tmp_prim_val.append(val)
             final_data.append(tmp_prim_val)
 
-        if self.parsed_primers is not None:
+        if self.ivar_primers is not None:
             pconfig = {
                 'id': 'ivar-primer-count-heatmap',
                 'decimalPlaces': 0,
-                'square': False, 
+                'square': False,
                 'title': 'iVar: Number of primers found for each sample'
             }
 
