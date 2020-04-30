@@ -22,6 +22,7 @@ MultiQC Modules:
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
+    iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md

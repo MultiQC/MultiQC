@@ -122,6 +122,7 @@ setup(
             'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
             'interop = multiqc.modules.interop:MultiqcModule',
+            'ivar = multiqc.modules.ivar:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'kat = multiqc.modules.kat:MultiqcModule',
