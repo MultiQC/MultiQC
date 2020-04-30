@@ -39,7 +39,7 @@ class GroupReadsByUmiMixin():
                     family_size.append(tuple(line.split("\t")))
 
             umi_data[f['s_name']] = { int(s):int(d[1]) for s, d in enumerate(family_size,1)}
-            umi_data_normed[f['s_name']] = { int(s):float(d[2]) for s, d in enumerate(family_size,1)}
+            umi_data_normed[f['s_name']] = { int(s):float(d[2])*100.0 for s, d in enumerate(family_size,1)}
 
         # Filter samples
         self.fgbio_umi_data = self.ignore_samples(umi_data)
@@ -49,20 +49,20 @@ class GroupReadsByUmiMixin():
         config = {
             'id': 'fgbio-groupreadsbyumi-plot',
             'title': 'fgbio: Family size count',
-            'ylab': '# UMIs',
+            'ylab': 'Number of UMIs',
             'xlab': 'Reads supporting UMI',
             'xmax': 15,
             'xDecimals': False,
             'data_labels': [
-                {'name': 'Counts', 'ylab': 'Count'},
-                {'name': 'Percentages', 'ylab': 'Frequency'}
+                {'name': 'Counts', 'ylab': 'Number of UMIs'},
+                {'name': 'Percentages', 'ylab': 'Percentage of sample'}
             ]
         }
 
         self.add_section(
             name = 'GroupReadsByUmi statistics',
             anchor = 'fgbio-groupreadsbyumi',
-            description = '''During GroupReadsByUmi processing family size count data is generated,
+            description = '''During `GroupReadsByUmi` processing, family size count data is generated,
                              showing number of UMIs represented by a certain number of reads.''',
             helptext = '''
             This tool groups reads together that appear to have come from the same original molecule.
