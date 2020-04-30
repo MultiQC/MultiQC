@@ -42,11 +42,48 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.mirtop_data, 'multiqc_mirtop')
 
+        # Helper variables
+        self.general_helptext = """
+            The different isomiR types are:
+
+            * `iso_3p`: a sequence with a 3' end difference because of trimming or templated tailing
+            * `iso_5p`: a sequence with a 5' end difference because of trimming or templated tailing
+            * `iso_add3p`: a sequence with non templated tailing in the 3' end
+            * `iso_add5p`: a sequence with non templated tailing in the 5' end
+            * `iso_snv`: a sequence with a single nucleotide variant
+
+            The `ref_miRNA` label corresponds to the reference miRNA (canonical sequence).
+
+        """
+        self.isomir_cats = [
+            'ref_miRNA',
+            'iso_3p',
+            'iso_5p',
+            'iso_add3p',
+            'iso_add5p',
+            'iso_add',
+            'iso_snv',
+            'iso_snv_seed',
+            'iso_snv_central_offset',
+            'iso_snv_central',
+            'iso_snv_central_supp',
+            'iso_snp',
+            'iso_snp_seed',
+            'iso_snp_central_offset',
+            'iso_snp_central',
+            'iso_snp_central_supp'
+        ]
+
+        # Calculate aggregate iso_snp counts
+        self.mirtop_data_snp_aggregate = self.aggregate_snps_in_samples()
+
         # Create summary table
         self.mirtop_stats_table()
 
         # Create detailed plots
-        self.mirtop_barplot_section(aggregate_snps=True)
+        self.mirtop_read_count()
+        self.mirtop_unique_read_count()
+        self.mirtop_mean_read_count()
 
     def parse_mirtop_report (self, f):
         """ Parse the mirtop log file. """
@@ -61,6 +98,31 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data['read_count'] = parsed_data['isomiR_sum'] + parsed_data['ref_miRNA_sum']
             parsed_data['isomiR_perc'] = (parsed_data['isomiR_sum'] / parsed_data['read_count']) * 100
             self.mirtop_data[s_name] = parsed_data
+
+    def aggregate_snps_in_samples(self):
+        """ Aggregate info for iso_snp isomiRs (for clarity). "Mean" section will be recomputed
+        """
+        snv_aggr = {} ## sub dict with all infos except for snps
+        for sample in self.mirtop_data:
+
+            snv_aggr[sample] = {
+                key:self.mirtop_data[sample][key] for key in self.mirtop_data[sample]
+                if "iso_snp" not in key
+            }
+            snv_aggr[sample]['iso_snv_sum'] = sum([
+                self.mirtop_data[sample][key] for key in self.mirtop_data[sample]
+                if "iso_snp" in key and "sum" in key
+            ])
+            snv_aggr[sample]['iso_snv_count'] = sum([
+                self.mirtop_data[sample][key] for key in self.mirtop_data[sample]
+                if "iso_snp" in key and "count" in key
+            ])
+
+            if snv_aggr[sample]['iso_snv_count'] > 0:
+                snv_aggr[sample]['iso_snv_mean'] = snv_aggr[sample]['iso_snv_sum'] / snv_aggr[sample]['iso_snv_count']
+            else:
+                snv_aggr[sample]['iso_snv_mean'] = 0
+        return snv_aggr
 
     def mirtop_stats_table(self):
         """ Take the parsed stats from the mirtop report and add them to the
@@ -99,28 +161,37 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(self.mirtop_data, headers)
 
-    def mirtop_barplot_section(self, aggregate_snps):
-        """ Generate barplots for a given stat type"""
-
-        # Define info for each plot
-        plots_info = OrderedDict()
-        general_helptext = """
-            The different isomiR types are:
-
-            * `iso_3p`: a sequence with a 3' end difference because of trimming or templated tailing
-            * `iso_5p`: a sequence with a 5' end difference because of trimming or templated tailing
-            * `iso_add3p`: a sequence with non templated tailing in the 3' end
-            * `iso_add5p`: a sequence with non templated tailing in the 5' end
-            * `iso_snv`: a sequence with a single nucleotide variant
-
-            The `ref_miRNA` label corresponds to the reference miRNA (canonical sequence).
-
+    def filter_plot_data(self, plot_key):
+        """ Helper function to return the subset of data that has been requested for this plot
         """
+        plot_data = {}
+        for s_name in self.mirtop_data_snp_aggregate:
+            plot_data[s_name] = {}
+            for key, data in self.mirtop_data_snp_aggregate[s_name].items():
+                if plot_key in key and 'isomiR' not in key and 'read' not in key:
+                    plot_data[s_name][key] = data
+        return plot_data
 
-        plots_info["sum"] = {
-            "name": "IsomiR read counts",
+    def get_plot_cats(self, plot_type):
+        """ Return the plot categories for the given plot
+        """
+        cats_section = OrderedDict()
+        for base_key in self.isomir_cats:
+            cat_key = '{}_{}'.format(base_key, plot_type)
+            cats_section[cat_key] = { 'name': base_key }
+        return cats_section
 
-            "description": """
+    def mirtop_read_count(self):
+        """ Generate barplot for the read count plot"""
+        p_config = {
+            'id': 'mirtop_read_count_plot',
+            'title': 'mirtop: IsomiR read counts',
+            'ylab': 'Read counts'
+        }
+        self.add_section (
+            name = 'IsomiR read counts',
+
+            description = """
             Total counts of reads aligned for each isomiR type, over all detected miRNAs.
             The total counts of reads detected as reference miRNA sequences is also shown.
 
@@ -129,114 +200,70 @@ class MultiqcModule(BaseMultiqcModule):
             read count shown in the general statistics.
             """,
 
-            "helptext": """
+            helptext = """
             For each sample, the mean counts of each type of isomiRs over all detected
             miRNAs is displayed in a different color.
-            """ + general_helptext
+            """ + self.general_helptext,
+
+            plot = bargraph.plot(
+                self.filter_plot_data('sum'),
+                self.get_plot_cats('sum'),
+                p_config
+            )
+        )
+
+
+    def mirtop_unique_read_count(self):
+        """ Generate the section for the Unique Read Count plot """
+        p_config = {
+            'id': 'mirtop_unique_read_count_plot',
+            'title': 'mirtop: IsomiR unique read counts',
+            'ylab': 'Unique sequences'
         }
+        self.add_section (
+            name = 'IsomiR unique read counts',
+            anchor = 'mirtop_unique_read_count',
 
-        plots_info["count"] = {
-            "name": "IsomiR unique read counts",
-
-            "description": """
+            description = """
             For each isomiR type, number of distinct sequences detected, over all miRNAs.
             The number of reference miRNA sequences detected is also shown.
             """,
 
-            "helptext": """
+            helptext = """
             For each sample, the number of miRNAs with each type of isomiRs, is displayed in a different color.
-            """ + general_helptext
+            """ + self.general_helptext,
+
+            plot = bargraph.plot(
+                self.filter_plot_data('count'),
+                self.get_plot_cats('count'),
+                p_config
+            )
+        )
+
+
+    def mirtop_mean_read_count(self):
+        """ Generate the section for the Mean Read Count plot """
+        p_config = {
+            'id': 'mirtop_mean_read_count_plot',
+            'title': 'mirtop: Mean isomiR read counts',
+            'ylab': 'Means'
         }
+        self.add_section (
+            name = 'Mean isomiR read counts',
+            anchor = 'mirtop_mean_read_count',
 
-        plots_info["mean"] = {
-            "name": "Mean isomiR read counts",
-
-            "description": """
+            description = """
             Mean counts, for each isomiR type, over all detected miRNAs.
             The mean counts of reads detected as reference miRNA sequences is also shown.
             """,
 
-            "helptext": """
+            helptext = """
             For each sample, the mean counts of each type of isomiRs over all detected miRNAs is displayed in a different color.
-            """ + general_helptext
-        }
+            """ + self.general_helptext,
 
-        # Each isomiR cat (combining mirtop current and previous versions)
-        cats = [
-            'ref_miRNA',
-            'iso_3p',
-            'iso_5p',
-            'iso_add3p',
-            'iso_add5p',
-            'iso_add',
-            'iso_snv',
-            'iso_snv_seed',
-            'iso_snv_central_offset',
-            'iso_snv_central',
-            'iso_snv_central_supp',
-            'iso_snp',
-            'iso_snp_seed',
-            'iso_snp_central_offset',
-            'iso_snp_central',
-            'iso_snp_central_supp'
-        ]
-
-        # Y axis label definition
-        ylab_dict = {
-            'sum': 'Read counts',
-            'count': 'Unique sequences',
-            'mean': 'Means'
-        }
-
-        # Aggregate infos for iso_snp isomiRs (for clarity). "Mean" section will be recomputed
-        def aggregate_snps_in_samples():
-            snv_aggr = {} ## sub dict with all infos except for snps
-            for sample in self.mirtop_data:
-
-                snv_aggr[sample] = {
-                    key:self.mirtop_data[sample][key] for key in self.mirtop_data[sample]
-                    if "iso_snp" not in key
-                }
-                snv_aggr[sample]['iso_snv_sum'] = sum([
-                    self.mirtop_data[sample][key] for key in self.mirtop_data[sample]
-                    if "iso_snp" in key and "sum" in key
-                ])
-                snv_aggr[sample]['iso_snv_count'] = sum([
-                    self.mirtop_data[sample][key] for key in self.mirtop_data[sample]
-                    if "iso_snp" in key and "count" in key
-                ])
-
-                if snv_aggr[sample]['iso_snv_count'] > 0:
-                    snv_aggr[sample]['iso_snv_mean'] = snv_aggr[sample]['iso_snv_sum'] / snv_aggr[sample]['iso_snv_count']
-                else:
-                    snv_aggr[sample]['iso_snv_mean'] = 0
-            return snv_aggr
-
-        if aggregate_snps:
-            data = aggregate_snps_in_samples()
-        else:
-            data = self.mirtop_data
-
-        # Gather data and add plot section
-        for plot_key in plots_info:
-            plot_data = dict()
-            for sample in data:
-                # Select keys with plot_key for each sample (except keys with "isomiRs_*" and "read_*")
-                plot_data[sample] = {
-                    key: data[sample][key] for key in data[sample]
-                    if plot_key in key and "isomiR" not in key and "read" not in key
-                }
-            cats_section = {
-                key + "_" + plot_key:{'name': key} for key in cats
-            }
-            config = {
-                'id': plot_key,
-                'title': 'mirtop: ' + plots_info[plot_key]['name'],
-                'ylab': ylab_dict[plot_key]
-            }
-            self.add_section (
-                name = plots_info[plot_key]['name'],
-                description = plots_info[plot_key]['description'],
-                helptext = plots_info[plot_key]['helptext'],
-                plot = bargraph.plot(plot_data, cats_section, config)
+            plot = bargraph.plot(
+                self.filter_plot_data('mean'),
+                self.get_plot_cats('mean'),
+                p_config
             )
+        )
