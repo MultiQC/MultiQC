@@ -25,11 +25,6 @@ Whilst it may be possible to continue using MultiQC with Python 2 for a short ti
 pinning dependencies, MultiQC compatibility for Python 2 will now slowly drift and start
 to break. If you haven't already, **you need to switch to Python 3 now**.
 
-#### New Modules
-
-* **VarScan2**
-    * Support for [VarScan2](https://github.com/dkoboldt/varscan)
-
 #### New MultiQC Features
 
 * Now using [GitHub Actions](https://github.com/features/actions) for all CI testing
@@ -51,7 +46,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
     * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
-    * combining multiple VCF files into one coherent report and format for downstream analysis.
+    * Combining multiple VCF files into one coherent report and format for downstream analysis.
+* [**VarScan2**](https://github.com/dkoboldt/varscan)
+    * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
 
 #### Module updates:
 
@@ -91,7 +88,6 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Plots folder properly renamed if using `-n`/`--filename`
 * Heatmap plotting function is now compatible with MultiQC toolbox `hide` and `highlight` ([#1136](https://github.com/ewels/MultiQC/issues/1136))
 * Plot config `logswitch_active` now works as advertised
-
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
