@@ -92,6 +92,7 @@ MultiQC Modules:
     Supernova: modules/supernova.md
     Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
+    VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md
 Custom Content:

@@ -602,6 +602,15 @@ tophat:
 trimmomatic:
     contents: 'Trimmomatic'
     shared: true
+varscan2/mpileup2snp:
+    contents: 'Only SNPs will be reported'
+    num_lines: 3
+varscan2/mpileup2indel:
+    contents: 'Only indels will be reported'
+    num_lines: 3
+varscan2/mpileup2cns:
+    contents: 'Only variants will be reported'
+    num_lines: 3
 vcftools/relatedness2:
     fn: '*.relatedness2'
 vcftools/tstv_by_count:
