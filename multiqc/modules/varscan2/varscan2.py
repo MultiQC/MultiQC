@@ -201,10 +201,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         cats = [ OrderedDict(), OrderedDict() ]
-        cats[0]['variant_reported_snps'] = {'name': 'Reported', 'color': '#7cb5ec'}
-        cats[0]['variant_snps_failed'] = {'name': 'Not reported', 'color': '#f7a35c'}
-        cats[1]['variant_reported_indels'] = {'name': 'Reported', 'color': '#7cb5ec'}
-        cats[1]['variant_indels_failed'] = {'name': 'Not reported', 'color': '#f7a35c'}
+        cats[0]['variant_reported_snps'] = {'name': 'Reported', 'color': '#e5f5f9'}
+        cats[0]['variant_snps_failed'] = {'name': 'Not reported', 'color': '#de2d26'}
+        cats[1]['variant_reported_indels'] = {'name': 'Reported', 'color': '#99d8c9'}
+        cats[1]['variant_indels_failed'] = {'name': 'Not reported', 'color': '#f03b20'}
 
         # Config for the plot
         pconfig = {
