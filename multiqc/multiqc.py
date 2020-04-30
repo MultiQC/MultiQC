@@ -113,6 +113,10 @@ logger = config.logger
                     type = click.Path(exists=True, readable=True),
                     help = "File containing alternative sample names"
 )
+@click.option('--sample-filters', 'sample_filters',
+                    type = click.Path(exists=True, readable=True),
+                    help = "File containing show/hide patterns for the report"
+)
 @click.option('-l', '--file-list',
                     is_flag = True,
                     help = "Supply a file containing a list of file paths to be searched, one per row"
@@ -193,7 +197,7 @@ logger = config.logger
 @click.version_option(config.version, prog_name='multiqc')
 
 def run_cli(analysis_dir, dirs, dirs_depth, no_clean_sname, title, report_comment, template, module_tag, module, exclude, outdir,
-ignore, ignore_samples, sample_names, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
+ignore, ignore_samples, sample_names, sample_filters, file_list, filename, make_data_dir, no_data_dir, data_format, zip_data_dir, force, ignore_symlinks,
 export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, config_file, cl_config, verbose, quiet, no_ansi, **kwargs):
     """
     Main MultiQC run command for use with the click command line, complete with all click function decorators.
@@ -216,6 +220,7 @@ export_plots, plots_flat, plots_interactive, lint, make_pdf, no_megaqc_upload, c
         ignore=ignore,
         ignore_samples=ignore_samples,
         sample_names=sample_names,
+        sample_filters=sample_filters,
         file_list=file_list,
         filename=filename,
         make_data_dir=make_data_dir,
@@ -257,6 +262,7 @@ def run(
         ignore = (),
         ignore_samples = (),
         sample_names = None,
+        sample_filters = None,
         file_list = False,
         filename = None,
         make_data_dir = False,
@@ -370,6 +376,7 @@ def run(
         config.megaqc_upload = True
     if sample_names:
         config.load_sample_names(sample_names)
+    config.load_show_hide(sample_filters)
     if module_tag is not None:
         config.module_tag = module_tag
     if len(module) > 0:
@@ -435,6 +442,7 @@ def run(
                 filename = filename[:-5]
             config.output_fn_name = filename
             config.data_dir_name = '{}_data'.format(filename)
+            config.plots_dir_name = '{}_plots'.format(filename)
         if not config.output_fn_name.endswith('.html'):
             config.output_fn_name = '{}.html'.format(config.output_fn_name)
 
@@ -512,6 +520,8 @@ def run(
     if filename != 'stdout' and config.export_plots == True:
         config.plots_dir = config.plots_tmp_dir
         os.makedirs(config.plots_dir)
+    else:
+        config.plots_dir = None
 
     # Load the template
     template_mod = config.avail_templates[config.template].load()
@@ -704,8 +714,9 @@ def run(
     if filename != 'stdout':
         config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
         # Check for existing reports and remove if -f was specified
-        if os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)):
+        if os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)) or (config.export_plots and os.path.exists(config.plots_dir)):
             if config.force:
                 if os.path.exists(config.output_fn):
                     logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.output_fn)))
@@ -713,20 +724,26 @@ def run(
                 if config.make_data_dir and os.path.exists(config.data_dir):
                     logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.data_dir)))
                     shutil.rmtree(config.data_dir)
+                if config.export_plots and os.path.exists(config.plots_dir):
+                    logger.warning("Deleting    : {}   (-f was specified)".format(os.path.relpath(config.plots_dir)))
+                    shutil.rmtree(config.plots_dir)
             else:
                 # Set up the base names of the report and the data dir
                 report_num = 1
                 report_base, report_ext = os.path.splitext(config.output_fn_name)
                 dir_base = os.path.basename(config.data_dir)
+                plots_base = os.path.basename(config.plots_dir)
 
                 # Iterate through appended numbers until we find one that's free
-                while os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)):
+                while os.path.exists(config.output_fn) or (config.make_data_dir and os.path.exists(config.data_dir)) or (config.export_plots and os.path.exists(config.plots_dir)):
                     config.output_fn = os.path.join(config.output_dir, "{}_{}{}".format(report_base, report_num, report_ext) )
                     config.data_dir = os.path.join(config.output_dir, "{}_{}".format(dir_base, report_num) )
+                    config.plots_dir = os.path.join(config.output_dir, "{}_{}".format(plots_base, report_num) )
                     report_num += 1
 
                 config.output_fn_name = os.path.basename(config.output_fn)
                 config.data_dir_name = os.path.basename(config.data_dir)
+                config.plots_dir_name = os.path.basename(config.plots_dir)
                 logger.warning("Previous MultiQC output found! Adjusting filenames..")
                 logger.warning("Use -f or --force to overwrite existing reports instead")
 
@@ -740,13 +757,10 @@ def run(
         else:
             # Make directories for data_dir
             logger.info("Data        : {}".format(os.path.relpath(config.data_dir)))
-            if not os.path.exists(config.data_dir):
-                os.makedirs(config.data_dir)
             # Modules have run, so data directory should be complete by now. Move its contents.
-            for f in os.listdir(config.data_tmp_dir):
-                fn = os.path.join(config.data_tmp_dir, f)
-                logger.debug("Moving data file from '{}' to '{}'".format(fn, config.data_dir))
-                shutil.move(fn, config.data_dir)
+            logger.debug("Moving data file from '{}' to '{}'".format(config.data_tmp_dir, config.data_dir))
+            copy_tree(config.data_tmp_dir, config.data_dir)
+            shutil.rmtree(config.data_tmp_dir)
 
         # Copy across the static plot images if requested
         if config.export_plots:
@@ -760,14 +774,12 @@ def run(
                     logger.info("Use -f or --force to overwrite existing reports")
                     shutil.rmtree(tmp_dir)
                     sys.exit(1)
-            os.makedirs(config.plots_dir)
             logger.info("Plots       : {}".format(os.path.relpath(config.plots_dir)))
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
-            for f in os.listdir(config.plots_tmp_dir):
-                fn = os.path.join(config.plots_tmp_dir, f)
-                logger.debug("Moving plots directory from '{}' to '{}'".format(fn, config.plots_dir))
-                shutil.move(fn, config.plots_dir)
+            logger.debug("Moving plots directory from '{}' to '{}'".format(config.plots_tmp_dir, config.plots_dir))
+            copy_tree(config.plots_tmp_dir, config.plots_dir)
+            shutil.rmtree(config.plots_tmp_dir)
 
     plugin_hooks.mqc_trigger('before_template')
 

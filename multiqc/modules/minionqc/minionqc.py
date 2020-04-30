@@ -230,6 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
             'id': 'minionqc_read_lengths',
             'title': 'MinIONQC: Output versus read length',
             'categories': True,
+            'ylab': '# reads',
             'data_labels': [
                 {'name': 'All reads: Num reads', 'ylab': '# reads'},
                 {'name': 'All reads: Num gigabases', 'ylab': '# gigabases'}

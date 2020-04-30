@@ -61,6 +61,7 @@ def plot_qahist(samples, file_type, **plot_args):
             'id': 'bbmap-' + file_type + '_plot',
             'title': 'BBTools: ' + plot_args['plot_title'],
             'xlab': 'Quality score',
+            'ylab': 'Match count',
             'data_labels': [
                 {'name': 'Match', 'ylab': 'Match count'},
                 {'name': 'Substitution', 'ylab': 'Substitution count'},

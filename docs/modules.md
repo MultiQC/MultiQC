@@ -499,6 +499,9 @@ that should be used to allow users to change the multiplier for read counts: `re
 Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
 `base_count_desc`.
 
+And for the read count of long reads: `long_read_count_multiplier`, `long_read_count_prefix` and
+`long_read_count_desc`.
+
 A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
 the function and uses this. However, sometimes it can be useful to overwrite this.
@@ -593,7 +596,7 @@ MultiQC `config` module and have sensible defaults. For example:
 ```python
 from multiqc import config
 
-mymod_config = getattr(config, mymod_config, {})
+mymod_config = getattr(config, 'mymod_config', {})
 my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
 ```
 
