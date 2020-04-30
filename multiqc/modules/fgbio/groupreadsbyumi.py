@@ -28,6 +28,7 @@ class GroupReadsByUmiMixin():
 
     def parse_groupreadsbyumi_log(self):
         umi_data = dict()
+        umi_data_normed = dict()
 
         for f in self.find_log_files('fgbio/groupreadsbyumi'):
             # add file to data sources
@@ -38,24 +39,30 @@ class GroupReadsByUmiMixin():
                     family_size.append(tuple(line.split("\t")))
 
             umi_data[f['s_name']] = { int(s):int(d[1]) for s, d in enumerate(family_size,1)}
+            umi_data_normed[f['s_name']] = { int(s):float(d[2])*100.0 for s, d in enumerate(family_size,1)}
 
         # Filter samples
         self.fgbio_umi_data = self.ignore_samples(umi_data)
+        self.fgbio_umi_data_normed = self.ignore_samples(umi_data_normed)
 
     def parse_groupreadsbyumi_plot(self):
         config = {
             'id': 'fgbio-groupreadsbyumi-plot',
             'title': 'fgbio: Family size count',
-            'ylab': '# UMIs',
+            'ylab': 'Number of UMIs',
             'xlab': 'Reads supporting UMI',
             'xmax': 15,
-            'xDecimals': False
+            'xDecimals': False,
+            'data_labels': [
+                {'name': 'Counts', 'ylab': 'Number of UMIs'},
+                {'name': 'Percentages', 'ylab': 'Percentage of sample'}
+            ]
         }
 
         self.add_section(
             name = 'GroupReadsByUmi statistics',
             anchor = 'fgbio-groupreadsbyumi',
-            description = '''During GroupReadsByUmi processing family size count data is generated,
+            description = '''During `GroupReadsByUmi` processing, family size count data is generated,
                              showing number of UMIs represented by a certain number of reads.''',
             helptext = '''
             This tool groups reads together that appear to have come from the same original molecule.
@@ -63,7 +70,7 @@ class GroupReadsByUmiMixin():
             of the reads from the template, used from earliest mapping position to latest.
             Reads that have the same end positions are then sub-grouped by UMI sequence.
 
-            The histogram shows tag family size counts.
+            The histogram shows tag family size counts or percentages.
             ''',
-            plot = linegraph.plot(self.fgbio_umi_data, config)
+            plot = linegraph.plot([self.fgbio_umi_data, self.fgbio_umi_data_normed], config)
         )

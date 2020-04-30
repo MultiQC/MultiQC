@@ -224,55 +224,72 @@ $(function () {
 // Call to render any plot
 function plot_graph(target, ds, max_num){
   if(mqc_plots[target] === undefined){ return false; }
-  else {
-    // XY Line charts
-    if(mqc_plots[target]['plot_type'] == 'xy_line'){
-      if(max_num === undefined || mqc_plots[target]['datasets'][0].length < max_num){
-        plot_xy_line_graph(target, ds);
-        $('#'+target).removeClass('not_rendered');
-      } else {
-        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-      }
+
+  // If no dataset specified, check if there is an active button and set automatically
+  if(ds === undefined){
+    var ds_btns = $('.hc_switch_group button[data-action="set_data"][data-target="'+target+'"]');
+    if(ds_btns.length){
+      ds = ds_btns.filter('.active').data('newdata');
     }
-    // Bar graphs
-    else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
-      if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
-        plot_stacked_bar_graph(target, ds);
-        $('#'+target).removeClass('not_rendered');
-      } else {
-        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-      }
-    }
-    // Scatter plots
-    else if(mqc_plots[target]['plot_type'] == 'scatter'){
-      if(max_num === undefined || Object.keys(mqc_plots[target]['datasets'][0]).length < max_num){
-        plot_scatter_plot(target, ds);
-        $('#'+target).removeClass('not_rendered');
-      } else {
-        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-      }
-    }
-    // Beeswarm graphs
-    else if(mqc_plots[target]['plot_type'] == 'beeswarm'){
-      if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
-        plot_beeswarm_graph(target, ds);
-        $('#'+target).removeClass('not_rendered');
-      } else {
-        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-      }
-    }
-    // Heatmap plots
-    else if(mqc_plots[target]['plot_type'] == 'heatmap'){
-      if(max_num === undefined || mqc_plots[target]['xcats'][0].length < max_num){
-        plot_heatmap(target, ds);
-        $('#'+target).removeClass('not_rendered');
-      } else {
-        $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-      }
-    }
-    // Not recognised
-    else { console.log('Did not recognise plot type: '+mqc_plots[target]['plot_type']); }
   }
+
+  // If log status is not set and button is there, check whether it's active by default
+  var config = mqc_plots[target]['config'];
+  if (config['ytype'] === undefined){
+    var log_btn = $('.hc_switch_group button[data-action="set_log"][data-target="'+target+'"]');
+    console.log(log_btn);
+    if(log_btn.length && log_btn.hasClass('active')){
+      config['ytype'] = 'logarithmic';
+    }
+  }
+
+  // XY Line charts
+  if(mqc_plots[target]['plot_type'] == 'xy_line'){
+    if(max_num === undefined || mqc_plots[target]['datasets'][0].length < max_num){
+      plot_xy_line_graph(target, ds);
+      $('#'+target).removeClass('not_rendered');
+    } else {
+      $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+    }
+  }
+  // Bar graphs
+  else if(mqc_plots[target]['plot_type'] == 'bar_graph'){
+    if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
+      plot_stacked_bar_graph(target, ds);
+      $('#'+target).removeClass('not_rendered');
+    } else {
+      $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+    }
+  }
+  // Scatter plots
+  else if(mqc_plots[target]['plot_type'] == 'scatter'){
+    if(max_num === undefined || Object.keys(mqc_plots[target]['datasets'][0]).length < max_num){
+      plot_scatter_plot(target, ds);
+      $('#'+target).removeClass('not_rendered');
+    } else {
+      $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+    }
+  }
+  // Beeswarm graphs
+  else if(mqc_plots[target]['plot_type'] == 'beeswarm'){
+    if(max_num === undefined || mqc_plots[target]['samples'][0].length < max_num){
+      plot_beeswarm_graph(target, ds);
+      $('#'+target).removeClass('not_rendered');
+    } else {
+      $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+    }
+  }
+  // Heatmap plots
+  else if(mqc_plots[target]['plot_type'] == 'heatmap'){
+    if(max_num === undefined || mqc_plots[target]['xcats'][0].length < max_num){
+      plot_heatmap(target, ds);
+      $('#'+target).removeClass('not_rendered');
+    } else {
+      $('#'+target).addClass('not_rendered gt_max_num_ds').html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+    }
+  }
+  // Not recognised
+  else { console.log('Did not recognise plot type: '+mqc_plots[target]['plot_type']); }
 }
 
 // Basic Line Graph
@@ -301,6 +318,17 @@ function plot_xy_line_graph(target, ds){
   if (config['yDecimals'] === undefined){ config['yDecimals'] = true; }
   if (config['pointFormat'] === undefined){
     config['pointFormat'] = '<div style="background-color:{series.color}; display:inline-block; height: 10px; width: 10px; border:1px solid #333;"></div> <span style="text-decoration:underline; font-weight:bold;">{series.name}</span><br>'+config['tt_label'];
+  }
+  if (config['ytype'] === undefined){
+    config['ytype'] = config['yLog'] ? 'logarithmic' : 'linear';
+  }
+  if (config['ytype'] == 'logarithmic'){
+    if(config['ymin'] == 0){
+      config['ymin'] = undefined;
+    }
+    var minTickInt = 'auto';
+  } else {
+    var minTickInt = undefined;
   }
 
   // Make a clone of the data, so that we can mess with it,
@@ -409,7 +437,7 @@ function plot_xy_line_graph(target, ds){
         text: config['ylab']
       },
       labels: { format: config['yLabelFormat'] ? config['yLabelFormat'] : '{value}' },
-      type: config['yLog'] ? 'logarithmic' : 'linear',
+      type: config['ytype'],
       ceiling: config['yCeiling'],
       floor: config['yFloor'],
       max: config['ymax'],
@@ -803,8 +831,8 @@ function plot_scatter_plot (target, ds){
     },
     tooltip: {
       headerFormat: '',
-			pointFormat: config['pointFormat'],
-			useHTML: true,
+      pointFormat: config['pointFormat'],
+      useHTML: true,
       formatter: (function() {
         if(!this.point.noTooltip) {
           // Formatter function doesn't do name for some reason
@@ -971,7 +999,7 @@ function plot_beeswarm_graph(target, ds){
 
     // Size and spacing options
     var markerRadius = 2.5
-  	var yspace = 70;
+    var yspace = 70;
     var ysep = 10;
     if(data.length > 50){
       markerRadius = 1.8
@@ -985,10 +1013,10 @@ function plot_beeswarm_graph(target, ds){
     }
 
     if (maxx == undefined){
-    	maxx = Math.max.apply(null, data);
+      maxx = Math.max.apply(null, data);
     }
     if (minx == undefined){
-    	minx = Math.max.apply(null, data);
+      minx = Math.max.apply(null, data);
     }
     var range = maxx-minx;
     var sep = range/yspace;
@@ -1039,7 +1067,7 @@ function plot_beeswarm_graph(target, ds){
         'height': (100/categories.length)+'%'
       })
       .highcharts({
-  			chart: {
+        chart: {
             type: 'scatter',
             spacingTop: 0,
             marginBottom: 0,
@@ -1076,7 +1104,7 @@ function plot_beeswarm_graph(target, ds){
             lineWidth: 0
         },
         xAxis: {
-        	lineWidth: 0,
+          lineWidth: 0,
           tickWidth: 0,
           tickPixelInterval: 200,
           labels: {
@@ -1171,6 +1199,8 @@ function plot_heatmap(target, ds){
   var data = JSON.parse(JSON.stringify(mqc_plots[target]['data']));
   var xcats = JSON.parse(JSON.stringify(mqc_plots[target]['xcats']));
   var ycats = JSON.parse(JSON.stringify(mqc_plots[target]['ycats']));
+  // "xcats" and "ycats" are labels of columns and rows respectively
+  // data[n] has form of [x,y,value], x/y are indices of columns/rows
 
   // Rename samples
   if(window.mqc_rename_f_texts.length > 0){
@@ -1228,6 +1258,7 @@ function plot_heatmap(target, ds){
           if(xcat_hl[i] == hl){
             new_xcats.push(xcats[i])
             for (j=0; j < data.length; j++) {
+              // data[j] element is [x,y,val], get "x"
               if(data[j][0] == i){ newdata[j][0] = xidx; }
             }
             xidx += 1;
@@ -1237,6 +1268,7 @@ function plot_heatmap(target, ds){
           if(ycat_hl[i] == hl){
             new_ycats.push(ycats[i])
             for (j=0; j < data.length; j++) {
+              // data[j] element is [x,y,val], get "y"
               if(data[j][1] == i){ newdata[j][1] = yidx; }
             }
             yidx += 1;
@@ -1257,6 +1289,7 @@ function plot_heatmap(target, ds){
     var remove = Array();
     var i = xcats.length;
     var xhidden = 0;
+    // iterate over x-categories (columns)
     while (i--) {
       var match = false;
       for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
@@ -1270,18 +1303,23 @@ function plot_heatmap(target, ds){
       if(window.mqc_hide_mode == 'show'){
         match = !match;
       }
+      // modify data if "i" is match for "hiding":
+      // mark elements from "i"-th column (x) for removal,
+      // shift "x" of elements from "i+" columns to the left
       if(match){
         xcats.splice(i, 1);
         for (n=0; n < data.length; n++) {
-          var x = data[n][1];
+          // data[n] element is [x,y,val], get "x"
+          let x = data[n][0];
           if (x == i){ remove.push(n); }
-          else if(x > i){ data[n][1] -= 1; }
+          else if(x > i){ data[n][0]  = x - 1; }
         }
         xhidden += 1;
       }
     }
     var i = ycats.length;
     var yhidden = 0;
+    // iterate over y-categories (rows)
     while (i--) {
       var match = false;
       for (j = 0; j < window.mqc_hide_f_texts.length; j++) {
@@ -1295,13 +1333,17 @@ function plot_heatmap(target, ds){
       if(window.mqc_hide_mode == 'show'){
         match = !match;
       }
+      // modify data if "i" is match for "hiding"
+      // mark elements from "i"-th row (y) for removal,
+      // shift "y" of elements from "i+" rows up
       if(match){
         ycats.splice(i, 1);
         for (n=0; n < data.length; n++) {
-          var y = data[n][0];
+          // data[n] element is [x,y,val], get "y"
+          let y = data[n][1];
           if (y == i){
             if(remove.indexOf(n) < 0){ remove.push(n); }
-          } else if(y > i){ data[n][0] -= 1; }
+          } else if(y > i){ data[n][1] = y - 1; }
         }
         yhidden += 1;
       }
@@ -1336,7 +1378,8 @@ function plot_heatmap(target, ds){
         if((window.mqc_highlight_regex_mode && xcats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && xcats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
             highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
-            if (data[n][1] == i){ highlight_cells[idx].push(n); }
+            // data[n] element is [x,y,val], get "x"
+            if (data[n][0] == i){ highlight_cells[idx].push(n); }
           }
         }
       });
@@ -1346,7 +1389,8 @@ function plot_heatmap(target, ds){
         if(f_text == ''){ return true; }
         if((window.mqc_highlight_regex_mode && ycats[i].match(f_text)) || (!window.mqc_highlight_regex_mode && ycats[i].indexOf(f_text) > -1)){
           for (n=0; n < data.length; n++) {
-            if (data[n][0] == i){
+            // data[n] element is [x,y,val], get "y"
+            if (data[n][1] == i){
               highlight_cells[idx] = ( typeof highlight_cells[idx] != 'undefined' && highlight_cells[idx] instanceof Array ) ? highlight_cells[idx] : [];
               if(highlight_cells[idx].indexOf(n) < 0){ highlight_cells[idx].push(n); }
             }
@@ -1362,8 +1406,9 @@ function plot_heatmap(target, ds){
       while(h--){
         var i = hl[h];
         data[i] = {
-          x: data[i][1] === undefined ? data[i]['x'] : data[i][1],
-          y: data[i][0] === undefined ? data[i]['y'] : data[i][0],
+          // data[i] element is [x,y,val]
+          x: data[i][0] === undefined ? data[i]['x'] : data[i][0],
+          y: data[i][1] === undefined ? data[i]['y'] : data[i][1],
           value:data[i][2] === undefined ? data[i]['value'] : data[i][2],
           borderWidth:2,
           borderColor: window.mqc_highlight_f_cols[idx]

@@ -25,6 +25,9 @@ pandoc_template: null
 read_count_multiplier: 0.000001
 read_count_prefix: 'M'
 read_count_desc: 'millions'
+long_read_count_multiplier: 0.001
+long_read_count_prefix: 'K'
+long_read_count_desc: 'thousands'
 base_count_multiplier: 0.000001
 base_count_prefix: 'Mb'
 base_count_desc: 'millions'
@@ -93,6 +96,9 @@ sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
 sample_names_rename: []
+show_hide_buttons: []
+show_hide_patterns: []
+show_hide_mode: []
 no_version_check: false
 log_filesize_limit: 10000000
 report_readerrors: false
@@ -315,6 +321,9 @@ module_order:
     - happy:
         module_tag:
             - DNA
+    - mirtop:
+        module_tag:
+            - miRNA
 
     # Post-alignment processing
     - homer:
@@ -516,6 +525,10 @@ module_order:
         module_tag:
             - RNA
             - DNA
+    - pycoqc:
+        module_tag:
+            - DNA
+            - RNA
     - minionqc:
         module_tag:
             - DNA
@@ -524,6 +537,10 @@ module_order:
         module_tag:
             - DNA
             - RNA
+    - multivcfanalyzer:
+        module_tag:
+            - DNA
+            - ancient
     - clusterflow:
         module_tag:
             - RNA
@@ -539,6 +556,11 @@ module_order:
             - RNA
             - DNA
             - methylation
+    - ivar:
+        module_tag:
+            - RNA
+            - epidemiology
+            - virus
     - flash:
         module_tag:
             - DNA
