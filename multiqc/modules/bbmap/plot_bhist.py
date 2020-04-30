@@ -44,6 +44,7 @@ def plot_bhist(samples, file_type, **plot_args):
             'id': 'bbmap-' + file_type + '_plot',
             'title': 'BBTools: ' + plot_args['plot_title'],
             'xlab': 'Read position',
+            'ylab': 'Percentage of G+C bases',
             'ymin': 0,
             'ymax': 100,
             'data_labels': [
