@@ -321,6 +321,9 @@ module_order:
     - happy:
         module_tag:
             - DNA
+    - mirtop:
+        module_tag:
+            - miRNA
 
     # Post-alignment processing
     - homer:

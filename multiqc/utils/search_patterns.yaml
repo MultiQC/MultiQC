@@ -350,6 +350,8 @@ methylQA:
 minionqc:
     fn: 'summary.yaml'
     contents: 'total.gigabases'
+mirtop:
+    fn: '*_mirtop_stats.log'
 mirtrace/summary:
     fn: 'mirtrace-results.json'
 mirtrace/length:

@@ -40,6 +40,9 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 
 #### New Modules:
 
+* [**miRTop**](https://github.com/miRTop/mirtop)
+    * Command line tool to annotate miRNAs with a standard mirna/isomir naming (mirGFF3)
+    * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
     * combining multiple VCF files into one coherent report and format for downstream analysis.
 
