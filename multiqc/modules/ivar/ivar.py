@@ -98,28 +98,28 @@ class MultiqcModule(BaseMultiqcModule):
         headers['reads_too_short_after_trimming'] = {
             'title': '{} Too short'.format(config.read_count_prefix),
             'description': 'Number of reads too short (<30bp) after primer trimming ({})'.format(config.read_count_desc),
-            'scale': 'RdYlGn',
+            'scale': 'OrRd',
             'shared_key': 'read_counts',
             'modify': lambda x: x * config.read_count_multiplier
         }
         headers['reads_outside_primer_region'] = {
             'title': '{} Outside primer'.format(config.read_count_prefix),
             'description': 'Number of reads outside the primer region ({})'.format(config.read_count_desc),
-            'scale': 'RdYlGn-rev',
+            'scale': 'YlOrBr',
             'shared_key': 'read_counts',
             'modify': lambda x: x * config.read_count_multiplier
         }
         headers['total_reads'] = {
             'title': '{} Primer trimmed'.format(config.read_count_prefix),
             'description': 'Total number of reads where primer trimming was performed. ({})'.format(config.read_count_desc),
-            'scale': 'PuRd',
+            'scale': 'Purples',
             'shared_key': 'read_counts',
             'modify': lambda x: x * config.read_count_multiplier
         }
         headers['mapped_reads'] = {
             'title': '{} Mapped'.format(config.read_count_prefix),
             'description': 'Total number of mapped reads in iVar input. ({})'.format(config.read_count_desc),
-            'scale': 'RdYlGn-rev',
+            'scale': 'PuBu',
             'shared_key': 'read_counts',
             'modify': lambda x: x * config.read_count_multiplier
         }
