@@ -53,6 +53,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Removes redundant typo in init name. This makes referring to the module's column consistent with other modules when customising general stats table.
 * **fgbio**
     * New: Plot error rate by read position from `ErrorRateByReadPosition`
+    * GroupReadsByUmi plot can now be toggled to show relative percents ([#1147](https://github.com/ewels/MultiQC/pull/1147))
 * **MTNucRatioCalculator**
     * Fixed misleading value suffix in general stats table
 * **Picard**
