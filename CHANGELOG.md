@@ -36,6 +36,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 * Added `--sample-filters` option to add _show_/_hide_ buttons at the top of the report ([#1125](https://github.com/ewels/MultiQC/issues/1125))
     * Buttons control the report toolbox Show/Hide tool, filtering your samples
     * Allows reports to be pre-configured based on a supplied list of sample names at report-generation time.
+* Line graphs can now have `Log10` buttons (same functionality as bar graphs)
 
 #### New Modules:
 
@@ -77,6 +78,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Incremental numeric suffixes now added if folder already exists
     * Plots folder properly renamed if using `-n`/`--filename`
 * Heatmap plotting function is now compatible with MultiQC toolbox `hide` and `highlight` ([#1136](https://github.com/ewels/MultiQC/issues/1136))
+* Plot config `logswitch_active` now works as advertised
 
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 

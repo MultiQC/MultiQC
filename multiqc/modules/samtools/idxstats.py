@@ -7,7 +7,6 @@ import logging
 from collections import OrderedDict, defaultdict
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
-import math
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -98,15 +97,15 @@ class IdxstatsReportMixin():
                 pdata[s_name] = OrderedDict()
                 pdata_norm[s_name] = OrderedDict()
                 pdata_obs_exp[s_name] = OrderedDict()
-                genome_size = sum([stats[1] for stats in self.samtools_idxstats[s_name].values()])
+                genome_size = float(sum([stats[1] for stats in self.samtools_idxstats[s_name].values()]))
                 for k in keys:
 
                     try:
                         pdata[s_name][k] = self.samtools_idxstats[s_name][k][0]
                         pdata_norm[s_name][k] = float(self.samtools_idxstats[s_name][k][0]) / sample_mapped[s_name]
-                        chrom_size = self.samtools_idxstats[s_name][k][1]
-                        expected_count = (chrom_size / genome_size) * sample_mapped[s_name]
-                        pdata_obs_exp[s_name][k] = math.log10(float(pdata[s_name][k] / expected_count))
+                        chrom_size = float(self.samtools_idxstats[s_name][k][1])
+                        expected_count = (chrom_size / genome_size) * float(sample_mapped[s_name])
+                        pdata_obs_exp[s_name][k] = float(pdata[s_name][k]) / expected_count
                     except (KeyError, ZeroDivisionError):
                         pdata[s_name][k] = 0
                         pdata_norm[s_name][k] = 0
@@ -138,12 +137,13 @@ class IdxstatsReportMixin():
                 'title': 'Samtools idxstats: Mapped reads per contig',
                 'ylab': '# mapped reads',
                 'xlab': 'Chromosome Name',
+                'logswitch': True,
                 'categories': True,
                 'tt_label': '<strong>{point.category}:</strong> {point.y:.2f}',
                 'data_labels': [
                     {'name': 'Normalised Counts', 'ylab': 'Fraction of total count'},
-                    {'name': 'Counts', 'ylab': '# mapped reads'},
-                    {'name': 'Observed over Expected Counts', 'ylab': 'log10(Observed over expected counts)'}
+                    {'name': 'Observed over Expected Counts', 'ylab': 'log10 ( Observed over expected counts )'},
+                    {'name': 'Raw Counts', 'ylab': '# mapped reads'}
                 ]
             }
             self.add_section (
@@ -151,7 +151,7 @@ class IdxstatsReportMixin():
                 anchor = 'samtools-idxstats',
                 description = 'The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. ' +
                     'Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.'.format(cutoff*100),
-                plot = linegraph.plot([pdata_norm, pdata, pdata_obs_exp], pconfig)
+                plot = linegraph.plot([pdata_norm, pdata_obs_exp, pdata], pconfig)
             )
 
         # Return the number of logs that were found
