@@ -182,7 +182,7 @@ bowtie2:
         - 'HiC-Pro'
     shared: true
 busco:
-    fn: 'short_summary_*'
+    fn: 'short_summary*'
     contents: 'BUSCO version is:'
     num_lines: 1
 custom_content:
@@ -259,7 +259,10 @@ featurecounts:
     shared: true
 fgbio/groupreadsbyumi:
     contents: 'fraction_gt_or_eq_family_size'
-    num_lines: 1
+    num_lines: 3
+fgbio/errorratebyreadposition:
+    contents: 'read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate'
+    num_lines: 3
 flash/log:
     contents: '[FLASH]'
     shared: true
@@ -286,7 +289,7 @@ htseq:
 hicexplorer:
     contents: 'Min rest. site distance'
     max_filesize: 4096
-    num_lines: 5
+    num_lines: 26
 hicup:
     fn: 'HiCUP_summary_report*'
 hicpro/mmapstat:
@@ -363,6 +366,8 @@ mosdepth/global_dist:
     fn: '*.mosdepth.global.dist.txt'
 mosdepth/region_dist:
     fn: '*.mosdepth.region.dist.txt'
+multivcfanalyzer:
+    fn: 'MultiVCFAnalyzer.json'
 disambiguate:
     contents: 'unique species A pairs'
     num_lines: 2
@@ -397,13 +402,25 @@ picard/markdups:
     contents: 'DuplicationMetrics'
     shared: true
 picard/oxogmetrics:
-    contents: 'CollectOxoGMetrics'
+    contents: 'OxoGMetrics'
     shared: true
 picard/pcr_metrics:
     contents: 'TargetedPcrMetrics'
     shared: true
+picard/quality_by_cycle:
+    contents_re: '[Qq]uality[Bb]y[Cc]ycle'
+    contents: 'MEAN_QUALITY'
+    shared: true
+picard/quality_score_distribution:
+    contents_re: '[Qq]uality[Ss]core[Dd]istribution'
+    contents: 'COUNT_OF_Q'
+    shared: true
+picard/quality_yield_metrics:
+    contents: 'QualityYieldMetrics'
+    shared: true
 picard/rnaseqmetrics:
-    contents_re: 'Collect[Rr]na[Ss]eq[Mm]etrics'
+    contents_re: '[Rr]na[Ss]eq[Mm]etrics'
+    contents: '## METRICS CLASS'
     shared: true
 picard/rrbs_metrics:
     contents: 'RrbsSummaryMetrics'
@@ -427,6 +444,9 @@ preseq/real_counts:
 prokka:
     contents: 'contigs:'
     num_lines: 2
+pycoqc:
+    contents: '"pycoqc":'
+    num_lines: 2
 qorts:
     contents: 'BENCHMARK_MinutesOnSamIteration'
     num_lines: 100
@@ -447,8 +467,13 @@ qualimap/rnaseq/coverage:
 quast:
     fn: 'report.tsv'
     shared: true
-rna_seqc/metrics:
-    fn: 'metrics.tsv'
+rna_seqc/metrics_v1:
+    fn: '*metrics.tsv'
+    contents: 'Sample	Note	'
+    shared: true
+rna_seqc/metrics_v2:
+    fn: '*metrics.tsv'
+    contents: 'High Quality Ambiguous Alignment Rate'
     shared: true
 rna_seqc/coverage:
     fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
@@ -528,6 +553,11 @@ slamdunk/tcperutrpos:
 snpeff:
     contents: 'SnpEff_version'
     max_filesize: 5000000
+snpsplit/old:
+    contents: 'Writing allele-flagged output file to:'
+    num_lines: 2
+snpsplit/new:
+    fn: '*SNPsplit_report.yaml'
 sortmerna:
     contents: 'Minimal SW score based on E-value'
     shared: true
