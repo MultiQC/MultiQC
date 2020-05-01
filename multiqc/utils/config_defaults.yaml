@@ -412,6 +412,9 @@ module_order:
     - stacks:
         module_tag:
             - DNA
+    - varscan2:
+        module_tag:
+            - DNA
 
     # Alignment tool stats
     - bbmap:
