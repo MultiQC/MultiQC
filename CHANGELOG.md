@@ -47,6 +47,8 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Module started by [@oneillkza](https://github.com/oneillkza/) and completed by [@FlorianThibord](https://github.com/FlorianThibord/)
 * [**MultiVCFAnalyzer**](https://github.com/alexherbig/multivcfanalyzer)
     * combining multiple VCF files into one coherent report and format for downstream analysis.
+* [**Sickle**](https://github.com/najoshi/sickle)
+    * A windowed adaptive trimming tool for FASTQ files using quality
 
 #### Module updates:
 
@@ -90,8 +92,7 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
 ## [MultiQC v1.8](https://github.com/ewels/MultiQC/releases/tag/v1.8) - 2019-11-20
 
 #### New Modules:
-* [**sickle**](https://github.com/najoshi/sickle)
-    * A windowed adaptive trimming tool for FASTQ files using quality
+
 * [**fgbio**](http://fulcrumgenomics.github.io/fgbio/)
     * Process family size count hist data from `GroupReadsByUmi`
 * [**biobambam2**](https://github.com/gt1/biobambam2)
