@@ -64,5 +64,3 @@ def parse_ploidy_estimation_metrics_file(f):
         data[metric] = stat
 
     return data
-
-

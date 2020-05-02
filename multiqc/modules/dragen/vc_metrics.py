@@ -222,16 +222,3 @@ def parse_vc_metrics_file(f):
         data['Filtered indels pct'] = data['Filtered indels'] / prefilter_data['Indels'] * 100.0
 
     return data
-
-
-
-
-
-
-
-
-
-
-
-
-

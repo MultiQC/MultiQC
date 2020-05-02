@@ -135,4 +135,3 @@ def parse_wgs_fine_hist(f):
     sample, phenotype = m.group(1), m.group(2)
     f['s_name'] = sample
     return {phenotype: (data, cum_data, depth_1pc)}
-

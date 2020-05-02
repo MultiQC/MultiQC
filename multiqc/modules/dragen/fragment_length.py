@@ -110,5 +110,3 @@ def parse_fragment_length_hist_file(f):
                     data_by_rg[read_group][frag_len] = cnt
 
     return data_by_rg
-
-

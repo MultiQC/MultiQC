@@ -152,5 +152,3 @@ def parse_time_metrics_file(f):
         data[step] = hours
 
     return data
-
-

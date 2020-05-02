@@ -397,35 +397,3 @@ MAPPING_METRICS = [
                                                                                                                               'over multiple loci (possibly due to structural variants). One alignment is '
                                                                                                                               'referred to as the representative alignment, the other are supplementary', precision=2),
 ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
