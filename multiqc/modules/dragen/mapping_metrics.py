@@ -69,7 +69,6 @@ class DragenMappingMetics(BaseMultiqcModule):
                 for m in data.keys():
                     all_metric_names.add(m)
         # and making headers
-        # headers, beeswarm_keys = make_mapping_stats_headers(all_metric_names)
         genstats_headers, own_tabl_headers = make_headers(all_metric_names, MAPPING_METRICS)
 
         self.general_stats_addcols(data_by_sample, genstats_headers, namespace=NAMESPACE)
@@ -77,9 +76,11 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.add_section(
             name='Mapping metrics per RG',
             anchor='dragen-mapping-metrics',
-            description='Mapping metrics, similar to the metrics computed by the samtools-stats command. '
-                        'Shown on per read group level. To see per-sample level metrics, refer to the general '
-                        'stats table.',
+            description="""
+            Mapping metrics, similar to the metrics computed by the samtools-stats command. 
+            Shown on per read group level. To see per-sample level metrics, refer to the general 
+            stats table.
+            """,
             plot=table.plot(data_by_rg, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )
 
@@ -207,7 +208,7 @@ def parse_mapping_metrics_file(f):
     NORMAL MAPPING/ALIGNING SUMMARY,,Total input reads,1100000000,100.00
     NORMAL MAPPING/ALIGNING SUMMARY,,Number of duplicate marked reads,123518125,11.23
     ...
-    # then tumor and normal per-read-group metrics - reproting in the beeswarm plot:
+    # then tumor and normal per-read-group metrics::
     TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Total reads in RG,2200000000,100.00
     TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Number of duplicate marked reads,433637413,19.71
     TUMOR MAPPING/ALIGNING PER RG,T_SRR7890936_50pc,Number of duplicate marked and mate reads removed,NA
@@ -264,7 +265,7 @@ def parse_mapping_metrics_file(f):
     NORMAL MAPPING/ALIGNING PER RG,N_SRR7890889,Number of unique reads (excl. duplicate marked reads),NA
     ...
 
-    We are reporting summary metrics in the general stats table, and per-read-group in the beeswarm plot.
+    We are reporting summary metrics in the general stats table, and per-read-group in a separate table.
     """
 
     f['s_name'] = re.search(r'(.*).mapping_metrics.csv', f['fn']).group(1)

@@ -54,8 +54,10 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         self.add_section(
             name='Coverage metrics',
             anchor='dragen-cov-metrics',
-            description='Coverage metrics over a region (where the region can be a target region, '
-                        'a QC coverage region, or the whole genome). Press the `Help` button for details.',
+            description="""
+            Coverage metrics over a region (where the region can be a target region, 
+            a QC coverage region, or the whole genome). Press the `Help` button for details.
+            """,
             helptext="""
             The following criteria are used when calculating coverage:
             
@@ -70,7 +72,6 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             4. Bases with `BQ` < `min BQ` (default `10`)
             5. Reads with `MAPQ` = `0` (multimappers)
             6. Overlapping mates are double-counted
-            
             """,
             plot=table.plot(data_by_sample, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )

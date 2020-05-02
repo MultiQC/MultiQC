@@ -46,10 +46,11 @@ class DragenFragmentLength(BaseMultiqcModule):
         self.add_section(
             name='Fragment length hist',
             anchor='dragen-fragment-length-histogram',
-            description='Distribution of estimated fragment lengths of mapped reads per RG. '
-                        'Only points with >=' + str(MIN_CNT_TO_SHOW_ON_PLOT) +
-                        ' support are shown to prevent long flat tail. '
-                        'The plot is also smoothed down to showing 300 points on the X axis, to reduce noise.',
+            description="""
+            Distribution of estimated fragment lengths of mapped reads per read group. 
+            Only points supported by at least {} reads are shown to prevent long flat tail. 
+            The plot is also smoothed down to showing 300 points on the X axis to reduce noise.
+            """.format(MIN_CNT_TO_SHOW_ON_PLOT),
             plot=linegraph.plot(data_by_rg, {
                 'id': 'dragen_fragment_length',
                 'title': 'Fragment length hist',

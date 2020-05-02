@@ -43,10 +43,12 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         self.add_section(
             name='Coverage per contig',
             anchor='dragen-coverage-per-contig',
-            description='Average coverage per contig or chromosome. '
-                        'Calculated as the number of bases (excluding duplicate marked reads, reads '
-                        'with MAPQ=0, and clipped bases), divided by the length of the contig or '
-                        '(if a target bed is used) the total length of the target region spanning that contig.',
+            description="""
+            Average coverage per contig or chromosome. 
+            Calculated as the number of bases (excluding duplicate marked reads, reads 
+            with MAPQ=0, and clipped bases), divided by the length of the contig or 
+            (if a target bed is used) the total length of the target region spanning that contig.
+            """,
             plot=linegraph.plot(main_contigs_by_sample, pconfig={
                  'id': 'dragen_coverage_per_contig',
                  'title': 'Average coverage per contig' + (' (main contigs)' if other_contigs_by_sample else ''),
