@@ -56,17 +56,22 @@ class DragenCoverageMetrics(BaseMultiqcModule):
             anchor='dragen-cov-metrics',
             description='Coverage metrics over a region (where the region can be a target region, '
                         'a QC coverage region, or the whole genome). Press the `Help` button for details.',
-            helptext="""The following criteria are used when calculating coverage:
-            - Duplicate reads and clipped bases are ignored.
-            - Only reads with MAPQ > min MAPQ and bases with BQ > min BQ are considered
-            Considering only bases usable for variant calling, i.e. excluding:
-                        1. clipped bases,
-                        2. bases in duplicate reads,
-                        3. reads with MAPQ < min MAPQ (default 20),
-                        4. bases with BQ < min BQ (default 10) 
-                        5. reads with MAPQ = 0 (multimappers); 
-                        6. overlapping mates are double-counted.
-                        """.replace('\n', '<br>'),
+            helptext="""
+            The following criteria are used when calculating coverage:
+            
+            * Duplicate reads and clipped bases are ignored.
+            * Only reads with `MAPQ` > `min MAPQ` and bases with `BQ` > `min BQ` are considered
+            
+            Considering only bases usable for variant calling, _i.e._ excluding:
+            
+            1. Clipped bases
+            2. Bases in duplicate reads
+            3. Reads with `MAPQ` < `min MAPQ` (default `20`)
+            4. Bases with `BQ` < `min BQ` (default `10`)
+            5. Reads with `MAPQ` = `0` (multimappers)
+            6. Overlapping mates are double-counted
+            
+            """,
             plot=table.plot(data_by_sample, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )
         return data_by_sample.keys()
@@ -213,7 +218,6 @@ def parse_wgs_overall_mean_cov(f):
 
     Fully covered by _coverage_metrics_normal.csv and _coverage_metrics_tumor.csv, so ignoring.
     """
-
 
 
 
