@@ -59,7 +59,6 @@ def make_headers(parsed_metric_ids, metrics):
                 col['scale'] = 'RdBu'
                 if metric.the_higher_the_worse:
                     col['scale'] = 'YlOrRd'
-                    # col['scale'] += '-rev'
         elif metric.namespace == 'Variants':
             col['scale'] = 'Purples'
 
@@ -79,7 +78,6 @@ def make_headers(parsed_metric_ids, metrics):
                 pct_col['scale'] = 'RdBu'
             if metric.the_higher_the_worse:
                 pct_col['scale'] = 'YlOrRd'
-                # pct_col['scale'] += '-rev'
 
             if metric.precision is not None:
                 pct_col['format'] = '{:,.' + str(metric.precision) + 'f}'
