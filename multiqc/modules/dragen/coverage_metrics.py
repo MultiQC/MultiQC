@@ -23,7 +23,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         for f in self.find_log_files('dragen/wgs_coverage_metrics'):
             data_by_phenotype = parse_wgs_coverage_metrics(f)
-            if f['s_name'] in data_by_phenotype:
+            if f['s_name'] in data_by_phenotype_by_sample:
                 log.debug('Duplicate sample name found! Overwriting: {}'.format(f['s_name']))
             self.add_data_source(f, section='stats')
             data_by_phenotype_by_sample[f['s_name']].update(data_by_phenotype)
@@ -188,55 +188,4 @@ def parse_wgs_coverage_metrics(f):
     sample, phenotype = m.group(1), m.group(2)
     f['s_name'] = sample
     return {phenotype: data}
-
-
-def parse_wgs_hist(f):
-    """
-    T_SRR7890936_50pc.wgs_hist_normal.csv
-    T_SRR7890936_50pc.wgs_hist_tumor.csv
-
-    PCT of bases in wgs with coverage [100x:inf), 0.22
-    PCT of bases in wgs with coverage [50x:100x), 43.78
-    PCT of bases in wgs with coverage [20x:50x), 48.79
-    PCT of bases in wgs with coverage [15x:20x), 1.72
-    PCT of bases in wgs with coverage [10x:15x), 0.80
-    PCT of bases in wgs with coverage [3x:10x), 0.78
-    PCT of bases in wgs with coverage [1x:3x), 0.49
-    PCT of bases in wgs with coverage [0x:1x), 3.42
-
-    Fully covered by _coverage_metrics_normal.csv and _coverage_metrics_tumor.csv, so ignoring.
-    """
-
-
-def parse_wgs_overall_mean_cov(f):
-    """
-    T_SRR7890936_50pc.wgs_overall_mean_cov_normal.csv
-    NORMAL Average alignment coverage over wgs, 45.61
-
-    T_SRR7890936_50pc.wgs_overall_mean_cov_tumor.csv
-    TUMOR Average alignment coverage over wgs, 82.09
-
-    Fully covered by _coverage_metrics_normal.csv and _coverage_metrics_tumor.csv, so ignoring.
-    """
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
