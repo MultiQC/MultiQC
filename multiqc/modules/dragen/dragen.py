@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from .mapping_metrics import DragenMappingMetics
 from .fragment_length import DragenFragmentLength
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
-from .time_metrics import DragenTimeMetrics
 from .vc_metrics import DragenVCMetrics
 from .coverage_per_contig import DragenCoveragePerContig
 from .coverage_metrics import DragenCoverageMetrics
@@ -13,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics, DragenTimeMetrics,
+class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstimationMetrics,
                     DragenVCMetrics, DragenCoveragePerContig, DragenCoverageMetrics, DragenCoverageHist):
     """ DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
