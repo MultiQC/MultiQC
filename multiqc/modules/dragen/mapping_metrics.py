@@ -87,71 +87,58 @@ class DragenMappingMetics(BaseMultiqcModule):
         )
 
         # Make bargraph plots of mapped, dupped and paired reads
-        self.__map_dup_read_chart(data_by_rg)
-        self.__map_pair_read_chart(data_by_rg)
+        self.__map_pair_dup_read_chart(data_by_rg)
 
-        # Alternatively can consider a beeswarm plot, similar to samtools flagstats:
-        # self.add_section(
-        #     name='Mapping metrics per RG',
-        #     anchor='dragen-mapping-metrics',
-        #     description="A dot plot showing DRAGEN mapping metrics for each input read group. "
-        #                 "All read counts in " + str(config.read_count_desc) + ", " +
-        #                 "all bases counts in " + str(config.read_count_desc),
-        #     plot=beeswarm.plot(data_by_rg, beeswarm_keys, {'id': 'dragen-mapping-metrics-dp'})
-        # )
-
-    def __map_dup_read_chart(self, data_by_sample):
-        chart_data = dict()
-        for sample_id, data in data_by_sample.items():
-            if data['Number of unique & mapped reads (excl. duplicate marked reads)']\
-                    + data['Number of duplicate marked reads']\
-                    + data['Unmapped reads'] != data['Total reads in RG']:
-                log.warning("sum of unique/duplicate/unmapped reads not matching total, "
-                            "skipping mapping/duplicates percentages plot for: {}".format(sample_id))
-            else:
-                chart_data[sample_id] = data
-        self.add_section(
-            name='Mapped and duplicated per RG',
-            anchor='dragen-mapping-dup-percentage',
-            description='Mapping and duplicate reads per read group: '
-                        'uniquely mapped vs. duplicate vs. unmapped reads.',
-            plot=bargraph.plot(chart_data, {
-                'Number of unique & mapped reads (excl. duplicate marked reads)': {'color': '#437bb1', 'name': 'Mapped'},
-                'Number of duplicate marked reads':                               {'color': '#f5a742', 'name': 'Duplicated'},
-                'Unmapped reads':                                                 {'color': '#b1084c', 'name': 'Unmapped'},
-            }, {
-                'id': 'mapping_dup_percentage_plot',
-                'title': 'Mapping metrics per read group: duplicate reads',
-                'ylab': '# Reads',
-                'cpswitch_counts_label': 'Number of reads'
-            })
-        )
-
-    def __map_pair_read_chart(self, data_by_sample):
-        chart_data = dict()
+    def __map_pair_dup_read_chart(self, data_by_sample):
+        chart_data = [dict(), dict()]
         for sample_id, data in data_by_sample.items():
             if data['Not properly paired reads (discordant)'] + data['Properly paired reads']\
                     + data['Singleton reads (itself mapped; mate unmapped)']\
                     + data['Unmapped reads'] != data['Total reads in RG']:
                 log.warning("sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                             "skipping mapping/paired percentages plot for: {}".format(sample_id))
-            else:
-                chart_data[sample_id] = data
+                continue
+            if data['Number of unique & mapped reads (excl. duplicate marked reads)']\
+                    + data['Number of duplicate marked reads']\
+                    + data['Unmapped reads'] != data['Total reads in RG']:
+                log.warning("sum of unique/duplicate/unmapped reads not matching total, "
+                            "skipping mapping/duplicates percentages plot for: {}".format(sample_id))
+                continue
+            chart_data[0][sample_id] = data
+            chart_data[1][sample_id] = data
         self.add_section(
-            name='Mapped and paired per RG',
-            anchor='dragen-mapping-paired-percentage',
-            description="Mapping and pairing read metrics per read group: "
-                        "properly paired vs. discordant vs. unpaired vs. unmapped reads.",
-            plot=bargraph.plot(chart_data, {
+            name='Mapped/paired/duplicated per RG',
+            anchor='dragen-mapped-paired-duplicated',
+            description='Distribution of reads based on pairing, duplication and mapping.',
+            plot=bargraph.plot(chart_data, [
+            {
                 'Properly paired reads':                          {'color': '#099109', 'name': 'Paired, properly'},
                 'Not properly paired reads (discordant)':         {'color': '#c27a0e', 'name': 'Paired, discordant'},
                 'Singleton reads (itself mapped; mate unmapped)': {'color': '#912476', 'name': 'Singleton'},
                 'Unmapped reads':                                 {'color': '#b1084c', 'name': 'Unmapped'},
-            }, {
-                'id': 'mapping_paired_percentage_plot',
-                'title': 'Mapping metrics per read group: paired reads',
-                'ylab': '# Reads',
-                'cpswitch_counts_label': 'Number of reads'
+            },
+            {
+                'Number of unique & mapped reads (excl. duplicate marked reads)': {'color': '#437bb1', 'name': 'Unique'},
+                'Number of duplicate marked reads':                               {'color': '#f5a742', 'name': 'Duplicated'},
+                'Unmapped reads':                                                 {'color': '#b1084c', 'name': 'Unmapped'},
+            },
+            ], {
+                'id': 'mapping_dup_percentage_plot',
+                'title': 'Mapped/paired/duplicated reads per read group',
+                'ylab': 'Reads',
+                'cpswitch_counts_label': 'Reads',
+                'data_labels': [
+                {
+                    'name': 'Paired vs. discordant vs. signleton',
+                    'ylab': 'Reads',
+                    'cpswitch_counts_label': 'Reads',
+                 },
+                {
+                    'name': 'Unique vs duplicated vs unmapped',
+                    'ylab': 'Reads',
+                    'cpswitch_counts_label': 'Reads',
+                 },
+                ]
             })
         )
 
