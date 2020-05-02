@@ -37,9 +37,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
                 perchrom_data_by_sample[new_sn] = perchrom_data_by_phenotype_by_sample[sn][phenotype]
 
         if not perchrom_data_by_sample:
-            return
-        log.info('Found DRAGEN per-contig coverage histogram for {} DRAGEN output prefixes'.format(
-            len(perchrom_data_by_sample)))
+            return set()
 
         main_contigs_by_sample = {sn: data[0] for sn, data in perchrom_data_by_sample.items()}
         other_contigs_by_sample = {sn: data[1] for sn, data in perchrom_data_by_sample.items()}
@@ -72,6 +70,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
                     'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
                 }) if other_contigs_by_sample else '')
         )
+        return perchrom_data_by_sample.keys()
 
 
 def parse_wgs_contig_mean_cov(f):

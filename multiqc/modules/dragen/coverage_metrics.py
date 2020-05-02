@@ -43,8 +43,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
 
         if not data_by_sample:
-            return
-        log.info('Found DRAGEN coverage metrics for {} DRAGEN output prefixes'.format(len(data_by_sample)))
+            return set()
 
         all_metric_names = set()
         for sn, sdata in data_by_sample.items():
@@ -72,6 +71,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                         """.replace('\n', '<br>'),
             plot=table.plot(data_by_sample, own_tabl_headers, pconfig={'namespace': NAMESPACE})
         )
+        return data_by_sample.keys()
 
 
 COV_METRICS = list(itertools.chain.from_iterable([[

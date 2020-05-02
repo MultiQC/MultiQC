@@ -32,9 +32,7 @@ class DragenFragmentLength(BaseMultiqcModule):
         # Filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
         if not data_by_rg_by_sample:
-            return
-        log.info('Found fragment length histograms for {} DRAGEN output prefixes'.format(
-            len(data_by_rg_by_sample)))
+            return set()
 
         # Merging all data
         data_by_rg = {}
@@ -63,6 +61,7 @@ class DragenFragmentLength(BaseMultiqcModule):
                 'smooth_points': smooth_points,
             })
         )
+        return data_by_rg_by_sample.keys()
 
 
 def parse_fragment_length_hist_file(f):

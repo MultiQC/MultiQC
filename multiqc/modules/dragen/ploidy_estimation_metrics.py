@@ -28,8 +28,7 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
-            return
-        log.info('Found ploidy estimation metrics for {} samples'.format(len(data_by_sample)))
+            return set()
 
         headers = OrderedDict()
         headers['Ploidy estimation'] = {
@@ -38,6 +37,7 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
             'scale': 'Set3',
         }
         self.general_stats_addcols(data_by_sample, headers, namespace=NAMESPACE)
+        return data_by_sample.keys()
 
 
 def parse_ploidy_estimation_metrics_file(f):

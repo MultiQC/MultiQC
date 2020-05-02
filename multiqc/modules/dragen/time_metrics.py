@@ -37,7 +37,6 @@ class DragenTimeMetrics(BaseMultiqcModule):
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
             return
-        log.info('Found time metrics for {} samples'.format(len(data_by_sample)))
 
         headers = OrderedDict()
         genstats_headers = OrderedDict()
@@ -122,6 +121,7 @@ class DragenTimeMetrics(BaseMultiqcModule):
                 'cpswitch_counts_label': 'Hours'
             })
         )
+        return data_by_sample.keys()
 
 
 def parse_time_metrics_file(f):

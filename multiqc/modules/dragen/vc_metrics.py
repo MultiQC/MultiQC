@@ -30,8 +30,7 @@ class DragenVCMetrics(BaseMultiqcModule):
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
-            return
-        log.info('Found variant calling metrics for {} DRAGEN output prefixes'.format(len(data_by_sample)))
+            return set()
 
         all_metric_names = set()
         for sn, sdata in data_by_sample.items():
@@ -52,6 +51,7 @@ class DragenVCMetrics(BaseMultiqcModule):
                         'from pre-filter VCF to generate the post-filter VCF.',
             plot=table.plot(data_by_sample, vc_table_headers, pconfig={'namespace': NAMESPACE})
         )
+        return data_by_sample.keys()
 
 
 VC_METRICS = [Metric(m.id, m.title, in_genstats=m.in_genstats, in_own_tabl=m.in_own_tabl, descr=m.descr, unit=m.unit,

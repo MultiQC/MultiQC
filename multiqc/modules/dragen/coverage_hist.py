@@ -38,12 +38,11 @@ class DragenCoverageHist(BaseMultiqcModule):
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
 
         if not data_by_sample:
-            return
-        log.info('Found DRAGEN coverage histogram for {} DRAGEN output prefixes'.format(len(data_by_sample)))
+            return set()
 
-        dist_data  = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
-        cum_data   = {sn: cum  for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
-        depth_1pc  = max(depth_1pc for (dist, cum, depth_1pc) in data_by_sample.values())
+        dist_data = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
+        cum_data  = {sn: cum  for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
+        depth_1pc = max(depth_1pc for (dist, cum, depth_1pc) in data_by_sample.values())
 
         self.add_section(
             name='Coverage distribution',
@@ -59,6 +58,7 @@ class DragenCoverageHist(BaseMultiqcModule):
                 'xmin': 0,
                 'xmax': depth_1pc,  # trim long flat tail
                 'tt_label': '<b>{point.x}X</b>: {point.y} loci',
+                'cpswitch': True,
             })
         )
 
@@ -79,6 +79,7 @@ class DragenCoverageHist(BaseMultiqcModule):
                 'tt_label': '<b>{point.x}X</b>: {point.y:.2f}%',
             })
         )
+        return data_by_sample.keys()
 
 
 def parse_wgs_fine_hist(f):

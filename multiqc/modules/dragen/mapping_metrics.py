@@ -51,10 +51,9 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
 
         if not data_by_rg_by_sample and not data_by_phenotype_by_sample:
-            return
-        log.info("Found mapping metrics for {} samples".format(len(data_by_rg_by_sample)))
-
+            return set()
         self.report_mapping_metrics(data_by_sample, data_by_rg_by_sample)
+        return data_by_rg_by_sample.keys()
 
     def report_mapping_metrics(self, data_by_sample, data_by_rg_by_sample):
         # merging all read group data
@@ -124,7 +123,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             },
             ], {
                 'id': 'mapping_dup_percentage_plot',
-                'title': 'Mapped/paired/duplicated reads per read group',
+                'title': 'Dragen: Mapped/paired/duplicated reads per read group',
                 'ylab': 'Reads',
                 'cpswitch_counts_label': 'Reads',
                 'data_labels': [
