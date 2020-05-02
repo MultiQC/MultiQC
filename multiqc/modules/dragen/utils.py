@@ -5,14 +5,14 @@ from multiqc import config
 read_format = '{:,.1f}'
 if config.read_count_multiplier == 1:
     read_format = '{:,.0f}'
-read_format += '&nbsp;' + config.read_count_prefix
+# read_format += '&nbsp;' + config.read_count_prefix
 
 base_format = '{:,.1f}&nbsp;'
 if config.base_count_multiplier == 1:
     base_format = '{:,.0f}'
 elif config.base_count_multiplier == 0.000000001:
     base_format = '{:,.2f}'
-base_format += '&nbsp;' + config.base_count_prefix
+# base_format += '&nbsp;' + config.base_count_prefix
 
 
 class Metric:
@@ -92,11 +92,13 @@ def make_headers(parsed_metric_ids, metrics):
 
         if metric.unit == 'reads':
             col['description'] = col['description'].format(config.read_count_desc)
+            col['title'] = config.read_count_prefix + ' ' + col['title']
             col['modify'] = lambda x: x * config.read_count_multiplier
             col['shared_key'] = 'read_count'
             col['format'] = read_format
         elif metric.unit == 'bases':
             col['description'] = col['description'].format(config.base_count_desc)
+            col['title'] = config.base_count_prefix + ' ' + col['title']
             col['modify'] = lambda x: x * config.base_count_multiplier
             col['shared_key'] = 'base_count'
             col['format'] = base_format
