@@ -50,26 +50,34 @@ class DragenCoveragePerContig(BaseMultiqcModule):
             (if a target bed is used) the total length of the target region spanning that contig.
             """,
             plot=linegraph.plot(main_contigs_by_sample, pconfig={
-                 'id': 'dragen_coverage_per_contig',
-                 'title': 'Dragen: Average coverage per contig' + (' (main contigs)' if other_contigs_by_sample else ''),
-                 'ylab': 'Average coverage',
-                 'xlab': 'Region',
-                 'categories': True,
-                 'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
-            }) + (
-                '<br>' +
-                'Non-main contigs: '
-                'unlocalized (*_random), unplaced (chrU_*), alts (*_alt), mitochondria (chrM), EBV, HLA. '
-                'Zoom in to see more contigs as all labels don\'t fit the screen. ' +
-                linegraph.plot(other_contigs_by_sample, pconfig={
+                'id': 'dragen_coverage_per_contig',
+                'title': 'Dragen: Average coverage per contig' + (' (main contigs)' if other_contigs_by_sample else ''),
+                'ylab': 'Average coverage',
+                'xlab': 'Region',
+                'categories': True,
+                'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
+            })
+        )
+
+        if other_contigs_by_sample:
+            self.add_section(
+                name='Coverage per contig (non-main)',
+                anchor='dragen-coverage-per-nonmain-contig',
+                description="""
+                Non-main contigs: 
+                unlocalized (*_random), unplaced (chrU_*), alts (*_alt), mitochondria (chrM), EBV, HLA. 
+                Zoom in to see more contigs as all labels don\'t fit the screen.
+                """,
+                plot=linegraph.plot(other_contigs_by_sample, pconfig={
                     'id': 'dragen_coverage_per_non_main_contig',
                     'title': 'Dragen: Average coverage of non-main contigs',
                     'ylab': 'Average coverage',
                     'xlab': 'Region',
                     'categories': True,
                     'tt_label': '<b>{point.x}</b>: {point.y:.1f}x',
-                }) if other_contigs_by_sample else '')
-        )
+                })
+            )
+
         return perchrom_data_by_sample.keys()
 
 
@@ -109,14 +117,15 @@ def parse_wgs_contig_mean_cov(f):
         depth = float(depth)
         # skipping unplaced and alternative contigs, as well as the mitochondria (might attract 100 times more coverage
         # than human chromosomes):
-        if \
-                chrom.startswith('chrUn_') or \
-                chrom.endswith('_random') or \
-                chrom.endswith('_alt') or \
-                chrom == 'chrM' or \
-                chrom == 'MT' or \
-                chrom == 'chrEBV' or \
-                chrom.startswith('HLA-'):
+        if (
+                chrom.startswith('chrUn_') or
+                chrom.endswith('_random') or
+                chrom.endswith('_alt') or
+                chrom == 'chrM' or
+                chrom == 'MT' or
+                chrom == 'chrEBV' or
+                chrom.startswith('HLA-')
+        ):
             other_contig_perchrom_data[chrom] = depth
         else:
             main_contig_perchrom_data[chrom] = depth
