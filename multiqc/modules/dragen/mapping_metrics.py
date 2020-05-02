@@ -377,7 +377,7 @@ MAPPING_METRICS = [
     # Read length stats
     Metric('Estimated read length'                                  , 'Read len'                   , 'hid', 'hid', 'bp'   , 'Estimated read length. Total number of input bases divided by the number of reads'),
     Metric('Insert length: mean'                                    , 'Avg IS'                     , 'hid', 'hid', 'bp'   , 'Mean insert size'),
-    Metric('Insert length: median'                                  , 'Med IS'                     , '#'  , '#'  , 'bp'   , 'Median insert size'),
+    Metric('Insert length: median'                                  , 'Med IS'                     , '#'  , '#'  , 'bp'   , 'Median insert size', precision=0),
     Metric('Insert length: standard deviation'                      , 'IS std'                     , 'hid', 'hid', 'bp'   , 'Standard deviation of insert size deviation'),
     # Bases stats:
     Metric('Total bases'                                            , 'Input bases'                , 'hid', 'hid', 'bases', 'Total number of bases sequenced, {}'),
