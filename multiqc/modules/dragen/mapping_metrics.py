@@ -4,11 +4,9 @@ from __future__ import print_function
 
 import itertools
 import re
-from collections import OrderedDict, defaultdict
-from multiqc import config
+from collections import defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.dragen.utils import base_format, read_format
-from multiqc.plots import bargraph, beeswarm, table
+from multiqc.plots import bargraph, table
 from .utils import make_headers, Metric
 
 # Initialise the logger

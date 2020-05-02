@@ -3,17 +3,15 @@
 from __future__ import print_function
 
 import itertools
-import math
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import linegraph, bargraph, table
+from multiqc.plots import table
+from .utils import make_headers, Metric
 
 # Initialise the logger
 import logging
 log = logging.getLogger(__name__)
-
-from .utils import make_headers, Metric
 
 
 NAMESPACE = 'DRAGEN coverage'

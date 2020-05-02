@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import itertools
-import math
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
-from multiqc.plots import linegraph, bargraph, table
+from multiqc.plots import linegraph
 
 # Initialise the logger
 import logging

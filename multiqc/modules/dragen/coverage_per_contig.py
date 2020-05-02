@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import itertools
-import math
 import re
 from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import linegraph
 
 # Initialise the logger
 import logging

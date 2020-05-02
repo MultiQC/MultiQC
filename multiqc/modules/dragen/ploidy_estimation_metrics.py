@@ -4,7 +4,6 @@ from __future__ import print_function
 import re
 from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import linegraph
 
 # Initialise the logger
 import logging

@@ -4,8 +4,7 @@ from __future__ import print_function
 import re
 from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import linegraph, bargraph, table, beeswarm
+from multiqc.plots import bargraph
 
 # Initialise the logger
 import logging
