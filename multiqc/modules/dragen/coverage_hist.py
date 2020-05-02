@@ -49,7 +49,7 @@ class DragenCoverageHist(BaseMultiqcModule):
             helptext=coverage_histogram_helptext,
             plot=linegraph.plot(dist_data, {
                 'id': 'dragen_coverage_dist',
-                'title': 'Coverage distribution',
+                'title': 'Dragen: Coverage distribution',
                 'xlab': 'Depth (x)',
                 'ylab': 'Number of bases in genome covered by X reads',
                 'ymin': 0,
@@ -67,7 +67,7 @@ class DragenCoverageHist(BaseMultiqcModule):
             helptext=genome_fraction_helptext,
             plot=linegraph.plot(cum_data, {
                 'id': 'dragen_cumulative_coverage_hist',
-                'title': 'Cumulative coverage hist',
+                'title': 'Dragen: Cumulative coverage hist',
                 'xlab': 'Depth (x)',
                 'ylab': '% of bases in genome covered by at least X reads',
                 'ymin': 0,

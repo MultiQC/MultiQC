@@ -51,7 +51,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
             """,
             plot=linegraph.plot(main_contigs_by_sample, pconfig={
                  'id': 'dragen_coverage_per_contig',
-                 'title': 'Average coverage per contig' + (' (main contigs)' if other_contigs_by_sample else ''),
+                 'title': 'Dragen: Average coverage per contig' + (' (main contigs)' if other_contigs_by_sample else ''),
                  'ylab': 'Average coverage',
                  'xlab': 'Region',
                  'categories': True,
@@ -63,7 +63,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
                 'Zoom in to see more contigs as all labels don\'t fit the screen. ' +
                 linegraph.plot(other_contigs_by_sample, pconfig={
                     'id': 'dragen_coverage_per_non_main_contig',
-                    'title': 'Average coverage of non-main contigs',
+                    'title': 'Dragen: Average coverage of non-main contigs',
                     'ylab': 'Average coverage',
                     'xlab': 'Region',
                     'categories': True,
