@@ -62,4 +62,6 @@ class MultiqcModule(DragenMappingMetics, DragenFragmentLength, DragenPloidyEstim
         samples_found |= self.add_fragment_length_hist()
         # <output prefix>.fragment_length_hist.csv         - a histogram plot
 
+        if len(samples_found) == 0:
+            raise UserWarning
         log.info("Found {} reports".format(len(samples_found)))
