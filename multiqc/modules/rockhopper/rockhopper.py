@@ -6,7 +6,6 @@ https://cs.wellesley.edu/~btjaden/Rockhopper/ """
 from __future__ import print_function
 import logging
 import re
-import numpy as np
 from collections import OrderedDict
 
 from multiqc import config
@@ -19,16 +18,20 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
-        
+
         # Initialize the parent object
-        super(MultiqcModule, self).__init__(name='Rockhopper', 
-            anchor='rockhopper',
-            href='https://cs.wellesley.edu/~btjaden/Rockhopper/',
-            info="is a comprehensive and user-friendly system "\
-                 "for computational analysis of bacterial RNA-seq data. "\
-                 "It can align reads to genomes, assemble transcripts, "\
-                 "identify transcript boundaries, and discover novel "\
-                 "transcripts such as small RNAs.")
+        super(MultiqcModule, self).__init__(
+            name = 'Rockhopper',
+            anchor = 'rockhopper',
+            href = 'https://cs.wellesley.edu/~btjaden/Rockhopper/',
+            info = """
+            is a comprehensive and user-friendly system
+            for computational analysis of bacterial RNA-seq data.
+            It can align reads to genomes, assemble transcripts,
+            identify transcript boundaries, and discover novel
+            transcripts such as small RNAs.
+            """
+        )
 
         # Set up vars
         self.rh_data = dict()
@@ -36,14 +39,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse summary file
         for f in self.find_log_files('rockhopper'):
             self.parse_rockhopper_summary(f)
-         
-        
+
         # Filter to strip out ignored sample names
         self.rh_data = self.ignore_samples(self.rh_data)
 
         if len(self.rh_data) == 0:
             raise UserWarning
-        
+
         log.info("Found {} reports".format(len(self.rh_data)))
 
         # Write to file
@@ -55,23 +57,30 @@ class MultiqcModule(BaseMultiqcModule):
         # Alignment bar plot
         self.rockhopper_count_bar_plot()
 
-       
+
     def parse_rockhopper_summary(self,f):
-       
+
         s_name = None
 
         # Initialize stats fields
-        stats_index = ['mRNA-sense','mRNA-antisense',\
-                       'rRNA-sense','rRNA-antisense',\
-                       'tRNA-sense','tRNA-antisense',\
-                       'ncRNA-sense','ncRNA-antisense','unannotated']
-        
-        results = {name:0 for name in stats_index}
+        stats_index = [
+            'mRNA-sense',
+            'mRNA-antisense',
+            'rRNA-sense',
+            'rRNA-antisense',
+            'tRNA-sense',
+            'tRNA-antisense',
+            'ncRNA-sense',
+            'ncRNA-antisense',
+            'unannotated'
+        ]
+
+        results = { name:0 for name in stats_index }
 
         # Parse rockhopper output line-by-line since there may be many genomes
         lines = f['f'].split('\n')
         for i, line in enumerate(lines):
-            
+
             # Get sample name
             if line.startswith('Aligning sequencing reads from file:'):
                 s_name = line.split(':', 1)[1].strip()
@@ -80,43 +89,48 @@ class MultiqcModule(BaseMultiqcModule):
             elif line.startswith('Aligning sequencing reads from files:'):
                 s_name = lines[i+1].strip()
                 s_name = self.clean_s_name(s_name,f['root'])
-            
+
             # Get total number of reads read by rockhopper
             if line.startswith('Total reads:'):
                 results['total-reads'] = int(re.search('Total reads:\s*(\d*)',line).group(1))
                 i += 1
-            
+
             # Get number of reads aligned to each genome
             elif line.startswith('Successfully aligned reads'):
-        
+
                 # Get Genome ID
                 genome = re.search('\(>(.*?) .*\)',line).group(1)
-        
+
                 # Get number of aligned reads
                 genome_reads = int(re.search('Successfully aligned reads:\s*(\d*)',line).group(1))
-        
+
                 # Get percent of reads in each category
                 stats = [int(re.search('(\d+)\%',subline).group(1)) for subline in lines[i+1:i+10]]
                 for name,val in zip(stats_index,stats):
                     # Convert percentages to true number of reads in each category
-                    results[name] += int(np.round(val*genome_reads/100))
+                    results[name] += int(round(val*genome_reads/100))
 
                 # Skip 10 lines
                 i += 10
-        
+
             else:
                 i += 1
-    
+
         if len(results) > 0 and s_name is not None:
+
+            # Calculate unaligned read count
+            total_mapped_reads  = sum([v for k,v in results.items() if k != 'total-reads'])
+            results['unaligned'] = results['total-reads'] - total_mapped_reads
+
             if s_name in self.rh_data:
                 log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name)
             self.rh_data[s_name] = results
 
     def rockhopper_general_stats_table(self):
-        """ Take the parsed stats from the Rockhopper summary and add it to the 
+        """ Take the parsed stats from the Rockhopper summary and add it to the
         basic stats table at the top of the report """
-        
+
         headers = {}
         headers['mRNA-sense'] = {
             'title': 'CDS Reads ({})'.format(config.read_count_prefix),
@@ -156,42 +170,34 @@ class MultiqcModule(BaseMultiqcModule):
 
     def rockhopper_count_bar_plot(self):
         """ Stacked bar plot showing counts of reads """
+
         pconfig = {
             'id':'rockhopper_reads_counts_plot',
             'title': 'Rockhopper: Alignment types',
             'ylab': 'Number of reads',
-            'tt_percentage': False,
-            'hide_zero_cats': True
+            'tt_percentage': False
         }
-
-        pdata = dict()
-        
-        for s_name, vals in self.rh_data.items():
-            pdata[s_name] = dict()
-            for k, v in vals.items():
-                if k != 'total-reads':
-                    pdata[s_name][k] = v
-            total_mapped_reads  = sum([v for k,v in vals.items() if k!='total-reads'])
-            pdata[s_name]['unaligned'] = vals['total-reads']-total_mapped_reads
 
         # Plot bar graph of groups
         keys = OrderedDict()
-        keys['mRNA-sense'] = {'name': "mRNA (Sense)"}
-        keys['mRNA-antisense'] = {'name': "mRNA (Antisense)"}
-        keys['rRNA-sense'] = {'name': "rRNA (Sense)"}
-        keys['rRNA-antisense'] = {'name': "rRNA (Antisense)"}
-        keys['tRNA-sense'] = {'name': "tRNA (Sense)"}
-        keys['tRNA-antisense'] = {'name': "tRNA (Antisense)"}
-        keys['ncRNA-sense'] = {'name': "ncRNA (Sense)"}
+        keys['mRNA-sense']      = {'name': "mRNA (Sense)"}
+        keys['mRNA-antisense']  = {'name': "mRNA (Antisense)"}
+        keys['rRNA-sense']      = {'name': "rRNA (Sense)"}
+        keys['rRNA-antisense']  = {'name': "rRNA (Antisense)"}
+        keys['tRNA-sense']      = {'name': "tRNA (Sense)"}
+        keys['tRNA-antisense']  = {'name': "tRNA (Antisense)"}
+        keys['ncRNA-sense']     = {'name': "ncRNA (Sense)"}
         keys['ncRNA-antisense'] = {'name': "ncRNA (Antisense)"}
-        keys['unannotated'] = {'name': "Unannotated"}
-        keys['unaligned'] = {'name':'Unaligned'}
+        keys['unannotated']     = {'name': "Unannotated"}
+        keys['unaligned']       = {'name':'Unaligned'}
 
         self.add_section (
             name = 'Rockhopper',
             anchor = 'rockhopper',
-            description = "This plot shows the number of reads mapped to "\
-                          "different regions of the genome, accounting for "\
-                          "sense and antisense alignment, if relevant",
-            plot = bargraph.plot(pdata, keys, pconfig)
+            description = """
+            This plot shows the number of reads mapped to
+            different regions of the genome, accounting for
+            sense and antisense alignment, if relevant.
+            """,
+            plot = bargraph.plot(self.rh_data, keys, pconfig)
         )

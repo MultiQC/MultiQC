@@ -54,13 +54,12 @@ to break. If you haven't already, **you need to switch to Python 3 now**.
     * Combining multiple VCF files into one coherent report and format for downstream analysis.
 * **Picard** - new submodules for `QualityByCycleMetrics`, `QualityScoreDistributionMetrics` & `QualityYieldMetrics`
     * See [#1116](https://github.com/ewels/MultiQC/issues/1114)
+* [**Rockhopper**](https://cs.wellesley.edu/~btjaden/Rockhopper/)
+    * RNA-seq tool for bacteria, includes bar plot showing where features map.
 * [**Sickle**](https://github.com/najoshi/sickle)
     * A windowed adaptive trimming tool for FASTQ files using quality
 * [**VarScan2**](https://github.com/dkoboldt/varscan)
     * Variant calling and somatic mutation/CNV detection for next-generation sequencing data
-
-* [**Rockhopper**](https://cs.wellesley.edu/~btjaden/Rockhopper/)
-    * RNA-seq tool for bacteria, includes bar plot showing where features map.
 
 #### Module updates:
 
