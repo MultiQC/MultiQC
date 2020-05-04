@@ -52,6 +52,7 @@ def parse_reports(self,
                 fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
                 if fn_search:
                     s_name = os.path.basename(fn_search.group(1).strip('[]'))
+                    s_name = self.clean_s_name(s_name, f['root'])
                     base_s_name = s_name
                 continue
 
@@ -69,10 +70,10 @@ def parse_reports(self,
             if in_stats_block:
 
                 # Split the values columns
-                vals = f['f'].readline().rstrip("\n").split("\t")
+                vals = l.rstrip("\n").split("\t")
 
                 # End of the METRICS table, or multiple libraries and we're not merging them
-                if len(vals) < 6 or (merge_multiple_libraries and len(parsed_data) > 0):
+                if len(vals) < 6 or (not merge_multiple_libraries and len(parsed_data) > 0):
 
                     # No data
                     if len(keys) == 0 or len(parsed_data) == 0:
@@ -80,11 +81,8 @@ def parse_reports(self,
 
                     # User has requested each library is kept separate
                     # Update the sample name to append the library name
-                    if merge_multiple_libraries and len(parsed_data) > 0:
+                    if not merge_multiple_libraries and len(parsed_data) > 0:
                         s_name = '{} - {}'.format(s_name, parsed_data['LIBRARY'])
-
-                    # Clean the sample name
-                    s_name = self.clean_s_name(s_name, f['root'])
 
                     # Skip - No reads
                     try:
