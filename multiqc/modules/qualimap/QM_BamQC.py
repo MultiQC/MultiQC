@@ -22,6 +22,8 @@ def parse_reports(self):
     for f in self.find_log_files('qualimap/bamqc/genome_results'):
         parse_genome_results(self, f)
     self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
+    if len(self.qualimap_bamqc_genome_results) > 0:
+        self.write_data_file(self.qualimap_bamqc_genome_results, 'multiqc_qualimap_bamqc_genome_results')
 
     # Coverage - coverage_histogram.txt
     self.qualimap_bamqc_coverage_hist = dict()
@@ -85,6 +87,7 @@ def parse_genome_results(self, f):
         'median_insert_size': r"median insert size = ([\d,\.]+)",
         'mean_mapping_quality': r"mean mapping quality = ([\d,\.]+)",
         'general_error_rate': r"general error rate = ([\d,\.]+)",
+        'mean_coverage': r"mean coverageData = ([\d,]+)"
     }
     d = dict()
     for k, r in regexes.items():
@@ -109,6 +112,7 @@ def parse_genome_results(self, f):
         d['percentage_aligned'] = (d['mapped_reads'] / d['total_reads'])*100
         self.general_stats_data[s_name]['percentage_aligned'] = d['percentage_aligned']
         self.general_stats_data[s_name]['general_error_rate'] = d['general_error_rate']*100
+        self.general_stats_data[s_name]['mean_coverage'] = d['mean_coverage']
     except KeyError:
         pass
 
@@ -141,14 +145,15 @@ def parse_coverage(self, f):
     # Find median without importing anything to do it for us
     num_counts = sum(d.values())
     cum_counts = 0
+    total_cov = 0
     median_coverage = None
     for thiscov, thiscount in d.items():
         cum_counts += thiscount
+        total_cov += thiscov*thiscount
         if cum_counts >= num_counts/2:
             median_coverage = thiscov
             break
     self.general_stats_data[s_name]['median_coverage'] = median_coverage
-
     # Save results
     if s_name in self.qualimap_bamqc_coverage_hist:
         log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
@@ -521,8 +526,15 @@ def general_stats_headers (self):
             'hidden': c in hidecovs
         }
     self.general_stats_headers['median_coverage'] = {
-        'title': 'Coverage',
+        'title': 'Median cov',
         'description': 'Median coverage',
+        'min': 0,
+        'suffix': 'X',
+        'scale': 'BuPu'
+    }
+    self.general_stats_headers['mean_coverage'] = {
+        'title': 'Mean cov',
+        'description': 'Mean coverage',
         'min': 0,
         'suffix': 'X',
         'scale': 'BuPu'

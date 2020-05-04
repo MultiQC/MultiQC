@@ -200,11 +200,14 @@ Additionally, a config dict can be supplied. The defaults are as follows:
 from multiqc.plots import linegraph
 config = {
     # Building the plot
-    'smooth_points': None,       # Supply a number to limit number of points / smooth data
-    'smooth_points_sumcounts': True, # Sum counts in bins, or average? Can supply list for multiple datasets
     'id': '<random string>',     # HTML ID used for plot
     'categories': False,         # Set to True to use x values as categories instead of numbers.
     'colors': dict()             # Provide dict with keys = sample names and values colours
+    'smooth_points': None,       # Supply a number to limit number of points / smooth data
+    'smooth_points_sumcounts': True, # Sum counts in bins, or average? Can supply list for multiple datasets
+    'logswitch': False,          # Show the 'Log10' switch?
+    'logswitch_active': False,   # Initial display with 'Log10' active?
+    'logswitch_label': 'Log10',  # Label for 'Log10' button
     'extra_series': None,        # See section below
     # Plot configuration
     'title': None,               # Plot title - should be in format "Module Name: Plot Title"

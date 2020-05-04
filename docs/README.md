@@ -22,10 +22,12 @@ MultiQC Modules:
     FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
+    iVar: modules/ivar.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md
     minionqc: modules/minionqc.md
+    pycoQC: modules/pycoqc.md
     SeqyClean: modules/seqyclean.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
@@ -66,7 +68,9 @@ MultiQC Modules:
     Methyl QA: modules/methylQA.md
     mosdepth: modules/mosdepth.md
     miRTrace: modules/mirtrace.md
+    mirtop: modules/mirtop.md
     MTNucRatio: modules/mtnucratio.md
+    MultiVCFAnalyzer: modules/multivcfanalyzer.md
     phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
@@ -84,9 +88,11 @@ MultiQC Modules:
     SexDetErrmine: modules/sexdeterrmine.md
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
+    SNPsplit: modules/snpsplit.md
     Supernova: modules/supernova.md
     Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
+    VarScan2: modules/varscan2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md
 Custom Content:

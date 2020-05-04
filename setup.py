@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = '1.8dev'
+version = '1.9dev'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -33,22 +33,30 @@ print("""-----------------------------------
 
 """.format(version))
 
+# Set version requirements according to what version of Python we're running
+networkx_version = ''
+numpy_version = ''
 matplotlib_version = '>=2.1.1'
-if sys.version_info[0] == 2:
+jinja2_version = '>=2.9'
+markdown_version = ''
+if sys.version_info[0:2] < (3, 6):
+    # Lots of tools have dropped Python 3 support, so limit their versions
     matplotlib_version += ',<3.0.0'
-else:
-    matplotlib_version += ',<3.1.0'
+    numpy_version = '<1.17'
+    networkx_version = '<2.3'
+    jinja2_version += ',<3.0'
+    markdown_version = '<3.2'
 
 install_requires = [
+        'matplotlib' + matplotlib_version,
+        'networkx' + networkx_version,
+        'numpy' + numpy_version,
         'click',
         'coloredlogs',
         'future>0.14.0',
-        'jinja2>=2.9',
+        'jinja2' + jinja2_version,
         'lzstring',
-        'markdown',
-        'matplotlib' + matplotlib_version,
-        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
-        'numpy',
+        'markdown' + markdown_version,
         'pyyaml>=4',
         'requests',
         'simplejson',
@@ -114,6 +122,7 @@ setup(
             'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
             'interop = multiqc.modules.interop:MultiqcModule',
+            'ivar = multiqc.modules.ivar:MultiqcModule',
             'jellyfish = multiqc.modules.jellyfish:MultiqcModule',
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'kat = multiqc.modules.kat:MultiqcModule',
@@ -122,14 +131,17 @@ setup(
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
             'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
+            'mirtop = multiqc.modules.mirtop:MultiqcModule',
             'minionqc = multiqc.modules.minionqc:MultiqcModule',
             'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
             'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
+            'multivcfanalyzer = multiqc.modules.multivcfanalyzer:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
             'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
+            'pycoqc = multiqc.modules.pycoqc:MultiqcModule',
             'qorts = multiqc.modules.qorts:MultiqcModule',
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
@@ -145,6 +157,7 @@ setup(
             'skewer = multiqc.modules.skewer:MultiqcModule',
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
+            'snpsplit = multiqc.modules.snpsplit:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
             'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
@@ -152,6 +165,7 @@ setup(
             'theta2 = multiqc.modules.theta2:MultiqcModule',
             'tophat = multiqc.modules.tophat:MultiqcModule',
             'trimmomatic = multiqc.modules.trimmomatic:MultiqcModule',
+            'varscan2 = multiqc.modules.varscan2:MultiqcModule',
             'vcftools = multiqc.modules.vcftools:MultiqcModule',
             'verifybamid = multiqc.modules.verifybamid:MultiqcModule'
         ],
@@ -160,6 +174,7 @@ setup(
             'default_dev = multiqc.templates.default_dev',
             'sections = multiqc.templates.sections',
             'simple = multiqc.templates.simple',
+            'gathered = multiqc.templates.gathered',
             'geo = multiqc.templates.geo',
         ],
         # 'multiqc.cli_options.v1': [

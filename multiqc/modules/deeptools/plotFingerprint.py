@@ -129,7 +129,7 @@ class plotFingerprintMixin():
                 continue
 
             for idx, c in enumerate(cols):
-                d[samples[idx]].append(int(c))
+                d[samples[idx]].append(self._int(c))
 
         # Switch to numpy, get the normalized cumsum
         x = np.linspace(0, len(d[samples[0]]) - 1, endpoint=True, num=100, dtype=int)  # The indices into the vectors that we'll actually return for plotting

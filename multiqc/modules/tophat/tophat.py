@@ -86,7 +86,11 @@ class MultiqcModule(BaseMultiqcModule):
             r_search = re.search(r, raw_data, re.MULTILINE)
             if r_search:
                 parsed_data[k] = float(r_search.group(1))
-        if len(parsed_data) == 0: return None
+
+        # Exit if we didn't manage to parse enough fields - probably not a TopHat log
+        # Note that Bowtie2 / HiSAT2 logs contain some but not all of these strings
+        if len(parsed_data) < 4: return None
+
         parsed_data['concordant_aligned_percent'] = parsed_data.get('concordant_aligned_percent', 0)
         parsed_data['aligned_total'] = parsed_data.get('aligned_total', 0)
         parsed_data['aligned_multimap'] = parsed_data.get('aligned_multimap', 0)

@@ -57,6 +57,6 @@ class bamPEFragmentSizeDistributionMixin():
                 if s_name != lastsample:
                     d[s_name] = dict()
                     lastsample = s_name
-                d[s_name].update({int(cols[0]):int(cols[1])})
+                d[s_name].update({self._int(cols[0]):self._int(cols[1])})
 
         return d

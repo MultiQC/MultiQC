@@ -146,7 +146,7 @@ def get_filelist(run_module_names):
                             break
 
     # Go through the analysis directories and get file list
-    multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'appveyor.yml', 'setup.py', '.gitignore', '.travis.yml']
+    multiqc_installation_dir_files = ['LICENSE', 'CHANGELOG.md', 'Dockerfile', 'MANIFEST.in', '.gitmodules', 'README.md', 'CSP.txt', 'setup.py', '.gitignore']
     for path in config.analysis_dir:
         if os.path.islink(path) and config.ignore_symlinks:
             continue
@@ -376,7 +376,21 @@ def save_htmlid(html_id, skiplint=False):
 def compress_json(data):
     """ Take a Python data object. Convert to JSON and compress using lzstring """
     json_string = json.dumps(data).encode('utf-8', 'ignore').decode('utf-8')
-    # JSON.parse() doesn't handle `NaN`, but it does handle `null`.
-    json_string = json_string.replace('NaN', 'null');
+    json_string = sanitise_json(json_string)
     x = lzstring.LZString()
     return x.compressToBase64(json_string)
+
+def sanitise_json(json_string):
+    """
+    The Python json module uses a bunch of values which are valid JavaScript
+    but invalid JSON. These crash the browser when parsing the JSON.
+    Nothing in the MultiQC front-end uses these values, so instead we just
+    do a find-and-replace for them and switch them with `null`, which works fine.
+
+    Side effect: Any string values that include the word "Infinity"
+    (case-sensitive) will have it switched for "null". Hopefully that doesn't happen
+    a lot, otherwise we'll have to do this in a more complicated manner.
+    """
+    json_string = re.sub(r'\bNaN\b', 'null', json_string)
+    json_string = re.sub(r'\b-?Infinity\b', 'null', json_string)
+    return json_string

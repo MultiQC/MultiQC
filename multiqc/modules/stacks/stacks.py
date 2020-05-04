@@ -199,8 +199,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
         config_distribs = {
             'id': 'distribs_plot',
+            'title': 'Stacks: Population plots',
             'namespace': 'stacks',
             'tt_label': '{point.y} loci, {point.x} samples/SNPs',
+            'ylab': '# loci',
             'data_labels': [
                 {'name': 'Samples per loci', 'ylab': '# loci', 'xlab': '# samples'},
                 {'name': 'SNPs per loci', 'ylab': '# loci', 'xlab': '# SNPs'}
@@ -248,14 +250,14 @@ class MultiqcModule(BaseMultiqcModule):
         var_lines = fl[fl.index("# Variant positions")+1:fl.index("# All positions (variant and fixed)")]
         headers = None
         for l in var_lines:
-            if l.startswith("# Pop ID"):
+            if l.startswith("# Pop ID	Private	Num_Indv"):
                 headers = l.split("\t")
             elif headers is not None:
                 cdict = OrderedDict()
                 content = l.split("\t")
                 for i in fields:
                     cdict[headers[i]] = content[i]
-                out_dict[s_name] = cdict
+                out_dict[s_name + " | "+ content[0]] = cdict
 
         return out_dict
 

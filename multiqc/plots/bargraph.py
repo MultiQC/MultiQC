@@ -22,6 +22,7 @@ try:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
 except Exception as e:
     # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
     # The lack of the library will be handled when plots are attempted
@@ -209,14 +210,14 @@ def highcharts_bargraph (plotdata, plotsamples=None, pconfig=None):
 
     # Counts / Percentages / Log Switches
     if pconfig.get('cpswitch') is not False or pconfig.get('logswitch') is True:
-        if pconfig.get('cpswitch_c_active', True) is True:
-            c_active = 'active'
-            p_active = ''
-            l_active = ''
-        elif pconfig.get('logswitch_active') is True:
+        if pconfig.get('logswitch_active') is True:
             c_active = ''
             p_active = ''
             l_active = 'active'
+        elif pconfig.get('cpswitch_c_active', True) is True:
+            c_active = 'active'
+            p_active = ''
+            l_active = ''
         else:
             c_active = ''
             p_active = 'active'
