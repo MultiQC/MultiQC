@@ -147,6 +147,7 @@ setup(
             'qualimap = multiqc.modules.qualimap:MultiqcModule',
             'quast = multiqc.modules.quast:MultiqcModule',
             'rna_seqc = multiqc.modules.rna_seqc:MultiqcModule',
+            'rockhopper = multiqc.modules.rockhopper:MultiqcModule',
             'rsem = multiqc.modules.rsem:MultiqcModule',
             'rseqc = multiqc.modules.rseqc:MultiqcModule',
             'salmon = multiqc.modules.salmon:MultiqcModule',

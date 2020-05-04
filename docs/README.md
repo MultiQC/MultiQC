@@ -82,6 +82,7 @@ MultiQC Modules:
     Qualimap: modules/qualimap.md
     Quast: modules/quast.md
     RNA-SeQC: modules/rna_seqc.md
+    Rockhopper: modules/rockhopper.md
     RSEM: modules/rsem.md
     RSeQC: modules/rseqc.md
     Samblaster: modules/samblaster.md
